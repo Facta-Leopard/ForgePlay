@@ -1,234 +1,154 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ForgePlay Privacy Policy</title>
-  <meta name="description" content="ForgePlay multilingual privacy policy.">
-  <link rel="stylesheet" href="styles.css">
+  <title>ForgePlay Privacy Notice</title>
+  <meta name="description" content="ForgePlay privacy notice in supported languages.">
+  <link rel="stylesheet" href="site.css">
 </head>
 <body>
   <header class="site-header">
-    <nav class="nav" aria-label="Primary navigation">
-      <a class="brand" href="index.html">ForgePlay</a>
-      <div class="nav-links">
+    <nav class="nav" aria-label="Primary">
+      <a class="brand" href="index.html">
+        <span class="brand-icon" aria-hidden="true"></span>
+        <span>ForgePlay</span>
+      </a>
+      <div class="links">
         <a href="index.html">Home</a>
-        <a href="support.html">Support</a>
         <a href="privacy.html">Privacy</a>
-        <a href="https://github.com/Facta-Leopard/ForgePlay">GitHub</a>
+        <a href="support.html">Support</a>
+        <a href="https://github.com/Facta-Leopard/ForgePlay/issues">GitHub Issues</a>
       </div>
     </nav>
   </header>
 
   <main>
-    <section class="page-header">
-      <p class="eyebrow">Privacy Policy</p>
-      <h1>ForgePlay Privacy Policy</h1>
-      <p>One page, multiple languages. No language subpaths are required for GitHub Pages setup.</p>
-      <p class="meta">Effective date: 2026-06-22</p>
+    <section class="hero">
+      <div>
+        <h1>Privacy Notice</h1>
+        <p>ForgePlay is designed for local setup, launch diagnostics, and support bundle generation on the user's Mac. This notice keeps every supported language on one page.</p>
+        <div class="language-links">
+          <a class="button" href="#privacy-ko">한국어</a>
+          <a class="button" href="#privacy-en">English</a>
+          <a class="button" href="#privacy-es">Español</a>
+          <a class="button" href="#privacy-de">Deutsch</a>
+          <a class="button" href="#privacy-ja">日本語</a>
+          <a class="button" href="#privacy-zh-Hans">简体中文</a>
+          <a class="button" href="#privacy-zh-Hant">繁體中文</a>
+          <a class="button" href="#privacy-fr">Français</a>
+        </div>
+      </div>
+      <span class="hero-icon" role="img" aria-label="ForgePlay app icon"></span>
     </section>
 
-    <section class="notice">
-      <h2>Short Version</h2>
-      <p>ForgePlay is designed as a local-first Mac app. It does not require an account, does not use an external AI endpoint for diagnostics, and does not include or host third-party game runtimes or installers. Optional support bundles and diagnostics are created only when the user chooses to use them.</p>
+    <section class="band">
+      <div class="content">
+        <p class="notice">This page is a product privacy notice, not legal advice. If a store, distributor, or local law requires a different format, review the text with appropriate counsel before publication.</p>
+      </div>
     </section>
 
-    <section class="language-block" lang="en">
-      <span class="badge">English</span>
-      <h2>Privacy Policy</h2>
-      <p>ForgePlay helps users prepare local Windows game execution environments on macOS. The app stores configuration and diagnostic information locally on the user’s Mac so the user can manage game setup, runtime status, compatibility notes, and troubleshooting history.</p>
-      <h3>Information stored locally</h3>
-      <ul>
-        <li>Selected ForgePlay storage location, selected GPTK/Wine runner path, Steam installer path, game library paths, prefix records, runtime installation records, compatibility recipes, launch records, and diagnostic records.</li>
-        <li>Security-scoped bookmarks may be stored so the app can reopen user-selected files or folders after permission is granted by the user.</li>
-        <li>Launch logs and diagnostic records may be stored locally for troubleshooting and support bundle creation.</li>
-      </ul>
-      <h3>What ForgePlay does not collect</h3>
-      <ul>
-        <li>ForgePlay does not require a ForgePlay account.</li>
-        <li>ForgePlay does not collect Steam credentials, Steam Guard codes, payment information, or gameplay activity for a ForgePlay server.</li>
-        <li>ForgePlay does not send AI diagnostic logs to an external AI provider.</li>
-      </ul>
-      <h3>AI diagnostics</h3>
-      <p>AI diagnostics are off by default. When enabled by the user, ForgePlay first shows a redacted preview, then uses Apple Foundation Models on this Mac when available. The app is designed to redact common secrets, API keys, bearer tokens, passwords, Steam identifiers, home paths, and selected local paths before the optional local AI diagnostic prompt is generated.</p>
-      <h3>Support bundles</h3>
-      <p>Support bundles are created only when requested by the user. ForgePlay attempts to redact sensitive values before saving a bundle. The user decides whether and where to share the generated bundle.</p>
-      <h3>Network access</h3>
-      <p>ForgePlay may open official third-party download pages at the user’s request and may check a signed compatibility database feed if the user configures that feature and the app includes a trusted public key. ForgePlay does not host Microsoft, NVIDIA, OpenAL, Steam, Wine, or Apple GPTK installers.</p>
-    </section>
+    <section class="content">
+      <article id="privacy-ko" class="language-section" lang="ko">
+        <h2>개인정보 처리 안내 <span class="tag">한국어</span></h2>
+        <p>ForgePlay는 사용자의 Mac에서 Windows 게임 실행 환경을 설정하고, 실행 문제를 진단하고, 사용자가 요청할 때 지원 번들을 만들기 위해 설계되었습니다. ForgePlay 앱에는 광고 추적, 제3자 분석, 크래시 리포팅 SDK, 원격 텔레메트리 SDK가 포함되어 있지 않습니다.</p>
+        <ul>
+          <li>설정 상태, 선택한 파일 경로, 보안 범위 북마크, 게임 기록, Prefix 메타데이터, Runtime 설치 기록, 실행 기록, 진단 기록, 호환성 기록은 사용자의 Application Support 폴더에 저장됩니다.</li>
+          <li>사용자가 선택한 게임 저장소, GPTK/Wine 실행 파일, Steam 설치 파일, Runtime 설치 파일, 로그, 가져온 게임 폴더에 접근할 수 있습니다. 접근 권한이 만료되면 다시 선택을 요청합니다.</li>
+          <li>AI 진단은 기본적으로 꺼져 있습니다. 사용자가 켜면 ForgePlay는 가려진 미리보기를 먼저 보여주고, 외부 AI 서버나 API 키 없이 이 Mac의 Apple Foundation Models로만 분석합니다.</li>
+          <li>지원 번들은 사용자가 직접 만들 때만 생성됩니다. bearer token, API key, password, URL 비밀값, Steam 식별자, 홈/사용자 경로, 선택한 로컬 저장소와 게임 경로를 가능한 범위에서 가립니다.</li>
+          <li>ForgePlay는 Steam 비밀번호나 Steam Guard 코드를 요청, 저장, 전송하지 않습니다. Steam 로그인은 선택한 Wine/GPTK 환경 안의 Steam UI에서 진행됩니다.</li>
+        </ul>
+      </article>
 
-    <section class="language-block" lang="ko">
-      <span class="badge">한국어</span>
-      <h2>개인정보 처리방침</h2>
-      <p>ForgePlay는 macOS에서 Windows 게임 실행 환경을 준비하도록 돕는 로컬 중심 앱입니다. 앱은 게임 설정, 실행 환경 상태, 호환성 정보, 문제 해결 기록을 사용자가 관리할 수 있도록 필요한 정보를 사용자의 Mac에 저장합니다.</p>
-      <h3>로컬에 저장되는 정보</h3>
-      <ul>
-        <li>사용자가 선택한 ForgePlay 저장 위치, GPTK/Wine 실행 파일 경로, Steam 설치 파일 경로, 게임 라이브러리 경로, Prefix 기록, Runtime 설치 기록, 호환성 레시피, 실행 기록, 진단 기록.</li>
-        <li>사용자가 권한을 부여한 파일 또는 폴더를 다시 열기 위해 security-scoped bookmark가 저장될 수 있습니다.</li>
-        <li>문제 해결과 지원 번들 생성을 위해 실행 로그와 진단 기록이 로컬에 저장될 수 있습니다.</li>
-      </ul>
-      <h3>ForgePlay가 수집하지 않는 정보</h3>
-      <ul>
-        <li>ForgePlay 계정은 필요하지 않습니다.</li>
-        <li>Steam 자격 증명, Steam Guard 코드, 결제 정보, 게임 플레이 활동을 ForgePlay 서버로 수집하지 않습니다.</li>
-        <li>AI 진단 로그를 외부 AI 제공자에게 보내지 않습니다.</li>
-      </ul>
-      <h3>AI 진단</h3>
-      <p>AI 진단은 기본값이 꺼짐입니다. 사용자가 켠 경우 ForgePlay는 먼저 가려진 미리보기를 보여준 뒤, 사용 가능한 경우 이 Mac의 Apple Foundation Models를 사용합니다. 선택적 로컬 AI 진단 프롬프트를 만들기 전에 일반적인 secret, API key, bearer token, password, Steam 식별자, 홈 경로, 사용자가 선택한 로컬 경로를 가리도록 설계되어 있습니다.</p>
-      <h3>지원 번들</h3>
-      <p>지원 번들은 사용자가 요청한 경우에만 생성됩니다. ForgePlay는 번들을 저장하기 전에 민감한 값을 가리려고 시도합니다. 생성된 번들을 공유할지와 어디에 공유할지는 사용자가 결정합니다.</p>
-      <h3>네트워크 접근</h3>
-      <p>ForgePlay는 사용자가 요청할 때 공식 외부 다운로드 페이지를 열 수 있고, 사용자가 기능을 설정했으며 앱에 신뢰할 수 있는 공개키가 포함된 경우 서명된 호환성 DB feed를 확인할 수 있습니다. ForgePlay는 Microsoft, NVIDIA, OpenAL, Steam, Wine, Apple GPTK 설치 파일을 호스팅하지 않습니다.</p>
-    </section>
+      <article id="privacy-en" class="language-section" lang="en">
+        <h2>Privacy Notice <span class="tag">English</span></h2>
+        <p>ForgePlay is built for local Windows game setup, launch diagnostics, and user-requested support bundle creation on the user's Mac. The app does not include advertising tracking, third-party analytics, crash reporting SDKs, or remote telemetry SDKs.</p>
+        <ul>
+          <li>Setup state, selected paths, security-scoped bookmarks, game records, prefix metadata, runtime installation records, launch records, diagnostics, and compatibility records are stored in the user's Application Support folder.</li>
+          <li>ForgePlay can access game storage, GPTK/Wine runners, Steam installers, runtime installers, logs, and imported game folders selected by the user. If access expires, ForgePlay asks the user to select the item again.</li>
+          <li>AI diagnostics are off by default. When enabled, ForgePlay shows a redacted preview first and analyzes only with Apple Foundation Models on this Mac, without an external AI server or API key.</li>
+          <li>Support bundles are created only when the user requests them. ForgePlay redacts common secrets, Steam identifiers, home/user paths, and selected local storage or game paths where possible.</li>
+          <li>ForgePlay does not ask for, store, or transmit Steam passwords or Steam Guard codes. Steam login happens inside Steam's own UI in the selected Wine/GPTK environment.</li>
+        </ul>
+      </article>
 
-    <section class="language-block" lang="es">
-      <span class="badge">Español</span>
-      <h2>Política de privacidad</h2>
-      <p>ForgePlay es una app local-first para ayudar a preparar entornos de ejecución de juegos de Windows en macOS. La app guarda la configuración y la información de diagnóstico localmente en el Mac del usuario.</p>
-      <h3>Información almacenada localmente</h3>
-      <ul>
-        <li>Ubicación de almacenamiento de ForgePlay, ruta del runner GPTK/Wine, ruta del instalador de Steam, rutas de bibliotecas de juegos, registros de prefix, runtimes, recetas de compatibilidad, lanzamientos y diagnósticos.</li>
-        <li>Puede guardar marcadores con alcance de seguridad para volver a abrir archivos o carpetas seleccionados por el usuario.</li>
-        <li>Los registros de ejecución y diagnósticos pueden guardarse localmente para solucionar problemas y crear paquetes de soporte.</li>
-      </ul>
-      <h3>Lo que ForgePlay no recopila</h3>
-      <ul>
-        <li>No se requiere una cuenta de ForgePlay.</li>
-        <li>No recopila credenciales de Steam, códigos de Steam Guard, datos de pago ni actividad de juego para un servidor de ForgePlay.</li>
-        <li>No envía registros de diagnóstico de IA a un proveedor externo de IA.</li>
-      </ul>
-      <h3>Diagnóstico con IA</h3>
-      <p>El diagnóstico con IA está desactivado de forma predeterminada. Si el usuario lo activa, ForgePlay muestra primero una vista previa redactada y luego usa Apple Foundation Models en este Mac cuando esté disponible.</p>
-      <h3>Paquetes de soporte</h3>
-      <p>Los paquetes de soporte se crean solo cuando el usuario los solicita. ForgePlay intenta redactar valores sensibles antes de guardar el paquete, y el usuario decide si lo comparte.</p>
-      <h3>Acceso de red</h3>
-      <p>ForgePlay puede abrir páginas oficiales de descarga cuando el usuario lo solicita y puede comprobar una base de datos de compatibilidad firmada si la función está configurada. ForgePlay no aloja instaladores de Microsoft, NVIDIA, OpenAL, Steam, Wine ni Apple GPTK.</p>
-    </section>
+      <article id="privacy-es" class="language-section" lang="es">
+        <h2>Aviso de privacidad <span class="tag">Español</span></h2>
+        <p>ForgePlay está diseñado para configurar entornos locales de juegos de Windows en Mac, diagnosticar fallos de inicio y crear paquetes de soporte cuando el usuario lo solicita. La app no incluye seguimiento publicitario, analítica de terceros, SDK de informes de fallos ni telemetría remota.</p>
+        <ul>
+          <li>El estado de configuración, rutas seleccionadas, marcadores con ámbito de seguridad, registros de juegos, metadatos de Prefix, instalaciones de Runtime, ejecuciones, diagnósticos y compatibilidad se guardan en Application Support del usuario.</li>
+          <li>ForgePlay accede solo a ubicaciones o archivos seleccionados por el usuario, como almacenamiento de juegos, ejecutores GPTK/Wine, instaladores de Steam o Runtime, registros y carpetas de juegos importadas.</li>
+          <li>El diagnóstico con IA está desactivado de forma predeterminada. Si se activa, ForgePlay muestra primero una vista previa redactada y usa solo Apple Foundation Models en este Mac, sin servidor externo ni clave API.</li>
+          <li>Los paquetes de soporte se crean solo a petición del usuario y redactan secretos comunes, identificadores de Steam, rutas de usuario y rutas locales seleccionadas cuando sea posible.</li>
+          <li>ForgePlay no solicita, almacena ni transmite contraseñas de Steam o códigos de Steam Guard. El inicio de sesión ocurre en la interfaz de Steam dentro del entorno Wine/GPTK seleccionado.</li>
+        </ul>
+      </article>
 
-    <section class="language-block" lang="de">
-      <span class="badge">Deutsch</span>
-      <h2>Datenschutzerklärung</h2>
-      <p>ForgePlay ist eine lokal ausgerichtete Mac-App, die beim Einrichten von Windows-Spielumgebungen unter macOS hilft. Konfigurations- und Diagnosedaten werden lokal auf dem Mac des Benutzers gespeichert.</p>
-      <h3>Lokal gespeicherte Informationen</h3>
-      <ul>
-        <li>ForgePlay-Speicherort, GPTK/Wine-Runner-Pfad, Steam-Installer-Pfad, Spielbibliotheken, Prefix-Datensätze, Runtime-Datensätze, Kompatibilitätsrezepte, Startprotokolle und Diagnosen.</li>
-        <li>Security-Scoped Bookmarks können gespeichert werden, damit zuvor ausgewählte Dateien oder Ordner wieder geöffnet werden können.</li>
-        <li>Startprotokolle und Diagnosen können lokal für Fehlerbehebung und Support-Pakete gespeichert werden.</li>
-      </ul>
-      <h3>Was ForgePlay nicht sammelt</h3>
-      <ul>
-        <li>Ein ForgePlay-Konto ist nicht erforderlich.</li>
-        <li>ForgePlay sammelt keine Steam-Zugangsdaten, Steam-Guard-Codes, Zahlungsdaten oder Spielaktivitäten für einen ForgePlay-Server.</li>
-        <li>ForgePlay sendet keine KI-Diagnoseprotokolle an einen externen KI-Anbieter.</li>
-      </ul>
-      <h3>KI-Diagnosen</h3>
-      <p>KI-Diagnosen sind standardmäßig deaktiviert. Wenn der Benutzer sie aktiviert, zeigt ForgePlay zuerst eine redigierte Vorschau und verwendet anschließend Apple Foundation Models auf diesem Mac, sofern verfügbar.</p>
-      <h3>Support-Pakete</h3>
-      <p>Support-Pakete werden nur auf Wunsch des Benutzers erstellt. ForgePlay versucht, sensible Werte vor dem Speichern zu redigieren. Der Benutzer entscheidet, ob das Paket geteilt wird.</p>
-      <h3>Netzwerkzugriff</h3>
-      <p>ForgePlay kann auf Wunsch offizielle Download-Seiten öffnen und eine signierte Kompatibilitätsdatenbank prüfen, wenn die Funktion konfiguriert ist. ForgePlay hostet keine Installer von Microsoft, NVIDIA, OpenAL, Steam, Wine oder Apple GPTK.</p>
-    </section>
+      <article id="privacy-de" class="language-section" lang="de">
+        <h2>Datenschutzhinweis <span class="tag">Deutsch</span></h2>
+        <p>ForgePlay dient zur lokalen Einrichtung von Windows-Spielumgebungen auf dem Mac, zur Startdiagnose und zur Erstellung von Support-Paketen auf Wunsch des Nutzers. Die App enthält kein Werbetracking, keine Drittanbieter-Analyse, kein Crash-Reporting-SDK und keine Remote-Telemetrie.</p>
+        <ul>
+          <li>Einrichtungsstatus, ausgewählte Pfade, Security-Scoped Bookmarks, Spieleinträge, Prefix-Metadaten, Runtime-Installationen, Startprotokolle, Diagnosen und Kompatibilitätsdaten werden im Application-Support-Ordner des Nutzers gespeichert.</li>
+          <li>ForgePlay greift auf vom Nutzer ausgewählte Spielordner, GPTK/Wine-Runner, Steam-Installer, Runtime-Installer, Logs und importierte Spielordner zu. Bei abgelaufenem Zugriff wird eine erneute Auswahl verlangt.</li>
+          <li>KI-Diagnosen sind standardmäßig deaktiviert. Nach Aktivierung zeigt ForgePlay zuerst eine geschwärzte Vorschau und nutzt nur Apple Foundation Models auf diesem Mac, ohne externen KI-Server oder API-Schlüssel.</li>
+          <li>Support-Pakete werden nur auf Anforderung erstellt und schwärzen nach Möglichkeit häufige Geheimnisse, Steam-Kennungen, Benutzerpfade und ausgewählte lokale Speicher- oder Spielpfade.</li>
+          <li>ForgePlay fragt keine Steam-Passwörter oder Steam-Guard-Codes ab, speichert sie nicht und überträgt sie nicht. Die Anmeldung erfolgt in Steams eigener UI im ausgewählten Wine/GPTK-Umfeld.</li>
+        </ul>
+      </article>
 
-    <section class="language-block" lang="fr">
-      <span class="badge">Français</span>
-      <h2>Politique de confidentialité</h2>
-      <p>ForgePlay est une application Mac locale qui aide à préparer des environnements d’exécution de jeux Windows sur macOS. Les informations de configuration et de diagnostic sont stockées localement sur le Mac de l’utilisateur.</p>
-      <h3>Informations stockées localement</h3>
-      <ul>
-        <li>Emplacement de stockage ForgePlay, chemin du runner GPTK/Wine, chemin de l’installateur Steam, bibliothèques de jeux, prefixes, runtimes, recettes de compatibilité, lancements et diagnostics.</li>
-        <li>Des signets à portée de sécurité peuvent être stockés pour rouvrir les fichiers ou dossiers choisis par l’utilisateur.</li>
-        <li>Les journaux et diagnostics peuvent être conservés localement pour le dépannage et les paquets de support.</li>
-      </ul>
-      <h3>Ce que ForgePlay ne collecte pas</h3>
-      <ul>
-        <li>Aucun compte ForgePlay n’est requis.</li>
-        <li>ForgePlay ne collecte pas les identifiants Steam, codes Steam Guard, informations de paiement ou activités de jeu pour un serveur ForgePlay.</li>
-        <li>ForgePlay n’envoie pas les journaux de diagnostic IA à un fournisseur IA externe.</li>
-      </ul>
-      <h3>Diagnostics IA</h3>
-      <p>Les diagnostics IA sont désactivés par défaut. Lorsque l’utilisateur les active, ForgePlay affiche d’abord un aperçu expurgé, puis utilise Apple Foundation Models sur ce Mac lorsque c’est disponible.</p>
-      <h3>Paquets de support</h3>
-      <p>Les paquets de support ne sont créés que sur demande. ForgePlay tente de masquer les valeurs sensibles avant l’enregistrement, et l’utilisateur décide s’il souhaite les partager.</p>
-      <h3>Accès réseau</h3>
-      <p>ForgePlay peut ouvrir des pages officielles de téléchargement à la demande de l’utilisateur et vérifier une base de compatibilité signée si la fonction est configurée. ForgePlay n’héberge pas les installateurs Microsoft, NVIDIA, OpenAL, Steam, Wine ou Apple GPTK.</p>
-    </section>
+      <article id="privacy-ja" class="language-section" lang="ja">
+        <h2>プライバシー通知 <span class="tag">日本語</span></h2>
+        <p>ForgePlay は、Mac 上で Windows ゲーム環境をローカルに設定し、起動診断を行い、ユーザーが希望した場合にサポートバンドルを作成するためのアプリです。広告トラッキング、第三者分析、クラッシュレポート SDK、リモートテレメトリ SDK は含まれていません。</p>
+        <ul>
+          <li>設定状態、選択したパス、セキュリティスコープ付きブックマーク、ゲーム記録、Prefix メタデータ、Runtime インストール記録、起動記録、診断、互換性記録はユーザーの Application Support フォルダに保存されます。</li>
+          <li>ForgePlay は、ユーザーが選択したゲーム保存先、GPTK/Wine ランナー、Steam インストーラ、Runtime インストーラ、ログ、インポートしたゲームフォルダにアクセスできます。アクセスが失効した場合は再選択を求めます。</li>
+          <li>AI 診断は既定でオフです。有効化すると、ForgePlay はまず編集済みプレビューを表示し、外部 AI サーバーや API キーを使わず、この Mac の Apple Foundation Models のみで分析します。</li>
+          <li>サポートバンドルはユーザーが要求した場合だけ作成され、一般的な秘密情報、Steam 識別子、ホーム/ユーザーパス、選択されたローカル保存先やゲームパスを可能な範囲で伏せます。</li>
+          <li>ForgePlay は Steam パスワードや Steam Guard コードを要求、保存、送信しません。Steam ログインは選択された Wine/GPTK 環境内の Steam UI で行われます。</li>
+        </ul>
+      </article>
 
-    <section class="language-block" lang="ja">
-      <span class="badge">日本語</span>
-      <h2>プライバシーポリシー</h2>
-      <p>ForgePlay は、macOS 上で Windows ゲーム実行環境を準備するためのローカル優先の Mac アプリです。設定情報と診断情報はユーザーの Mac にローカル保存されます。</p>
-      <h3>ローカルに保存される情報</h3>
-      <ul>
-        <li>ForgePlay の保存場所、GPTK/Wine runner のパス、Steam インストーラのパス、ゲームライブラリ、Prefix、Runtime、互換性レシピ、起動記録、診断記録。</li>
-        <li>ユーザーが選択したファイルやフォルダを再度開くために security-scoped bookmark を保存する場合があります。</li>
-        <li>トラブルシューティングとサポートバンドル作成のため、起動ログや診断記録をローカルに保存する場合があります。</li>
-      </ul>
-      <h3>ForgePlay が収集しない情報</h3>
-      <ul>
-        <li>ForgePlay アカウントは不要です。</li>
-        <li>Steam の認証情報、Steam Guard コード、支払い情報、ゲームプレイ活動を ForgePlay サーバーに収集しません。</li>
-        <li>AI 診断ログを外部 AI プロバイダへ送信しません。</li>
-      </ul>
-      <h3>AI 診断</h3>
-      <p>AI 診断は初期状態では無効です。ユーザーが有効にした場合、ForgePlay はまず伏せ字化されたプレビューを表示し、利用可能な場合にこの Mac 上の Apple Foundation Models を使用します。</p>
-      <h3>サポートバンドル</h3>
-      <p>サポートバンドルはユーザーが要求した場合のみ作成されます。ForgePlay は保存前に機密値を伏せ字化しようとし、共有するかどうかはユーザーが決定します。</p>
-      <h3>ネットワークアクセス</h3>
-      <p>ForgePlay はユーザーの操作で公式ダウンロードページを開くことがあり、設定済みの場合は署名済み互換性データベースを確認できます。Microsoft、NVIDIA、OpenAL、Steam、Wine、Apple GPTK のインストーラはホストしません。</p>
-    </section>
+      <article id="privacy-zh-Hans" class="language-section" lang="zh-Hans">
+        <h2>隐私声明 <span class="tag">简体中文</span></h2>
+        <p>ForgePlay 用于在用户的 Mac 上本地设置 Windows 游戏环境、诊断启动问题，并在用户请求时生成支持包。应用不包含广告跟踪、第三方分析、崩溃报告 SDK 或远程遥测 SDK。</p>
+        <ul>
+          <li>设置状态、所选路径、安全范围书签、游戏记录、Prefix 元数据、Runtime 安装记录、启动记录、诊断和兼容性记录会保存在用户的 Application Support 文件夹中。</li>
+          <li>ForgePlay 可以访问用户选择的游戏存储位置、GPTK/Wine 运行器、Steam 安装程序、Runtime 安装程序、日志和导入的游戏文件夹。访问失效时会要求重新选择。</li>
+          <li>AI 诊断默认关闭。启用后，ForgePlay 会先显示已遮盖的预览，并且只使用此 Mac 上的 Apple Foundation Models，不使用外部 AI 服务器或 API 密钥。</li>
+          <li>支持包只会在用户请求时创建，并会尽可能遮盖常见密钥、Steam 标识符、用户路径以及所选本地存储或游戏路径。</li>
+          <li>ForgePlay 不会请求、保存或传输 Steam 密码或 Steam Guard 代码。Steam 登录在所选 Wine/GPTK 环境中的 Steam 自有界面内完成。</li>
+        </ul>
+      </article>
 
-    <section class="language-block" lang="zh-Hans">
-      <span class="badge">简体中文</span>
-      <h2>隐私政策</h2>
-      <p>ForgePlay 是一款以本地为优先的 Mac 应用，用于帮助用户在 macOS 上准备 Windows 游戏运行环境。配置和诊断信息会保存在用户的 Mac 本地。</p>
-      <h3>本地存储的信息</h3>
-      <ul>
-        <li>ForgePlay 存储位置、GPTK/Wine runner 路径、Steam 安装程序路径、游戏库路径、Prefix 记录、Runtime 记录、兼容性配方、启动记录和诊断记录。</li>
-        <li>为了重新打开用户授权选择的文件或文件夹，应用可能保存 security-scoped bookmark。</li>
-        <li>启动日志和诊断记录可能会保存在本地，用于排查问题和创建支持包。</li>
-      </ul>
-      <h3>ForgePlay 不收集的内容</h3>
-      <ul>
-        <li>不需要 ForgePlay 账户。</li>
-        <li>不会为 ForgePlay 服务器收集 Steam 凭据、Steam Guard 代码、付款信息或游戏活动。</li>
-        <li>不会把 AI 诊断日志发送给外部 AI 提供商。</li>
-      </ul>
-      <h3>AI 诊断</h3>
-      <p>AI 诊断默认关闭。用户启用后，ForgePlay 会先显示已脱敏的预览，然后在可用时使用这台 Mac 上的 Apple Foundation Models。</p>
-      <h3>支持包</h3>
-      <p>支持包只会在用户请求时创建。ForgePlay 会在保存前尝试脱敏敏感值，是否分享由用户决定。</p>
-      <h3>网络访问</h3>
-      <p>ForgePlay 可在用户请求时打开官方第三方下载页面，并可在配置后检查已签名的兼容性数据库。ForgePlay 不托管 Microsoft、NVIDIA、OpenAL、Steam、Wine 或 Apple GPTK 安装程序。</p>
-    </section>
+      <article id="privacy-zh-Hant" class="language-section" lang="zh-Hant">
+        <h2>隱私權聲明 <span class="tag">繁體中文</span></h2>
+        <p>ForgePlay 用於在使用者的 Mac 上本機設定 Windows 遊戲環境、診斷啟動問題，並在使用者要求時建立支援套件。App 不包含廣告追蹤、第三方分析、當機回報 SDK 或遠端遙測 SDK。</p>
+        <ul>
+          <li>設定狀態、所選路徑、安全範圍書籤、遊戲記錄、Prefix 中繼資料、Runtime 安裝記錄、啟動記錄、診斷與相容性記錄會儲存在使用者的 Application Support 資料夾。</li>
+          <li>ForgePlay 可存取使用者選取的遊戲儲存位置、GPTK/Wine 執行器、Steam 安裝程式、Runtime 安裝程式、記錄檔與匯入的遊戲資料夾。存取失效時會要求重新選取。</li>
+          <li>AI 診斷預設關閉。啟用後，ForgePlay 會先顯示已遮蔽的預覽，並且只使用此 Mac 上的 Apple Foundation Models，不使用外部 AI 伺服器或 API 金鑰。</li>
+          <li>支援套件只會在使用者要求時建立，並會盡可能遮蔽常見秘密、Steam 識別碼、使用者路徑，以及所選本機儲存或遊戲路徑。</li>
+          <li>ForgePlay 不會要求、儲存或傳輸 Steam 密碼或 Steam Guard 代碼。Steam 登入會在所選 Wine/GPTK 環境中的 Steam 自有介面內完成。</li>
+        </ul>
+      </article>
 
-    <section class="language-block" lang="zh-Hant">
-      <span class="badge">繁體中文</span>
-      <h2>隱私權政策</h2>
-      <p>ForgePlay 是一款以本機為優先的 Mac App，用於協助使用者在 macOS 上準備 Windows 遊戲執行環境。設定與診斷資訊會保存在使用者的 Mac 本機。</p>
-      <h3>本機儲存的資訊</h3>
-      <ul>
-        <li>ForgePlay 儲存位置、GPTK/Wine runner 路徑、Steam 安裝程式路徑、遊戲資料庫路徑、Prefix 紀錄、Runtime 紀錄、相容性配方、啟動紀錄與診斷紀錄。</li>
-        <li>為了重新開啟使用者授權選取的檔案或資料夾，App 可能會儲存 security-scoped bookmark。</li>
-        <li>啟動日誌與診斷紀錄可能會保存在本機，用於疑難排解與建立支援包。</li>
-      </ul>
-      <h3>ForgePlay 不會收集的內容</h3>
-      <ul>
-        <li>不需要 ForgePlay 帳號。</li>
-        <li>不會為 ForgePlay 伺服器收集 Steam 憑證、Steam Guard 代碼、付款資訊或遊玩活動。</li>
-        <li>不會將 AI 診斷日誌傳送給外部 AI 服務提供者。</li>
-      </ul>
-      <h3>AI 診斷</h3>
-      <p>AI 診斷預設關閉。使用者啟用後，ForgePlay 會先顯示已遮蔽的預覽，然後在可用時使用這台 Mac 上的 Apple Foundation Models。</p>
-      <h3>支援包</h3>
-      <p>支援包只會在使用者要求時建立。ForgePlay 會在儲存前嘗試遮蔽敏感值，是否分享由使用者決定。</p>
-      <h3>網路存取</h3>
-      <p>ForgePlay 可在使用者要求時開啟官方第三方下載頁面，並可在設定後檢查已簽署的相容性資料庫。ForgePlay 不託管 Microsoft、NVIDIA、OpenAL、Steam、Wine 或 Apple GPTK 安裝程式。</p>
+      <article id="privacy-fr" class="language-section" lang="fr">
+        <h2>Avis de confidentialité <span class="tag">Français</span></h2>
+        <p>ForgePlay sert à configurer localement des environnements de jeux Windows sur Mac, à diagnostiquer les échecs de lancement et à créer des dossiers de support lorsque l'utilisateur le demande. L'app n'intègre pas de suivi publicitaire, d'analyse tierce, de SDK de rapport de crash ni de télémétrie distante.</p>
+        <ul>
+          <li>L'état de configuration, les chemins sélectionnés, les signets à portée de sécurité, les jeux, les métadonnées de Prefix, les installations de Runtime, les lancements, les diagnostics et la compatibilité sont stockés dans le dossier Application Support de l'utilisateur.</li>
+          <li>ForgePlay peut accéder aux emplacements choisis par l'utilisateur, comme le stockage des jeux, les runners GPTK/Wine, les installateurs Steam ou Runtime, les journaux et les dossiers de jeux importés.</li>
+          <li>Le diagnostic IA est désactivé par défaut. Une fois activé, ForgePlay affiche d'abord un aperçu expurgé puis utilise uniquement Apple Foundation Models sur ce Mac, sans serveur IA externe ni clé API.</li>
+          <li>Les dossiers de support ne sont créés qu'à la demande de l'utilisateur et masquent autant que possible les secrets courants, identifiants Steam, chemins utilisateur et chemins locaux sélectionnés.</li>
+          <li>ForgePlay ne demande pas, ne stocke pas et ne transmet pas les mots de passe Steam ni les codes Steam Guard. La connexion Steam se fait dans l'interface Steam de l'environnement Wine/GPTK choisi.</li>
+        </ul>
+      </article>
     </section>
   </main>
 
   <footer class="site-footer">
-    <p>Last updated: 2026-06-22</p>
-    <p>ForgePlay is not affiliated with Valve, Microsoft, NVIDIA, WineHQ, or Apple. Third-party names belong to their owners.</p>
+    <p>Last updated: 2026-06-26. For support, open <a href="support.html">Support</a> or use <a href="https://github.com/Facta-Leopard/ForgePlay/issues">GitHub Issues</a>.</p>
   </footer>
 </body>
 </html>
