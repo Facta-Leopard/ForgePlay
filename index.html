@@ -1,60 +1,75 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ForgePlay Support & Privacy</title>
-  <meta name="description" content="ForgePlay support, privacy policy, and multilingual product information.">
-  <link rel="stylesheet" href="styles.css">
+  <title>ForgePlay Support</title>
+  <meta name="description" content="ForgePlay privacy and support information for users.">
+  <link rel="stylesheet" href="site.css">
 </head>
 <body>
   <header class="site-header">
-    <nav class="nav" aria-label="Primary navigation">
-      <a class="brand" href="index.html">ForgePlay</a>
-      <div class="nav-links">
-        <a href="support.html">Support</a>
+    <nav class="nav" aria-label="Primary">
+      <a class="brand" href="index.html">
+        <span class="brand-icon" aria-hidden="true"></span>
+        <span>ForgePlay</span>
+      </a>
+      <div class="links">
         <a href="privacy.html">Privacy</a>
-        <a href="https://github.com/Facta-Leopard/ForgePlay">GitHub</a>
+        <a href="support.html">Support</a>
+        <a href="https://github.com/Facta-Leopard/ForgePlay/issues">GitHub Issues</a>
       </div>
     </nav>
   </header>
 
   <main>
     <section class="hero">
-      <p class="eyebrow">Windows games on Mac, with local-first diagnostics</p>
-      <h1>ForgePlay Support & Privacy</h1>
-      <p class="lead">ForgePlay helps Mac users prepare local Windows game execution environments with GPTK/Wine, Steam, compatibility guidance, and optional on-device Apple Foundation Models diagnostics.</p>
-      <div class="hero-actions">
-        <a class="button primary" href="support.html">Open Support</a>
-        <a class="button secondary" href="privacy.html">Read Privacy Policy</a>
+      <div>
+        <h1>ForgePlay Support</h1>
+        <p>ForgePlay helps users set up local Windows game environments on Mac, review launch diagnostics, and create redacted support bundles when troubleshooting is needed.</p>
+        <div class="actions">
+          <a class="button primary" href="support.html">Open Support Guide</a>
+          <a class="button" href="privacy.html">Read Privacy Notice</a>
+        </div>
+      </div>
+      <span class="hero-icon" role="img" aria-label="ForgePlay app icon"></span>
+    </section>
+
+    <section class="band">
+      <div class="content">
+        <div class="grid">
+          <article class="panel">
+            <h2>Privacy Notice</h2>
+            <p>ForgePlay does not include advertising tracking, third-party analytics, crash reporting SDKs, or telemetry SDKs. The app keeps setup, diagnostics, and support data local unless the user chooses to share files.</p>
+            <a href="privacy.html">View all language sections</a>
+          </article>
+          <article class="panel">
+            <h2>Support Guide</h2>
+            <p>Support starts with local diagnostics. Include the game name, Steam App ID if available, macOS version, runner type, prefix, recent launch result, and visible error text.</p>
+            <a href="support.html">View all language sections</a>
+          </article>
+        </div>
       </div>
     </section>
 
-    <section class="grid two-column">
-      <article class="panel">
-        <h2>Support</h2>
-        <p>Find setup guidance, troubleshooting steps, diagnostics notes, and safe ways to report issues without sharing secrets or personal paths.</p>
-        <a class="text-link" href="support.html">Go to support page</a>
-      </article>
-      <article class="panel">
-        <h2>Privacy</h2>
-        <p>Review what ForgePlay stores locally, what it does not collect, how support bundles are redacted, and how optional AI diagnostics work on device.</p>
-        <a class="text-link" href="privacy.html">Go to privacy policy</a>
-      </article>
-    </section>
-
-    <section class="language-summary">
-      <h2>Languages on This Site</h2>
-      <p>These pages keep language sections together instead of using separate language subpaths. The current content includes English, Korean, Spanish, German, French, Japanese, Simplified Chinese, and Traditional Chinese.</p>
-      <div class="language-list" aria-label="Included languages">
-        <span>English</span><span>한국어</span><span>Español</span><span>Deutsch</span><span>Français</span><span>日本語</span><span>简体中文</span><span>繁體中文</span>
+    <section class="content">
+      <h2>Languages on this site</h2>
+      <p>Language-specific content is kept in the same page instead of separate language subpaths.</p>
+      <div class="language-links">
+        <a class="button" href="privacy.html#privacy-ko">한국어</a>
+        <a class="button" href="privacy.html#privacy-en">English</a>
+        <a class="button" href="privacy.html#privacy-es">Español</a>
+        <a class="button" href="privacy.html#privacy-de">Deutsch</a>
+        <a class="button" href="privacy.html#privacy-ja">日本語</a>
+        <a class="button" href="privacy.html#privacy-zh-Hans">简体中文</a>
+        <a class="button" href="privacy.html#privacy-zh-Hant">繁體中文</a>
+        <a class="button" href="privacy.html#privacy-fr">Français</a>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
-    <p>Last updated: 2026-06-22</p>
-    <p>ForgePlay is not affiliated with Valve, Microsoft, NVIDIA, WineHQ, or Apple. Third-party names belong to their owners.</p>
+    <p>ForgePlay is distributed for macOS Developer ID notarized releases. ForgePlay does not bundle Apple GPTK, Steam, Microsoft runtime installers, Wine distributions, or Windows game files.</p>
   </footer>
 </body>
 </html>
