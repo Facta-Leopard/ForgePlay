@@ -61,7 +61,13 @@ require_regular_file() {
   local path="$1"
   local link_count
   [[ -f "$path" && ! -L "$path" ]] || fail "$path must be a non-symlink regular file"
-  link_count="$(stat -f '%l' "$path" 2>/dev/null)" || fail "could not inspect link count for $path"
+  if link_count="$(stat -f '%l' "$path" 2>/dev/null)"; then
+    :
+  elif link_count="$(stat -c '%h' "$path" 2>/dev/null)"; then
+    :
+  else
+    fail "could not inspect link count for $path"
+  fi
   [[ "$link_count" == "1" ]] || fail "$path must not be hardlinked"
 }
 
