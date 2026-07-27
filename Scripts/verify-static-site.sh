@@ -469,9 +469,9 @@ PY
 
 for html in index.html why.html license.html privacy.html support.html compatibility.html updates.html; do
   require_snippet "$ROOT_DIR/$html" '<html lang="en">'
-  require_snippet "$ROOT_DIR/$html" 'src="locale-bootstrap.js?v=20260728-5"'
-  require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260728-5"'
-  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260728-5"'
+  require_snippet "$ROOT_DIR/$html" 'src="locale-bootstrap.js?v=20260728-6"'
+  require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260728-6"'
+  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260728-6"'
   require_snippet "$ROOT_DIR/$html" 'data-language-select'
   require_snippet "$ROOT_DIR/$html" 'site-assets/forgeplay-icon.png'
 done
@@ -498,9 +498,9 @@ require_snippet "$ROOT_DIR/index.html" 'data-compatibility-count'
 require_snippet "$ROOT_DIR/index.html" 'href="compatibility.html"'
 require_snippet "$ROOT_DIR/index.html" 'PLAYABLE IN GAME MODE'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
-require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260728-5"'
-require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260728-5"'
-require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260728-5"'
+require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260728-6"'
+require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260728-6"'
+require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260728-6"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
 require_snippet "$ROOT_DIR/index.html" 'id="other-apps"'
 require_snippet "$ROOT_DIR/index.html" 'data-developer-app-grid'
@@ -516,7 +516,7 @@ require_snippet "$ROOT_DIR/compatibility.html" 'Works in Game Mode or doesn’t�
 require_snippet "$ROOT_DIR/compatibility.html" 'Playable in Game Mode'
 require_snippet "$ROOT_DIR/compatibility.html" 'Logs shorten the distance to a fix.'
 require_snippet "$ROOT_DIR/compatibility.html" 'issues/new?template=compatibility-report.yml'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260728-5"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260728-6"'
 require_snippet "$ROOT_DIR/compatibility.js" 'site-data/compatibility-games.json'
 require_snippet "$ROOT_DIR/compatibility.js" 'forgeplay:localechange'
 require_snippet "$ROOT_DIR/site.js" '"compat.statusPlayable": "게임 모드로 플레이 가능"'
@@ -526,7 +526,7 @@ require_snippet "$ROOT_DIR/site-data/README.md" 'DeveloperAppCatalog.swift'
 
 require_snippet "$ROOT_DIR/updates.html" 'data-announcement-list'
 require_snippet "$ROOT_DIR/updates.html" 'data-nav-page="updates"'
-require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260728-5"'
+require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260728-6"'
 require_snippet "$ROOT_DIR/announcements.js" 'site-data/announcements.json'
 require_snippet "$ROOT_DIR/announcements.js" 'forgeplay:localechange'
 require_snippet "$ROOT_DIR/developer-apps.js" 'site-data/developer-apps.json'
@@ -560,21 +560,20 @@ require_snippet "$ROOT_DIR/support.html" "D3DMetal in the direct-distribution DM
 require_snippet "$ROOT_DIR/support.html" "Steam, Microsoft Runtime, DirectX"
 
 for lang in "${LANGS[@]}"; do
-  require_snippet "$ROOT_DIR/privacy.html" "href=\"#privacy-$lang\" data-set-locale=\"$lang\""
-  require_snippet "$ROOT_DIR/support.html" "href=\"#support-$lang\" data-set-locale=\"$lang\""
-  require_snippet "$ROOT_DIR/license.html" "href=\"#license-$lang\" data-set-locale=\"$lang\""
   require_snippet "$ROOT_DIR/privacy.html" "id=\"privacy-$lang\" class=\"language-section\" lang=\"$lang\""
   require_snippet "$ROOT_DIR/support.html" "id=\"support-$lang\" class=\"language-section\" lang=\"$lang\""
   require_snippet "$ROOT_DIR/why.html" "id=\"why-$lang\" class=\"language-section story-language\" lang=\"$lang\""
   require_snippet "$ROOT_DIR/license.html" "id=\"license-$lang\" class=\"language-section license-language\" lang=\"$lang\""
 done
 
-if grep -Fq 'data-set-locale=' "$ROOT_DIR/why.html"; then
-  fail "why.html must use only the global language selector"
-fi
-if [[ "$(grep -c 'data-language-select' "$ROOT_DIR/why.html")" -ne 1 ]]; then
-  fail "why.html must contain exactly one global language selector"
-fi
+for localized_page in privacy.html support.html why.html license.html; do
+  if grep -Fq 'data-set-locale=' "$ROOT_DIR/$localized_page"; then
+    fail "$localized_page must use only the global language selector"
+  fi
+  if [[ "$(grep -c 'data-language-select' "$ROOT_DIR/$localized_page")" -ne 1 ]]; then
+    fail "$localized_page must contain exactly one global language selector"
+  fi
+done
 
 require_snippet "$ROOT_DIR/site.css" ":focus-visible"
 require_snippet "$ROOT_DIR/site.css" "@media (max-width: 760px)"

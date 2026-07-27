@@ -227,7 +227,7 @@
       "privacy.metaDescription": "How ForgePlay handles local game data, diagnostics, AI analysis, and support bundles.",
       "privacy.eyebrow": "LOCAL-FIRST BY DESIGN",
       "privacy.title": "Privacy Notice",
-      "privacy.lead": "ForgePlay keeps setup and diagnostics on your Mac. Choose a language to read what is stored, what is redacted, and what only leaves the device when you decide to share it.",
+      "privacy.lead": "ForgePlay keeps setup and diagnostics on your Mac. This notice explains what is stored, what is redacted, and what only leaves the device when you decide to share it.",
       "privacy.languages": "Privacy languages",
       "privacy.summary": "No advertising tracking, third-party analytics, crash-reporting SDK, or remote telemetry SDK. AI diagnostics are opt-in and use Apple Foundation Models on this Mac.",
       "privacy.updated": "Updated 28 July 2026.",
@@ -236,7 +236,7 @@
       "support.metaDescription": "How to collect ForgePlay diagnostics and share a redacted support bundle safely.",
       "support.eyebrow": "EVIDENCE BEFORE GUESSWORK",
       "support.title": "Support Guide",
-      "support.lead": "ForgePlay support starts with local diagnostics. Choose a language for what to include, what the support bundle may contain, and what never to share.",
+      "support.lead": "ForgePlay support starts with local diagnostics. This guide explains what to include, what the support bundle may contain, and what never to share.",
       "support.languages": "Support languages",
       "support.summary": "Need help or have a compatibility result? Describe the game, your Mac, what happened, and relevant diagnostics in ForgePlay GitHub Issues.",
       "support.issueButton": "Report it on GitHub Issues ↗",
@@ -911,7 +911,7 @@
       "privacy.metaDescription": "ForgePlay 如何处理本地游戏数据、诊断、AI 分析和支持包。",
       "privacy.eyebrow": "本地优先设计",
       "privacy.title": "隐私声明",
-      "privacy.lead": "ForgePlay 将设置和诊断保留在你的 Mac 上。请选择语言，了解会保存什么、遮盖什么，以及只有在你决定分享时才会离开设备的内容。",
+      "privacy.lead": "ForgePlay 将设置和诊断保留在你的 Mac 上。本说明介绍会保存什么、遮盖什么，以及只有在你决定分享时才会离开设备的内容。",
       "privacy.languages": "隐私声明语言",
       "privacy.summary": "不包含广告跟踪、第三方分析、崩溃报告 SDK 或远程遥测 SDK。AI 诊断需主动启用，并使用此 Mac 上的 Apple Foundation Models。",
       "privacy.updated": "更新于 2026 年 7 月 28 日。",
@@ -920,7 +920,7 @@
       "support.metaDescription": "如何收集 ForgePlay 诊断并安全分享已遮盖的支持包。",
       "support.eyebrow": "证据先于猜测",
       "support.title": "支持指南",
-      "support.lead": "ForgePlay 支持从本地诊断开始。请选择语言，了解应提供什么、支持包可能包含什么，以及绝不能分享什么。",
+      "support.lead": "ForgePlay 支持从本地诊断开始。本指南说明应提供什么、支持包可能包含什么，以及绝不能分享什么。",
       "support.languages": "支持指南语言",
       "support.summary": "如需支持或报告兼容性结果，请在 ForgePlay GitHub Issues 中填写游戏名称、Mac 环境、实际现象和相关诊断信息。",
       "support.issueButton": "前往 GitHub Issues 报告 ↗",
@@ -1139,7 +1139,7 @@
       "privacy.metaDescription": "ForgePlay 如何處理本機遊戲資料、診斷、AI 分析與支援套件。",
       "privacy.eyebrow": "本機優先設計",
       "privacy.title": "隱私權聲明",
-      "privacy.lead": "ForgePlay 將設定與診斷保留在你的 Mac 上。請選擇語言，了解會儲存什麼、遮蔽什麼，以及只有在你決定分享時才會離開裝置的內容。",
+      "privacy.lead": "ForgePlay 將設定與診斷保留在你的 Mac 上。本說明介紹會儲存什麼、遮蔽什麼，以及只有在你決定分享時才會離開裝置的內容。",
       "privacy.languages": "隱私權聲明語言",
       "privacy.summary": "不包含廣告追蹤、第三方分析、當機回報 SDK 或遠端遙測 SDK。AI 診斷須主動啟用，並使用此 Mac 上的 Apple Foundation Models。",
       "privacy.updated": "更新於 2026 年 7 月 28 日。",
@@ -1148,7 +1148,7 @@
       "support.metaDescription": "如何收集 ForgePlay 診斷並安全分享已遮蔽的支援套件。",
       "support.eyebrow": "證據先於猜測",
       "support.title": "支援指南",
-      "support.lead": "ForgePlay 支援從本機診斷開始。請選擇語言，了解應提供什麼、支援套件可能包含什麼，以及絕不能分享什麼。",
+      "support.lead": "ForgePlay 支援從本機診斷開始。本指南說明應提供什麼、支援套件可能包含什麼，以及絕不能分享什麼。",
       "support.languages": "支援指南語言",
       "support.summary": "如需支援或回報相容性結果，請在 ForgePlay GitHub Issues 中填寫遊戲名稱、Mac 環境、實際情況與相關診斷資訊。",
       "support.issueButton": "前往 GitHub Issues 回報 ↗",
@@ -1367,7 +1367,7 @@
       "privacy.metaDescription": "Wie ForgePlay lokale Spieldaten, Diagnosen, KI-Analysen und Support-Bundles verarbeitet.",
       "privacy.eyebrow": "LOKAL ZUERST",
       "privacy.title": "Datenschutzhinweis",
-      "privacy.lead": "ForgePlay behält Einrichtung und Diagnosen auf deinem Mac. Wähle eine Sprache, um zu erfahren, was gespeichert und geschwärzt wird und was das Gerät nur verlässt, wenn du es teilst.",
+      "privacy.lead": "ForgePlay behält Einrichtung und Diagnosen auf deinem Mac. Dieser Hinweis erklärt, was gespeichert und geschwärzt wird und was das Gerät nur verlässt, wenn du es teilst.",
       "privacy.languages": "Sprachen des Datenschutzhinweises",
       "privacy.summary": "Kein Werbetracking, keine Drittanbieter-Analyse, kein Crash-Reporting-SDK und keine Remote-Telemetrie. KI-Diagnosen sind optional und verwenden Apple Foundation Models auf diesem Mac.",
       "privacy.updated": "Aktualisiert am 28. Juli 2026.",
@@ -1376,7 +1376,7 @@
       "support.metaDescription": "So sammelst du ForgePlay-Diagnosen und teilst ein geschwärztes Support-Bundle sicher.",
       "support.eyebrow": "NACHWEISE STATT RATEN",
       "support.title": "Support-Leitfaden",
-      "support.lead": "ForgePlay-Support beginnt mit lokalen Diagnosen. Wähle eine Sprache für Hinweise dazu, was du angeben, was ein Support-Bundle enthalten und was du niemals teilen solltest.",
+      "support.lead": "ForgePlay-Support beginnt mit lokalen Diagnosen. Dieser Leitfaden erklärt, was du angeben solltest, was ein Support-Bundle enthalten kann und was du niemals teilen solltest.",
       "support.languages": "Sprachen des Support-Leitfadens",
       "support.summary": "Brauchst du Hilfe oder möchtest du ein Kompatibilitätsergebnis melden? Beschreibe Spiel, Mac-Umgebung, Verhalten und relevante Diagnosedaten in den ForgePlay GitHub Issues.",
       "support.issueButton": "In GitHub Issues melden ↗",
@@ -1595,7 +1595,7 @@
       "privacy.metaDescription": "Cómo gestiona ForgePlay los datos locales de juegos, los diagnósticos, el análisis con IA y los paquetes de soporte.",
       "privacy.eyebrow": "DISEÑO LOCAL PRIMERO",
       "privacy.title": "Aviso de privacidad",
-      "privacy.lead": "ForgePlay conserva la configuración y los diagnósticos en tu Mac. Elige un idioma para saber qué se guarda, qué se oculta y qué solo sale del dispositivo cuando decides compartirlo.",
+      "privacy.lead": "ForgePlay conserva la configuración y los diagnósticos en tu Mac. Este aviso explica qué se guarda, qué se oculta y qué solo sale del dispositivo cuando decides compartirlo.",
       "privacy.languages": "Idiomas del aviso de privacidad",
       "privacy.summary": "Sin seguimiento publicitario, analítica de terceros, SDK de informes de fallos ni telemetría remota. El diagnóstico con IA es opcional y usa Apple Foundation Models en este Mac.",
       "privacy.updated": "Actualizado el 28 de julio de 2026.",
@@ -1604,7 +1604,7 @@
       "support.metaDescription": "Cómo recopilar diagnósticos de ForgePlay y compartir de forma segura un paquete de soporte redactado.",
       "support.eyebrow": "EVIDENCIA ANTES QUE SUPOSICIONES",
       "support.title": "Guía de soporte",
-      "support.lead": "El soporte de ForgePlay empieza con diagnósticos locales. Elige un idioma para saber qué incluir, qué puede contener el paquete de soporte y qué no debes compartir nunca.",
+      "support.lead": "El soporte de ForgePlay empieza con diagnósticos locales. Esta guía explica qué incluir, qué puede contener el paquete de soporte y qué no debes compartir nunca.",
       "support.languages": "Idiomas de la guía de soporte",
       "support.summary": "¿Necesitas ayuda o quieres informar de un resultado de compatibilidad? Describe el juego, tu Mac, lo ocurrido y los diagnósticos pertinentes en GitHub Issues de ForgePlay.",
       "support.issueButton": "Informar en GitHub Issues ↗",
@@ -1823,7 +1823,7 @@
       "privacy.metaDescription": "Comment ForgePlay traite les données de jeu locales, les diagnostics, l’analyse par IA et les bundles d’assistance.",
       "privacy.eyebrow": "CONÇU POUR RESTER LOCAL",
       "privacy.title": "Avis de confidentialité",
-      "privacy.lead": "ForgePlay conserve la configuration et les diagnostics sur votre Mac. Choisissez une langue pour savoir ce qui est stocké, masqué et ce qui ne quitte l’appareil que lorsque vous décidez de le partager.",
+      "privacy.lead": "ForgePlay conserve la configuration et les diagnostics sur votre Mac. Cet avis explique ce qui est stocké, masqué et ce qui ne quitte l’appareil que lorsque vous décidez de le partager.",
       "privacy.languages": "Langues de l’avis de confidentialité",
       "privacy.summary": "Aucun suivi publicitaire, aucune analyse tierce, aucun SDK de rapport de crash ni télémétrie distante. Le diagnostic IA est facultatif et utilise Apple Foundation Models sur ce Mac.",
       "privacy.updated": "Mis à jour le 28 juillet 2026.",
@@ -1832,7 +1832,7 @@
       "support.metaDescription": "Comment recueillir les diagnostics ForgePlay et partager en sécurité un bundle d’assistance expurgé.",
       "support.eyebrow": "LES PREUVES AVANT LES SUPPOSITIONS",
       "support.title": "Guide d’assistance",
-      "support.lead": "L’assistance ForgePlay commence par les diagnostics locaux. Choisissez une langue pour savoir quoi joindre, ce que le bundle peut contenir et ce qu’il ne faut jamais partager.",
+      "support.lead": "L’assistance ForgePlay commence par les diagnostics locaux. Ce guide explique quoi joindre, ce que le bundle peut contenir et ce qu’il ne faut jamais partager.",
       "support.languages": "Langues du guide d’assistance",
       "support.summary": "Besoin d’aide ou envie de signaler un résultat de compatibilité ? Décrivez le jeu, votre Mac, le comportement observé et les diagnostics utiles dans les GitHub Issues de ForgePlay.",
       "support.issueButton": "Signaler dans GitHub Issues ↗",
@@ -1858,13 +1858,6 @@
   const updateLanguageSections = (locale) => {
     document.querySelectorAll(".language-section[lang]").forEach((section) => {
       section.hidden = section.getAttribute("lang") !== locale;
-    });
-    document.querySelectorAll("[data-set-locale]").forEach((link) => {
-      if (link.dataset.setLocale === locale) {
-        link.setAttribute("aria-current", "true");
-      } else {
-        link.removeAttribute("aria-current");
-      }
     });
   };
 
@@ -2041,16 +2034,6 @@
 
   window.addEventListener("resize", () => {
     requestAnimationFrame(() => centerCurrentNavigation());
-  });
-
-  document.querySelectorAll("[data-set-locale]").forEach((link) => {
-    link.addEventListener("click", (event) => {
-      event.preventDefault();
-      const locale = normalizeLocale(event.currentTarget.dataset.setLocale) || "en";
-      const sectionHash = event.currentTarget.getAttribute("href");
-      currentLocale = applyLocale(locale, { persist: true, updateAddress: true, sectionHash });
-      document.querySelector(sectionHash)?.scrollIntoView({ block: "start" });
-    });
   });
 
   window.addEventListener("hashchange", () => {

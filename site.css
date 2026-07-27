@@ -1207,25 +1207,6 @@ select {
   box-shadow: var(--shadow);
 }
 
-.language-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 30px;
-}
-
-.language-links .button {
-  min-height: 40px;
-  padding: 8px 12px;
-  font-size: 0.84rem;
-}
-
-.language-links .button[aria-current="true"] {
-  color: #130d0a;
-  background: var(--orange);
-  border-color: var(--orange);
-}
-
 .legal-summary {
   padding: 22px 24px;
   color: #ded9ce;
@@ -1574,12 +1555,6 @@ select {
   padding: 28px 0 clamp(100px, 12vw, 170px);
 }
 
-.story-languages {
-  position: relative;
-  z-index: 2;
-  margin-top: 0;
-}
-
 .story-language,
 .license-language {
   max-width: none;
@@ -1774,10 +1749,6 @@ select {
 
 .license-shell {
   padding: 28px 0 clamp(100px, 12vw, 170px);
-}
-
-.license-languages {
-  margin-top: 0;
 }
 
 .license-intro {
