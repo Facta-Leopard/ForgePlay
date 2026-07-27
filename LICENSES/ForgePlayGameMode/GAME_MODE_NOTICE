@@ -1,0 +1,29 @@
+ForgePlay Game Mode
+Copyright (C) 2026 Facta-Leopard
+Original source: https://github.com/Facta-Leopard/ForgePlay
+
+The ForgePlay Game Mode code identified in GAME_MODE_LICENSE_SCOPE.md is
+licensed under the GNU General Public License, version 3 only
+(GPL-3.0-only).
+
+The GPL itself grants permission for compliant use, modification, commercial
+use, and redistribution. No separate permission from Facta-Leopard is
+required when all GPLv3 conditions are satisfied. No permission is granted by
+this notice to distribute the covered code in a proprietary product while
+omitting GPLv3 obligations.
+
+Covered distributions must preserve the specified author attribution,
+copyright notices, license notices, and upstream provenance. Modified versions
+must be marked as modified and must not imply that they are official ForgePlay
+releases or are endorsed by Facta-Leopard.
+
+No trademark rights in the ForgePlay name or logo are granted.
+
+The identified GameModeProcessHost and Game Mode Wine patch copies include
+Wine-derived material designated for conversion to GPL-3.0-only under LGPL
+2.1 section 3. A public binary release must make the corresponding source
+notices consistent with that designation. All Wine and upstream author
+notices remain required.
+
+This notice grants no compatibility exception for D3DMetal or any other
+third-party component.

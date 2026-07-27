@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facta-leopard.github.io/ForgePlay/site-data/announcements.schema.json",
+  "title": "ForgePlay announcements",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "updatedAt",
+    "announcements"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date"
+    },
+    "announcements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/announcement"
+      }
+    }
+  },
+  "$defs": {
+    "localizedText": {
+      "type": "object",
+      "required": [
+        "en",
+        "ko",
+        "de",
+        "es",
+        "fr",
+        "ja",
+        "zh-Hans",
+        "zh-Hant"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "en": { "type": "string", "minLength": 1 },
+        "ko": { "type": "string", "minLength": 1 },
+        "de": { "type": "string", "minLength": 1 },
+        "es": { "type": "string", "minLength": 1 },
+        "fr": { "type": "string", "minLength": 1 },
+        "ja": { "type": "string", "minLength": 1 },
+        "zh-Hans": { "type": "string", "minLength": 1 },
+        "zh-Hant": { "type": "string", "minLength": 1 }
+      }
+    },
+    "announcement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "publishedAt",
+        "featured",
+        "titles",
+        "summaries",
+        "href"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "type": {
+          "enum": [
+            "compatibility",
+            "project",
+            "release"
+          ]
+        },
+        "publishedAt": {
+          "type": "string",
+          "format": "date"
+        },
+        "featured": {
+          "type": "boolean"
+        },
+        "titles": {
+          "$ref": "#/$defs/localizedText"
+        },
+        "summaries": {
+          "$ref": "#/$defs/localizedText"
+        },
+        "href": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

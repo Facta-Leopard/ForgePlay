@@ -1,0 +1,88 @@
+{
+  "$schema": "./announcements.schema.json",
+  "schemaVersion": 1,
+  "updatedAt": "2026-07-28",
+  "announcements": [
+    {
+      "id": "compatibility-database-opens",
+      "type": "compatibility",
+      "publishedAt": "2026-07-28",
+      "featured": true,
+      "titles": {
+        "en": "Compatibility database opens with 12 tested games.",
+        "ko": "테스트 게임 12종과 함께 호환성 DB를 공개했습니다.",
+        "de": "Die Kompatibilitätsdatenbank startet mit 12 getesteten Spielen.",
+        "es": "La base de compatibilidad abre con 12 juegos probados.",
+        "fr": "La base de compatibilité ouvre avec 12 jeux testés.",
+        "ja": "12本のテスト済みタイトルとともに互換性DBを公開しました。",
+        "zh-Hans": "兼容性数据库首批公开 12 款实测游戏。",
+        "zh-Hant": "相容性資料庫首批公開 12 款實測遊戲。"
+      },
+      "summaries": {
+        "en": "Results from an M4 Pro Mac with 24GB unified memory are now searchable by status, device, and notes.",
+        "ko": "M4 Pro·통합 메모리 24GB 환경의 결과를 상태, 기기, 비고와 함께 확인할 수 있습니다.",
+        "de": "Ergebnisse von einem M4 Pro Mac mit 24 GB gemeinsamem Arbeitsspeicher lassen sich nach Status, Gerät und Hinweisen durchsuchen.",
+        "es": "Ya se pueden consultar por estado, dispositivo y notas los resultados de un Mac M4 Pro con 24 GB de memoria unificada.",
+        "fr": "Les résultats obtenus sur un Mac M4 Pro avec 24 Go de mémoire unifiée sont consultables par état, appareil et remarques.",
+        "ja": "M4 Pro・ユニファイドメモリ24GBのMacで得た結果を、状態、検証機、備考とともに確認できます。",
+        "zh-Hans": "现在可按状态、测试设备和备注查看 M4 Pro、24GB 统一内存 Mac 的实测结果。",
+        "zh-Hant": "現在可依狀態、測試裝置與備註查看 M4 Pro、24GB 統一記憶體 Mac 的實測結果。"
+      },
+      "href": "compatibility.html"
+    },
+    {
+      "id": "game-mode-first",
+      "type": "project",
+      "publishedAt": "2026-07-28",
+      "featured": false,
+      "titles": {
+        "en": "ForgePlay puts macOS Game Mode at the center.",
+        "ko": "ForgePlay의 중심에 macOS 게임 모드를 세웠습니다.",
+        "de": "ForgePlay stellt macOS Game Mode in den Mittelpunkt.",
+        "es": "ForgePlay sitúa Game Mode de macOS en el centro.",
+        "fr": "ForgePlay place Game Mode de macOS au centre.",
+        "ja": "ForgePlayはmacOSのGame Modeを中核に据えました。",
+        "zh-Hans": "ForgePlay 将 macOS 游戏模式置于核心。",
+        "zh-Hant": "ForgePlay 將 macOS 遊戲模式置於核心。"
+      },
+      "summaries": {
+        "en": "The website now explains how the live Windows game session enters a native Game Mode-capable macOS context.",
+        "ko": "실제 Windows 게임 세션이 네이티브 macOS 게임 모드 실행 환경으로 이어지는 이유를 홈페이지에서 바로 확인할 수 있습니다.",
+        "de": "Die Website zeigt jetzt direkt, wie die laufende Windows-Spielesitzung in einen nativen macOS-Kontext mit Game Mode gelangt.",
+        "es": "La web explica cómo la sesión activa del juego de Windows entra en un contexto nativo de macOS compatible con Game Mode.",
+        "fr": "Le site explique comment la session Windows active rejoint un contexte macOS natif compatible avec Game Mode.",
+        "ja": "実際のWindowsゲームセッションが、Game Mode対応のネイティブmacOS環境へ入る仕組みをサイトで確認できます。",
+        "zh-Hans": "网站现已说明实际 Windows 游戏会话如何进入支持游戏模式的原生 macOS 环境。",
+        "zh-Hant": "網站現已說明實際 Windows 遊戲工作階段如何進入支援遊戲模式的原生 macOS 環境。"
+      },
+      "href": "index.html#game-mode"
+    },
+    {
+      "id": "first-public-release-preparing",
+      "type": "release",
+      "publishedAt": "2026-07-28",
+      "featured": false,
+      "titles": {
+        "en": "The first public GitHub release is being prepared.",
+        "ko": "첫 공개 GitHub 릴리스를 준비하고 있습니다.",
+        "de": "Das erste öffentliche GitHub-Release wird vorbereitet.",
+        "es": "Se está preparando la primera versión pública en GitHub.",
+        "fr": "La première version publique sur GitHub est en préparation.",
+        "ja": "初の公開GitHubリリースを準備しています。",
+        "zh-Hans": "首个公开 GitHub 版本正在准备中。",
+        "zh-Hant": "首個公開 GitHub 版本正在準備中。"
+      },
+      "summaries": {
+        "en": "The binary, matching source, license notices, and verification material will arrive together.",
+        "ko": "바이너리와 버전이 일치하는 소스, 라이선스 고지, 검증 자료를 함께 공개할 예정입니다.",
+        "de": "Binärdatei, passender Quellcode, Lizenzhinweise und Prüfnachweise werden gemeinsam veröffentlicht.",
+        "es": "El binario, el código fuente correspondiente, los avisos de licencia y las pruebas se publicarán a la vez.",
+        "fr": "Le binaire, le code source correspondant, les mentions de licence et les éléments de vérification seront publiés ensemble.",
+        "ja": "バイナリ、対応するソース、ライセンス通知、検証資料を同時に公開する予定です。",
+        "zh-Hans": "二进制文件、对应源代码、许可证声明和验证材料将同步公开。",
+        "zh-Hant": "二進位檔、對應原始碼、授權聲明與驗證資料將同步公開。"
+      },
+      "href": "index.html#release"
+    }
+  ]
+}

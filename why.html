@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0d0e">
+  <title>Why I Built ForgePlay</title>
+  <meta name="description" content="ForgePlay’s declaration: if progress stalled because no one could challenge it, we’ll build the challenger ourselves.">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Why I Built ForgePlay">
+  <meta property="og:description" content="If progress stalled, ForgePlay will build the challenger.">
+  <meta property="og:image" content="https://facta-leopard.github.io/ForgePlay/site-assets/forgeplay-social.png">
+  <link rel="icon" type="image/png" href="site-assets/forgeplay-favicon.png">
+  <script src="locale-bootstrap.js?v=20260728-4"></script>
+  <link rel="preload" href="site-assets/forgeplay-manifesto.jpg" as="image"
+        imagesrcset="site-assets/forgeplay-manifesto.jpg 1935w, site-assets/forgeplay-manifesto-3200.jpg 3200w"
+        imagesizes="100vw" fetchpriority="high">
+  <link rel="stylesheet" href="site.css?v=20260728-4">
+  <script src="site.js?v=20260728-4" defer></script>
+</head>
+<body class="story-page" data-page="why">
+  <a class="skip-link" href="#main" data-i18n="shared.skip">Skip to content</a>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary" data-i18n-aria-label="shared.primaryNav">
+      <a class="brand" href="index.html" data-locale-link>
+        <img class="brand-icon" src="site-assets/forgeplay-icon.png" alt="" width="44" height="44">
+        <span class="brand-word">ForgePlay</span>
+      </a>
+      <div class="nav-links">
+        <a href="index.html#game-mode" data-locale-link data-i18n="shared.navGameMode">Game Mode</a>
+        <a href="compatibility.html" data-locale-link data-i18n="shared.navCompatibility">Compatibility</a>
+        <a href="updates.html" data-locale-link data-i18n="shared.navUpdates">Updates</a>
+        <a href="why.html" data-locale-link data-nav-page="why" data-i18n="shared.navWhy">Why</a>
+        <a href="license.html" data-locale-link data-i18n="shared.navLicense">License</a>
+        <a href="support.html" data-locale-link data-i18n="shared.navSupport">Support</a>
+      </div>
+      <label class="language-control">
+        <span class="visually-hidden" data-i18n="shared.language">Language</span>
+        <select data-language-select aria-label="Language">
+          <option value="ko">한국어</option>
+          <option value="en">English</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="ja">日本語</option>
+          <option value="zh-Hans">简体中文</option>
+          <option value="zh-Hant">繁體中文</option>
+        </select>
+      </label>
+    </nav>
+  </header>
+
+  <main id="main" class="story-main">
+    <div class="story-art" aria-hidden="true">
+      <img src="site-assets/forgeplay-manifesto.jpg"
+           srcset="site-assets/forgeplay-manifesto.jpg 1935w, site-assets/forgeplay-manifesto-3200.jpg 3200w"
+           sizes="100vw" alt="" width="1935" height="812" fetchpriority="high">
+    </div>
+    <div class="story-art-shade" aria-hidden="true"></div>
+
+    <div class="story-shell">
+      <div class="language-links story-languages" aria-label="Statement languages">
+        <a class="button" href="#why-ko" data-set-locale="ko">한국어</a>
+        <a class="button" href="#why-en" data-set-locale="en">English</a>
+        <a class="button" href="#why-de" data-set-locale="de">Deutsch</a>
+        <a class="button" href="#why-es" data-set-locale="es">Español</a>
+        <a class="button" href="#why-fr" data-set-locale="fr">Français</a>
+        <a class="button" href="#why-ja" data-set-locale="ja">日本語</a>
+        <a class="button" href="#why-zh-Hans" data-set-locale="zh-Hans">简体中文</a>
+        <a class="button" href="#why-zh-Hant" data-set-locale="zh-Hant">繁體中文</a>
+      </div>
+
+      <article id="why-ko" class="language-section story-language" lang="ko">
+        <header class="story-intro" data-reveal>
+          <p class="section-label">FORGEPLAY를 만든 이유</p>
+          <h1>왜 <span class="no-break">ForgePlay를</span> 만들었는가</h1>
+          <p>지금의 답이 마지막 답일 필요는 없다. ForgePlay는 그 생각에서 시작됐다.</p>
+        </header>
+        <div class="story-chapters">
+          <section class="story-chapter" data-reveal>
+            <span>01</span>
+            <h2>경쟁이 사라지면 변화는 선택이 된다</h2>
+            <p>나는 ‘철밥통’이라 불리는 한국 공직 사회에서 약 10년을 일했다. 경쟁과 생존의 압력이 사라지면 해결되지 않은 문제가 관행으로 굳는 모습을 보았고, 결국 그 조직을 떠났다. 그 뒤 오래전부터 하고 싶었던 게임 개발을 시작하기 위해 게임 엔진과 그래픽스, DirectX와 Metal 기술 스택을 익혔다.</p>
+          </section>
+          <section class="story-chapter" data-reveal>
+            <span>02</span>
+            <h2>공로와 비판은 별개의 문제다</h2>
+            <p>CodeWeavers가 Wine에 기여한 공로는 존중한다. 그러나 그 공로가 CrossOver의 현재 구조를 최종 답으로 만들지는 않으며, 동급 경쟁자가 없었던 환경은 변화의 압력을 약하게 만들었다고 본다.</p>
+          </section>
+          <section class="story-chapter" data-reveal>
+            <span>03</span>
+            <h2>Mac을 단순한 Wine 실행 환경으로 보지 않는다</h2>
+            <p>Mac용 게임 도구라면 게임을 시작하는 순간부터 종료한 뒤 정리할 때까지, macOS의 게임 기능과 설정, 진단을 한 흐름으로 관리해야 한다. ForgePlay는 그 원칙에서 출발했다.</p>
+          </section>
+          <section class="story-chapter" data-reveal>
+            <span>04</span>
+            <h2>비판은 검증할 수 있어야 한다</h2>
+            <p>호환성은 별점이나 한 번의 실행으로 끝나지 않는다. 그래서 소스와 기록을 공개하고, 성공뿐 아니라 실패와 한계도 감추지 않는다.</p>
+          </section>
+        </div>
+        <blockquote class="story-declaration" data-reveal>
+          <span>05 / 선언</span>
+          <p>경쟁이 없어서 멈췄다면, 경쟁자를 만들어 주겠다!</p>
+        </blockquote>
+        <div class="story-closing" data-reveal>
+          <p>ForgePlay는 선택지 하나를 더하는 데 머물지 않는다. Mac 게임의 안주를 끝낼 실제 경쟁자가 되기 위해 존재한다.</p>
+          <a class="button ghost" href="index.html#release">소스 공개 준비 현황 보기</a>
+        </div>
+      </article>
+
+      <article id="why-en" class="language-section story-language" lang="en">
+        <header class="story-intro" data-reveal>
+          <p class="section-label">WHY FORGEPLAY EXISTS</p>
+          <h1>Why I Built ForgePlay</h1>
+          <p>The current answer does not have to be the final one. ForgePlay began with that refusal.</p>
+        </header>
+        <div class="story-chapters">
+          <section class="story-chapter" data-reveal>
+            <span>01</span>
+            <h2>When competition disappears, change becomes optional</h2>
+            <p>I spent roughly a decade in Korea’s civil service—often called an “iron rice bowl.” I watched unresolved problems harden into routine when competitive and survival pressure faded, and eventually I left. Afterward, I learned game engines and graphics—including the DirectX and Metal stacks—to pursue the game development I had long wanted to do.</p>
+          </section>
+          <section class="story-chapter" data-reveal>
+            <span>02</span>
+            <h2>Contribution deserves respect; products still deserve scrutiny</h2>
+            <p>CodeWeavers’ long contribution to Wine deserves recognition. It does not make CrossOver’s current architecture the final answer, and I believe the absence of a like-for-like rival weakened the pressure to change.</p>
+          </section>
+          <section class="story-chapter" data-reveal>
+            <span>03</span>
+            <h2>Treat macOS as more than a place to launch Wine</h2>
+            <p>A Mac gaming tool should own the experience from launch to exit, bringing platform gaming features, configuration, diagnosis, and cleanup into one coherent flow. ForgePlay began from that principle.</p>
+          </section>
+          <section class="story-chapter" data-reveal>
+            <span>04</span>
+            <h2>Criticism should be testable</h2>
+            <p>Compatibility is more than a rating or one successful launch. ForgePlay opens its source and records, showing failures and limits as clearly as successes.</p>
+          </section>
+        </div>
+        <blockquote class="story-declaration" data-reveal>
+          <span>05 / DECLARATION</span>
+          <p>If progress stalled because no one could challenge it, we’ll build the challenger ourselves!</p>
+        </blockquote>
+        <div class="story-closing" data-reveal>
+          <p>ForgePlay is not here to be one more option. It exists to become the rival that ends complacency in Mac gaming.</p>
+          <a class="button ghost" href="index.html#release">Track source publication</a>
+        </div>
+      </article>
+
+      <article id="why-de" class="language-section story-language" lang="de">
+        <header class="story-intro" data-reveal>
+          <p class="section-label">WARUM FORGEPLAY EXISTIERT</p>
+          <h1>Warum ich ForgePlay gebaut habe</h1>
+          <p>Die heutige Antwort muss nicht die endgültige sein. Mit dieser Weigerung begann ForgePlay.</p>
+        </header>
+        <div class="story-chapters">
+          <section class="story-chapter" data-reveal>
+            <span>01</span>
+            <h2>Ohne Wettbewerb wird Veränderung zur Kür</h2>
+            <p>Fast zehn Jahre arbeitete ich im koreanischen Staatsdienst, der oft als „eiserne Reisschüssel“ bezeichnet wird. Ich sah, wie ungelöste Probleme zur Gewohnheit wurden, sobald Wettbewerbs- und Überlebensdruck fehlten—und verließ schließlich das System. Danach lernte ich Game Engines und Computergrafik einschließlich der DirectX- und Metal-Technologien, um endlich die Spieleentwicklung zu verfolgen, die ich schon lange machen wollte.</p>
+          </section>
+          <section class="story-chapter" data-reveal>
+            <span>02</span>
+            <h2>Verdienst verdient Respekt; Produkte bleiben kritisierbar</h2>
+            <p>CodeWeavers’ langjähriger Beitrag zu Wine verdient Anerkennung. Er macht die heutige Architektur von CrossOver jedoch nicht zur endgültigen Antwort; aus meiner Sicht schwächte das Fehlen eines ebenbürtigen Konkurrenten den Veränderungsdruck.</p>
+          </section>
+          <section class="story-chapter" data-reveal>
+            <span>03</span>
+            <h2>macOS ist mehr als ein Ort, an dem Wine startet</h2>
+            <p>Ein Gaming-Werkzeug für den Mac sollte den Weg vom Start bis zum Ende als Ganzes verantworten—mit Plattformfunktionen, Konfiguration, Diagnose und Aufräumen. Auf diesem Grundsatz baut ForgePlay auf.</p>
+          </section>
+          <section class="story-chapter" data-reveal>
+            <span>04</span>
+            <h2>Kritik muss überprüfbar sein</h2>
+            <p>Kompatibilität ist mehr als eine Bewertung oder ein einzelner erfolgreicher Start. ForgePlay legt Quellcode und Nachweise offen und zeigt Grenzen und Fehler ebenso wie Erfolge.</p>
+          </section>
+        </div>
+        <blockquote class="story-declaration" data-reveal>
+          <span>05 / ERKLÄRUNG</span>
+          <p>Wenn der Fortschritt mangels Wettbewerb ins Stocken gerät, bauen wir den Herausforderer selbst!</p>
+        </blockquote>
+        <div class="story-closing" data-reveal>
+          <p>ForgePlay will nicht nur eine weitere Option sein. Es will der Rivale werden, der die Selbstzufriedenheit im Mac-Gaming beendet.</p>
+          <a class="button ghost" href="index.html#release">Status der Quellcode-Veröffentlichung</a>
+        </div>
+      </article>
+
+      <article id="why-es" class="language-section story-language" lang="es">
+        <header class="story-intro" data-reveal>
+          <p class="section-label">POR QUÉ EXISTE FORGEPLAY</p>
+          <h1>Por qué creé ForgePlay</h1>
+          <p>La respuesta actual no tiene por qué ser la definitiva. ForgePlay nació de esa negativa.</p>
+        </header>
+        <div class="story-chapters">
+          <section class="story-chapter" data-reveal>
+            <span>01</span>
+            <h2>Sin competencia, cambiar se vuelve opcional</h2>
+            <p>Trabajé casi diez años en la función pública coreana, conocida como el «cuenco de arroz de hierro». Vi cómo los problemas sin resolver se convertían en rutina cuando desaparecían la competencia y la presión por sobrevivir; al final, me fui. Después aprendí motores de juego y gráficos, incluidas las tecnologías DirectX y Metal, para dedicarme al desarrollo de juegos que llevaba tanto tiempo queriendo hacer.</p>
+          </section>
+          <section class="story-chapter" data-reveal>
+            <span>02</span>
+            <h2>La contribución merece respeto; el producto, examen</h2>
+            <p>La larga contribución de CodeWeavers a Wine merece reconocimiento. No convierte la arquitectura actual de CrossOver en la respuesta definitiva; creo que la ausencia de un rival equivalente debilitó la presión por cambiar.</p>
+          </section>
+          <section class="story-chapter" data-reveal>
+            <span>03</span>
+            <h2>macOS es más que un lugar donde iniciar Wine</h2>
+            <p>Una herramienta de juegos para Mac debe asumir todo el recorrido, del inicio al cierre, e integrar las funciones de la plataforma, la configuración, el diagnóstico y la limpieza. ForgePlay parte de ese principio.</p>
+          </section>
+          <section class="story-chapter" data-reveal>
+            <span>04</span>
+            <h2>La crítica debe poder comprobarse</h2>
+            <p>La compatibilidad es más que una puntuación o un inicio correcto. ForgePlay abre su código y sus registros, y muestra los fallos y los límites con la misma claridad que los aciertos.</p>
+          </section>
+        </div>
+        <blockquote class="story-declaration" data-reveal>
+          <span>05 / DECLARACIÓN</span>
+          <p>Si el progreso se frenó por falta de competencia, crearemos nosotros mismos a su rival.</p>
+        </blockquote>
+        <div class="story-closing" data-reveal>
+          <p>ForgePlay no viene a ser una opción más. Existe para convertirse en el rival que termine con la complacencia en los juegos para Mac.</p>
+          <a class="button ghost" href="index.html#release">Ver el estado de publicación del código</a>
+        </div>
+      </article>
+
+      <article id="why-fr" class="language-section story-language" lang="fr">
+        <header class="story-intro" data-reveal>
+          <p class="section-label">POURQUOI FORGEPLAY EXISTE</p>
+          <h1>Pourquoi j’ai créé ForgePlay</h1>
+          <p>La réponse actuelle n’a pas à être définitive. ForgePlay est né de ce refus.</p>
+        </header>
+        <div class="story-chapters">
+          <section class="story-chapter" data-reveal>
+            <span>01</span>
+            <h2>Sans concurrence, le changement devient facultatif</h2>
+            <p>J’ai travaillé près de dix ans dans la fonction publique coréenne, souvent décrite comme un « bol de riz en fer ». J’y ai vu les problèmes non résolus devenir la norme lorsque disparaissaient concurrence et pression de survie, puis j’ai quitté ce système. J’ai ensuite appris les moteurs de jeu et l’infographie, notamment les technologies DirectX et Metal, pour me consacrer au développement de jeux que je voulais entreprendre depuis longtemps.</p>
+          </section>
+          <section class="story-chapter" data-reveal>
+            <span>02</span>
+            <h2>Une contribution mérite le respect; un produit reste critiquable</h2>
+            <p>La contribution de longue date de CodeWeavers à Wine mérite d’être reconnue. Elle ne fait pas de l’architecture actuelle de CrossOver une réponse définitive; selon moi, l’absence d’un rival comparable a affaibli la pression au changement.</p>
+          </section>
+          <section class="story-chapter" data-reveal>
+            <span>03</span>
+            <h2>macOS est plus qu’un endroit où lancer Wine</h2>
+            <p>Un outil de jeu pour Mac doit prendre en charge tout le parcours, du lancement à l’arrêt, et réunir fonctions de la plateforme, configuration, diagnostic et nettoyage. ForgePlay part de ce principe.</p>
+          </section>
+          <section class="story-chapter" data-reveal>
+            <span>04</span>
+            <h2>La critique doit pouvoir être vérifiée</h2>
+            <p>La compatibilité ne se résume ni à une note ni à un lancement réussi. ForgePlay ouvre son code et ses traces, et montre les échecs et les limites aussi clairement que les réussites.</p>
+          </section>
+        </div>
+        <blockquote class="story-declaration" data-reveal>
+          <span>05 / DÉCLARATION</span>
+          <p>Si le progrès s’est arrêté faute de concurrence, nous créerons nous-mêmes le rival qui lui manque !</p>
+        </blockquote>
+        <div class="story-closing" data-reveal>
+          <p>ForgePlay ne vient pas ajouter une option de plus. Il existe pour devenir le rival qui mettra fin à l’immobilisme du jeu sur Mac.</p>
+          <a class="button ghost" href="index.html#release">Suivre la publication du code</a>
+        </div>
+      </article>
+
+      <article id="why-ja" class="language-section story-language" lang="ja">
+        <header class="story-intro" data-reveal>
+          <p class="section-label">FORGEPLAY が存在する理由</p>
+          <h1>ForgePlay をつくった理由</h1>
+          <p>今ある答えが、最後の答えである必要はない。ForgePlay は、その思いから始まりました。</p>
+        </header>
+        <div class="story-chapters">
+          <section class="story-chapter" data-reveal>
+            <span>01</span>
+            <h2>競争がなくなると、変化は任意になる</h2>
+            <p>私は韓国の公務員として約10年働きました。「鉄飯碗」と呼ばれる安定した組織で、競争や生存への圧力が薄れると未解決の問題が慣習になる姿を見て、やがてその場を離れました。その後、以前から望んでいたゲーム開発に取り組むため、ゲームエンジンとグラフィックス、DirectXとMetalの技術スタックを学びました。</p>
+          </section>
+          <section class="story-chapter" data-reveal>
+            <span>02</span>
+            <h2>貢献への敬意と、製品への批評は両立する</h2>
+            <p>CodeWeavers が長年 Wine に貢献してきたことは尊重します。しかし、それが CrossOver の現在の構造を最終回答にするわけではありません。同等の競争相手がいなかったことで、変化を求める圧力は弱まったと考えています。</p>
+          </section>
+          <section class="story-chapter" data-reveal>
+            <span>03</span>
+            <h2>macOS を、Wine を起動するだけの場所にしない</h2>
+            <p>Mac のゲームツールは、起動から終了までを一つの流れとして担い、プラットフォームのゲーム機能、設定、診断、後片付けまで結び付けるべきです。ForgePlay はこの原則から始まりました。</p>
+          </section>
+          <section class="story-chapter" data-reveal>
+            <span>04</span>
+            <h2>批評は検証できなければならない</h2>
+            <p>互換性は、評価や一度の起動成功だけでは決まりません。ForgePlay はソースと記録を公開し、成功だけでなく失敗と限界も明らかにします。</p>
+          </section>
+        </div>
+        <blockquote class="story-declaration" data-reveal>
+          <span>05 / 宣言</span>
+          <p>競争がなくて進歩が止まったのなら、こちらで競争相手をつくる！</p>
+        </blockquote>
+        <div class="story-closing" data-reveal>
+          <p>ForgePlay は選択肢を一つ増やすための存在ではありません。Mac ゲームの停滞を終わらせる競争相手になるために存在します。</p>
+          <a class="button ghost" href="index.html#release">ソース公開の準備状況を見る</a>
+        </div>
+      </article>
+
+      <article id="why-zh-Hans" class="language-section story-language" lang="zh-Hans">
+        <header class="story-intro" data-reveal>
+          <p class="section-label">FORGEPLAY 为何存在</p>
+          <h1>我为何打造 ForgePlay</h1>
+          <p>现有答案不必是最终答案。ForgePlay 始于这份不愿妥协。</p>
+        </header>
+        <div class="story-chapters">
+          <section class="story-chapter" data-reveal>
+            <span>01</span>
+            <h2>竞争消失，改变就会变成可选项</h2>
+            <p>我在韩国公务员体系中工作了约十年。那里常被称作“铁饭碗”。我亲眼看到，当竞争和生存压力消失，未解决的问题会固化成惯例，最终选择离开。离开后，为了投入自己一直想做的游戏开发，我学习了游戏引擎与图形技术，包括DirectX和Metal技术栈。</p>
+          </section>
+          <section class="story-chapter" data-reveal>
+            <span>02</span>
+            <h2>贡献值得尊重，产品仍应接受审视</h2>
+            <p>CodeWeavers 长期为 Wine 作出的贡献值得肯定。但这并不意味着 CrossOver 现有架构就是最终答案；我认为，缺少同等竞争者削弱了改变的压力。</p>
+          </section>
+          <section class="story-chapter" data-reveal>
+            <span>03</span>
+            <h2>macOS 不只是启动 Wine 的地方</h2>
+            <p>Mac 游戏工具应当负责从启动到退出的完整体验，把平台游戏功能、配置、诊断与清理连成一体。ForgePlay 正是从这一原则出发。</p>
+          </section>
+          <section class="story-chapter" data-reveal>
+            <span>04</span>
+            <h2>批评必须经得起验证</h2>
+            <p>兼容性不只是一项评分，也不只是一次成功启动。ForgePlay 公开源码与记录，让失败和局限像成功一样清楚可见。</p>
+          </section>
+        </div>
+        <blockquote class="story-declaration" data-reveal>
+          <span>05 / 宣言</span>
+          <p>如果没有竞争让进步停滞，我们就亲手打造一个对手！</p>
+        </blockquote>
+        <div class="story-closing" data-reveal>
+          <p>ForgePlay 不是为了再增加一个选项，而是为了成为终结 Mac 游戏停滞的真正对手。</p>
+          <a class="button ghost" href="index.html#release">查看源码公开进度</a>
+        </div>
+      </article>
+
+      <article id="why-zh-Hant" class="language-section story-language" lang="zh-Hant">
+        <header class="story-intro" data-reveal>
+          <p class="section-label">FORGEPLAY 為何存在</p>
+          <h1>我為何打造 ForgePlay</h1>
+          <p>現有答案不必是最終答案。ForgePlay 始於這份不願妥協。</p>
+        </header>
+        <div class="story-chapters">
+          <section class="story-chapter" data-reveal>
+            <span>01</span>
+            <h2>競爭消失，改變就會成為選項</h2>
+            <p>我在韓國公務員體系工作了約十年，那裡常被稱為「鐵飯碗」。我親眼看見，當競爭與生存壓力消失，未解決的問題會固化成慣例，最後選擇離開。離開後，為了投入自己一直想做的遊戲開發，我學習了遊戲引擎與圖形技術，包括DirectX和Metal技術棧。</p>
+          </section>
+          <section class="story-chapter" data-reveal>
+            <span>02</span>
+            <h2>貢獻值得尊重，產品仍應接受檢視</h2>
+            <p>CodeWeavers 長期為 Wine 作出的貢獻值得肯定。但這不代表 CrossOver 現有架構就是最終答案；我認為，缺少同等競爭者削弱了改變的壓力。</p>
+          </section>
+          <section class="story-chapter" data-reveal>
+            <span>03</span>
+            <h2>macOS 不只是啟動 Wine 的地方</h2>
+            <p>Mac 遊戲工具應該負責從啟動到結束的完整體驗，把平台遊戲功能、設定、診斷與清理串成一體。ForgePlay 正是從這項原則出發。</p>
+          </section>
+          <section class="story-chapter" data-reveal>
+            <span>04</span>
+            <h2>批評必須經得起驗證</h2>
+            <p>相容性不只是一項評分，也不只是一次成功啟動。ForgePlay 公開原始碼與記錄，讓失敗和限制像成功一樣清楚可見。</p>
+          </section>
+        </div>
+        <blockquote class="story-declaration" data-reveal>
+          <span>05 / 宣言</span>
+          <p>如果沒有競爭讓進步停滯，我們就親手打造一個對手！</p>
+        </blockquote>
+        <div class="story-closing" data-reveal>
+          <p>ForgePlay 不是為了再增加一個選項，而是為了成為終結 Mac 遊戲停滯的真正對手。</p>
+          <a class="button ghost" href="index.html#release">查看原始碼公開進度</a>
+        </div>
+      </article>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-grid">
+      <div>
+        <a class="brand footer-brand" href="index.html" data-locale-link>
+          <img class="brand-icon" src="site-assets/forgeplay-icon.png" alt="" width="44" height="44">
+          <span class="brand-word">ForgePlay</span>
+        </a>
+        <p data-i18n="shared.footerTagline">Windows game architecture, forged for Apple Silicon Mac.</p>
+      </div>
+      <div class="footer-links">
+        <a href="index.html" data-locale-link data-i18n="shared.home">Home</a>
+        <a href="compatibility.html" data-locale-link data-i18n="shared.navCompatibility">Compatibility</a>
+        <a href="updates.html" data-locale-link data-i18n="shared.navUpdates">Updates</a>
+        <a href="license.html" data-locale-link data-i18n="shared.navLicense">License</a>
+        <a href="privacy.html" data-locale-link data-i18n="shared.navPrivacy">Privacy</a>
+        <a href="support.html" data-locale-link data-i18n="shared.navSupport">Support</a>
+      </div>
+      <p class="footer-note" data-i18n="shared.footerNote">Apple, macOS, Game Mode, Steam, Windows, Wine, and renderer names belong to their respective owners. ForgePlay is not affiliated with them.</p>
+    </div>
+  </footer>
+</body>
+</html>

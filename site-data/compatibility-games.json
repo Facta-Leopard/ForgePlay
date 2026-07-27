@@ -1,0 +1,222 @@
+{
+  "$schema": "./compatibility.schema.json",
+  "schemaVersion": 1,
+  "updatedAt": "2026-07-28",
+  "testProfiles": [
+    {
+      "id": "apple-silicon-m4-pro-24gb",
+      "platform": "Apple Silicon Mac",
+      "chip": "M4 Pro",
+      "unifiedMemoryGB": 24,
+      "macOSVersion": null
+    }
+  ],
+  "games": [
+    {
+      "id": "stellar-blade",
+      "titles": {
+        "en": "Stellar Blade",
+        "ko": "스텔라 블레이드"
+      }
+    },
+    {
+      "id": "atomic-heart",
+      "titles": {
+        "en": "Atomic Heart",
+        "ko": "아토믹 하트"
+      }
+    },
+    {
+      "id": "overwatch",
+      "titles": {
+        "en": "Overwatch",
+        "ko": "오버워치"
+      }
+    },
+    {
+      "id": "counter-strike-2",
+      "titles": {
+        "en": "Counter-Strike 2",
+        "ko": "카운터-스트라이크 2"
+      }
+    },
+    {
+      "id": "half-life-2",
+      "titles": {
+        "en": "Half-Life 2",
+        "ko": "하프라이프 2"
+      }
+    },
+    {
+      "id": "heroes-might-magic-olden-era",
+      "titles": {
+        "en": "Heroes of Might and Magic: Olden Era",
+        "ko": "히어로즈 오브 마이트 앤 매직: 올든 에라"
+      }
+    },
+    {
+      "id": "kingdom-come-deliverance",
+      "titles": {
+        "en": "Kingdom Come: Deliverance",
+        "ko": "킹덤 컴: 딜리버런스"
+      }
+    },
+    {
+      "id": "left-4-dead",
+      "titles": {
+        "en": "Left 4 Dead",
+        "ko": "레프트 4 데드"
+      }
+    },
+    {
+      "id": "once-human",
+      "titles": {
+        "en": "Once Human",
+        "ko": "원스 휴먼"
+      }
+    },
+    {
+      "id": "pragmata",
+      "titles": {
+        "en": "Pragmata",
+        "ko": "프라그마타"
+      }
+    },
+    {
+      "id": "the-walking-dead",
+      "titles": {
+        "en": "The Walking Dead",
+        "ko": "더 워킹 데드"
+      }
+    },
+    {
+      "id": "yu-gi-oh-master-duel",
+      "titles": {
+        "en": "Yu-Gi-Oh! Master Duel",
+        "ko": "유희왕 마스터 듀얼"
+      }
+    }
+  ],
+  "reports": [
+    {
+      "id": "stellar-blade-m4-pro-24gb-initial",
+      "gameId": "stellar-blade",
+      "testProfileId": "apple-silicon-m4-pro-24gb",
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": null,
+      "blocker": null
+    },
+    {
+      "id": "atomic-heart-m4-pro-24gb-initial",
+      "gameId": "atomic-heart",
+      "testProfileId": "apple-silicon-m4-pro-24gb",
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": null,
+      "blocker": null
+    },
+    {
+      "id": "overwatch-m4-pro-24gb-initial",
+      "gameId": "overwatch",
+      "testProfileId": "apple-silicon-m4-pro-24gb",
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": null,
+      "blocker": null
+    },
+    {
+      "id": "counter-strike-2-m4-pro-24gb-initial",
+      "gameId": "counter-strike-2",
+      "testProfileId": "apple-silicon-m4-pro-24gb",
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": null,
+      "blocker": null
+    },
+    {
+      "id": "half-life-2-m4-pro-24gb-initial",
+      "gameId": "half-life-2",
+      "testProfileId": "apple-silicon-m4-pro-24gb",
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": null,
+      "blocker": null
+    },
+    {
+      "id": "heroes-might-magic-olden-era-m4-pro-24gb-initial",
+      "gameId": "heroes-might-magic-olden-era",
+      "testProfileId": "apple-silicon-m4-pro-24gb",
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": null,
+      "blocker": null
+    },
+    {
+      "id": "kingdom-come-deliverance-m4-pro-24gb-initial",
+      "gameId": "kingdom-come-deliverance",
+      "testProfileId": "apple-silicon-m4-pro-24gb",
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": null,
+      "blocker": null
+    },
+    {
+      "id": "left-4-dead-m4-pro-24gb-initial",
+      "gameId": "left-4-dead",
+      "testProfileId": "apple-silicon-m4-pro-24gb",
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": null,
+      "blocker": null
+    },
+    {
+      "id": "once-human-m4-pro-24gb-initial",
+      "gameId": "once-human",
+      "testProfileId": "apple-silicon-m4-pro-24gb",
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": null,
+      "blocker": null
+    },
+    {
+      "id": "pragmata-m4-pro-24gb-initial",
+      "gameId": "pragmata",
+      "testProfileId": "apple-silicon-m4-pro-24gb",
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": null,
+      "blocker": null
+    },
+    {
+      "id": "the-walking-dead-m4-pro-24gb-initial",
+      "gameId": "the-walking-dead",
+      "testProfileId": "apple-silicon-m4-pro-24gb",
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": null,
+      "blocker": null
+    },
+    {
+      "id": "yu-gi-oh-master-duel-m4-pro-24gb-initial",
+      "gameId": "yu-gi-oh-master-duel",
+      "testProfileId": "apple-silicon-m4-pro-24gb",
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": null,
+      "blocker": null
+    }
+  ]
+}
