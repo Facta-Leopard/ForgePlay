@@ -2722,6 +2722,11 @@ select {
   letter-spacing: 0.12em;
 }
 
+.compatibility-teaser-count > span {
+  line-height: 1.35;
+  text-wrap: balance;
+}
+
 .compatibility-teaser-count strong {
   margin: 24px 0 16px;
   font-size: clamp(7rem, 18vw, 15rem);
@@ -2749,6 +2754,10 @@ select {
   font-size: clamp(3.2rem, 7vw, 6.8rem);
   letter-spacing: -0.045em;
   line-height: 0.94;
+}
+
+html[lang="ko"] .compatibility-teaser-copy h2 {
+  word-break: keep-all;
 }
 
 .compatibility-teaser-copy > p:not(.section-label),
@@ -3029,6 +3038,11 @@ select {
   letter-spacing: 0.11em;
 }
 
+.compatibility-count-card span {
+  line-height: 1.35;
+  text-wrap: balance;
+}
+
 .compatibility-count-card strong {
   font-size: clamp(7rem, 14vw, 11rem);
   font-weight: 950;
@@ -3119,7 +3133,7 @@ select {
   display: grid;
   grid-template-columns:
     minmax(260px, 1.7fr)
-    minmax(120px, 0.72fr)
+    minmax(175px, 0.9fr)
     minmax(150px, 0.9fr)
     minmax(150px, 0.88fr)
     minmax(210px, 1.18fr);
@@ -3198,12 +3212,14 @@ select {
 
 .compatibility-status {
   align-self: flex-start;
+  max-width: 100%;
   padding: 7px 10px;
   border: 1px solid currentColor;
   border-radius: 999px;
   font-size: 0.72rem;
   font-weight: 850;
   line-height: 1.15;
+  text-wrap: balance;
 }
 
 .compatibility-status[data-status="playable"] {
