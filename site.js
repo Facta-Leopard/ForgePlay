@@ -50,13 +50,13 @@
       "home.betaNote": "The Game Mode path is an opt-in beta. Confirm activation on your Mac.",
       "home.ctaArchitecture": "What is Game Mode?",
       "home.ctaWhy": "Why ForgePlay exists",
-      "home.proofTitle": "A native Game Mode path",
-      "home.proofBody": "Windows games · macOS Game Mode · open source",
+      "home.proofTitle": "WINDOWS GAMES IN macOS GAME MODE",
+      "home.proofBody": "DirectX → Metal · open source",
       "home.statusLabel": "Project status",
       "home.statusApple": "Apple Silicon",
       "home.statusOS": "macOS 26+ · Rosetta required",
       "home.statusBeta": "Opt-in Beta",
-      "home.statusRelease": "GitHub release in preparation",
+      "home.statusRelease": "GitHub release · within days",
       "home.gameModeLabel": "WHAT IS macOS GAME MODE?",
       "home.gameModeTitle": "macOS gives the game priority. ForgePlay puts Windows games in that path.",
       "home.gameModeLead": "Game Mode reduces background activity, prioritizes CPU and GPU access for the game, and lowers wireless input and audio latency.",
@@ -131,13 +131,13 @@
       "home.licenseFootnote": "The ForgePlay name, logo, and artwork are not granted as trademarks by the Game Mode license. Third-party rights remain separate.",
       "home.releaseLabel": "FIRST PUBLIC RELEASE",
       "home.releaseTitle": "Source and release arrive together.",
-      "home.releaseBody": "The first public GitHub Release is being prepared.",
-      "home.releaseStatus": "PREPARING — NO PUBLIC DOWNLOAD YET",
+      "home.releaseBody": "The first public GitHub Release and source are planned within the next few days.",
+      "home.releaseStatus": "PLANNED WITHIN DAYS — NO PUBLIC DOWNLOAD YET",
       "home.releaseCheck1": "Developer ID signed and Apple-notarized DMG",
       "home.releaseCheck2": "Gatekeeper, checksum, and release manifest verification",
       "home.releaseCheck3": "Version-matched Corresponding Source and license notices",
       "home.releaseCheck4": "Published through GitHub Releases—not the Mac App Store",
-      "home.releaseButton": "GitHub Release — coming soon",
+      "home.releaseButton": "GitHub Release — due within days",
 
       "why.metaTitle": "Why I Built ForgePlay",
       "why.metaDescription": "ForgePlay’s declaration: if progress stalled because no one could challenge it, we’ll build the challenger ourselves.",
@@ -238,7 +238,8 @@
       "support.title": "Support Guide",
       "support.lead": "ForgePlay support starts with local diagnostics. Choose a language for what to include, what the support bundle may contain, and what never to share.",
       "support.languages": "Support languages",
-      "support.summary": "Support bundles are created locally only when you ask. Review the archive yourself before sharing it with anyone you trust.",
+      "support.summary": "Need help or have a compatibility result? Describe the game, your Mac, what happened, and relevant diagnostics in ForgePlay GitHub Issues.",
+      "support.issueButton": "Report it on GitHub Issues ↗",
       "support.updated": "Updated 28 July 2026."
     },
     ko: {
@@ -277,13 +278,13 @@
       "home.betaNote": "게임 모드 연동은 현재 베타 단계이며 기본적으로 비활성화되어 있습니다. 게임을 전체 화면으로 실행한 뒤 macOS에서 활성 여부를 확인하세요.",
       "home.ctaArchitecture": "게임 모드란?",
       "home.ctaWhy": "ForgePlay를 만든 이유",
-      "home.proofTitle": "macOS 게임 모드로 이어지는 네이티브 실행 경로",
-      "home.proofBody": "Windows 게임 · macOS 게임 모드 · 오픈소스",
+      "home.proofTitle": "WINDOWS 게임을 macOS 게임 모드로",
+      "home.proofBody": "DirectX → Metal · 오픈소스",
       "home.statusLabel": "프로젝트 상태",
       "home.statusApple": "Apple Silicon",
       "home.statusOS": "macOS 26+ · Rosetta 필요",
       "home.statusBeta": "베타 · 기본 비활성화",
-      "home.statusRelease": "GitHub 릴리스 준비 중",
+      "home.statusRelease": "며칠 내 GitHub 공개 예정",
       "home.gameModeLabel": "macOS 게임 모드란?",
       "home.gameModeTitle": "macOS는 게임을 최우선으로 처리합니다. ForgePlay는 Windows 게임을 그 실행 환경에 연결합니다.",
       "home.gameModeLead": "macOS 게임 모드는 백그라운드 활동을 줄이고, 게임이 CPU와 GPU를 최우선으로 사용하도록 하며, 무선 입력과 오디오의 지연 시간을 줄입니다.",
@@ -358,13 +359,13 @@
       "home.licenseFootnote": "Game Mode 라이선스는 ForgePlay 이름, 로고, 아트워크에 대한 상표 사용권을 부여하지 않습니다. 서드파티 권리는 별도로 적용됩니다.",
       "home.releaseLabel": "첫 공개 릴리스",
       "home.releaseTitle": "소스와 릴리스는 함께 공개됩니다.",
-      "home.releaseBody": "첫 공개 GitHub Release를 준비하고 있습니다.",
-      "home.releaseStatus": "준비 중 — 아직 공개 버전이 없습니다",
+      "home.releaseBody": "첫 공개 GitHub Release와 소스는 며칠 내 함께 공개할 예정입니다.",
+      "home.releaseStatus": "며칠 내 공개 예정 — 현재는 다운로드할 수 없습니다",
       "home.releaseCheck1": "Developer ID로 서명되고 Apple 공증을 받은 DMG",
       "home.releaseCheck2": "Gatekeeper, 체크섬, 릴리스 매니페스트 검증",
       "home.releaseCheck3": "버전이 일치하는 대응 소스와 라이선스 고지",
       "home.releaseCheck4": "Mac App Store가 아닌 GitHub Releases로 공개",
-      "home.releaseButton": "GitHub Release — 준비 중",
+      "home.releaseButton": "GitHub Release — 며칠 내 공개",
 
       "why.metaTitle": "왜 ForgePlay를 만들었는가",
       "why.metaDescription": "경쟁이 없어서 멈췄다면 ForgePlay가 경쟁자를 만들어 주겠다는 선언문입니다.",
@@ -465,7 +466,8 @@
       "support.title": "지원 안내",
       "support.lead": "ForgePlay 지원은 Mac에 저장된 진단 자료에서 시작합니다. 문의할 때 포함할 정보, 지원 번들에 들어갈 수 있는 내용, 절대 공유하면 안 되는 정보를 확인하세요.",
       "support.languages": "지원 안내 언어",
-      "support.summary": "지원 번들은 사용자가 요청할 때만 로컬에서 생성됩니다. 신뢰하는 상대에게 보내기 전 압축 파일을 직접 검토하세요.",
+      "support.summary": "지원이 필요하거나 호환성 결과를 제보하려면 ForgePlay GitHub Issues에 게임, Mac 환경, 발생한 현상과 관련 진단 내용을 남겨주세요.",
+      "support.issueButton": "GitHub Issues에 제보하기 ↗",
       "support.updated": "2026년 7월 28일 기준."
     },
     ja: {
@@ -504,13 +506,13 @@
       "home.betaNote": "Game Mode は、ユーザーが有効にして試すベータ機能です。フルスクリーンでの動作中に、Mac 上で有効かどうかを確認してください。",
       "home.ctaArchitecture": "Game Mode とは？",
       "home.ctaWhy": "ForgePlay が存在する理由",
-      "home.proofTitle": "ネイティブ Game Mode への経路",
-      "home.proofBody": "Windowsゲーム · macOS Game Mode · オープンソース",
+      "home.proofTitle": "WINDOWS ゲームを macOS GAME MODE へ",
+      "home.proofBody": "DirectX → Metal · オープンソース",
       "home.statusLabel": "プロジェクトの状況",
       "home.statusApple": "Apple Silicon",
       "home.statusOS": "macOS 26+ · Rosetta 必須",
       "home.statusBeta": "ユーザーが有効にするベータ",
-      "home.statusRelease": "GitHub Release を準備中",
+      "home.statusRelease": "数日以内に GitHub で公開予定",
       "home.gameModeLabel": "macOS GAME MODE とは？",
       "home.gameModeTitle": "macOS はゲームを優先する。ForgePlay は Windows ゲームをその経路へつなぐ。",
       "home.gameModeLead": "Game Mode はバックグラウンド処理を抑え、ゲームの CPU・GPU アクセスを優先し、ワイヤレス入力と音声の遅延を低減します。",
@@ -585,13 +587,13 @@
       "home.licenseFootnote": "Game Mode ライセンスは、ForgePlay の名称、ロゴ、アートワークについて商標権を許諾するものではありません。第三者の権利は別個に扱われます。",
       "home.releaseLabel": "初の公開リリース",
       "home.releaseTitle": "ソースとリリースを同時に公開します。",
-      "home.releaseBody": "最初の公開 GitHub Release を準備しています。",
-      "home.releaseStatus": "準備中 — 公開ダウンロードはまだありません",
+      "home.releaseBody": "初の公開 GitHub Release とソースは、数日以内に同時公開する予定です。",
+      "home.releaseStatus": "数日以内に公開予定 — 現在はダウンロードできません",
       "home.releaseCheck1": "Developer ID 署名済み・Apple 公証済みの DMG",
       "home.releaseCheck2": "Gatekeeper、チェックサム、リリースマニフェストの検証",
       "home.releaseCheck3": "バージョンが一致する対応するソース（Corresponding Source）とライセンス通知",
       "home.releaseCheck4": "Mac App Store ではなく GitHub Releases で公開",
-      "home.releaseButton": "GitHub Release — 準備中",
+      "home.releaseButton": "GitHub Release — 数日以内に公開",
 
       "why.metaTitle": "ForgePlay をつくった理由",
       "why.metaDescription": "競争がなくて進歩が止まったのなら、ForgePlayが競争相手をつくる。その決意を記した宣言です。",
@@ -692,7 +694,8 @@
       "support.title": "サポートガイド",
       "support.lead": "ForgePlay のサポートはローカル診断から始まります。含める情報、サポートバンドルに含まれる可能性のある内容、共有してはいけない情報を確認してください。",
       "support.languages": "サポートガイドの言語",
-      "support.summary": "サポートバンドルは要求した場合にのみローカルで作成されます。信頼できる相手と共有する前に、アーカイブを自分で確認してください。",
+      "support.summary": "サポートが必要な場合や互換性結果を報告する場合は、ForgePlay GitHub Issues にゲーム名、Mac 環境、発生した現象、関連する診断情報を記載してください。",
+      "support.issueButton": "GitHub Issues で報告する ↗",
       "support.updated": "2026年7月28日更新。"
     },
     "zh-Hans": {
@@ -731,13 +734,13 @@
       "home.betaNote": "Game Mode 是由用户开启体验的 Beta 功能。请在游戏全屏运行时，通过 Mac 确认是否已启用。",
       "home.ctaArchitecture": "了解游戏模式",
       "home.ctaWhy": "ForgePlay 为何存在",
-      "home.proofTitle": "原生 Game Mode 路径",
-      "home.proofBody": "Windows游戏 · macOS游戏模式 · 开源",
+      "home.proofTitle": "WINDOWS 游戏进入 macOS 游戏模式",
+      "home.proofBody": "DirectX → Metal · 开源",
       "home.statusLabel": "项目状态",
       "home.statusApple": "Apple Silicon",
       "home.statusOS": "macOS 26+ · 需要 Rosetta",
       "home.statusBeta": "由用户开启的 Beta",
-      "home.statusRelease": "GitHub Release 准备中",
+      "home.statusRelease": "GitHub 将于数日内公开",
       "home.gameModeLabel": "什么是 macOS 游戏模式？",
       "home.gameModeTitle": "macOS 让游戏获得优先资源。ForgePlay 让 Windows 游戏进入这条路径。",
       "home.gameModeLead": "游戏模式会减少后台活动，为游戏提供最高优先级的 CPU 和 GPU 访问，并降低无线输入与音频延迟。",
@@ -812,13 +815,13 @@
       "home.licenseFootnote": "Game Mode 许可证并未授予对 ForgePlay 名称、徽标和美术素材的商标权。第三方权利仍各自独立。",
       "home.releaseLabel": "首次公开发布",
       "home.releaseTitle": "源码与发布内容同步到来。",
-      "home.releaseBody": "首个公开 GitHub Release 正在准备中。",
-      "home.releaseStatus": "准备中 — 暂无公开下载",
+      "home.releaseBody": "首个公开 GitHub Release 与源代码计划在数日内同步公开。",
+      "home.releaseStatus": "计划数日内公开 — 目前暂无下载",
       "home.releaseCheck1": "经 Developer ID 签名并通过 Apple 公证的 DMG",
       "home.releaseCheck2": "Gatekeeper、校验和及发布清单验证",
       "home.releaseCheck3": "版本匹配的对应源代码（Corresponding Source）及许可证声明",
       "home.releaseCheck4": "通过 GitHub Releases 发布，而非 Mac App Store",
-      "home.releaseButton": "GitHub Release — 准备中",
+      "home.releaseButton": "GitHub Release — 数日内公开",
 
       "why.metaTitle": "我为何打造 ForgePlay",
       "why.metaDescription": "如果没有竞争让进步停滞，ForgePlay就会亲手打造一个对手。",
@@ -919,7 +922,8 @@
       "support.title": "支持指南",
       "support.lead": "ForgePlay 支持从本地诊断开始。请选择语言，了解应提供什么、支持包可能包含什么，以及绝不能分享什么。",
       "support.languages": "支持指南语言",
-      "support.summary": "支持包只会在你提出请求时在本地创建。与信任的对象分享前，请自行检查压缩包。",
+      "support.summary": "如需支持或报告兼容性结果，请在 ForgePlay GitHub Issues 中填写游戏名称、Mac 环境、实际现象和相关诊断信息。",
+      "support.issueButton": "前往 GitHub Issues 报告 ↗",
       "support.updated": "更新于 2026 年 7 月 28 日。"
     },
     "zh-Hant": {
@@ -958,13 +962,13 @@
       "home.betaNote": "Game Mode 是由使用者開啟體驗的 Beta 功能。請在遊戲全螢幕執行時，透過 Mac 確認是否已啟用。",
       "home.ctaArchitecture": "了解遊戲模式",
       "home.ctaWhy": "ForgePlay 為何存在",
-      "home.proofTitle": "原生 Game Mode 路徑",
-      "home.proofBody": "Windows遊戲 · macOS遊戲模式 · 開源",
+      "home.proofTitle": "WINDOWS 遊戲進入 macOS 遊戲模式",
+      "home.proofBody": "DirectX → Metal · 開源",
       "home.statusLabel": "專案狀態",
       "home.statusApple": "Apple Silicon",
       "home.statusOS": "macOS 26+ · 需要 Rosetta",
       "home.statusBeta": "由使用者開啟的 Beta",
-      "home.statusRelease": "GitHub Release 準備中",
+      "home.statusRelease": "GitHub 將於數日內公開",
       "home.gameModeLabel": "什麼是 macOS 遊戲模式？",
       "home.gameModeTitle": "macOS 讓遊戲獲得優先資源。ForgePlay 讓 Windows 遊戲進入這條路徑。",
       "home.gameModeLead": "遊戲模式會減少背景活動，讓遊戲優先使用 CPU 與 GPU，並降低無線輸入與音訊延遲。",
@@ -1039,13 +1043,13 @@
       "home.licenseFootnote": "Game Mode 授權並未授予 ForgePlay 名稱、標誌與美術素材的商標權。第三方權利仍各自獨立。",
       "home.releaseLabel": "首次公開發行",
       "home.releaseTitle": "原始碼與發行內容同步到來。",
-      "home.releaseBody": "首個公開 GitHub Release 正在準備中。",
-      "home.releaseStatus": "準備中 — 暫無公開下載",
+      "home.releaseBody": "首個公開 GitHub Release 與原始碼預計在數日內同步公開。",
+      "home.releaseStatus": "預計數日內公開 — 目前暫無下載",
       "home.releaseCheck1": "使用 Developer ID 簽署並通過 Apple 公證的 DMG",
       "home.releaseCheck2": "Gatekeeper、檢查碼與發行清單驗證",
       "home.releaseCheck3": "版本相符的對應原始碼（Corresponding Source）與授權聲明",
       "home.releaseCheck4": "透過 GitHub Releases 發行，而非 Mac App Store",
-      "home.releaseButton": "GitHub Release — 準備中",
+      "home.releaseButton": "GitHub Release — 數日內公開",
 
       "why.metaTitle": "我為何打造 ForgePlay",
       "why.metaDescription": "如果沒有競爭讓進步停滯，ForgePlay就會親手打造一個對手。",
@@ -1146,7 +1150,8 @@
       "support.title": "支援指南",
       "support.lead": "ForgePlay 支援從本機診斷開始。請選擇語言，了解應提供什麼、支援套件可能包含什麼，以及絕不能分享什麼。",
       "support.languages": "支援指南語言",
-      "support.summary": "支援套件只會在你提出要求時於本機建立。與信任的對象分享前，請自行檢查壓縮檔。",
+      "support.summary": "如需支援或回報相容性結果，請在 ForgePlay GitHub Issues 中填寫遊戲名稱、Mac 環境、實際情況與相關診斷資訊。",
+      "support.issueButton": "前往 GitHub Issues 回報 ↗",
       "support.updated": "更新於 2026 年 7 月 28 日。"
     },
     de: {
@@ -1185,13 +1190,13 @@
       "home.betaNote": "Der Game-Mode-Pfad ist eine optionale Betafunktion. Ob Game Mode aktiv ist, muss auf dem Mac geprüft werden.",
       "home.ctaArchitecture": "Was ist Game Mode?",
       "home.ctaWhy": "Warum ForgePlay existiert",
-      "home.proofTitle": "Ein nativer Game-Mode-Pfad",
-      "home.proofBody": "Windows-Spiele · macOS Game Mode · Open Source",
+      "home.proofTitle": "WINDOWS-SPIELE IM macOS GAME MODE",
+      "home.proofBody": "DirectX → Metal · Open Source",
       "home.statusLabel": "Projektstatus",
       "home.statusApple": "Apple Silicon",
       "home.statusOS": "macOS 26+ · Rosetta erforderlich",
       "home.statusBeta": "Optionale Beta",
-      "home.statusRelease": "GitHub Release in Vorbereitung",
+      "home.statusRelease": "GitHub-Veröffentlichung in wenigen Tagen",
       "home.gameModeLabel": "WAS IST DER macOS GAME MODE?",
       "home.gameModeTitle": "macOS gibt dem Spiel Vorrang. ForgePlay bringt Windows-Spiele auf diesen Weg.",
       "home.gameModeLead": "Game Mode reduziert Hintergrundaktivität, priorisiert den CPU- und GPU-Zugriff des Spiels und senkt die Latenz drahtloser Eingabe und Audioausgabe.",
@@ -1266,13 +1271,13 @@
       "home.licenseFootnote": "Die Game Mode-Lizenz gewährt keine Markenrechte am Namen ForgePlay, am Logo oder an den Grafiken. Rechte Dritter bleiben davon getrennt.",
       "home.releaseLabel": "ERSTES ÖFFENTLICHES RELEASE",
       "home.releaseTitle": "Quellcode und Release erscheinen gemeinsam.",
-      "home.releaseBody": "Das erste öffentliche GitHub Release wird vorbereitet.",
-      "home.releaseStatus": "IN VORBEREITUNG — NOCH KEIN ÖFFENTLICHER DOWNLOAD",
+      "home.releaseBody": "Das erste öffentliche GitHub Release und der Quellcode sollen in wenigen Tagen gemeinsam erscheinen.",
+      "home.releaseStatus": "IN WENIGEN TAGEN — NOCH KEIN ÖFFENTLICHER DOWNLOAD",
       "home.releaseCheck1": "Mit Developer ID signiertes und von Apple notarisiertes DMG",
       "home.releaseCheck2": "Prüfung von Gatekeeper, Prüfsumme und Release-Manifest",
       "home.releaseCheck3": "Versionsgleicher zugehöriger Quellcode und Lizenzhinweise",
       "home.releaseCheck4": "Veröffentlichung über GitHub Releases – nicht über den Mac App Store",
-      "home.releaseButton": "GitHub Release — in Vorbereitung",
+      "home.releaseButton": "GitHub Release — in wenigen Tagen",
 
       "why.metaTitle": "Warum ich ForgePlay gebaut habe",
       "why.metaDescription": "Wenn der Fortschritt mangels Wettbewerb ins Stocken gerät, baut ForgePlay den Herausforderer selbst.",
@@ -1373,7 +1378,8 @@
       "support.title": "Support-Leitfaden",
       "support.lead": "ForgePlay-Support beginnt mit lokalen Diagnosen. Wähle eine Sprache für Hinweise dazu, was du angeben, was ein Support-Bundle enthalten und was du niemals teilen solltest.",
       "support.languages": "Sprachen des Support-Leitfadens",
-      "support.summary": "Support-Bundles werden nur auf deinen Wunsch lokal erstellt. Prüfe das Archiv selbst, bevor du es mit einer vertrauenswürdigen Person teilst.",
+      "support.summary": "Brauchst du Hilfe oder möchtest du ein Kompatibilitätsergebnis melden? Beschreibe Spiel, Mac-Umgebung, Verhalten und relevante Diagnosedaten in den ForgePlay GitHub Issues.",
+      "support.issueButton": "In GitHub Issues melden ↗",
       "support.updated": "Aktualisiert am 28. Juli 2026."
     },
     es: {
@@ -1412,13 +1418,13 @@
       "home.betaNote": "La ruta de Game Mode es una función beta opcional. Confirma en el Mac si está activa.",
       "home.ctaArchitecture": "¿Qué es Game Mode?",
       "home.ctaWhy": "Por qué existe ForgePlay",
-      "home.proofTitle": "Una ruta nativa de Game Mode",
-      "home.proofBody": "Juegos de Windows · Game Mode de macOS · código abierto",
+      "home.proofTitle": "JUEGOS DE WINDOWS EN GAME MODE DE macOS",
+      "home.proofBody": "DirectX → Metal · código abierto",
       "home.statusLabel": "Estado del proyecto",
       "home.statusApple": "Apple Silicon",
       "home.statusOS": "macOS 26+ · requiere Rosetta",
       "home.statusBeta": "Beta opcional",
-      "home.statusRelease": "GitHub Release en preparación",
+      "home.statusRelease": "Publicación en GitHub en unos días",
       "home.gameModeLabel": "¿QUÉ ES GAME MODE DE macOS?",
       "home.gameModeTitle": "macOS da prioridad al juego. ForgePlay lleva los juegos de Windows a esa ruta.",
       "home.gameModeLead": "Game Mode reduce la actividad en segundo plano, prioriza el acceso del juego a la CPU y la GPU y disminuye la latencia del audio y la entrada inalámbrica.",
@@ -1493,13 +1499,13 @@
       "home.licenseFootnote": "La licencia de Game Mode no concede derechos de marca sobre el nombre, el logotipo ni las ilustraciones de ForgePlay. Los derechos de terceros permanecen separados.",
       "home.releaseLabel": "PRIMERA PUBLICACIÓN PÚBLICA",
       "home.releaseTitle": "El código fuente y el lanzamiento llegan juntos.",
-      "home.releaseBody": "La primera publicación pública en GitHub Releases está en preparación.",
-      "home.releaseStatus": "EN PREPARACIÓN — AÚN NO HAY DESCARGA PÚBLICA",
+      "home.releaseBody": "La primera publicación en GitHub Releases y el código fuente se publicarán juntos dentro de unos días.",
+      "home.releaseStatus": "PREVISTO EN UNOS DÍAS — AÚN NO HAY DESCARGA PÚBLICA",
       "home.releaseCheck1": "DMG firmado con Developer ID y notarizado por Apple",
       "home.releaseCheck2": "Verificación de Gatekeeper, suma de comprobación y manifiesto de publicación",
       "home.releaseCheck3": "Código Fuente Correspondiente de la misma versión y avisos de licencia",
       "home.releaseCheck4": "Publicado mediante GitHub Releases, no en la Mac App Store",
-      "home.releaseButton": "GitHub Release — en preparación",
+      "home.releaseButton": "GitHub Release — en unos días",
 
       "why.metaTitle": "Por qué creé ForgePlay",
       "why.metaDescription": "Si el progreso se frenó por falta de competencia, ForgePlay creará a su rival.",
@@ -1600,7 +1606,8 @@
       "support.title": "Guía de soporte",
       "support.lead": "El soporte de ForgePlay empieza con diagnósticos locales. Elige un idioma para saber qué incluir, qué puede contener el paquete de soporte y qué no debes compartir nunca.",
       "support.languages": "Idiomas de la guía de soporte",
-      "support.summary": "Los paquetes de soporte se crean localmente solo cuando lo solicitas. Revisa el archivo antes de compartirlo con una persona de confianza.",
+      "support.summary": "¿Necesitas ayuda o quieres informar de un resultado de compatibilidad? Describe el juego, tu Mac, lo ocurrido y los diagnósticos pertinentes en GitHub Issues de ForgePlay.",
+      "support.issueButton": "Informar en GitHub Issues ↗",
       "support.updated": "Actualizado el 28 de julio de 2026."
     },
     fr: {
@@ -1639,13 +1646,13 @@
       "home.betaNote": "La voie Game Mode est une fonction bêta facultative. Vérifiez son activation directement sur le Mac.",
       "home.ctaArchitecture": "Qu’est-ce que Game Mode ?",
       "home.ctaWhy": "Pourquoi ForgePlay existe",
-      "home.proofTitle": "Une voie Game Mode native",
-      "home.proofBody": "Jeux Windows · Game Mode de macOS · open source",
+      "home.proofTitle": "JEUX WINDOWS DANS LE GAME MODE DE macOS",
+      "home.proofBody": "DirectX → Metal · open source",
       "home.statusLabel": "État du projet",
       "home.statusApple": "Apple Silicon",
       "home.statusOS": "macOS 26+ · Rosetta requis",
       "home.statusBeta": "Bêta facultative",
-      "home.statusRelease": "GitHub Release en préparation",
+      "home.statusRelease": "Publication GitHub dans quelques jours",
       "home.gameModeLabel": "QU’EST-CE QUE GAME MODE SUR macOS ?",
       "home.gameModeTitle": "macOS donne la priorité au jeu. ForgePlay place les jeux Windows sur cette voie.",
       "home.gameModeLead": "Game Mode réduit l’activité en arrière-plan, donne la priorité au jeu sur le CPU et le GPU, et diminue la latence des entrées et de l’audio sans fil.",
@@ -1720,13 +1727,13 @@
       "home.licenseFootnote": "La licence de Game Mode n’accorde aucun droit de marque sur le nom, le logo ou les illustrations de ForgePlay. Les droits des tiers restent distincts.",
       "home.releaseLabel": "PREMIÈRE PUBLICATION",
       "home.releaseTitle": "Le code source et la release paraissent ensemble.",
-      "home.releaseBody": "La première publication publique sur GitHub Releases est en préparation.",
-      "home.releaseStatus": "EN PRÉPARATION — AUCUN TÉLÉCHARGEMENT PUBLIC POUR L’INSTANT",
+      "home.releaseBody": "La première publication sur GitHub Releases et le code source seront publiés ensemble dans quelques jours.",
+      "home.releaseStatus": "PRÉVU DANS QUELQUES JOURS — AUCUN TÉLÉCHARGEMENT PUBLIC POUR L’INSTANT",
       "home.releaseCheck1": "DMG signé avec Developer ID et notarisé par Apple",
       "home.releaseCheck2": "Vérification de Gatekeeper, de la somme de contrôle et du manifeste de publication",
       "home.releaseCheck3": "Code source correspondant de même version et mentions de licence",
       "home.releaseCheck4": "Publication via GitHub Releases, pas via le Mac App Store",
-      "home.releaseButton": "GitHub Release — en préparation",
+      "home.releaseButton": "GitHub Release — dans quelques jours",
 
       "why.metaTitle": "Pourquoi j’ai créé ForgePlay",
       "why.metaDescription": "Si le progrès s’est arrêté faute de concurrence, ForgePlay créera le rival qui lui manque.",
@@ -1827,7 +1834,8 @@
       "support.title": "Guide d’assistance",
       "support.lead": "L’assistance ForgePlay commence par les diagnostics locaux. Choisissez une langue pour savoir quoi joindre, ce que le bundle peut contenir et ce qu’il ne faut jamais partager.",
       "support.languages": "Langues du guide d’assistance",
-      "support.summary": "Les bundles d’assistance sont créés localement uniquement à votre demande. Vérifiez vous-même l’archive avant de la partager avec une personne de confiance.",
+      "support.summary": "Besoin d’aide ou envie de signaler un résultat de compatibilité ? Décrivez le jeu, votre Mac, le comportement observé et les diagnostics utiles dans les GitHub Issues de ForgePlay.",
+      "support.issueButton": "Signaler dans GitHub Issues ↗",
       "support.updated": "Mis à jour le 28 juillet 2026."
     }
   };
@@ -1893,6 +1901,22 @@
     });
   };
 
+  const centerCurrentNavigation = (behavior = "auto") => {
+    if (!window.matchMedia("(max-width: 760px)").matches) return;
+    const navigation = document.querySelector(".nav-links");
+    const current = navigation?.querySelector(
+      'a[aria-current="page"], a[aria-current="location"]'
+    );
+    if (!navigation || !current) return;
+
+    const left = current.offsetLeft - ((navigation.clientWidth - current.offsetWidth) / 2);
+    const maximum = Math.max(0, navigation.scrollWidth - navigation.clientWidth);
+    navigation.scrollTo({
+      left: Math.min(maximum, Math.max(0, left)),
+      behavior
+    });
+  };
+
   const initializeSectionNavigation = () => {
     if ((document.body.dataset.page || "home") !== "home") return;
     const sectionLinks = new Map();
@@ -1914,6 +1938,7 @@
           link.removeAttribute("aria-current");
         }
       });
+      centerCurrentNavigation();
     };
 
     const initialSection = window.location.hash.slice(1);
@@ -1996,6 +2021,7 @@
   let currentLocale = applyLocale(initialLocale());
   document.documentElement.classList.remove("locale-pending");
   markCurrentPageNavigation();
+  requestAnimationFrame(() => centerCurrentNavigation());
   initializeSectionNavigation();
   window.ForgePlaySite = Object.freeze({
     getLocale: () => document.documentElement.lang || currentLocale,
@@ -2009,7 +2035,12 @@
       const localizedPages = new Set(["privacy", "support", "why", "license"]);
       const sectionHash = localizedPages.has(page) ? `#${page}-${locale}` : null;
       currentLocale = applyLocale(locale, { persist: true, updateAddress: true, sectionHash });
+      requestAnimationFrame(() => centerCurrentNavigation());
     });
+  });
+
+  window.addEventListener("resize", () => {
+    requestAnimationFrame(() => centerCurrentNavigation());
   });
 
   document.querySelectorAll("[data-set-locale]").forEach((link) => {

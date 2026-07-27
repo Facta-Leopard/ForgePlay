@@ -489,7 +489,7 @@ require_snippet "$ROOT_DIR/index.html" 'Implementation details will be published
 require_snippet "$ROOT_DIR/index.html" 'href="#release" data-i18n="home.sourceLink"'
 require_snippet "$ROOT_DIR/index.html" 'href="why.html"'
 require_snippet "$ROOT_DIR/index.html" 'href="license.html"'
-require_snippet "$ROOT_DIR/index.html" 'PREPARING — NO PUBLIC DOWNLOAD YET'
+require_snippet "$ROOT_DIR/index.html" 'PLANNED WITHIN DAYS — NO PUBLIC DOWNLOAD YET'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/forgeplay-social.png'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/forgeplay-manifesto.jpg'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/forgeplay-hero-3200.jpg 3200w'
