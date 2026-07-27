@@ -562,13 +562,19 @@ require_snippet "$ROOT_DIR/support.html" "Steam, Microsoft Runtime, DirectX"
 for lang in "${LANGS[@]}"; do
   require_snippet "$ROOT_DIR/privacy.html" "href=\"#privacy-$lang\" data-set-locale=\"$lang\""
   require_snippet "$ROOT_DIR/support.html" "href=\"#support-$lang\" data-set-locale=\"$lang\""
-  require_snippet "$ROOT_DIR/why.html" "href=\"#why-$lang\" data-set-locale=\"$lang\""
   require_snippet "$ROOT_DIR/license.html" "href=\"#license-$lang\" data-set-locale=\"$lang\""
   require_snippet "$ROOT_DIR/privacy.html" "id=\"privacy-$lang\" class=\"language-section\" lang=\"$lang\""
   require_snippet "$ROOT_DIR/support.html" "id=\"support-$lang\" class=\"language-section\" lang=\"$lang\""
   require_snippet "$ROOT_DIR/why.html" "id=\"why-$lang\" class=\"language-section story-language\" lang=\"$lang\""
   require_snippet "$ROOT_DIR/license.html" "id=\"license-$lang\" class=\"language-section license-language\" lang=\"$lang\""
 done
+
+if grep -Fq 'data-set-locale=' "$ROOT_DIR/why.html"; then
+  fail "why.html must use only the global language selector"
+fi
+if [[ "$(grep -c 'data-language-select' "$ROOT_DIR/why.html")" -ne 1 ]]; then
+  fail "why.html must contain exactly one global language selector"
+fi
 
 require_snippet "$ROOT_DIR/site.css" ":focus-visible"
 require_snippet "$ROOT_DIR/site.css" "@media (max-width: 760px)"
