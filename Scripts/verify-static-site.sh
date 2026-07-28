@@ -182,15 +182,22 @@ if sorted(locale for locale, _, _ in markers) != sorted(locale_names):
     raise SystemExit("site.js must define exactly the eight supported locale objects")
 
 translation_keys = {}
+translation_values = {}
 for index, (locale, _, start) in enumerate(markers):
     end = markers[index + 1][1] if index + 1 < len(markers) else site_js.index(
         "const message",
         start,
     )
-    keys = re.findall(r'^\s{6}"([^"]+)":', site_js[start:end], flags=re.MULTILINE)
+    entries = re.findall(
+        r'^\s{6}"([^"]+)":\s*"((?:[^"\\]|\\.)*)",?$',
+        site_js[start:end],
+        flags=re.MULTILINE,
+    )
+    keys = [key for key, _ in entries]
     if len(keys) != len(set(keys)):
         raise SystemExit(f"site.js has duplicate translation keys for {locale}")
     translation_keys[locale] = set(keys)
+    translation_values[locale] = dict(entries)
 
 english_keys = translation_keys["en"]
 if len(english_keys) < 175:
@@ -202,6 +209,77 @@ for locale in locale_names:
         raise SystemExit(
             f"site.js locale {locale} differs from English; "
             f"missing={sorted(missing)} extra={sorted(extra)}"
+        )
+
+retired_keys = {
+    "home.whyKo",
+    "home.whyEn",
+    "home.license1Title",
+    "home.license1Body",
+    "home.license2Tag",
+    "home.license2Title",
+    "home.license2Body",
+    "home.license3Tag",
+    "home.license3Title",
+    "home.license3Body",
+    "home.licenseManifest",
+    "home.licenseScope",
+    "home.licenseFootnote",
+    "privacy.languages",
+    "support.languages",
+}
+present_retired_keys = retired_keys & english_keys
+if present_retired_keys:
+    raise SystemExit(
+        f"site.js still contains retired translation keys: "
+        f"{sorted(present_retired_keys)}"
+    )
+
+required_localized_keys = {
+    "home.worldFirstRouteGameMode",
+    "home.sponsorMark",
+    "license.mastheadLabel",
+    "license.mastheadAria",
+    "license.mastheadScope",
+    "license.filesLabel",
+    "compat.logLabel",
+}
+missing_localized_keys = required_localized_keys - english_keys
+if missing_localized_keys:
+    raise SystemExit(
+        f"site.js is missing localized presentation keys: "
+        f"{sorted(missing_localized_keys)}"
+    )
+
+expected_game_mode_navigation = {
+    "ko": "게임 모드",
+    "ja": "ゲームモード",
+    "zh-Hans": "游戏模式",
+    "zh-Hant": "遊戲模式",
+    "de": "Spielmodus",
+    "es": "Modo Juego",
+    "fr": "Mode Jeu",
+}
+for locale, expected in expected_game_mode_navigation.items():
+    actual = translation_values[locale].get("shared.navGameMode")
+    if actual != expected:
+        raise SystemExit(
+            f"site.js locale {locale} must use the localized Apple Game Mode "
+            f"term {expected!r}; found {actual!r}"
+        )
+    locale_start = next(start for name, start, _ in markers if name == locale)
+    locale_index = next(
+        index for index, (name, _, _) in enumerate(markers) if name == locale
+    )
+    locale_end = (
+        markers[locale_index + 1][1]
+        if locale_index + 1 < len(markers)
+        else site_js.index("const message", locale_start)
+    )
+    locale_block = site_js[locale_start:locale_end]
+    if re.search(r"Game Mode|GAME MODE|Game-Mode|GAME-MODE", locale_block):
+        raise SystemExit(
+            f"site.js locale {locale} contains an untranslated Game Mode term"
         )
 
 used_keys = set()
@@ -469,9 +547,9 @@ PY
 
 for html in index.html why.html license.html privacy.html support.html compatibility.html updates.html; do
   require_snippet "$ROOT_DIR/$html" '<html lang="en">'
-  require_snippet "$ROOT_DIR/$html" 'src="locale-bootstrap.js?v=20260728-6"'
-  require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260728-6"'
-  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260728-6"'
+  require_snippet "$ROOT_DIR/$html" 'src="locale-bootstrap.js?v=20260728-7"'
+  require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260728-7"'
+  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260728-7"'
   require_snippet "$ROOT_DIR/$html" 'data-language-select'
   require_snippet "$ROOT_DIR/$html" 'site-assets/forgeplay-icon.png'
 done
@@ -498,15 +576,17 @@ require_snippet "$ROOT_DIR/index.html" 'data-compatibility-count'
 require_snippet "$ROOT_DIR/index.html" 'href="compatibility.html"'
 require_snippet "$ROOT_DIR/index.html" 'PLAYABLE IN GAME MODE'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
-require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260728-6"'
-require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260728-6"'
-require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260728-6"'
+require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260728-7"'
+require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260728-7"'
+require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260728-7"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
 require_snippet "$ROOT_DIR/index.html" 'id="other-apps"'
 require_snippet "$ROOT_DIR/index.html" 'data-developer-app-grid'
 require_snippet "$ROOT_DIR/index.html" 'DIRECTX'
 require_snippet "$ROOT_DIR/index.html" 'METAL'
 require_snippet "$ROOT_DIR/index.html" 'macOS GAME MODE'
+require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.worldFirstRouteGameMode"'
+require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.sponsorMark"'
 require_snippet "$ROOT_DIR/index.html" 'THE WORLD’S FIRST*'
 
 require_snippet "$ROOT_DIR/compatibility.html" 'data-compatibility-list'
@@ -515,8 +595,9 @@ require_snippet "$ROOT_DIR/compatibility.html" 'M4 Pro · 24GB'
 require_snippet "$ROOT_DIR/compatibility.html" 'Works in Game Mode or doesn’t—report what you see.'
 require_snippet "$ROOT_DIR/compatibility.html" 'Playable in Game Mode'
 require_snippet "$ROOT_DIR/compatibility.html" 'Logs shorten the distance to a fix.'
+require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.logLabel"'
 require_snippet "$ROOT_DIR/compatibility.html" 'issues/new?template=compatibility-report.yml'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260728-6"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260728-7"'
 require_snippet "$ROOT_DIR/compatibility.js" 'site-data/compatibility-games.json'
 require_snippet "$ROOT_DIR/compatibility.js" 'forgeplay:localechange'
 require_snippet "$ROOT_DIR/site.js" '"compat.statusPlayable": "게임 모드로 플레이 가능"'
@@ -526,7 +607,7 @@ require_snippet "$ROOT_DIR/site-data/README.md" 'DeveloperAppCatalog.swift'
 
 require_snippet "$ROOT_DIR/updates.html" 'data-announcement-list'
 require_snippet "$ROOT_DIR/updates.html" 'data-nav-page="updates"'
-require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260728-6"'
+require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260728-7"'
 require_snippet "$ROOT_DIR/announcements.js" 'site-data/announcements.json'
 require_snippet "$ROOT_DIR/announcements.js" 'forgeplay:localechange'
 require_snippet "$ROOT_DIR/developer-apps.js" 'site-data/developer-apps.json'
@@ -543,12 +624,29 @@ require_snippet "$ROOT_DIR/why.html" 'game engines and graphics—including the 
 require_snippet "$ROOT_DIR/why.html" '게임 엔진과 그래픽스, DirectX와 Metal 기술 스택'
 require_snippet "$ROOT_DIR/why.html" 'href="index.html#release"'
 
-require_snippet "$ROOT_DIR/license.html" 'ForgePlay is a multi-license distribution'
+require_snippet "$ROOT_DIR/license.html" 'ForgePlay does not have a single license.'
 require_snippet "$ROOT_DIR/license.html" 'GPL-3.0-only'
 require_snippet "$ROOT_DIR/license.html" 'Corresponding Source'
 require_snippet "$ROOT_DIR/license.html" 'not accept external code contributions'
+require_snippet "$ROOT_DIR/license.html" 'data-i18n="license.mastheadLabel"'
+require_snippet "$ROOT_DIR/license.html" 'data-i18n-aria-label="license.mastheadAria"'
+require_snippet "$ROOT_DIR/license.html" 'data-i18n="license.mastheadScope"'
+require_snippet "$ROOT_DIR/license.html" 'data-i18n="license.filesLabel"'
+require_snippet "$ROOT_DIR/license.html" '게임 모드 코드는 GPLv3로 공개합니다. 나머지 구성 요소는 각자의 조건을 따릅니다.'
+require_snippet "$ROOT_DIR/license.html" 'Game Mode code is GPLv3. Every other component keeps its own terms.'
+require_snippet "$ROOT_DIR/license.html" 'Der Spielmodus-Code steht unter GPLv3. Für alle anderen Komponenten gelten ihre eigenen Bedingungen.'
+require_snippet "$ROOT_DIR/license.html" 'El código del modo Juego usa GPLv3. Los demás componentes conservan sus propias condiciones.'
+require_snippet "$ROOT_DIR/license.html" 'Le code du mode Jeu est sous GPLv3. Les autres composants conservent leurs propres conditions.'
+require_snippet "$ROOT_DIR/license.html" 'ゲームモードのコードは GPLv3。その他のコンポーネントには、それぞれの条件が適用されます。'
+require_snippet "$ROOT_DIR/license.html" '游戏模式代码采用 GPLv3。其他组件各自遵循原有条款。'
+require_snippet "$ROOT_DIR/license.html" '遊戲模式程式碼採用 GPLv3。其他元件各自遵循原有條款。'
 require_snippet "$ROOT_DIR/license.html" 'href="LICENSE.md" download'
 require_snippet "$ROOT_DIR/license.html" 'href="LICENSES/GPL-3.0-only.txt" download'
+
+require_snippet "$ROOT_DIR/site-data/announcements.json" '"de": "ForgePlay stellt den macOS-Spielmodus in den Mittelpunkt."'
+require_snippet "$ROOT_DIR/site-data/announcements.json" '"es": "ForgePlay sitúa el modo Juego de macOS en el centro."'
+require_snippet "$ROOT_DIR/site-data/announcements.json" '"fr": "ForgePlay place le mode Jeu de macOS au centre."'
+require_snippet "$ROOT_DIR/site-data/announcements.json" '"ja": "ForgePlayはmacOSのゲームモードを中核に据えました。"'
 
 require_snippet "$ROOT_DIR/privacy.html" "does not include advertising tracking"
 require_snippet "$ROOT_DIR/privacy.html" "Apple Foundation Models"
@@ -620,6 +718,21 @@ for forbidden_phrase in \
     "$ROOT_DIR/privacy.html" "$ROOT_DIR/support.html" "$ROOT_DIR/compatibility.html" \
     "$ROOT_DIR/updates.html"; then
     fail "public site must not contain inaccurate or retired wording: $forbidden_phrase"
+  fi
+done
+
+for retired_license_phrase in \
+  "Open code stays open. Separate rights stay clear." \
+  "열린 코드는 열려 있게. 다른 권리는 분명하게." \
+  "Offener Code bleibt offen. Getrennte Rechte bleiben klar." \
+  "El código abierto sigue abierto. Los demás derechos, bien delimitados." \
+  "Le code ouvert reste ouvert. Les autres droits restent clairement séparés." \
+  "オープンなコードは、オープンなまま。別の権利は明確に。" \
+  "开放的代码，始终开放。其他权利，边界清晰。" \
+  "開放的程式碼，持續開放。其他權利，界線清楚。"; do
+  if grep -Fq "$retired_license_phrase" \
+    "$ROOT_DIR/index.html" "$ROOT_DIR/license.html" "$ROOT_DIR/site.js"; then
+    fail "public site contains retired license wording: $retired_license_phrase"
   fi
 done
 
