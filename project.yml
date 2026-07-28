@@ -1,0 +1,126 @@
+# This file contains separately licensed ForgePlay Game Mode build integration.
+# The exact GPL-3.0-only sections are listed in
+# LICENSES/ForgePlayGameMode/GAME_MODE_SYMBOL_MANIFEST.md.
+# This notice does not apply GPL-3.0-only to unrelated configuration.
+
+name: ForgePlay
+options:
+  bundleIdPrefix: com.forgeplay
+  developmentLanguage: ko
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+  defaultConfig: Debug
+configs:
+  Debug: debug
+  Release: release
+settings:
+  configFiles:
+    Debug: Config/ForgePlayDefaults.xcconfig
+    Release: Config/ForgePlayDefaults.xcconfig
+  base:
+    ARCHS: arm64
+    SWIFT_VERSION: 6.0
+    MACOSX_DEPLOYMENT_TARGET: 26.0
+    CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED: YES
+targets:
+  ForgePlay:
+    type: application
+    platform: macOS
+    deploymentTarget: "26.0"
+    configFiles:
+      Debug: Config/ForgePlayApp.xcconfig
+      Release: Config/ForgePlayApp.xcconfig
+    sources:
+      - path: Sources/ForgePlay
+      - path: Resources
+        buildPhase: resources
+        type: group
+        excludes:
+          - Runners/**
+          - Documents/**
+      - path: LICENSE.md
+        buildPhase: resources
+      - path: LICENSES
+        buildPhase: resources
+        type: folder
+    dependencies:
+      - target: ExternalStorageAccessBridge
+        embed: true
+        link: false
+        codeSign: true
+        copy:
+          destination: frameworks
+      - target: GameModeProcessHost
+        embed: true
+        link: false
+        codeSign: true
+        copy:
+          destination: wrapper
+          subpath: Contents/Helpers
+  ExternalStorageAccessBridge:
+    type: library.dynamic
+    productName: ForgePlayExternalStorageAccess
+    platform: macOS
+    deploymentTarget: "26.0"
+    configFiles:
+      Debug: Config/ForgePlayExternalStorageAccessBridge.xcconfig
+      Release: Config/ForgePlayExternalStorageAccessBridge.xcconfig
+    sources:
+      - path: Native/ExternalStorageAccessBridge/ExternalStorageAccessBridge.m
+      - path: Native/ExternalStorageAccessBridge/ExternalStorageAccessBridge.h
+        headerVisibility: project
+    dependencies:
+      - sdk: Foundation.framework
+  GameModeProcessHost:
+    type: application
+    platform: macOS
+    deploymentTarget: "26.0"
+    configFiles:
+      Debug: Config/ForgePlayGameModeProcessHost.xcconfig
+      Release: Config/ForgePlayGameModeProcessHost.xcconfig
+    sources:
+      - path: Native/GameModeProcessHost/GameModeProcessHost.m
+      - path: Native/GameModeProcessHost/GameModeRuntimeIdentity.m
+      - path: Native/GameModeProcessHost/GameModeApplicationGroup.m
+      - path: Native/GameModeProcessHost/GameModeInheritedExecution.m
+      - path: Native/GameModeProcessHost/PrefixExecutionLease.m
+      - path: Resources/Assets.xcassets
+        buildPhase: resources
+    dependencies:
+      - sdk: Foundation.framework
+      - sdk: Security.framework
+    preBuildScripts:
+      - name: Bind Source Runtime Identity
+        basedOnDependencyAnalysis: true
+        inputFiles:
+          - $(SRCROOT)/Native/GameModeProcessHost/Info.plist
+          - $(SRCROOT)/Resources/Runners/ForgePlayRuntime/RuntimeManifest.json
+          - $(SRCROOT)/Resources/Runners/ForgePlayRuntime/SOURCE-AVAILABILITY.md
+        outputFiles:
+          - $(DERIVED_FILE_DIR)/GameModeBuildIdentity.generated.h
+          - $(DERIVED_FILE_DIR)/GameModeHostEmbeddedInfo.plist
+        script: |
+          "$SRCROOT/Scripts/prepare-game-mode-host-build-identity.sh"
+  ForgePlayTests:
+    type: bundle.unit-test
+    platform: macOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: Tests/ForgePlayTests
+    dependencies:
+      - target: ForgePlay
+schemes:
+  ForgePlay:
+    build:
+      targets:
+        ForgePlay: all
+        ForgePlayTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - ForgePlayTests
+    archive:
+      config: Release

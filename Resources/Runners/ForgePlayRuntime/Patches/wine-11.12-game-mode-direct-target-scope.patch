@@ -1,0 +1,175 @@
+diff --git a/dlls/ntdll/unix/loader.c b/dlls/ntdll/unix/loader.c
+index 795940c..38ea9c1 100644
+--- a/dlls/ntdll/unix/loader.c
++++ b/dlls/ntdll/unix/loader.c
+@@ -555,9 +555,9 @@ static void forgeplay_record_game_mode_loader_event( const char *event, int erro
+     close( descriptor );
+ }
+ 
+-/* Steam remains the Windows parent and creates the canonical game process.
+- * Game lineage is independent of renderer selection, so a deferred, Vulkan,
+- * or otherwise non-Direct3D child can use the same fixed host. argv, cwd,
++/* Steam remains the Windows parent and creates the canonical game processes.
++ * process.c derives the trusted target flag from each resolved image path so
++ * a launcher's long-lived child can enter the same fixed host. argv, cwd,
+  * inherited handles, server socket, and the Darwin PID are preserved by exec. */
+ static NTSTATUS forgeplay_exec_required_game_mode_host( char **argv )
+ {
+@@ -565,10 +565,24 @@ static NTSTATUS forgeplay_exec_required_game_mode_host( char **argv )
+     char *host_argument;
+     int saved_error;
+ 
++    unsetenv( "FORGEPLAY_GAME_MODE_HOST_ROUTED" );
+     if (!forgeplay_environment_flag_enabled( "FORGEPLAY_STEAM_GAME_PROCESS" ))
+         return STATUS_SUCCESS;
+     if (!forgeplay_environment_flag_enabled( "FORGEPLAY_GAME_MODE_HOST_ENABLED" ))
+-        return STATUS_NOT_SUPPORTED;
++    {
++        forgeplay_record_game_mode_loader_event(
++            "loader_route_skipped_game_mode_not_requested", 0 );
++        unsetenv( "FORGEPLAY_GAME_MODE_DIRECT_TARGET" );
++        return STATUS_SUCCESS;
++    }
++    if (!forgeplay_environment_flag_enabled( "FORGEPLAY_GAME_MODE_DIRECT_TARGET" ))
++    {
++        forgeplay_record_game_mode_loader_event(
++            "loader_route_skipped_non_game_target", 0 );
++        unsetenv( "FORGEPLAY_STEAM_GAME_PROCESS" );
++        unsetenv( "FORGEPLAY_GAME_MODE_DIRECT_TARGET" );
++        return STATUS_SUCCESS;
++    }
+ 
+     mode = getenv( "FORGEPLAY_GAME_MODE_HOST_MODE" );
+     host = getenv( "FORGEPLAY_GAME_MODE_HOST_EXECUTABLE" );
+diff --git a/dlls/ntdll/unix/process.c b/dlls/ntdll/unix/process.c
+index b652c6b..215560c 100644
+--- a/dlls/ntdll/unix/process.c
++++ b/dlls/ntdll/unix/process.c
+@@ -453,6 +453,72 @@ static BOOL set_forgeplay_unix_environment_variable( const WCHAR *environment,
+ }
+ 
+ 
++static BOOL forgeplay_game_mode_path_separator( WCHAR value )
++{
++    return value == L'/' || value == L'\\';
++}
++
++
++static BOOL forgeplay_game_mode_component_equal( const WCHAR *value, SIZE_T length,
++                                                  const char *expected )
++{
++    SIZE_T index;
++
++    if (!value || !expected || strlen( expected ) != length) return FALSE;
++    for (index = 0; index < length; ++index)
++    {
++        WCHAR left = value[index];
++        unsigned char right = expected[index];
++        if (left >= L'A' && left <= L'Z') left += L'a' - L'A';
++        if (right >= 'A' && right <= 'Z') right += 'a' - 'A';
++        if (left != right) return FALSE;
++    }
++    return TRUE;
++}
++
++
++/* ImagePathName is Wine's resolved executable identity. Every independently
++ * resolved executable in a Steam game tree can be the long-lived surface
++ * behind a launcher, so each eligible target enters the same fixed host.
++ * Shared redistributable infrastructure remains excluded. A Windows child
++ * cannot forge this Unix-only decision through its environment or command
++ * line, and the rule is independent of account, drive, volume, and title. */
++static BOOL forgeplay_game_mode_image_path_is_eligible( const UNICODE_STRING *image_path )
++{
++    const WCHAR *path, *end, *component;
++    SIZE_T length;
++    unsigned int stage = 0;
++    BOOL game_tree = FALSE;
++
++    if (!image_path || !image_path->Buffer || !image_path->Length) return FALSE;
++    path = image_path->Buffer;
++    end = path + image_path->Length / sizeof(WCHAR);
++    while (path < end)
++    {
++        while (path < end && forgeplay_game_mode_path_separator( *path )) ++path;
++        if (path == end) break;
++        component = path;
++        while (path < end && !forgeplay_game_mode_path_separator( *path )) ++path;
++        length = path - component;
++
++        if (forgeplay_game_mode_component_equal(
++                component, length, "_CommonRedist" )) return FALSE;
++        if (!stage && forgeplay_game_mode_component_equal(
++                component, length, "steamapps" ))
++            stage = 1;
++        else if (stage == 1 && forgeplay_game_mode_component_equal(
++                     component, length, "common" ))
++            stage = 2;
++        else if (stage == 1)
++            stage = forgeplay_game_mode_component_equal(
++                component, length, "steamapps" ) ? 1 : 0;
++        else if (stage == 2)
++            game_tree = TRUE;
++    }
++    return game_tree;
++}
++
++
+ static BOOL apply_forgeplay_steam_game_process_unix_environment(
+     const RTL_USER_PROCESS_PARAMETERS *params )
+ {
+@@ -486,6 +552,8 @@ static BOOL apply_forgeplay_steam_game_process_unix_environment(
+         "DXVK_LOG_LEVEL",
+         "DXVK_CONFIG",
+     };
++    const WCHAR *game_identity;
++    BOOL eligible_game_target;
+     unsigned int i;
+ 
+     for (i = 0; i < ARRAY_SIZE(variables); ++i)
+@@ -493,6 +561,16 @@ static BOOL apply_forgeplay_steam_game_process_unix_environment(
+         if (!set_forgeplay_unix_environment_variable( params->Environment, variables[i] ))
+             return FALSE;
+     }
++    game_identity = find_forgeplay_process_environment_value_ascii(
++        params->Environment, "FORGEPLAY_STEAM_GAME_PROCESS" );
++    eligible_game_target = game_identity && game_identity[0] == L'1' &&
++        !game_identity[1] &&
++        forgeplay_game_mode_image_path_is_eligible( &params->ImagePathName );
++    if ((eligible_game_target &&
++         setenv( "FORGEPLAY_GAME_MODE_DIRECT_TARGET", "1", 1 ) == -1) ||
++        (!eligible_game_target &&
++         unsetenv( "FORGEPLAY_GAME_MODE_DIRECT_TARGET" ) == -1))
++        return FALSE;
+     TRACE( "synchronized ForgePlay Steam game process Unix environment\n" );
+     return TRUE;
+ }
+diff --git a/dlls/winemac.drv/window.c b/dlls/winemac.drv/window.c
+index bd1c7fb..01050e6 100644
+--- a/dlls/winemac.drv/window.c
++++ b/dlls/winemac.drv/window.c
+@@ -28,6 +28,7 @@
+ #include "config.h"
+ 
+ #include <IOKit/pwr_mgt/IOPMLib.h>
++#include <stdlib.h>
+ #define GetCurrentThread Mac_GetCurrentThread
+ #define LoadResource Mac_LoadResource
+ #include <CoreServices/CoreServices.h>
+@@ -794,7 +795,15 @@ void activate_on_following_focus(void)
+  */
+ static void set_app_icon(void)
+ {
+-    CFArrayRef images = create_app_icon_images();
++    const char *fixed_host = getenv( "FORGEPLAY_GAME_MODE_HOST_ROUTED" );
++    CFArrayRef images;
++
++    if (fixed_host && fixed_host[0] == '1' && !fixed_host[1])
++    {
++        TRACE( "preserving fixed Game Mode host application icon\n" );
++        return;
++    }
++    images = create_app_icon_images();
+     if (images)
+     {
+         macdrv_set_application_icon(images);

@@ -1,6 +1,21 @@
 # ForgePlay Source — 한국어
 
-[English](README_EN.md) | [언어 선택](README.md)
+[English](#forgeplay-source--english) | [한국어 별도 문서](README_KO.md) | [English standalone](README_EN.md) | [Release v1.0.0](https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0)
+
+## 공개 경로 / Published paths
+
+- 공개 소스(`main`) / current source: [repository tree](https://github.com/Facta-Leopard/ForgePlay/tree/main)
+- `v1.0.0` 소스 스냅샷 / source snapshot: [tagged source](https://github.com/Facta-Leopard/ForgePlay/tree/v1.0.0)
+- 정식 릴리스 / release: [ForgePlay 1.0 (build 1)](https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0)
+- Apple 공증 DMG / notarized DMG: [ForgePlay-1.0-1.dmg](https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.0.0/ForgePlay-1.0-1.dmg)
+- 검증 자료 / verification: [SHA-256](https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.0.0/ForgePlay-1.0-1.dmg.sha256) · [공증·서명 증빙 JSON](https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.0.0/ForgePlay-1.0-1.dmg.release.json)
+
+`main`에는 기존 GitHub Pages 홈페이지 파일과 공개 소스가 함께 있다. DMG와
+공증 증빙은 소스 트리에 커밋하지 않고 GitHub Releases에서 별도로 배포한다.
+
+The `main` branch keeps the existing GitHub Pages files alongside the published
+source. The DMG and notarization evidence remain release assets rather than
+committed source files.
 
 ## 먼저 밝히는 입장
 
@@ -245,7 +260,7 @@ Original source: https://github.com/Facta-Leopard/ForgePlay
 
 # ForgePlay Source — English
 
-[한국어](README_KO.md) | [Language index](README.md)
+[한국어](#forgeplay-source--한국어) | [Korean standalone](README_KO.md) | [English standalone](README_EN.md) | [Release v1.0.0](https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0)
 
 ## The position, stated plainly
 

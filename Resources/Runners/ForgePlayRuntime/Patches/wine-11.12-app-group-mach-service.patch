@@ -1,0 +1,66 @@
+diff --git a/dlls/ntdll/unix/server.c b/dlls/ntdll/unix/server.c
+index 00000000000..00000000000 100644
+--- a/dlls/ntdll/unix/server.c
++++ b/dlls/ntdll/unix/server.c
+@@ -1478,6 +1478,7 @@ static int server_connect(void)
+ static void send_server_task_port(void)
+ {
+     mach_port_t bootstrap_port, wineserver_port;
++    const char *service_name;
+     kern_return_t kret;
+
+     struct {
+@@ -1493,7 +1494,9 @@ static void send_server_task_port(void)
+         stat( config_dir, &st );
+         server_dir = init_server_dir( st.st_dev, st.st_ino );
+     }
+-    kret = bootstrap_look_up(bootstrap_port, server_dir, &wineserver_port);
++    service_name = getenv( "WINE_MACH_SERVICE_NAME" );
++    if (!service_name || !service_name[0]) service_name = server_dir;
++    kret = bootstrap_look_up(bootstrap_port, service_name, &wineserver_port);
+     if (kret != KERN_SUCCESS)
+         fatal_error( "cannot find the server port: 0x%08x\n", kret );
+
+diff --git a/server/mach.c b/server/mach.c
+index 00000000000..00000000000 100644
+--- a/server/mach.c
++++ b/server/mach.c
+@@ -24,6 +24,7 @@
+ #include <errno.h>
+ #include <stdio.h>
+ #include <signal.h>
++#include <stdlib.h>
+ #include <stdarg.h>
+ #include <sys/types.h>
+ #include <unistd.h>
+@@ -92,23 +93,27 @@ static int is_rosetta(void)
+     return rosetta_status;
+ }
+
+-extern kern_return_t bootstrap_register2( mach_port_t bp, name_t service_name, mach_port_t sp, uint64_t flags );
+-
+ /* initialize the process control mechanism */
+ void init_tracing_mechanism(void)
+ {
++    char *service_name = getenv( "WINE_MACH_SERVICE_NAME" );
+     mach_port_t bp;
+
++    if (!service_name || !service_name[0]) service_name = server_dir;
++
+     if (task_get_bootstrap_port( mach_task_self(), &bp ) != KERN_SUCCESS)
+         fatal_error( "Can't find bootstrap port\n" );
+     if (mach_port_allocate( mach_task_self(), MACH_PORT_RIGHT_RECEIVE, &server_mach_port ) != KERN_SUCCESS)
+         fatal_error( "Can't allocate port\n" );
+     if  (mach_port_insert_right( mach_task_self(),
+                                  server_mach_port,
+                                  server_mach_port,
+                                  MACH_MSG_TYPE_MAKE_SEND ) != KERN_SUCCESS)
+             fatal_error( "Error inserting rights\n" );
+-    if (bootstrap_register2( bp, server_dir, server_mach_port, 0 ) != KERN_SUCCESS)
++#pragma clang diagnostic push
++#pragma clang diagnostic ignored "-Wdeprecated-declarations"
++    if (bootstrap_register( bp, service_name, server_mach_port ) != KERN_SUCCESS)
+         fatal_error( "Can't check in server_mach_port\n" );
++#pragma clang diagnostic pop
+     mach_port_deallocate( mach_task_self(), bp );
+ }

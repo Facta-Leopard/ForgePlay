@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>D3DMETAL</key>
+	<true/>
+	<key>D9VK</key>
+	<true/>
+	<key>DXMT</key>
+	<true/>
+	<key>DXVK</key>
+	<true/>
+	<key>WINEDEBUG</key>
+	<string>-plugplay,+loaddll</string>
+</dict>
+</plist>

@@ -1,0 +1,289 @@
+{
+  "architecture": "x86_64",
+  "artifacts": [
+    {
+      "formula": "p11-kit",
+      "formulaVersion": "0.26.2",
+      "licenseExpression": "BSD-3-Clause",
+      "licensePaths": [
+        "Legal/P11-Kit/COPYING"
+      ],
+      "sourcePath": "lib/libp11-kit.0.dylib",
+      "sourceReference": "https://formulae.brew.sh/formula/p11-kit",
+      "sourceSHA256": "c90e5aee50149050745df569e8f3371b830fb2d15d56366ee7576461ed4545ca",
+      "targetPath": "wine/lib/libp11-kit.0.dylib"
+    },
+    {
+      "formula": "gnutls",
+      "formulaVersion": "3.8.13_2",
+      "licenseExpression": "LGPL-2.1-or-later AND GPL-3.0-only",
+      "licensePaths": [
+        "Legal/GnuTLS/COPYING.LESSERv2",
+        "Legal/GnuTLS/COPYING"
+      ],
+      "sourcePath": "lib/libgnutls.30.dylib",
+      "sourceReference": "https://formulae.brew.sh/formula/gnutls",
+      "sourceSHA256": "8992090dec64becf6c41be6c87447b2cad75ceea575c52786dadab2dd36226af",
+      "targetPath": "wine/lib/libgnutls.30.dylib"
+    },
+    {
+      "formula": "libtasn1",
+      "formulaVersion": "4.21.0",
+      "licenseExpression": "LGPL-2.1-or-later",
+      "licensePaths": [
+        "Legal/Libtasn1/COPYING.LESSERv2"
+      ],
+      "sourcePath": "lib/libtasn1.6.dylib",
+      "sourceReference": "https://formulae.brew.sh/formula/libtasn1",
+      "sourceSHA256": "22ede67170b7d188d644dbe892e18f2dba54f7272883adcfc14530b076dc56d9",
+      "targetPath": "wine/lib/libtasn1.6.dylib"
+    },
+    {
+      "formula": "libidn2",
+      "formulaVersion": "2.3.8",
+      "licenseExpression": "(GPL-2.0-or-later OR LGPL-3.0-or-later) AND Unicode-TOU AND Unicode-DFS-2016",
+      "licensePaths": [
+        "Legal/Libidn2/COPYING.LESSERv3",
+        "Legal/Libidn2/COPYING.unicode"
+      ],
+      "sourcePath": "lib/libidn2.0.dylib",
+      "sourceReference": "https://formulae.brew.sh/formula/libidn2",
+      "sourceSHA256": "be6936b089fbe9f6647fb0ef638561de875ca69500c87477158a45701377cec1",
+      "targetPath": "wine/lib/libidn2.0.dylib"
+    },
+    {
+      "formula": "libpng",
+      "formulaVersion": "1.6.58",
+      "licenseExpression": "libpng-2.0",
+      "licensePaths": [
+        "Legal/Libpng/LICENSE"
+      ],
+      "sourcePath": "lib/libpng16.16.dylib",
+      "sourceReference": "https://formulae.brew.sh/formula/libpng",
+      "sourceSHA256": "b018c5075aaf20179c62b0b86c6d308c5abbc80ad2d9cc5250560892be154787",
+      "targetPath": "wine/lib/libpng16.16.dylib"
+    },
+    {
+      "formula": "vulkan-loader",
+      "formulaVersion": "1.4.350.1",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/Vulkan-Loader/LICENSE.txt"
+      ],
+      "sourcePath": "lib/libvulkan.1.4.350.dylib",
+      "sourceReference": "https://formulae.brew.sh/formula/vulkan-loader",
+      "sourceSHA256": "d235dff40c240e41342ae98620217daad7afad05ed04b56fc571c835b183ce4c",
+      "targetPath": "wine/lib/libvulkan.dylib"
+    },
+    {
+      "formula": "vulkan-loader",
+      "formulaVersion": "1.4.350.1",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/Vulkan-Loader/LICENSE.txt"
+      ],
+      "sourcePath": "lib/libvulkan.1.4.350.dylib",
+      "sourceReference": "https://formulae.brew.sh/formula/vulkan-loader",
+      "sourceSHA256": "d235dff40c240e41342ae98620217daad7afad05ed04b56fc571c835b183ce4c",
+      "targetPath": "wine/lib/libvulkan.1.dylib"
+    },
+    {
+      "formula": "freetype",
+      "formulaVersion": "2.14.3",
+      "licenseExpression": "FTL",
+      "licensePaths": [
+        "Legal/FreeType/LICENSE.TXT"
+      ],
+      "sourcePath": "lib/libfreetype.6.dylib",
+      "sourceReference": "https://formulae.brew.sh/formula/freetype",
+      "sourceSHA256": "23c57bffa9fde184c38ddebd2592e79e4ee7e2e8973468bbfb74153ad2ab3d1c",
+      "targetPath": "wine/lib/libfreetype.6.dylib"
+    },
+    {
+      "formula": "molten-vk",
+      "formulaVersion": "1.4.1",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/MoltenVK/LICENSE"
+      ],
+      "sourcePath": "lib/libMoltenVK.dylib",
+      "sourceReference": "https://formulae.brew.sh/formula/molten-vk",
+      "sourceSHA256": "07c194ca3aa92106d15eaf5577f379014aa92019c37851d6352f59ff7e6014d8",
+      "targetPath": "wine/lib/libMoltenVK.dylib"
+    },
+    {
+      "formula": "molten-vk",
+      "formulaVersion": "1.4.1",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/MoltenVK/LICENSE"
+      ],
+      "sourcePath": "etc/vulkan/icd.d/MoltenVK_icd.json",
+      "sourceReference": "https://formulae.brew.sh/formula/molten-vk",
+      "sourceSHA256": "b514f51690582fb783383154b7a33c7816cc47e98ee1a1f652dccd3e996f0bf1",
+      "targetPath": "wine/etc/vulkan/icd.d/MoltenVK_icd.json"
+    },
+    {
+      "formula": "gettext",
+      "formulaVersion": "1.0",
+      "licenseExpression": "GPL-3.0-or-later AND LGPL-2.1-or-later",
+      "licensePaths": [
+        "Legal/Gettext/COPYING"
+      ],
+      "sourcePath": "lib/libintl.8.dylib",
+      "sourceReference": "https://formulae.brew.sh/formula/gettext",
+      "sourceSHA256": "56e85bfeae93c23765ca77ef584f753d13fa909eb0fb0d622c5e34211c0519fe",
+      "targetPath": "wine/lib/libintl.8.dylib"
+    },
+    {
+      "formula": "nettle",
+      "formulaVersion": "4.0",
+      "licenseExpression": "GPL-2.0-or-later OR LGPL-3.0-or-later",
+      "licensePaths": [
+        "Legal/Nettle/COPYING.LESSERv3"
+      ],
+      "sourcePath": "lib/libnettle.9.0.dylib",
+      "sourceReference": "https://formulae.brew.sh/formula/nettle",
+      "sourceSHA256": "7785c2ff8f090203e8463bfa45ba41707c2f80e686c819048297340c68c4c394",
+      "targetPath": "wine/lib/libnettle.9.dylib"
+    },
+    {
+      "formula": "nettle",
+      "formulaVersion": "4.0",
+      "licenseExpression": "GPL-2.0-or-later OR LGPL-3.0-or-later",
+      "licensePaths": [
+        "Legal/Nettle/COPYING.LESSERv3"
+      ],
+      "sourcePath": "lib/libhogweed.7.0.dylib",
+      "sourceReference": "https://formulae.brew.sh/formula/nettle",
+      "sourceSHA256": "9d7aeb270b517bc7709824c54e95241d283cb46a8988bba52fac2168f9383351",
+      "targetPath": "wine/lib/libhogweed.7.dylib"
+    },
+    {
+      "formula": "libunistring",
+      "formulaVersion": "1.4.2",
+      "licenseExpression": "GPL-2.0-or-later OR LGPL-3.0-or-later",
+      "licensePaths": [
+        "Legal/Libunistring/COPYING.LIB"
+      ],
+      "sourcePath": "lib/libunistring.5.dylib",
+      "sourceReference": "https://formulae.brew.sh/formula/libunistring",
+      "sourceSHA256": "46500265d18ce13d2fac746b477f41869f2aa19ba33f712a7b2c65d096d5c891",
+      "targetPath": "wine/lib/libunistring.5.dylib"
+    },
+    {
+      "formula": "gmp",
+      "formulaVersion": "6.3.0",
+      "licenseExpression": "LGPL-3.0-or-later OR GPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GMP/COPYING.LESSERv3"
+      ],
+      "sourcePath": "lib/libgmp.10.dylib",
+      "sourceReference": "https://formulae.brew.sh/formula/gmp",
+      "sourceSHA256": "31b41d0359fce1c234dcca3104ea937637a56734592f1bd4d51fb14ee25fd30b",
+      "targetPath": "wine/lib/libgmp.10.dylib"
+    }
+  ],
+  "licenses": [
+    {
+      "formula": "p11-kit",
+      "formulaVersion": "0.26.2",
+      "sourcePath": "COPYING",
+      "sourceSHA256": "2e1ba993904df807a10c3eda1e5c272338edc35674b679773a8b3ad460731054",
+      "targetPath": "Legal/P11-Kit/COPYING"
+    },
+    {
+      "formula": "gnutls",
+      "formulaVersion": "3.8.13_2",
+      "sourcePath": "COPYING.LESSERv2",
+      "sourceSHA256": "20e50fe7aae3e56378ebf0417d9de904f55a0e61e4df315333e632a4d3555d95",
+      "targetPath": "Legal/GnuTLS/COPYING.LESSERv2"
+    },
+    {
+      "formula": "gnutls",
+      "formulaVersion": "3.8.13_2",
+      "sourcePath": "COPYING",
+      "sourceSHA256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+      "targetPath": "Legal/GnuTLS/COPYING"
+    },
+    {
+      "formula": "libtasn1",
+      "formulaVersion": "4.21.0",
+      "sourcePath": "COPYING.LESSERv2",
+      "sourceSHA256": "20e50fe7aae3e56378ebf0417d9de904f55a0e61e4df315333e632a4d3555d95",
+      "targetPath": "Legal/Libtasn1/COPYING.LESSERv2"
+    },
+    {
+      "formula": "libidn2",
+      "formulaVersion": "2.3.8",
+      "sourcePath": "COPYING.LESSERv3",
+      "sourceSHA256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118",
+      "targetPath": "Legal/Libidn2/COPYING.LESSERv3"
+    },
+    {
+      "formula": "libidn2",
+      "formulaVersion": "2.3.8",
+      "sourcePath": "COPYING.unicode",
+      "sourceSHA256": "01d621eef165cf4d3d3dbb737aa0699178d94c6f18cf87e9dde6db3ca7790f46",
+      "targetPath": "Legal/Libidn2/COPYING.unicode"
+    },
+    {
+      "formula": "libpng",
+      "formulaVersion": "1.6.58",
+      "sourcePath": "LICENSE",
+      "sourceSHA256": "bdb0a645ea18c60507d0368379b1ac5474b92255fcc2d115e07486a7672ba526",
+      "targetPath": "Legal/Libpng/LICENSE"
+    },
+    {
+      "formula": "vulkan-loader",
+      "formulaVersion": "1.4.350.1",
+      "sourcePath": "LICENSE.txt",
+      "sourceSHA256": "43c0a37e6a0fa7ff3c843b3ec5a4fac84b712558ddac103fbd4c1649662a9ece",
+      "targetPath": "Legal/Vulkan-Loader/LICENSE.txt"
+    },
+    {
+      "formula": "freetype",
+      "formulaVersion": "2.14.3",
+      "sourcePath": "LICENSE.TXT",
+      "sourceSHA256": "bd36c8b474855fa294c2ec5c184544478ef3720aad37d65a6296a4f264fd2d3b",
+      "targetPath": "Legal/FreeType/LICENSE.TXT"
+    },
+    {
+      "formula": "molten-vk",
+      "formulaVersion": "1.4.1",
+      "sourcePath": "LICENSE",
+      "sourceSHA256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "targetPath": "Legal/MoltenVK/LICENSE"
+    },
+    {
+      "formula": "gettext",
+      "formulaVersion": "1.0",
+      "sourcePath": "COPYING",
+      "sourceSHA256": "e79e9c8a0c85d735ff98185918ec94ed7d175efc377012787aebcf3b80f0d90b",
+      "targetPath": "Legal/Gettext/COPYING"
+    },
+    {
+      "formula": "nettle",
+      "formulaVersion": "4.0",
+      "sourcePath": "COPYING.LESSERv3",
+      "sourceSHA256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118",
+      "targetPath": "Legal/Nettle/COPYING.LESSERv3"
+    },
+    {
+      "formula": "libunistring",
+      "formulaVersion": "1.4.2",
+      "sourcePath": "COPYING.LIB",
+      "sourceSHA256": "a853c2ffec17057872340eee242ae4d96cbf2b520ae27d903e1b2fef1a5f9d1c",
+      "targetPath": "Legal/Libunistring/COPYING.LIB"
+    },
+    {
+      "formula": "gmp",
+      "formulaVersion": "6.3.0",
+      "sourcePath": "COPYING.LESSERv3",
+      "sourceSHA256": "a853c2ffec17057872340eee242ae4d96cbf2b520ae27d903e1b2fef1a5f9d1c",
+      "targetPath": "Legal/GMP/COPYING.LESSERv3"
+    }
+  ],
+  "provider": "homebrew-core-prebuilt-package",
+  "schemaVersion": 1
+}

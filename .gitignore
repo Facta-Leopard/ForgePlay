@@ -1,0 +1,34 @@
+.DS_Store
+.forgeplay-source-export
+
+# Xcode user and build state
+xcuserdata/
+*.xcuserstate
+DerivedData/
+Build/
+.build/
+
+# Local signing and machine-specific configuration
+Config/ForgePlay.local.xcconfig
+
+# Generated products and release artifacts
+*.app
+*.dmg
+*.xcarchive
+dist/
+Artifacts/
+LiveEvidence/
+
+# Binary runtime payloads are intentionally outside this source tree
+Resources/Runners/ForgePlayRuntime/wine/
+Resources/Runners/ForgePlayRuntime/Frameworks/
+Resources/Runners/ForgePlayRuntime/SteamCompat/
+Resources/Runners/ForgePlayRuntime/RuntimeSBOM.json
+Resources/Runners/ForgePlayRuntime/BUILD-METADATA.md
+
+# Local caches
+.cache/
+.derived/
+.derived-*/
+__pycache__/
+*.py[cod]

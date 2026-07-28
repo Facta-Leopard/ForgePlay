@@ -1,0 +1,164 @@
+diff --git a/dlls/ntdll/unix/loader.c b/dlls/ntdll/unix/loader.c
+--- a/dlls/ntdll/unix/loader.c
++++ b/dlls/ntdll/unix/loader.c
+@@ -110,6 +110,65 @@
+ #ifdef __GNUC__
+ static void fatal_error( const char *err, ... ) __attribute__((noreturn, format(printf,1,2)));
+ #endif
++
++#define FORGEPLAY_EXTERNAL_STORAGE_REASON_CAPACITY 512
++
++typedef int (*forgeplay_external_storage_activate_func)( char *, size_t );
++
++static int forgeplay_activate_external_storage_grants( const char *program )
++{
++    char reason[FORGEPLAY_EXTERNAL_STORAGE_REASON_CAPACITY] = {0};
++    const char *bridge = getenv( "FORGEPLAY_EXTERNAL_STORAGE_BRIDGE" );
++    const char *manifest_file = getenv( "FORGEPLAY_EXTERNAL_STORAGE_GRANT_FILE" );
++    const char *manifest_sha256 = getenv( "FORGEPLAY_EXTERNAL_STORAGE_GRANT_SHA256" );
++    const char *run_id = getenv( "FORGEPLAY_EXTERNAL_STORAGE_GRANT_RUN_ID" );
++    const char *loader_reason;
++    forgeplay_external_storage_activate_func activate;
++    void *handle;
++
++    if (!bridge && !manifest_file && !manifest_sha256 && !run_id) return 1;
++    if (!bridge || !bridge[0] || !manifest_file || !manifest_file[0] ||
++        !manifest_sha256 || !manifest_sha256[0] || !run_id || !run_id[0])
++    {
++        fprintf( stderr, "FORGEPLAY_EXTERNAL_STORAGE_GRANT_V1 program=%s status=failed reason=incomplete-environment\n",
++                 program );
++        return 0;
++    }
++
++    dlerror();
++    if (!(handle = dlopen( bridge, RTLD_NOW | RTLD_LOCAL )))
++    {
++        loader_reason = dlerror();
++        (void)loader_reason;
++        fprintf( stderr, "FORGEPLAY_EXTERNAL_STORAGE_GRANT_V1 program=%s status=failed reason=bridge-load\n",
++                 program );
++        return 0;
++    }
++
++    dlerror();
++    activate = dlsym( handle, "FPActivateExternalStorageGrantManifest" );
++    loader_reason = dlerror();
++    if (loader_reason || !activate)
++    {
++        fprintf( stderr, "FORGEPLAY_EXTERNAL_STORAGE_GRANT_V1 program=%s status=failed reason=bridge-symbol\n",
++                 program );
++        dlclose( handle );
++        return 0;
++    }
++
++    if (activate( reason, sizeof(reason) ))
++    {
++        reason[sizeof(reason) - 1] = 0;
++        fprintf( stderr, "FORGEPLAY_EXTERNAL_STORAGE_GRANT_V1 program=%s status=failed reason=manifest-rejected\n",
++                 program );
++        dlclose( handle );
++        return 0;
++    }
++
++    fprintf( stderr, "FORGEPLAY_EXTERNAL_STORAGE_GRANT_V1 program=wine status=activated\n" );
++    /* Keep the bridge loaded for the lifetime of this Wine process. */
++    return 1;
++}
+ 
+ static const char *bin_dir;
+ static const char *dll_dir;
+@@ -2261,6 +2320,8 @@
+  */
+ DECLSPEC_EXPORT void __wine_main( int argc, char *argv[] )
+ {
++    forgeplay_activate_external_storage_grants( "wine" );
++
+     main_argc = argc;
+     main_argv = argv;
+ 
+diff --git a/server/main.c b/server/main.c
+--- a/server/main.c
++++ b/server/main.c
+@@ -22,6 +22,7 @@
+ 
+ #include <assert.h>
+ #include <ctype.h>
++#include <dlfcn.h>
+ #include <fcntl.h>
+ #include <signal.h>
+ #include <stdio.h>
+@@ -46,6 +47,65 @@
+ int foreground = 0;
+ timeout_t master_socket_timeout = 3 * -TICKS_PER_SEC;  /* master socket timeout, default is 3 seconds */
+ const char *server_argv0;
++
++#define FORGEPLAY_EXTERNAL_STORAGE_REASON_CAPACITY 512
++
++typedef int (*forgeplay_external_storage_activate_func)( char *, size_t );
++
++static int forgeplay_activate_external_storage_grants(void)
++{
++    char reason[FORGEPLAY_EXTERNAL_STORAGE_REASON_CAPACITY] = {0};
++    const char *bridge = getenv( "FORGEPLAY_EXTERNAL_STORAGE_BRIDGE" );
++    const char *manifest_file = getenv( "FORGEPLAY_EXTERNAL_STORAGE_GRANT_FILE" );
++    const char *manifest_sha256 = getenv( "FORGEPLAY_EXTERNAL_STORAGE_GRANT_SHA256" );
++    const char *run_id = getenv( "FORGEPLAY_EXTERNAL_STORAGE_GRANT_RUN_ID" );
++    const char *loader_reason;
++    forgeplay_external_storage_activate_func activate;
++    void *handle;
++
++    if (!bridge && !manifest_file && !manifest_sha256 && !run_id) return 1;
++    if (!bridge || !bridge[0] || !manifest_file || !manifest_file[0] ||
++        !manifest_sha256 || !manifest_sha256[0] || !run_id || !run_id[0])
++    {
++        fprintf( stderr,
++                 "FORGEPLAY_EXTERNAL_STORAGE_GRANT_V1 program=wineserver status=failed reason=incomplete-environment\n" );
++        return 0;
++    }
++
++    dlerror();
++    if (!(handle = dlopen( bridge, RTLD_NOW | RTLD_LOCAL )))
++    {
++        loader_reason = dlerror();
++        (void)loader_reason;
++        fprintf( stderr,
++                 "FORGEPLAY_EXTERNAL_STORAGE_GRANT_V1 program=wineserver status=failed reason=bridge-load\n" );
++        return 0;
++    }
++
++    dlerror();
++    activate = dlsym( handle, "FPActivateExternalStorageGrantManifest" );
++    loader_reason = dlerror();
++    if (loader_reason || !activate)
++    {
++        fprintf( stderr,
++                 "FORGEPLAY_EXTERNAL_STORAGE_GRANT_V1 program=wineserver status=failed reason=bridge-symbol\n" );
++        dlclose( handle );
++        return 0;
++    }
++
++    if (activate( reason, sizeof(reason) ))
++    {
++        reason[sizeof(reason) - 1] = 0;
++        fprintf( stderr,
++                 "FORGEPLAY_EXTERNAL_STORAGE_GRANT_V1 program=wineserver status=failed reason=manifest-rejected\n" );
++        dlclose( handle );
++        return 0;
++    }
++
++    fprintf( stderr, "FORGEPLAY_EXTERNAL_STORAGE_GRANT_V1 program=wineserver status=activated\n" );
++    /* Keep the bridge loaded for the lifetime of wineserver. */
++    return 1;
++}
+ 
+ /* parse-line args */
+ 
+@@ -244,6 +304,8 @@
+ int main( int argc, char *argv[] )
+ {
+     setvbuf( stderr, NULL, _IOLBF, 0 );
++    forgeplay_activate_external_storage_grants();
++
+     server_argv0 = argv[0];
+     parse_options( argc, argv, "d::fhk::p::vw", long_options, option_callback );
+ 

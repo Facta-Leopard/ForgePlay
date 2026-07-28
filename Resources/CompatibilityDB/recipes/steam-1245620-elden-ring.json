@@ -1,0 +1,19 @@
+{
+  "beginnerSummary": "최신 ForgePlay Runtime과 D3DMetal 게임 렌더러 payload를 먼저 확인하고, Windows용 Steam을 로그인 상태로 유지한 뒤 실행하는 것을 권장합니다.",
+  "confidence": 0.62,
+  "id": "steam-1245620-elden-ring",
+  "lastVerifiedAt": "2026-06-18T00:00:00Z",
+  "launchOptions": [],
+  "name": "ELDEN RING",
+  "notes": [
+    "Game-specific tuning may change by GPTK and macOS release.",
+    "Do not install arbitrary DLL packs."
+  ],
+  "preferredGraphicsBackend": "d3dMetal",
+  "requiredRuntimes": [
+    "vcrun2022"
+  ],
+  "steamAppId": "1245620",
+  "supportStatus": "partial",
+  "technicalSummary": "High-demand D3D12 Steam title. Prefer current ForgePlay Runtime or Apple GPTK with the Steam Prefix baseline."
+}

@@ -24,13 +24,17 @@ GPLv3를 완전히 준수하는 이용자는 별도 허락 없이 상업적으�
    현재 파일 구조와 작동 기전에 따른 상세 한국어 적용 범위
 4. `GAME_MODE_LICENSE_SCOPE.md`  
    GitHub 공개용 영문 적용 범위
-5. `GAME_MODE_NOTICE`  
+5. `GAME_MODE_FILE_LICENSES.json`  
+   전체 파일·혼합 파일·해시 고정 패치의 기계 판독 가능한 라이선스 지정
+6. `GAME_MODE_SYMBOL_MANIFEST.md`  
+   Game Mode와 일반 책임이 섞인 파일의 정확한 선언 경계
+7. `GAME_MODE_NOTICE`  
    바이너리와 소스 배포물에 포함할 저작권·출처 고지
-6. `../GPL-3.0-only.txt`  
+8. `../GPL-3.0-only.txt`  
    수정하지 않은 GNU GPL version 3 영문 전문
-7. `../LGPL-2.1-or-later.txt`  
+9. `../LGPL-2.1-or-later.txt`  
    Wine 원본에서 복사한 GNU LGPL version 2.1 전문
-8. `../../LICENSE.md`  
+10. `../../LICENSE.md`  
    다중 라이선스 저장소의 루트 적용 범위표
 
 ## 배포 원칙
