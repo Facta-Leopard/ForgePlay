@@ -9,6 +9,13 @@
       "chip": "M4 Pro",
       "unifiedMemoryGB": 24,
       "macOSVersion": null
+    },
+    {
+      "id": "apple-silicon-m3-max-36gb-tahoe-26-5-1",
+      "platform": "Apple Silicon Mac",
+      "chip": "M3 Max",
+      "unifiedMemoryGB": 36,
+      "macOSVersion": "Tahoe 26.5.1"
     }
   ],
   "games": [
@@ -94,6 +101,13 @@
       "titles": {
         "en": "Yu-Gi-Oh! Master Duel",
         "ko": "유희왕 마스터 듀얼"
+      }
+    },
+    {
+      "id": "tekken-8",
+      "titles": {
+        "en": "Tekken 8",
+        "ko": "철권 8"
       }
     }
   ],
@@ -216,6 +230,26 @@
       "source": "project-test",
       "testedAt": null,
       "notes": null,
+      "blocker": null
+    },
+    {
+      "id": "tekken-8-m3-max-36gb-community-guswnswkd15",
+      "gameId": "tekken-8",
+      "testProfileId": "apple-silicon-m3-max-36gb-tahoe-26-5-1",
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "guswnswkd15",
+      "testedAt": null,
+      "notes": {
+        "en": "Tested at 1080p on High settings across about eight ranked matches. Occasional frame drops occurred in enclosed areas before enough shader data had downloaded, then eased as the map download progressed. No issues beyond stuttering were observed.",
+        "ko": "1080p 상옵에서 랭크 매치를 약 8회 진행했습니다. 셰이더 다운로드가 충분히 진행되기 전에는 구석진 공간에서 간헐적으로 프레임이 떨어졌지만, 맵 다운로드가 어느 정도 진행된 뒤에는 완화되었습니다. 스터터링 외에 특이사항은 없었습니다.",
+        "ja": "1080p・高設定でランクマッチを約8試合プレイ。シェーダーデータのダウンロードが十分に進む前は狭い場所でまれにフレームレートが低下しましたが、マップのダウンロードが進むと軽減しました。スタッタリング以外の問題は確認されていません。",
+        "zh-Hans": "在 1080p 高画质下进行了约 8 场排位赛。着色器数据尚未充分下载时，狭窄区域偶尔会掉帧；随着地图下载推进，情况有所缓解。除卡顿外未发现其他异常。",
+        "zh-Hant": "以 1080p 高畫質進行了約 8 場排名賽。著色器資料尚未充分下載時，狹窄區域偶爾會掉幀；隨著地圖下載推進，情況有所緩解。除卡頓外未發現其他異常。",
+        "de": "Getestet in 1080p mit hohen Einstellungen über etwa acht Ranglistenspiele. Bevor genügend Shader-Daten geladen waren, kam es in engen Bereichen gelegentlich zu Bildrateneinbrüchen; mit fortschreitendem Karten-Download ließ dies nach. Abgesehen von Rucklern wurden keine Auffälligkeiten beobachtet.",
+        "es": "Probado a 1080p con ajustes altos durante unas ocho partidas clasificatorias. Antes de que se descargaran suficientes datos de sombreadores, hubo caídas ocasionales de fotogramas en zonas cerradas; disminuyeron a medida que avanzó la descarga del mapa. No se observaron problemas aparte de algunos tirones.",
+        "fr": "Testé en 1080p avec des réglages élevés pendant environ huit parties classées. Avant le téléchargement d’une quantité suffisante de données de shaders, des baisses d’images occasionnelles se produisaient dans les espaces confinés ; elles se sont atténuées à mesure que le téléchargement de la carte avançait. Aucun autre problème que des saccades n’a été constaté."
+      },
       "blocker": null
     }
   ]

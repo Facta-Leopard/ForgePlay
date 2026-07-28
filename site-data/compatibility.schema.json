@@ -141,6 +141,10 @@
             "community-report"
           ]
         },
+        "reporter": {
+          "type": "string",
+          "minLength": 1
+        },
         "testedAt": {
           "type": [
             "string",

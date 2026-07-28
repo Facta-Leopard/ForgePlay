@@ -22,6 +22,7 @@ One spreadsheet row should represent one test report. The preferred columns are:
 | `macos_version` | optional | `26.0` |
 | `tested_at` | optional | `2026-07-28` |
 | `source` | yes | `project-test` or `community-report` |
+| `reporter` | optional | Public GitHub handle for an attributed community report |
 | `blocker` | optional | `anti-cheat`, `launcher`, `graphics`, `runtime`, or `unknown` |
 | `notes_en` | optional | Free-form public note |
 | `notes_ko` | optional | 공개 비고 |

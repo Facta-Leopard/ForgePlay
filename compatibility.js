@@ -38,6 +38,14 @@
     return `${profile.chip} · ${profile.unifiedMemoryGB}GB`;
   };
 
+  const formatProfileDetails = (profile) => {
+    if (!profile) return "—";
+    return [
+      profile.platform,
+      profile.macOSVersion ? `macOS ${profile.macOSVersion}` : null
+    ].filter(Boolean).join(" · ") || "—";
+  };
+
   const formatDate = (value, selectedLocale) => {
     if (!value) return "";
     const date = new Date(`${value}T00:00:00Z`);
@@ -146,7 +154,7 @@
         message("compat.columnDevice", "Tested device")
       );
       appendTextElement(deviceCell, "strong", "", formatProfile(profile));
-      appendTextElement(deviceCell, "span", "", profile?.platform || "—");
+      appendTextElement(deviceCell, "span", "", formatProfileDetails(profile));
 
       const verificationCell = makeCell(
         "compatibility-verification-cell",
@@ -161,14 +169,15 @@
         "",
         message(sourceKey, report.source)
       );
-      appendTextElement(
-        verificationCell,
-        "span",
-        "",
+      const verificationDetails = [
+        report.reporter ? `@${report.reporter}` : null,
         report.testedAt
           ? formatDate(report.testedAt, selectedLocale)
-          : message("compat.verificationInitial", "Initial test")
-      );
+          : report.reporter
+            ? null
+            : message("compat.verificationInitial", "Initial test")
+      ].filter(Boolean).join(" · ");
+      appendTextElement(verificationCell, "span", "", verificationDetails);
 
       const notesCell = makeCell(
         "compatibility-notes-cell",

@@ -344,6 +344,11 @@ for report_id, report in report_by_id.items():
         raise SystemExit(f"report {report_id} has an invalid status")
     if report.get("source") not in allowed_sources:
         raise SystemExit(f"report {report_id} has an invalid source")
+    reporter = report.get("reporter")
+    if reporter is not None and (
+        not isinstance(reporter, str) or not reporter.strip()
+    ):
+        raise SystemExit(f"report {report_id} has an invalid reporter")
     if report.get("blocker") not in allowed_blockers:
         raise SystemExit(f"report {report_id} has an invalid blocker")
 
@@ -377,6 +382,37 @@ seed_reports = [
 ]
 if {report["gameId"] for report in seed_reports} != seed_game_ids:
     raise SystemExit("every seed game must have a playable M4 Pro 24GB report")
+
+tekken_profile = profile_by_id.get("apple-silicon-m3-max-36gb-tahoe-26-5-1")
+if (
+    not tekken_profile
+    or tekken_profile.get("chip") != "M3 Max"
+    or tekken_profile.get("unifiedMemoryGB") != 36
+    or tekken_profile.get("macOSVersion") != "Tahoe 26.5.1"
+):
+    raise SystemExit(
+        "compatibility database must include the reported M3 Max 36GB "
+        "Tahoe 26.5.1 profile"
+    )
+
+tekken_report = report_by_id.get("tekken-8-m3-max-36gb-community-guswnswkd15")
+if (
+    "tekken-8" not in game_by_id
+    or not tekken_report
+    or tekken_report.get("gameId") != "tekken-8"
+    or tekken_report.get("testProfileId") != tekken_profile.get("id")
+    or tekken_report.get("status") != "playable"
+    or tekken_report.get("source") != "community-report"
+    or tekken_report.get("reporter") != "guswnswkd15"
+):
+    raise SystemExit("compatibility database must include the Tekken 8 community report")
+
+tekken_notes = tekken_report.get("notes")
+if not isinstance(tekken_notes, dict) or not all(
+    isinstance(tekken_notes.get(locale), str) and tekken_notes[locale].strip()
+    for locale in locale_names
+):
+    raise SystemExit("Tekken 8 report notes must cover all eight site locales")
 
 announcements_path = root / "site-data" / "announcements.json"
 announcements_schema_path = root / "site-data" / "announcements.schema.json"
@@ -547,20 +583,18 @@ PY
 
 for html in index.html why.html license.html privacy.html support.html compatibility.html updates.html; do
   require_snippet "$ROOT_DIR/$html" '<html lang="en">'
-  require_snippet "$ROOT_DIR/$html" 'src="locale-bootstrap.js?v=20260728-9"'
-  require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260728-9"'
-  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260728-9"'
+  require_snippet "$ROOT_DIR/$html" 'src="locale-bootstrap.js?v=20260728-10"'
+  require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260728-10"'
+  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260728-10"'
   require_snippet "$ROOT_DIR/$html" 'data-language-select'
   require_snippet "$ROOT_DIR/$html" 'site-assets/forgeplay-icon.png'
-  require_snippet "$ROOT_DIR/$html" 'class="community-link"'
-  require_snippet "$ROOT_DIR/$html" 'href="https://gall.dcinside.com/mgallery/board/lists/?id=macbook"'
   require_snippet "$ROOT_DIR/$html" 'target="_blank" rel="noopener noreferrer"'
-  require_snippet "$ROOT_DIR/$html" 'data-i18n="shared.navCommunity"'
   require_snippet "$ROOT_DIR/$html" 'href="https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0"'
   require_snippet "$ROOT_DIR/$html" 'href="https://github.com/Facta-Leopard/ForgePlay/tree/main"'
   require_snippet "$ROOT_DIR/$html" 'data-i18n="shared.navSource"'
-  if [[ "$(grep -c 'class="community-link"' "$ROOT_DIR/$html")" -ne 1 ]]; then
-    fail "$html must contain exactly one DCInside MacBook Gallery link"
+  if grep -Fq 'gall.dcinside.com' "$ROOT_DIR/$html" || \
+     grep -Fq 'data-i18n="shared.navCommunity"' "$ROOT_DIR/$html"; then
+    fail "$html must not contain the retired DCInside navigation link"
   fi
 done
 
@@ -588,10 +622,11 @@ require_snippet "$ROOT_DIR/index.html" 'site-assets/forgeplay-manifesto-3200.jpg
 require_snippet "$ROOT_DIR/index.html" 'data-compatibility-count'
 require_snippet "$ROOT_DIR/index.html" 'href="compatibility.html"'
 require_snippet "$ROOT_DIR/index.html" 'PLAYABLE IN GAME MODE'
+require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count>13</strong>'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
-require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260728-9"'
-require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260728-9"'
-require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260728-9"'
+require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260728-10"'
+require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260728-10"'
+require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260728-10"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
 require_snippet "$ROOT_DIR/index.html" 'id="other-apps"'
 require_snippet "$ROOT_DIR/index.html" 'data-developer-app-grid'
@@ -610,17 +645,21 @@ require_snippet "$ROOT_DIR/compatibility.html" 'Playable in Game Mode'
 require_snippet "$ROOT_DIR/compatibility.html" 'Logs shorten the distance to a fix.'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.logLabel"'
 require_snippet "$ROOT_DIR/compatibility.html" 'issues/new?template=compatibility-report.yml'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260728-9"'
+require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count>13</strong>'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260728-10"'
 require_snippet "$ROOT_DIR/compatibility.js" 'site-data/compatibility-games.json'
 require_snippet "$ROOT_DIR/compatibility.js" 'forgeplay:localechange'
+require_snippet "$ROOT_DIR/compatibility.js" 'profile.macOSVersion ? `macOS ${profile.macOSVersion}` : null'
+require_snippet "$ROOT_DIR/compatibility.js" 'report.reporter ? `@${report.reporter}` : null'
 require_snippet "$ROOT_DIR/site.js" '"compat.statusPlayable": "게임 모드로 플레이 가능"'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Excel / spreadsheet import contract'
+require_snippet "$ROOT_DIR/site-data/README.md" '`reporter`'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Developer app catalog'
 require_snippet "$ROOT_DIR/site-data/README.md" 'DeveloperAppCatalog.swift'
 
 require_snippet "$ROOT_DIR/updates.html" 'data-announcement-list'
 require_snippet "$ROOT_DIR/updates.html" 'data-nav-page="updates"'
-require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260728-9"'
+require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260728-10"'
 require_snippet "$ROOT_DIR/announcements.js" 'site-data/announcements.json'
 require_snippet "$ROOT_DIR/announcements.js" 'forgeplay:localechange'
 require_snippet "$ROOT_DIR/announcements.js" 'applyLinkDestination'
@@ -700,7 +739,6 @@ require_snippet "$ROOT_DIR/site.css" "word-break: keep-all"
 require_snippet "$ROOT_DIR/site.css" ".world-first-route"
 require_snippet "$ROOT_DIR/site.css" ".updates-list"
 require_snippet "$ROOT_DIR/site.css" '.nav-links a[aria-current="page"]'
-require_snippet "$ROOT_DIR/site.css" ".nav-links a.community-link"
 require_snippet "$ROOT_DIR/site.css" ".developer-app-grid"
 require_snippet "$ROOT_DIR/site.css" ".release-actions"
 require_snippet "$ROOT_DIR/site.css" ".release-status.live"
@@ -716,10 +754,17 @@ require_snippet "$ROOT_DIR/site.js" 'section.hidden = section.getAttribute("lang
 require_snippet "$ROOT_DIR/site.js" 'new Set(["privacy", "support", "why", "license"])'
 require_snippet "$ROOT_DIR/site.js" 'window.ForgePlaySite = Object.freeze'
 require_snippet "$ROOT_DIR/site.js" 'document.dispatchEvent(new CustomEvent("forgeplay:localechange"'
-require_snippet "$ROOT_DIR/site.js" '"shared.navCommunity": "디시인사이드 맥북갤러리"'
 require_snippet "$ROOT_DIR/site.js" '"shared.navSource": "소스 코드"'
 require_snippet "$ROOT_DIR/site.js" '"home.releaseStatus": "지금 다운로드 가능 · v1.0.0"'
 require_snippet "$ROOT_DIR/site.js" '"home.releaseStatus": "AVAILABLE NOW · v1.0.0"'
+
+if grep -Fq 'shared.navCommunity' "$ROOT_DIR/site.js"; then
+  fail "site.js must not contain the retired DCInside navigation localization"
+fi
+
+if grep -Fq 'community-link' "$ROOT_DIR/site.css"; then
+  fail "site.css must not contain retired DCInside navigation styles"
+fi
 
 if [[ -d "$ROOT_DIR/.git" ]]; then
   require_regular_file "$ROOT_DIR/.github/ISSUE_TEMPLATE/compatibility-report.yml"
