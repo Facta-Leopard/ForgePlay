@@ -125,7 +125,14 @@
           "$ref": "#/$defs/identifier"
         },
         "testProfileId": {
-          "$ref": "#/$defs/identifier"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "status": {
           "enum": [
@@ -138,7 +145,8 @@
         "source": {
           "enum": [
             "project-test",
-            "github-issue"
+            "github-issue",
+            "community-report"
           ]
         },
         "reporter": {
@@ -172,6 +180,7 @@
             "launcher",
             "graphics",
             "runtime",
+            "security-module",
             "unknown",
             null
           ]

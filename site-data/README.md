@@ -15,15 +15,15 @@ One spreadsheet row should represent one test report. The preferred columns are:
 | `title_en` | yes for a new game | `Stellar Blade` |
 | `title_ko` | optional | `스텔라 블레이드` |
 | `status` | yes | `playable`, `testing`, `blocked`, or `unknown` |
-| `device_id` | yes | `apple-silicon-m4-pro-24gb` |
+| `device_id` | yes; leave blank if not reported | `apple-silicon-m4-pro-24gb` |
 | `platform` | yes for a new device | `Apple Silicon Mac` |
 | `chip` | yes for a new device | `M4 Pro` |
 | `unified_memory_gb` | yes for a new device | `24` |
 | `macos_version` | optional | `26.0` |
 | `tested_at` | optional | `2026-07-28` |
-| `source` | yes | `project-test` or `github-issue` |
-| `reporter` | optional | Public GitHub handle for an attributed issue report |
-| `blocker` | optional | `anti-cheat`, `launcher`, `graphics`, `runtime`, or `unknown` |
+| `source` | yes | `project-test`, `github-issue`, or `community-report` |
+| `reporter` | optional | Public handle or display name for an attributed report |
+| `blocker` | optional | `anti-cheat`, `launcher`, `graphics`, `runtime`, `security-module`, or `unknown` |
 | `notes_en` | optional | Free-form public note |
 | `notes_ko` | optional | 공개 비고 |
 

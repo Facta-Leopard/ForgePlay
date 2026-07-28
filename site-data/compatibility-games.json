@@ -1,7 +1,7 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 1,
-  "updatedAt": "2026-07-28",
+  "updatedAt": "2026-07-29",
   "testProfiles": [
     {
       "id": "apple-silicon-m4-pro-24gb",
@@ -108,6 +108,27 @@
       "titles": {
         "en": "Tekken 8",
         "ko": "철권 8"
+      }
+    },
+    {
+      "id": "umamusume-pretty-derby",
+      "titles": {
+        "en": "Umamusume: Pretty Derby",
+        "ko": "우마무스메 프리티 더비"
+      }
+    },
+    {
+      "id": "grand-theft-auto-iv",
+      "titles": {
+        "en": "Grand Theft Auto IV",
+        "ko": "GTA 4"
+      }
+    },
+    {
+      "id": "blue-archive",
+      "titles": {
+        "en": "Blue Archive",
+        "ko": "블루 아카이브"
       }
     }
   ],
@@ -251,6 +272,66 @@
         "fr": "Testé en 1080p avec des réglages élevés pendant environ huit parties classées. Avant le téléchargement d’une quantité suffisante de données de shaders, des baisses d’images occasionnelles se produisaient dans les espaces confinés ; elles se sont atténuées à mesure que le téléchargement de la carte avançait. Aucun autre problème que des saccades n’a été constaté."
       },
       "blocker": null
+    },
+    {
+      "id": "umamusume-pretty-derby-community-lotus-20260729",
+      "gameId": "umamusume-pretty-derby",
+      "testProfileId": null,
+      "status": "blocked",
+      "source": "community-report",
+      "reporter": "로투스홍차튀김",
+      "testedAt": null,
+      "notes": {
+        "en": "A community report says the game does not run at all. The tested Mac and software versions were not provided.",
+        "ko": "커뮤니티 제보에 따르면 게임을 전혀 실행할 수 없습니다. 테스트한 Mac과 소프트웨어 버전은 제보되지 않았습니다.",
+        "ja": "コミュニティから、ゲームをまったく起動できないとの報告がありました。テストしたMacとソフトウェアのバージョンは未報告です。",
+        "zh-Hans": "社区反馈称该游戏完全无法运行。未提供测试所用的 Mac 和软件版本。",
+        "zh-Hant": "社群回報指出該遊戲完全無法執行。未提供測試所用的 Mac 與軟體版本。",
+        "de": "Laut einer Community-Meldung lässt sich das Spiel überhaupt nicht starten. Der getestete Mac und die Softwareversionen wurden nicht angegeben.",
+        "es": "Según un informe de la comunidad, el juego no se ejecuta en absoluto. No se indicaron el Mac probado ni las versiones del software.",
+        "fr": "Selon un signalement de la communauté, le jeu ne se lance pas du tout. Le Mac testé et les versions logicielles n’ont pas été indiqués."
+      },
+      "blocker": "unknown"
+    },
+    {
+      "id": "grand-theft-auto-iv-community-anonymous-20260729",
+      "gameId": "grand-theft-auto-iv",
+      "testProfileId": null,
+      "status": "blocked",
+      "source": "community-report",
+      "reporter": "ㅇㅇ",
+      "testedAt": null,
+      "notes": {
+        "en": "The process exits at the launcher, so the game cannot be started. The tested Mac and software versions were not provided.",
+        "ko": "런처 단계에서 종료되어 게임에 진입할 수 없습니다. 테스트한 Mac과 소프트웨어 버전은 제보되지 않았습니다.",
+        "ja": "ランチャーの段階で終了し、ゲームを開始できません。テストしたMacとソフトウェアのバージョンは未報告です。",
+        "zh-Hans": "程序在启动器阶段退出，因此无法进入游戏。未提供测试所用的 Mac 和软件版本。",
+        "zh-Hant": "程式在啟動器階段結束，因此無法進入遊戲。未提供測試所用的 Mac 與軟體版本。",
+        "de": "Der Vorgang endet bereits im Launcher, sodass das Spiel nicht gestartet werden kann. Der getestete Mac und die Softwareversionen wurden nicht angegeben.",
+        "es": "El proceso se cierra en el lanzador, por lo que no es posible iniciar el juego. No se indicaron el Mac probado ni las versiones del software.",
+        "fr": "Le processus se ferme au niveau du lanceur, ce qui empêche de démarrer le jeu. Le Mac testé et les versions logicielles n’ont pas été indiqués."
+      },
+      "blocker": "launcher"
+    },
+    {
+      "id": "blue-archive-m4-pro-24gb-community-macgallery-20260729",
+      "gameId": "blue-archive",
+      "testProfileId": "apple-silicon-m4-pro-24gb",
+      "status": "blocked",
+      "source": "community-report",
+      "reporter": "맥갤러",
+      "testedAt": null,
+      "notes": {
+        "en": "On an M4 Pro Mac with 24GB of unified memory, rendering is normal, but after selecting a server a security-module message appears and progress is blocked. The macOS and ForgePlay versions were not provided.",
+        "ko": "M4 Pro 24GB에서 화면은 정상적으로 렌더링되지만, 서버 선택 후 보안 모듈 관련 메시지가 나타나 더 진행할 수 없습니다. macOS 및 ForgePlay 버전은 제보되지 않았습니다.",
+        "ja": "M4 Pro・24GBのMacでは描画は正常ですが、サーバー選択後にセキュリティモジュールに関するメッセージが表示され、それ以上進めません。macOSとForgePlayのバージョンは未報告です。",
+        "zh-Hans": "在配备 M4 Pro 和 24GB 统一内存的 Mac 上画面渲染正常，但选择服务器后会出现与安全模块有关的提示，无法继续。未提供 macOS 和 ForgePlay 版本。",
+        "zh-Hant": "在配備 M4 Pro 與 24GB 統一記憶體的 Mac 上畫面渲染正常，但選擇伺服器後會出現與安全模組有關的提示，無法繼續。未提供 macOS 與 ForgePlay 版本。",
+        "de": "Auf einem Mac mit M4 Pro und 24GB gemeinsamem Arbeitsspeicher wird die Grafik korrekt dargestellt. Nach der Serverauswahl erscheint jedoch eine Meldung zu einem Sicherheitsmodul, und der Vorgang kann nicht fortgesetzt werden. Die macOS- und ForgePlay-Versionen wurden nicht angegeben.",
+        "es": "En un Mac con M4 Pro y 24GB de memoria unificada, el renderizado es normal, pero tras seleccionar un servidor aparece un mensaje relacionado con un módulo de seguridad y no se puede continuar. No se indicaron las versiones de macOS ni de ForgePlay.",
+        "fr": "Sur un Mac équipé d’un M4 Pro et de 24GB de mémoire unifiée, le rendu est normal, mais après la sélection d’un serveur, un message relatif à un module de sécurité apparaît et empêche de continuer. Les versions de macOS et de ForgePlay n’ont pas été indiquées."
+      },
+      "blocker": "security-module"
     }
   ]
 }

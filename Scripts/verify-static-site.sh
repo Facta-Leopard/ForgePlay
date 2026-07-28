@@ -302,6 +302,18 @@ if database.get("schemaVersion") != 1:
     raise SystemExit("compatibility database schemaVersion must be 1")
 if schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
     raise SystemExit("compatibility schema must use JSON Schema draft 2020-12")
+test_profile_reference_schema = (
+    schema.get("$defs", {})
+    .get("report", {})
+    .get("properties", {})
+    .get("testProfileId", {})
+)
+test_profile_reference_options = test_profile_reference_schema.get("anyOf", [])
+if not (
+    any(option.get("$ref") == "#/$defs/identifier" for option in test_profile_reference_options)
+    and any(option.get("type") == "null" for option in test_profile_reference_options)
+):
+    raise SystemExit("compatibility reports must support an explicitly unreported device")
 
 profiles = database.get("testProfiles")
 games = database.get("games")
@@ -325,8 +337,16 @@ game_by_id = index_unique(games, "games")
 report_by_id = index_unique(reports, "reports")
 
 allowed_statuses = {"playable", "testing", "blocked", "unknown"}
-allowed_sources = {"project-test", "github-issue"}
-allowed_blockers = {"anti-cheat", "launcher", "graphics", "runtime", "unknown", None}
+allowed_sources = {"project-test", "github-issue", "community-report"}
+allowed_blockers = {
+    "anti-cheat",
+    "launcher",
+    "graphics",
+    "runtime",
+    "security-module",
+    "unknown",
+    None,
+}
 for game_id, game in game_by_id.items():
     titles = game.get("titles")
     if not isinstance(titles, dict) or not all(
@@ -338,7 +358,8 @@ for game_id, game in game_by_id.items():
 for report_id, report in report_by_id.items():
     if report.get("gameId") not in game_by_id:
         raise SystemExit(f"report {report_id} references an unknown game")
-    if report.get("testProfileId") not in profile_by_id:
+    test_profile_id = report.get("testProfileId")
+    if test_profile_id is not None and test_profile_id not in profile_by_id:
         raise SystemExit(f"report {report_id} references an unknown test profile")
     if report.get("status") not in allowed_statuses:
         raise SystemExit(f"report {report_id} has an invalid status")
@@ -413,6 +434,48 @@ if not isinstance(tekken_notes, dict) or not all(
     for locale in locale_names
 ):
     raise SystemExit("Tekken 8 report notes must cover all eight site locales")
+
+if database.get("updatedAt") != "2026-07-29":
+    raise SystemExit("compatibility database update date must reflect the latest reports")
+
+community_report_expectations = {
+    "umamusume-pretty-derby-community-lotus-20260729": {
+        "gameId": "umamusume-pretty-derby",
+        "testProfileId": None,
+        "reporter": "로투스홍차튀김",
+        "blocker": "unknown",
+    },
+    "grand-theft-auto-iv-community-anonymous-20260729": {
+        "gameId": "grand-theft-auto-iv",
+        "testProfileId": None,
+        "reporter": "ㅇㅇ",
+        "blocker": "launcher",
+    },
+    "blue-archive-m4-pro-24gb-community-macgallery-20260729": {
+        "gameId": "blue-archive",
+        "testProfileId": "apple-silicon-m4-pro-24gb",
+        "reporter": "맥갤러",
+        "blocker": "security-module",
+    },
+}
+for report_id, expected in community_report_expectations.items():
+    report = report_by_id.get(report_id)
+    if (
+        not report
+        or report.get("gameId") != expected["gameId"]
+        or report.get("testProfileId") != expected["testProfileId"]
+        or report.get("status") != "blocked"
+        or report.get("source") != "community-report"
+        or report.get("reporter") != expected["reporter"]
+        or report.get("blocker") != expected["blocker"]
+    ):
+        raise SystemExit(f"compatibility database has an invalid community report: {report_id}")
+    notes = report.get("notes")
+    if not isinstance(notes, dict) or not all(
+        isinstance(notes.get(locale), str) and notes[locale].strip()
+        for locale in locale_names
+    ):
+        raise SystemExit(f"community report notes must cover all eight locales: {report_id}")
 
 announcements_path = root / "site-data" / "announcements.json"
 announcements_schema_path = root / "site-data" / "announcements.schema.json"
@@ -583,9 +646,9 @@ PY
 
 for html in index.html why.html license.html privacy.html support.html compatibility.html updates.html; do
   require_snippet "$ROOT_DIR/$html" '<html lang="en">'
-  require_snippet "$ROOT_DIR/$html" 'src="locale-bootstrap.js?v=20260728-11"'
-  require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260728-11"'
-  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260728-11"'
+  require_snippet "$ROOT_DIR/$html" 'src="locale-bootstrap.js?v=20260729-12"'
+  require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-12"'
+  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260729-12"'
   require_snippet "$ROOT_DIR/$html" 'data-language-select'
   require_snippet "$ROOT_DIR/$html" 'site-assets/forgeplay-icon.png'
   require_snippet "$ROOT_DIR/$html" 'target="_blank" rel="noopener noreferrer"'
@@ -624,9 +687,9 @@ require_snippet "$ROOT_DIR/index.html" 'href="compatibility.html"'
 require_snippet "$ROOT_DIR/index.html" 'PLAYABLE IN GAME MODE'
 require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
-require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260728-11"'
-require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260728-11"'
-require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260728-11"'
+require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260729-12"'
+require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260729-12"'
+require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260729-12"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
 require_snippet "$ROOT_DIR/index.html" 'id="other-apps"'
 require_snippet "$ROOT_DIR/index.html" 'data-developer-app-grid'
@@ -646,7 +709,7 @@ require_snippet "$ROOT_DIR/compatibility.html" 'Logs shorten the distance to a f
 require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.logLabel"'
 require_snippet "$ROOT_DIR/compatibility.html" 'issues/new?template=compatibility-report.yml'
 require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260728-11"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260729-12"'
 require_snippet "$ROOT_DIR/compatibility.js" 'site-data/compatibility-games.json'
 require_snippet "$ROOT_DIR/compatibility.js" 'forgeplay:localechange'
 require_snippet "$ROOT_DIR/compatibility.js" 'document.currentScript?.src'
@@ -655,10 +718,16 @@ require_snippet "$ROOT_DIR/compatibility.js" 'cache: "no-cache"'
 require_snippet "$ROOT_DIR/compatibility.js" 'const playableGameIds = new Set('
 require_snippet "$ROOT_DIR/compatibility.js" 'element.textContent = String(playableGameIds.size)'
 require_snippet "$ROOT_DIR/compatibility.js" '"github-issue": "compat.verificationGitHubIssue"'
+require_snippet "$ROOT_DIR/compatibility.js" '"community-report": "compat.verificationCommunityReport"'
+require_snippet "$ROOT_DIR/compatibility.js" '"security-module": "compat.blockerSecurityModule"'
 require_snippet "$ROOT_DIR/compatibility.js" 'profile.macOSVersion ? `macOS ${profile.macOSVersion}` : null'
 require_snippet "$ROOT_DIR/compatibility.js" 'report.reporter ? `@${report.reporter}` : null'
+require_snippet "$ROOT_DIR/compatibility.js" 'const localizedNote = localizedText(report.notes, selectedLocale)'
 require_snippet "$ROOT_DIR/site.js" '"compat.statusPlayable": "게임 모드로 플레이 가능"'
 require_snippet "$ROOT_DIR/site.js" '"compat.verificationGitHubIssue": "GitHub 이슈 제보"'
+require_snippet "$ROOT_DIR/site.js" '"compat.verificationCommunityReport": "커뮤니티 제보"'
+require_snippet "$ROOT_DIR/site.js" '"compat.deviceNotReported": "기기 정보 없음"'
+require_snippet "$ROOT_DIR/site.js" '"compat.blockerSecurityModule": "보안 모듈로 인해 실행이 제한됩니다."'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Excel / spreadsheet import contract'
 require_snippet "$ROOT_DIR/site-data/README.md" '`reporter`'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Developer app catalog'
@@ -666,7 +735,7 @@ require_snippet "$ROOT_DIR/site-data/README.md" 'DeveloperAppCatalog.swift'
 
 require_snippet "$ROOT_DIR/updates.html" 'data-announcement-list'
 require_snippet "$ROOT_DIR/updates.html" 'data-nav-page="updates"'
-require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260728-11"'
+require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260729-12"'
 require_snippet "$ROOT_DIR/announcements.js" 'site-data/announcements.json'
 require_snippet "$ROOT_DIR/announcements.js" 'forgeplay:localechange'
 require_snippet "$ROOT_DIR/announcements.js" 'applyLinkDestination'
@@ -773,17 +842,9 @@ if grep -Fq 'community-link' "$ROOT_DIR/site.css"; then
   fail "site.css must not contain retired DCInside navigation styles"
 fi
 
-for retired_source_file in \
-  site.js \
-  compatibility.js \
-  site-data/compatibility-games.json \
-  site-data/compatibility.schema.json \
-  site-data/README.md; do
-  if grep -Fq 'community-report' "$ROOT_DIR/$retired_source_file" || \
-     grep -Fq 'verificationCommunity' "$ROOT_DIR/$retired_source_file"; then
-    fail "$retired_source_file must not contain the retired community-report source"
-  fi
-done
+if grep -Fq '"compat.verificationCommunity":' "$ROOT_DIR/site.js"; then
+  fail "site.js must not use the retired ambiguous community verification key"
+fi
 
 if [[ -d "$ROOT_DIR/.git" ]]; then
   require_regular_file "$ROOT_DIR/.github/ISSUE_TEMPLATE/compatibility-report.yml"

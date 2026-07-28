@@ -20,13 +20,15 @@
   };
   const sourceMessageKeys = {
     "project-test": "compat.verificationProject",
-    "github-issue": "compat.verificationGitHubIssue"
+    "github-issue": "compat.verificationGitHubIssue",
+    "community-report": "compat.verificationCommunityReport"
   };
   const blockerMessageKeys = {
     "anti-cheat": "compat.blockerAntiCheat",
     launcher: "compat.blockerLauncher",
     graphics: "compat.blockerGraphics",
     runtime: "compat.blockerRuntime",
+    "security-module": "compat.blockerSecurityModule",
     unknown: "compat.blockerUnknown"
   };
 
@@ -48,12 +50,12 @@
   };
 
   const formatProfile = (profile) => {
-    if (!profile) return "—";
+    if (!profile) return message("compat.deviceNotReported", "Not provided");
     return `${profile.chip} · ${profile.unifiedMemoryGB}GB`;
   };
 
   const formatProfileDetails = (profile) => {
-    if (!profile) return "—";
+    if (!profile) return "";
     return [
       profile.platform,
       profile.macOSVersion ? `macOS ${profile.macOSVersion}` : null
@@ -168,7 +170,10 @@
         message("compat.columnDevice", "Tested device")
       );
       appendTextElement(deviceCell, "strong", "", formatProfile(profile));
-      appendTextElement(deviceCell, "span", "", formatProfileDetails(profile));
+      const profileDetails = formatProfileDetails(profile);
+      if (profileDetails) {
+        appendTextElement(deviceCell, "span", "", profileDetails);
+      }
 
       const verificationCell = makeCell(
         "compatibility-verification-cell",
@@ -195,13 +200,14 @@
         "compatibility-notes-cell",
         message("compat.columnNotes", "Notes")
       );
-      const note = report.blocker
-        ? message(blockerMessageKeys[report.blocker], report.blocker)
-        : localizedText(report.notes, selectedLocale)
-          || message(
+      const localizedNote = localizedText(report.notes, selectedLocale);
+      const note = localizedNote
+        || (report.blocker
+          ? message(blockerMessageKeys[report.blocker], report.blocker)
+          : message(
             report.status === "playable" ? "compat.notePlayable" : "compat.notePending",
             "No additional note."
-          );
+          ));
       notesCell.textContent = note;
 
       row.append(gameCell, statusCell, deviceCell, verificationCell, notesCell);
