@@ -1,6 +1,17 @@
 # ForgePlay Source — 한국어
 
-[English](README_EN.md) | [언어 선택](README.md)
+[English](README_EN.md) | [통합 문서](README.md) | [Release v1.0.0](https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0)
+
+## 공개 경로
+
+- [현재 공개 소스(`main`)](https://github.com/Facta-Leopard/ForgePlay/tree/main)
+- [`v1.0.0` 소스 스냅샷](https://github.com/Facta-Leopard/ForgePlay/tree/v1.0.0)
+- [ForgePlay 1.0 (build 1) 릴리스](https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0)
+- [Apple 공증 DMG](https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.0.0/ForgePlay-1.0-1.dmg)
+- [SHA-256](https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.0.0/ForgePlay-1.0-1.dmg.sha256) · [공증·서명 증빙 JSON](https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.0.0/ForgePlay-1.0-1.dmg.release.json)
+
+기존 GitHub Pages 홈페이지 파일과 공개 소스는 `main`에 함께 있으며,
+DMG와 공증 증빙은 GitHub Releases에서 별도 배포한다.
 
 ## 먼저 밝히는 입장
 
