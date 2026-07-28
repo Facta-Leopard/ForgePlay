@@ -325,7 +325,7 @@ game_by_id = index_unique(games, "games")
 report_by_id = index_unique(reports, "reports")
 
 allowed_statuses = {"playable", "testing", "blocked", "unknown"}
-allowed_sources = {"project-test", "community-report"}
+allowed_sources = {"project-test", "github-issue"}
 allowed_blockers = {"anti-cheat", "launcher", "graphics", "runtime", "unknown", None}
 for game_id, game in game_by_id.items():
     titles = game.get("titles")
@@ -402,10 +402,10 @@ if (
     or tekken_report.get("gameId") != "tekken-8"
     or tekken_report.get("testProfileId") != tekken_profile.get("id")
     or tekken_report.get("status") != "playable"
-    or tekken_report.get("source") != "community-report"
+    or tekken_report.get("source") != "github-issue"
     or tekken_report.get("reporter") != "guswnswkd15"
 ):
-    raise SystemExit("compatibility database must include the Tekken 8 community report")
+    raise SystemExit("compatibility database must include the Tekken 8 GitHub issue report")
 
 tekken_notes = tekken_report.get("notes")
 if not isinstance(tekken_notes, dict) or not all(
@@ -583,9 +583,9 @@ PY
 
 for html in index.html why.html license.html privacy.html support.html compatibility.html updates.html; do
   require_snippet "$ROOT_DIR/$html" '<html lang="en">'
-  require_snippet "$ROOT_DIR/$html" 'src="locale-bootstrap.js?v=20260728-10"'
-  require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260728-10"'
-  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260728-10"'
+  require_snippet "$ROOT_DIR/$html" 'src="locale-bootstrap.js?v=20260728-11"'
+  require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260728-11"'
+  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260728-11"'
   require_snippet "$ROOT_DIR/$html" 'data-language-select'
   require_snippet "$ROOT_DIR/$html" 'site-assets/forgeplay-icon.png'
   require_snippet "$ROOT_DIR/$html" 'target="_blank" rel="noopener noreferrer"'
@@ -622,11 +622,11 @@ require_snippet "$ROOT_DIR/index.html" 'site-assets/forgeplay-manifesto-3200.jpg
 require_snippet "$ROOT_DIR/index.html" 'data-compatibility-count'
 require_snippet "$ROOT_DIR/index.html" 'href="compatibility.html"'
 require_snippet "$ROOT_DIR/index.html" 'PLAYABLE IN GAME MODE'
-require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count>13</strong>'
+require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
-require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260728-10"'
-require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260728-10"'
-require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260728-10"'
+require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260728-11"'
+require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260728-11"'
+require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260728-11"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
 require_snippet "$ROOT_DIR/index.html" 'id="other-apps"'
 require_snippet "$ROOT_DIR/index.html" 'data-developer-app-grid'
@@ -645,13 +645,20 @@ require_snippet "$ROOT_DIR/compatibility.html" 'Playable in Game Mode'
 require_snippet "$ROOT_DIR/compatibility.html" 'Logs shorten the distance to a fix.'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.logLabel"'
 require_snippet "$ROOT_DIR/compatibility.html" 'issues/new?template=compatibility-report.yml'
-require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count>13</strong>'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260728-10"'
+require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260728-11"'
 require_snippet "$ROOT_DIR/compatibility.js" 'site-data/compatibility-games.json'
 require_snippet "$ROOT_DIR/compatibility.js" 'forgeplay:localechange'
+require_snippet "$ROOT_DIR/compatibility.js" 'document.currentScript?.src'
+require_snippet "$ROOT_DIR/compatibility.js" 'url.searchParams.set("v", version)'
+require_snippet "$ROOT_DIR/compatibility.js" 'cache: "no-cache"'
+require_snippet "$ROOT_DIR/compatibility.js" 'const playableGameIds = new Set('
+require_snippet "$ROOT_DIR/compatibility.js" 'element.textContent = String(playableGameIds.size)'
+require_snippet "$ROOT_DIR/compatibility.js" '"github-issue": "compat.verificationGitHubIssue"'
 require_snippet "$ROOT_DIR/compatibility.js" 'profile.macOSVersion ? `macOS ${profile.macOSVersion}` : null'
 require_snippet "$ROOT_DIR/compatibility.js" 'report.reporter ? `@${report.reporter}` : null'
 require_snippet "$ROOT_DIR/site.js" '"compat.statusPlayable": "게임 모드로 플레이 가능"'
+require_snippet "$ROOT_DIR/site.js" '"compat.verificationGitHubIssue": "GitHub 이슈 제보"'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Excel / spreadsheet import contract'
 require_snippet "$ROOT_DIR/site-data/README.md" '`reporter`'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Developer app catalog'
@@ -659,7 +666,7 @@ require_snippet "$ROOT_DIR/site-data/README.md" 'DeveloperAppCatalog.swift'
 
 require_snippet "$ROOT_DIR/updates.html" 'data-announcement-list'
 require_snippet "$ROOT_DIR/updates.html" 'data-nav-page="updates"'
-require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260728-10"'
+require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260728-11"'
 require_snippet "$ROOT_DIR/announcements.js" 'site-data/announcements.json'
 require_snippet "$ROOT_DIR/announcements.js" 'forgeplay:localechange'
 require_snippet "$ROOT_DIR/announcements.js" 'applyLinkDestination'
@@ -765,6 +772,18 @@ fi
 if grep -Fq 'community-link' "$ROOT_DIR/site.css"; then
   fail "site.css must not contain retired DCInside navigation styles"
 fi
+
+for retired_source_file in \
+  site.js \
+  compatibility.js \
+  site-data/compatibility-games.json \
+  site-data/compatibility.schema.json \
+  site-data/README.md; do
+  if grep -Fq 'community-report' "$ROOT_DIR/$retired_source_file" || \
+     grep -Fq 'verificationCommunity' "$ROOT_DIR/$retired_source_file"; then
+    fail "$retired_source_file must not contain the retired community-report source"
+  fi
+done
 
 if [[ -d "$ROOT_DIR/.git" ]]; then
   require_regular_file "$ROOT_DIR/.github/ISSUE_TEMPLATE/compatibility-report.yml"

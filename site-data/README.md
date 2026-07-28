@@ -21,8 +21,8 @@ One spreadsheet row should represent one test report. The preferred columns are:
 | `unified_memory_gb` | yes for a new device | `24` |
 | `macos_version` | optional | `26.0` |
 | `tested_at` | optional | `2026-07-28` |
-| `source` | yes | `project-test` or `community-report` |
-| `reporter` | optional | Public GitHub handle for an attributed community report |
+| `source` | yes | `project-test` or `github-issue` |
+| `reporter` | optional | Public GitHub handle for an attributed issue report |
 | `blocker` | optional | `anti-cheat`, `launcher`, `graphics`, `runtime`, or `unknown` |
 | `notes_en` | optional | Free-form public note |
 | `notes_ko` | optional | 공개 비고 |

@@ -1,12 +1,26 @@
 (() => {
   "use strict";
 
-  const databaseURL = "site-data/compatibility-games.json";
+  const versionedDataURL = (path) => {
+    const url = new URL(path, document.baseURI);
+    const scriptSource = document.currentScript?.src;
+    if (!scriptSource) return url.href;
+
+    const version = new URL(scriptSource, document.baseURI).searchParams.get("v");
+    if (version) url.searchParams.set("v", version);
+    return url.href;
+  };
+
+  const databaseURL = versionedDataURL("site-data/compatibility-games.json");
   const statusMessageKeys = {
     playable: "compat.statusPlayable",
     testing: "compat.statusTesting",
     blocked: "compat.statusBlocked",
     unknown: "compat.statusUnknown"
+  };
+  const sourceMessageKeys = {
+    "project-test": "compat.verificationProject",
+    "github-issue": "compat.verificationGitHubIssue"
   };
   const blockerMessageKeys = {
     "anti-cheat": "compat.blockerAntiCheat",
@@ -160,9 +174,7 @@
         "compatibility-verification-cell",
         message("compat.columnVerification", "Verification")
       );
-      const sourceKey = report.source === "community-report"
-        ? "compat.verificationCommunity"
-        : "compat.verificationProject";
+      const sourceKey = sourceMessageKeys[report.source];
       appendTextElement(
         verificationCell,
         "strong",
@@ -204,6 +216,7 @@
   const load = async () => {
     try {
       const response = await fetch(databaseURL, {
+        cache: "no-cache",
         headers: { Accept: "application/json" }
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);

@@ -237,7 +237,7 @@
       "gameId": "tekken-8",
       "testProfileId": "apple-silicon-m3-max-36gb-tahoe-26-5-1",
       "status": "playable",
-      "source": "community-report",
+      "source": "github-issue",
       "reporter": "guswnswkd15",
       "testedAt": null,
       "notes": {
