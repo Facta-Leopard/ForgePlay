@@ -547,11 +547,18 @@ PY
 
 for html in index.html why.html license.html privacy.html support.html compatibility.html updates.html; do
   require_snippet "$ROOT_DIR/$html" '<html lang="en">'
-  require_snippet "$ROOT_DIR/$html" 'src="locale-bootstrap.js?v=20260728-7"'
-  require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260728-7"'
-  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260728-7"'
+  require_snippet "$ROOT_DIR/$html" 'src="locale-bootstrap.js?v=20260728-8"'
+  require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260728-8"'
+  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260728-8"'
   require_snippet "$ROOT_DIR/$html" 'data-language-select'
   require_snippet "$ROOT_DIR/$html" 'site-assets/forgeplay-icon.png'
+  require_snippet "$ROOT_DIR/$html" 'class="community-link"'
+  require_snippet "$ROOT_DIR/$html" 'href="https://gall.dcinside.com/mgallery/board/lists/?id=macbook"'
+  require_snippet "$ROOT_DIR/$html" 'target="_blank" rel="noopener noreferrer"'
+  require_snippet "$ROOT_DIR/$html" 'data-i18n="shared.navCommunity"'
+  if [[ "$(grep -c 'class="community-link"' "$ROOT_DIR/$html")" -ne 1 ]]; then
+    fail "$html must contain exactly one DCInside MacBook Gallery link"
+  fi
 done
 
 require_snippet "$ROOT_DIR/index.html" 'id="game-mode"'
@@ -576,9 +583,9 @@ require_snippet "$ROOT_DIR/index.html" 'data-compatibility-count'
 require_snippet "$ROOT_DIR/index.html" 'href="compatibility.html"'
 require_snippet "$ROOT_DIR/index.html" 'PLAYABLE IN GAME MODE'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
-require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260728-7"'
-require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260728-7"'
-require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260728-7"'
+require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260728-8"'
+require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260728-8"'
+require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260728-8"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
 require_snippet "$ROOT_DIR/index.html" 'id="other-apps"'
 require_snippet "$ROOT_DIR/index.html" 'data-developer-app-grid'
@@ -597,7 +604,7 @@ require_snippet "$ROOT_DIR/compatibility.html" 'Playable in Game Mode'
 require_snippet "$ROOT_DIR/compatibility.html" 'Logs shorten the distance to a fix.'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.logLabel"'
 require_snippet "$ROOT_DIR/compatibility.html" 'issues/new?template=compatibility-report.yml'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260728-7"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260728-8"'
 require_snippet "$ROOT_DIR/compatibility.js" 'site-data/compatibility-games.json'
 require_snippet "$ROOT_DIR/compatibility.js" 'forgeplay:localechange'
 require_snippet "$ROOT_DIR/site.js" '"compat.statusPlayable": "게임 모드로 플레이 가능"'
@@ -607,7 +614,7 @@ require_snippet "$ROOT_DIR/site-data/README.md" 'DeveloperAppCatalog.swift'
 
 require_snippet "$ROOT_DIR/updates.html" 'data-announcement-list'
 require_snippet "$ROOT_DIR/updates.html" 'data-nav-page="updates"'
-require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260728-7"'
+require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260728-8"'
 require_snippet "$ROOT_DIR/announcements.js" 'site-data/announcements.json'
 require_snippet "$ROOT_DIR/announcements.js" 'forgeplay:localechange'
 require_snippet "$ROOT_DIR/developer-apps.js" 'site-data/developer-apps.json'
@@ -681,6 +688,7 @@ require_snippet "$ROOT_DIR/site.css" "word-break: keep-all"
 require_snippet "$ROOT_DIR/site.css" ".world-first-route"
 require_snippet "$ROOT_DIR/site.css" ".updates-list"
 require_snippet "$ROOT_DIR/site.css" '.nav-links a[aria-current="page"]'
+require_snippet "$ROOT_DIR/site.css" ".nav-links a.community-link"
 require_snippet "$ROOT_DIR/site.css" ".developer-app-grid"
 require_snippet "$ROOT_DIR/locale-bootstrap.js" "const supportedLocales = Object.freeze(["
 require_snippet "$ROOT_DIR/locale-bootstrap.js" "navigator.languages"
@@ -694,6 +702,7 @@ require_snippet "$ROOT_DIR/site.js" 'section.hidden = section.getAttribute("lang
 require_snippet "$ROOT_DIR/site.js" 'new Set(["privacy", "support", "why", "license"])'
 require_snippet "$ROOT_DIR/site.js" 'window.ForgePlaySite = Object.freeze'
 require_snippet "$ROOT_DIR/site.js" 'document.dispatchEvent(new CustomEvent("forgeplay:localechange"'
+require_snippet "$ROOT_DIR/site.js" '"shared.navCommunity": "디시인사이드 맥북갤러리"'
 
 if [[ -d "$ROOT_DIR/.git" ]]; then
   require_regular_file "$ROOT_DIR/.github/ISSUE_TEMPLATE/compatibility-report.yml"
