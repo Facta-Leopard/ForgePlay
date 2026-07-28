@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "licenseExpression": "GPL-3.0-only",
+  "copyrightNotice": "Copyright (C) 2026 Facta-Leopard",
+  "originalSource": "https://github.com/Facta-Leopard/ForgePlay",
+  "scopeDocument": "LICENSES/ForgePlayGameMode/GAME_MODE_LICENSE_SCOPE.md",
+  "symbolManifest": "LICENSES/ForgePlayGameMode/GAME_MODE_SYMBOL_MANIFEST.md",
+  "wholeFileSPDX": [
+    "Sources/ForgePlay/Models/GameModeEvidence.swift",
+    "Sources/ForgePlay/Services/GameModeHostCapability.swift",
+    "Sources/ForgePlay/Services/GameModeLaunchRequestStore.swift",
+    "Tests/ForgePlayTests/GameModeHostCapabilityTests.swift",
+    "Tests/ForgePlayTests/GameModeLaunchRequestStoreTests.swift",
+    "Native/GameModeProcessHost/GameModeApplicationGroup.h",
+    "Native/GameModeProcessHost/GameModeApplicationGroup.m",
+    "Native/GameModeProcessHost/GameModeBuildIdentity.h",
+    "Native/GameModeProcessHost/GameModeInheritedExecution.h",
+    "Native/GameModeProcessHost/GameModeInheritedExecution.m",
+    "Native/GameModeProcessHost/GameModeProcessHost-AppStore.entitlements",
+    "Native/GameModeProcessHost/GameModeProcessHost-Development.entitlements",
+    "Native/GameModeProcessHost/GameModeProcessHost-Distribution.entitlements",
+    "Native/GameModeProcessHost/GameModeProcessHost.entitlements.in",
+    "Native/GameModeProcessHost/GameModeProcessHost.m",
+    "Native/GameModeProcessHost/GameModeRuntimeIdentity.h",
+    "Native/GameModeProcessHost/GameModeRuntimeIdentity.m",
+    "Native/GameModeProcessHost/Info.plist",
+    "Native/GameModeProcessHost/Info.plist.in",
+    "Native/GameModeProcessHost/PrefixExecutionLease.h",
+    "Native/GameModeProcessHost/PrefixExecutionLease.m",
+    "Native/GameModeProcessHost/README.md",
+    "Native/GameModeProcessHost/SOURCE-CONTRACT.md",
+    "Native/GameModeProcessHost/build-game-mode-process-host.sh",
+    "Config/ForgePlayGameModeProcessHost.xcconfig",
+    "Config/ForgePlayGameModeProcessHostAppStore.xcconfig",
+    "Config/ForgePlayGameModeProcessHostDistribution.xcconfig",
+    "Scripts/prepare-game-mode-host-build-identity.sh",
+    "Scripts/verify-game-mode-source-licenses.py",
+    "Scripts/tests/test-wine-game-mode-process-host-routing.sh"
+  ],
+  "mixedSymbolScope": [
+    "Sources/ForgePlay/Services/SafeProcessRunner.swift",
+    "Sources/ForgePlay/UI/SteamLaunchView.swift",
+    "Sources/ForgePlay/Services/SteamManager.swift",
+    "Sources/ForgePlay/Services/SteamPrefixService.swift",
+    "Sources/ForgePlay/Services/SupportBundleService.swift",
+    "Sources/ForgePlay/App/AppServices.swift",
+    "Sources/ForgePlay/Services/PrefixExecutionLease.swift",
+    "project.yml"
+  ],
+  "contentAddressedExternalNotice": [
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-game-mode-process-host-routing.patch",
+      "conversionBasis": "LGPL-2.1 section 3",
+      "reason": "The patch is an exact Runtime fingerprint input; its GPL-3.0-only notice is carried here without changing the version-matched patch bytes."
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-game-mode-direct-target-scope.patch",
+      "conversionBasis": "LGPL-2.1 section 3",
+      "reason": "The patch is an exact Runtime fingerprint input; its GPL-3.0-only notice is carried here without changing the version-matched patch bytes."
+    }
+  ]
+}

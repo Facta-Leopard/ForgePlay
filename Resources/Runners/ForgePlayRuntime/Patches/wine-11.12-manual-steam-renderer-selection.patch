@@ -1,0 +1,780 @@
+diff --git a/dlls/kernelbase/process.c b/dlls/kernelbase/process.c
+--- a/dlls/kernelbase/process.c
++++ b/dlls/kernelbase/process.c
+@@ -351,11 +351,9 @@
+ {
+     const WCHAR *requested;
+     const WCHAR *applied;
+-    const WCHAR *profile;
+     const WCHAR *reason;
+     WCHAR evidence[320];
+     BOOL d3dmetal_bridge_required;
+-    BOOL deferred;
+     BOOL supported;
+ };
+ 
+@@ -644,428 +642,87 @@
+     if (mapping) CloseHandle( mapping );
+     if (file != INVALID_HANDLE_VALUE) CloseHandle( file );
+     HeapFree( GetProcessHeap(), 0, relative_path );
+-}
+-
+-
+-/* Both the regular and delayed import directories have been consumed before
+- * this selector runs. Commit one renderer route only after that complete scan,
+- * so an earlier D3D11 import cannot hide a later D3D12 import. */
+-static enum forgeplay_direct3d_generation forgeplay_select_game_renderer_generation(
+-    const struct forgeplay_game_renderer_import_scan *scan )
+-{
+-    int generation;
+-
+-    for (generation = FORGEPLAY_DIRECT3D_12;
+-         generation > FORGEPLAY_DIRECT3D_NONE; --generation)
+-    {
+-        if (scan->generation_mask & FORGEPLAY_DIRECT3D_BIT(generation))
+-            return (enum forgeplay_direct3d_generation)generation;
+-    }
+-    return FORGEPLAY_DIRECT3D_NONE;
+-}
+-
+-
+-static const WCHAR *forgeplay_direct3d_generation_name(
+-    enum forgeplay_direct3d_generation generation )
+-{
+-    switch (generation)
+-    {
+-    case FORGEPLAY_DIRECT3D_12: return L"d3d12";
+-    case FORGEPLAY_DIRECT3D_11: return L"d3d11";
+-    case FORGEPLAY_DIRECT3D_10: return L"d3d10";
+-    case FORGEPLAY_DIRECT3D_9: return L"d3d9";
+-    case FORGEPLAY_DIRECT3D_8: return L"d3d8";
+-    default: return L"none";
+-    }
+-}
+-
+-
+-static const char *forgeplay_game_renderer_generation_module(
+-    const struct forgeplay_game_renderer_import_scan *scan,
+-    enum forgeplay_direct3d_generation generation, BOOL *delayed )
+-{
+-    *delayed = FALSE;
+-    switch (generation)
+-    {
+-    case FORGEPLAY_DIRECT3D_12:
+-        *delayed = scan->d3d12_delayed;
+-        return scan->d3d12_module;
+-    case FORGEPLAY_DIRECT3D_11:
+-        *delayed = scan->d3d11_delayed;
+-        return scan->d3d11_module;
+-    case FORGEPLAY_DIRECT3D_10:
+-        *delayed = scan->d3d10_delayed;
+-        return scan->d3d10_module;
+-    case FORGEPLAY_DIRECT3D_9:
+-        *delayed = scan->d3d9_delayed;
+-        return scan->d3d9_module;
+-    case FORGEPLAY_DIRECT3D_8:
+-        *delayed = scan->d3d8_delayed;
+-        return scan->d3d8_module;
+-    default:
+-        return NULL;
+-    }
+-}
+-
+-
+-static unsigned int forgeplay_game_renderer_generation_count(
+-    const struct forgeplay_game_renderer_import_scan *scan )
+-{
+-    unsigned int count = 0, generation;
+-
+-    for (generation = FORGEPLAY_DIRECT3D_8;
+-         generation <= FORGEPLAY_DIRECT3D_12; ++generation)
+-    {
+-        if (scan->generation_mask & FORGEPLAY_DIRECT3D_BIT(generation)) ++count;
+-    }
+-    return count;
+-}
+-
+-
+-static void forgeplay_format_game_renderer_generations(
+-    const struct forgeplay_game_renderer_import_scan *scan, WCHAR *buffer, SIZE_T size )
+-{
+-    static const enum forgeplay_direct3d_generation priority[] =
+-    {
+-        FORGEPLAY_DIRECT3D_12,
+-        FORGEPLAY_DIRECT3D_11,
+-        FORGEPLAY_DIRECT3D_10,
+-        FORGEPLAY_DIRECT3D_9,
+-        FORGEPLAY_DIRECT3D_8,
+-    };
+-    SIZE_T length = 0;
+-    unsigned int i;
+-
+-    if (!size) return;
+-    buffer[0] = 0;
+-    for (i = 0; i < ARRAY_SIZE(priority); ++i)
+-    {
+-        const WCHAR *name;
+-        int written;
+-
+-        if (!(scan->generation_mask & FORGEPLAY_DIRECT3D_BIT(priority[i]))) continue;
+-        name = forgeplay_direct3d_generation_name( priority[i] );
+-        written = swprintf( buffer + length, size - length, L"%s%s",
+-                            length ? L"," : L"", name );
+-        if (written < 0 || (SIZE_T)written >= size - length)
+-        {
+-            buffer[size - 1] = 0;
+-            return;
+-        }
+-        length += written;
+-    }
+ }
+ 
+ 
+-static BOOL forgeplay_game_renderer_profile_is_available( const WCHAR *profile, BOOL pe64 )
+-{
+-    WCHAR variable[128], value[2];
+-
+-    swprintf( variable, ARRAY_SIZE(variable),
+-              L"FORGEPLAY_GAME_RENDERER_PROFILE_%s_DLL_PATH_%s",
+-              profile, pe64 ? L"X64" : L"X86" );
+-    return GetEnvironmentVariableW( variable, value, ARRAY_SIZE(value) ) != 0 ||
+-           GetLastError() == ERROR_MORE_DATA;
+-}
+-
+-
+-static BOOL forgeplay_try_game_renderer_profile( struct forgeplay_game_renderer_route *route,
+-                                                 const WCHAR *applied, const WCHAR *profile,
+-                                                 BOOL pe64, BOOL d3dmetal_bridge_required )
+-{
+-    if (!forgeplay_game_renderer_profile_is_available( profile, pe64 )) return FALSE;
+-    route->applied = applied;
+-    route->profile = profile;
+-    route->d3dmetal_bridge_required = d3dmetal_bridge_required;
+-    route->supported = TRUE;
+-    return TRUE;
+-}
+-
+-
+ static void forgeplay_set_unsupported_renderer_route(
+     struct forgeplay_game_renderer_route *route, const WCHAR *reason )
+ {
+     route->applied = L"unsupported";
+-    route->profile = NULL;
+     route->reason = reason;
+     route->d3dmetal_bridge_required = FALSE;
+-    route->deferred = FALSE;
+     route->supported = FALSE;
+ }
+ 
+ 
+-/* Generation-specific profiles remain independent so a missing legacy
+- * renderer cannot disable a valid D3D11/12 route. A valid PE without static
+- * generation evidence uses an architecture-specific loader-stage profile:
+- * each module name still has exactly one owner, which supports games that
+- * resolve Direct3D through LoadLibrary. A PE whose architecture is unknown
+- * remains on the base Runtime with game lineage. DXVK is never an automatic
+- * catch-all because its D3D9/D3D11 ownership overlaps the dedicated profiles. */
+-static void forgeplay_set_deferred_renderer_route(
+-    struct forgeplay_game_renderer_route *route, const WCHAR *reason )
+-{
+-    route->applied = L"deferred";
+-    route->profile = NULL;
+-    route->reason = reason;
+-    route->d3dmetal_bridge_required = FALSE;
+-    route->deferred = TRUE;
+-    route->supported = FALSE;
+-}
+-
+-
+-static void forgeplay_set_renderer_route_evidence( struct forgeplay_game_renderer_route *route,
+-                                                   const struct forgeplay_game_renderer_import_scan *scan,
+-                                                   enum forgeplay_direct3d_generation generation )
+-{
+-    const char *module;
+-    BOOL delayed;
+-    WCHAR moduleW[128], generations[64];
+-
+-    module = forgeplay_game_renderer_generation_module( scan, generation, &delayed );
+-    if (!module || !module[0]) module = "unavailable";
+-    if (!MultiByteToWideChar( CP_ACP, 0, module, -1, moduleW, ARRAY_SIZE(moduleW) ))
+-        lstrcpyW( moduleW, L"unavailable" );
+-    if (forgeplay_game_renderer_generation_count( scan ) > 1)
+-    {
+-        forgeplay_format_game_renderer_generations( scan, generations,
+-                                                     ARRAY_SIZE(generations) );
+-        swprintf( route->evidence, ARRAY_SIZE(route->evidence),
+-                  L"%s;%s=%s;generation-conflict=%s;selected=%s;"
+-                  L"resolution=highest-generation-before-route-commit",
+-                  scan->pe64 ? L"pe32+" : L"pe32",
+-                  delayed ? L"delay-import" : L"import", moduleW, generations,
+-                  forgeplay_direct3d_generation_name( generation ) );
+-    }
+-    else
+-    {
+-        swprintf( route->evidence, ARRAY_SIZE(route->evidence), L"%s;%s=%s",
+-                  scan->pe64 ? L"pe32+" : L"pe32",
+-                  delayed ? L"delay-import" : L"import", moduleW );
+-    }
+-}
+-
+-
+ static void forgeplay_resolve_game_renderer_route( const WCHAR *filename, const WCHAR *cur_dir,
+                                                    USHORT requested_machine,
+                                                    struct forgeplay_game_renderer_route *route )
+ {
+-    static const WCHAR automatic[] = L"automatic";
+     static const WCHAR d3dmetal[] = L"d3dMetal";
+     static const WCHAR dxmt[] = L"dxmt";
+     static const WCHAR dxvk[] = L"dxvk";
+     static const WCHAR d9vk[] = L"d9vk";
+-    static const WCHAR loader[] = L"loader";
+-    static const WCHAR profile_d3dmetal_d3d11[] = L"D3DMETAL_D3D11";
+-    static const WCHAR profile_d3dmetal_d3d12[] = L"D3DMETAL_D3D12";
+-    static const WCHAR profile_dxmt[] = L"DXMT";
+-    static const WCHAR profile_d9vk[] = L"D9VK";
+-    static const WCHAR profile_loader_x64[] = L"LOADER_X64";
+-    static const WCHAR profile_loader_x86[] = L"LOADER_X86";
+     WCHAR policy[32];
+-    const WCHAR *architecture_evidence;
+     DWORD policy_size, saved_error = GetLastError();
+     struct forgeplay_game_renderer_import_scan scan;
+-    enum forgeplay_direct3d_generation generation;
++    const WCHAR *architecture_evidence;
+ 
+     memset( route, 0, sizeof(*route) );
+     forgeplay_scan_game_renderer_imports( filename, cur_dir, &scan );
+-    generation = forgeplay_select_game_renderer_generation( &scan );
+     policy_size = GetEnvironmentVariableW( L"FORGEPLAY_GAME_RENDERER_POLICY",
+                                            policy, ARRAY_SIZE(policy) );
+-    if (policy_size && policy_size < ARRAY_SIZE(policy) && !wcscmp( policy, L"vulkan" ))
+-    {
+-        route->requested = L"vulkan";
+-        route->applied = dxvk;
+-        route->reason = L"explicit-policy";
+-        route->supported = TRUE;
+-        lstrcpyW( route->evidence, scan.valid_pe ?
+-                  (scan.pe64 ? L"host-policy;pe32+" : L"host-policy;pe32") :
+-                  L"host-policy;pe-unreadable" );
+-        SetLastError( saved_error );
+-        return;
+-    }
+     if (scan.valid_pe) architecture_evidence = scan.pe64 ? L"pe32+" : L"pe32";
+     else if (requested_machine == IMAGE_FILE_MACHINE_AMD64)
+-    {
+-        scan.pe64 = TRUE;
+         architecture_evidence = L"machine=amd64;pe-unreadable";
+-    }
+     else if (requested_machine == IMAGE_FILE_MACHINE_I386)
+-    {
+-        scan.pe64 = FALSE;
+         architecture_evidence = L"machine=i386;pe-unreadable";
+-    }
+     else
++        architecture_evidence = L"pe-unreadable;machine=unknown";
++
++    if (!policy_size || policy_size >= ARRAY_SIZE(policy))
+     {
+-        route->requested = policy_size && policy_size < ARRAY_SIZE(policy) &&
+-                           !wcscmp( policy, L"d3dMetal" ) ? d3dmetal : automatic;
+-        if (route->requested == d3dmetal)
+-            forgeplay_set_unsupported_renderer_route(
+-                route, L"explicit-metal-pe-unreadable-machine-unknown" );
+-        else
+-            forgeplay_set_deferred_renderer_route(
+-                route, L"automatic-deferred-pe-unreadable-machine-unknown" );
+-        lstrcpyW( route->evidence, L"pe-unreadable;machine=unknown" );
+-        SetLastError( saved_error );
+-        return;
++        route->requested = L"manual";
++        forgeplay_set_unsupported_renderer_route(
++            route, L"manual-session-selection-missing" );
+     }
+-
+-    if (policy_size && policy_size < ARRAY_SIZE(policy) && !wcscmp( policy, L"d3dMetal" ))
++    else if (!wcscmp( policy, L"d3dMetal" ))
+     {
+         route->requested = d3dmetal;
+-        forgeplay_set_unsupported_renderer_route( route, L"explicit-metal-generation-unknown" );
+-        if (!scan.valid_pe)
+-        {
+-            if ((scan.pe64 && forgeplay_try_game_renderer_profile(
+-                     route, loader, profile_loader_x64, TRUE, TRUE )) ||
+-                (!scan.pe64 && forgeplay_try_game_renderer_profile(
+-                     route, loader, profile_loader_x86, FALSE, FALSE )))
+-                route->reason = scan.pe64 ?
+-                    L"explicit-metal-loader-stage-x64" :
+-                    L"explicit-metal-loader-stage-x86";
+-            else
+-                forgeplay_set_deferred_renderer_route(
+-                    route, L"explicit-metal-loader-stage-profile-unavailable" );
+-            swprintf( route->evidence, ARRAY_SIZE(route->evidence),
+-                      L"host-policy;%s;generation-unreadable", architecture_evidence );
+-        }
+-        else if (generation == FORGEPLAY_DIRECT3D_12)
+-        {
+-            if (scan.pe64 && forgeplay_try_game_renderer_profile(
+-                    route, d3dmetal, profile_d3dmetal_d3d12, TRUE, TRUE ))
+-                route->reason = L"explicit-metal-d3d12";
+-            else
+-                forgeplay_set_unsupported_renderer_route(
+-                    route, scan.pe64 ? L"explicit-metal-d3d12-profile-unavailable" :
+-                                       L"explicit-metal-d3d12-unsupported-pe32" );
+-            forgeplay_set_renderer_route_evidence( route, &scan, generation );
+-        }
+-        else if (generation == FORGEPLAY_DIRECT3D_11 ||
+-                 generation == FORGEPLAY_DIRECT3D_10)
+-        {
+-            if ((scan.pe64 && forgeplay_try_game_renderer_profile(
+-                     route, d3dmetal, profile_d3dmetal_d3d11, TRUE, TRUE )) ||
+-                (!scan.pe64 && forgeplay_try_game_renderer_profile(
+-                     route, dxmt, profile_dxmt, FALSE, FALSE )))
+-                route->reason = scan.pe64 ? L"explicit-metal-d3d11-family" :
+-                                            L"explicit-metal-dxmt-d3d11-family";
+-            else
+-                forgeplay_set_unsupported_renderer_route(
+-                    route, L"explicit-metal-d3d11-profile-unavailable" );
+-            forgeplay_set_renderer_route_evidence( route, &scan, generation );
+-        }
+-        else if (generation == FORGEPLAY_DIRECT3D_9)
+-        {
+-            if (forgeplay_try_game_renderer_profile(
+-                    route, d9vk, profile_d9vk, scan.pe64, FALSE ))
+-                route->reason = L"explicit-metal-d3d9";
+-            else
+-                forgeplay_set_unsupported_renderer_route(
+-                    route, L"explicit-metal-d3d9-profile-unavailable" );
+-            forgeplay_set_renderer_route_evidence( route, &scan, generation );
+-        }
+-        else if (generation == FORGEPLAY_DIRECT3D_8)
+-        {
+-            forgeplay_set_unsupported_renderer_route(
+-                route, L"explicit-metal-d3d8-unsupported" );
+-            forgeplay_set_renderer_route_evidence( route, &scan, generation );
+-        }
+-        else
+-        {
+-            if ((scan.pe64 && forgeplay_try_game_renderer_profile(
+-                     route, loader, profile_loader_x64, TRUE, TRUE )) ||
+-                (!scan.pe64 && forgeplay_try_game_renderer_profile(
+-                     route, loader, profile_loader_x86, FALSE, FALSE )))
+-                route->reason = scan.pe64 ?
+-                    L"explicit-metal-loader-stage-x64" :
+-                    L"explicit-metal-loader-stage-x86";
+-            else
+-                forgeplay_set_deferred_renderer_route(
+-                    route, L"explicit-metal-loader-stage-profile-unavailable" );
+-            swprintf( route->evidence, ARRAY_SIZE(route->evidence), L"host-policy;%s;%s",
+-                      architecture_evidence,
+-                      scan.saw_import ? L"no-direct3d-generation" : L"empty-import-table" );
+-        }
+-        SetLastError( saved_error );
+-        return;
++        route->applied = d3dmetal;
++        route->reason = L"manual-session-d3dmetal";
++        route->d3dmetal_bridge_required = TRUE;
++        route->supported = TRUE;
+     }
+-    route->requested = automatic;
+-    forgeplay_set_unsupported_renderer_route( route, L"automatic-no-compatible-profile" );
+-    if (!scan.valid_pe)
++    else if (!wcscmp( policy, L"dxmt" ))
+     {
+-        if ((scan.pe64 && forgeplay_try_game_renderer_profile(
+-                 route, loader, profile_loader_x64, TRUE, TRUE )) ||
+-            (!scan.pe64 && forgeplay_try_game_renderer_profile(
+-                 route, loader, profile_loader_x86, FALSE, FALSE )))
+-            route->reason = scan.pe64 ?
+-                L"automatic-loader-stage-x64" :
+-                L"automatic-loader-stage-x86";
+-        else
+-            forgeplay_set_deferred_renderer_route(
+-                route, L"automatic-loader-stage-profile-unavailable" );
+-        swprintf( route->evidence, ARRAY_SIZE(route->evidence), L"%s;generation-unreadable",
+-                  architecture_evidence );
+-        goto done;
++        route->requested = dxmt;
++        route->applied = dxmt;
++        route->reason = L"manual-session-dxmt";
++        route->supported = TRUE;
+     }
+-    if (generation == FORGEPLAY_DIRECT3D_12)
++    else if (!wcscmp( policy, L"d9vk" ))
+     {
+-        if (scan.pe64 && forgeplay_try_game_renderer_profile(
+-                route, d3dmetal, profile_d3dmetal_d3d12, TRUE, TRUE ))
+-            route->reason = L"automatic-d3d12";
+-        else
+-            forgeplay_set_unsupported_renderer_route(
+-                route, scan.pe64 ? L"automatic-d3d12-profile-unavailable" :
+-                                   L"automatic-d3d12-unsupported-pe32" );
+-        forgeplay_set_renderer_route_evidence( route, &scan, generation );
++        route->requested = d9vk;
++        route->applied = d9vk;
++        route->reason = L"manual-session-d9vk";
++        route->supported = TRUE;
+     }
+-    else if (generation == FORGEPLAY_DIRECT3D_11 ||
+-             generation == FORGEPLAY_DIRECT3D_10)
++    else if (!wcscmp( policy, L"vulkan" ))
+     {
+-        if ((scan.pe64 && forgeplay_try_game_renderer_profile(
+-                 route, d3dmetal, profile_d3dmetal_d3d11, TRUE, TRUE )) ||
+-            (!scan.pe64 && forgeplay_try_game_renderer_profile(
+-                 route, dxmt, profile_dxmt, FALSE, FALSE )))
+-            route->reason = scan.pe64 ? L"automatic-d3d11-metal" :
+-                                        L"automatic-d3d11-dxmt";
+-        else
+-            forgeplay_set_unsupported_renderer_route(
+-                route, L"automatic-d3d11-profile-unavailable" );
+-        forgeplay_set_renderer_route_evidence( route, &scan, generation );
++        route->requested = L"vulkan";
++        route->applied = dxvk;
++        route->reason = L"manual-session-dxvk";
++        route->supported = TRUE;
+     }
+-    else if (generation == FORGEPLAY_DIRECT3D_9 &&
+-             forgeplay_try_game_renderer_profile(
+-                 route, d9vk, profile_d9vk, scan.pe64, FALSE ))
++    else
+     {
+-        route->reason = L"automatic-d3d9-d9vk";
+-        forgeplay_set_renderer_route_evidence( route, &scan, generation );
+-    }
+-    else if (generation == FORGEPLAY_DIRECT3D_8)
+-    {
++        route->requested = L"manual";
+         forgeplay_set_unsupported_renderer_route(
+-            route, L"automatic-d3d8-no-safe-profile" );
+-        forgeplay_set_renderer_route_evidence( route, &scan, generation );
++            route, L"manual-session-selection-invalid" );
+     }
+-    else
+-    {
+-        if (generation == FORGEPLAY_DIRECT3D_9)
+-            forgeplay_set_unsupported_renderer_route(
+-                route, L"automatic-d3d9-profile-unavailable" );
+-        else if ((scan.pe64 && forgeplay_try_game_renderer_profile(
+-                      route, loader, profile_loader_x64, TRUE, TRUE )) ||
+-                 (!scan.pe64 && forgeplay_try_game_renderer_profile(
+-                      route, loader, profile_loader_x86, FALSE, FALSE )))
+-            route->reason = scan.pe64 ?
+-                L"automatic-loader-stage-x64" :
+-                L"automatic-loader-stage-x86";
+-        else
+-            forgeplay_set_deferred_renderer_route(
+-                route, L"automatic-loader-stage-profile-unavailable" );
+-        swprintf( route->evidence, ARRAY_SIZE(route->evidence), L"%s;%s",
+-                  architecture_evidence,
+-                  scan.saw_import ? L"no-direct3d-generation" : L"empty-import-table" );
+-    }
+-
+-done:
++    swprintf( route->evidence, ARRAY_SIZE(route->evidence),
++              L"host-policy;manual-selection;%s", architecture_evidence );
+     SetLastError( saved_error );
+ }
+ 
+@@ -1341,53 +998,10 @@
+ failed:
+     RtlDestroyEnvironment( *result );
+     *result = NULL;
+-    return status;
+-}
+-
+-
+-static NTSTATUS create_forgeplay_deferred_renderer_environment(
+-    const void *environment, DWORD flags, WCHAR **result )
+-{
+-    NTSTATUS status;
+-
+-    if ((status = create_forgeplay_base_renderer_environment(
+-             environment, flags, result ))) return status;
+-    if ((status = set_forgeplay_renderer_literal(
+-             result, L"FORGEPLAY_STEAM_GAME_PROCESS", L"1" )) ||
+-        (status = set_forgeplay_renderer_literal(
+-             result, L"FORGEPLAY_GAME_RENDERER_LINEAGE", L"1" )))
+-    {
+-        RtlDestroyEnvironment( *result );
+-        *result = NULL;
+-    }
+     return status;
+ }
+ 
+ 
+-static NTSTATUS forgeplay_renderer_source_name( const struct forgeplay_game_renderer_route *route,
+-                                                const WCHAR *base_name, WCHAR *source_name,
+-                                                SIZE_T source_count )
+-{
+-    static const WCHAR prefix[] = L"FORGEPLAY_GAME_RENDERER_";
+-    SIZE_T required;
+-
+-    if (!route->profile)
+-    {
+-        required = wcslen( base_name ) + 1;
+-        if (required > source_count) return STATUS_BUFFER_TOO_SMALL;
+-        memcpy( source_name, base_name, required * sizeof(WCHAR) );
+-        return STATUS_SUCCESS;
+-    }
+-    if (wcsncmp( base_name, prefix, ARRAY_SIZE(prefix) - 1 )) return STATUS_INVALID_PARAMETER;
+-    required = wcslen( prefix ) + wcslen( L"PROFILE__" ) + wcslen( route->profile ) +
+-               wcslen( base_name + ARRAY_SIZE(prefix) - 1 ) + 1;
+-    if (required > source_count) return STATUS_BUFFER_TOO_SMALL;
+-    swprintf( source_name, source_count, L"%sPROFILE_%s_%s", prefix, route->profile,
+-              base_name + ARRAY_SIZE(prefix) - 1 );
+-    return STATUS_SUCCESS;
+-}
+-
+-
+ static NTSTATUS create_forgeplay_game_renderer_environment( const void *environment, DWORD flags,
+                                                             const struct forgeplay_game_renderer_route *route,
+                                                             const WCHAR *app_name, WCHAR **result )
+@@ -1429,10 +1043,7 @@
+         L"FORGEPLAY_GAME_RENDERER_POLICY_ENABLED",
+         L"FORGEPLAY_GAME_RENDERER_POLICY",
+         L"FORGEPLAY_GAME_RENDERER_REQUESTED",
+-        L"FORGEPLAY_GAME_RENDERER_ROUTING_MODE",
+         L"FORGEPLAY_GAME_RENDERER_CORRELATION_ID",
+-        L"FORGEPLAY_GAME_RENDERER_AVAILABLE_PROFILES",
+-        L"FORGEPLAY_GAME_RENDERER_UNAVAILABLE_PROFILES",
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_WINEDLLOVERRIDES",
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_WINEDLLPATH",
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DYLD_LIBRARY_PATH",
+@@ -1447,16 +1058,10 @@
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_LOG_LEVEL",
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_CONFIG",
+     };
+-    static const WCHAR *profiles[] =
+-    {
+-        L"D3DMETAL_D3D11", L"D3DMETAL_D3D12", L"DXMT", L"D9VK",
+-        L"LOADER_X64", L"LOADER_X86"
+-    };
+-    struct forgeplay_game_renderer_route retained_route = {0};
+     const WCHAR *target_name, *cursor;
+-    WCHAR source_name[192], bridge_required_value[2];
++    WCHAR bridge_required_value[2];
+     NTSTATUS status;
+-    unsigned int i, j;
++    unsigned int i;
+ 
+     if ((status = clone_forgeplay_process_environment( environment, flags, result ))) return status;
+     /* Selector scope is recomputed for every routed child. Never trust or
+@@ -1470,25 +1075,19 @@
+         goto failed;
+     for (i = 0; i < ARRAY_SIZE(variables); ++i)
+     {
+-        if ((status = forgeplay_renderer_source_name( route, variables[i].source_name,
+-                                                      source_name, ARRAY_SIZE(source_name) )))
+-            goto failed;
+-        status = set_forgeplay_renderer_environment_variable( result, source_name,
++        status = set_forgeplay_renderer_environment_variable( result, variables[i].source_name,
+                                                               variables[i].target_name );
+         if (status) goto failed;
+         /* Keep the host-owned source value as well. A Steam launcher can pass
+          * an explicit child environment, and descendants below steamapps/common
+          * must still be able to rehydrate the same renderer policy. */
+-        status = copy_forgeplay_renderer_variable( result, source_name,
++        status = copy_forgeplay_renderer_variable( result, variables[i].source_name,
+                                                    variables[i].source_name, TRUE );
+         if (status) goto failed;
+     }
+     for (i = 0; i < ARRAY_SIZE(selected_control_variables); ++i)
+     {
+-        if ((status = forgeplay_renderer_source_name( route, selected_control_variables[i].name,
+-                                                      source_name, ARRAY_SIZE(source_name) )))
+-            goto failed;
+-        status = copy_forgeplay_renderer_variable( result, source_name,
++        status = copy_forgeplay_renderer_variable( result, selected_control_variables[i].name,
+                                                    selected_control_variables[i].name,
+                                                    selected_control_variables[i].required );
+         if (status) goto failed;
+@@ -1500,39 +1099,6 @@
+         if (status) goto failed;
+     }
+ 
+-    /* Automatic routing must survive launchers which construct a fresh child
+-     * environment. Preserve every named profile, but expose only the selected
+-     * profile through the real renderer variables above. */
+-    if (route->profile)
+-    {
+-        for (i = 0; i < ARRAY_SIZE(profiles); ++i)
+-        {
+-            retained_route.profile = profiles[i];
+-            for (j = 0; j < ARRAY_SIZE(variables); ++j)
+-            {
+-                if ((status = forgeplay_renderer_source_name( &retained_route,
+-                                                              variables[j].source_name,
+-                                                              source_name,
+-                                                              ARRAY_SIZE(source_name) )))
+-                    goto failed;
+-                if ((status = copy_forgeplay_renderer_variable( result, source_name,
+-                                                                source_name, FALSE )))
+-                    goto failed;
+-            }
+-            for (j = 0; j < ARRAY_SIZE(selected_control_variables); ++j)
+-            {
+-                if ((status = forgeplay_renderer_source_name( &retained_route,
+-                                                              selected_control_variables[j].name,
+-                                                              source_name,
+-                                                              ARRAY_SIZE(source_name) )))
+-                    goto failed;
+-                if ((status = copy_forgeplay_renderer_variable( result, source_name,
+-                                                                source_name, FALSE )))
+-                    goto failed;
+-            }
+-        }
+-    }
+-
+     bridge_required_value[0] = route->d3dmetal_bridge_required ? L'1' : L'0';
+     bridge_required_value[1] = 0;
+     if ((status = set_forgeplay_renderer_literal( result,
+@@ -1553,8 +1119,8 @@
+                                                   route->applied )))
+         goto failed;
+     if ((status = set_forgeplay_renderer_literal( result,
+-                                                           L"FORGEPLAY_GAME_RENDERER_PROFILE",
+-                                                           route->profile ? route->profile : route->applied )))
++                                                  L"FORGEPLAY_GAME_RENDERER_PROFILE",
++                                                  route->applied )))
+         goto failed;
+     if ((status = set_forgeplay_renderer_literal( result,
+                                                   L"FORGEPLAY_GAME_RENDERER_D3DMETAL_BRIDGE_REQUIRED",
+@@ -1630,29 +1196,15 @@
+ {
+     static const WCHAR unreported[] = L"unreported";
+     WCHAR components_x64[256], components_x86[256], correlation[128];
+-    WCHAR components_x64_name[192], components_x86_name[192];
+-    const WCHAR *planned_profile = route->profile ? route->profile : route->applied;
+     const WCHAR *reported_owner = route->supported ? route->applied : L"unreported";
+     WCHAR *text;
+     SIZE_T text_size;
+     DWORD x64_size, x86_size, correlation_size;
+ 
+-    if (route->profile)
+-    {
+-        swprintf( components_x64_name, ARRAY_SIZE(components_x64_name),
+-                  L"FORGEPLAY_GAME_RENDERER_PROFILE_%s_COMPONENTS_X64", route->profile );
+-        swprintf( components_x86_name, ARRAY_SIZE(components_x86_name),
+-                  L"FORGEPLAY_GAME_RENDERER_PROFILE_%s_COMPONENTS_X86", route->profile );
+-    }
+-    else
+-    {
+-        lstrcpyW( components_x64_name, L"FORGEPLAY_GAME_RENDERER_COMPONENTS_X64" );
+-        lstrcpyW( components_x86_name, L"FORGEPLAY_GAME_RENDERER_COMPONENTS_X86" );
+-    }
+-    x64_size = GetEnvironmentVariableW( components_x64_name, components_x64,
+-                                        ARRAY_SIZE(components_x64) );
+-    x86_size = GetEnvironmentVariableW( components_x86_name, components_x86,
+-                                        ARRAY_SIZE(components_x86) );
++    x64_size = GetEnvironmentVariableW( L"FORGEPLAY_GAME_RENDERER_COMPONENTS_X64",
++                                        components_x64, ARRAY_SIZE(components_x64) );
++    x86_size = GetEnvironmentVariableW( L"FORGEPLAY_GAME_RENDERER_COMPONENTS_X86",
++                                        components_x86, ARRAY_SIZE(components_x86) );
+     if (!x64_size || x64_size >= ARRAY_SIZE(components_x64))
+         lstrcpyW( components_x64, unreported );
+     if (!x86_size || x86_size >= ARRAY_SIZE(components_x86))
+@@ -1664,7 +1216,7 @@
+ 
+     if (!filename) filename = L"<unknown>";
+     text_size = wcslen( route->requested ) + wcslen( route->applied ) +
+-                wcslen( planned_profile ) + wcslen( components_x64 ) +
++                wcslen( route->applied ) + wcslen( components_x64 ) +
+                 wcslen( components_x86 ) + wcslen( route->reason ) +
+                 wcslen( route->evidence ) + wcslen( correlation ) +
+                 wcslen( filename ) + 208;
+@@ -1673,7 +1225,7 @@
+               L"requested=%s | applied=%s | planned-profile=%s | planned-owner=%s | "
+               L"planned-components-x64=%s | planned-components-x86=%s | "
+               L"actual-loaded=unobserved | reason=%s | evidence=%s | correlation=%s | %s",
+-              route->requested, reported_owner, planned_profile, reported_owner,
++              route->requested, reported_owner, route->applied, reported_owner,
+               components_x64, components_x86, route->reason, route->evidence,
+               correlation, filename );
+     record_process_observation( "FORGEPLAY_GAME_RENDERER_ROUTE_V2\t", text, process_id );
+@@ -2068,7 +1620,7 @@
+     HANDLE parent = 0, debug = 0;
+     ULONG nt_flags = 0;
+     USHORT machine = 0;
+-    NTSTATUS status, renderer_status, fallback_status;
++    NTSTATUS status, renderer_status;
+     BOOL game_renderer_route_observed = FALSE;
+     BOOL process_argument_policy_applied = FALSE;
+ 
+@@ -2142,61 +1694,31 @@
+               is_forgeplay_steam_game_path( cur_dir ) ||
+               forgeplay_game_renderer_lineage_is_active()))
+     {
+-        const WCHAR *fallback_reason, *failure_stage;
+-        BOOL fallback_attempted, route_unsupported;
+-
+         forgeplay_resolve_game_renderer_route( app_name, cur_dir, machine,
+                                                &game_renderer_route );
+-        route_unsupported = !game_renderer_route.supported && !game_renderer_route.deferred;
+-        if (route_unsupported)
+-            renderer_status = STATUS_NOT_SUPPORTED;
+-        else if (game_renderer_route.deferred)
+-            renderer_status = create_forgeplay_deferred_renderer_environment(
+-                env, flags, &game_renderer_environment );
+-        else
+-            renderer_status = create_forgeplay_game_renderer_environment(
+-                env, flags, &game_renderer_route, app_name,
+-                &game_renderer_environment );
+-
+-        if (renderer_status)
++        if (!game_renderer_route.supported)
+         {
+-            fallback_attempted = !game_renderer_route.deferred;
+-            fallback_status = renderer_status;
+-            if (fallback_attempted)
+-                fallback_status = create_forgeplay_deferred_renderer_environment(
+-                    env, flags, &game_renderer_environment );
+-
+-            failure_stage = route_unsupported ? L"unsupported-route" :
+-                            (game_renderer_route.deferred ?
+-                                L"deferred-child-environment" : L"child-environment");
+             record_forgeplay_game_renderer_fallback(
+-                failure_stage, app_name, renderer_status,
+-                fallback_status ? L"original-environment" :
+-                                  L"game-identity-environment" );
+-            if (fallback_attempted && fallback_status)
+-                record_forgeplay_game_renderer_fallback(
+-                    L"game-identity-environment", app_name, fallback_status,
+-                    L"original-environment" );
+-
+-            if (!fallback_status)
+-            {
+-                env = game_renderer_environment;
+-                flags |= CREATE_UNICODE_ENVIRONMENT;
+-            }
+-            fallback_reason = route_unsupported ? game_renderer_route.reason :
+-                              (fallback_status ?
+-                                  L"renderer-environment-original-fallback" :
+-                                  L"renderer-environment-identity-fallback");
+-            forgeplay_set_deferred_renderer_route( &game_renderer_route, fallback_reason );
++                L"manual-route", app_name, STATUS_NOT_SUPPORTED,
++                L"process-creation-rejected" );
++            status = STATUS_NOT_SUPPORTED;
++            goto done;
+         }
+-        else
++        renderer_status = create_forgeplay_game_renderer_environment(
++            env, flags, &game_renderer_route, app_name,
++            &game_renderer_environment );
++        if (renderer_status)
+         {
+-            env = game_renderer_environment;
+-            flags |= CREATE_UNICODE_ENVIRONMENT;
++            record_forgeplay_game_renderer_fallback(
++                L"selected-renderer-environment", app_name, renderer_status,
++                L"process-creation-rejected" );
++            status = renderer_status;
++            goto done;
+         }
++        env = game_renderer_environment;
++        flags |= CREATE_UNICODE_ENVIRONMENT;
+         game_renderer_route_observed = TRUE;
+-        TRACE( "%s ForgePlay Steam game renderer process policy for %s\n",
+-               game_renderer_route.deferred ? "deferred" : "applied",
++        TRACE( "applied ForgePlay Steam game renderer process policy for %s\n",
+                debugstr_w(app_name) );
+     }
+ 

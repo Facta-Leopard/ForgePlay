@@ -1,0 +1,2265 @@
+diff --git a/dlls/kernelbase/process.c b/dlls/kernelbase/process.c
+index 99b50ec..9a068ec 100644
+--- a/dlls/kernelbase/process.c
++++ b/dlls/kernelbase/process.c
+@@ -184,37 +184,36 @@ done:
+  * Record the final command line only for the executable-scoped policy
+  * target. The host creates a unique observation file for each launch.
+  */
+-static void record_process_argument_observation( const WCHAR *cmdline, DWORD process_id )
++static void record_process_observation( const char *record_prefix, const WCHAR *text, DWORD process_id )
+ {
+     static const WCHAR observation_variable[] = L"FORGEPLAY_PROCESS_OBSERVATION_FILE";
+-    static const char record_prefix[] = "FORGEPLAY_PROCESS_V1\t";
+     WCHAR *observation_path = NULL;
+     char process_id_text[16], *record = NULL;
+     DWORD bytes_written, path_size;
+     HANDLE file = INVALID_HANDLE_VALUE;
+     int command_size, process_id_size;
+-    SIZE_T i, record_size;
++    SIZE_T i, prefix_size, record_size;
+
+     path_size = GetEnvironmentVariableW( observation_variable, NULL, 0 );
+     if (!path_size || path_size > 32767) return;
+     if (!(observation_path = HeapAlloc( GetProcessHeap(), 0, path_size * sizeof(WCHAR) ))) return;
+     if (!GetEnvironmentVariableW( observation_variable, observation_path, path_size )) goto done;
+ 
+-    command_size = WideCharToMultiByte( CP_UTF8, 0, cmdline, -1, NULL, 0, NULL, NULL );
++    command_size = WideCharToMultiByte( CP_UTF8, 0, text, -1, NULL, 0, NULL, NULL );
+     if (command_size <= 1) goto done;
+     process_id_size = snprintf( process_id_text, sizeof(process_id_text), "%lu\t", process_id );
+     if (process_id_size <= 0 || (SIZE_T)process_id_size >= sizeof(process_id_text)) goto done;
+ 
+-    record_size = sizeof(record_prefix) - 1 + process_id_size + command_size - 1 + 1;
++    prefix_size = strlen( record_prefix );
++    record_size = prefix_size + process_id_size + command_size - 1 + 1;
+     if (!(record = HeapAlloc( GetProcessHeap(), 0, record_size ))) goto done;
+-    memcpy( record, record_prefix, sizeof(record_prefix) - 1 );
+-    memcpy( record + sizeof(record_prefix) - 1, process_id_text, process_id_size );
+-    if (!WideCharToMultiByte( CP_UTF8, 0, cmdline, -1,
+-                              record + sizeof(record_prefix) - 1 + process_id_size,
++    memcpy( record, record_prefix, prefix_size );
++    memcpy( record + prefix_size, process_id_text, process_id_size );
++    if (!WideCharToMultiByte( CP_UTF8, 0, text, -1,
++                              record + prefix_size + process_id_size,
+                               command_size, NULL, NULL )) goto done;
+ 
+-    for (i = sizeof(record_prefix) - 1 + process_id_size;
+-         i < record_size - 1; ++i)
++    for (i = prefix_size + process_id_size; i < record_size - 1; ++i)
+     {
+         if (record[i] == '\r' || record[i] == '\n' || record[i] == '\t') record[i] = ' ';
+     }
+@@ -234,6 +233,1448 @@ done:
+ }
+ 
+ 
++static void record_process_argument_observation( const WCHAR *cmdline, DWORD process_id )
++{
++    record_process_observation( "FORGEPLAY_PROCESS_V1\t", cmdline, process_id );
++}
++
++
++/***********************************************************************
++ *           is_forgeplay_steam_game_path
++ *
++ * Steam libraries always launch the first game or launcher executable
++ * below steamapps/common. Renderer state inherited by later descendants
++ * remains process-local and never reaches Steam or Steam WebHelper.
++ */
++static BOOL is_forgeplay_steam_game_path( const WCHAR *path )
++{
++    const WCHAR *cursor;
++
++    if (!path) return FALSE;
++    for (cursor = path; *cursor; ++cursor)
++    {
++        if (*cursor != L'\\' && *cursor != L'/') continue;
++        if (wcslen( cursor ) < 18) return FALSE;
++        if (!wcsnicmp( cursor + 1, L"steamapps", 9 ) &&
++            (cursor[10] == L'\\' || cursor[10] == L'/') &&
++            !wcsnicmp( cursor + 11, L"common", 6 ) &&
++            (cursor[17] == L'\\' || cursor[17] == L'/')) return TRUE;
++    }
++    return FALSE;
++}
++
++
++static const WCHAR *forgeplay_path_basename( const WCHAR *path )
++{
++    const WCHAR *cursor, *basename = path;
++
++    if (!path) return NULL;
++    for (cursor = path; *cursor; ++cursor)
++        if (*cursor == L'\\' || *cursor == L'/') basename = cursor + 1;
++    return basename;
++}
++
++
++/* Infrastructure processes must never receive a game renderer even if a
++ * game launcher starts one while carrying the game-lineage token. */
++static BOOL is_forgeplay_game_renderer_excluded_role( const WCHAR *path )
++{
++    static const WCHAR *excluded_names[] =
++    {
++        L"steam.exe",
++        L"steamwebhelper.exe",
++        L"steamservice.exe",
++        L"crashhandler.exe",
++        L"crashhandler64.exe",
++    };
++    const WCHAR *basename = forgeplay_path_basename( path );
++    unsigned int i;
++
++    if (!basename || !*basename) return FALSE;
++    for (i = 0; i < ARRAY_SIZE(excluded_names); ++i)
++        if (!wcsicmp( basename, excluded_names[i] )) return TRUE;
++    return FALSE;
++}
++
++
++static BOOL forgeplay_game_renderer_lineage_is_active(void)
++{
++    WCHAR value[8];
++    DWORD size = GetEnvironmentVariableW( L"FORGEPLAY_GAME_RENDERER_LINEAGE",
++                                          value, ARRAY_SIZE(value) );
++    return size == 1 && value[0] == L'1';
++}
++
++
++static BOOL forgeplay_game_renderer_policy_enabled(void)
++{
++    WCHAR value[8];
++    DWORD size = GetEnvironmentVariableW( L"FORGEPLAY_GAME_RENDERER_POLICY_ENABLED",
++                                          value, ARRAY_SIZE(value) );
++    return size == 1 && value[0] == L'1';
++}
++
++
++enum forgeplay_direct3d_generation
++{
++    FORGEPLAY_DIRECT3D_NONE = 0,
++    FORGEPLAY_DIRECT3D_8,
++    FORGEPLAY_DIRECT3D_9,
++    FORGEPLAY_DIRECT3D_10,
++    FORGEPLAY_DIRECT3D_11,
++    FORGEPLAY_DIRECT3D_12,
++};
++
++#define FORGEPLAY_DIRECT3D_BIT(generation) ((DWORD)1 << (generation))
++
++
++struct forgeplay_game_renderer_import_scan
++{
++    BOOL valid_pe;
++    BOOL pe64;
++    BOOL saw_import;
++    DWORD generation_mask;
++    char d3d12_module[128];
++    char d3d11_module[128];
++    char d3d10_module[128];
++    char d3d9_module[128];
++    char d3d8_module[128];
++    BOOL d3d12_delayed;
++    BOOL d3d11_delayed;
++    BOOL d3d10_delayed;
++    BOOL d3d9_delayed;
++    BOOL d3d8_delayed;
++};
++
++
++struct forgeplay_game_renderer_route
++{
++    const WCHAR *requested;
++    const WCHAR *applied;
++    const WCHAR *profile;
++    const WCHAR *reason;
++    WCHAR evidence[320];
++    BOOL d3dmetal_bridge_required;
++    BOOL deferred;
++    BOOL supported;
++};
++
++
++static BOOL forgeplay_file_range_is_valid( SIZE_T offset, SIZE_T length, SIZE_T file_size )
++{
++    return offset <= file_size && length <= file_size - offset;
++}
++
++
++static WORD forgeplay_read_word( const BYTE *bytes, SIZE_T offset )
++{
++    WORD value;
++    memcpy( &value, bytes + offset, sizeof(value) );
++    return value;
++}
++
++
++static DWORD forgeplay_read_dword( const BYTE *bytes, SIZE_T offset )
++{
++    DWORD value;
++    memcpy( &value, bytes + offset, sizeof(value) );
++    return value;
++}
++
++
++static BOOL forgeplay_pe_rva_to_file_offset( const BYTE *bytes, SIZE_T file_size,
++                                             SIZE_T section_offset, WORD section_count,
++                                             DWORD size_of_headers, DWORD rva,
++                                             SIZE_T *file_offset )
++{
++    unsigned int i;
++
++    if (rva < size_of_headers && rva < file_size)
++    {
++        *file_offset = rva;
++        return TRUE;
++    }
++    for (i = 0; i < section_count; ++i)
++    {
++        SIZE_T offset = section_offset + i * IMAGE_SIZEOF_SECTION_HEADER;
++        DWORD virtual_size, virtual_address, raw_size, raw_offset, mapped_size, delta;
++
++        if (!forgeplay_file_range_is_valid( offset, IMAGE_SIZEOF_SECTION_HEADER, file_size ))
++            return FALSE;
++        virtual_size = forgeplay_read_dword( bytes, offset + 8 );
++        virtual_address = forgeplay_read_dword( bytes, offset + 12 );
++        raw_size = forgeplay_read_dword( bytes, offset + 16 );
++        raw_offset = forgeplay_read_dword( bytes, offset + 20 );
++        mapped_size = max( virtual_size, raw_size );
++        if (rva < virtual_address || rva - virtual_address >= mapped_size) continue;
++        delta = rva - virtual_address;
++        if (delta >= raw_size || !forgeplay_file_range_is_valid( raw_offset, delta + 1, file_size ))
++            return FALSE;
++        *file_offset = raw_offset + delta;
++        return TRUE;
++    }
++    return FALSE;
++}
++
++
++static BOOL forgeplay_ascii_contains_case_insensitive( const char *text, const char *needle )
++{
++    SIZE_T text_length = strlen( text ), needle_length = strlen( needle ), i, j;
++
++    if (!needle_length || needle_length > text_length) return FALSE;
++    for (i = 0; i <= text_length - needle_length; ++i)
++    {
++        for (j = 0; j < needle_length; ++j)
++        {
++            char left = text[i + j], right = needle[j];
++            if (left >= 'A' && left <= 'Z') left += 'a' - 'A';
++            if (right >= 'A' && right <= 'Z') right += 'a' - 'A';
++            if (left != right) break;
++        }
++        if (j == needle_length) return TRUE;
++    }
++    return FALSE;
++}
++
++
++static BOOL forgeplay_copy_import_module_name( const BYTE *bytes, SIZE_T file_size,
++                                               SIZE_T name_offset, char *name, SIZE_T name_size )
++{
++    const BYTE *terminator;
++    SIZE_T length, i;
++
++    if (!name_size || name_offset >= file_size) return FALSE;
++    terminator = memchr( bytes + name_offset, 0, min( file_size - name_offset, name_size ) );
++    if (!terminator) return FALSE;
++    length = terminator - (bytes + name_offset);
++    if (!length || length >= name_size) return FALSE;
++    for (i = 0; i < length; ++i)
++    {
++        BYTE value = bytes[name_offset + i];
++        if (value < 0x20 || value > 0x7e || value == '|') return FALSE;
++        name[i] = value;
++    }
++    name[length] = 0;
++    return TRUE;
++}
++
++
++static void forgeplay_record_import_generation( struct forgeplay_game_renderer_import_scan *scan,
++                                                const char *module, BOOL delayed )
++{
++    enum forgeplay_direct3d_generation generation = FORGEPLAY_DIRECT3D_NONE;
++    char *destination = NULL;
++    BOOL *delayed_destination = NULL;
++
++    scan->saw_import = TRUE;
++    /* A clear d3d12/dx12 token also covers vendor bridge modules such as
++     * FidelityFX DX12 without relying on a game name or Steam AppID. */
++    if (forgeplay_ascii_contains_case_insensitive( module, "d3d12" ) ||
++        forgeplay_ascii_contains_case_insensitive( module, "dx12" ))
++    {
++        generation = FORGEPLAY_DIRECT3D_12;
++        destination = scan->d3d12_module;
++        delayed_destination = &scan->d3d12_delayed;
++    }
++    else if (forgeplay_ascii_contains_case_insensitive( module, "d3d11" ) ||
++             forgeplay_ascii_contains_case_insensitive( module, "dx11" ))
++    {
++        generation = FORGEPLAY_DIRECT3D_11;
++        destination = scan->d3d11_module;
++        delayed_destination = &scan->d3d11_delayed;
++    }
++    else if (forgeplay_ascii_contains_case_insensitive( module, "d3d10" ) ||
++             forgeplay_ascii_contains_case_insensitive( module, "dx10" ))
++    {
++        generation = FORGEPLAY_DIRECT3D_10;
++        destination = scan->d3d10_module;
++        delayed_destination = &scan->d3d10_delayed;
++    }
++    else if (forgeplay_ascii_contains_case_insensitive( module, "d3d9" ) ||
++             forgeplay_ascii_contains_case_insensitive( module, "dx9" ))
++    {
++        generation = FORGEPLAY_DIRECT3D_9;
++        destination = scan->d3d9_module;
++        delayed_destination = &scan->d3d9_delayed;
++    }
++    else if (forgeplay_ascii_contains_case_insensitive( module, "d3d8" ) ||
++             forgeplay_ascii_contains_case_insensitive( module, "dx8" ))
++    {
++        generation = FORGEPLAY_DIRECT3D_8;
++        destination = scan->d3d8_module;
++        delayed_destination = &scan->d3d8_delayed;
++    }
++    if (generation != FORGEPLAY_DIRECT3D_NONE)
++        scan->generation_mask |= FORGEPLAY_DIRECT3D_BIT(generation);
++    if (destination && !destination[0])
++    {
++        lstrcpynA( destination, module, 128 );
++        *delayed_destination = delayed;
++    }
++}
++
++
++static void forgeplay_scan_pe_import_directory( const BYTE *bytes, SIZE_T file_size,
++                                                SIZE_T section_offset, WORD section_count,
++                                                DWORD size_of_headers, DWORD directory_rva,
++                                                DWORD directory_size, BOOL delayed,
++                                                struct forgeplay_game_renderer_import_scan *scan )
++{
++    SIZE_T directory_offset, descriptor_size = delayed ? 32 : sizeof(IMAGE_IMPORT_DESCRIPTOR);
++    SIZE_T available, count, i;
++
++    if (!directory_rva ||
++        !forgeplay_pe_rva_to_file_offset( bytes, file_size, section_offset, section_count,
++                                          size_of_headers, directory_rva, &directory_offset ))
++        return;
++    available = file_size - directory_offset;
++    if (directory_size && directory_size < available) available = directory_size;
++    count = min( available / descriptor_size, 4096 );
++    for (i = 0; i < count; ++i)
++    {
++        SIZE_T descriptor_offset = directory_offset + i * descriptor_size, name_offset;
++        DWORD name_rva = forgeplay_read_dword( bytes, descriptor_offset + (delayed ? 4 : 12) );
++        char module[128];
++
++        if (!name_rva) break;
++        if (!forgeplay_pe_rva_to_file_offset( bytes, file_size, section_offset, section_count,
++                                              size_of_headers, name_rva, &name_offset ))
++            continue;
++        if (!forgeplay_copy_import_module_name( bytes, file_size, name_offset,
++                                                module, ARRAY_SIZE(module) ))
++            continue;
++        forgeplay_record_import_generation( scan, module, delayed );
++    }
++}
++
++
++static void forgeplay_scan_game_renderer_imports( const WCHAR *filename, const WCHAR *cur_dir,
++                                                  struct forgeplay_game_renderer_import_scan *scan )
++{
++    WCHAR *relative_path = NULL;
++    const WCHAR *open_path = filename;
++    HANDLE file = INVALID_HANDLE_VALUE, mapping = NULL;
++    LARGE_INTEGER size;
++    BYTE *bytes = NULL;
++    SIZE_T file_size, nt_offset, optional_offset, section_offset, directory_offset;
++    WORD section_count, optional_size, optional_magic;
++    DWORD size_of_headers, directory_count, import_rva, import_size, delay_rva, delay_size;
++
++    memset( scan, 0, sizeof(*scan) );
++    file = CreateFileW( open_path, GENERIC_READ,
++                        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
++                        NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL );
++    if (file == INVALID_HANDLE_VALUE && cur_dir && filename && filename[0] &&
++        !(filename[1] == L':' || filename[0] == L'\\' || filename[0] == L'/'))
++    {
++        SIZE_T length = wcslen( cur_dir ) + wcslen( filename ) + 2;
++        if ((relative_path = HeapAlloc( GetProcessHeap(), 0, length * sizeof(WCHAR) )))
++        {
++            swprintf( relative_path, length, L"%s\\%s", cur_dir, filename );
++            open_path = relative_path;
++            file = CreateFileW( open_path, GENERIC_READ,
++                                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
++                                NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL );
++        }
++    }
++    if (file == INVALID_HANDLE_VALUE || !GetFileSizeEx( file, &size ) ||
++        size.QuadPart <= 0 || (ULONGLONG)size.QuadPart > ~(SIZE_T)0)
++        goto done;
++    file_size = size.QuadPart;
++    if (!(mapping = CreateFileMappingW( file, NULL, PAGE_READONLY, 0, 0, NULL ))) goto done;
++    if (!(bytes = MapViewOfFile( mapping, FILE_MAP_READ, 0, 0, 0 ))) goto done;
++
++    if (!forgeplay_file_range_is_valid( 0, 0x40, file_size ) ||
++        forgeplay_read_word( bytes, 0 ) != IMAGE_DOS_SIGNATURE)
++        goto done;
++    nt_offset = forgeplay_read_dword( bytes, 0x3c );
++    if (!forgeplay_file_range_is_valid( nt_offset, 24, file_size ) ||
++        forgeplay_read_dword( bytes, nt_offset ) != IMAGE_NT_SIGNATURE)
++        goto done;
++    section_count = forgeplay_read_word( bytes, nt_offset + 6 );
++    optional_size = forgeplay_read_word( bytes, nt_offset + 20 );
++    optional_offset = nt_offset + 24;
++    if (!section_count || section_count > 96 ||
++        !forgeplay_file_range_is_valid( optional_offset, optional_size, file_size ) ||
++        optional_size < 112)
++        goto done;
++    optional_magic = forgeplay_read_word( bytes, optional_offset );
++    if (optional_magic == IMAGE_NT_OPTIONAL_HDR64_MAGIC)
++    {
++        scan->pe64 = TRUE;
++        directory_offset = optional_offset + 112;
++        directory_count = forgeplay_read_dword( bytes, optional_offset + 108 );
++    }
++    else if (optional_magic == IMAGE_NT_OPTIONAL_HDR32_MAGIC)
++    {
++        scan->pe64 = FALSE;
++        directory_offset = optional_offset + 96;
++        directory_count = forgeplay_read_dword( bytes, optional_offset + 92 );
++    }
++    else goto done;
++    section_offset = optional_offset + optional_size;
++    if (!forgeplay_file_range_is_valid( section_offset,
++                                        (SIZE_T)section_count * IMAGE_SIZEOF_SECTION_HEADER,
++                                        file_size ))
++        goto done;
++    size_of_headers = forgeplay_read_dword( bytes, optional_offset + 60 );
++    scan->valid_pe = TRUE;
++
++    if (directory_count > IMAGE_DIRECTORY_ENTRY_IMPORT &&
++        forgeplay_file_range_is_valid( directory_offset + IMAGE_DIRECTORY_ENTRY_IMPORT * 8,
++                                       8, optional_offset + optional_size ))
++    {
++        import_rva = forgeplay_read_dword( bytes, directory_offset + IMAGE_DIRECTORY_ENTRY_IMPORT * 8 );
++        import_size = forgeplay_read_dword( bytes, directory_offset + IMAGE_DIRECTORY_ENTRY_IMPORT * 8 + 4 );
++        forgeplay_scan_pe_import_directory( bytes, file_size, section_offset, section_count,
++                                            size_of_headers, import_rva, import_size, FALSE, scan );
++    }
++    if (directory_count > IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT &&
++        forgeplay_file_range_is_valid( directory_offset + IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT * 8,
++                                       8, optional_offset + optional_size ))
++    {
++        delay_rva = forgeplay_read_dword( bytes, directory_offset + IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT * 8 );
++        delay_size = forgeplay_read_dword( bytes, directory_offset + IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT * 8 + 4 );
++        forgeplay_scan_pe_import_directory( bytes, file_size, section_offset, section_count,
++                                            size_of_headers, delay_rva, delay_size, TRUE, scan );
++    }
++
++done:
++    if (bytes) UnmapViewOfFile( bytes );
++    if (mapping) CloseHandle( mapping );
++    if (file != INVALID_HANDLE_VALUE) CloseHandle( file );
++    HeapFree( GetProcessHeap(), 0, relative_path );
++}
++
++
++/* Both the regular and delayed import directories have been consumed before
++ * this selector runs. Commit one renderer route only after that complete scan,
++ * so an earlier D3D11 import cannot hide a later D3D12 import. */
++static enum forgeplay_direct3d_generation forgeplay_select_game_renderer_generation(
++    const struct forgeplay_game_renderer_import_scan *scan )
++{
++    int generation;
++
++    for (generation = FORGEPLAY_DIRECT3D_12;
++         generation > FORGEPLAY_DIRECT3D_NONE; --generation)
++    {
++        if (scan->generation_mask & FORGEPLAY_DIRECT3D_BIT(generation))
++            return (enum forgeplay_direct3d_generation)generation;
++    }
++    return FORGEPLAY_DIRECT3D_NONE;
++}
++
++
++static const WCHAR *forgeplay_direct3d_generation_name(
++    enum forgeplay_direct3d_generation generation )
++{
++    switch (generation)
++    {
++    case FORGEPLAY_DIRECT3D_12: return L"d3d12";
++    case FORGEPLAY_DIRECT3D_11: return L"d3d11";
++    case FORGEPLAY_DIRECT3D_10: return L"d3d10";
++    case FORGEPLAY_DIRECT3D_9: return L"d3d9";
++    case FORGEPLAY_DIRECT3D_8: return L"d3d8";
++    default: return L"none";
++    }
++}
++
++
++static const char *forgeplay_game_renderer_generation_module(
++    const struct forgeplay_game_renderer_import_scan *scan,
++    enum forgeplay_direct3d_generation generation, BOOL *delayed )
++{
++    *delayed = FALSE;
++    switch (generation)
++    {
++    case FORGEPLAY_DIRECT3D_12:
++        *delayed = scan->d3d12_delayed;
++        return scan->d3d12_module;
++    case FORGEPLAY_DIRECT3D_11:
++        *delayed = scan->d3d11_delayed;
++        return scan->d3d11_module;
++    case FORGEPLAY_DIRECT3D_10:
++        *delayed = scan->d3d10_delayed;
++        return scan->d3d10_module;
++    case FORGEPLAY_DIRECT3D_9:
++        *delayed = scan->d3d9_delayed;
++        return scan->d3d9_module;
++    case FORGEPLAY_DIRECT3D_8:
++        *delayed = scan->d3d8_delayed;
++        return scan->d3d8_module;
++    default:
++        return NULL;
++    }
++}
++
++
++static unsigned int forgeplay_game_renderer_generation_count(
++    const struct forgeplay_game_renderer_import_scan *scan )
++{
++    unsigned int count = 0, generation;
++
++    for (generation = FORGEPLAY_DIRECT3D_8;
++         generation <= FORGEPLAY_DIRECT3D_12; ++generation)
++    {
++        if (scan->generation_mask & FORGEPLAY_DIRECT3D_BIT(generation)) ++count;
++    }
++    return count;
++}
++
++
++static void forgeplay_format_game_renderer_generations(
++    const struct forgeplay_game_renderer_import_scan *scan, WCHAR *buffer, SIZE_T size )
++{
++    static const enum forgeplay_direct3d_generation priority[] =
++    {
++        FORGEPLAY_DIRECT3D_12,
++        FORGEPLAY_DIRECT3D_11,
++        FORGEPLAY_DIRECT3D_10,
++        FORGEPLAY_DIRECT3D_9,
++        FORGEPLAY_DIRECT3D_8,
++    };
++    SIZE_T length = 0;
++    unsigned int i;
++
++    if (!size) return;
++    buffer[0] = 0;
++    for (i = 0; i < ARRAY_SIZE(priority); ++i)
++    {
++        const WCHAR *name;
++        int written;
++
++        if (!(scan->generation_mask & FORGEPLAY_DIRECT3D_BIT(priority[i]))) continue;
++        name = forgeplay_direct3d_generation_name( priority[i] );
++        written = swprintf( buffer + length, size - length, L"%s%s",
++                            length ? L"," : L"", name );
++        if (written < 0 || (SIZE_T)written >= size - length)
++        {
++            buffer[size - 1] = 0;
++            return;
++        }
++        length += written;
++    }
++}
++
++
++static BOOL forgeplay_game_renderer_profile_is_available( const WCHAR *profile, BOOL pe64 )
++{
++    WCHAR variable[128], value[2];
++
++    swprintf( variable, ARRAY_SIZE(variable),
++              L"FORGEPLAY_GAME_RENDERER_PROFILE_%s_DLL_PATH_%s",
++              profile, pe64 ? L"X64" : L"X86" );
++    return GetEnvironmentVariableW( variable, value, ARRAY_SIZE(value) ) != 0 ||
++           GetLastError() == ERROR_MORE_DATA;
++}
++
++
++static BOOL forgeplay_try_game_renderer_profile( struct forgeplay_game_renderer_route *route,
++                                                 const WCHAR *applied, const WCHAR *profile,
++                                                 BOOL pe64, BOOL d3dmetal_bridge_required )
++{
++    if (!forgeplay_game_renderer_profile_is_available( profile, pe64 )) return FALSE;
++    route->applied = applied;
++    route->profile = profile;
++    route->d3dmetal_bridge_required = d3dmetal_bridge_required;
++    route->supported = TRUE;
++    return TRUE;
++}
++
++
++static void forgeplay_set_unsupported_renderer_route(
++    struct forgeplay_game_renderer_route *route, const WCHAR *reason )
++{
++    route->applied = L"unsupported";
++    route->profile = NULL;
++    route->reason = reason;
++    route->d3dmetal_bridge_required = FALSE;
++    route->deferred = FALSE;
++    route->supported = FALSE;
++}
++
++
++/* Generation-specific profiles remain independent so a missing legacy
++ * renderer cannot disable a valid D3D11/12 route. A valid PE without static
++ * generation evidence uses an architecture-specific loader-stage profile:
++ * each module name still has exactly one owner, which supports games that
++ * resolve Direct3D through LoadLibrary. A PE whose architecture is unknown
++ * remains on the base Runtime with game lineage. DXVK is never an automatic
++ * catch-all because its D3D9/D3D11 ownership overlaps the dedicated profiles. */
++static void forgeplay_set_deferred_renderer_route(
++    struct forgeplay_game_renderer_route *route, const WCHAR *reason )
++{
++    route->applied = L"deferred";
++    route->profile = NULL;
++    route->reason = reason;
++    route->d3dmetal_bridge_required = FALSE;
++    route->deferred = TRUE;
++    route->supported = FALSE;
++}
++
++
++static void forgeplay_set_renderer_route_evidence( struct forgeplay_game_renderer_route *route,
++                                                   const struct forgeplay_game_renderer_import_scan *scan,
++                                                   enum forgeplay_direct3d_generation generation )
++{
++    const char *module;
++    BOOL delayed;
++    WCHAR moduleW[128], generations[64];
++
++    module = forgeplay_game_renderer_generation_module( scan, generation, &delayed );
++    if (!module || !module[0]) module = "unavailable";
++    if (!MultiByteToWideChar( CP_ACP, 0, module, -1, moduleW, ARRAY_SIZE(moduleW) ))
++        lstrcpyW( moduleW, L"unavailable" );
++    if (forgeplay_game_renderer_generation_count( scan ) > 1)
++    {
++        forgeplay_format_game_renderer_generations( scan, generations,
++                                                     ARRAY_SIZE(generations) );
++        swprintf( route->evidence, ARRAY_SIZE(route->evidence),
++                  L"%s;%s=%s;generation-conflict=%s;selected=%s;"
++                  L"resolution=highest-generation-before-route-commit",
++                  scan->pe64 ? L"pe32+" : L"pe32",
++                  delayed ? L"delay-import" : L"import", moduleW, generations,
++                  forgeplay_direct3d_generation_name( generation ) );
++    }
++    else
++    {
++        swprintf( route->evidence, ARRAY_SIZE(route->evidence), L"%s;%s=%s",
++                  scan->pe64 ? L"pe32+" : L"pe32",
++                  delayed ? L"delay-import" : L"import", moduleW );
++    }
++}
++
++
++static void forgeplay_resolve_game_renderer_route( const WCHAR *filename, const WCHAR *cur_dir,
++                                                   USHORT requested_machine,
++                                                   struct forgeplay_game_renderer_route *route )
++{
++    static const WCHAR automatic[] = L"automatic";
++    static const WCHAR d3dmetal[] = L"d3dMetal";
++    static const WCHAR dxmt[] = L"dxmt";
++    static const WCHAR dxvk[] = L"dxvk";
++    static const WCHAR d9vk[] = L"d9vk";
++    static const WCHAR loader[] = L"loader";
++    static const WCHAR profile_d3dmetal_d3d11[] = L"D3DMETAL_D3D11";
++    static const WCHAR profile_d3dmetal_d3d12[] = L"D3DMETAL_D3D12";
++    static const WCHAR profile_dxmt[] = L"DXMT";
++    static const WCHAR profile_d9vk[] = L"D9VK";
++    static const WCHAR profile_loader_x64[] = L"LOADER_X64";
++    static const WCHAR profile_loader_x86[] = L"LOADER_X86";
++    WCHAR policy[32];
++    const WCHAR *architecture_evidence;
++    DWORD policy_size, saved_error = GetLastError();
++    struct forgeplay_game_renderer_import_scan scan;
++    enum forgeplay_direct3d_generation generation;
++
++    memset( route, 0, sizeof(*route) );
++    forgeplay_scan_game_renderer_imports( filename, cur_dir, &scan );
++    generation = forgeplay_select_game_renderer_generation( &scan );
++    policy_size = GetEnvironmentVariableW( L"FORGEPLAY_GAME_RENDERER_POLICY",
++                                           policy, ARRAY_SIZE(policy) );
++    if (policy_size && policy_size < ARRAY_SIZE(policy) && !wcscmp( policy, L"vulkan" ))
++    {
++        route->requested = L"vulkan";
++        route->applied = dxvk;
++        route->reason = L"explicit-policy";
++        route->supported = TRUE;
++        lstrcpyW( route->evidence, scan.valid_pe ?
++                  (scan.pe64 ? L"host-policy;pe32+" : L"host-policy;pe32") :
++                  L"host-policy;pe-unreadable" );
++        SetLastError( saved_error );
++        return;
++    }
++    if (scan.valid_pe) architecture_evidence = scan.pe64 ? L"pe32+" : L"pe32";
++    else if (requested_machine == IMAGE_FILE_MACHINE_AMD64)
++    {
++        scan.pe64 = TRUE;
++        architecture_evidence = L"machine=amd64;pe-unreadable";
++    }
++    else if (requested_machine == IMAGE_FILE_MACHINE_I386)
++    {
++        scan.pe64 = FALSE;
++        architecture_evidence = L"machine=i386;pe-unreadable";
++    }
++    else
++    {
++        route->requested = policy_size && policy_size < ARRAY_SIZE(policy) &&
++                           !wcscmp( policy, L"d3dMetal" ) ? d3dmetal : automatic;
++        if (route->requested == d3dmetal)
++            forgeplay_set_unsupported_renderer_route(
++                route, L"explicit-metal-pe-unreadable-machine-unknown" );
++        else
++            forgeplay_set_deferred_renderer_route(
++                route, L"automatic-deferred-pe-unreadable-machine-unknown" );
++        lstrcpyW( route->evidence, L"pe-unreadable;machine=unknown" );
++        SetLastError( saved_error );
++        return;
++    }
++
++    if (policy_size && policy_size < ARRAY_SIZE(policy) && !wcscmp( policy, L"d3dMetal" ))
++    {
++        route->requested = d3dmetal;
++        forgeplay_set_unsupported_renderer_route( route, L"explicit-metal-generation-unknown" );
++        if (!scan.valid_pe)
++        {
++            if ((scan.pe64 && forgeplay_try_game_renderer_profile(
++                     route, loader, profile_loader_x64, TRUE, TRUE )) ||
++                (!scan.pe64 && forgeplay_try_game_renderer_profile(
++                     route, loader, profile_loader_x86, FALSE, FALSE )))
++                route->reason = scan.pe64 ?
++                    L"explicit-metal-loader-stage-x64" :
++                    L"explicit-metal-loader-stage-x86";
++            else
++                forgeplay_set_deferred_renderer_route(
++                    route, L"explicit-metal-loader-stage-profile-unavailable" );
++            swprintf( route->evidence, ARRAY_SIZE(route->evidence),
++                      L"host-policy;%s;generation-unreadable", architecture_evidence );
++        }
++        else if (generation == FORGEPLAY_DIRECT3D_12)
++        {
++            if (scan.pe64 && forgeplay_try_game_renderer_profile(
++                    route, d3dmetal, profile_d3dmetal_d3d12, TRUE, TRUE ))
++                route->reason = L"explicit-metal-d3d12";
++            else
++                forgeplay_set_unsupported_renderer_route(
++                    route, scan.pe64 ? L"explicit-metal-d3d12-profile-unavailable" :
++                                       L"explicit-metal-d3d12-unsupported-pe32" );
++            forgeplay_set_renderer_route_evidence( route, &scan, generation );
++        }
++        else if (generation == FORGEPLAY_DIRECT3D_11 ||
++                 generation == FORGEPLAY_DIRECT3D_10)
++        {
++            if ((scan.pe64 && forgeplay_try_game_renderer_profile(
++                     route, d3dmetal, profile_d3dmetal_d3d11, TRUE, TRUE )) ||
++                (!scan.pe64 && forgeplay_try_game_renderer_profile(
++                     route, dxmt, profile_dxmt, FALSE, FALSE )))
++                route->reason = scan.pe64 ? L"explicit-metal-d3d11-family" :
++                                            L"explicit-metal-dxmt-d3d11-family";
++            else
++                forgeplay_set_unsupported_renderer_route(
++                    route, L"explicit-metal-d3d11-profile-unavailable" );
++            forgeplay_set_renderer_route_evidence( route, &scan, generation );
++        }
++        else if (generation == FORGEPLAY_DIRECT3D_9)
++        {
++            if (forgeplay_try_game_renderer_profile(
++                    route, d9vk, profile_d9vk, scan.pe64, FALSE ))
++                route->reason = L"explicit-metal-d3d9";
++            else
++                forgeplay_set_unsupported_renderer_route(
++                    route, L"explicit-metal-d3d9-profile-unavailable" );
++            forgeplay_set_renderer_route_evidence( route, &scan, generation );
++        }
++        else if (generation == FORGEPLAY_DIRECT3D_8)
++        {
++            forgeplay_set_unsupported_renderer_route(
++                route, L"explicit-metal-d3d8-unsupported" );
++            forgeplay_set_renderer_route_evidence( route, &scan, generation );
++        }
++        else
++        {
++            if ((scan.pe64 && forgeplay_try_game_renderer_profile(
++                     route, loader, profile_loader_x64, TRUE, TRUE )) ||
++                (!scan.pe64 && forgeplay_try_game_renderer_profile(
++                     route, loader, profile_loader_x86, FALSE, FALSE )))
++                route->reason = scan.pe64 ?
++                    L"explicit-metal-loader-stage-x64" :
++                    L"explicit-metal-loader-stage-x86";
++            else
++                forgeplay_set_deferred_renderer_route(
++                    route, L"explicit-metal-loader-stage-profile-unavailable" );
++            swprintf( route->evidence, ARRAY_SIZE(route->evidence), L"host-policy;%s;%s",
++                      architecture_evidence,
++                      scan.saw_import ? L"no-direct3d-generation" : L"empty-import-table" );
++        }
++        SetLastError( saved_error );
++        return;
++    }
++    route->requested = automatic;
++    forgeplay_set_unsupported_renderer_route( route, L"automatic-no-compatible-profile" );
++    if (!scan.valid_pe)
++    {
++        if ((scan.pe64 && forgeplay_try_game_renderer_profile(
++                 route, loader, profile_loader_x64, TRUE, TRUE )) ||
++            (!scan.pe64 && forgeplay_try_game_renderer_profile(
++                 route, loader, profile_loader_x86, FALSE, FALSE )))
++            route->reason = scan.pe64 ?
++                L"automatic-loader-stage-x64" :
++                L"automatic-loader-stage-x86";
++        else
++            forgeplay_set_deferred_renderer_route(
++                route, L"automatic-loader-stage-profile-unavailable" );
++        swprintf( route->evidence, ARRAY_SIZE(route->evidence), L"%s;generation-unreadable",
++                  architecture_evidence );
++        goto done;
++    }
++    if (generation == FORGEPLAY_DIRECT3D_12)
++    {
++        if (scan.pe64 && forgeplay_try_game_renderer_profile(
++                route, d3dmetal, profile_d3dmetal_d3d12, TRUE, TRUE ))
++            route->reason = L"automatic-d3d12";
++        else
++            forgeplay_set_unsupported_renderer_route(
++                route, scan.pe64 ? L"automatic-d3d12-profile-unavailable" :
++                                   L"automatic-d3d12-unsupported-pe32" );
++        forgeplay_set_renderer_route_evidence( route, &scan, generation );
++    }
++    else if (generation == FORGEPLAY_DIRECT3D_11 ||
++             generation == FORGEPLAY_DIRECT3D_10)
++    {
++        if ((scan.pe64 && forgeplay_try_game_renderer_profile(
++                 route, d3dmetal, profile_d3dmetal_d3d11, TRUE, TRUE )) ||
++            (!scan.pe64 && forgeplay_try_game_renderer_profile(
++                 route, dxmt, profile_dxmt, FALSE, FALSE )))
++            route->reason = scan.pe64 ? L"automatic-d3d11-metal" :
++                                        L"automatic-d3d11-dxmt";
++        else
++            forgeplay_set_unsupported_renderer_route(
++                route, L"automatic-d3d11-profile-unavailable" );
++        forgeplay_set_renderer_route_evidence( route, &scan, generation );
++    }
++    else if (generation == FORGEPLAY_DIRECT3D_9 &&
++             forgeplay_try_game_renderer_profile(
++                 route, d9vk, profile_d9vk, scan.pe64, FALSE ))
++    {
++        route->reason = L"automatic-d3d9-d9vk";
++        forgeplay_set_renderer_route_evidence( route, &scan, generation );
++    }
++    else if (generation == FORGEPLAY_DIRECT3D_8)
++    {
++        forgeplay_set_unsupported_renderer_route(
++            route, L"automatic-d3d8-no-safe-profile" );
++        forgeplay_set_renderer_route_evidence( route, &scan, generation );
++    }
++    else
++    {
++        if (generation == FORGEPLAY_DIRECT3D_9)
++            forgeplay_set_unsupported_renderer_route(
++                route, L"automatic-d3d9-profile-unavailable" );
++        else if ((scan.pe64 && forgeplay_try_game_renderer_profile(
++                      route, loader, profile_loader_x64, TRUE, TRUE )) ||
++                 (!scan.pe64 && forgeplay_try_game_renderer_profile(
++                      route, loader, profile_loader_x86, FALSE, FALSE )))
++            route->reason = scan.pe64 ?
++                L"automatic-loader-stage-x64" :
++                L"automatic-loader-stage-x86";
++        else
++            forgeplay_set_deferred_renderer_route(
++                route, L"automatic-loader-stage-profile-unavailable" );
++        swprintf( route->evidence, ARRAY_SIZE(route->evidence), L"%s;%s",
++                  architecture_evidence,
++                  scan.saw_import ? L"no-direct3d-generation" : L"empty-import-table" );
++    }
++
++done:
++    SetLastError( saved_error );
++}
++
++
++static NTSTATUS clone_forgeplay_process_environment( const void *environment, DWORD flags, WCHAR **result )
++{
++    const WCHAR *unicode_end, *unicode_source;
++    const char *ansi_end, *ansi_source;
++    SIZE_T size;
++    int unicode_size;
++
++    *result = NULL;
++    if (!environment) return RtlCreateEnvironment( TRUE, result );
++
++    if (flags & CREATE_UNICODE_ENVIRONMENT)
++    {
++        unicode_source = environment;
++        unicode_end = unicode_source;
++        while (*unicode_end) unicode_end += wcslen( unicode_end ) + 1;
++        unicode_end++;
++        size = (unicode_end - unicode_source) * sizeof(WCHAR);
++        if (!(*result = RtlAllocateHeap( GetProcessHeap(), 0, size ))) return STATUS_NO_MEMORY;
++        memcpy( *result, unicode_source, size );
++        return STATUS_SUCCESS;
++    }
++
++    ansi_source = environment;
++    ansi_end = ansi_source;
++    while (*ansi_end) ansi_end += strlen( ansi_end ) + 1;
++    ansi_end++;
++    unicode_size = MultiByteToWideChar( CP_ACP, 0, ansi_source, ansi_end - ansi_source, NULL, 0 );
++    if (!unicode_size) return STATUS_INVALID_PARAMETER;
++    if (!(*result = RtlAllocateHeap( GetProcessHeap(), 0, unicode_size * sizeof(WCHAR) )))
++        return STATUS_NO_MEMORY;
++    if (!MultiByteToWideChar( CP_ACP, 0, ansi_source, ansi_end - ansi_source,
++                              *result, unicode_size ))
++    {
++        RtlDestroyEnvironment( *result );
++        *result = NULL;
++        return STATUS_INVALID_PARAMETER;
++    }
++    return STATUS_SUCCESS;
++}
++
++
++static void record_forgeplay_renderer_environment_failure( const WCHAR *operation,
++                                                            const WCHAR *source_name,
++                                                            const WCHAR *target_name,
++                                                            NTSTATUS status )
++{
++    static const WCHAR unreported[] = L"unreported";
++    WCHAR *text;
++    SIZE_T text_size;
++
++    if (!operation) operation = unreported;
++    if (!source_name) source_name = unreported;
++    if (!target_name) target_name = unreported;
++    text_size = wcslen( operation ) + wcslen( source_name ) + wcslen( target_name ) + 80;
++    if (!(text = HeapAlloc( GetProcessHeap(), 0, text_size * sizeof(WCHAR) ))) return;
++    swprintf( text, text_size,
++              L"operation=%s | source=%s | target=%s | status=0x%08lx",
++              operation, source_name, target_name, status );
++    record_process_observation( "FORGEPLAY_GAME_RENDERER_ENVIRONMENT_V1\t", text,
++                                GetCurrentProcessId() );
++    HeapFree( GetProcessHeap(), 0, text );
++}
++
++
++static NTSTATUS set_forgeplay_renderer_environment_variable( WCHAR **environment,
++                                                             const WCHAR *source_name,
++                                                             const WCHAR *target_name )
++{
++    static const WCHAR unset_value[] = L"__FORGEPLAY_UNSET__";
++    UNICODE_STRING name, value_string, *value = &value_string;
++    WCHAR *buffer;
++    BOOL removing;
++    DWORD size;
++    NTSTATUS status;
++
++    size = GetEnvironmentVariableW( source_name, NULL, 0 );
++    if (!size || size > 32767)
++    {
++        status = STATUS_INVALID_PARAMETER;
++        record_forgeplay_renderer_environment_failure(
++            L"read-source", source_name, target_name, status );
++        return status;
++    }
++    if (!(buffer = RtlAllocateHeap( GetProcessHeap(), 0, size * sizeof(WCHAR) )))
++    {
++        status = STATUS_NO_MEMORY;
++        record_forgeplay_renderer_environment_failure(
++            L"read-source", source_name, target_name, status );
++        return status;
++    }
++    if (!GetEnvironmentVariableW( source_name, buffer, size ))
++    {
++        RtlFreeHeap( GetProcessHeap(), 0, buffer );
++        status = STATUS_INVALID_PARAMETER;
++        record_forgeplay_renderer_environment_failure(
++            L"read-source", source_name, target_name, status );
++        return status;
++    }
++
++    RtlInitUnicodeString( &name, target_name );
++    removing = !wcscmp( buffer, unset_value );
++    if (removing) value = NULL;
++    else RtlInitUnicodeString( value, buffer );
++    status = RtlSetEnvironmentVariable( environment, &name, value );
++    if (removing && status == STATUS_VARIABLE_NOT_FOUND) status = STATUS_SUCCESS;
++    if (status)
++        record_forgeplay_renderer_environment_failure(
++            removing ? L"remove-from-source" : L"set-from-source",
++            source_name, target_name, status );
++    RtlFreeHeap( GetProcessHeap(), 0, buffer );
++    return status;
++}
++
++
++static NTSTATUS copy_forgeplay_renderer_variable( WCHAR **environment,
++                                                  const WCHAR *source_name,
++                                                  const WCHAR *target_name,
++                                                  BOOL required )
++{
++    UNICODE_STRING name_string, value;
++    WCHAR *buffer;
++    DWORD size;
++    NTSTATUS status;
++
++    size = GetEnvironmentVariableW( source_name, NULL, 0 );
++    if (!size)
++    {
++        if (required)
++        {
++            status = STATUS_VARIABLE_NOT_FOUND;
++            record_forgeplay_renderer_environment_failure(
++                L"copy-required-source", source_name, target_name, status );
++            return status;
++        }
++        RtlInitUnicodeString( &name_string, target_name );
++        status = RtlSetEnvironmentVariable( environment, &name_string, NULL );
++        if (status == STATUS_VARIABLE_NOT_FOUND) status = STATUS_SUCCESS;
++        if (status)
++            record_forgeplay_renderer_environment_failure(
++                L"remove-optional-target", source_name, target_name, status );
++        return status;
++    }
++    if (size > 32767)
++    {
++        status = STATUS_INVALID_PARAMETER;
++        record_forgeplay_renderer_environment_failure(
++            L"copy-source", source_name, target_name, status );
++        return status;
++    }
++    if (!(buffer = RtlAllocateHeap( GetProcessHeap(), 0, size * sizeof(WCHAR) )))
++    {
++        status = STATUS_NO_MEMORY;
++        record_forgeplay_renderer_environment_failure(
++            L"copy-source", source_name, target_name, status );
++        return status;
++    }
++    if (!GetEnvironmentVariableW( source_name, buffer, size ))
++    {
++        RtlFreeHeap( GetProcessHeap(), 0, buffer );
++        status = required ? STATUS_VARIABLE_NOT_FOUND : STATUS_SUCCESS;
++        if (status)
++            record_forgeplay_renderer_environment_failure(
++                L"copy-source", source_name, target_name, status );
++        return status;
++    }
++
++    RtlInitUnicodeString( &name_string, target_name );
++    RtlInitUnicodeString( &value, buffer );
++    status = RtlSetEnvironmentVariable( environment, &name_string, &value );
++    if (status)
++        record_forgeplay_renderer_environment_failure(
++            L"copy-source", source_name, target_name, status );
++    RtlFreeHeap( GetProcessHeap(), 0, buffer );
++    return status;
++}
++
++
++static NTSTATUS set_forgeplay_renderer_literal( WCHAR **environment, const WCHAR *name,
++                                                const WCHAR *literal )
++{
++    UNICODE_STRING name_string, value;
++    NTSTATUS status;
++
++    RtlInitUnicodeString( &name_string, name );
++    RtlInitUnicodeString( &value, literal );
++    status = RtlSetEnvironmentVariable( environment, &name_string, &value );
++    if (status)
++        record_forgeplay_renderer_environment_failure(
++            L"set-literal", L"literal", name, status );
++    return status;
++}
++
++
++static NTSTATUS remove_forgeplay_renderer_variable( WCHAR **environment, const WCHAR *name )
++{
++    UNICODE_STRING name_string;
++    NTSTATUS status;
++
++    RtlInitUnicodeString( &name_string, name );
++    status = RtlSetEnvironmentVariable( environment, &name_string, NULL );
++    if (status == STATUS_VARIABLE_NOT_FOUND) status = STATUS_SUCCESS;
++    if (status)
++        record_forgeplay_renderer_environment_failure(
++            L"remove", L"child-environment", name, status );
++    return status;
++}
++
++
++static NTSTATUS create_forgeplay_base_renderer_environment( const void *environment, DWORD flags,
++                                                            WCHAR **result )
++{
++    static const struct
++    {
++        const WCHAR *source_name;
++        const WCHAR *target_name;
++    } base_variables[] =
++    {
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_WINEDLLOVERRIDES", L"WINEDLLOVERRIDES" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_WINEDLLPATH", L"WINEDLLPATH" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DYLD_LIBRARY_PATH", L"DYLD_LIBRARY_PATH" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DYLD_FALLBACK_LIBRARY_PATH", L"DYLD_FALLBACK_LIBRARY_PATH" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DYLD_FRAMEWORK_PATH", L"DYLD_FRAMEWORK_PATH" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DMETAL_FRAMEWORK_PATH", L"D3DMETAL_FRAMEWORK_PATH" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DMETAL_SHARED_LIBRARY", L"FORGEPLAY_D3DMETAL_SHARED_LIBRARY" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_WINE_UNIX_CALL", L"D3DM_WINE_UNIX_CALL" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_VK_ICD_FILENAMES", L"VK_ICD_FILENAMES" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_VK_DRIVER_FILES", L"VK_DRIVER_FILES" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_LOG_PATH", L"DXVK_LOG_PATH" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_LOG_LEVEL", L"DXVK_LOG_LEVEL" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_CONFIG", L"DXVK_CONFIG" },
++    };
++    static const WCHAR *renderer_state_variables[] =
++    {
++        L"FORGEPLAY_GAME_RENDERER_ACTIVE",
++        L"FORGEPLAY_GAME_RENDERER_LINEAGE",
++        L"FORGEPLAY_GAME_RENDERER_APPLIED",
++        L"FORGEPLAY_GAME_RENDERER_PROFILE",
++        L"FORGEPLAY_GAME_RENDERER_D3DMETAL_BRIDGE_REQUIRED",
++        L"FORGEPLAY_D3DMETAL_NATIVE_THREAD_CONTEXT",
++        L"FORGEPLAY_GAME_RENDERER_ROUTE_REASON",
++        L"FORGEPLAY_GAME_RENDERER_ROUTE_EVIDENCE",
++        L"FORGEPLAY_GAME_RENDERER_COMPONENTS_X64",
++        L"FORGEPLAY_GAME_RENDERER_COMPONENTS_X86",
++        L"FORGEPLAY_GAME_RENDERER_DLL_PATH_X64",
++        L"FORGEPLAY_GAME_RENDERER_DLL_PATH_X86",
++        L"FORGEPLAY_D3DMETAL_BRIDGE",
++        L"FORGEPLAY_D3DMETAL_TARGET",
++        L"D3DMETAL_SHARED_LIBRARY",
++    };
++    NTSTATUS status;
++    unsigned int i;
++
++    if ((status = clone_forgeplay_process_environment( environment, flags, result ))) return status;
++    for (i = 0; i < ARRAY_SIZE(renderer_state_variables); ++i)
++        if ((status = remove_forgeplay_renderer_variable(
++                 result, renderer_state_variables[i] ))) goto failed;
++    for (i = 0; i < ARRAY_SIZE(base_variables); ++i)
++    {
++        if (!GetEnvironmentVariableW( base_variables[i].source_name, NULL, 0 ))
++            status = remove_forgeplay_renderer_variable( result, base_variables[i].target_name );
++        else
++            status = set_forgeplay_renderer_environment_variable(
++                result, base_variables[i].source_name, base_variables[i].target_name );
++        if (status) goto failed;
++    }
++    return STATUS_SUCCESS;
++
++failed:
++    RtlDestroyEnvironment( *result );
++    *result = NULL;
++    return status;
++}
++
++
++static NTSTATUS create_forgeplay_deferred_renderer_environment(
++    const void *environment, DWORD flags, WCHAR **result )
++{
++    NTSTATUS status;
++
++    if ((status = create_forgeplay_base_renderer_environment(
++             environment, flags, result ))) return status;
++    if ((status = set_forgeplay_renderer_literal(
++             result, L"FORGEPLAY_GAME_RENDERER_LINEAGE", L"1" )))
++    {
++        RtlDestroyEnvironment( *result );
++        *result = NULL;
++    }
++    return status;
++}
++
++
++static NTSTATUS forgeplay_renderer_source_name( const struct forgeplay_game_renderer_route *route,
++                                                const WCHAR *base_name, WCHAR *source_name,
++                                                SIZE_T source_count )
++{
++    static const WCHAR prefix[] = L"FORGEPLAY_GAME_RENDERER_";
++    SIZE_T required;
++
++    if (!route->profile)
++    {
++        required = wcslen( base_name ) + 1;
++        if (required > source_count) return STATUS_BUFFER_TOO_SMALL;
++        memcpy( source_name, base_name, required * sizeof(WCHAR) );
++        return STATUS_SUCCESS;
++    }
++    if (wcsncmp( base_name, prefix, ARRAY_SIZE(prefix) - 1 )) return STATUS_INVALID_PARAMETER;
++    required = wcslen( prefix ) + wcslen( L"PROFILE__" ) + wcslen( route->profile ) +
++               wcslen( base_name + ARRAY_SIZE(prefix) - 1 ) + 1;
++    if (required > source_count) return STATUS_BUFFER_TOO_SMALL;
++    swprintf( source_name, source_count, L"%sPROFILE_%s_%s", prefix, route->profile,
++              base_name + ARRAY_SIZE(prefix) - 1 );
++    return STATUS_SUCCESS;
++}
++
++
++static NTSTATUS create_forgeplay_game_renderer_environment( const void *environment, DWORD flags,
++                                                            const struct forgeplay_game_renderer_route *route,
++                                                            const WCHAR *app_name, WCHAR **result )
++{
++    static const struct
++    {
++        const WCHAR *source_name;
++        const WCHAR *target_name;
++    } variables[] =
++    {
++        { L"FORGEPLAY_GAME_RENDERER_ENV_WINEDLLOVERRIDES", L"WINEDLLOVERRIDES" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_WINEDLLPATH", L"WINEDLLPATH" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_DYLD_LIBRARY_PATH", L"DYLD_LIBRARY_PATH" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_DYLD_FALLBACK_LIBRARY_PATH", L"DYLD_FALLBACK_LIBRARY_PATH" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_DYLD_FRAMEWORK_PATH", L"DYLD_FRAMEWORK_PATH" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_D3DMETAL_FRAMEWORK_PATH", L"D3DMETAL_FRAMEWORK_PATH" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_D3DMETAL_SHARED_LIBRARY", L"FORGEPLAY_D3DMETAL_SHARED_LIBRARY" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_D3DM_WINE_UNIX_CALL", L"D3DM_WINE_UNIX_CALL" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_VK_ICD_FILENAMES", L"VK_ICD_FILENAMES" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_VK_DRIVER_FILES", L"VK_DRIVER_FILES" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_DXVK_LOG_PATH", L"DXVK_LOG_PATH" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_DXVK_LOG_LEVEL", L"DXVK_LOG_LEVEL" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_DXVK_CONFIG", L"DXVK_CONFIG" },
++    };
++    static const struct
++    {
++        const WCHAR *name;
++        BOOL required;
++    } selected_control_variables[] =
++    {
++        { L"FORGEPLAY_GAME_RENDERER_COMPONENTS_X64", TRUE },
++        { L"FORGEPLAY_GAME_RENDERER_COMPONENTS_X86", FALSE },
++        { L"FORGEPLAY_GAME_RENDERER_DLL_PATH_X64", TRUE },
++        { L"FORGEPLAY_GAME_RENDERER_DLL_PATH_X86", FALSE },
++    };
++    static const WCHAR *global_control_variables[] =
++    {
++        L"FORGEPLAY_PROCESS_OBSERVATION_FILE",
++        L"FORGEPLAY_GAME_RENDERER_POLICY_ENABLED",
++        L"FORGEPLAY_GAME_RENDERER_POLICY",
++        L"FORGEPLAY_GAME_RENDERER_REQUESTED",
++        L"FORGEPLAY_GAME_RENDERER_ROUTING_MODE",
++        L"FORGEPLAY_GAME_RENDERER_CORRELATION_ID",
++        L"FORGEPLAY_GAME_RENDERER_AVAILABLE_PROFILES",
++        L"FORGEPLAY_GAME_RENDERER_UNAVAILABLE_PROFILES",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_WINEDLLOVERRIDES",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_WINEDLLPATH",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DYLD_LIBRARY_PATH",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DYLD_FALLBACK_LIBRARY_PATH",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DYLD_FRAMEWORK_PATH",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DMETAL_FRAMEWORK_PATH",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DMETAL_SHARED_LIBRARY",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_WINE_UNIX_CALL",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_VK_ICD_FILENAMES",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_VK_DRIVER_FILES",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_LOG_PATH",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_LOG_LEVEL",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_CONFIG",
++    };
++    static const WCHAR *profiles[] =
++    {
++        L"D3DMETAL_D3D11", L"D3DMETAL_D3D12", L"DXMT", L"D9VK",
++        L"LOADER_X64", L"LOADER_X86"
++    };
++    struct forgeplay_game_renderer_route retained_route = {0};
++    const WCHAR *target_name, *cursor;
++    WCHAR source_name[192], bridge_required_value[2];
++    NTSTATUS status;
++    unsigned int i, j;
++
++    if ((status = clone_forgeplay_process_environment( environment, flags, result ))) return status;
++    /* Selector scope is recomputed for every routed child. Never trust or
++     * propagate a selector inherited from its parent. */
++    if ((status = remove_forgeplay_renderer_variable( result, L"FORGEPLAY_D3DMETAL_BRIDGE" )))
++        goto failed;
++    if ((status = remove_forgeplay_renderer_variable( result, L"FORGEPLAY_D3DMETAL_TARGET" )))
++        goto failed;
++    if ((status = remove_forgeplay_renderer_variable(
++             result, L"FORGEPLAY_D3DMETAL_NATIVE_THREAD_CONTEXT" )))
++        goto failed;
++    for (i = 0; i < ARRAY_SIZE(variables); ++i)
++    {
++        if ((status = forgeplay_renderer_source_name( route, variables[i].source_name,
++                                                      source_name, ARRAY_SIZE(source_name) )))
++            goto failed;
++        status = set_forgeplay_renderer_environment_variable( result, source_name,
++                                                              variables[i].target_name );
++        if (status) goto failed;
++        /* Keep the host-owned source value as well. A Steam launcher can pass
++         * an explicit child environment, and descendants below steamapps/common
++         * must still be able to rehydrate the same renderer policy. */
++        status = copy_forgeplay_renderer_variable( result, source_name,
++                                                   variables[i].source_name, TRUE );
++        if (status) goto failed;
++    }
++    for (i = 0; i < ARRAY_SIZE(selected_control_variables); ++i)
++    {
++        if ((status = forgeplay_renderer_source_name( route, selected_control_variables[i].name,
++                                                      source_name, ARRAY_SIZE(source_name) )))
++            goto failed;
++        status = copy_forgeplay_renderer_variable( result, source_name,
++                                                   selected_control_variables[i].name,
++                                                   selected_control_variables[i].required );
++        if (status) goto failed;
++    }
++    for (i = 0; i < ARRAY_SIZE(global_control_variables); ++i)
++    {
++        status = copy_forgeplay_renderer_variable( result, global_control_variables[i],
++                                                   global_control_variables[i], i < 3 );
++        if (status) goto failed;
++    }
++
++    /* Automatic routing must survive launchers which construct a fresh child
++     * environment. Preserve every named profile, but expose only the selected
++     * profile through the real renderer variables above. */
++    if (route->profile)
++    {
++        for (i = 0; i < ARRAY_SIZE(profiles); ++i)
++        {
++            retained_route.profile = profiles[i];
++            for (j = 0; j < ARRAY_SIZE(variables); ++j)
++            {
++                if ((status = forgeplay_renderer_source_name( &retained_route,
++                                                              variables[j].source_name,
++                                                              source_name,
++                                                              ARRAY_SIZE(source_name) )))
++                    goto failed;
++                if ((status = copy_forgeplay_renderer_variable( result, source_name,
++                                                                source_name, FALSE )))
++                    goto failed;
++            }
++            for (j = 0; j < ARRAY_SIZE(selected_control_variables); ++j)
++            {
++                if ((status = forgeplay_renderer_source_name( &retained_route,
++                                                              selected_control_variables[j].name,
++                                                              source_name,
++                                                              ARRAY_SIZE(source_name) )))
++                    goto failed;
++                if ((status = copy_forgeplay_renderer_variable( result, source_name,
++                                                                source_name, FALSE )))
++                    goto failed;
++            }
++        }
++    }
++
++    bridge_required_value[0] = route->d3dmetal_bridge_required ? L'1' : L'0';
++    bridge_required_value[1] = 0;
++    if ((status = set_forgeplay_renderer_literal( result,
++                                                  L"FORGEPLAY_GAME_RENDERER_ACTIVE", L"1" )))
++        goto failed;
++    if ((status = set_forgeplay_renderer_literal( result,
++                                                  L"FORGEPLAY_GAME_RENDERER_LINEAGE", L"1" )))
++        goto failed;
++    if ((status = set_forgeplay_renderer_literal( result,
++                                                  L"FORGEPLAY_GAME_RENDERER_REQUESTED",
++                                                  route->requested )))
++        goto failed;
++    if ((status = set_forgeplay_renderer_literal( result,
++                                                  L"FORGEPLAY_GAME_RENDERER_APPLIED",
++                                                  route->applied )))
++        goto failed;
++    if ((status = set_forgeplay_renderer_literal( result,
++                                                           L"FORGEPLAY_GAME_RENDERER_PROFILE",
++                                                           route->profile ? route->profile : route->applied )))
++        goto failed;
++    if ((status = set_forgeplay_renderer_literal( result,
++                                                  L"FORGEPLAY_GAME_RENDERER_D3DMETAL_BRIDGE_REQUIRED",
++                                                  bridge_required_value )))
++        goto failed;
++    if ((status = set_forgeplay_renderer_literal( result,
++                                                  L"FORGEPLAY_GAME_RENDERER_ROUTE_REASON",
++                                                  route->reason )))
++        goto failed;
++    if ((status = set_forgeplay_renderer_literal( result,
++                                                  L"FORGEPLAY_GAME_RENDERER_ROUTE_EVIDENCE",
++                                                  route->evidence )))
++        goto failed;
++
++    if (route->d3dmetal_bridge_required)
++    {
++        if (!app_name || !*app_name)
++        {
++            status = STATUS_INVALID_PARAMETER;
++            goto failed;
++        }
++        target_name = app_name;
++        for (cursor = app_name; *cursor; ++cursor)
++            if (*cursor == L'\\' || *cursor == L'/') target_name = cursor + 1;
++        if (!*target_name)
++        {
++            status = STATUS_INVALID_PARAMETER;
++            goto failed;
++        }
++        if ((status = set_forgeplay_renderer_literal( result,
++                                                      L"FORGEPLAY_D3DMETAL_BRIDGE", L"1" )))
++            goto failed;
++        if ((status = set_forgeplay_renderer_literal(
++                 result, L"FORGEPLAY_D3DMETAL_NATIVE_THREAD_CONTEXT", L"1" )))
++            goto failed;
++        if ((status = set_forgeplay_renderer_literal( result,
++                                                      L"FORGEPLAY_D3DMETAL_TARGET", target_name )))
++            goto failed;
++    }
++    return STATUS_SUCCESS;
++
++failed:
++    RtlDestroyEnvironment( *result );
++    *result = NULL;
++    return status;
++}
++
++
++static void record_forgeplay_game_renderer_fallback( const WCHAR *stage, const WCHAR *filename,
++                                                     NTSTATUS status, const WCHAR *result )
++{
++    static const WCHAR unreported[] = L"unreported";
++    WCHAR *text;
++    SIZE_T text_size;
++
++    if (!stage) stage = unreported;
++    if (!filename) filename = L"<unknown>";
++    if (!result) result = unreported;
++    text_size = wcslen( stage ) + wcslen( result ) + wcslen( filename ) + 80;
++    if (!(text = HeapAlloc( GetProcessHeap(), 0, text_size * sizeof(WCHAR) ))) return;
++    swprintf( text, text_size,
++              L"stage=%s | status=0x%08lx | result=%s | path=%s",
++              stage, status, result, filename );
++    record_process_observation( "FORGEPLAY_GAME_RENDERER_FALLBACK_V1\t", text,
++                                GetCurrentProcessId() );
++    HeapFree( GetProcessHeap(), 0, text );
++}
++
++
++static void record_forgeplay_game_renderer_observation(
++    const WCHAR *filename, DWORD process_id,
++    const struct forgeplay_game_renderer_route *route )
++{
++    static const WCHAR unreported[] = L"unreported";
++    WCHAR components_x64[256], components_x86[256], correlation[128];
++    WCHAR components_x64_name[192], components_x86_name[192];
++    const WCHAR *planned_profile = route->profile ? route->profile : route->applied;
++    const WCHAR *reported_owner = route->supported ? route->applied : L"unreported";
++    WCHAR *text;
++    SIZE_T text_size;
++    DWORD x64_size, x86_size, correlation_size;
++
++    if (route->profile)
++    {
++        swprintf( components_x64_name, ARRAY_SIZE(components_x64_name),
++                  L"FORGEPLAY_GAME_RENDERER_PROFILE_%s_COMPONENTS_X64", route->profile );
++        swprintf( components_x86_name, ARRAY_SIZE(components_x86_name),
++                  L"FORGEPLAY_GAME_RENDERER_PROFILE_%s_COMPONENTS_X86", route->profile );
++    }
++    else
++    {
++        lstrcpyW( components_x64_name, L"FORGEPLAY_GAME_RENDERER_COMPONENTS_X64" );
++        lstrcpyW( components_x86_name, L"FORGEPLAY_GAME_RENDERER_COMPONENTS_X86" );
++    }
++    x64_size = GetEnvironmentVariableW( components_x64_name, components_x64,
++                                        ARRAY_SIZE(components_x64) );
++    x86_size = GetEnvironmentVariableW( components_x86_name, components_x86,
++                                        ARRAY_SIZE(components_x86) );
++    if (!x64_size || x64_size >= ARRAY_SIZE(components_x64))
++        lstrcpyW( components_x64, unreported );
++    if (!x86_size || x86_size >= ARRAY_SIZE(components_x86))
++        lstrcpyW( components_x86, unreported );
++    correlation_size = GetEnvironmentVariableW( L"FORGEPLAY_GAME_RENDERER_CORRELATION_ID",
++                                                 correlation, ARRAY_SIZE(correlation) );
++    if (!correlation_size || correlation_size >= ARRAY_SIZE(correlation))
++        lstrcpyW( correlation, unreported );
++
++    if (!filename) filename = L"<unknown>";
++    text_size = wcslen( route->requested ) + wcslen( route->applied ) +
++                wcslen( planned_profile ) + wcslen( components_x64 ) +
++                wcslen( components_x86 ) + wcslen( route->reason ) +
++                wcslen( route->evidence ) + wcslen( correlation ) +
++                wcslen( filename ) + 208;
++    if (!(text = HeapAlloc( GetProcessHeap(), 0, text_size * sizeof(WCHAR) ))) return;
++    swprintf( text, text_size,
++              L"requested=%s | applied=%s | planned-profile=%s | planned-owner=%s | "
++              L"planned-components-x64=%s | planned-components-x86=%s | "
++              L"actual-loaded=unobserved | reason=%s | evidence=%s | correlation=%s | %s",
++              route->requested, reported_owner, planned_profile, reported_owner,
++              components_x64, components_x86, route->reason, route->evidence,
++              correlation, filename );
++    record_process_observation( "FORGEPLAY_GAME_RENDERER_ROUTE_V2\t", text, process_id );
++    HeapFree( GetProcessHeap(), 0, text );
++}
++
++
+ /***********************************************************************
+  *           create_process_params
+  */
+@@ -613,13 +2044,16 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
+ {
+     const struct proc_thread_attr *handle_list = NULL, *job_list = NULL;
+     WCHAR name[MAX_PATH];
++    WCHAR *game_renderer_environment = NULL;
+     WCHAR *p, *policy_cmdline, *tidy_cmdline = cmd_line;
++    struct forgeplay_game_renderer_route game_renderer_route = {0};
+     RTL_USER_PROCESS_PARAMETERS *params = NULL;
+     RTL_USER_PROCESS_INFORMATION rtl_info = { 0 };
+     HANDLE parent = 0, debug = 0;
+     ULONG nt_flags = 0;
+     USHORT machine = 0;
+-    NTSTATUS status;
++    NTSTATUS status, renderer_status, fallback_status;
++    BOOL game_renderer_route_observed = FALSE;
+     BOOL process_argument_policy_applied = FALSE;
+ 
+     /* Process the AppName and/or CmdLine to get module name and path */
+@@ -650,6 +2084,106 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
+         process_argument_policy_applied = TRUE;
+     }
+ 
++    /* The PE scanner is authoritative when readable. If it cannot open the
++     * image, preserve the caller's explicit machine attribute instead of
++     * silently treating the target as PE32+. The normal attribute loop below
++     * still validates and applies the same value to process creation. */
++    if (flags & EXTENDED_STARTUPINFO_PRESENT)
++    {
++        struct _PROC_THREAD_ATTRIBUTE_LIST *attrs =
++            (struct _PROC_THREAD_ATTRIBUTE_LIST *)((STARTUPINFOEXW *)startup_info)->lpAttributeList;
++        unsigned int i;
++
++        if (attrs)
++            for (i = 0; i < attrs->count; ++i)
++                if (attrs->attrs[i].attr == PROC_THREAD_ATTRIBUTE_MACHINE_TYPE)
++                    machine = *(USHORT *)attrs->attrs[i].value;
++    }
++
++    if (forgeplay_game_renderer_policy_enabled() &&
++        is_forgeplay_game_renderer_excluded_role( app_name ))
++    {
++        renderer_status = create_forgeplay_base_renderer_environment(
++            env, flags, &game_renderer_environment );
++        if (renderer_status)
++        {
++            record_forgeplay_game_renderer_fallback(
++                L"excluded-child-environment", app_name, renderer_status,
++                L"original-environment" );
++            TRACE( "could not scrub inherited ForgePlay renderer state from %s; "
++                   "continuing with its original environment\n", debugstr_w(app_name) );
++        }
++        else
++        {
++            env = game_renderer_environment;
++            flags |= CREATE_UNICODE_ENVIRONMENT;
++            TRACE( "scrubbed inherited ForgePlay game renderer state from %s\n",
++                   debugstr_w(app_name) );
++        }
++    }
++    else if (forgeplay_game_renderer_policy_enabled() &&
++             (is_forgeplay_steam_game_path( app_name ) ||
++              is_forgeplay_steam_game_path( cur_dir ) ||
++              forgeplay_game_renderer_lineage_is_active()))
++    {
++        const WCHAR *fallback_reason, *failure_stage;
++        BOOL fallback_attempted, route_unsupported;
++
++        forgeplay_resolve_game_renderer_route( app_name, cur_dir, machine,
++                                               &game_renderer_route );
++        route_unsupported = !game_renderer_route.supported && !game_renderer_route.deferred;
++        if (route_unsupported)
++            renderer_status = STATUS_NOT_SUPPORTED;
++        else if (game_renderer_route.deferred)
++            renderer_status = create_forgeplay_deferred_renderer_environment(
++                env, flags, &game_renderer_environment );
++        else
++            renderer_status = create_forgeplay_game_renderer_environment(
++                env, flags, &game_renderer_route, app_name,
++                &game_renderer_environment );
++
++        if (renderer_status)
++        {
++            fallback_attempted = !game_renderer_route.deferred;
++            fallback_status = renderer_status;
++            if (fallback_attempted)
++                fallback_status = create_forgeplay_deferred_renderer_environment(
++                    env, flags, &game_renderer_environment );
++
++            failure_stage = route_unsupported ? L"unsupported-route" :
++                            (game_renderer_route.deferred ?
++                                L"deferred-child-environment" : L"child-environment");
++            record_forgeplay_game_renderer_fallback(
++                failure_stage, app_name, renderer_status,
++                fallback_status ? L"original-environment" :
++                                  L"game-identity-environment" );
++            if (fallback_attempted && fallback_status)
++                record_forgeplay_game_renderer_fallback(
++                    L"game-identity-environment", app_name, fallback_status,
++                    L"original-environment" );
++
++            if (!fallback_status)
++            {
++                env = game_renderer_environment;
++                flags |= CREATE_UNICODE_ENVIRONMENT;
++            }
++            fallback_reason = route_unsupported ? game_renderer_route.reason :
++                              (fallback_status ?
++                                  L"renderer-environment-original-fallback" :
++                                  L"renderer-environment-identity-fallback");
++            forgeplay_set_deferred_renderer_route( &game_renderer_route, fallback_reason );
++        }
++        else
++        {
++            env = game_renderer_environment;
++            flags |= CREATE_UNICODE_ENVIRONMENT;
++        }
++        game_renderer_route_observed = TRUE;
++        TRACE( "%s ForgePlay Steam game renderer process policy for %s\n",
++               game_renderer_route.deferred ? "deferred" : "applied",
++               debugstr_w(app_name) );
++    }
++
+     /* Warn if unsupported features are used */
+ 
+     if (flags & (IDLE_PRIORITY_CLASS | HIGH_PRIORITY_CLASS | REALTIME_PRIORITY_CLASS |
+@@ -791,10 +2325,14 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
+         TRACE( "started process pid %04lx tid %04lx\n", info->dwProcessId, info->dwThreadId );
+         if (process_argument_policy_applied)
+             record_process_argument_observation( tidy_cmdline, info->dwProcessId );
++        if (game_renderer_route_observed)
++            record_forgeplay_game_renderer_observation( app_name, info->dwProcessId,
++                                                        &game_renderer_route );
+     }
+ 
+  done:
+     RtlDestroyProcessParameters( params );
++    if (game_renderer_environment) RtlDestroyEnvironment( game_renderer_environment );
+     if (tidy_cmdline != cmd_line) HeapFree( GetProcessHeap(), 0, tidy_cmdline );
+     return set_ntstatus( status );
+ }
+diff --git a/dlls/ntdll/loader.c b/dlls/ntdll/loader.c
+index 443b984..a1524dc 100644
+--- a/dlls/ntdll/loader.c
++++ b/dlls/ntdll/loader.c
+@@ -20,6 +20,7 @@
+  */
+ 
+ #include <assert.h>
++#include <stdio.h>
+ #include <stdarg.h>
+ #include <stdlib.h>
+ 
+@@ -3137,6 +3138,400 @@ static NTSTATUS get_env_var( const WCHAR *name, SIZE_T extra, UNICODE_STRING *re
+ }
+ 
+ 
++/***********************************************************************
++ *	record_forgeplay_game_renderer_loader_error
++ *
++ * The child loader runs before kernelbase is available, so append a small
++ * ntdll-native record to the same per-launch observation file before a
++ * missing or invalid renderer DLL path terminates the process.
++ */
++static void record_forgeplay_game_renderer_loader_error( NTSTATUS renderer_status )
++{
++#ifdef _WIN64
++    static const char renderer_path_name[] = "FORGEPLAY_GAME_RENDERER_DLL_PATH_X64";
++#else
++    static const char renderer_path_name[] = "FORGEPLAY_GAME_RENDERER_DLL_PATH_X86";
++#endif
++    UNICODE_STRING observation_path = { 0 }, nt_path = { 0 };
++    OBJECT_ATTRIBUTES attr;
++    IO_STATUS_BLOCK io;
++    LARGE_INTEGER offset;
++    HANDLE file;
++    char record[256];
++    int record_size;
++    NTSTATUS status;
++
++    status = get_env_var( L"FORGEPLAY_PROCESS_OBSERVATION_FILE", 0, &observation_path );
++    if (status) return;
++    if (!RtlDosPathNameToNtPathName_U( observation_path.Buffer, &nt_path, NULL, NULL ))
++        goto done;
++
++    InitializeObjectAttributes( &attr, &nt_path, OBJ_CASE_INSENSITIVE, 0, NULL );
++    status = NtCreateFile( &file, FILE_APPEND_DATA | SYNCHRONIZE, &attr, &io, NULL,
++                           FILE_ATTRIBUTE_NORMAL,
++                           FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
++                           FILE_OPEN_IF,
++                           FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
++                           NULL, 0 );
++    if (status) goto done_nt_path;
++
++    record_size = snprintf(
++        record, sizeof(record),
++        "FORGEPLAY_GAME_RENDERER_ERROR_V1\t%lu\tloader-dll-path | status=0x%08lx | %s\n",
++        (unsigned long)HandleToULong( NtCurrentTeb()->ClientId.UniqueProcess ),
++        (unsigned long)renderer_status, renderer_path_name );
++    if (record_size > 0 && (SIZE_T)record_size < sizeof(record))
++    {
++        offset.QuadPart = -1;
++        if (!NtWriteFile( file, NULL, NULL, NULL, &io, record, record_size, &offset, NULL ))
++            NtFlushBuffersFile( file, &io );
++    }
++    NtClose( file );
++
++done_nt_path:
++    RtlFreeUnicodeString( &nt_path );
++done:
++    RtlFreeHeap( GetProcessHeap(), 0, observation_path.Buffer );
++}
++
++
++static BOOL forgeplay_game_renderer_is_active(void)
++{
++    UNICODE_STRING active = { 0 };
++    BOOL result;
++
++    if (get_env_var( L"FORGEPLAY_GAME_RENDERER_ACTIVE", 0, &active )) return FALSE;
++    result = active.Length == sizeof(WCHAR) && active.Buffer[0] == L'1';
++    RtlFreeHeap( GetProcessHeap(), 0, active.Buffer );
++    return result;
++}
++
++
++static const WCHAR *forgeplay_renderer_module_basename( const WCHAR *name )
++{
++    const WCHAR *cursor, *basename = name;
++
++    if (!name) return NULL;
++    for (cursor = name; *cursor; ++cursor)
++        if (*cursor == L'\\' || *cursor == L'/') basename = cursor + 1;
++    return basename;
++}
++
++
++static BOOL forgeplay_is_renderer_module( const WCHAR *name )
++{
++    static const WCHAR *renderer_modules[] =
++    {
++        L"d3d8.dll", L"d3d9.dll", L"d3d10.dll", L"d3d10_1.dll",
++        L"d3d10core.dll", L"d3d11.dll", L"d3d12.dll", L"d3d12core.dll",
++        L"dxgi.dll", L"winemetal.dll", L"nvapi64.dll", L"nvngx.dll",
++        L"nvngx-on-metalfx.dll",
++    };
++    const WCHAR *basename = forgeplay_renderer_module_basename( name );
++    unsigned int i;
++
++    if (!basename || !*basename) return FALSE;
++    for (i = 0; i < ARRAY_SIZE(renderer_modules); ++i)
++        if (!wcsicmp( basename, renderer_modules[i] )) return TRUE;
++    return FALSE;
++}
++
++
++static void forgeplay_sanitize_observation_field( char *text )
++{
++    unsigned char *cursor = (unsigned char *)text;
++
++    while (*cursor)
++    {
++        if (*cursor < 0x20 || *cursor == '|') *cursor = '_';
++        ++cursor;
++    }
++}
++
++
++static BOOL forgeplay_unicode_to_utf8( const WCHAR *text, SIZE_T length,
++                                       char *buffer, DWORD buffer_size )
++{
++    DWORD converted = 0;
++    NTSTATUS status;
++
++    if (!text || !length || buffer_size < 2) return FALSE;
++    status = RtlUnicodeToUTF8N( buffer, buffer_size - 1, &converted,
++                                text, length * sizeof(WCHAR) );
++    if (status || converted >= buffer_size) return FALSE;
++    buffer[converted] = 0;
++    forgeplay_sanitize_observation_field( buffer );
++    return TRUE;
++}
++
++
++static BOOL forgeplay_renderer_env_to_utf8( const WCHAR *name, char *buffer, DWORD buffer_size )
++{
++    UNICODE_STRING value = { 0 };
++    BOOL result = FALSE;
++
++    if (!get_env_var( name, 0, &value ))
++    {
++        result = forgeplay_unicode_to_utf8( value.Buffer, value.Length / sizeof(WCHAR),
++                                            buffer, buffer_size );
++        RtlFreeHeap( GetProcessHeap(), 0, value.Buffer );
++    }
++    return result;
++}
++
++
++static BOOL forgeplay_renderer_path_separator( WCHAR character )
++{
++    return character == L'\\' || character == L'/';
++}
++
++
++static BOOL forgeplay_renderer_path_character_equal( WCHAR left, WCHAR right )
++{
++    if (forgeplay_renderer_path_separator( left ) &&
++        forgeplay_renderer_path_separator( right )) return TRUE;
++    return RtlUpcaseUnicodeChar( left ) == RtlUpcaseUnicodeChar( right );
++}
++
++
++static void forgeplay_renderer_strip_device_prefix( const WCHAR **path, SIZE_T *length )
++{
++    if (*length < 4 || (*path)[0] != L'\\' || (*path)[3] != L'\\') return;
++    if (((*path)[1] == L'?' && (*path)[2] == L'?') ||
++        ((*path)[1] == L'\\' && (*path)[2] == L'?'))
++    {
++        *path += 4;
++        *length -= 4;
++    }
++}
++
++
++/* Match one loader-resolved DLL path to one exact architecture-specific
++ * renderer directory. Device prefixes and separator styles may differ, but
++ * a subdirectory, sibling prefix, or suffix after the requested basename is
++ * never accepted as renderer ownership evidence. */
++static BOOL forgeplay_renderer_path_matches_directory( const WCHAR *actual,
++                                                        SIZE_T actual_length,
++                                                        const WCHAR *directory,
++                                                        SIZE_T directory_length,
++                                                        const WCHAR *basename )
++{
++    SIZE_T basename_length, i;
++
++    forgeplay_renderer_strip_device_prefix( &actual, &actual_length );
++    while (directory_length && (directory[0] == L' ' || directory[0] == L'\t'))
++    {
++        ++directory;
++        --directory_length;
++    }
++    while (directory_length &&
++           (directory[directory_length - 1] == L' ' ||
++            directory[directory_length - 1] == L'\t')) --directory_length;
++    forgeplay_renderer_strip_device_prefix( &directory, &directory_length );
++    while (directory_length &&
++           forgeplay_renderer_path_separator( directory[directory_length - 1] ))
++        --directory_length;
++    if (!directory_length || !basename || !(basename_length = wcslen( basename ))) return FALSE;
++    if (actual_length != directory_length + 1 + basename_length) return FALSE;
++    for (i = 0; i < directory_length; ++i)
++        if (!forgeplay_renderer_path_character_equal( actual[i], directory[i] )) return FALSE;
++    if (!forgeplay_renderer_path_separator( actual[directory_length] )) return FALSE;
++    for (i = 0; i < basename_length; ++i)
++        if (!forgeplay_renderer_path_character_equal(
++                actual[directory_length + 1 + i], basename[i] )) return FALSE;
++    return TRUE;
++}
++
++
++static const char *forgeplay_renderer_module_path_owner( const WINE_MODREF *module,
++                                                         const WCHAR *basename )
++{
++#ifdef _WIN64
++    static const WCHAR renderer_path_name[] = L"FORGEPLAY_GAME_RENDERER_DLL_PATH_X64";
++#else
++    static const WCHAR renderer_path_name[] = L"FORGEPLAY_GAME_RENDERER_DLL_PATH_X86";
++#endif
++    const WCHAR *cursor, *end, *entry;
++    UNICODE_STRING allowed_paths = { 0 };
++    SIZE_T actual_length, entry_length;
++    BOOL saw_directory = FALSE, verified = FALSE;
++
++    if (!module || !module->ldr.FullDllName.Buffer || !module->ldr.FullDllName.Length)
++        return "unavailable";
++    if (get_env_var( renderer_path_name, 0, &allowed_paths )) return "unavailable";
++    actual_length = module->ldr.FullDllName.Length / sizeof(WCHAR);
++    cursor = allowed_paths.Buffer;
++    end = cursor + allowed_paths.Length / sizeof(WCHAR);
++    while (cursor <= end)
++    {
++        entry = cursor;
++        while (cursor < end && *cursor != L';') ++cursor;
++        entry_length = cursor - entry;
++        if (entry_length)
++        {
++            saw_directory = TRUE;
++            if (forgeplay_renderer_path_matches_directory(
++                    module->ldr.FullDllName.Buffer, actual_length,
++                    entry, entry_length, basename ))
++            {
++                verified = TRUE;
++                break;
++            }
++        }
++        if (cursor == end) break;
++        ++cursor;
++    }
++    RtlFreeHeap( GetProcessHeap(), 0, allowed_paths.Buffer );
++    if (!saw_directory) return "unavailable";
++    return verified ? "verified" : "mismatch";
++}
++
++
++/***********************************************************************
++ * record_forgeplay_game_renderer_module_load
++ *
++ * Record the loader's resolved module path separately from the route-time
++ * plan. Only a successful path-owner=verified record proves that a Direct3D
++ * renderer DLL loaded from the active process-scoped renderer allowlist.
++ */
++static void record_forgeplay_game_renderer_module_load( const WCHAR *requested,
++                                                        const WINE_MODREF *module,
++                                                        NTSTATUS load_status )
++{
++    const WCHAR *basename = forgeplay_renderer_module_basename( requested );
++    UNICODE_STRING observation_path = { 0 }, nt_path = { 0 };
++    OBJECT_ATTRIBUTES attr;
++    IO_STATUS_BLOCK io;
++    LARGE_INTEGER offset;
++    HANDLE file;
++    char requested_utf8[256], actual_path[1536], executable[1536];
++    char profile[64], owner[64], correlation[96], record[4096];
++    const char *state = load_status ? "failed" : "loaded";
++    const char *path_owner;
++    int record_size;
++    NTSTATUS status;
++
++    if (!forgeplay_game_renderer_is_active() ||
++        !forgeplay_is_renderer_module( requested )) return;
++    if (!forgeplay_unicode_to_utf8( basename, wcslen(basename),
++                                    requested_utf8, sizeof(requested_utf8) ))
++        strcpy( requested_utf8, "unavailable" );
++    if (load_status || !module ||
++        !forgeplay_unicode_to_utf8( module->ldr.FullDllName.Buffer,
++                                    module->ldr.FullDllName.Length / sizeof(WCHAR),
++                                    actual_path, sizeof(actual_path) ))
++        strcpy( actual_path, "unavailable" );
++    path_owner = load_status ? "unavailable" :
++        forgeplay_renderer_module_path_owner( module, basename );
++    if (!forgeplay_renderer_env_to_utf8( L"FORGEPLAY_GAME_RENDERER_PROFILE",
++                                         profile, sizeof(profile) ))
++        strcpy( profile, "unreported" );
++    if (!forgeplay_renderer_env_to_utf8( L"FORGEPLAY_GAME_RENDERER_APPLIED",
++                                         owner, sizeof(owner) ))
++        strcpy( owner, "unreported" );
++    if (!forgeplay_renderer_env_to_utf8( L"FORGEPLAY_GAME_RENDERER_CORRELATION_ID",
++                                         correlation, sizeof(correlation) ))
++        strcpy( correlation, "unreported" );
++    if (!forgeplay_unicode_to_utf8(
++            NtCurrentTeb()->Peb->ProcessParameters->ImagePathName.Buffer,
++            NtCurrentTeb()->Peb->ProcessParameters->ImagePathName.Length / sizeof(WCHAR),
++            executable, sizeof(executable) ))
++        strcpy( executable, "unavailable" );
++
++    status = get_env_var( L"FORGEPLAY_PROCESS_OBSERVATION_FILE", 0, &observation_path );
++    if (status) return;
++    if (!RtlDosPathNameToNtPathName_U( observation_path.Buffer, &nt_path, NULL, NULL ))
++        goto done;
++    InitializeObjectAttributes( &attr, &nt_path, OBJ_CASE_INSENSITIVE, 0, NULL );
++    status = NtCreateFile( &file, FILE_APPEND_DATA | SYNCHRONIZE, &attr, &io, NULL,
++                           FILE_ATTRIBUTE_NORMAL,
++                           FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
++                           FILE_OPEN_IF,
++                           FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
++                           NULL, 0 );
++    if (status) goto done_nt_path;
++
++    record_size = snprintf(
++        record, sizeof(record),
++        "FORGEPLAY_GAME_RENDERER_LOAD_V3\t%lu\tstate=%s | module=%s | actual-path=%s | "
++        "path-owner=%s | profile=%s | owner=%s | status=0x%08lx | correlation=%s | executable=%s\n",
++        (unsigned long)HandleToULong( NtCurrentTeb()->ClientId.UniqueProcess ),
++        state, requested_utf8, actual_path, path_owner, profile, owner,
++        (unsigned long)load_status, correlation, executable );
++    if (record_size > 0 && (SIZE_T)record_size < sizeof(record))
++    {
++        offset.QuadPart = -1;
++        if (!NtWriteFile( file, NULL, NULL, NULL, &io, record, record_size, &offset, NULL ))
++            NtFlushBuffersFile( file, &io );
++    }
++    NtClose( file );
++
++done_nt_path:
++    RtlFreeUnicodeString( &nt_path );
++done:
++    RtlFreeHeap( GetProcessHeap(), 0, observation_path.Buffer );
++}
++
++
++/***********************************************************************
++ *	prepend_forgeplay_game_renderer_dll_path
++ *
++ * Native renderer modules live outside the prefix so Steam cannot load them.
++ * A game process marked by kernelbase gets its architecture-specific
++ * renderer directory ahead of the normal DLL search path before imports
++ * for the main executable are resolved.
++ */
++static NTSTATUS prepend_forgeplay_game_renderer_dll_path( WCHAR **load_path )
++{
++#ifdef _WIN64
++    static const WCHAR renderer_path_name[] = L"FORGEPLAY_GAME_RENDERER_DLL_PATH_X64";
++#else
++    static const WCHAR renderer_path_name[] = L"FORGEPLAY_GAME_RENDERER_DLL_PATH_X86";
++#endif
++    UNICODE_STRING active = { 0 }, renderer_path = { 0 };
++    WCHAR *combined;
++    SIZE_T renderer_length, load_path_length, combined_length;
++    NTSTATUS status;
++
++    status = get_env_var( L"FORGEPLAY_GAME_RENDERER_ACTIVE", 0, &active );
++    if (status == STATUS_VARIABLE_NOT_FOUND) return STATUS_SUCCESS;
++    if (status) return status;
++    if (active.Length != sizeof(WCHAR) || active.Buffer[0] != L'1')
++    {
++        RtlFreeHeap( GetProcessHeap(), 0, active.Buffer );
++        return STATUS_SUCCESS;
++    }
++    RtlFreeHeap( GetProcessHeap(), 0, active.Buffer );
++
++    if ((status = get_env_var( renderer_path_name, 0, &renderer_path ))) return status;
++    renderer_length = renderer_path.Length / sizeof(WCHAR);
++    if (!renderer_length)
++    {
++        RtlFreeHeap( GetProcessHeap(), 0, renderer_path.Buffer );
++        return STATUS_INVALID_PARAMETER;
++    }
++    load_path_length = *load_path ? wcslen( *load_path ) : 0;
++    combined_length = renderer_length + (load_path_length ? 1 : 0) + load_path_length + 1;
++    if (!(combined = RtlAllocateHeap( GetProcessHeap(), 0, combined_length * sizeof(WCHAR) )))
++    {
++        RtlFreeHeap( GetProcessHeap(), 0, renderer_path.Buffer );
++        return STATUS_NO_MEMORY;
++    }
++    memcpy( combined, renderer_path.Buffer, renderer_length * sizeof(WCHAR) );
++    if (load_path_length)
++    {
++        combined[renderer_length] = L';';
++        memcpy( combined + renderer_length + 1, *load_path,
++                (load_path_length + 1) * sizeof(WCHAR) );
++    }
++    else combined[renderer_length] = 0;
++    RtlFreeHeap( GetProcessHeap(), 0, renderer_path.Buffer );
++    *load_path = combined;
++    TRACE( "applied ForgePlay Steam game renderer DLL search path\n" );
++    return STATUS_SUCCESS;
++}
++
++
+ /***********************************************************************
+  *	find_builtin_without_file
+  *
+@@ -3363,6 +3758,7 @@ static NTSTATUS load_dll( const WCHAR *load_path, const WCHAR *libname, DWORD fl
+         TRACE("Found %s for %s at %p, count=%d\n",
+               debugstr_w((*pwm)->ldr.FullDllName.Buffer), debugstr_w(libname),
+               (*pwm)->ldr.DllBase, (*pwm)->ldr.LoadCount);
++        record_forgeplay_game_renderer_module_load( libname, *pwm, STATUS_SUCCESS );
+         RtlFreeUnicodeString( &nt_name );
+         return STATUS_SUCCESS;
+     }
+@@ -3392,6 +3788,7 @@ done:
+     else
+         WARN("Failed to load module %s; status=%lx\n", debugstr_w(libname), nts);
+-
++
++    record_forgeplay_game_renderer_module_load( libname, nts ? NULL : *pwm, nts );
+     if (mapping) NtClose( mapping );
+     RtlFreeUnicodeString( &nt_name );
+     return nts;
+@@ -4483,6 +4880,12 @@ void loader_init( CONTEXT *context, void **entry )
+         default_load_path = peb->ProcessParameters->DllPath.Buffer;
+         if (!default_load_path)
+             get_dll_load_path( peb->ProcessParameters->ImagePathName.Buffer, NULL, dll_safe_mode, &default_load_path );
++        if ((status = prepend_forgeplay_game_renderer_dll_path( &default_load_path )))
++        {
++            record_forgeplay_game_renderer_loader_error( status );
++            MESSAGE( "wine: could not apply ForgePlay game renderer DLL path, status %lx\n", status );
++            NtTerminateProcess( GetCurrentProcess(), status );
++        }
+ 
+         if (NtCurrentTeb()->WowTebOffset) init_wow64( context );
+ 
+@@ -4808,6 +5211,7 @@ NTSTATUS WINAPI LdrSetDefaultDllDirectories( ULONG flags )
+ NTSTATUS WINAPI LdrGetDllPath( PCWSTR module, ULONG flags, PWSTR *path, PWSTR *unknown )
+ {
+     NTSTATUS status;
++    WCHAR *base_path;
+     const ULONG load_library_search_flags = (LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR |
+                                              LOAD_LIBRARY_SEARCH_APPLICATION_DIR |
+                                              LOAD_LIBRARY_SEARCH_USER_DIRS |
+@@ -4836,6 +5240,20 @@ NTSTATUS WINAPI LdrGetDllPath( PCWSTR module, ULONG flags, PWSTR *path, PWSTR *u
+     }
+ 
+     RtlLeaveCriticalSection( &dlldir_section );
++    if (!status)
++    {
++        base_path = *path;
++        status = prepend_forgeplay_game_renderer_dll_path( path );
++        if (!status)
++        {
++            if (*path != base_path) RtlFreeHeap( GetProcessHeap(), 0, base_path );
++        }
++        else
++        {
++            RtlFreeHeap( GetProcessHeap(), 0, base_path );
++            *path = NULL;
++        }
++    }
+     *unknown = NULL;
+     return status;
+ }
+diff --git a/dlls/ntdll/unix/loader.c b/dlls/ntdll/unix/loader.c
+index ef978f2..377b35f 100644
+--- a/dlls/ntdll/unix/loader.c
++++ b/dlls/ntdll/unix/loader.c
+@@ -294,6 +294,8 @@ static WORD get_alt_machine( WORD machine )
+ static void set_dll_path(void)
+ {
+     char *p, *path = getenv( "WINEDLLPATH" );
++    const char *renderer_active = getenv( "FORGEPLAY_GAME_RENDERER_ACTIVE" );
++    BOOL renderer_path_first = renderer_active && !strcmp( renderer_active, "1" );
+     int i, count = 0;
+ 
+     if (path) for (p = path, count = 1; *p; p++) if (*p == ':') count++;
+@@ -301,6 +303,15 @@ static void set_dll_path(void)
+     dll_paths = malloc( (count + 2) * sizeof(*dll_paths) );
+     count = 0;
+ 
++    if (renderer_path_first && path)
++    {
++        path = strdup(path);
++        for (p = strtok( path, ":" ); p; p = strtok( NULL, ":" )) dll_paths[count++] = strdup( p );
++        free( path );
++        path = NULL;
++        TRACE( "prioritized ForgePlay Steam game renderer builtin path\n" );
++    }
++
+     if (!build_dir) dll_paths[count++] = dll_dir;
+ 
+     if (path)
+diff --git a/dlls/ntdll/unix/process.c b/dlls/ntdll/unix/process.c
+index 418f95b..39884a7 100644
+--- a/dlls/ntdll/unix/process.c
++++ b/dlls/ntdll/unix/process.c
+@@ -397,6 +397,110 @@ static BOOL is_unix_console_handle( HANDLE handle )
+ }
+ 
+ 
++/***********************************************************************
++ *           apply_forgeplay_game_renderer_unix_environment
++ *
++ * Wine normally inherits the Unix environment of the Steam process when
++ * it execs a Windows child. Mirror only the renderer variables selected by
++ * kernelbase so the child loader, MoltenVK, DXVK, and Metal frameworks see
++ * the game policy without changing the Steam client environment.
++ */
++static const WCHAR *find_forgeplay_process_environment_value( const WCHAR *environment,
++                                                              const WCHAR *name )
++{
++    SIZE_T name_length = wcslen( name );
++
++    while (environment && *environment)
++    {
++        if (!wcsnicmp( environment, name, name_length ) && environment[name_length] == L'=')
++            return environment + name_length + 1;
++        environment += wcslen( environment ) + 1;
++    }
++    return NULL;
++}
++
++
++static const WCHAR *find_forgeplay_process_environment_value_ascii( const WCHAR *environment,
++                                                                    const char *name )
++{
++    WCHAR nameW[64];
++    SIZE_T i, length = strlen( name );
++
++    if (length >= ARRAY_SIZE(nameW)) return NULL;
++    for (i = 0; i <= length; ++i) nameW[i] = name[i];
++    return find_forgeplay_process_environment_value( environment, nameW );
++}
++
++
++static BOOL set_forgeplay_unix_environment_variable( const WCHAR *environment,
++                                                     const char *name )
++{
++    const WCHAR *value = find_forgeplay_process_environment_value_ascii( environment, name );
++    SIZE_T value_length, buffer_size;
++    char *buffer;
++
++    if (!value) return unsetenv( name ) != -1;
++    value_length = wcslen( value );
++    buffer_size = value_length * 3 + 1;
++    if (!(buffer = malloc( buffer_size ))) return FALSE;
++    ntdll_wcstoumbs( value, value_length + 1, buffer, buffer_size, FALSE );
++    if (setenv( name, buffer, 1 ) == -1)
++    {
++        free( buffer );
++        return FALSE;
++    }
++    free( buffer );
++    return TRUE;
++}
++
++
++static BOOL apply_forgeplay_game_renderer_unix_environment(
++    const RTL_USER_PROCESS_PARAMETERS *params )
++{
++    static const char *variables[] =
++    {
++        "FORGEPLAY_GAME_RENDERER_ACTIVE",
++        "FORGEPLAY_GAME_RENDERER_LINEAGE",
++        "FORGEPLAY_GAME_RENDERER_POLICY",
++        "FORGEPLAY_GAME_RENDERER_REQUESTED",
++        "FORGEPLAY_GAME_RENDERER_APPLIED",
++        "FORGEPLAY_GAME_RENDERER_PROFILE",
++        "FORGEPLAY_GAME_RENDERER_CORRELATION_ID",
++        "FORGEPLAY_GAME_RENDERER_D3DMETAL_BRIDGE_REQUIRED",
++        "FORGEPLAY_D3DMETAL_NATIVE_THREAD_CONTEXT",
++        "FORGEPLAY_GAME_RENDERER_ROUTE_REASON",
++        "FORGEPLAY_GAME_RENDERER_ROUTE_EVIDENCE",
++        "WINEDLLOVERRIDES",
++        "WINEDLLPATH",
++        "DYLD_LIBRARY_PATH",
++        "DYLD_FALLBACK_LIBRARY_PATH",
++        "DYLD_FRAMEWORK_PATH",
++        "D3DMETAL_FRAMEWORK_PATH",
++        "FORGEPLAY_D3DMETAL_SHARED_LIBRARY",
++        "FORGEPLAY_D3DMETAL_BRIDGE",
++        "FORGEPLAY_D3DMETAL_TARGET",
++        "D3DM_WINE_UNIX_CALL",
++        "VK_ICD_FILENAMES",
++        "VK_DRIVER_FILES",
++        "DXVK_LOG_PATH",
++        "DXVK_LOG_LEVEL",
++        "DXVK_CONFIG",
++    };
++    const WCHAR *active = find_forgeplay_process_environment_value_ascii(
++        params->Environment, "FORGEPLAY_GAME_RENDERER_ACTIVE" );
++    unsigned int i;
++
++    if (!active || active[0] != L'1' || active[1]) return TRUE;
++    for (i = 0; i < ARRAY_SIZE(variables); ++i)
++    {
++        if (!set_forgeplay_unix_environment_variable( params->Environment, variables[i] ))
++            return FALSE;
++    }
++    TRACE( "applied ForgePlay Steam game renderer Unix environment\n" );
++    return TRUE;
++}
++
++
+ /***********************************************************************
+  *           spawn_process
+  */
+@@ -433,6 +536,7 @@ static NTSTATUS spawn_process( const RTL_USER_PROCESS_PARAMETERS *params, int so
+             if (stdin_fd != -1 && stdin_fd != 0) close( stdin_fd );
+             if (stdout_fd != -1 && stdout_fd != 1) close( stdout_fd );
+ 
++            if (!apply_forgeplay_game_renderer_unix_environment( params )) _exit(1);
+             if (winedebug) putenv( winedebug );
+             if (unixdir != -1)
+             {

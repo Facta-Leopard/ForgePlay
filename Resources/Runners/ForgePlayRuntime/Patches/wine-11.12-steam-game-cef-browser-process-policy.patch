@@ -1,0 +1,185 @@
+--- a/dlls/kernelbase/process.c
++++ b/dlls/kernelbase/process.c
+@@ -332,6 +332,15 @@ static BOOL forgeplay_game_renderer_policy_enabled(void)
+ }
+ 
+ 
++static BOOL forgeplay_steam_game_cef_browser_policy_enabled(void)
++{
++    WCHAR value[8];
++    DWORD size = GetEnvironmentVariableW(
++        L"FORGEPLAY_STEAM_GAME_CEF_BROWSER_POLICY_ENABLED", value, ARRAY_SIZE(value) );
++    return size == 1 && value[0] == L'1';
++}
++
++
+ enum forgeplay_direct3d_generation
+ {
+     FORGEPLAY_DIRECT3D_NONE = 0,
+@@ -452,6 +461,50 @@ static BOOL forgeplay_ascii_contains_case_insensitive( const char *text, const
+ }
+ 
+ 
++static BOOL forgeplay_wide_contains_case_insensitive( const WCHAR *text, const WCHAR *needle )
++{
++    SIZE_T text_length, needle_length, i, j;
++
++    if (!text || !needle) return FALSE;
++    text_length = wcslen( text );
++    needle_length = wcslen( needle );
++    if (!needle_length || needle_length > text_length) return FALSE;
++    for (i = 0; i <= text_length - needle_length; ++i)
++    {
++        for (j = 0; j < needle_length; ++j)
++        {
++            WCHAR left = text[i + j], right = needle[j];
++            if (left >= L'A' && left <= L'Z') left += L'a' - L'A';
++            if (right >= L'A' && right <= L'Z') right += L'a' - L'A';
++            if (left != right) break;
++        }
++        if (j == needle_length) return TRUE;
++    }
++    return FALSE;
++}
++
++
++static BOOL forgeplay_ascii_buffer_contains_case_insensitive(
++    const BYTE *bytes, SIZE_T size, const char *needle )
++{
++    SIZE_T needle_length = strlen( needle ), i, j;
++
++    if (!needle_length || needle_length > size) return FALSE;
++    for (i = 0; i <= size - needle_length; ++i)
++    {
++        for (j = 0; j < needle_length; ++j)
++        {
++            BYTE left = bytes[i + j], right = needle[j];
++            if (left >= 'A' && left <= 'Z') left += 'a' - 'A';
++            if (right >= 'A' && right <= 'Z') right += 'a' - 'A';
++            if (left != right) break;
++        }
++        if (j == needle_length) return TRUE;
++    }
++    return FALSE;
++}
++
++
+ static BOOL forgeplay_copy_import_module_name( const BYTE *bytes, SIZE_T file_size,
+                                                SIZE_T name_offset, char *name, SIZE_T name_size )
+ {
+@@ -662,6 +715,94 @@ done:
+ }
+ 
+ 
++static BOOL forgeplay_pe_contains_ascii_marker(
++    const WCHAR *filename, const WCHAR *cur_dir, const char *marker )
++{
++    WCHAR *relative_path = NULL;
++    const WCHAR *open_path = filename;
++    HANDLE file = INVALID_HANDLE_VALUE, mapping = NULL;
++    LARGE_INTEGER size;
++    BYTE *bytes = NULL;
++    SIZE_T file_size, nt_offset;
++    BOOL found = FALSE;
++    DWORD saved_error = GetLastError();
++
++    if (!filename || !filename[0]) goto done;
++    file = CreateFileW( open_path, GENERIC_READ,
++                        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
++                        NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL );
++    if (file == INVALID_HANDLE_VALUE && cur_dir &&
++        !(filename[1] == L':' || filename[0] == L'\\' || filename[0] == L'/'))
++    {
++        SIZE_T length = wcslen( cur_dir ) + wcslen( filename ) + 2;
++        if ((relative_path = HeapAlloc( GetProcessHeap(), 0, length * sizeof(WCHAR) )))
++        {
++            swprintf( relative_path, length, L"%s\\%s", cur_dir, filename );
++            open_path = relative_path;
++            file = CreateFileW( open_path, GENERIC_READ,
++                                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
++                                NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL );
++        }
++    }
++    if (file == INVALID_HANDLE_VALUE || !GetFileSizeEx( file, &size ) ||
++        size.QuadPart < 0x40 || size.QuadPart > 256 * 1024 * 1024)
++        goto done;
++    file_size = size.QuadPart;
++    if (!(mapping = CreateFileMappingW( file, NULL, PAGE_READONLY, 0, 0, NULL ))) goto done;
++    if (!(bytes = MapViewOfFile( mapping, FILE_MAP_READ, 0, 0, 0 ))) goto done;
++    if (forgeplay_read_word( bytes, 0 ) != IMAGE_DOS_SIGNATURE) goto done;
++    nt_offset = forgeplay_read_dword( bytes, 0x3c );
++    if (!forgeplay_file_range_is_valid( nt_offset, 24, file_size ) ||
++        forgeplay_read_dword( bytes, nt_offset ) != IMAGE_NT_SIGNATURE)
++        goto done;
++    found = forgeplay_ascii_buffer_contains_case_insensitive( bytes, file_size, marker );
++
++done:
++    if (bytes) UnmapViewOfFile( bytes );
++    if (mapping) CloseHandle( mapping );
++    if (file != INVALID_HANDLE_VALUE) CloseHandle( file );
++    HeapFree( GetProcessHeap(), 0, relative_path );
++    SetLastError( saved_error );
++    return found;
++}
++
++
++static WCHAR *append_forgeplay_steam_game_cef_browser_argument(
++    const WCHAR *filename, const WCHAR *cur_dir, const WCHAR *cmdline )
++{
++    static const WCHAR process_type_argument[] = L"--type=";
++    static const WCHAR in_process_gpu_argument[] = L"--in-process-gpu";
++    WCHAR *result;
++    SIZE_T result_size;
++    DWORD saved_error = GetLastError();
++
++    if (!forgeplay_steam_game_cef_browser_policy_enabled() ||
++        is_forgeplay_game_renderer_excluded_role( filename ) ||
++        (!is_forgeplay_steam_game_path( filename ) &&
++         !is_forgeplay_steam_game_path( cur_dir )) ||
++        forgeplay_wide_contains_case_insensitive( cmdline, process_type_argument ) ||
++        forgeplay_wide_contains_case_insensitive( cmdline, in_process_gpu_argument ) ||
++        !forgeplay_pe_contains_ascii_marker( filename, cur_dir, "libcef.dll" ))
++    {
++        SetLastError( saved_error );
++        return NULL;
++    }
++
++    result_size = wcslen( cmdline ) + ARRAY_SIZE(in_process_gpu_argument) + 1;
++    if (result_size > 32767 ||
++        !(result = HeapAlloc( GetProcessHeap(), 0, result_size * sizeof(WCHAR) )))
++    {
++        SetLastError( saved_error );
++        return NULL;
++    }
++    swprintf( result, result_size, L"%s %s", cmdline, in_process_gpu_argument );
++    TRACE( "enabled in-process GPU for Steam game CEF browser process %s\n",
++           debugstr_w(filename) );
++    SetLastError( saved_error );
++    return result;
++}
++
++
+ static void forgeplay_set_unsupported_renderer_route(
+     struct forgeplay_game_renderer_route *route, const WCHAR *reason )
+ {
+@@ -1073,6 +1214,7 @@ static NTSTATUS create_forgeplay_game_renderer_environment( const void *environ
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_LOG_PATH",
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_LOG_LEVEL",
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_CONFIG",
++        L"FORGEPLAY_STEAM_GAME_CEF_BROWSER_POLICY_ENABLED",
+     };
+     const WCHAR *target_name, *cursor;
+     WCHAR bridge_required_value[2];
+@@ -1669,6 +1811,12 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
+         tidy_cmdline = policy_cmdline;
+         process_argument_policy_applied = TRUE;
+     }
++    if ((policy_cmdline = append_forgeplay_steam_game_cef_browser_argument(
++             app_name, cur_dir, tidy_cmdline )))
++    {
++        if (tidy_cmdline != cmd_line) HeapFree( GetProcessHeap(), 0, tidy_cmdline );
++        tidy_cmdline = policy_cmdline;
++    }
+ 
+     /* The PE scanner is authoritative when readable. If it cannot open the
+      * image, preserve the caller's explicit machine attribute instead of

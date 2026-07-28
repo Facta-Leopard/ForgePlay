@@ -1,0 +1,12 @@
+--- a/server/request.c
++++ b/server/request.c
+@@ -688,7 +688,8 @@ static int create_server_lock(void)
+             fatal_error( "%s/%s is not a regular file\n", server_dir, server_lock_name );
+     }
+
+-    if ((fd = open( server_lock_name, O_CREAT|O_TRUNC|O_WRONLY, 0600 )) == -1)
++    /* The file contents are never read. Avoid truncating a lock held by a sandboxed peer. */
++    if ((fd = open( server_lock_name, O_CREAT|O_WRONLY, 0600 )) == -1)
+         fatal_error( "error creating %s/%s: %s\n", server_dir, server_lock_name, strerror( errno ));
+     return fd;
+ }

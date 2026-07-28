@@ -1,0 +1,266 @@
+diff --git a/dlls/kernelbase/process.c b/dlls/kernelbase/process.c
+index 3e8f139b3ad69261740d72d6c966ecfdb9fca58e..1f78e6553e31a059a8504614c8a092ab5f880c5c 100644
+--- a/dlls/kernelbase/process.c
++++ b/dlls/kernelbase/process.c
+@@ -1181,6 +1181,7 @@ static NTSTATUS create_forgeplay_base_renderer_environment( const void *environm
+     };
+     static const WCHAR *renderer_state_variables[] =
+     {
++        L"FORGEPLAY_STEAM_GAME_PROCESS",
+         L"FORGEPLAY_GAME_RENDERER_ACTIVE",
+         L"FORGEPLAY_GAME_RENDERER_LINEAGE",
+         L"FORGEPLAY_GAME_RENDERER_APPLIED",
+@@ -1229,6 +1230,8 @@ static NTSTATUS create_forgeplay_deferred_renderer_environment(
+     if ((status = create_forgeplay_base_renderer_environment(
+              environment, flags, result ))) return status;
+     if ((status = set_forgeplay_renderer_literal(
++             result, L"FORGEPLAY_STEAM_GAME_PROCESS", L"1" )) ||
++        (status = set_forgeplay_renderer_literal(
+              result, L"FORGEPLAY_GAME_RENDERER_LINEAGE", L"1" )))
+     {
+         RtlDestroyEnvironment( *result );
+@@ -1405,6 +1408,9 @@ static NTSTATUS create_forgeplay_game_renderer_environment( const void *environm
+
+     bridge_required_value[0] = route->d3dmetal_bridge_required ? L'1' : L'0';
+     bridge_required_value[1] = 0;
++    if ((status = set_forgeplay_renderer_literal( result,
++                                                  L"FORGEPLAY_STEAM_GAME_PROCESS", L"1" )))
++        goto failed;
+     if ((status = set_forgeplay_renderer_literal( result,
+                                                   L"FORGEPLAY_GAME_RENDERER_ACTIVE", L"1" )))
+         goto failed;
+diff --git a/dlls/ntdll/unix/loader.c b/dlls/ntdll/unix/loader.c
+index 377b35f363df196501f3ad1e66139b7af703eff3..e41f066bef923d1377d7ae713fdc2c34c7dbc313 100644
+--- a/dlls/ntdll/unix/loader.c
++++ b/dlls/ntdll/unix/loader.c
+@@ -33,6 +33,7 @@
+ #include <spawn.h>
+ #include <string.h>
+ #include <stdlib.h>
++#include <sys/file.h>
+ #include <sys/types.h>
+ #include <sys/stat.h>
+ #include <sys/mman.h>
+@@ -465,12 +466,159 @@ static void preloader_exec( char **argv )
+     execv( argv[1], argv + 1 );
+ }
+
++static BOOL forgeplay_environment_flag_enabled( const char *name )
++{
++    const char *value = getenv( name );
++    return value && value[0] == '1' && !value[1];
++}
++
++static BOOL forgeplay_game_mode_identifier_is_valid( const char *value )
++{
++    size_t i;
++
++    if (!value || strlen( value ) != 36) return FALSE;
++    for (i = 0; value[i]; ++i)
++    {
++        if ((value[i] >= '0' && value[i] <= '9') ||
++            (value[i] >= 'a' && value[i] <= 'f') || value[i] == '-') continue;
++        return FALSE;
++    }
++    return TRUE;
++}
++
++static BOOL forgeplay_game_mode_value_is_bounded( const char *value, size_t maximum )
++{
++    size_t length;
++
++    if (!value || !*value) return FALSE;
++    length = strnlen( value, maximum + 1 );
++    return length > 0 && length <= maximum;
++}
++
++static BOOL forgeplay_game_mode_host_is_safe( const char *path )
++{
++    static const char suffix[] =
++        "/Contents/Helpers/GameModeProcessHost.app/Contents/MacOS/GameModeProcessHost";
++    struct stat status;
++    char resolved[PATH_MAX];
++    size_t length, suffix_length = sizeof(suffix) - 1;
++
++    if (!forgeplay_game_mode_value_is_bounded( path, PATH_MAX - 1 ) || path[0] != '/') return FALSE;
++    if (!realpath( path, resolved ) || strcmp( path, resolved )) return FALSE;
++    length = strlen( resolved );
++    if (length <= suffix_length || strcmp( resolved + length - suffix_length, suffix )) return FALSE;
++    if (lstat( resolved, &status ) == -1 || !S_ISREG( status.st_mode ) ||
++        status.st_nlink != 1 || !(status.st_mode & S_IXUSR)) return FALSE;
++    return TRUE;
++}
++
++static void forgeplay_record_game_mode_loader_event( const char *event, int error )
++{
++    const char *evidence = getenv( "FORGEPLAY_GAME_MODE_HOST_EVIDENCE_FILE" );
++    const char *run_id = getenv( "FORGEPLAY_GAME_MODE_HOST_RUN_ID" );
++    struct stat status;
++    char record[384];
++    int descriptor, length;
++
++    if (!event || !forgeplay_game_mode_identifier_is_valid( run_id ) ||
++        !forgeplay_game_mode_value_is_bounded( evidence, PATH_MAX - 1 ) || evidence[0] != '/') return;
++    descriptor = open( evidence, O_WRONLY | O_APPEND | O_CREAT | O_CLOEXEC | O_NOFOLLOW, 0600 );
++    if (descriptor == -1) return;
++    if (flock( descriptor, LOCK_EX ) == -1 ||
++        fstat( descriptor, &status ) == -1 || !S_ISREG( status.st_mode ) ||
++        status.st_nlink != 1 || status.st_uid != geteuid())
++    {
++        flock( descriptor, LOCK_UN );
++        close( descriptor );
++        return;
++    }
++    length = snprintf(
++        record, sizeof(record),
++        "{\"schema_version\":1,\"producer\":\"wine-loader\","
++        "\"event_code\":\"%s\",\"run_identifier\":\"%s\","
++        "\"darwin_pid\":%ld,\"error_code\":%d}\n",
++        event, run_id, (long)getpid(), error );
++    if (length > 0 && (size_t)length < sizeof(record))
++    {
++        ssize_t written;
++        size_t offset = 0;
++        while (offset < (size_t)length)
++        {
++            written = write( descriptor, record + offset, length - offset );
++            if (written > 0) offset += written;
++            else if (written == -1 && errno == EINTR) continue;
++            else break;
++        }
++        fsync( descriptor );
++    }
++    flock( descriptor, LOCK_UN );
++    close( descriptor );
++}
++
++/* Steam remains the Windows parent and creates the canonical game process.
++ * Game lineage is independent of renderer selection, so a deferred, Vulkan,
++ * or otherwise non-Direct3D child can use the same fixed host. argv, cwd,
++ * inherited handles, server socket, and the Darwin PID are preserved by exec. */
++static NTSTATUS forgeplay_exec_required_game_mode_host( char **argv )
++{
++    const char *mode, *host, *bundle_id, *host_hash, *ntdll, *evidence, *lock, *run_id;
++    char *host_argument;
++    int saved_error;
++
++    if (!forgeplay_environment_flag_enabled( "FORGEPLAY_STEAM_GAME_PROCESS" ))
++        return STATUS_SUCCESS;
++    if (!forgeplay_environment_flag_enabled( "FORGEPLAY_GAME_MODE_HOST_ENABLED" ))
++        return STATUS_NOT_SUPPORTED;
++
++    mode = getenv( "FORGEPLAY_GAME_MODE_HOST_MODE" );
++    host = getenv( "FORGEPLAY_GAME_MODE_HOST_EXECUTABLE" );
++    bundle_id = getenv( "FORGEPLAY_GAME_MODE_HOST_BUNDLE_IDENTIFIER" );
++    host_hash = getenv( "FORGEPLAY_GAME_MODE_HOST_EXECUTABLE_SHA256" );
++    ntdll = getenv( "FORGEPLAY_GAME_MODE_HOST_NTDLL" );
++    evidence = getenv( "FORGEPLAY_GAME_MODE_HOST_EVIDENCE_FILE" );
++    run_id = getenv( "FORGEPLAY_GAME_MODE_HOST_RUN_ID" );
++    lock = getenv( "FORGEPLAY_PREFIX_EXECUTION_LOCK" );
++
++    if (!mode || strcmp( mode, "steam-child" ) ||
++        !forgeplay_game_mode_host_is_safe( host ) ||
++        !forgeplay_game_mode_value_is_bounded( bundle_id, 255 ) ||
++        !forgeplay_game_mode_value_is_bounded( host_hash, 64 ) || strlen( host_hash ) != 64 ||
++        !forgeplay_game_mode_value_is_bounded( ntdll, PATH_MAX - 1 ) || ntdll[0] != '/' ||
++        !forgeplay_game_mode_value_is_bounded( evidence, PATH_MAX - 1 ) || evidence[0] != '/' ||
++        !forgeplay_game_mode_identifier_is_valid( run_id ) ||
++        !forgeplay_game_mode_value_is_bounded( lock, PATH_MAX - 1 ) || lock[0] != '/')
++    {
++        forgeplay_record_game_mode_loader_event( "loader_contract_rejected", EINVAL );
++        return STATUS_INVALID_PARAMETER;
++    }
++
++    host_argument = strdup( host );
++    if (!host_argument)
++    {
++        forgeplay_record_game_mode_loader_event( "loader_allocation_failed", ENOMEM );
++        return STATUS_NO_MEMORY;
++    }
++    setenv( "FORGEPLAY_GAME_MODE_HOST_ROUTED", "1", 1 );
++    forgeplay_record_game_mode_loader_event( "loader_route_selected", 0 );
++    argv[1] = host_argument;
++    execv( argv[1], argv + 1 );
++    saved_error = errno;
++    forgeplay_record_game_mode_loader_event( "loader_exec_failed", saved_error );
++    free( host_argument );
++    argv[1] = NULL;
++    unsetenv( "FORGEPLAY_GAME_MODE_HOST_ROUTED" );
++    errno = saved_error;
++    return STATUS_UNSUCCESSFUL;
++}
++
+ /* exec the appropriate wine loader for the specified machine */
+ static NTSTATUS loader_exec( char **argv, WORD machine )
+ {
+     static char noexec[] = "WINELOADERNOEXEC=1";
++    NTSTATUS status;
+
+     putenv( noexec );
++    if ((status = forgeplay_exec_required_game_mode_host( argv ))) return status;
+
+     if (((argv[1] = get_alternate_wineloader( machine )))) preloader_exec( argv );
+
+diff --git a/dlls/ntdll/unix/process.c b/dlls/ntdll/unix/process.c
+index 39884a7fb91f8ea6f8505991adf65b528d41e85d..95a389dcc0679be0a45d176aa68add10565f25a5 100644
+--- a/dlls/ntdll/unix/process.c
++++ b/dlls/ntdll/unix/process.c
+@@ -398,12 +398,11 @@ static BOOL is_unix_console_handle( HANDLE handle )
+
+
+ /***********************************************************************
+- *           apply_forgeplay_game_renderer_unix_environment
++ *           apply_forgeplay_steam_game_process_unix_environment
+  *
+- * Wine normally inherits the Unix environment of the Steam process when
+- * it execs a Windows child. Mirror only the renderer variables selected by
+- * kernelbase so the child loader, MoltenVK, DXVK, and Metal frameworks see
+- * the game policy without changing the Steam client environment.
++ * Synchronize the child environment selected by kernelbase on every spawn.
++ * This both applies an active renderer and restores the base environment
++ * when a routed launcher creates an excluded or deferred child.
+  */
+ static const WCHAR *find_forgeplay_process_environment_value( const WCHAR *environment,
+                                                               const WCHAR *name )
+@@ -454,11 +453,12 @@ static BOOL set_forgeplay_unix_environment_variable( const WCHAR *environment,
+ }
+
+
+-static BOOL apply_forgeplay_game_renderer_unix_environment(
++static BOOL apply_forgeplay_steam_game_process_unix_environment(
+     const RTL_USER_PROCESS_PARAMETERS *params )
+ {
+     static const char *variables[] =
+     {
++        "FORGEPLAY_STEAM_GAME_PROCESS",
+         "FORGEPLAY_GAME_RENDERER_ACTIVE",
+         "FORGEPLAY_GAME_RENDERER_LINEAGE",
+         "FORGEPLAY_GAME_RENDERER_POLICY",
+@@ -485,17 +485,14 @@ static BOOL apply_forgeplay_game_renderer_unix_environment(
+         "DXVK_LOG_LEVEL",
+         "DXVK_CONFIG",
+     };
+-    const WCHAR *active = find_forgeplay_process_environment_value_ascii(
+-        params->Environment, "FORGEPLAY_GAME_RENDERER_ACTIVE" );
+     unsigned int i;
+
+-    if (!active || active[0] != L'1' || active[1]) return TRUE;
+     for (i = 0; i < ARRAY_SIZE(variables); ++i)
+     {
+         if (!set_forgeplay_unix_environment_variable( params->Environment, variables[i] ))
+             return FALSE;
+     }
+-    TRACE( "applied ForgePlay Steam game renderer Unix environment\n" );
++    TRACE( "synchronized ForgePlay Steam game process Unix environment\n" );
+     return TRUE;
+ }
+
+@@ -536,7 +533,7 @@ static NTSTATUS spawn_process( const RTL_USER_PROCESS_PARAMETERS *params, int so
+             if (stdin_fd != -1 && stdin_fd != 0) close( stdin_fd );
+             if (stdout_fd != -1 && stdout_fd != 1) close( stdout_fd );
+
+-            if (!apply_forgeplay_game_renderer_unix_environment( params )) _exit(1);
++            if (!apply_forgeplay_steam_game_process_unix_environment( params )) _exit(1);
+             if (winedebug) putenv( winedebug );
+             if (unixdir != -1)
+             {

@@ -1,0 +1,759 @@
+{
+  "architecture": "x86_64",
+  "artifacts": [
+    {
+      "component": "GStreamer Bad Plug-ins",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBad/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBad/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/gstreamer-1.0/libgstapplemedia.dylib",
+      "sourceSHA256": "65169a6b4d24c331e40feda449cd1c19610fe07acbecc4d1f3bc4e220b1cd7a5",
+      "targetPath": "wine/gstreamer/lib/gstreamer-1.0/libgstapplemedia.dylib"
+    },
+    {
+      "component": "GStreamer Ugly Plug-ins",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerUgly/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerUgly/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/gstreamer-1.0/libgstasf.dylib",
+      "sourceSHA256": "e75f2bd0a785bae239fae287c17d18567d0ed0e44b65207585a47568454b46de",
+      "targetPath": "wine/gstreamer/lib/gstreamer-1.0/libgstasf.dylib"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/gstreamer-1.0/libgstaudioconvert.dylib",
+      "sourceSHA256": "f40321fc95e582dd2d3c6a69aa1b681d1f357ec33443374e00c33a6004684ced",
+      "targetPath": "wine/gstreamer/lib/gstreamer-1.0/libgstaudioconvert.dylib"
+    },
+    {
+      "component": "GStreamer Good Plug-ins",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerGood/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerGood/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/gstreamer-1.0/libgstaudioparsers.dylib",
+      "sourceSHA256": "574cb2589751de6906eaa37d9ad71fff22ea5ed1672cfa632d9d2312b29a48bb",
+      "targetPath": "wine/gstreamer/lib/gstreamer-1.0/libgstaudioparsers.dylib"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/gstreamer-1.0/libgstaudioresample.dylib",
+      "sourceSHA256": "1336100faf47d5e5dad32a48413057edd127f41385e598973c26336e906fd346",
+      "targetPath": "wine/gstreamer/lib/gstreamer-1.0/libgstaudioresample.dylib"
+    },
+    {
+      "component": "GStreamer",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamer/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamer/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/gstreamer-1.0/libgstcoreelements.dylib",
+      "sourceSHA256": "b563c449a744dc18444269492b1e61b5f9a59233c3a80fa0ab3328bd16223b23",
+      "targetPath": "wine/gstreamer/lib/gstreamer-1.0/libgstcoreelements.dylib"
+    },
+    {
+      "component": "GStreamer Good Plug-ins",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerGood/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerGood/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/gstreamer-1.0/libgstdeinterlace.dylib",
+      "sourceSHA256": "58b8e141f18bd8e311eb5d80bc5498f63760043268d5edfed5d91e96c92ace18",
+      "targetPath": "wine/gstreamer/lib/gstreamer-1.0/libgstdeinterlace.dylib"
+    },
+    {
+      "component": "GStreamer Good Plug-ins",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerGood/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerGood/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/gstreamer-1.0/libgstisomp4.dylib",
+      "sourceSHA256": "888a053d26c3c926d4a34bffa55ea774df337c829402fcfda5677ac1126d94e0",
+      "targetPath": "wine/gstreamer/lib/gstreamer-1.0/libgstisomp4.dylib"
+    },
+    {
+      "component": "GStreamer libav",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerLibav/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerLibav/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/gstreamer-1.0/libgstlibav.dylib",
+      "sourceSHA256": "a249bbcbaab667c02cee16d1b20e3d2c3d85623f3598287c8b55f7b09c8f0d38",
+      "targetPath": "wine/gstreamer/lib/gstreamer-1.0/libgstlibav.dylib"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/gstreamer-1.0/libgstplayback.dylib",
+      "sourceSHA256": "28c6ecf8be62b5e5d19c8a7fb2f5fe8302f57e03197cc345d5b074f8f0b3054d",
+      "targetPath": "wine/gstreamer/lib/gstreamer-1.0/libgstplayback.dylib"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/gstreamer-1.0/libgsttypefindfunctions.dylib",
+      "sourceSHA256": "165bf7f3113cfcbc121340795546fd22967ba11976e97537e1a65960a96b4f0f",
+      "targetPath": "wine/gstreamer/lib/gstreamer-1.0/libgsttypefindfunctions.dylib"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/gstreamer-1.0/libgstvideoconvertscale.dylib",
+      "sourceSHA256": "b83cc344ebee61cd8f54719c493f95b85256c6c66eff61f6c6a0bc36674be8f9",
+      "targetPath": "wine/gstreamer/lib/gstreamer-1.0/libgstvideoconvertscale.dylib"
+    },
+    {
+      "component": "GStreamer Good Plug-ins",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerGood/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerGood/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/gstreamer-1.0/libgstvideofilter.dylib",
+      "sourceSHA256": "d376b91c28de3b57f799cdc78c2459d3213099b9fee7ff1a7670c4ab34caac5b",
+      "targetPath": "wine/gstreamer/lib/gstreamer-1.0/libgstvideofilter.dylib"
+    },
+    {
+      "component": "GStreamer Bad Plug-ins",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBad/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBad/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/gstreamer-1.0/libgstvideoparsersbad.dylib",
+      "sourceSHA256": "788bd57ad5064816c25b524846a563f53e7f543e7ebc0f5eb3c7c3d2f9eac726",
+      "targetPath": "wine/gstreamer/lib/gstreamer-1.0/libgstvideoparsersbad.dylib"
+    },
+    {
+      "component": "MoltenVK",
+      "componentVersion": "1.2.9",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/GStreamer/MoltenVK/Apache-2.0.txt",
+        "Legal/GStreamer/MoltenVK/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libMoltenVK.dylib",
+      "sourceSHA256": "e50581be09547002fef15d4fa01ffd277e8726eb76969f338215770792e70eb8",
+      "targetPath": "wine/gstreamer/lib/libMoltenVK.dylib"
+    },
+    {
+      "component": "FFmpeg",
+      "componentVersion": "libavcodec-61.19.100",
+      "licenseExpression": "LGPL-2.1-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/FFmpeg/LGPL-2.1-or-later.txt",
+        "Legal/GStreamer/FFmpeg/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libavcodec.61.dylib",
+      "sourceSHA256": "a9f9e527a8c8e52872d1bb04460470eb4f6488792bc559551ee11050b46b6a43",
+      "targetPath": "wine/gstreamer/lib/libavcodec.61.dylib"
+    },
+    {
+      "component": "FFmpeg",
+      "componentVersion": "libavcodec-61.19.100",
+      "licenseExpression": "LGPL-2.1-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/FFmpeg/LGPL-2.1-or-later.txt",
+        "Legal/GStreamer/FFmpeg/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libavfilter.10.dylib",
+      "sourceSHA256": "90d4c02ce9de686850bac602585ead8e45fd279a0dc6abdee5d757b9047dc079",
+      "targetPath": "wine/gstreamer/lib/libavfilter.10.dylib"
+    },
+    {
+      "component": "FFmpeg",
+      "componentVersion": "libavcodec-61.19.100",
+      "licenseExpression": "LGPL-2.1-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/FFmpeg/LGPL-2.1-or-later.txt",
+        "Legal/GStreamer/FFmpeg/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libavformat.61.dylib",
+      "sourceSHA256": "76108d6b6dfb4d4e8246bd44425ae7ac00c3c7476d4efd68367d4c9c371e19b3",
+      "targetPath": "wine/gstreamer/lib/libavformat.61.dylib"
+    },
+    {
+      "component": "FFmpeg",
+      "componentVersion": "libavcodec-61.19.100",
+      "licenseExpression": "LGPL-2.1-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/FFmpeg/LGPL-2.1-or-later.txt",
+        "Legal/GStreamer/FFmpeg/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libavutil.59.dylib",
+      "sourceSHA256": "8804cf6072a5248670ee2fdad915d750ad5983bc5c5618224c29ebf810b26e76",
+      "targetPath": "wine/gstreamer/lib/libavutil.59.dylib"
+    },
+    {
+      "component": "bzip2",
+      "componentVersion": "1.0.8",
+      "licenseExpression": "bzip2-1.0.6",
+      "licensePaths": [
+        "Legal/GStreamer/bzip2/LICENSE",
+        "Legal/GStreamer/bzip2/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libbz2.1.dylib",
+      "sourceSHA256": "ccb51555f66825d90a4464f3d9ecf87447a88c548be881eddfbf301967ef2845",
+      "targetPath": "wine/gstreamer/lib/libbz2.1.dylib"
+    },
+    {
+      "component": "libffi",
+      "componentVersion": "3.2.9999",
+      "licenseExpression": "MIT",
+      "licensePaths": [
+        "Legal/GStreamer/libffi/LICENSE",
+        "Legal/GStreamer/libffi/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libffi.7.dylib",
+      "sourceSHA256": "eefd7bb49aeca4e73d34cd739a22a44ed88443730c0b280a84fa9062fe01b66e",
+      "targetPath": "wine/gstreamer/lib/libffi.7.dylib"
+    },
+    {
+      "component": "GLib",
+      "componentVersion": "2.82.4",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GLib/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GLib/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libgio-2.0.0.dylib",
+      "sourceSHA256": "6493ac1832ac0d8787a05a7ddb3f58223956815031c7158ada8b4d6f57c00268",
+      "targetPath": "wine/gstreamer/lib/libgio-2.0.0.dylib"
+    },
+    {
+      "component": "GLib",
+      "componentVersion": "2.82.4",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GLib/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GLib/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libglib-2.0.0.dylib",
+      "sourceSHA256": "3dad0dcb9f9804021e9c4ab1b448403e508223539b0a673144131ae494c32629",
+      "targetPath": "wine/gstreamer/lib/libglib-2.0.0.dylib"
+    },
+    {
+      "component": "GLib",
+      "componentVersion": "2.82.4",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GLib/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GLib/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libgmodule-2.0.0.dylib",
+      "sourceSHA256": "5cc973f1352b405727366ddd91d18f03577471adc4e208d0fbc56cde49c5a23b",
+      "targetPath": "wine/gstreamer/lib/libgmodule-2.0.0.dylib"
+    },
+    {
+      "component": "GLib",
+      "componentVersion": "2.82.4",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GLib/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GLib/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libgobject-2.0.0.dylib",
+      "sourceSHA256": "69085861dbb12c9f84abcea878963816148499af77c31c7a1ae04ac265555fc9",
+      "targetPath": "wine/gstreamer/lib/libgobject-2.0.0.dylib"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libgstaudio-1.0.0.dylib",
+      "sourceSHA256": "1dbafc10cb132ca0a785bbc8f00b86610bdce19209316a99301210bac47ec5df",
+      "targetPath": "wine/gstreamer/lib/libgstaudio-1.0.0.dylib"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libgstbase-1.0.0.dylib",
+      "sourceSHA256": "167b3a2da94a3cd24bc5564b18960d231e40b52b212bf3276cf88e6aa0f75d42",
+      "targetPath": "wine/gstreamer/lib/libgstbase-1.0.0.dylib"
+    },
+    {
+      "component": "GStreamer Bad Plug-ins",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBad/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBad/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libgstcodecparsers-1.0.0.dylib",
+      "sourceSHA256": "c0a2a831165a5359a32c15e4061cb8bb5ff6f8b36c5523afa540e99505c5e2d3",
+      "targetPath": "wine/gstreamer/lib/libgstcodecparsers-1.0.0.dylib"
+    },
+    {
+      "component": "GStreamer Bad Plug-ins",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBad/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBad/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libgstgl-1.0.0.dylib",
+      "sourceSHA256": "0bfe1dfd0b56710360ba9e1ed52d5fb58293a31c42fba058af4a48355fef62fb",
+      "targetPath": "wine/gstreamer/lib/libgstgl-1.0.0.dylib"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libgstpbutils-1.0.0.dylib",
+      "sourceSHA256": "48a91d7c723c9d97eafa0a340c4ca44a0ffbb35a8e756dc835d5c9ee64440289",
+      "targetPath": "wine/gstreamer/lib/libgstpbutils-1.0.0.dylib"
+    },
+    {
+      "component": "GStreamer",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamer/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamer/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libgstreamer-1.0.0.dylib",
+      "sourceSHA256": "d9c87de9db7cf392deab55e104918fa17fa0fe48704b327434f66fd17837f4d8",
+      "targetPath": "wine/gstreamer/lib/libgstreamer-1.0.0.dylib"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libgstriff-1.0.0.dylib",
+      "sourceSHA256": "5267fb378f6f34e1694dc92fd15290697e45c49fbb5456739cee7eef4d506997",
+      "targetPath": "wine/gstreamer/lib/libgstriff-1.0.0.dylib"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libgstrtp-1.0.0.dylib",
+      "sourceSHA256": "20b9da6643a5dac3e5742a162c22e59c795bfe69eff99b71933c94aee29d9864",
+      "targetPath": "wine/gstreamer/lib/libgstrtp-1.0.0.dylib"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libgstrtsp-1.0.0.dylib",
+      "sourceSHA256": "179ce9da2b6e9d7e4c03f3cbee53d056f687b649f3c8ba78d306b80418f26f2a",
+      "targetPath": "wine/gstreamer/lib/libgstrtsp-1.0.0.dylib"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libgstsdp-1.0.0.dylib",
+      "sourceSHA256": "0f05be4a7108bd0030d62672cef3ce21ca113b9bfb5c347e4824b02551441d68",
+      "targetPath": "wine/gstreamer/lib/libgstsdp-1.0.0.dylib"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libgsttag-1.0.0.dylib",
+      "sourceSHA256": "7dcdefa4d2ded37f4e907a1534ab1367bd0d42cc56e938dfce4fdd276a0df20b",
+      "targetPath": "wine/gstreamer/lib/libgsttag-1.0.0.dylib"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libgstvideo-1.0.0.dylib",
+      "sourceSHA256": "09d75b896f2317778f44dfb56a7b96d2e22106eb08b92d6dba678e567090ba1a",
+      "targetPath": "wine/gstreamer/lib/libgstvideo-1.0.0.dylib"
+    },
+    {
+      "component": "GStreamer Bad Plug-ins",
+      "componentVersion": "1.28.5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBad/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBad/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libgstvulkan-1.0.0.dylib",
+      "sourceSHA256": "1cf8d7f6a744b65233910d051295ed11295ace0ad0e674d41a33b3979664f244",
+      "targetPath": "wine/gstreamer/lib/libgstvulkan-1.0.0.dylib"
+    },
+    {
+      "component": "proxy-libintl",
+      "componentVersion": "0.4",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/proxy-libintl/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/proxy-libintl/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libintl.8.dylib",
+      "sourceSHA256": "d6506824bb269bab6c0bb85d96138c766304ac518d62afc0d3761ccc2cfc77d8",
+      "targetPath": "wine/gstreamer/lib/libintl.8.dylib"
+    },
+    {
+      "component": "ORC",
+      "componentVersion": "0.4.42",
+      "licenseExpression": "BSD-2-Clause",
+      "licensePaths": [
+        "Legal/GStreamer/ORC/COPYING",
+        "Legal/GStreamer/ORC/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/liborc-0.4.0.dylib",
+      "sourceSHA256": "57eefd196c7d16ed83adee4956b917de03306b64313623f32ac7582510984d52",
+      "targetPath": "wine/gstreamer/lib/liborc-0.4.0.dylib"
+    },
+    {
+      "component": "PCRE2",
+      "componentVersion": "10.42",
+      "licenseExpression": "BSD-3-Clause",
+      "licensePaths": [
+        "Legal/GStreamer/PCRE2/LICENCE",
+        "Legal/GStreamer/PCRE2/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libpcre2-8.0.dylib",
+      "sourceSHA256": "0ab149dcf90556ffe7721932f53cec2f98e49ee46f83b53ef6a11550e012d9c4",
+      "targetPath": "wine/gstreamer/lib/libpcre2-8.0.dylib"
+    },
+    {
+      "component": "FFmpeg",
+      "componentVersion": "libavcodec-61.19.100",
+      "licenseExpression": "LGPL-2.1-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/FFmpeg/LGPL-2.1-or-later.txt",
+        "Legal/GStreamer/FFmpeg/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libswresample.5.dylib",
+      "sourceSHA256": "fb955d0d222b0a0943dfafa2b7ed9454c10c66658847a8141dbefee869cdf71b",
+      "targetPath": "wine/gstreamer/lib/libswresample.5.dylib"
+    },
+    {
+      "component": "FFmpeg",
+      "componentVersion": "libavcodec-61.19.100",
+      "licenseExpression": "LGPL-2.1-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/FFmpeg/LGPL-2.1-or-later.txt",
+        "Legal/GStreamer/FFmpeg/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libswscale.8.dylib",
+      "sourceSHA256": "eb17b62cb2ee3c59919acdfd71413e4aa68657a747a12ddcd29ed5f44c87016d",
+      "targetPath": "wine/gstreamer/lib/libswscale.8.dylib"
+    },
+    {
+      "component": "zlib",
+      "componentVersion": "1.2.11",
+      "licenseExpression": "Zlib",
+      "licensePaths": [
+        "Legal/GStreamer/zlib/README",
+        "Legal/GStreamer/zlib/README-LICENSE-INFO.txt"
+      ],
+      "sourcePath": "lib/libz.1.dylib",
+      "sourceSHA256": "9f99d8b3926760c6701188b0df7eac2ba9724003fdcd681997ed5683db2b8f35",
+      "targetPath": "wine/gstreamer/lib/libz.1.dylib"
+    }
+  ],
+  "licenses": [
+    {
+      "component": "FFmpeg",
+      "componentVersion": "libavcodec-61.19.100",
+      "sourcePath": "share/licenses/ffmpeg/LGPL-2.1-or-later.txt",
+      "sourceSHA256": "dc626520dcd53a22f727af3ee42c770e56c97a64fe3adb063799d8ab032fe551",
+      "targetPath": "Legal/GStreamer/FFmpeg/LGPL-2.1-or-later.txt"
+    },
+    {
+      "component": "FFmpeg",
+      "componentVersion": "libavcodec-61.19.100",
+      "sourcePath": "share/licenses/ffmpeg/README-LICENSE-INFO.txt",
+      "sourceSHA256": "75bd999907c110691ac5d5c8116fc9428c890e7a6ce881fb424e3b8d583e8f5c",
+      "targetPath": "Legal/GStreamer/FFmpeg/README-LICENSE-INFO.txt"
+    },
+    {
+      "component": "GLib",
+      "componentVersion": "2.82.4",
+      "sourcePath": "share/licenses/glib/LGPL-2.0-or-later.txt",
+      "sourceSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
+      "targetPath": "Legal/GStreamer/GLib/LGPL-2.0-or-later.txt"
+    },
+    {
+      "component": "GLib",
+      "componentVersion": "2.82.4",
+      "sourcePath": "share/licenses/glib/README-LICENSE-INFO.txt",
+      "sourceSHA256": "1b0ef316ea0204d4920b2695796f34683d3338a07a4db4d8597402ee54e83df7",
+      "targetPath": "Legal/GStreamer/GLib/README-LICENSE-INFO.txt"
+    },
+    {
+      "component": "GStreamer",
+      "componentVersion": "1.28.5",
+      "sourcePath": "share/licenses/gstreamer-1.0/LGPL-2.0-or-later.txt",
+      "sourceSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
+      "targetPath": "Legal/GStreamer/GStreamer/LGPL-2.0-or-later.txt"
+    },
+    {
+      "component": "GStreamer",
+      "componentVersion": "1.28.5",
+      "sourcePath": "share/licenses/gstreamer-1.0/README-LICENSE-INFO.txt",
+      "sourceSHA256": "1b0ef316ea0204d4920b2695796f34683d3338a07a4db4d8597402ee54e83df7",
+      "targetPath": "Legal/GStreamer/GStreamer/README-LICENSE-INFO.txt"
+    },
+    {
+      "component": "GStreamer Bad Plug-ins",
+      "componentVersion": "1.28.5",
+      "sourcePath": "share/licenses/gst-plugins-bad-1.0/LGPL-2.0-or-later.txt",
+      "sourceSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
+      "targetPath": "Legal/GStreamer/GStreamerBad/LGPL-2.0-or-later.txt"
+    },
+    {
+      "component": "GStreamer Bad Plug-ins",
+      "componentVersion": "1.28.5",
+      "sourcePath": "share/licenses/gst-plugins-bad-1.0/README-LICENSE-INFO.txt",
+      "sourceSHA256": "cc77d75df35ab070d2544e78502038912fe6b38b342995d3df9c1d376cfcae3c",
+      "targetPath": "Legal/GStreamer/GStreamerBad/README-LICENSE-INFO.txt"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "componentVersion": "1.28.5",
+      "sourcePath": "share/licenses/gst-plugins-base-1.0/LGPL-2.0-or-later.txt",
+      "sourceSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
+      "targetPath": "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "componentVersion": "1.28.5",
+      "sourcePath": "share/licenses/gst-plugins-base-1.0/README-LICENSE-INFO.txt",
+      "sourceSHA256": "1b0ef316ea0204d4920b2695796f34683d3338a07a4db4d8597402ee54e83df7",
+      "targetPath": "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+    },
+    {
+      "component": "GStreamer Good Plug-ins",
+      "componentVersion": "1.28.5",
+      "sourcePath": "share/licenses/gstreamer-1.0/LGPL-2.0-or-later.txt",
+      "sourceSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
+      "targetPath": "Legal/GStreamer/GStreamerGood/LGPL-2.0-or-later.txt"
+    },
+    {
+      "component": "GStreamer Good Plug-ins",
+      "componentVersion": "1.28.5",
+      "sourcePath": "share/licenses/gstreamer-1.0/README-LICENSE-INFO.txt",
+      "sourceSHA256": "1b0ef316ea0204d4920b2695796f34683d3338a07a4db4d8597402ee54e83df7",
+      "targetPath": "Legal/GStreamer/GStreamerGood/README-LICENSE-INFO.txt"
+    },
+    {
+      "component": "GStreamer libav",
+      "componentVersion": "1.28.5",
+      "sourcePath": "share/licenses/gstreamer-1.0/LGPL-2.0-or-later.txt",
+      "sourceSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
+      "targetPath": "Legal/GStreamer/GStreamerLibav/LGPL-2.0-or-later.txt"
+    },
+    {
+      "component": "GStreamer libav",
+      "componentVersion": "1.28.5",
+      "sourcePath": "share/licenses/gstreamer-1.0/README-LICENSE-INFO.txt",
+      "sourceSHA256": "1b0ef316ea0204d4920b2695796f34683d3338a07a4db4d8597402ee54e83df7",
+      "targetPath": "Legal/GStreamer/GStreamerLibav/README-LICENSE-INFO.txt"
+    },
+    {
+      "component": "GStreamer Ugly Plug-ins",
+      "componentVersion": "1.28.5",
+      "sourcePath": "share/licenses/gstreamer-1.0/LGPL-2.0-or-later.txt",
+      "sourceSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
+      "targetPath": "Legal/GStreamer/GStreamerUgly/LGPL-2.0-or-later.txt"
+    },
+    {
+      "component": "GStreamer Ugly Plug-ins",
+      "componentVersion": "1.28.5",
+      "sourcePath": "share/licenses/gstreamer-1.0/README-LICENSE-INFO.txt",
+      "sourceSHA256": "1b0ef316ea0204d4920b2695796f34683d3338a07a4db4d8597402ee54e83df7",
+      "targetPath": "Legal/GStreamer/GStreamerUgly/README-LICENSE-INFO.txt"
+    },
+    {
+      "component": "MoltenVK",
+      "componentVersion": "1.2.9",
+      "sourcePath": "share/licenses/moltenvk/Apache-2.0.txt",
+      "sourceSHA256": "eb7e9ab9690124c5c9f42bdc81383d886a3dede26345b6ed15bbad7caf81f7ea",
+      "targetPath": "Legal/GStreamer/MoltenVK/Apache-2.0.txt"
+    },
+    {
+      "component": "MoltenVK",
+      "componentVersion": "1.2.9",
+      "sourcePath": "share/licenses/moltenvk/README-LICENSE-INFO.txt",
+      "sourceSHA256": "2ec8c7b80d2143ae48f48e5a583b07616d756bab3628288c5f4f3547ad086e7a",
+      "targetPath": "Legal/GStreamer/MoltenVK/README-LICENSE-INFO.txt"
+    },
+    {
+      "component": "ORC",
+      "componentVersion": "0.4.42",
+      "sourcePath": "share/licenses/orc/COPYING",
+      "sourceSHA256": "4f5dabb1b44bb6fc5cd53820b1f103147ad61b395a57903991325bd1b85d97bf",
+      "targetPath": "Legal/GStreamer/ORC/COPYING"
+    },
+    {
+      "component": "ORC",
+      "componentVersion": "0.4.42",
+      "sourcePath": "share/licenses/orc/README-LICENSE-INFO.txt",
+      "sourceSHA256": "31079dc29805c57b4fa213876b1febecc823c5177ae8f442e4e91b64bcc179c1",
+      "targetPath": "Legal/GStreamer/ORC/README-LICENSE-INFO.txt"
+    },
+    {
+      "component": "PCRE2",
+      "componentVersion": "10.42",
+      "sourcePath": "share/licenses/pcre2/LICENCE",
+      "sourceSHA256": "87d884eceb7fc54611470ce9f74280d28612b0c877adfc767e9676892a638987",
+      "targetPath": "Legal/GStreamer/PCRE2/LICENCE"
+    },
+    {
+      "component": "PCRE2",
+      "componentVersion": "10.42",
+      "sourcePath": "share/licenses/pcre2/README-LICENSE-INFO.txt",
+      "sourceSHA256": "1bf7a56504fe859fd22d303b26364e19f4b830c3739025f7d262e4eda677db1b",
+      "targetPath": "Legal/GStreamer/PCRE2/README-LICENSE-INFO.txt"
+    },
+    {
+      "component": "bzip2",
+      "componentVersion": "1.0.8",
+      "sourcePath": "share/licenses/bzip2/LICENSE",
+      "sourceSHA256": "c6dbbf828498be844a89eaa3b84adbab3199e342eb5cb2ed2f0d4ba7ec0f38a3",
+      "targetPath": "Legal/GStreamer/bzip2/LICENSE"
+    },
+    {
+      "component": "bzip2",
+      "componentVersion": "1.0.8",
+      "sourcePath": "share/licenses/bzip2/README-LICENSE-INFO.txt",
+      "sourceSHA256": "7ac1e4ca33b090317a3866f1c49620a74f6ed94d52618f03abc48c280b40cc74",
+      "targetPath": "Legal/GStreamer/bzip2/README-LICENSE-INFO.txt"
+    },
+    {
+      "component": "libffi",
+      "componentVersion": "3.2.9999",
+      "sourcePath": "share/licenses/libffi/LICENSE",
+      "sourceSHA256": "0f4d7a0bfb83c37465d42dc305f124189196cc0cc2cc8d6f8461103682aebbc5",
+      "targetPath": "Legal/GStreamer/libffi/LICENSE"
+    },
+    {
+      "component": "libffi",
+      "componentVersion": "3.2.9999",
+      "sourcePath": "share/licenses/libffi/README-LICENSE-INFO.txt",
+      "sourceSHA256": "7ac1e4ca33b090317a3866f1c49620a74f6ed94d52618f03abc48c280b40cc74",
+      "targetPath": "Legal/GStreamer/libffi/README-LICENSE-INFO.txt"
+    },
+    {
+      "component": "proxy-libintl",
+      "componentVersion": "0.4",
+      "sourcePath": "share/licenses/proxy-libintl/LGPL-2.0-or-later.txt",
+      "sourceSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
+      "targetPath": "Legal/GStreamer/proxy-libintl/LGPL-2.0-or-later.txt"
+    },
+    {
+      "component": "proxy-libintl",
+      "componentVersion": "0.4",
+      "sourcePath": "share/licenses/proxy-libintl/README-LICENSE-INFO.txt",
+      "sourceSHA256": "1b0ef316ea0204d4920b2695796f34683d3338a07a4db4d8597402ee54e83df7",
+      "targetPath": "Legal/GStreamer/proxy-libintl/README-LICENSE-INFO.txt"
+    },
+    {
+      "component": "zlib",
+      "componentVersion": "1.2.11",
+      "sourcePath": "share/licenses/zlib/README",
+      "sourceSHA256": "d106dcdb2a0b3087cb3a2380b9f00a0bbadc7eb835cd80408f94a2d78d69727d",
+      "targetPath": "Legal/GStreamer/zlib/README"
+    },
+    {
+      "component": "zlib",
+      "componentVersion": "1.2.11",
+      "sourcePath": "share/licenses/zlib/README-LICENSE-INFO.txt",
+      "sourceSHA256": "9f74ad178e7fc29c452876b139dfca84ee1ee0442f31065b0c439ea24bed4a2c",
+      "targetPath": "Legal/GStreamer/zlib/README-LICENSE-INFO.txt"
+    }
+  ],
+  "provider": "gstreamer-official-macos-universal-sdk",
+  "releasePackages": [
+    {
+      "name": "gstreamer-1.0-1.28.5-universal.pkg",
+      "sha256": "0a8fc7a1cf8d7bac833ca0ebe2fd196a199c2465e810cd5b1e4b4f720c258f43"
+    },
+    {
+      "name": "gstreamer-1.0-devel-1.28.5-universal.pkg",
+      "sha256": "6f7b55e8fb86dcc615c9cae46b79b7785851e5c77f79a938648a81dfa2603729"
+    }
+  ],
+  "schemaVersion": 1,
+  "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+  "version": "1.28.5"
+}

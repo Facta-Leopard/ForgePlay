@@ -42,6 +42,12 @@ SPDX-FileCopyrightText: 2026 Facta-Leopard
 SPDX-License-Identifier: GPL-3.0-only
 ```
 
+경로별 라이선스 지정은 기계 판독 가능한
+`GAME_MODE_FILE_LICENSES.json`에도 기록한다. 두 Wine 패치는 현재
+Runtime의 버전 일치 해시 입력이므로 패치 바이트를 바꾸지 않는다.
+대신 그 패치 사본 전체의 `GPL-3.0-only` 전환 고지를 위 외부
+매니페스트에 기록한다.
+
 ## 3. GPL 대상: 혼합 Swift 파일의 Game Mode 고유 코드
 
 다음 파일은 일반 앱 책임과 Game Mode 책임이 섞여 있다. 이 문서가
@@ -90,6 +96,10 @@ GPL 대상으로 지정하는 것은 파일의 모든 일반 코드가 아니라
 경계가 사라질 수 있다. 각 바이너리 릴리스는 확정 커밋의 심볼 목록과
 파일별 고지로 이 범위를 고정해야 한다.
 
+혼합 파일의 선언 경계는 `GAME_MODE_SYMBOL_MANIFEST.md`에 고정한다.
+그 매니페스트를 포함하는 릴리스 태그와 커밋이 실제 배포 소스 트리와
+매니페스트를 결합한다.
+
 ## 4. GPL 대상: GameModeProcessHost
 
 현재 별도 애플리케이션 타깃으로 빌드되는 다음 범위를
@@ -102,6 +112,7 @@ GPL 대상으로 지정하는 것은 파일의 모든 일반 코드가 아니라
 - `Config/ForgePlayGameModeProcessHostAppStore.xcconfig`
 - `Config/ForgePlayGameModeProcessHostDistribution.xcconfig`
 - `Scripts/prepare-game-mode-host-build-identity.sh`
+- `Scripts/verify-game-mode-source-licenses.py`
 - `Scripts/tests/test-wine-game-mode-process-host-routing.sh`
 
 ### Wine 유래 부분
@@ -277,7 +288,8 @@ ForgePlay 독자 구현의 경계를 기록하고 있다. 이 기록과 upstream
 이 적용 범위는 ForgePlay Game Mode의 확정 라이선스 정책이다. 공개
 바이너리 릴리스는 다음 조건을 모두 충족해야 한다.
 
-1. 확정 커밋을 기준으로 Game Mode 파일·심볼 목록을 고정한다.
+1. 확정 커밋에 Game Mode 파일 지정과 혼합 파일 심볼 매니페스트를
+   포함하고, 공개 빌드를 그 깨끗한 커밋에서 수행한다.
 2. GPL 대상 파일의 저작권·SPDX 표시와 Host·두 Wine 패치의 LGPL→GPL
    전환 고지를 일치시킨다.
 3. Wine 결합 사본의 라이선스·대응 소스 문서를 갱신한다.

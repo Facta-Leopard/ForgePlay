@@ -1,0 +1,13 @@
+// SPDX-FileCopyrightText: 2026 Facta-Leopard
+// SPDX-License-Identifier: GPL-3.0-only
+//
+// ForgePlay Game Mode
+// Original source: https://github.com/Facta-Leopard/ForgePlay
+
+#include "ForgePlayGameModeProcessHost.xcconfig"
+
+PRODUCT_BUNDLE_IDENTIFIER = $(FORGEPLAY_APP_STORE_BUNDLE_ID).game-mode-host
+FORGEPLAY_GAME_MODE_APPLICATION_GROUP = $(DEVELOPMENT_TEAM).$(FORGEPLAY_APP_STORE_BUNDLE_ID)
+FORGEPLAY_REQUIRE_GAME_MODE_PRODUCTION_IDENTITY = YES
+CODE_SIGN_ENTITLEMENTS = Native/GameModeProcessHost/GameModeProcessHost-AppStore.entitlements
+CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO

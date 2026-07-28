@@ -1,0 +1,235 @@
+diff --git a/include/forgeplay_process_journal.h b/include/forgeplay_process_journal.h
+new file mode 100644
+--- /dev/null
++++ b/include/forgeplay_process_journal.h
+@@ -0,0 +1,148 @@
++/*
++ * Project-owned Darwin process lifecycle journal for the ForgePlay runtime.
++ *
++ * The host creates an owner-private file and supplies a per-launch UUID,
++ * prefix scope, and runtime fingerprint. Wine only appends bounded,
++ * path-free records. ForgePlay revalidates each PID's executable and start
++ * identity before sending a signal.
++ */
++
++#ifndef __FORGEPLAY_PROCESS_JOURNAL_H
++#define __FORGEPLAY_PROCESS_JOURNAL_H
++
++#ifdef __APPLE__
++
++#include <errno.h>
++#include <fcntl.h>
++#include <libproc.h>
++#include <limits.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <sys/file.h>
++#include <sys/proc_info.h>
++#include <sys/stat.h>
++#include <sys/time.h>
++#include <unistd.h>
++
++#define FORGEPLAY_PROCESS_JOURNAL_MAX_BYTES (4 * 1024 * 1024)
++
++static int forgeplay_process_journal_hex_is_valid( const char *value, size_t length )
++{
++    size_t i;
++
++    if (!value || strlen( value ) != length) return 0;
++    for (i = 0; i < length; ++i)
++        if (!((value[i] >= '0' && value[i] <= '9') ||
++              (value[i] >= 'a' && value[i] <= 'f'))) return 0;
++    return 1;
++}
++
++static int forgeplay_process_journal_uuid_is_valid( const char *value )
++{
++    size_t i;
++
++    if (!value || strlen( value ) != 36) return 0;
++    for (i = 0; i < 36; ++i)
++    {
++        if (i == 8 || i == 13 || i == 18 || i == 23)
++        {
++            if (value[i] != '-') return 0;
++        }
++        else if (!((value[i] >= '0' && value[i] <= '9') ||
++                   (value[i] >= 'a' && value[i] <= 'f'))) return 0;
++    }
++    return 1;
++}
++
++static void forgeplay_record_managed_wine_process( const char *role )
++{
++    const char *evidence =
++        getenv( "FORGEPLAY_MANAGED_WINE_PROCESS_EVIDENCE_FILE" );
++    const char *run_id =
++        getenv( "FORGEPLAY_MANAGED_WINE_PROCESS_RUN_ID" );
++    const char *prefix_scope =
++        getenv( "FORGEPLAY_MANAGED_WINE_PREFIX_SCOPE" );
++    const char *runtime_fingerprint =
++        getenv( "FORGEPLAY_MANAGED_WINE_RUNTIME_FINGERPRINT" );
++    struct proc_bsdinfo process_info;
++    struct timeval recorded_at;
++    struct stat status;
++    char record[768];
++    long long recorded_at_milliseconds;
++    unsigned long long process_started_at_microseconds;
++    size_t evidence_length, offset;
++    ssize_t written;
++    int descriptor, length;
++
++    if (!role || (strcmp( role, "wine-loader" ) &&
++                  strcmp( role, "wineserver" ))) return;
++    if (!evidence || evidence[0] != '/' ||
++        (evidence_length = strnlen( evidence, PATH_MAX )) == 0 ||
++        evidence_length >= PATH_MAX ||
++        !forgeplay_process_journal_uuid_is_valid( run_id ) ||
++        !forgeplay_process_journal_hex_is_valid( prefix_scope, 64 ) ||
++        !forgeplay_process_journal_hex_is_valid( runtime_fingerprint, 64 ))
++        return;
++    if (gettimeofday( &recorded_at, NULL ) == -1 ||
++        proc_pidinfo( getpid(), PROC_PIDTBSDINFO, 0, &process_info,
++                      sizeof(process_info) ) != sizeof(process_info))
++        return;
++
++    recorded_at_milliseconds =
++        (long long)recorded_at.tv_sec * 1000 +
++        recorded_at.tv_usec / 1000;
++    process_started_at_microseconds =
++        (unsigned long long)process_info.pbi_start_tvsec * 1000000 +
++        process_info.pbi_start_tvusec;
++    length = snprintf(
++        record, sizeof(record),
++        "{\"schema_version\":1,\"producer\":\"forgeplay-wine-runtime\","
++        "\"event_code\":\"darwin_process_started\",\"role\":\"%s\","
++        "\"run_identifier\":\"%s\",\"prefix_scope\":\"%s\","
++        "\"runtime_fingerprint\":\"%s\",\"darwin_pid\":%ld,"
++        "\"recorded_at_unix_milliseconds\":%lld,"
++        "\"process_started_at_unix_microseconds\":%llu}\n",
++        role, run_id, prefix_scope, runtime_fingerprint, (long)getpid(),
++        recorded_at_milliseconds, process_started_at_microseconds );
++    if (length <= 0 || (size_t)length >= sizeof(record)) return;
++
++    descriptor = open( evidence,
++                       O_WRONLY | O_APPEND | O_CLOEXEC | O_NOFOLLOW );
++    if (descriptor == -1) return;
++    if (flock( descriptor, LOCK_EX ) == -1 ||
++        fstat( descriptor, &status ) == -1 ||
++        !S_ISREG( status.st_mode ) || status.st_nlink != 1 ||
++        status.st_uid != geteuid() ||
++        (status.st_mode & 0777) != (S_IRUSR | S_IWUSR) ||
++        status.st_size < 0 ||
++        status.st_size > FORGEPLAY_PROCESS_JOURNAL_MAX_BYTES - length)
++    {
++        flock( descriptor, LOCK_UN );
++        close( descriptor );
++        return;
++    }
++
++    offset = 0;
++    while (offset < (size_t)length)
++    {
++        written = write( descriptor, record + offset, length - offset );
++        if (written > 0) offset += written;
++        else if (written == -1 && errno == EINTR) continue;
++        else break;
++    }
++    if (offset == (size_t)length) fsync( descriptor );
++    flock( descriptor, LOCK_UN );
++    close( descriptor );
++}
++
++#else
++
++static inline void forgeplay_record_managed_wine_process( const char *role )
++{
++    (void)role;
++}
++
++#endif /* __APPLE__ */
++
++#endif /* __FORGEPLAY_PROCESS_JOURNAL_H */
+diff --git a/include/Makefile.in b/include/Makefile.in
+--- a/include/Makefile.in
++++ b/include/Makefile.in
+@@ -345,6 +345,7 @@ SOURCES = \
+ 	fileapi.h \
+ 	filter.idl \
+ 	fltdefs.h \
++	forgeplay_process_journal.h \
+ 	fontsub.h \
+ 	fusion.idl \
+ 	gameinput.idl \
+diff --git a/dlls/ntdll/unix/loader.c b/dlls/ntdll/unix/loader.c
+--- a/dlls/ntdll/unix/loader.c
++++ b/dlls/ntdll/unix/loader.c
+@@ -77,6 +77,7 @@
+ #include "winioctl.h"
+ #include "winternl.h"
+ #include "unix_private.h"
++#include "forgeplay_process_journal.h"
+ #include "wine/list.h"
+ #include "wine/debug.h"
+ 
+@@ -2321,6 +2322,7 @@ static void check_command_line( int argc, char *argv[] )
+  */
+ DECLSPEC_EXPORT void __wine_main( int argc, char *argv[] )
+ {
++    forgeplay_record_managed_wine_process( "wine-loader" );
+     forgeplay_activate_external_storage_grants( "wine" );
+ 
+     main_argc = argc;
+diff --git a/dlls/ntdll/unix/process.c b/dlls/ntdll/unix/process.c
+--- a/dlls/ntdll/unix/process.c
++++ b/dlls/ntdll/unix/process.c
+@@ -438,6 +438,18 @@ static BOOL set_forgeplay_unix_environment_variable( const WCHAR *environment,
+     SIZE_T value_length, buffer_size;
+     char *buffer;
+ 
++    /*
++     * The managed-process identity belongs to the trusted Unix launch, not to
++     * the mutable Windows environment. fork/exec already preserves these four
++     * values. Never let a child that supplies a custom Windows environment
++     * clear or rebind the journal used for termination ownership.
++     */
++    if (!strcmp( name, "FORGEPLAY_MANAGED_WINE_PROCESS_EVIDENCE_FILE" ) ||
++        !strcmp( name, "FORGEPLAY_MANAGED_WINE_PROCESS_RUN_ID" ) ||
++        !strcmp( name, "FORGEPLAY_MANAGED_WINE_PREFIX_SCOPE" ) ||
++        !strcmp( name, "FORGEPLAY_MANAGED_WINE_RUNTIME_FINGERPRINT" ))
++        return TRUE;
++
+     if (!value) return unsetenv( name ) != -1;
+     value_length = wcslen( value );
+     buffer_size = value_length * 3 + 1;
+@@ -470,6 +482,10 @@ static BOOL apply_forgeplay_steam_game_process_unix_environment(
+         "FORGEPLAY_D3DMETAL_NATIVE_THREAD_CONTEXT",
+         "FORGEPLAY_GAME_RENDERER_ROUTE_REASON",
+         "FORGEPLAY_GAME_RENDERER_ROUTE_EVIDENCE",
++        "FORGEPLAY_MANAGED_WINE_PROCESS_EVIDENCE_FILE",
++        "FORGEPLAY_MANAGED_WINE_PROCESS_RUN_ID",
++        "FORGEPLAY_MANAGED_WINE_PREFIX_SCOPE",
++        "FORGEPLAY_MANAGED_WINE_RUNTIME_FINGERPRINT",
+         "WINEDLLOVERRIDES",
+         "WINEDLLPATH",
+         "DYLD_LIBRARY_PATH",
+diff --git a/server/main.c b/server/main.c
+--- a/server/main.c
++++ b/server/main.c
+@@ -37,6 +37,7 @@
+ #include "thread.h"
+ #include "request.h"
+ #include "unicode.h"
++#include "forgeplay_process_journal.h"
+ 
+ /* command-line options */
+ int debug_level = 0;
+@@ -304,6 +305,7 @@ static void init_limits(void)
+ int main( int argc, char *argv[] )
+ {
+     setvbuf( stderr, NULL, _IOLBF, 0 );
++    forgeplay_record_managed_wine_process( "wineserver" );
+     forgeplay_activate_external_storage_grants();
+ 
+     server_argv0 = argv[0];

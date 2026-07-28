@@ -1,0 +1,1274 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		003254059776A52A5C62A639 /* CompatibilityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91F2171C97BCA11E2378273B /* CompatibilityService.swift */; };
+		0244F567E8AE26F375AF05ED /* PrefixManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79418D548EA48FF1F9DBC329 /* PrefixManager.swift */; };
+		041621D6140D53FF3200BFFC /* DeveloperAppsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 065D923295DDAFFDE2C51B1F /* DeveloperAppsView.swift */; };
+		0567FEB1C5F1B8B65A0CE4B1 /* LocalizedActionPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 425FC21C9334A652DA301EF3 /* LocalizedActionPresentation.swift */; };
+		0608955B66BA01ACA6CCE246 /* WindowsFontCompatibilityProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0AE5CB5E67F976AE29FF363 /* WindowsFontCompatibilityProfile.swift */; };
+		079BBE80D17CA2A74B64C311 /* LegalDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCA69AB20116F6D8486E88FA /* LegalDocument.swift */; };
+		0947236972203017F979D20F /* PathManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 817A95D0C612208D603E0ECA /* PathManager.swift */; };
+		0BA248E49AE42B58137F3EC6 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB3978C724508612AB7C50CF /* Localization.swift */; };
+		17309F988213987B9BCB742F /* ForgePlaySupport.md in Resources */ = {isa = PBXBuildFile; fileRef = C5E696923798EE4765DF2C2A /* ForgePlaySupport.md */; };
+		179FBF66C4046395DFAD2C80 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1A832DDCFDA475B8B6BD73FF /* Localizable.strings */; };
+		17A8AEFDCF8C9203AC7B497D /* DiagnosticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 404911F798BB545B3C050B1E /* DiagnosticsView.swift */; };
+		18FD3027BA804BAF0BB28107 /* AppNavigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D50172CA44BD54E373ED65E8 /* AppNavigation.swift */; };
+		1E06AB969C12F870DFCC7F3C /* UsageGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 746127A1ED692BFF1B5C6F29 /* UsageGuideView.swift */; };
+		1EEBA6EC65A4C58DF9782A2B /* RuntimeManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DD029A6E290F3F77515E86B /* RuntimeManifest.swift */; };
+		1F045492B77F95E0D3EE1797 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 981075223BFFC9A421D337A0 /* Assets.xcassets */; };
+		1FC86509738F1C239FE4FF29 /* CompatibilityDBPublicKey.base64 in Resources */ = {isa = PBXBuildFile; fileRef = 08398DF828BB72351479DB32 /* CompatibilityDBPublicKey.base64 */; };
+		205DE5ACE17A69699ABABB64 /* SteamGameIdentityPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C70157160DD86AA2DC814CE /* SteamGameIdentityPolicy.swift */; };
+		218A9203662636575DFEFF13 /* ForgePlayStoreConfigurationError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 048BAED7BBCD3E965BCDF6BA /* ForgePlayStoreConfigurationError.swift */; };
+		21E802921A608CE5CABB3985 /* RuntimeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CB86A9146A39EF3CAAAAEA8 /* RuntimeManager.swift */; };
+		27F9C8D3BA5A4FF1CC208B2C /* SteamLibraryScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69C40D0E0C0D37DBE20C2400 /* SteamLibraryScanner.swift */; };
+		3162C4C311B0F32018632323 /* SteamExternalStorageProcessGrant.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1F2A2758D8779CF290A8F1 /* SteamExternalStorageProcessGrant.swift */; };
+		31797459DC272F0CEBACB505 /* DomainModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6028769472755655A8F016D /* DomainModels.swift */; };
+		34211F497569E93FAB21F814 /* LICENSE.md in Resources */ = {isa = PBXBuildFile; fileRef = F84FEF10E13897B804022FFE /* LICENSE.md */; };
+		3DB7CBC46AFC9498924BF57D /* WindowsRuntimeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60E162D3520A16ADD4917DA3 /* WindowsRuntimeService.swift */; };
+		45F904EF761FB69D97DD6832 /* SteamRendererPolicyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E78752AD54DE434011A5107 /* SteamRendererPolicyManager.swift */; };
+		47ACDD531FB35A55B115CA40 /* ExternalStorageAccessBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B73447F32D1533E158AF219 /* ExternalStorageAccessBridge.m */; };
+		4C59D7DCC726DBC91D6C0129 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6A152B184FF0CA4541BA166 /* RootView.swift */; };
+		4CD9FAD27E983F4E9344369D /* VDFParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34EFBD133F4E813375D37BC3 /* VDFParser.swift */; };
+		4DEB42868594200BDDEA4269 /* SteamManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07A4C90721A1282F3DDEA875 /* SteamManager.swift */; };
+		4F7B5BEE470C1598968C8D2F /* ExternalLinkPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5F4A0EE3B68D0BBEE90C7B /* ExternalLinkPolicy.swift */; };
+		59CEE2C5F6A6B6D0CE0ED357 /* ForgePlayExternalStorageAccess.dylib in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 9DE8EAA1B59704ABB304B16D /* ForgePlayExternalStorageAccess.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		5B972F2B5A45BC2C11EBF5D3 /* SteamStorageHealthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7B75E50716A5815798C1C46 /* SteamStorageHealthService.swift */; };
+		5D7453BD100FB875780FC706 /* SteamLaunchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EE678CB941B895F15E55ED6 /* SteamLaunchView.swift */; };
+		635C2F693E8F45E5FD7AFC27 /* LogRetentionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4412B268F960404E49768BA /* LogRetentionService.swift */; };
+		667911490A5A2DBEED1931B7 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF5B0CEAD133538555C1D41D /* DashboardView.swift */; };
+		67BBD22FB83FD72C95D33C99 /* GameModeHostCapabilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FE726F4E266791FB425FA49 /* GameModeHostCapabilityTests.swift */; };
+		68FE2BCDD6F1A00298D8C8A8 /* ManagedStorageLocationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B96EBCF8381CFF52E9F255F /* ManagedStorageLocationView.swift */; };
+		6ADDC54DB23FAFA663AA5D21 /* SecurityScopedBookmarkPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 618672417B38CF57EBEFC55F /* SecurityScopedBookmarkPolicy.swift */; };
+		721DB54BF6FBA9759125F5A6 /* GameModeLaunchRequestStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E856F3E5DC5A915BBBA2B1EE /* GameModeLaunchRequestStore.swift */; };
+		72B6B59069F77C687D75CE84 /* RuleEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03D89B4AAC2DC246D0111832 /* RuleEngine.swift */; };
+		74A3F69370E2522DFBC22D28 /* SteamStorageHealthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18C0FEA73294D5A2A87A6FD0 /* SteamStorageHealthView.swift */; };
+		7E691482BA846E31D9FE836A /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9A075AEA710DB35DADB951E /* Components.swift */; };
+		80C15BEB7604C6CC6563C4E0 /* SteamPrefixState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D97EC5CFA4A07BB097685C2E /* SteamPrefixState.swift */; };
+		824626F5C3FB8A555F3C48F4 /* ForgePlayThirdPartyNotices.md in Resources */ = {isa = PBXBuildFile; fileRef = 87FAE01C78FE824351FCC14B /* ForgePlayThirdPartyNotices.md */; };
+		8501C08A484612AB787B3A74 /* ForgePlayApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41A1EE165176095533E2366 /* ForgePlayApp.swift */; };
+		857707C4D7B04DCAFCF69B3E /* GameModeProcessHost.app in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = BD91E850C69673DD5E5090DE /* GameModeProcessHost.app */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		85F0E185974C68239A770D1F /* DebugLaunchOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39D562194C9799CE03417B51 /* DebugLaunchOptions.swift */; };
+		88C556B64F57D8AD570680A7 /* LLMService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 269FFA96EA7A0D8AEE560DF7 /* LLMService.swift */; };
+		8A9DA13C35870446926CF5B3 /* AutoFixService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 771832A63867488656309B0C /* AutoFixService.swift */; };
+		8B66121F5E75957B1734B6B3 /* GameModeEvidence.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6B0E72BF541672A584886B4 /* GameModeEvidence.swift */; };
+		8C1F6D2ADB1A7451FEC3F625 /* DiagnosticEnvironmentSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 291214E830B6BED6FD61CEE1 /* DiagnosticEnvironmentSnapshot.swift */; };
+		9552A8DD28B7E440C9C45532 /* GameModeHostCapability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 596430AFFF1D3412F3342718 /* GameModeHostCapability.swift */; };
+		95918A3617840FD8B2D61AFE /* SteamClientCompatibilityProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 418BC36F8D3828493209A7E0 /* SteamClientCompatibilityProfile.swift */; };
+		96C96F2CD082004963F94E3B /* ForgePlayLicenseNotice.md in Resources */ = {isa = PBXBuildFile; fileRef = 19F631558B2DC731C0E8B672 /* ForgePlayLicenseNotice.md */; };
+		96E2B6EF9CE3F47F5103BCD8 /* SteamLibraryManifestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0755194EE5E84629D6A615BE /* SteamLibraryManifestSupport.swift */; };
+		98160D84EBA82070430865F3 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CB832F5B7DCA9C560D4A8DD /* Theme.swift */; };
+		991D6D2B3C57939C8815D056 /* ProcessDiagnosticEvidence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BE5EA947F2DBA5A0C09639E /* ProcessDiagnosticEvidence.swift */; };
+		9BBF9219B707AC0FA33CF8F1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8205F7F16EDDA75DB7A1A077 /* Foundation.framework */; };
+		9C4899C770115EFB6A3C98D4 /* SystemCheckService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DAD5DCAC1E1F6FCEFCA865 /* SystemCheckService.swift */; };
+		9D471F1D085110A2752E2C3B /* ForgePlayPrivacy.md in Resources */ = {isa = PBXBuildFile; fileRef = C75FA6F855C18ABFEFCF9CC3 /* ForgePlayPrivacy.md */; };
+		9D69E1DC199DF4D8AE90EB67 /* SteamPrefixProcessSupervisor.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFFB8D61F9601FC74649743C /* SteamPrefixProcessSupervisor.swift */; };
+		9E7815996F98A581E00D08F9 /* ExternalStorageAccessBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = D4E4E67C9CC3ECC90708974C /* ExternalStorageAccessBridge.h */; };
+		A14235C34979594301EE1A37 /* HallOfSupportersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7721FC85E9DED275B476DD21 /* HallOfSupportersView.swift */; };
+		A61BB969762BDAA12AAF194C /* LogTextReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D27C2D3DB5412597969ECBE0 /* LogTextReader.swift */; };
+		AB68780D832C065883AFF379 /* BoundedProcessExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5507BCFA57F156703F37CB58 /* BoundedProcessExecutor.swift */; };
+		AD87A4842D6696B886EBCBEC /* ManagedStorageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA0C2B94205253056E0CD90 /* ManagedStorageService.swift */; };
+		ADDB4B4A2D14587704727FEB /* AppServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5F7D13C744CF84C22ACBE1A /* AppServices.swift */; };
+		AF19B94F56521062D1C699FF /* PrefixExecutionLease.m in Sources */ = {isa = PBXBuildFile; fileRef = F0AF83C735F33DFD4C6E2D0A /* PrefixExecutionLease.m */; };
+		B0A91511BD11D19B6A9A1DD9 /* GameModeApplicationGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = 860D7BA5CC4E5362A2322FF4 /* GameModeApplicationGroup.m */; };
+		B0D365A038B259BE3FC3E037 /* ManagedRootOperationLease.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37E84A17F55206DF3ED7849C /* ManagedRootOperationLease.swift */; };
+		B284BE7A3BB7319350E81BB1 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 866AA33F8E9B0B16B39435B6 /* AppState.swift */; };
+		B2DE42C7A7ECE6E10F45BED2 /* SteamServiceModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAE6208280F872DF54F46503 /* SteamServiceModels.swift */; };
+		B367360A06E6AD5736C0D57A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 0EBFA8D7554C57EF272CE5DD /* PrivacyInfo.xcprivacy */; };
+		B6B1B4A77D4CF5EFA5052F7A /* BundledWindowsRuntimePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D8DB4E7AA711B660E2603 /* BundledWindowsRuntimePolicy.swift */; };
+		B9626F86A58F65A6C30548CD /* GameModeRuntimeIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = 01E8F2ED658E60E73BF5544D /* GameModeRuntimeIdentity.m */; };
+		B98BEA77A41D83E439ED428D /* PersistenceModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13A575EC8C62BCC5C0B84FA /* PersistenceModels.swift */; };
+		BD70E358D7222026A747B752 /* SteamLaunchRecordLifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBD291DAB254186833D413C /* SteamLaunchRecordLifecycle.swift */; };
+		C10C186513856B11E0B6E5CA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 981075223BFFC9A421D337A0 /* Assets.xcassets */; };
+		C1C6828472A4A94A97176C35 /* SafeProcessRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C9E308407F203B584F90F7 /* SafeProcessRunner.swift */; };
+		C20E8211A66EE48130661F97 /* SetupResetService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFEE68EE2AAA7EEEC225ECDA /* SetupResetService.swift */; };
+		C3E4DB2783109FFE2FE78369 /* SupportBundleService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BF2CE282027039F3BC464B9 /* SupportBundleService.swift */; };
+		C6F0FC2C90AA11C6772559BE /* SteamSessionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB9914CB53CF849B15EF55FC /* SteamSessionState.swift */; };
+		CC8C3FC0F02723E50FDF80C0 /* Redactor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85BDA98DF449C695D5F65714 /* Redactor.swift */; };
+		CDFBA0CA33FB61CC71276E55 /* DeveloperAppCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6045957DB950D176A9016DC0 /* DeveloperAppCatalog.swift */; };
+		CF70140047C19CB36F0EA405 /* StartupFailureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B3268EE310C98262CFB5DF6 /* StartupFailureView.swift */; };
+		D47B7BD9152A8C4F0FCF4726 /* SteamLaunchDiagnosticsReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EA6126F9B452BB604408826 /* SteamLaunchDiagnosticsReporter.swift */; };
+		D5D3938EED2C92E453813BA1 /* GameModeInheritedExecution.m in Sources */ = {isa = PBXBuildFile; fileRef = 4656C704A77B8A348ED25283 /* GameModeInheritedExecution.m */; };
+		D6BBEAA58694217DC9A498D9 /* SetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD7174DFE097E4E4D541DB1 /* SetupView.swift */; };
+		D6BCCAA27B1184B13FB64ADC /* SupporterRecognitionCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2517BCDABB5FF058D362149F /* SupporterRecognitionCatalog.swift */; };
+		D959DADBC779BD8E06D7F54F /* SetupWorkflowCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2CC1179BA3F535A405AFF86 /* SetupWorkflowCoordinator.swift */; };
+		DA2FFFFEE0B5B2342369479F /* SteamLibraryDriveMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E311BD592E78F76E8CB18C25 /* SteamLibraryDriveMapper.swift */; };
+		DD6006C26BABB90B3E273D10 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9845AA13C12E93EE8861ED03 /* Security.framework */; };
+		DD61F2E7212B260A6748217B /* AdvancedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 874F79DB4E4F0DBF75AC06D0 /* AdvancedView.swift */; };
+		DD87CF937A0487E333038DDA /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14607EAFE1262DA179C92109 /* SettingsView.swift */; };
+		E52638BC113D8790FCF980ED /* LICENSES in Resources */ = {isa = PBXBuildFile; fileRef = F64B4D085A503C902FFA92D4 /* LICENSES */; };
+		E59EE285B16A2017C33B6AD1 /* FileSystemItemPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26DCA825D1576C3E71A15290 /* FileSystemItemPolicy.swift */; };
+		E5B55AD07757FE1C711638D6 /* SetupProgressResetCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7442FCBCFAAFF73BC804C44D /* SetupProgressResetCard.swift */; };
+		E65AE104A1AA175E73199EF1 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 0CD5140297389C3DC6CCD651 /* InfoPlist.strings */; };
+		E6A7D5D9DADF14C9151616D7 /* GameModeLaunchRequestStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4EF2E79CFDA6DDFC5A613E4 /* GameModeLaunchRequestStoreTests.swift */; };
+		EBA38FD6B76E0E1BC5357026 /* StorageMigrationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F0F71B2BBEE12FC64D109E8 /* StorageMigrationService.swift */; };
+		EED21A4294236E8329BA5379 /* steam-1245620-elden-ring.json in Resources */ = {isa = PBXBuildFile; fileRef = 89E51D161D9FB15F5833CCC9 /* steam-1245620-elden-ring.json */; };
+		F123077252838877DFEF7D27 /* SteamPrefixService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C48AF76D8E5BAF87D3FBB213 /* SteamPrefixService.swift */; };
+		F19347E252B9A6C6BB97848D /* CompatibilityDBUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2537133DB46375C57CCF65F /* CompatibilityDBUpdateService.swift */; };
+		F2C4FE4952ED273253DBDF91 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8205F7F16EDDA75DB7A1A077 /* Foundation.framework */; };
+		F2F86DAD484E761DFA9F66FE /* GameModeProcessHost.m in Sources */ = {isa = PBXBuildFile; fileRef = 1EE161C9F5A097959A0A5E17 /* GameModeProcessHost.m */; };
+		F560D99CB6D3E95A66EF4132 /* SheetHostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE4E4974A52946011E7EA20 /* SheetHostView.swift */; };
+		F9CAAE92A197133BACDC824A /* PrefixExecutionLease.swift in Sources */ = {isa = PBXBuildFile; fileRef = B56A6E4D6224C1F9798067E4 /* PrefixExecutionLease.swift */; };
+		FFEDCF371227D70DC32950E7 /* WineRuntimeCrashEventParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07148B461E5BC058E183CED6 /* WineRuntimeCrashEventParser.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		179C46EFC215DE45C3C980E0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4747D045EB3B6E9C0E201EBD /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F2F626711A1E368F5C377B9B;
+			remoteInfo = ExternalStorageAccessBridge;
+		};
+		6489A29054A616D6A42645D5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4747D045EB3B6E9C0E201EBD /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5D420AF5F318B1AA3EF76A27;
+			remoteInfo = ForgePlay;
+		};
+		8F41772913150B52F990F4B1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4747D045EB3B6E9C0E201EBD /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 67DE54CA7A1601FF11DF8C28;
+			remoteInfo = GameModeProcessHost;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		3BA84162DF434E8FF1675C69 /* Embed Dependencies */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Contents/Helpers;
+			dstSubfolderSpec = 1;
+			files = (
+				857707C4D7B04DCAFCF69B3E /* GameModeProcessHost.app in Embed Dependencies */,
+			);
+			name = "Embed Dependencies";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6F236AE648DA9DD9D3E41E52 /* Embed Dependencies */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				59CEE2C5F6A6B6D0CE0ED357 /* ForgePlayExternalStorageAccess.dylib in Embed Dependencies */,
+			);
+			name = "Embed Dependencies";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		00C401A460B24666E1A09C4C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		01E8F2ED658E60E73BF5544D /* GameModeRuntimeIdentity.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GameModeRuntimeIdentity.m; sourceTree = "<group>"; };
+		03D89B4AAC2DC246D0111832 /* RuleEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuleEngine.swift; sourceTree = "<group>"; };
+		048BAED7BBCD3E965BCDF6BA /* ForgePlayStoreConfigurationError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgePlayStoreConfigurationError.swift; sourceTree = "<group>"; };
+		065D923295DDAFFDE2C51B1F /* DeveloperAppsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeveloperAppsView.swift; sourceTree = "<group>"; };
+		07148B461E5BC058E183CED6 /* WineRuntimeCrashEventParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WineRuntimeCrashEventParser.swift; sourceTree = "<group>"; };
+		0755194EE5E84629D6A615BE /* SteamLibraryManifestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteamLibraryManifestSupport.swift; sourceTree = "<group>"; };
+		07A4C90721A1282F3DDEA875 /* SteamManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteamManager.swift; sourceTree = "<group>"; };
+		08398DF828BB72351479DB32 /* CompatibilityDBPublicKey.base64 */ = {isa = PBXFileReference; path = CompatibilityDBPublicKey.base64; sourceTree = "<group>"; };
+		0B824FAF4817165EA08148FD /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		0BE5EA947F2DBA5A0C09639E /* ProcessDiagnosticEvidence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessDiagnosticEvidence.swift; sourceTree = "<group>"; };
+		0EBFA8D7554C57EF272CE5DD /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		0F9EC42D786BE813FEEBED0B /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		0FE726F4E266791FB425FA49 /* GameModeHostCapabilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameModeHostCapabilityTests.swift; sourceTree = "<group>"; };
+		14607EAFE1262DA179C92109 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		166A61167113091D7F1F0A6D /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		167D8DB4E7AA711B660E2603 /* BundledWindowsRuntimePolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BundledWindowsRuntimePolicy.swift; sourceTree = "<group>"; };
+		18C0FEA73294D5A2A87A6FD0 /* SteamStorageHealthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteamStorageHealthView.swift; sourceTree = "<group>"; };
+		1DD029A6E290F3F77515E86B /* RuntimeManifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuntimeManifest.swift; sourceTree = "<group>"; };
+		1E78752AD54DE434011A5107 /* SteamRendererPolicyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteamRendererPolicyManager.swift; sourceTree = "<group>"; };
+		1EE161C9F5A097959A0A5E17 /* GameModeProcessHost.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GameModeProcessHost.m; sourceTree = "<group>"; };
+		2517BCDABB5FF058D362149F /* SupporterRecognitionCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupporterRecognitionCatalog.swift; sourceTree = "<group>"; };
+		269FFA96EA7A0D8AEE560DF7 /* LLMService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMService.swift; sourceTree = "<group>"; };
+		26DCA825D1576C3E71A15290 /* FileSystemItemPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSystemItemPolicy.swift; sourceTree = "<group>"; };
+		291214E830B6BED6FD61CEE1 /* DiagnosticEnvironmentSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticEnvironmentSnapshot.swift; sourceTree = "<group>"; };
+		2B73447F32D1533E158AF219 /* ExternalStorageAccessBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ExternalStorageAccessBridge.m; sourceTree = "<group>"; };
+		34EFBD133F4E813375D37BC3 /* VDFParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VDFParser.swift; sourceTree = "<group>"; };
+		37E84A17F55206DF3ED7849C /* ManagedRootOperationLease.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedRootOperationLease.swift; sourceTree = "<group>"; };
+		383749A60F7954D7F50AF24D /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = "zh-Hans"; path = "zh-Hans.lproj/ForgePlayLicenseNotice.md"; sourceTree = "<group>"; };
+		39D562194C9799CE03417B51 /* DebugLaunchOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugLaunchOptions.swift; sourceTree = "<group>"; };
+		3F0F71B2BBEE12FC64D109E8 /* StorageMigrationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageMigrationService.swift; sourceTree = "<group>"; };
+		404911F798BB545B3C050B1E /* DiagnosticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsView.swift; sourceTree = "<group>"; };
+		418BC36F8D3828493209A7E0 /* SteamClientCompatibilityProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteamClientCompatibilityProfile.swift; sourceTree = "<group>"; };
+		41F6B00FCDE5D1D0B1DBD620 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		425FC21C9334A652DA301EF3 /* LocalizedActionPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizedActionPresentation.swift; sourceTree = "<group>"; };
+		4656C704A77B8A348ED25283 /* GameModeInheritedExecution.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GameModeInheritedExecution.m; sourceTree = "<group>"; };
+		4A365386408E1E1822F42207 /* ForgePlayExternalStorageAccessBridge.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = ForgePlayExternalStorageAccessBridge.xcconfig; sourceTree = "<group>"; };
+		4B3268EE310C98262CFB5DF6 /* StartupFailureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupFailureView.swift; sourceTree = "<group>"; };
+		4CB832F5B7DCA9C560D4A8DD /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		4D4E0BE8D4F181E7CC5C169D /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		5507BCFA57F156703F37CB58 /* BoundedProcessExecutor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoundedProcessExecutor.swift; sourceTree = "<group>"; };
+		596430AFFF1D3412F3342718 /* GameModeHostCapability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameModeHostCapability.swift; sourceTree = "<group>"; };
+		5AC711365A26B6D491409CB5 /* ForgePlay.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ForgePlay.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5B96EBCF8381CFF52E9F255F /* ManagedStorageLocationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedStorageLocationView.swift; sourceTree = "<group>"; };
+		5EA6126F9B452BB604408826 /* SteamLaunchDiagnosticsReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteamLaunchDiagnosticsReporter.swift; sourceTree = "<group>"; };
+		6045957DB950D176A9016DC0 /* DeveloperAppCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeveloperAppCatalog.swift; sourceTree = "<group>"; };
+		60E162D3520A16ADD4917DA3 /* WindowsRuntimeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowsRuntimeService.swift; sourceTree = "<group>"; };
+		618672417B38CF57EBEFC55F /* SecurityScopedBookmarkPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityScopedBookmarkPolicy.swift; sourceTree = "<group>"; };
+		622B877C6B4B771B02A775F6 /* ForgePlayGameModeProcessHost.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = ForgePlayGameModeProcessHost.xcconfig; sourceTree = "<group>"; };
+		69C40D0E0C0D37DBE20C2400 /* SteamLibraryScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteamLibraryScanner.swift; sourceTree = "<group>"; };
+		6BD7174DFE097E4E4D541DB1 /* SetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
+		6D2279569A8C368AF3DCD657 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
+		6EE678CB941B895F15E55ED6 /* SteamLaunchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteamLaunchView.swift; sourceTree = "<group>"; };
+		7442FCBCFAAFF73BC804C44D /* SetupProgressResetCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupProgressResetCard.swift; sourceTree = "<group>"; };
+		746127A1ED692BFF1B5C6F29 /* UsageGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageGuideView.swift; sourceTree = "<group>"; };
+		7613D533905019CFDD57FB6B /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
+		771832A63867488656309B0C /* AutoFixService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoFixService.swift; sourceTree = "<group>"; };
+		7721FC85E9DED275B476DD21 /* HallOfSupportersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HallOfSupportersView.swift; sourceTree = "<group>"; };
+		773EB8A08BAD74768DEB086D /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = "zh-Hant"; path = "zh-Hant.lproj/ForgePlayLicenseNotice.md"; sourceTree = "<group>"; };
+		79418D548EA48FF1F9DBC329 /* PrefixManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrefixManager.swift; sourceTree = "<group>"; };
+		817A95D0C612208D603E0ECA /* PathManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathManager.swift; sourceTree = "<group>"; };
+		8205F7F16EDDA75DB7A1A077 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		85BDA98DF449C695D5F65714 /* Redactor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Redactor.swift; sourceTree = "<group>"; };
+		860D7BA5CC4E5362A2322FF4 /* GameModeApplicationGroup.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GameModeApplicationGroup.m; sourceTree = "<group>"; };
+		866AA33F8E9B0B16B39435B6 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		874F79DB4E4F0DBF75AC06D0 /* AdvancedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedView.swift; sourceTree = "<group>"; };
+		87FAE01C78FE824351FCC14B /* ForgePlayThirdPartyNotices.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ForgePlayThirdPartyNotices.md; sourceTree = "<group>"; };
+		89E51D161D9FB15F5833CCC9 /* steam-1245620-elden-ring.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "steam-1245620-elden-ring.json"; sourceTree = "<group>"; };
+		8AEDC131D9B2DAC7F97D7FE4 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		90CFC363C093F7A6F8B3A84A /* fr */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = fr; path = fr.lproj/ForgePlayLicenseNotice.md; sourceTree = "<group>"; };
+		91F2171C97BCA11E2378273B /* CompatibilityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompatibilityService.swift; sourceTree = "<group>"; };
+		954A6A751BC7E042A488CCBF /* de */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = de; path = de.lproj/ForgePlayLicenseNotice.md; sourceTree = "<group>"; };
+		97DE26529E18E7347F750356 /* es */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = es; path = es.lproj/ForgePlayLicenseNotice.md; sourceTree = "<group>"; };
+		981075223BFFC9A421D337A0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		9845AA13C12E93EE8861ED03 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		9BF2CE282027039F3BC464B9 /* SupportBundleService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportBundleService.swift; sourceTree = "<group>"; };
+		9C70157160DD86AA2DC814CE /* SteamGameIdentityPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteamGameIdentityPolicy.swift; sourceTree = "<group>"; };
+		9CB86A9146A39EF3CAAAAEA8 /* RuntimeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuntimeManager.swift; sourceTree = "<group>"; };
+		9DE8EAA1B59704ABB304B16D /* ForgePlayExternalStorageAccess.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = ForgePlayExternalStorageAccess.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		9DEE022099A1A56B2907EFE4 /* ko */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = ko; path = ko.lproj/ForgePlayLicenseNotice.md; sourceTree = "<group>"; };
+		A2CC1179BA3F535A405AFF86 /* SetupWorkflowCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupWorkflowCoordinator.swift; sourceTree = "<group>"; };
+		A35EA5CEF71DB64D58E35E85 /* ForgePlayApp.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = ForgePlayApp.xcconfig; sourceTree = "<group>"; };
+		A5D96DA63A85D8FEC47B1834 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/Localizable.strings; sourceTree = "<group>"; };
+		A5F7D13C744CF84C22ACBE1A /* AppServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppServices.swift; sourceTree = "<group>"; };
+		A7C9E308407F203B584F90F7 /* SafeProcessRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeProcessRunner.swift; sourceTree = "<group>"; };
+		A85ADDFE49F36E92C5F3A0BB /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		A9A075AEA710DB35DADB951E /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
+		B0AE5CB5E67F976AE29FF363 /* WindowsFontCompatibilityProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowsFontCompatibilityProfile.swift; sourceTree = "<group>"; };
+		B2537133DB46375C57CCF65F /* CompatibilityDBUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompatibilityDBUpdateService.swift; sourceTree = "<group>"; };
+		B4412B268F960404E49768BA /* LogRetentionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogRetentionService.swift; sourceTree = "<group>"; };
+		B56A6E4D6224C1F9798067E4 /* PrefixExecutionLease.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrefixExecutionLease.swift; sourceTree = "<group>"; };
+		B5805A3A89D23C323348862D /* ForgePlayTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ForgePlayTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B8DAD5DCAC1E1F6FCEFCA865 /* SystemCheckService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemCheckService.swift; sourceTree = "<group>"; };
+		B9494879D8C28E48994910D2 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		BB9914CB53CF849B15EF55FC /* SteamSessionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteamSessionState.swift; sourceTree = "<group>"; };
+		BD91E850C69673DD5E5090DE /* GameModeProcessHost.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GameModeProcessHost.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BE8334990C684E36A174AF79 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		BF5F4A0EE3B68D0BBEE90C7B /* ExternalLinkPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalLinkPolicy.swift; sourceTree = "<group>"; };
+		C09C7C3EAA6E678528725D45 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C13A575EC8C62BCC5C0B84FA /* PersistenceModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceModels.swift; sourceTree = "<group>"; };
+		C2F029BC5275CD51306C1080 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		C41A1EE165176095533E2366 /* ForgePlayApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgePlayApp.swift; sourceTree = "<group>"; };
+		C48AF76D8E5BAF87D3FBB213 /* SteamPrefixService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteamPrefixService.swift; sourceTree = "<group>"; };
+		C5E696923798EE4765DF2C2A /* ForgePlaySupport.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ForgePlaySupport.md; sourceTree = "<group>"; };
+		C6028769472755655A8F016D /* DomainModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DomainModels.swift; sourceTree = "<group>"; };
+		C75FA6F855C18ABFEFCF9CC3 /* ForgePlayPrivacy.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ForgePlayPrivacy.md; sourceTree = "<group>"; };
+		CE8433588838FD7185808A7A /* en */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = en; path = en.lproj/ForgePlayLicenseNotice.md; sourceTree = "<group>"; };
+		D27C2D3DB5412597969ECBE0 /* LogTextReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogTextReader.swift; sourceTree = "<group>"; };
+		D47FED26DB2412911285C1B5 /* ForgePlay.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ForgePlay.entitlements; sourceTree = "<group>"; };
+		D4E4E67C9CC3ECC90708974C /* ExternalStorageAccessBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ExternalStorageAccessBridge.h; sourceTree = "<group>"; };
+		D50172CA44BD54E373ED65E8 /* AppNavigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNavigation.swift; sourceTree = "<group>"; };
+		D6A152B184FF0CA4541BA166 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		D6B0E72BF541672A584886B4 /* GameModeEvidence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameModeEvidence.swift; sourceTree = "<group>"; };
+		D7B75E50716A5815798C1C46 /* SteamStorageHealthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteamStorageHealthService.swift; sourceTree = "<group>"; };
+		D97EC5CFA4A07BB097685C2E /* SteamPrefixState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteamPrefixState.swift; sourceTree = "<group>"; };
+		DB3978C724508612AB7C50CF /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		DCA69AB20116F6D8486E88FA /* LegalDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalDocument.swift; sourceTree = "<group>"; };
+		DDBD291DAB254186833D413C /* SteamLaunchRecordLifecycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteamLaunchRecordLifecycle.swift; sourceTree = "<group>"; };
+		DFEE68EE2AAA7EEEC225ECDA /* SetupResetService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupResetService.swift; sourceTree = "<group>"; };
+		DFFB8D61F9601FC74649743C /* SteamPrefixProcessSupervisor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteamPrefixProcessSupervisor.swift; sourceTree = "<group>"; };
+		E311BD592E78F76E8CB18C25 /* SteamLibraryDriveMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteamLibraryDriveMapper.swift; sourceTree = "<group>"; };
+		E856F3E5DC5A915BBBA2B1EE /* GameModeLaunchRequestStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameModeLaunchRequestStore.swift; sourceTree = "<group>"; };
+		E8873B00A46CCA5DD4DB8A7C /* ja */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = ja; path = ja.lproj/ForgePlayLicenseNotice.md; sourceTree = "<group>"; };
+		E93AB5EE65388C869465A5A5 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
+		EAE6208280F872DF54F46503 /* SteamServiceModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteamServiceModels.swift; sourceTree = "<group>"; };
+		EF0F48EF7419E53A74C6A3BC /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		F0AF83C735F33DFD4C6E2D0A /* PrefixExecutionLease.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PrefixExecutionLease.m; sourceTree = "<group>"; };
+		F4EF2E79CFDA6DDFC5A613E4 /* GameModeLaunchRequestStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameModeLaunchRequestStoreTests.swift; sourceTree = "<group>"; };
+		F64B4D085A503C902FFA92D4 /* LICENSES */ = {isa = PBXFileReference; lastKnownFileType = folder; path = LICENSES; sourceTree = SOURCE_ROOT; };
+		F84FEF10E13897B804022FFE /* LICENSE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = LICENSE.md; sourceTree = "<group>"; };
+		FA1F2A2758D8779CF290A8F1 /* SteamExternalStorageProcessGrant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteamExternalStorageProcessGrant.swift; sourceTree = "<group>"; };
+		FDE4E4974A52946011E7EA20 /* SheetHostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SheetHostView.swift; sourceTree = "<group>"; };
+		FF5B0CEAD133538555C1D41D /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		FFA0C2B94205253056E0CD90 /* ManagedStorageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedStorageService.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		0439DDB48A4BBF038EFD5401 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F2C4FE4952ED273253DBDF91 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		24B21B9335B93924A98D9252 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9BBF9219B707AC0FA33CF8F1 /* Foundation.framework in Frameworks */,
+				DD6006C26BABB90B3E273D10 /* Security.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2F7159D343A3539C8AF7979F /* ForgePlayTests */ = {
+			isa = PBXGroup;
+			children = (
+				0FE726F4E266791FB425FA49 /* GameModeHostCapabilityTests.swift */,
+				F4EF2E79CFDA6DDFC5A613E4 /* GameModeLaunchRequestStoreTests.swift */,
+			);
+			path = ForgePlayTests;
+			sourceTree = "<group>";
+		};
+		4029FDE75A18CF5E20B2D471 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				A35EA5CEF71DB64D58E35E85 /* ForgePlayApp.xcconfig */,
+				4A365386408E1E1822F42207 /* ForgePlayExternalStorageAccessBridge.xcconfig */,
+				622B877C6B4B771B02A775F6 /* ForgePlayGameModeProcessHost.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		485A9A1296AA36FCD64ED720 /* Legal */ = {
+			isa = PBXGroup;
+			children = (
+				C75FA6F855C18ABFEFCF9CC3 /* ForgePlayPrivacy.md */,
+				C5E696923798EE4765DF2C2A /* ForgePlaySupport.md */,
+				87FAE01C78FE824351FCC14B /* ForgePlayThirdPartyNotices.md */,
+			);
+			path = Legal;
+			sourceTree = "<group>";
+		};
+		546D2B57434C2CC92ADEF199 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				981075223BFFC9A421D337A0 /* Assets.xcassets */,
+				08398DF828BB72351479DB32 /* CompatibilityDBPublicKey.base64 */,
+				0EBFA8D7554C57EF272CE5DD /* PrivacyInfo.xcprivacy */,
+				745A75EFFCC5A69F37ADC226 /* CompatibilityDB */,
+				19F631558B2DC731C0E8B672 /* ForgePlayLicenseNotice.md */,
+				0CD5140297389C3DC6CCD651 /* InfoPlist.strings */,
+				485A9A1296AA36FCD64ED720 /* Legal */,
+				1A832DDCFDA475B8B6BD73FF /* Localizable.strings */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		5D2E2AC6C3257580AA7C6A9E /* ExternalStorageAccessBridge */ = {
+			isa = PBXGroup;
+			children = (
+				D4E4E67C9CC3ECC90708974C /* ExternalStorageAccessBridge.h */,
+				2B73447F32D1533E158AF219 /* ExternalStorageAccessBridge.m */,
+			);
+			path = ExternalStorageAccessBridge;
+			sourceTree = "<group>";
+		};
+		5DAF428AEF234688CC46F111 /* ForgePlay */ = {
+			isa = PBXGroup;
+			children = (
+				D47FED26DB2412911285C1B5 /* ForgePlay.entitlements */,
+				C41A1EE165176095533E2366 /* ForgePlayApp.swift */,
+				00C401A460B24666E1A09C4C /* Info.plist */,
+				A8D90948D8AE89B79E716FCA /* App */,
+				807232650B8B7A59FA2A39CB /* Models */,
+				B81DE068EAFFADF4F7D7063C /* Services */,
+				C4479BD328F108E7060015A0 /* UI */,
+			);
+			path = ForgePlay;
+			sourceTree = "<group>";
+		};
+		621780897C6D52188C35E018 /* recipes */ = {
+			isa = PBXGroup;
+			children = (
+				89E51D161D9FB15F5833CCC9 /* steam-1245620-elden-ring.json */,
+			);
+			path = recipes;
+			sourceTree = "<group>";
+		};
+		66D3FD7C9B45CF9737849AAD /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				8205F7F16EDDA75DB7A1A077 /* Foundation.framework */,
+				9845AA13C12E93EE8861ED03 /* Security.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		745A75EFFCC5A69F37ADC226 /* CompatibilityDB */ = {
+			isa = PBXGroup;
+			children = (
+				621780897C6D52188C35E018 /* recipes */,
+			);
+			path = CompatibilityDB;
+			sourceTree = "<group>";
+		};
+		7A83F2C072490A250A2EF8CB /* GameModeProcessHost */ = {
+			isa = PBXGroup;
+			children = (
+				860D7BA5CC4E5362A2322FF4 /* GameModeApplicationGroup.m */,
+				4656C704A77B8A348ED25283 /* GameModeInheritedExecution.m */,
+				1EE161C9F5A097959A0A5E17 /* GameModeProcessHost.m */,
+				01E8F2ED658E60E73BF5544D /* GameModeRuntimeIdentity.m */,
+				F0AF83C735F33DFD4C6E2D0A /* PrefixExecutionLease.m */,
+			);
+			path = GameModeProcessHost;
+			sourceTree = "<group>";
+		};
+		807232650B8B7A59FA2A39CB /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				6045957DB950D176A9016DC0 /* DeveloperAppCatalog.swift */,
+				C6028769472755655A8F016D /* DomainModels.swift */,
+				D6B0E72BF541672A584886B4 /* GameModeEvidence.swift */,
+				C13A575EC8C62BCC5C0B84FA /* PersistenceModels.swift */,
+				2517BCDABB5FF058D362149F /* SupporterRecognitionCatalog.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		89E1B60685751C5EAEB21A82 /* Native */ = {
+			isa = PBXGroup;
+			children = (
+				5D2E2AC6C3257580AA7C6A9E /* ExternalStorageAccessBridge */,
+				7A83F2C072490A250A2EF8CB /* GameModeProcessHost */,
+			);
+			path = Native;
+			sourceTree = "<group>";
+		};
+		8CD0D62B0EFAB2991EB25C8C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				5AC711365A26B6D491409CB5 /* ForgePlay.app */,
+				9DE8EAA1B59704ABB304B16D /* ForgePlayExternalStorageAccess.dylib */,
+				B5805A3A89D23C323348862D /* ForgePlayTests.xctest */,
+				BD91E850C69673DD5E5090DE /* GameModeProcessHost.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A0F5D22B3C572BFD5825A3ED /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				5DAF428AEF234688CC46F111 /* ForgePlay */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		A8D90948D8AE89B79E716FCA /* App */ = {
+			isa = PBXGroup;
+			children = (
+				D50172CA44BD54E373ED65E8 /* AppNavigation.swift */,
+				A5F7D13C744CF84C22ACBE1A /* AppServices.swift */,
+				866AA33F8E9B0B16B39435B6 /* AppState.swift */,
+				39D562194C9799CE03417B51 /* DebugLaunchOptions.swift */,
+				048BAED7BBCD3E965BCDF6BA /* ForgePlayStoreConfigurationError.swift */,
+				DCA69AB20116F6D8486E88FA /* LegalDocument.swift */,
+				DB3978C724508612AB7C50CF /* Localization.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		B81DE068EAFFADF4F7D7063C /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				771832A63867488656309B0C /* AutoFixService.swift */,
+				5507BCFA57F156703F37CB58 /* BoundedProcessExecutor.swift */,
+				167D8DB4E7AA711B660E2603 /* BundledWindowsRuntimePolicy.swift */,
+				B2537133DB46375C57CCF65F /* CompatibilityDBUpdateService.swift */,
+				91F2171C97BCA11E2378273B /* CompatibilityService.swift */,
+				291214E830B6BED6FD61CEE1 /* DiagnosticEnvironmentSnapshot.swift */,
+				BF5F4A0EE3B68D0BBEE90C7B /* ExternalLinkPolicy.swift */,
+				26DCA825D1576C3E71A15290 /* FileSystemItemPolicy.swift */,
+				596430AFFF1D3412F3342718 /* GameModeHostCapability.swift */,
+				E856F3E5DC5A915BBBA2B1EE /* GameModeLaunchRequestStore.swift */,
+				269FFA96EA7A0D8AEE560DF7 /* LLMService.swift */,
+				B4412B268F960404E49768BA /* LogRetentionService.swift */,
+				D27C2D3DB5412597969ECBE0 /* LogTextReader.swift */,
+				37E84A17F55206DF3ED7849C /* ManagedRootOperationLease.swift */,
+				FFA0C2B94205253056E0CD90 /* ManagedStorageService.swift */,
+				817A95D0C612208D603E0ECA /* PathManager.swift */,
+				B56A6E4D6224C1F9798067E4 /* PrefixExecutionLease.swift */,
+				79418D548EA48FF1F9DBC329 /* PrefixManager.swift */,
+				0BE5EA947F2DBA5A0C09639E /* ProcessDiagnosticEvidence.swift */,
+				85BDA98DF449C695D5F65714 /* Redactor.swift */,
+				03D89B4AAC2DC246D0111832 /* RuleEngine.swift */,
+				9CB86A9146A39EF3CAAAAEA8 /* RuntimeManager.swift */,
+				1DD029A6E290F3F77515E86B /* RuntimeManifest.swift */,
+				A7C9E308407F203B584F90F7 /* SafeProcessRunner.swift */,
+				618672417B38CF57EBEFC55F /* SecurityScopedBookmarkPolicy.swift */,
+				DFEE68EE2AAA7EEEC225ECDA /* SetupResetService.swift */,
+				A2CC1179BA3F535A405AFF86 /* SetupWorkflowCoordinator.swift */,
+				418BC36F8D3828493209A7E0 /* SteamClientCompatibilityProfile.swift */,
+				FA1F2A2758D8779CF290A8F1 /* SteamExternalStorageProcessGrant.swift */,
+				9C70157160DD86AA2DC814CE /* SteamGameIdentityPolicy.swift */,
+				5EA6126F9B452BB604408826 /* SteamLaunchDiagnosticsReporter.swift */,
+				E311BD592E78F76E8CB18C25 /* SteamLibraryDriveMapper.swift */,
+				0755194EE5E84629D6A615BE /* SteamLibraryManifestSupport.swift */,
+				69C40D0E0C0D37DBE20C2400 /* SteamLibraryScanner.swift */,
+				07A4C90721A1282F3DDEA875 /* SteamManager.swift */,
+				DFFB8D61F9601FC74649743C /* SteamPrefixProcessSupervisor.swift */,
+				C48AF76D8E5BAF87D3FBB213 /* SteamPrefixService.swift */,
+				D97EC5CFA4A07BB097685C2E /* SteamPrefixState.swift */,
+				1E78752AD54DE434011A5107 /* SteamRendererPolicyManager.swift */,
+				EAE6208280F872DF54F46503 /* SteamServiceModels.swift */,
+				BB9914CB53CF849B15EF55FC /* SteamSessionState.swift */,
+				D7B75E50716A5815798C1C46 /* SteamStorageHealthService.swift */,
+				3F0F71B2BBEE12FC64D109E8 /* StorageMigrationService.swift */,
+				9BF2CE282027039F3BC464B9 /* SupportBundleService.swift */,
+				B8DAD5DCAC1E1F6FCEFCA865 /* SystemCheckService.swift */,
+				34EFBD133F4E813375D37BC3 /* VDFParser.swift */,
+				B0AE5CB5E67F976AE29FF363 /* WindowsFontCompatibilityProfile.swift */,
+				60E162D3520A16ADD4917DA3 /* WindowsRuntimeService.swift */,
+				07148B461E5BC058E183CED6 /* WineRuntimeCrashEventParser.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		C0BDC13088B2204A1003E8F9 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				2F7159D343A3539C8AF7979F /* ForgePlayTests */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		C4479BD328F108E7060015A0 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				874F79DB4E4F0DBF75AC06D0 /* AdvancedView.swift */,
+				A9A075AEA710DB35DADB951E /* Components.swift */,
+				FF5B0CEAD133538555C1D41D /* DashboardView.swift */,
+				065D923295DDAFFDE2C51B1F /* DeveloperAppsView.swift */,
+				404911F798BB545B3C050B1E /* DiagnosticsView.swift */,
+				7721FC85E9DED275B476DD21 /* HallOfSupportersView.swift */,
+				425FC21C9334A652DA301EF3 /* LocalizedActionPresentation.swift */,
+				5B96EBCF8381CFF52E9F255F /* ManagedStorageLocationView.swift */,
+				D6A152B184FF0CA4541BA166 /* RootView.swift */,
+				14607EAFE1262DA179C92109 /* SettingsView.swift */,
+				7442FCBCFAAFF73BC804C44D /* SetupProgressResetCard.swift */,
+				6BD7174DFE097E4E4D541DB1 /* SetupView.swift */,
+				FDE4E4974A52946011E7EA20 /* SheetHostView.swift */,
+				4B3268EE310C98262CFB5DF6 /* StartupFailureView.swift */,
+				DDBD291DAB254186833D413C /* SteamLaunchRecordLifecycle.swift */,
+				6EE678CB941B895F15E55ED6 /* SteamLaunchView.swift */,
+				18C0FEA73294D5A2A87A6FD0 /* SteamStorageHealthView.swift */,
+				4CB832F5B7DCA9C560D4A8DD /* Theme.swift */,
+				746127A1ED692BFF1B5C6F29 /* UsageGuideView.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		EDBAA2774F3DF2364D420E8B = {
+			isa = PBXGroup;
+			children = (
+				F84FEF10E13897B804022FFE /* LICENSE.md */,
+				F64B4D085A503C902FFA92D4 /* LICENSES */,
+				4029FDE75A18CF5E20B2D471 /* Config */,
+				89E1B60685751C5EAEB21A82 /* Native */,
+				546D2B57434C2CC92ADEF199 /* Resources */,
+				A0F5D22B3C572BFD5825A3ED /* Sources */,
+				C0BDC13088B2204A1003E8F9 /* Tests */,
+				66D3FD7C9B45CF9737849AAD /* Frameworks */,
+				8CD0D62B0EFAB2991EB25C8C /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		CC2B25206AAC2F1A155808C2 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9E7815996F98A581E00D08F9 /* ExternalStorageAccessBridge.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		493BFB7AE2784F3EDE6CFBF8 /* ForgePlayTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EDD6419FE3A7F2EFA4C06F84 /* Build configuration list for PBXNativeTarget "ForgePlayTests" */;
+			buildPhases = (
+				E5E4D46EA6A2B667D0C4CA40 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9AD367922B697937C1F4D482 /* PBXTargetDependency */,
+			);
+			name = ForgePlayTests;
+			packageProductDependencies = (
+			);
+			productName = ForgePlayTests;
+			productReference = B5805A3A89D23C323348862D /* ForgePlayTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		5D420AF5F318B1AA3EF76A27 /* ForgePlay */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E52B2ECA056115B21C3AEDFC /* Build configuration list for PBXNativeTarget "ForgePlay" */;
+			buildPhases = (
+				8950997312409A14C90A93A7 /* Sources */,
+				E2790051E9BC9237D60D5E23 /* Resources */,
+				3BA84162DF434E8FF1675C69 /* Embed Dependencies */,
+				6F236AE648DA9DD9D3E41E52 /* Embed Dependencies */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0575EB32E82249642934A216 /* PBXTargetDependency */,
+				A14A7BD01CEDB2B3799AB671 /* PBXTargetDependency */,
+			);
+			name = ForgePlay;
+			packageProductDependencies = (
+			);
+			productName = ForgePlay;
+			productReference = 5AC711365A26B6D491409CB5 /* ForgePlay.app */;
+			productType = "com.apple.product-type.application";
+		};
+		67DE54CA7A1601FF11DF8C28 /* GameModeProcessHost */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F50AB42D658BCFBECB81E9CA /* Build configuration list for PBXNativeTarget "GameModeProcessHost" */;
+			buildPhases = (
+				B6923C2C7260C89B23A0999F /* Bind Source Runtime Identity */,
+				C60F576DDBFD865DAE583A63 /* Sources */,
+				4AB633EF1B39244CEDDA6F49 /* Resources */,
+				24B21B9335B93924A98D9252 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GameModeProcessHost;
+			packageProductDependencies = (
+			);
+			productName = GameModeProcessHost;
+			productReference = BD91E850C69673DD5E5090DE /* GameModeProcessHost.app */;
+			productType = "com.apple.product-type.application";
+		};
+		F2F626711A1E368F5C377B9B /* ExternalStorageAccessBridge */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F7FAD9A03D5A3F031B82EEF5 /* Build configuration list for PBXNativeTarget "ExternalStorageAccessBridge" */;
+			buildPhases = (
+				CC2B25206AAC2F1A155808C2 /* Headers */,
+				372FD02D595A7BABB84822D8 /* Sources */,
+				0439DDB48A4BBF038EFD5401 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ExternalStorageAccessBridge;
+			packageProductDependencies = (
+			);
+			productName = ExternalStorageAccessBridge;
+			productReference = 9DE8EAA1B59704ABB304B16D /* ForgePlayExternalStorageAccess.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		4747D045EB3B6E9C0E201EBD /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					5D420AF5F318B1AA3EF76A27 = {
+						DevelopmentTeam = "$(FORGEPLAY_DEVELOPMENT_TEAM)";
+						ProvisioningStyle = "$(FORGEPLAY_CODE_SIGN_STYLE)";
+					};
+					67DE54CA7A1601FF11DF8C28 = {
+						DevelopmentTeam = "$(FORGEPLAY_DEVELOPMENT_TEAM)";
+						ProvisioningStyle = "$(FORGEPLAY_CODE_SIGN_STYLE)";
+					};
+					F2F626711A1E368F5C377B9B = {
+						DevelopmentTeam = "$(FORGEPLAY_DEVELOPMENT_TEAM)";
+						ProvisioningStyle = "$(FORGEPLAY_CODE_SIGN_STYLE)";
+					};
+				};
+			};
+			buildConfigurationList = 0226A25F157957FCAC6EB7B2 /* Build configuration list for PBXProject "ForgePlay" */;
+			developmentRegion = ko;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				de,
+				en,
+				es,
+				fr,
+				ja,
+				ko,
+				"zh-Hans",
+				"zh-Hant",
+			);
+			mainGroup = EDBAA2774F3DF2364D420E8B;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 8CD0D62B0EFAB2991EB25C8C /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F2F626711A1E368F5C377B9B /* ExternalStorageAccessBridge */,
+				5D420AF5F318B1AA3EF76A27 /* ForgePlay */,
+				493BFB7AE2784F3EDE6CFBF8 /* ForgePlayTests */,
+				67DE54CA7A1601FF11DF8C28 /* GameModeProcessHost */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		4AB633EF1B39244CEDDA6F49 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C10C186513856B11E0B6E5CA /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E2790051E9BC9237D60D5E23 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1F045492B77F95E0D3EE1797 /* Assets.xcassets in Resources */,
+				1FC86509738F1C239FE4FF29 /* CompatibilityDBPublicKey.base64 in Resources */,
+				96C96F2CD082004963F94E3B /* ForgePlayLicenseNotice.md in Resources */,
+				9D471F1D085110A2752E2C3B /* ForgePlayPrivacy.md in Resources */,
+				17309F988213987B9BCB742F /* ForgePlaySupport.md in Resources */,
+				824626F5C3FB8A555F3C48F4 /* ForgePlayThirdPartyNotices.md in Resources */,
+				E65AE104A1AA175E73199EF1 /* InfoPlist.strings in Resources */,
+				34211F497569E93FAB21F814 /* LICENSE.md in Resources */,
+				E52638BC113D8790FCF980ED /* LICENSES in Resources */,
+				179FBF66C4046395DFAD2C80 /* Localizable.strings in Resources */,
+				B367360A06E6AD5736C0D57A /* PrivacyInfo.xcprivacy in Resources */,
+				EED21A4294236E8329BA5379 /* steam-1245620-elden-ring.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		B6923C2C7260C89B23A0999F /* Bind Source Runtime Identity */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Native/GameModeProcessHost/Info.plist",
+				"$(SRCROOT)/Resources/Runners/ForgePlayRuntime/RuntimeManifest.json",
+				"$(SRCROOT)/Resources/Runners/ForgePlayRuntime/SOURCE-AVAILABILITY.md",
+			);
+			name = "Bind Source Runtime Identity";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/GameModeBuildIdentity.generated.h",
+				"$(DERIVED_FILE_DIR)/GameModeHostEmbeddedInfo.plist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"$SRCROOT/Scripts/prepare-game-mode-host-build-identity.sh\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		372FD02D595A7BABB84822D8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				47ACDD531FB35A55B115CA40 /* ExternalStorageAccessBridge.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8950997312409A14C90A93A7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DD61F2E7212B260A6748217B /* AdvancedView.swift in Sources */,
+				18FD3027BA804BAF0BB28107 /* AppNavigation.swift in Sources */,
+				ADDB4B4A2D14587704727FEB /* AppServices.swift in Sources */,
+				B284BE7A3BB7319350E81BB1 /* AppState.swift in Sources */,
+				8A9DA13C35870446926CF5B3 /* AutoFixService.swift in Sources */,
+				AB68780D832C065883AFF379 /* BoundedProcessExecutor.swift in Sources */,
+				B6B1B4A77D4CF5EFA5052F7A /* BundledWindowsRuntimePolicy.swift in Sources */,
+				F19347E252B9A6C6BB97848D /* CompatibilityDBUpdateService.swift in Sources */,
+				003254059776A52A5C62A639 /* CompatibilityService.swift in Sources */,
+				7E691482BA846E31D9FE836A /* Components.swift in Sources */,
+				667911490A5A2DBEED1931B7 /* DashboardView.swift in Sources */,
+				85F0E185974C68239A770D1F /* DebugLaunchOptions.swift in Sources */,
+				CDFBA0CA33FB61CC71276E55 /* DeveloperAppCatalog.swift in Sources */,
+				041621D6140D53FF3200BFFC /* DeveloperAppsView.swift in Sources */,
+				8C1F6D2ADB1A7451FEC3F625 /* DiagnosticEnvironmentSnapshot.swift in Sources */,
+				17A8AEFDCF8C9203AC7B497D /* DiagnosticsView.swift in Sources */,
+				31797459DC272F0CEBACB505 /* DomainModels.swift in Sources */,
+				4F7B5BEE470C1598968C8D2F /* ExternalLinkPolicy.swift in Sources */,
+				E59EE285B16A2017C33B6AD1 /* FileSystemItemPolicy.swift in Sources */,
+				8501C08A484612AB787B3A74 /* ForgePlayApp.swift in Sources */,
+				218A9203662636575DFEFF13 /* ForgePlayStoreConfigurationError.swift in Sources */,
+				8B66121F5E75957B1734B6B3 /* GameModeEvidence.swift in Sources */,
+				9552A8DD28B7E440C9C45532 /* GameModeHostCapability.swift in Sources */,
+				721DB54BF6FBA9759125F5A6 /* GameModeLaunchRequestStore.swift in Sources */,
+				A14235C34979594301EE1A37 /* HallOfSupportersView.swift in Sources */,
+				88C556B64F57D8AD570680A7 /* LLMService.swift in Sources */,
+				079BBE80D17CA2A74B64C311 /* LegalDocument.swift in Sources */,
+				0BA248E49AE42B58137F3EC6 /* Localization.swift in Sources */,
+				0567FEB1C5F1B8B65A0CE4B1 /* LocalizedActionPresentation.swift in Sources */,
+				635C2F693E8F45E5FD7AFC27 /* LogRetentionService.swift in Sources */,
+				A61BB969762BDAA12AAF194C /* LogTextReader.swift in Sources */,
+				B0D365A038B259BE3FC3E037 /* ManagedRootOperationLease.swift in Sources */,
+				68FE2BCDD6F1A00298D8C8A8 /* ManagedStorageLocationView.swift in Sources */,
+				AD87A4842D6696B886EBCBEC /* ManagedStorageService.swift in Sources */,
+				0947236972203017F979D20F /* PathManager.swift in Sources */,
+				B98BEA77A41D83E439ED428D /* PersistenceModels.swift in Sources */,
+				F9CAAE92A197133BACDC824A /* PrefixExecutionLease.swift in Sources */,
+				0244F567E8AE26F375AF05ED /* PrefixManager.swift in Sources */,
+				991D6D2B3C57939C8815D056 /* ProcessDiagnosticEvidence.swift in Sources */,
+				CC8C3FC0F02723E50FDF80C0 /* Redactor.swift in Sources */,
+				4C59D7DCC726DBC91D6C0129 /* RootView.swift in Sources */,
+				72B6B59069F77C687D75CE84 /* RuleEngine.swift in Sources */,
+				21E802921A608CE5CABB3985 /* RuntimeManager.swift in Sources */,
+				1EEBA6EC65A4C58DF9782A2B /* RuntimeManifest.swift in Sources */,
+				C1C6828472A4A94A97176C35 /* SafeProcessRunner.swift in Sources */,
+				6ADDC54DB23FAFA663AA5D21 /* SecurityScopedBookmarkPolicy.swift in Sources */,
+				DD87CF937A0487E333038DDA /* SettingsView.swift in Sources */,
+				E5B55AD07757FE1C711638D6 /* SetupProgressResetCard.swift in Sources */,
+				C20E8211A66EE48130661F97 /* SetupResetService.swift in Sources */,
+				D6BBEAA58694217DC9A498D9 /* SetupView.swift in Sources */,
+				D959DADBC779BD8E06D7F54F /* SetupWorkflowCoordinator.swift in Sources */,
+				F560D99CB6D3E95A66EF4132 /* SheetHostView.swift in Sources */,
+				CF70140047C19CB36F0EA405 /* StartupFailureView.swift in Sources */,
+				95918A3617840FD8B2D61AFE /* SteamClientCompatibilityProfile.swift in Sources */,
+				3162C4C311B0F32018632323 /* SteamExternalStorageProcessGrant.swift in Sources */,
+				205DE5ACE17A69699ABABB64 /* SteamGameIdentityPolicy.swift in Sources */,
+				D47B7BD9152A8C4F0FCF4726 /* SteamLaunchDiagnosticsReporter.swift in Sources */,
+				BD70E358D7222026A747B752 /* SteamLaunchRecordLifecycle.swift in Sources */,
+				5D7453BD100FB875780FC706 /* SteamLaunchView.swift in Sources */,
+				DA2FFFFEE0B5B2342369479F /* SteamLibraryDriveMapper.swift in Sources */,
+				96E2B6EF9CE3F47F5103BCD8 /* SteamLibraryManifestSupport.swift in Sources */,
+				27F9C8D3BA5A4FF1CC208B2C /* SteamLibraryScanner.swift in Sources */,
+				4DEB42868594200BDDEA4269 /* SteamManager.swift in Sources */,
+				9D69E1DC199DF4D8AE90EB67 /* SteamPrefixProcessSupervisor.swift in Sources */,
+				F123077252838877DFEF7D27 /* SteamPrefixService.swift in Sources */,
+				80C15BEB7604C6CC6563C4E0 /* SteamPrefixState.swift in Sources */,
+				45F904EF761FB69D97DD6832 /* SteamRendererPolicyManager.swift in Sources */,
+				B2DE42C7A7ECE6E10F45BED2 /* SteamServiceModels.swift in Sources */,
+				C6F0FC2C90AA11C6772559BE /* SteamSessionState.swift in Sources */,
+				5B972F2B5A45BC2C11EBF5D3 /* SteamStorageHealthService.swift in Sources */,
+				74A3F69370E2522DFBC22D28 /* SteamStorageHealthView.swift in Sources */,
+				EBA38FD6B76E0E1BC5357026 /* StorageMigrationService.swift in Sources */,
+				C3E4DB2783109FFE2FE78369 /* SupportBundleService.swift in Sources */,
+				D6BCCAA27B1184B13FB64ADC /* SupporterRecognitionCatalog.swift in Sources */,
+				9C4899C770115EFB6A3C98D4 /* SystemCheckService.swift in Sources */,
+				98160D84EBA82070430865F3 /* Theme.swift in Sources */,
+				1E06AB969C12F870DFCC7F3C /* UsageGuideView.swift in Sources */,
+				4CD9FAD27E983F4E9344369D /* VDFParser.swift in Sources */,
+				0608955B66BA01ACA6CCE246 /* WindowsFontCompatibilityProfile.swift in Sources */,
+				3DB7CBC46AFC9498924BF57D /* WindowsRuntimeService.swift in Sources */,
+				FFEDCF371227D70DC32950E7 /* WineRuntimeCrashEventParser.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C60F576DDBFD865DAE583A63 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B0A91511BD11D19B6A9A1DD9 /* GameModeApplicationGroup.m in Sources */,
+				D5D3938EED2C92E453813BA1 /* GameModeInheritedExecution.m in Sources */,
+				F2F86DAD484E761DFA9F66FE /* GameModeProcessHost.m in Sources */,
+				B9626F86A58F65A6C30548CD /* GameModeRuntimeIdentity.m in Sources */,
+				AF19B94F56521062D1C699FF /* PrefixExecutionLease.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E5E4D46EA6A2B667D0C4CA40 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				67BBD22FB83FD72C95D33C99 /* GameModeHostCapabilityTests.swift in Sources */,
+				E6A7D5D9DADF14C9151616D7 /* GameModeLaunchRequestStoreTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		0575EB32E82249642934A216 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F2F626711A1E368F5C377B9B /* ExternalStorageAccessBridge */;
+			targetProxy = 179C46EFC215DE45C3C980E0 /* PBXContainerItemProxy */;
+		};
+		9AD367922B697937C1F4D482 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5D420AF5F318B1AA3EF76A27 /* ForgePlay */;
+			targetProxy = 6489A29054A616D6A42645D5 /* PBXContainerItemProxy */;
+		};
+		A14A7BD01CEDB2B3799AB671 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 67DE54CA7A1601FF11DF8C28 /* GameModeProcessHost */;
+			targetProxy = 8F41772913150B52F990F4B1 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		0CD5140297389C3DC6CCD651 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				EF0F48EF7419E53A74C6A3BC /* de */,
+				41F6B00FCDE5D1D0B1DBD620 /* en */,
+				8AEDC131D9B2DAC7F97D7FE4 /* es */,
+				0F9EC42D786BE813FEEBED0B /* fr */,
+				B9494879D8C28E48994910D2 /* ja */,
+				0B824FAF4817165EA08148FD /* ko */,
+				C2F029BC5275CD51306C1080 /* zh-Hans */,
+				A85ADDFE49F36E92C5F3A0BB /* zh-Hant */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		19F631558B2DC731C0E8B672 /* ForgePlayLicenseNotice.md */ = {
+			isa = PBXVariantGroup;
+			children = (
+				954A6A751BC7E042A488CCBF /* de */,
+				CE8433588838FD7185808A7A /* en */,
+				97DE26529E18E7347F750356 /* es */,
+				90CFC363C093F7A6F8B3A84A /* fr */,
+				E8873B00A46CCA5DD4DB8A7C /* ja */,
+				9DEE022099A1A56B2907EFE4 /* ko */,
+				383749A60F7954D7F50AF24D /* zh-Hans */,
+				773EB8A08BAD74768DEB086D /* zh-Hant */,
+			);
+			name = ForgePlayLicenseNotice.md;
+			sourceTree = "<group>";
+		};
+		1A832DDCFDA475B8B6BD73FF /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C09C7C3EAA6E678528725D45 /* de */,
+				BE8334990C684E36A174AF79 /* en */,
+				6D2279569A8C368AF3DCD657 /* es */,
+				7613D533905019CFDD57FB6B /* fr */,
+				E93AB5EE65388C869465A5A5 /* ja */,
+				A5D96DA63A85D8FEC47B1834 /* ko */,
+				4D4E0BE8D4F181E7CC5C169D /* zh-Hans */,
+				166A61167113091D7F1F0A6D /* zh-Hant */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		4BDD2D213E2E51419CC74DAD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 622B877C6B4B771B02A775F6 /* ForgePlayGameModeProcessHost.xcconfig */;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		5058839F81B477D9A8F99D5F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4A365386408E1E1822F42207 /* ForgePlayExternalStorageAccessBridge.xcconfig */;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.forgeplay.ExternalStorageAccessBridge;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		67E844EA03E7DB2B2377046B /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4A365386408E1E1822F42207 /* ForgePlayExternalStorageAccessBridge.xcconfig */;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.forgeplay.ExternalStorageAccessBridge;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		955958697FC44C7C266C6E52 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = A35EA5CEF71DB64D58E35E85 /* ForgePlayApp.xcconfig */;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Sources/ForgePlay/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		9F5E1C5F8F563340132FBD5E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.forgeplay.ForgePlayTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ForgePlay.app/Contents/MacOS/ForgePlay";
+			};
+			name = Debug;
+		};
+		B6D5D59A0A2EB539DF75B37E /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 622B877C6B4B771B02A775F6 /* ForgePlayGameModeProcessHost.xcconfig */;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		C6FB0ECEBECBC31D0A2FAD48 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		F0D2373FB0ABB830D047174D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.forgeplay.ForgePlayTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ForgePlay.app/Contents/MacOS/ForgePlay";
+			};
+			name = Release;
+		};
+		F3E2D2C4272D261B3FA05697 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = A35EA5CEF71DB64D58E35E85 /* ForgePlayApp.xcconfig */;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Sources/ForgePlay/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		FE56A5FF833904FE9DB9315F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0226A25F157957FCAC6EB7B2 /* Build configuration list for PBXProject "ForgePlay" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FE56A5FF833904FE9DB9315F /* Debug */,
+				C6FB0ECEBECBC31D0A2FAD48 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E52B2ECA056115B21C3AEDFC /* Build configuration list for PBXNativeTarget "ForgePlay" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F3E2D2C4272D261B3FA05697 /* Debug */,
+				955958697FC44C7C266C6E52 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		EDD6419FE3A7F2EFA4C06F84 /* Build configuration list for PBXNativeTarget "ForgePlayTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9F5E1C5F8F563340132FBD5E /* Debug */,
+				F0D2373FB0ABB830D047174D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F50AB42D658BCFBECB81E9CA /* Build configuration list for PBXNativeTarget "GameModeProcessHost" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4BDD2D213E2E51419CC74DAD /* Debug */,
+				B6D5D59A0A2EB539DF75B37E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F7FAD9A03D5A3F031B82EEF5 /* Build configuration list for PBXNativeTarget "ExternalStorageAccessBridge" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5058839F81B477D9A8F99D5F /* Debug */,
+				67E844EA03E7DB2B2377046B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 4747D045EB3B6E9C0E201EBD /* Project object */;
+}

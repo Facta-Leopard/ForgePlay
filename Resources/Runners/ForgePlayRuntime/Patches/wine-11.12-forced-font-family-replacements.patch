@@ -1,0 +1,217 @@
+--- a/dlls/win32u/font.c
++++ b/dlls/win32u/font.c
+@@ -821,6 +821,7 @@
+ {
+     struct gdi_font_family *family = malloc( sizeof(*family) );
+ 
++    if (!family) return NULL;
+     family->refcount = 1;
+     lstrcpynW( family->family_name, name, LF_FACESIZE );
+     if (second_name && second_name[0] && wcsicmp( name, second_name ))
+@@ -871,7 +872,8 @@
+ 
+ static const struct list *get_family_face_list( const struct gdi_font_family *family )
+ {
+-    return family->replacement ? &family->replacement->faces : &family->faces;
++    while (family->replacement) family = family->replacement;
++    return &family->faces;
+ }
+ 
+ static struct gdi_font_face *family_find_face_from_filename( struct gdi_font_family *family, const WCHAR *file_name )
+@@ -990,6 +992,71 @@
+             else if (info->Type == REG_SZ) add_family_replacement( value, data );
+         }
+         else TRACE("%s is available. Skip this replacement.\n", debugstr_w(value));
++    }
++    NtClose( hkey );
++}
++
++static BOOL force_family_replacement( const WCHAR *name, const WCHAR *replace )
++{
++    struct gdi_font_family *family, *replacement;
++
++    if (!(replacement = find_family_from_any_name( replace )))
++    {
++        TRACE( "%s is not available. Skip this forced replacement.\n", debugstr_w(replace) );
++        return FALSE;
++    }
++
++    while (replacement->replacement) replacement = replacement->replacement;
++    if (!(family = find_family_from_any_name( name )) &&
++        !(family = create_family( name, NULL ))) return FALSE;
++
++    /* Resolving the replacement to its terminal family also prevents cycles. */
++    if (family == replacement) return TRUE;
++    if (family->replacement == replacement) return TRUE;
++
++    if (family->replacement) release_family( family->replacement );
++    family->replacement = replacement;
++    replacement->refcount++;
++    TRACE( "forcing %s to use %s faces\n", debugstr_w(name),
++           debugstr_w(replacement->family_name) );
++    return TRUE;
++}
++
++/*
++ * Forced replacements deliberately differ from the standard Replacements key:
++ * an installed family with the requested name is redirected too. Since font
++ * selection always follows the family replacement pointer, private faces added
++ * to that family later cannot silently bypass the mapping.
++ */
++static void load_gdi_forced_replacements(void)
++{
++    char buffer[2048];
++    KEY_VALUE_FULL_INFORMATION *info = (KEY_VALUE_FULL_INFORMATION *)buffer;
++    HKEY hkey;
++    DWORD i = 0;
++    WCHAR value[LF_FACESIZE];
++
++    static const WCHAR forced_replacementsW[] =
++        {'F','o','r','c','e','d','R','e','p','l','a','c','e','m','e','n','t','s'};
++
++    /* @@ Wine registry key: HKCU\Software\Wine\Fonts\ForcedReplacements */
++    if (!(hkey = reg_open_key( wine_fonts_key, forced_replacementsW,
++                               sizeof(forced_replacementsW) ))) return;
++
++    while (reg_enum_value( hkey, i++, info, sizeof(buffer), value, sizeof(value) ))
++    {
++        WCHAR *data = (WCHAR *)((char *)info + info->DataOffset);
++
++        if (info->Type == REG_MULTI_SZ)
++        {
++            WCHAR *replace = data;
++            while (*replace)
++            {
++                if (force_family_replacement( value, replace )) break;
++                replace += lstrlenW(replace) + 1;
++            }
++        }
++        else if (info->Type == REG_SZ) force_family_replacement( value, data );
+     }
+     NtClose( hkey );
+ }
+@@ -6781,6 +6848,7 @@
+     reorder_font_list();
+     load_gdi_font_subst();
+     load_gdi_font_replacements();
++    load_gdi_forced_replacements();
+     load_system_links();
+     dump_gdi_font_list();
+     dump_gdi_font_subst();
+--- a/dlls/dwrite/font.c
++++ b/dlls/dwrite/font.c
+@@ -4662,7 +4662,103 @@
+     free(name);
+     RegCloseKey(hkey);
+ }
++
++static BOOL fontcollection_force_replacement(struct dwrite_fontcollection *collection,
++        const WCHAR *target_name, const WCHAR *replacement_name)
++{
++    UINT32 target_index = collection_find_family(collection, target_name);
++    UINT32 replacement_index = collection_find_family(collection, replacement_name);
++    struct dwrite_fontfamily_data *target, *replacement;
++    struct dwrite_font_data **fonts;
++    WCHAR nameW[255];
++    size_t i;
++
++    if (replacement_index == ~0u)
++        return FALSE;
++    if (target_index == ~0u)
++        return fontcollection_add_replacement(collection, target_name, replacement_name);
++    if (target_index == replacement_index)
++        return TRUE;
+ 
++    target = collection->family_data[target_index];
++    replacement = collection->family_data[replacement_index];
++    if (!replacement->count || !(fonts = calloc(replacement->count, sizeof(*fonts))))
++        return FALSE;
++
++    for (i = 0; i < replacement->count; ++i)
++        fonts[i] = addref_font_data(replacement->fonts[i]);
++
++    for (i = 0; i < target->count; ++i)
++        release_font_data(target->fonts[i]);
++    free(target->fonts);
++
++    target->fonts = fonts;
++    target->size = target->count = replacement->count;
++    target->has_normal_face = replacement->has_normal_face;
++    target->has_oblique_face = replacement->has_oblique_face;
++    target->has_italic_face = replacement->has_italic_face;
++
++    fontstrings_get_en_string(replacement->familyname, nameW, ARRAY_SIZE(nameW));
++    TRACE("forced replacement %s -> %s\n", debugstr_w(target_name), debugstr_w(nameW));
++    return TRUE;
++}
++
++/* Replace existing family slots as well as missing aliases. This is intentionally
++   opt-in and only affects system font collections. */
++static void fontcollection_add_forced_replacements(struct dwrite_fontcollection *collection)
++{
++    DWORD max_namelen, max_datalen, i = 0, type, datalen, namelen;
++    WCHAR *name;
++    void *data;
++    HKEY hkey;
++
++    if (RegOpenKeyA(HKEY_CURRENT_USER, "Software\\Wine\\Fonts\\ForcedReplacements", &hkey))
++        return;
++
++    if (RegQueryInfoKeyW(hkey, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
++            &max_namelen, &max_datalen, NULL, NULL))
++    {
++        RegCloseKey(hkey);
++        return;
++    }
++
++    max_namelen++;
++    name = malloc(max_namelen * sizeof(WCHAR));
++    data = malloc(max_datalen ? max_datalen : sizeof(WCHAR));
++    if (!name || !data)
++    {
++        free(data);
++        free(name);
++        RegCloseKey(hkey);
++        return;
++    }
++
++    datalen = max_datalen;
++    namelen = max_namelen;
++    while (RegEnumValueW(hkey, i++, name, &namelen, NULL, &type, data, &datalen) == ERROR_SUCCESS)
++    {
++        if (type == REG_MULTI_SZ)
++        {
++            WCHAR *replacement = data;
++            while (*replacement)
++            {
++                if (fontcollection_force_replacement(collection, name, replacement))
++                    break;
++                replacement += wcslen(replacement) + 1;
++            }
++        }
++        else if (type == REG_SZ)
++            fontcollection_force_replacement(collection, name, data);
++
++        datalen = max_datalen;
++        namelen = max_namelen;
++    }
++
++    free(data);
++    free(name);
++    RegCloseKey(hkey);
++}
++
+ HRESULT create_font_collection(IDWriteFactory7 *factory, IDWriteFontFileEnumerator *enumerator, IDWriteFontCollection3 **ret)
+ {
+     struct fontfile_enum {
+@@ -4844,7 +4940,10 @@
+     }
+ 
+     if (set->is_system)
++    {
+         fontcollection_add_replacements(collection);
++        fontcollection_add_forced_replacements(collection);
++    }
+ 
+     hr = IDWriteFontCollection3_QueryInterface(&collection->IDWriteFontCollection3_iface, riid, ret);
+     IDWriteFontCollection3_Release(&collection->IDWriteFontCollection3_iface);

@@ -1,0 +1,40 @@
+// SPDX-FileCopyrightText: 2026 Facta-Leopard
+// SPDX-License-Identifier: GPL-3.0-only
+//
+// ForgePlay Game Mode
+// Original source: https://github.com/Facta-Leopard/ForgePlay
+
+#include "ForgePlayDefaults.xcconfig"
+
+PRODUCT_NAME = GameModeProcessHost
+PRODUCT_BUNDLE_IDENTIFIER = $(FORGEPLAY_APP_BUNDLE_ID).game-mode-host
+INFOPLIST_FILE = Native/GameModeProcessHost/Info.plist
+CODE_SIGN_ENTITLEMENTS = Native/GameModeProcessHost/GameModeProcessHost-Development.entitlements
+GENERATE_INFOPLIST_FILE = NO
+ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon
+// This target is embedded under ForgePlay.app/Contents/Helpers. It must not
+// become a second top-level product during install or archive.
+SKIP_INSTALL = YES
+
+// The product remains Apple Silicon-only. This x86_64 target is an internal
+// Rosetta/Wine process component embedded inside the arm64 ForgePlay app.
+ARCHS = x86_64
+ONLY_ACTIVE_ARCH = NO
+GCC_PREFIX_HEADER = $(DERIVED_FILE_DIR)/GameModeBuildIdentity.generated.h
+GCC_PRECOMPILE_PREFIX_HEADER = NO
+CLANG_ENABLE_OBJC_ARC = YES
+GCC_SYMBOLS_PRIVATE_EXTERN = YES
+GCC_TREAT_WARNINGS_AS_ERRORS = YES
+OTHER_CFLAGS = $(inherited) -Wall -Wextra -Wpedantic -Wno-deprecated-declarations
+// Wine discovers wine_main_preload_info with dlsym after the host starts.
+// Xcode's application default "all" strip style removes that executable
+// export during install/archive even though the linker retained it.
+STRIP_STYLE = non-global
+// Xcode's Debug Dylib links app sources as a dylib before emitting a thin
+// launcher. This host must itself be the fixed-address main Wine loader Mach-O.
+ENABLE_DEBUG_DYLIB = NO
+LD_NO_PIE = YES
+// Application product specs force CREATE_INFOPLIST_SECTION_IN_BINARY off. Embed
+// the exact expanded identity explicitly so exec-loading Wine keeps Game Mode
+// classification on this Mach-O process.
+OTHER_LDFLAGS = $(inherited) -Wl,-image_base,0x200000000 -Wl,-no_huge -Wl,-no_fixup_chains -Wl,-segalign,0x1000 -Wl,-pagezero_size,0x1000 -Wl,-segaddr,WINE_RESERVE,0x1000 -Wl,-segaddr,WINE_TOP_DOWN,0x7ff000000000 -Wl,-headerpad_max_install_names "-Wl,-sectcreate,__TEXT,__info_plist,$(DERIVED_FILE_DIR)/GameModeHostEmbeddedInfo.plist" -Wl,-exported_symbol,_wine_main_preload_info -Wl,-rpath,@executable_path/../../../../Resources/Runners/ForgePlayRuntime/wine/lib

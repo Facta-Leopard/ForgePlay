@@ -49,12 +49,17 @@ Each binary release must accompany mixed files with a commit-specific symbol
 manifest. The scope does not purport to relicense unrelated application
 responsibilities merely because they share a file.
 
+The mixed-file declarations are fixed in
+`GAME_MODE_SYMBOL_MANIFEST.md`. The release tag and commit containing that
+manifest bind it to the exact conveyed source tree.
+
 ### GameModeProcessHost
 
 - the source, headers, property lists, entitlements, scripts, documentation,
   and provenance material in `Native/GameModeProcessHost/`
 - the three `Config/ForgePlayGameModeProcessHost*.xcconfig` files
 - `Scripts/prepare-game-mode-host-build-identity.sh`
+- `Scripts/verify-game-mode-source-licenses.py`
 - `Scripts/tests/test-wine-game-mode-process-host-routing.sh`
 
 ### Game Mode Wine patches
@@ -68,6 +73,12 @@ ForgePlay-authored covered files should carry:
 SPDX-FileCopyrightText: 2026 Facta-Leopard
 SPDX-License-Identifier: GPL-3.0-only
 ```
+
+`GAME_MODE_FILE_LICENSES.json` is the machine-readable, path-exact license
+assignment. The two content-addressed Wine patch inputs retain their
+version-matched bytes; their whole-file `GPL-3.0-only` conversion notice is
+therefore carried by that external manifest instead of being inserted into the
+patch payload.
 
 ## 3. Wine-derived Game Mode material
 
@@ -203,8 +214,8 @@ covered code is conveyed as part of one combined program.
 This scope is the final ForgePlay Game Mode license policy. A public binary
 release is permitted only after:
 
-1. the exact file and mixed-file symbol manifest is fixed to the release
-   commit;
+1. the exact file assignment and mixed-file symbol manifest are present in the
+   release commit, and the public build is made from that clean commit;
 2. all covered source notices are consistent with `GPL-3.0-only`;
 3. the LGPL-to-GPL conversion notices and Wine provenance are recorded;
 4. separately licensed third-party components remain identified under their

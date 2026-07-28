@@ -1,0 +1,214 @@
+diff --git a/dlls/winemac.drv/Makefile.in b/dlls/winemac.drv/Makefile.in
+index 576a2fbd0c5c012f2a9717d5189993afc369794a..d2be0abdfbbcf07272e9eca11ac9323d50b427ea 100644
+--- a/dlls/winemac.drv/Makefile.in
++++ b/dlls/winemac.drv/Makefile.in
+@@ -34,6 +34,7 @@ SOURCES = \
+ 	image.c \
+ 	keyboard.c \
+ 	macdrv_main.c \
++	metal_surface_contract.c \
+ 	mouse.c \
+ 	opengl.c \
+ 	surface.c \
+diff --git a/dlls/winemac.drv/cocoa_event.m b/dlls/winemac.drv/cocoa_event.m
+index 410ab4320451bbd61a8b902173a8ece42a1edbf4..1b959df3c49562338ca765bb68fe5f26676d9c59 100644
+--- a/dlls/winemac.drv/cocoa_event.m
++++ b/dlls/winemac.drv/cocoa_event.m
+@@ -535,6 +535,19 @@ void OnMainThread(dispatch_block_t block)
+ }
+ }
+ 
++/***********************************************************************
++ *              macdrv_on_main_thread
++ *
++ * C ABI adapter for native renderer clients that pass a dispatch block
++ * through the public Mac-driver function table.
++ */
++void macdrv_on_main_thread(void *opaque)
++{
++    dispatch_block_t block = (dispatch_block_t)opaque;
++
++    if (block) OnMainThread(block);
++}
++
+ 
+ /***********************************************************************
+  *              macdrv_create_event_queue
+diff --git a/dlls/winemac.drv/cocoa_window.m b/dlls/winemac.drv/cocoa_window.m
+index 6b0ab117cd12f84d1133f0dd53772449bfab7c97..06613d1446c404912dd974b18239159e739d50e9 100644
+--- a/dlls/winemac.drv/cocoa_window.m
++++ b/dlls/winemac.drv/cocoa_window.m
+@@ -3468,6 +3468,23 @@ void macdrv_destroy_cocoa_window(macdrv_window w)
+     return window.hwnd;
+ }
+ 
++/***********************************************************************
++ *              macdrv_window_get_content_view
++ *
++ * Return the root content view owned by a Cocoa window.
++ */
++macdrv_view macdrv_window_get_content_view(macdrv_window w)
++{
++    WineWindow* window = (WineWindow*)w;
++    __block WineContentView* view = nil;
++
++    OnMainThread(^{
++        view = [window contentView];
++    });
++
++    return (macdrv_view)view;
++}
++
+ /***********************************************************************
+  *              macdrv_set_cocoa_window_features
+  *
+diff --git a/dlls/winemac.drv/macdrv_cocoa.h b/dlls/winemac.drv/macdrv_cocoa.h
+index 9a91edbe8e31aaba42bb054fe242c17e1e272396..770e8c31a0ba880bbe9699e5e5356c5d41049417 100644
+--- a/dlls/winemac.drv/macdrv_cocoa.h
++++ b/dlls/winemac.drv/macdrv_cocoa.h
+@@ -496,6 +496,7 @@ extern macdrv_window macdrv_create_cocoa_window(const struct macdrv_window_featu
+         CGRect frame, void* hwnd, macdrv_event_queue queue);
+ extern void macdrv_destroy_cocoa_window(macdrv_window w);
+ extern void* macdrv_get_window_hwnd(macdrv_window w);
++extern macdrv_view macdrv_window_get_content_view(macdrv_window w);
+ extern void macdrv_set_cocoa_window_features(macdrv_window w,
+         const struct macdrv_window_features* wf);
+ extern void macdrv_set_cocoa_window_state(macdrv_window w,
+diff --git a/dlls/winemac.drv/macdrv.h b/dlls/winemac.drv/macdrv.h
+index 848961552585b9378d12a47b07c845c937063632..280c38145e8612d218484f238099936ba94a63cc 100644
+--- a/dlls/winemac.drv/macdrv.h
++++ b/dlls/winemac.drv/macdrv.h
+@@ -127,6 +127,7 @@ static inline struct macdrv_thread_data *macdrv_thread_data(void)
+ 
+ extern BOOL macdrv_ActivateKeyboardLayout(HKL hkl, UINT flags);
+ extern void macdrv_Beep(void);
++extern void macdrv_on_main_thread(void *block);
+ extern LONG macdrv_ChangeDisplaySettings(LPDEVMODEW displays, LPCWSTR primary_name, HWND hwnd, DWORD flags, LPVOID lpvoid);
+ extern LRESULT macdrv_ClipboardWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
+ extern UINT macdrv_UpdateDisplayDevices(const struct gdi_device_manager *device_manager, void *param);
+diff --git a/dlls/winemac.drv/metal_surface_contract.c b/dlls/winemac.drv/metal_surface_contract.c
+new file mode 100644
+index 0000000000000000000000000000000000000000..e071beae1c2847e3f36cb18b8b92a3f7459f0a2c
+--- /dev/null
++++ b/dlls/winemac.drv/metal_surface_contract.c
+@@ -0,0 +1,120 @@
++/*
++ * Public Metal renderer window-surface contract for the Mac driver
++ *
++ * Copyright 2026 ForgePlay contributors
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
++ */
++
++#if 0
++#pragma makedep unix
++#endif
++
++#include "config.h"
++
++#include <stddef.h>
++#include <stdlib.h>
++
++#include "macdrv.h"
++#include "ntuser.h"
++
++/*
++ * Metal renderers discover this table with dlsym().  Keep this layout stable:
++ * it is an ABI boundary, not a mirror of struct macdrv_win_data.
++ */
++struct macdrv_metal_surface_functions
++{
++    void (*init_display_devices)(BOOL);
++    void *(*get_win_data)(HWND);
++    void (*release_win_data)(void *);
++    macdrv_window (*get_cocoa_window)(HWND, BOOL);
++    macdrv_metal_device (*create_metal_device)(void);
++    void (*release_metal_device)(macdrv_metal_device);
++    macdrv_metal_view (*view_create_metal_view)(macdrv_view, macdrv_metal_device);
++    macdrv_metal_layer (*view_get_metal_layer)(macdrv_metal_view);
++    void (*view_release_metal_view)(macdrv_metal_view);
++    void (*on_main_thread)(void *);
++};
++
++/*
++ * Renderer clients only observe this four-pointer prefix.  The owner is kept
++ * after that prefix so Wine's private window-data layout remains private and
++ * can continue to evolve independently.
++ */
++struct macdrv_metal_surface_window_data
++{
++    HWND hwnd;
++    macdrv_window cocoa_window;
++    macdrv_view cocoa_view;
++    macdrv_view client_cocoa_view;
++    struct macdrv_win_data *owner;
++};
++
++C_ASSERT(offsetof(struct macdrv_metal_surface_window_data, client_cocoa_view) == 3 * sizeof(void *));
++C_ASSERT(offsetof(struct macdrv_metal_surface_functions, view_create_metal_view) == 6 * sizeof(void *));
++C_ASSERT(offsetof(struct macdrv_metal_surface_functions, view_release_metal_view) == 8 * sizeof(void *));
++
++static void metal_surface_init_display_devices(BOOL force)
++{
++    UINT32 path_count, mode_count;
++
++    if (force)
++        NtUserCallNoParam(NtUserCallNoParam_DisplayModeChanged);
++    else
++        NtUserGetDisplayConfigBufferSizes(QDC_ONLY_ACTIVE_PATHS, &path_count, &mode_count);
++}
++
++static void *metal_surface_get_win_data(HWND hwnd)
++{
++    struct macdrv_metal_surface_window_data *contract;
++    struct macdrv_win_data *data;
++
++    if (!(data = get_win_data(hwnd))) return NULL;
++    if (!(contract = calloc(1, sizeof(*contract))))
++    {
++        release_win_data(data);
++        return NULL;
++    }
++
++    contract->hwnd = data->hwnd;
++    contract->cocoa_window = data->cocoa_window;
++    contract->cocoa_view = data->cocoa_window ? macdrv_window_get_content_view(data->cocoa_window) : NULL;
++    contract->client_cocoa_view = data->client_view ? data->client_view : contract->cocoa_view;
++    contract->owner = data;
++    return contract;
++}
++
++static void metal_surface_release_win_data(void *opaque)
++{
++    struct macdrv_metal_surface_window_data *contract = opaque;
++
++    if (!contract) return;
++    release_win_data(contract->owner);
++    free(contract);
++}
++
++DECLSPEC_EXPORT const struct macdrv_metal_surface_functions macdrv_functions =
++{
++    metal_surface_init_display_devices,
++    metal_surface_get_win_data,
++    metal_surface_release_win_data,
++    macdrv_get_cocoa_window,
++    macdrv_create_metal_device,
++    macdrv_release_metal_device,
++    macdrv_view_create_metal_view,
++    macdrv_view_get_metal_layer,
++    macdrv_view_release_metal_view,
++    macdrv_on_main_thread,
++};

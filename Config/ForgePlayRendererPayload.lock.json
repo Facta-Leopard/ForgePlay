@@ -1,0 +1,66 @@
+{
+  "components": [
+    {
+      "fileCount": 22,
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "name": "d3dmetal",
+      "preservedSignatureFiles": [
+        {
+          "path": "external/D3DMetal.framework/Versions/A/_CodeSignature/CodeResources",
+          "sha256": "6a588e946d35ac02c53c0f1c62fe3b21f0e7709795f39e79c1d5afa3637a9416"
+        }
+      ],
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "treeSHA256": "08f32e5ed4d1ef8fc7ebd6117cfb7d3e50c42d24fefaccee6c9a4df937983f65",
+      "version": "4.0b1"
+    },
+    {
+      "fileCount": 4,
+      "licenseExpression": "Zlib",
+      "licensePaths": [
+        "Legal/d9vk/LICENSE"
+      ],
+      "name": "d9vk",
+      "preservedSignatureFiles": [],
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/Joshua-Ashton/d9vk",
+      "treeSHA256": "c4907b4ce6b89a0c1f2deedfda6381cab30363ca6a6b6f529e19782490ae2baf",
+      "version": "1.10.4-async"
+    },
+    {
+      "fileCount": 13,
+      "licenseExpression": "MIT",
+      "licensePaths": [
+        "Legal/dxmt/LICENSE"
+      ],
+      "name": "dxmt",
+      "preservedSignatureFiles": [],
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/3Shain/dxmt",
+      "treeSHA256": "9bfcf8dd5c52a2d095fe7beb6376258fdf6d37fa3d9180aa859762210560dc61",
+      "version": "0.61"
+    },
+    {
+      "fileCount": 12,
+      "licenseExpression": "Zlib",
+      "licensePaths": [
+        "Legal/dxvk/LICENSE"
+      ],
+      "name": "dxvk",
+      "preservedSignatureFiles": [],
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/doitsujin/dxvk",
+      "treeSHA256": "dcf2e6ec11b6fd9b1a00318ab4088d50268c3886a4b5b08b2281a8facc179433",
+      "version": "3.0"
+    }
+  ],
+  "hashAlgorithm": "forgeplay-renderer-payload-tree-v3",
+  "provenancePolicy": "official-or-upstream-artifact-only-v1",
+  "schemaVersion": 2
+}

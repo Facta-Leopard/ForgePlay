@@ -1,0 +1,241 @@
+diff --git a/dlls/ntdll/Makefile.in b/dlls/ntdll/Makefile.in
+index 9a15bc319a4fda08a9d5e678e4cec4ced959d9bc..e7d9bc49e4a7f664ca4429687693d126bf85842b 100644
+--- a/dlls/ntdll/Makefile.in
++++ b/dlls/ntdll/Makefile.in
+@@ -54,6 +54,7 @@ SOURCES = \
+ 	unix/debug.c \
+ 	unix/env.c \
+ 	unix/file.c \
++	unix/forgeplay_d3dmetal.c \
+ 	unix/loader.c \
+ 	unix/loadorder.c \
+ 	unix/process.c \
+diff --git a/dlls/ntdll/unix/forgeplay_d3dmetal.c b/dlls/ntdll/unix/forgeplay_d3dmetal.c
+new file mode 100644
+index 0000000000000000000000000000000000000000..d93795083a496fd34f825d4c9196d46142f0c6ce
+--- /dev/null
++++ b/dlls/ntdll/unix/forgeplay_d3dmetal.c
+@@ -0,0 +1,143 @@
++/*
++ * ForgePlay process-scoped D3DMetal compatibility bridge
++ *
++ * Copyright 2026 ForgePlay project
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
++ */
++
++#if 0
++#pragma makedep unix
++#endif
++
++#include "config.h"
++
++#include <dlfcn.h>
++#include <stdbool.h>
++#include <stdint.h>
++#include <stdarg.h>
++#include <stdlib.h>
++#include <string.h>
++
++#include "ntstatus.h"
++#include "windef.h"
++#include "winternl.h"
++#include "unix_private.h"
++
++#include "wine/debug.h"
++#include "wine/unixlib.h"
++
++WINE_DEFAULT_DEBUG_CHANNEL(module);
++
++typedef bool (*supports_non_native_code_regions_t)( void );
++typedef void (*register_non_native_code_region_t)( void *start, void *end );
++
++static void *d3dshared_handle;
++static register_non_native_code_region_t register_non_native_code_region;
++static BOOL activation_checked;
++
++static BOOL selector_matches( const UNICODE_STRING *main_image )
++{
++    const char *enabled = getenv( "FORGEPLAY_D3DMETAL_BRIDGE" );
++    const char *target = getenv( "FORGEPLAY_D3DMETAL_TARGET" );
++    const WCHAR *basename, *end;
++    WCHAR *targetW;
++    SIZE_T target_bytes, target_len, basename_len;
++    BOOL matches;
++
++    if (!enabled || strcmp( enabled, "1" ) || !target || !target[0]) return FALSE;
++    if (strchr( target, '/' ) || strchr( target, '\\' ))
++    {
++        WARN( "FORGEPLAY_D3DMETAL_TARGET must be a main-image basename\n" );
++        return FALSE;
++    }
++
++    end = main_image->Buffer + main_image->Length / sizeof(WCHAR);
++    basename = main_image->Buffer;
++    for (const WCHAR *cursor = basename; cursor < end; cursor++)
++        if (*cursor == '/' || *cursor == '\\') basename = cursor + 1;
++    basename_len = end - basename;
++
++    target_bytes = strlen( target );
++    if (!(targetW = malloc( max( target_bytes, 1 ) * sizeof(*targetW) ))) return FALSE;
++    target_len = ntdll_umbstowcs( target, target_bytes, targetW, target_bytes );
++    matches = target_len == basename_len && !wcsnicmp( targetW, basename, target_len );
++    free( targetW );
++    return matches;
++}
++
++static void load_registration_capability(void)
++{
++    const char *library = getenv( "FORGEPLAY_D3DMETAL_SHARED_LIBRARY" );
++    supports_non_native_code_regions_t supports_non_native_code_regions;
++    register_non_native_code_region_t register_region;
++    void *handle;
++
++    if (library && library[0] != '/')
++    {
++        WARN( "FORGEPLAY_D3DMETAL_SHARED_LIBRARY must be an absolute path\n" );
++        return;
++    }
++    if (!library || !library[0]) library = "libd3dshared.dylib";
++
++    if (!(handle = dlopen( library, RTLD_LAZY | RTLD_LOCAL )))
++    {
++        WARN( "failed to load %s: %s\n", debugstr_a(library), dlerror() );
++        return;
++    }
++
++    supports_non_native_code_regions = dlsym( handle, "supports_non_native_code_regions" );
++    register_region = dlsym( handle, "register_non_native_code_region" );
++    if (!supports_non_native_code_regions || !register_region)
++    {
++        WARN( "%s does not expose non-native code-region registration\n", debugstr_a(library) );
++        dlclose( handle );
++        return;
++    }
++    if (!supports_non_native_code_regions())
++    {
++        TRACE( "%s reports that non-native code-region registration is unnecessary\n",
++               debugstr_a(library) );
++        dlclose( handle );
++        return;
++    }
++
++    d3dshared_handle = handle;
++    register_non_native_code_region = register_region;
++    TRACE( "enabled non-native PE image registration through %s\n", debugstr_a(library) );
++}
++
++void forgeplay_d3dmetal_register_image( void *base, SIZE_T size )
++{
++    uintptr_t start = (uintptr_t)base;
++
++    if (!register_non_native_code_region || !base || !size) return;
++    if (size > UINTPTR_MAX - start)
++    {
++        WARN( "refusing overflowing PE image range %p + %lu\n", base, (unsigned long)size );
++        return;
++    }
++    register_non_native_code_region( base, (void *)(start + size) );
++}
++
++void forgeplay_d3dmetal_activate( const UNICODE_STRING *main_image, void *base, SIZE_T size )
++{
++    if (activation_checked) return;
++    activation_checked = TRUE;
++    if (!selector_matches( main_image )) return;
++
++    load_registration_capability();
++    forgeplay_d3dmetal_register_image( base, size );
++}
+diff --git a/dlls/ntdll/unix/loader.c b/dlls/ntdll/unix/loader.c
+index c1321ce679dd780258e5416ca2e16ef25a43d1ea..ef978f204bc042779e67a8b459647c0abe99c8f3 100644
+--- a/dlls/ntdll/unix/loader.c
++++ b/dlls/ntdll/unix/loader.c
+@@ -1417,11 +1417,11 @@ BOOL is_system_dir_path( const UNICODE_STRING *path, WORD *machine )
+ /***********************************************************************
+  *           open_main_image
+  */
+-static NTSTATUS open_main_image( UNICODE_STRING *nt_name, void **module, SECTION_IMAGE_INFORMATION *info,
+-                                 enum loadorder loadorder, USHORT machine )
++static NTSTATUS open_main_image( UNICODE_STRING *nt_name, void **module, SIZE_T *size,
++                                 SECTION_IMAGE_INFORMATION *info, enum loadorder loadorder,
++                                 USHORT machine )
+ {
+     OBJECT_ATTRIBUTES attr;
+-    SIZE_T size = 0;
+     char *unix_name;
+     NTSTATUS status;
+     HANDLE mapping;
+@@ -1435,7 +1435,7 @@ static NTSTATUS open_main_image( UNICODE_STRING *nt_name, void **module, SECTION
+     status = open_dll_file( unix_name, &attr, &mapping );
+     if (!status)
+     {
+-        status = virtual_map_module( mapping, module, &size, info, 0, 0, machine );
++        status = virtual_map_module( mapping, module, size, info, 0, 0, machine );
+         if (status == STATUS_IMAGE_MACHINE_TYPE_MISMATCH && info->ComPlusNativeReady)
+         {
+             info->Machine = native_machine;
+@@ -1459,18 +1459,23 @@ static NTSTATUS open_main_image( UNICODE_STRING *nt_name, void **module, SECTION
+ NTSTATUS load_main_exe( UNICODE_STRING *nt_name, USHORT load_machine, void **module )
+ {
+     unsigned int status;
+-    SIZE_T size;
++    SIZE_T size = 0;
+     USHORT search_machine;
+     BOOL is_system_dir = is_system_dir_path( nt_name, &search_machine );
+     enum loadorder loadorder = get_load_order( nt_name, is_system_dir, NULL );
+ 
+-    status = open_main_image( nt_name, module, &main_image_info, loadorder, load_machine );
+-    if (status != STATUS_DLL_NOT_FOUND) return status;
++    status = open_main_image( nt_name, module, &size, &main_image_info, loadorder, load_machine );
++    if (status != STATUS_DLL_NOT_FOUND)
++    {
++        if (!status) forgeplay_d3dmetal_activate( nt_name, *module, size );
++        return status;
++    }
+ 
+     /* if path is in system dir, we can load the builtin even if the file itself doesn't exist */
+     if (loadorder != LO_NATIVE && is_prefix_bootstrap && is_system_dir)
+         status = find_builtin_dll( nt_name, NULL, module, &size, &main_image_info, 0, 0,
+                                    search_machine, load_machine, FALSE, 0 );
++    if (!status) forgeplay_d3dmetal_activate( nt_name, *module, size );
+     return status;
+ }
+ 
+diff --git a/dlls/ntdll/unix/unix_private.h b/dlls/ntdll/unix/unix_private.h
+index c8ca97d21a0163099dcba8a0dc7a8b10b8aa31bc..8c211bd137b7ec1a2cc6c75317828b1788881ed3 100644
+--- a/dlls/ntdll/unix/unix_private.h
++++ b/dlls/ntdll/unix/unix_private.h
+@@ -335,6 +335,8 @@ extern void virtual_fill_image_information( const struct pe_image_info *pe_info,
+                                             SECTION_IMAGE_INFORMATION *info );
+ extern void *get_builtin_so_handle( void *module );
+ extern NTSTATUS set_builtin_unixlib_name( void *module, const char *name );
++extern void forgeplay_d3dmetal_activate( const UNICODE_STRING *main_image, void *base, SIZE_T size );
++extern void forgeplay_d3dmetal_register_image( void *base, SIZE_T size );
+ 
+ extern NTSTATUS get_thread_ldt_entry( HANDLE handle, THREAD_DESCRIPTOR_INFORMATION *info, ULONG len );
+ extern void *get_native_context( CONTEXT *context );
+diff --git a/dlls/ntdll/unix/virtual.c b/dlls/ntdll/unix/virtual.c
+index eda3fee3d8b317e06fa9c0cbd043c56e1287f4f1..ec4651525ece8a4398fe40a84ae07d8290adbbcb 100644
+--- a/dlls/ntdll/unix/virtual.c
++++ b/dlls/ntdll/unix/virtual.c
+@@ -3472,6 +3472,7 @@ done:
+     server_leave_uninterrupted_section( &virtual_mutex, &sigset );
+     if (needs_close) close( unix_fd );
+     if (shared_needs_close) close( shared_fd );
++    if (NT_SUCCESS(status) && !offset) forgeplay_d3dmetal_register_image( *addr_ptr, *size_ptr );
+     return status;
+ }
+ 
