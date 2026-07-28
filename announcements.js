@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const databaseURL = "site-data/announcements.json";
+  const databaseURL = "site-data/announcements.json?v=20260728-9";
   const typeMessageKeys = {
     compatibility: "updates.typeCompatibility",
     project: "updates.typeProject",
@@ -44,6 +44,19 @@
     return `${path}?lang=${encodeURIComponent(selectedLocale)}${fragment ? `#${fragment}` : ""}`;
   };
 
+  const applyLinkDestination = (link, href, selectedLocale) => {
+    if (!link) return;
+    const destination = localizedHref(href, selectedLocale);
+    link.href = destination;
+    if (/^https?:/i.test(destination)) {
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+    } else {
+      link.removeAttribute("target");
+      link.removeAttribute("rel");
+    }
+  };
+
   const sortedAnnouncements = () => {
     return [...(database?.announcements || [])].sort((left, right) => {
       const featuredDifference = Number(right.featured) - Number(left.featured);
@@ -68,7 +81,7 @@
       if (date) date.textContent = formatDate(announcement.publishedAt, selectedLocale);
       if (title) title.textContent = localizedText(announcement.titles, selectedLocale);
       if (summary) summary.textContent = localizedText(announcement.summaries, selectedLocale);
-      if (link) link.href = localizedHref(announcement.href, selectedLocale);
+      applyLinkDestination(link, announcement.href, selectedLocale);
     });
   };
 
@@ -115,7 +128,7 @@
         "text-link update-card-link",
         message("updates.openLink", "Open update ↗")
       );
-      link.href = localizedHref(announcement.href, selectedLocale);
+      applyLinkDestination(link, announcement.href, selectedLocale);
 
       article.append(meta, copy);
       fragment.append(article);

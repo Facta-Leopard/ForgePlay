@@ -7,7 +7,7 @@
       "id": "compatibility-database-opens",
       "type": "compatibility",
       "publishedAt": "2026-07-28",
-      "featured": true,
+      "featured": false,
       "titles": {
         "en": "Compatibility database opens with 12 tested games.",
         "ko": "테스트 게임 12종과 함께 호환성 DB를 공개했습니다.",
@@ -58,31 +58,31 @@
       "href": "index.html#game-mode"
     },
     {
-      "id": "first-public-release-preparing",
+      "id": "forgeplay-1-0-released",
       "type": "release",
       "publishedAt": "2026-07-28",
-      "featured": false,
+      "featured": true,
       "titles": {
-        "en": "The first public GitHub release is being prepared.",
-        "ko": "첫 공개 GitHub 릴리스를 준비하고 있습니다.",
-        "de": "Das erste öffentliche GitHub-Release wird vorbereitet.",
-        "es": "Se está preparando la primera versión pública en GitHub.",
-        "fr": "La première version publique sur GitHub est en préparation.",
-        "ja": "初の公開GitHubリリースを準備しています。",
-        "zh-Hans": "首个公开 GitHub 版本正在准备中。",
-        "zh-Hant": "首個公開 GitHub 版本正在準備中。"
+        "en": "ForgePlay 1.0 is now available.",
+        "ko": "ForgePlay 1.0을 공개했습니다.",
+        "de": "ForgePlay 1.0 ist jetzt verfügbar.",
+        "es": "ForgePlay 1.0 ya está disponible.",
+        "fr": "ForgePlay 1.0 est maintenant disponible.",
+        "ja": "ForgePlay 1.0を公開しました。",
+        "zh-Hans": "ForgePlay 1.0 现已发布。",
+        "zh-Hant": "ForgePlay 1.0 現已發布。"
       },
       "summaries": {
-        "en": "The binary, matching source, license notices, and verification material will arrive together.",
-        "ko": "바이너리와 버전이 일치하는 소스, 라이선스 고지, 검증 자료를 함께 공개할 예정입니다.",
-        "de": "Binärdatei, passender Quellcode, Lizenzhinweise und Prüfnachweise werden gemeinsam veröffentlicht.",
-        "es": "El binario, el código fuente correspondiente, los avisos de licencia y las pruebas se publicarán a la vez.",
-        "fr": "Le binaire, le code source correspondant, les mentions de licence et les éléments de vérification seront publiés ensemble.",
-        "ja": "バイナリ、対応するソース、ライセンス通知、検証資料を同時に公開する予定です。",
-        "zh-Hans": "二进制文件、对应源代码、许可证声明和验证材料将同步公开。",
-        "zh-Hant": "二進位檔、對應原始碼、授權聲明與驗證資料將同步公開。"
+        "en": "The Apple-notarized DMG, version-matched source, SHA-256 checksum, and signing evidence are public on GitHub.",
+        "ko": "Apple 공증을 마친 DMG와 버전이 일치하는 소스, SHA-256 체크섬, 서명·공증 증빙을 GitHub에 공개했습니다.",
+        "de": "Das von Apple notarisierte DMG, der versionsgleiche Quellcode, die SHA-256-Prüfsumme sowie Signatur- und Notarisierungsnachweise sind auf GitHub veröffentlicht.",
+        "es": "El DMG notarizado por Apple, el código fuente de la misma versión, la suma SHA-256 y las pruebas de firma ya están publicados en GitHub.",
+        "fr": "Le DMG notarié par Apple, le code source correspondant à cette version, la somme SHA-256 et les preuves de signature sont publiés sur GitHub.",
+        "ja": "Apple公証済みDMG、同一バージョンのソース、SHA-256チェックサム、署名・公証の証跡をGitHubで公開しました。",
+        "zh-Hans": "经 Apple 公证的 DMG、版本一致的源代码、SHA-256 校验值及签名与公证材料均已在 GitHub 公开。",
+        "zh-Hant": "經 Apple 公證的 DMG、版本一致的原始碼、SHA-256 校驗值及簽章與公證資料均已在 GitHub 公開。"
       },
-      "href": "index.html#release"
+      "href": "https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0"
     }
   ]
 }

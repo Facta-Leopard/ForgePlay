@@ -547,15 +547,18 @@ PY
 
 for html in index.html why.html license.html privacy.html support.html compatibility.html updates.html; do
   require_snippet "$ROOT_DIR/$html" '<html lang="en">'
-  require_snippet "$ROOT_DIR/$html" 'src="locale-bootstrap.js?v=20260728-8"'
-  require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260728-8"'
-  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260728-8"'
+  require_snippet "$ROOT_DIR/$html" 'src="locale-bootstrap.js?v=20260728-9"'
+  require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260728-9"'
+  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260728-9"'
   require_snippet "$ROOT_DIR/$html" 'data-language-select'
   require_snippet "$ROOT_DIR/$html" 'site-assets/forgeplay-icon.png'
   require_snippet "$ROOT_DIR/$html" 'class="community-link"'
   require_snippet "$ROOT_DIR/$html" 'href="https://gall.dcinside.com/mgallery/board/lists/?id=macbook"'
   require_snippet "$ROOT_DIR/$html" 'target="_blank" rel="noopener noreferrer"'
   require_snippet "$ROOT_DIR/$html" 'data-i18n="shared.navCommunity"'
+  require_snippet "$ROOT_DIR/$html" 'href="https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0"'
+  require_snippet "$ROOT_DIR/$html" 'href="https://github.com/Facta-Leopard/ForgePlay/tree/main"'
+  require_snippet "$ROOT_DIR/$html" 'data-i18n="shared.navSource"'
   if [[ "$(grep -c 'class="community-link"' "$ROOT_DIR/$html")" -ne 1 ]]; then
     fail "$html must contain exactly one DCInside MacBook Gallery link"
   fi
@@ -570,11 +573,14 @@ require_snippet "$ROOT_DIR/index.html" 'href="https://support.apple.com/105118"'
 require_snippet "$ROOT_DIR/index.html" 'The Game Mode path is an opt-in beta'
 require_snippet "$ROOT_DIR/index.html" 'Confirm activation on your Mac'
 require_snippet "$ROOT_DIR/index.html" 'macOS 26+ · Rosetta required'
-require_snippet "$ROOT_DIR/index.html" 'Implementation details will be published with the open-source release'
-require_snippet "$ROOT_DIR/index.html" 'href="#release" data-i18n="home.sourceLink"'
+require_snippet "$ROOT_DIR/index.html" 'The published source includes ForgePlay, the Game Mode host, Wine patches, build records, and license notices.'
+require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.sourceLink">Browse the published source ↗'
 require_snippet "$ROOT_DIR/index.html" 'href="why.html"'
 require_snippet "$ROOT_DIR/index.html" 'href="license.html"'
-require_snippet "$ROOT_DIR/index.html" 'PLANNED WITHIN DAYS — NO PUBLIC DOWNLOAD YET'
+require_snippet "$ROOT_DIR/index.html" 'AVAILABLE NOW · v1.0.0'
+require_snippet "$ROOT_DIR/index.html" 'data-release-download'
+require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.0.0/ForgePlay-1.0-1.dmg"'
+require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.releaseNotesButton"'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/forgeplay-social.png'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/forgeplay-manifesto.jpg'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/forgeplay-hero-3200.jpg 3200w'
@@ -583,9 +589,9 @@ require_snippet "$ROOT_DIR/index.html" 'data-compatibility-count'
 require_snippet "$ROOT_DIR/index.html" 'href="compatibility.html"'
 require_snippet "$ROOT_DIR/index.html" 'PLAYABLE IN GAME MODE'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
-require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260728-8"'
-require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260728-8"'
-require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260728-8"'
+require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260728-9"'
+require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260728-9"'
+require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260728-9"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
 require_snippet "$ROOT_DIR/index.html" 'id="other-apps"'
 require_snippet "$ROOT_DIR/index.html" 'data-developer-app-grid'
@@ -604,7 +610,7 @@ require_snippet "$ROOT_DIR/compatibility.html" 'Playable in Game Mode'
 require_snippet "$ROOT_DIR/compatibility.html" 'Logs shorten the distance to a fix.'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.logLabel"'
 require_snippet "$ROOT_DIR/compatibility.html" 'issues/new?template=compatibility-report.yml'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260728-8"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260728-9"'
 require_snippet "$ROOT_DIR/compatibility.js" 'site-data/compatibility-games.json'
 require_snippet "$ROOT_DIR/compatibility.js" 'forgeplay:localechange'
 require_snippet "$ROOT_DIR/site.js" '"compat.statusPlayable": "게임 모드로 플레이 가능"'
@@ -614,9 +620,11 @@ require_snippet "$ROOT_DIR/site-data/README.md" 'DeveloperAppCatalog.swift'
 
 require_snippet "$ROOT_DIR/updates.html" 'data-announcement-list'
 require_snippet "$ROOT_DIR/updates.html" 'data-nav-page="updates"'
-require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260728-8"'
+require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260728-9"'
 require_snippet "$ROOT_DIR/announcements.js" 'site-data/announcements.json'
 require_snippet "$ROOT_DIR/announcements.js" 'forgeplay:localechange'
+require_snippet "$ROOT_DIR/announcements.js" 'applyLinkDestination'
+require_snippet "$ROOT_DIR/announcements.js" 'site-data/announcements.json?v=20260728-9'
 require_snippet "$ROOT_DIR/developer-apps.js" 'site-data/developer-apps.json'
 require_snippet "$ROOT_DIR/developer-apps.js" 'data-developer-platform'
 require_snippet "$ROOT_DIR/developer-apps.js" 'forgeplay:localechange'
@@ -629,7 +637,8 @@ require_snippet "$ROOT_DIR/why.html" 'If progress stalled because no one could c
 require_snippet "$ROOT_DIR/why.html" '경쟁이 없어서 멈췄다면, 경쟁자를 만들어 주겠다!'
 require_snippet "$ROOT_DIR/why.html" 'game engines and graphics—including the DirectX and Metal stacks'
 require_snippet "$ROOT_DIR/why.html" '게임 엔진과 그래픽스, DirectX와 Metal 기술 스택'
-require_snippet "$ROOT_DIR/why.html" 'href="index.html#release"'
+require_snippet "$ROOT_DIR/why.html" 'href="https://github.com/Facta-Leopard/ForgePlay/tree/main"'
+require_snippet "$ROOT_DIR/why.html" '공개 소스 보기 ↗'
 
 require_snippet "$ROOT_DIR/license.html" 'ForgePlay does not have a single license.'
 require_snippet "$ROOT_DIR/license.html" 'GPL-3.0-only'
@@ -654,6 +663,9 @@ require_snippet "$ROOT_DIR/site-data/announcements.json" '"de": "ForgePlay stell
 require_snippet "$ROOT_DIR/site-data/announcements.json" '"es": "ForgePlay sitúa el modo Juego de macOS en el centro."'
 require_snippet "$ROOT_DIR/site-data/announcements.json" '"fr": "ForgePlay place le mode Jeu de macOS au centre."'
 require_snippet "$ROOT_DIR/site-data/announcements.json" '"ja": "ForgePlayはmacOSのゲームモードを中核に据えました。"'
+require_snippet "$ROOT_DIR/site-data/announcements.json" '"id": "forgeplay-1-0-released"'
+require_snippet "$ROOT_DIR/site-data/announcements.json" '"ko": "ForgePlay 1.0을 공개했습니다."'
+require_snippet "$ROOT_DIR/site-data/announcements.json" '"href": "https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0"'
 
 require_snippet "$ROOT_DIR/privacy.html" "does not include advertising tracking"
 require_snippet "$ROOT_DIR/privacy.html" "Apple Foundation Models"
@@ -690,6 +702,8 @@ require_snippet "$ROOT_DIR/site.css" ".updates-list"
 require_snippet "$ROOT_DIR/site.css" '.nav-links a[aria-current="page"]'
 require_snippet "$ROOT_DIR/site.css" ".nav-links a.community-link"
 require_snippet "$ROOT_DIR/site.css" ".developer-app-grid"
+require_snippet "$ROOT_DIR/site.css" ".release-actions"
+require_snippet "$ROOT_DIR/site.css" ".release-status.live"
 require_snippet "$ROOT_DIR/locale-bootstrap.js" "const supportedLocales = Object.freeze(["
 require_snippet "$ROOT_DIR/locale-bootstrap.js" "navigator.languages"
 require_snippet "$ROOT_DIR/locale-bootstrap.js" "document.documentElement.lang = resolvedLocale"
@@ -703,6 +717,9 @@ require_snippet "$ROOT_DIR/site.js" 'new Set(["privacy", "support", "why", "lice
 require_snippet "$ROOT_DIR/site.js" 'window.ForgePlaySite = Object.freeze'
 require_snippet "$ROOT_DIR/site.js" 'document.dispatchEvent(new CustomEvent("forgeplay:localechange"'
 require_snippet "$ROOT_DIR/site.js" '"shared.navCommunity": "디시인사이드 맥북갤러리"'
+require_snippet "$ROOT_DIR/site.js" '"shared.navSource": "소스 코드"'
+require_snippet "$ROOT_DIR/site.js" '"home.releaseStatus": "지금 다운로드 가능 · v1.0.0"'
+require_snippet "$ROOT_DIR/site.js" '"home.releaseStatus": "AVAILABLE NOW · v1.0.0"'
 
 if [[ -d "$ROOT_DIR/.git" ]]; then
   require_regular_file "$ROOT_DIR/.github/ISSUE_TEMPLATE/compatibility-report.yml"
@@ -727,6 +744,24 @@ for forbidden_phrase in \
     "$ROOT_DIR/privacy.html" "$ROOT_DIR/support.html" "$ROOT_DIR/compatibility.html" \
     "$ROOT_DIR/updates.html"; then
     fail "public site must not contain inaccurate or retired wording: $forbidden_phrase"
+  fi
+done
+
+for retired_release_phrase in \
+  "within days" \
+  "PLANNED WITHIN DAYS" \
+  "NO PUBLIC DOWNLOAD YET" \
+  "며칠 내" \
+  "다운로드할 수 없습니다" \
+  "数日以内" \
+  "数日内" \
+  "in wenigen Tagen" \
+  "unos días" \
+  "quelques jours"; do
+  if grep -Fiq "$retired_release_phrase" \
+    "$ROOT_DIR/index.html" "$ROOT_DIR/site.js" \
+    "$ROOT_DIR/site-data/announcements.json"; then
+    fail "public site contains retired pre-release wording: $retired_release_phrase"
   fi
 done
 

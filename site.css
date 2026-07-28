@@ -1148,6 +1148,24 @@ select {
   letter-spacing: 0.08em;
 }
 
+.release-status.live {
+  color: var(--success);
+}
+
+.release-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.release-actions .button {
+  min-width: 0;
+}
+
+.release-actions .button.primary {
+  grid-column: 1 / -1;
+}
+
 .release-checks {
   display: grid;
   gap: 13px;
@@ -1546,7 +1564,7 @@ select {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 48px;
+  gap: 28px;
 }
 
 /* Manifesto page */
@@ -2199,6 +2217,14 @@ select {
 
   .release-panel {
     padding: 24px 20px;
+  }
+
+  .release-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .release-actions .button.primary {
+    grid-column: auto;
   }
 
   .footer-grid {
