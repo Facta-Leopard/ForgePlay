@@ -1,6 +1,17 @@
 # ForgePlay Source — English
 
-[한국어](README_KO.md) | [Language index](README.md)
+[한국어](README_KO.md) | [Combined README](README.md) | [Release v1.0.0](https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0)
+
+## Published paths
+
+- [Current published source (`main`)](https://github.com/Facta-Leopard/ForgePlay/tree/main)
+- [`v1.0.0` source snapshot](https://github.com/Facta-Leopard/ForgePlay/tree/v1.0.0)
+- [ForgePlay 1.0 (build 1) release](https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0)
+- [Apple-notarized DMG](https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.0.0/ForgePlay-1.0-1.dmg)
+- [SHA-256](https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.0.0/ForgePlay-1.0-1.dmg.sha256) · [notarization and signing evidence JSON](https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.0.0/ForgePlay-1.0-1.dmg.release.json)
+
+The existing GitHub Pages files and the published source share `main`. The DMG
+and notarization evidence are distributed separately through GitHub Releases.
 
 ## The position, stated plainly
 
