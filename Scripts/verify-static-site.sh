@@ -477,6 +477,23 @@ for report_id, expected in community_report_expectations.items():
     ):
         raise SystemExit(f"community report notes must cover all eight locales: {report_id}")
 
+eternal_return_report = report_by_id.get(
+    "eternal-return-m4-pro-24gb-project-20260729"
+)
+if (
+    "eternal-return" not in game_by_id
+    or not eternal_return_report
+    or eternal_return_report.get("gameId") != "eternal-return"
+    or eternal_return_report.get("testProfileId") != "apple-silicon-m4-pro-24gb"
+    or eternal_return_report.get("status") != "playable"
+    or eternal_return_report.get("source") != "project-test"
+    or eternal_return_report.get("testedAt") != "2026-07-29"
+    or eternal_return_report.get("blocker") is not None
+):
+    raise SystemExit(
+        "compatibility database must include the Eternal Return M4 Pro 24GB test"
+    )
+
 announcements_path = root / "site-data" / "announcements.json"
 announcements_schema_path = root / "site-data" / "announcements.schema.json"
 try:
@@ -646,9 +663,9 @@ PY
 
 for html in index.html why.html license.html privacy.html support.html compatibility.html updates.html; do
   require_snippet "$ROOT_DIR/$html" '<html lang="en">'
-  require_snippet "$ROOT_DIR/$html" 'src="locale-bootstrap.js?v=20260729-12"'
-  require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-12"'
-  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260729-12"'
+  require_snippet "$ROOT_DIR/$html" 'src="locale-bootstrap.js?v=20260729-13"'
+  require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-13"'
+  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260729-13"'
   require_snippet "$ROOT_DIR/$html" 'data-language-select'
   require_snippet "$ROOT_DIR/$html" 'site-assets/forgeplay-icon.png'
   require_snippet "$ROOT_DIR/$html" 'target="_blank" rel="noopener noreferrer"'
@@ -687,9 +704,9 @@ require_snippet "$ROOT_DIR/index.html" 'href="compatibility.html"'
 require_snippet "$ROOT_DIR/index.html" 'PLAYABLE IN GAME MODE'
 require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
-require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260729-12"'
-require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260729-12"'
-require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260729-12"'
+require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260729-13"'
+require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260729-13"'
+require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260729-13"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
 require_snippet "$ROOT_DIR/index.html" 'id="other-apps"'
 require_snippet "$ROOT_DIR/index.html" 'data-developer-app-grid'
@@ -709,7 +726,7 @@ require_snippet "$ROOT_DIR/compatibility.html" 'Logs shorten the distance to a f
 require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.logLabel"'
 require_snippet "$ROOT_DIR/compatibility.html" 'issues/new?template=compatibility-report.yml'
 require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260729-12"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260729-13"'
 require_snippet "$ROOT_DIR/compatibility.js" 'site-data/compatibility-games.json'
 require_snippet "$ROOT_DIR/compatibility.js" 'forgeplay:localechange'
 require_snippet "$ROOT_DIR/compatibility.js" 'document.currentScript?.src'
@@ -735,7 +752,7 @@ require_snippet "$ROOT_DIR/site-data/README.md" 'DeveloperAppCatalog.swift'
 
 require_snippet "$ROOT_DIR/updates.html" 'data-announcement-list'
 require_snippet "$ROOT_DIR/updates.html" 'data-nav-page="updates"'
-require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260729-12"'
+require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260729-13"'
 require_snippet "$ROOT_DIR/announcements.js" 'site-data/announcements.json'
 require_snippet "$ROOT_DIR/announcements.js" 'forgeplay:localechange'
 require_snippet "$ROOT_DIR/announcements.js" 'applyLinkDestination'

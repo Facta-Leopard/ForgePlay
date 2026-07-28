@@ -130,6 +130,13 @@
         "en": "Blue Archive",
         "ko": "블루 아카이브"
       }
+    },
+    {
+      "id": "eternal-return",
+      "titles": {
+        "en": "Eternal Return",
+        "ko": "이터널 리턴"
+      }
     }
   ],
   "reports": [
@@ -332,6 +339,16 @@
         "fr": "Sur un Mac équipé d’un M4 Pro et de 24GB de mémoire unifiée, le rendu est normal, mais après la sélection d’un serveur, un message relatif à un module de sécurité apparaît et empêche de continuer. Les versions de macOS et de ForgePlay n’ont pas été indiquées."
       },
       "blocker": "security-module"
+    },
+    {
+      "id": "eternal-return-m4-pro-24gb-project-20260729",
+      "gameId": "eternal-return",
+      "testProfileId": "apple-silicon-m4-pro-24gb",
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": "2026-07-29",
+      "notes": null,
+      "blocker": null
     }
   ]
 }
