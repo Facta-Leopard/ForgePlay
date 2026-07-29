@@ -69,3 +69,14 @@ the catalog without hardcoding product cards. Every entry includes:
 Keep this catalog synchronized with
 `Sources/ForgePlay/Models/DeveloperAppCatalog.swift` and validate structural
 changes against `developer-apps.schema.json`.
+
+## Why ForgePlay exists — full text
+
+The complete founder's statement lives in `why-story/`, with one Markdown
+source for each of the website's eight locales. `site-assets/why-story.js` loads the active
+locale on demand and renders the supported Markdown into the expandable note
+on `why.html`; raw Markdown is never inserted into the page.
+
+Keep all eight locale files structurally aligned when the statement changes.
+The renderer intentionally supports only headings, paragraphs, block quotes,
+unordered lists, bold text, inline code, HTTPS links, and named footnotes.
