@@ -149,14 +149,28 @@
       "id": "shape-of-dreams",
       "titles": {
         "en": "Shape of Dreams",
-        "ko": "Shape of Dreams"
+        "ko": "셰이프 오브 드림즈"
       }
     },
     {
       "id": "meccha-chameleon",
       "titles": {
         "en": "MECCHA CHAMELEON",
-        "ko": "MECCHA CHAMELEON"
+        "ko": "메차 카멜레온"
+      }
+    },
+    {
+      "id": "palworld",
+      "titles": {
+        "en": "Palworld",
+        "ko": "팰월드"
+      }
+    },
+    {
+      "id": "legend-of-mortal",
+      "titles": {
+        "en": "Legend of Mortal",
+        "ko": "활협전"
       }
     }
   ],
@@ -392,6 +406,28 @@
       "testedAt": null,
       "notes": null,
       "blocker": null
+    },
+    {
+      "id": "palworld-m5-max-community-ieungieungi-20260729",
+      "gameId": "palworld",
+      "testProfileId": "apple-silicon-m5-max",
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "ㅇ이응이ㅇ",
+      "testedAt": null,
+      "notes": null,
+      "blocker": null
+    },
+    {
+      "id": "legend-of-mortal-m5-max-community-ieungieungi-20260729",
+      "gameId": "legend-of-mortal",
+      "testProfileId": "apple-silicon-m5-max",
+      "status": "blocked",
+      "source": "community-report",
+      "reporter": "ㅇ이응이ㅇ",
+      "testedAt": null,
+      "notes": null,
+      "blocker": "unknown"
     }
   ]
 }
