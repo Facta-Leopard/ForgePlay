@@ -314,6 +314,18 @@ if not (
     and any(option.get("type") == "null" for option in test_profile_reference_options)
 ):
     raise SystemExit("compatibility reports must support an explicitly unreported device")
+unified_memory_schema = (
+    schema.get("$defs", {})
+    .get("testProfile", {})
+    .get("properties", {})
+    .get("unifiedMemoryGB", {})
+)
+unified_memory_types = unified_memory_schema.get("type", [])
+if not (
+    isinstance(unified_memory_types, list)
+    and {"integer", "null"}.issubset(unified_memory_types)
+):
+    raise SystemExit("compatibility profiles must support unreported unified memory")
 
 profiles = database.get("testProfiles")
 games = database.get("games")
@@ -494,6 +506,48 @@ if (
         "compatibility database must include the Eternal Return M4 Pro 24GB test"
     )
 
+m5_max_profile = profile_by_id.get("apple-silicon-m5-max")
+if (
+    not m5_max_profile
+    or m5_max_profile.get("chip") != "M5 Max"
+    or m5_max_profile.get("unifiedMemoryGB") is not None
+    or m5_max_profile.get("macOSVersion") is not None
+):
+    raise SystemExit(
+        "compatibility database must preserve unreported M5 Max profile details"
+    )
+
+m5_max_community_reports = {
+    "shape-of-dreams-m5-max-community-ieungieungi-20260729": (
+        "shape-of-dreams",
+        "Shape of Dreams",
+    ),
+    "meccha-chameleon-m5-max-community-ieungieungi-20260729": (
+        "meccha-chameleon",
+        "MECCHA CHAMELEON",
+    ),
+}
+for report_id, (game_id, official_title) in m5_max_community_reports.items():
+    game = game_by_id.get(game_id)
+    report = report_by_id.get(report_id)
+    if (
+        not game
+        or game.get("titles", {}).get("en") != official_title
+        or game.get("titles", {}).get("ko") != official_title
+        or not report
+        or report.get("gameId") != game_id
+        or report.get("testProfileId") != m5_max_profile.get("id")
+        or report.get("status") != "playable"
+        or report.get("source") != "community-report"
+        or report.get("reporter") != "ㅇ이응이ㅇ"
+        or report.get("testedAt") is not None
+        or report.get("notes") is not None
+        or report.get("blocker") is not None
+    ):
+        raise SystemExit(
+            f"compatibility database has an invalid M5 Max community report: {report_id}"
+        )
+
 announcements_path = root / "site-data" / "announcements.json"
 announcements_schema_path = root / "site-data" / "announcements.schema.json"
 try:
@@ -663,9 +717,9 @@ PY
 
 for html in index.html why.html license.html privacy.html support.html compatibility.html updates.html; do
   require_snippet "$ROOT_DIR/$html" '<html lang="en">'
-  require_snippet "$ROOT_DIR/$html" 'src="locale-bootstrap.js?v=20260729-13"'
-  require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-13"'
-  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260729-13"'
+  require_snippet "$ROOT_DIR/$html" 'src="locale-bootstrap.js?v=20260729-14"'
+  require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-14"'
+  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260729-14"'
   require_snippet "$ROOT_DIR/$html" 'data-language-select'
   require_snippet "$ROOT_DIR/$html" 'site-assets/forgeplay-icon.png'
   require_snippet "$ROOT_DIR/$html" 'target="_blank" rel="noopener noreferrer"'
@@ -704,9 +758,9 @@ require_snippet "$ROOT_DIR/index.html" 'href="compatibility.html"'
 require_snippet "$ROOT_DIR/index.html" 'PLAYABLE IN GAME MODE'
 require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
-require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260729-13"'
-require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260729-13"'
-require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260729-13"'
+require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260729-14"'
+require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260729-14"'
+require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260729-14"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
 require_snippet "$ROOT_DIR/index.html" 'id="other-apps"'
 require_snippet "$ROOT_DIR/index.html" 'data-developer-app-grid'
@@ -726,7 +780,7 @@ require_snippet "$ROOT_DIR/compatibility.html" 'Logs shorten the distance to a f
 require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.logLabel"'
 require_snippet "$ROOT_DIR/compatibility.html" 'issues/new?template=compatibility-report.yml'
 require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260729-13"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260729-14"'
 require_snippet "$ROOT_DIR/compatibility.js" 'site-data/compatibility-games.json'
 require_snippet "$ROOT_DIR/compatibility.js" 'forgeplay:localechange'
 require_snippet "$ROOT_DIR/compatibility.js" 'document.currentScript?.src'
@@ -737,6 +791,7 @@ require_snippet "$ROOT_DIR/compatibility.js" 'element.textContent = String(playa
 require_snippet "$ROOT_DIR/compatibility.js" '"github-issue": "compat.verificationGitHubIssue"'
 require_snippet "$ROOT_DIR/compatibility.js" '"community-report": "compat.verificationCommunityReport"'
 require_snippet "$ROOT_DIR/compatibility.js" '"security-module": "compat.blockerSecurityModule"'
+require_snippet "$ROOT_DIR/compatibility.js" 'Number.isInteger(profile.unifiedMemoryGB)'
 require_snippet "$ROOT_DIR/compatibility.js" 'profile.macOSVersion ? `macOS ${profile.macOSVersion}` : null'
 require_snippet "$ROOT_DIR/compatibility.js" 'report.reporter ? `@${report.reporter}` : null'
 require_snippet "$ROOT_DIR/compatibility.js" 'const localizedNote = localizedText(report.notes, selectedLocale)'
@@ -752,7 +807,7 @@ require_snippet "$ROOT_DIR/site-data/README.md" 'DeveloperAppCatalog.swift'
 
 require_snippet "$ROOT_DIR/updates.html" 'data-announcement-list'
 require_snippet "$ROOT_DIR/updates.html" 'data-nav-page="updates"'
-require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260729-13"'
+require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260729-14"'
 require_snippet "$ROOT_DIR/announcements.js" 'site-data/announcements.json'
 require_snippet "$ROOT_DIR/announcements.js" 'forgeplay:localechange'
 require_snippet "$ROOT_DIR/announcements.js" 'applyLinkDestination'

@@ -77,7 +77,10 @@
           "minLength": 1
         },
         "unifiedMemoryGB": {
-          "type": "integer",
+          "type": [
+            "integer",
+            "null"
+          ],
           "minimum": 1
         },
         "macOSVersion": {

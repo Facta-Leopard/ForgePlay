@@ -51,7 +51,10 @@
 
   const formatProfile = (profile) => {
     if (!profile) return message("compat.deviceNotReported", "Not provided");
-    return `${profile.chip} · ${profile.unifiedMemoryGB}GB`;
+    const memory = Number.isInteger(profile.unifiedMemoryGB)
+      ? ` · ${profile.unifiedMemoryGB}GB`
+      : "";
+    return `${profile.chip}${memory}`;
   };
 
   const formatProfileDetails = (profile) => {

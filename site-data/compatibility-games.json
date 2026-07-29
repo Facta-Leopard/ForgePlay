@@ -16,6 +16,13 @@
       "chip": "M3 Max",
       "unifiedMemoryGB": 36,
       "macOSVersion": "Tahoe 26.5.1"
+    },
+    {
+      "id": "apple-silicon-m5-max",
+      "platform": "Apple Silicon Mac",
+      "chip": "M5 Max",
+      "unifiedMemoryGB": null,
+      "macOSVersion": null
     }
   ],
   "games": [
@@ -136,6 +143,20 @@
       "titles": {
         "en": "Eternal Return",
         "ko": "이터널 리턴"
+      }
+    },
+    {
+      "id": "shape-of-dreams",
+      "titles": {
+        "en": "Shape of Dreams",
+        "ko": "Shape of Dreams"
+      }
+    },
+    {
+      "id": "meccha-chameleon",
+      "titles": {
+        "en": "MECCHA CHAMELEON",
+        "ko": "MECCHA CHAMELEON"
       }
     }
   ],
@@ -347,6 +368,28 @@
       "status": "playable",
       "source": "project-test",
       "testedAt": "2026-07-29",
+      "notes": null,
+      "blocker": null
+    },
+    {
+      "id": "shape-of-dreams-m5-max-community-ieungieungi-20260729",
+      "gameId": "shape-of-dreams",
+      "testProfileId": "apple-silicon-m5-max",
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "ㅇ이응이ㅇ",
+      "testedAt": null,
+      "notes": null,
+      "blocker": null
+    },
+    {
+      "id": "meccha-chameleon-m5-max-community-ieungieungi-20260729",
+      "gameId": "meccha-chameleon",
+      "testProfileId": "apple-silicon-m5-max",
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "ㅇ이응이ㅇ",
+      "testedAt": null,
       "notes": null,
       "blocker": null
     }

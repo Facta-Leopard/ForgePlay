@@ -18,7 +18,7 @@ One spreadsheet row should represent one test report. The preferred columns are:
 | `device_id` | yes; leave blank if not reported | `apple-silicon-m4-pro-24gb` |
 | `platform` | yes for a new device | `Apple Silicon Mac` |
 | `chip` | yes for a new device | `M4 Pro` |
-| `unified_memory_gb` | yes for a new device | `24` |
+| `unified_memory_gb` | optional; leave blank if not reported | `24` |
 | `macos_version` | optional | `26.0` |
 | `tested_at` | optional | `2026-07-28` |
 | `source` | yes | `project-test`, `github-issue`, or `community-report` |
