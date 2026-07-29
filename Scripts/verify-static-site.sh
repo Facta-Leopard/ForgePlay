@@ -11,8 +11,10 @@ PAGES=(
   compatibility.html
   updates.html
   site.css
+  site-assets/why-story.css
   locale-bootstrap.js
   site.js
+  site-assets/why-story.js
   compatibility.js
   announcements.js
   developer-apps.js
@@ -23,6 +25,14 @@ PAGES=(
   site-data/developer-apps.json
   site-data/developer-apps.schema.json
   site-data/README.md
+  site-data/why-story/ko.md
+  site-data/why-story/en.md
+  site-data/why-story/de.md
+  site-data/why-story/es.md
+  site-data/why-story/fr.md
+  site-data/why-story/ja.md
+  site-data/why-story/zh-Hans.md
+  site-data/why-story/zh-Hant.md
   site-assets/forgeplay-favicon.png
   site-assets/forgeplay-hero.jpg
   site-assets/forgeplay-hero-3200.jpg
@@ -80,6 +90,122 @@ require_snippet() {
 for page in "${PAGES[@]}"; do
   require_regular_file "$ROOT_DIR/$page"
 done
+
+python3 - "$ROOT_DIR" "${LANGS[@]}" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1])
+locales = sys.argv[2:]
+expected_reference_ids = {
+    "crossover-95",
+    "lgpl",
+    "game-mode",
+    "crossover-settings",
+    "compatibility-database",
+    "crossover-proprietary",
+    "gptk-license",
+    "crossover26",
+}
+required_terms = {
+    "ForgePlay",
+    "CrossOver",
+    "CodeWeavers",
+    "Wine",
+    "Game Host",
+    "GPTK",
+    "D3DMetal",
+    "LGPL",
+}
+structural_counts = None
+
+for locale in locales:
+    path = root / "site-data" / "why-story" / f"{locale}.md"
+    text = path.read_text(encoding="utf-8")
+    lines = text.splitlines()
+    if not text.endswith("\n") or "\r" in text or "\ufffd" in text:
+        raise SystemExit(f"{path}: invalid UTF-8 text normalization")
+    if "[^^" in text:
+        raise SystemExit(f"{path}: malformed footnote marker")
+    if re.search(r"!\[[^\]]*\]\(", text):
+        raise SystemExit(f"{path}: images are not supported by the note renderer")
+    if re.search(r"</?[A-Za-z][^>]*>", text):
+        raise SystemExit(f"{path}: raw HTML is not allowed")
+
+    level_two = [line for line in lines if line.startswith("## ")]
+    level_three = [line for line in lines if line.startswith("### ")]
+    if len(level_two) != 1 or len(level_three) != 10:
+        raise SystemExit(
+            f"{path}: expected one title and ten full-text sections"
+        )
+    if len(level_three) != len(set(level_three)):
+        raise SystemExit(f"{path}: duplicate section heading")
+
+    missing_terms = sorted(term for term in required_terms if term not in text)
+    if missing_terms:
+        raise SystemExit(f"{path}: missing core terms: {missing_terms}")
+    if not re.search(r"95\s*%", text):
+        raise SystemExit(f"{path}: missing the 95 percent claim")
+
+    definitions = re.findall(
+        r"^\[\^([^\]]+)\]:\s*(\S.*)$",
+        text,
+        flags=re.MULTILINE,
+    )
+    definition_ids = [identifier for identifier, _ in definitions]
+    if len(definition_ids) != len(set(definition_ids)):
+        raise SystemExit(f"{path}: duplicate footnote definition")
+    if set(definition_ids) != expected_reference_ids:
+        raise SystemExit(
+            f"{path}: footnote definitions differ from the source statement"
+        )
+    references = re.findall(r"\[\^([^\]]+)\](?!:)", text)
+    if set(references) != expected_reference_ids:
+        raise SystemExit(
+            f"{path}: every source note must be cited in the full text"
+        )
+
+    links = re.findall(r"\[[^\]]+\]\(([^)]+)\)", text)
+    if not links or any(not target.startswith("https://") for target in links):
+        raise SystemExit(f"{path}: note links must use HTTPS")
+
+    unsupported_blocks = [
+        line
+        for line in lines
+        if re.match(r"^(?:# |####|\* |\+ |\d+\. |---+$)", line)
+    ]
+    if unsupported_blocks:
+        raise SystemExit(f"{path}: unsupported Markdown block syntax")
+
+    counts = {
+        "paragraphs": sum(
+            bool(line)
+            and not line.startswith(("## ", "### ", "> ", "- ", "[^"))
+            for line in lines
+        ),
+        "quotes": sum(line.startswith("> ") for line in lines),
+        "listItems": sum(line.startswith("- ") for line in lines),
+        "footnotes": len(definitions),
+    }
+    if structural_counts is None:
+        structural_counts = counts
+    elif counts != structural_counts:
+        raise SystemExit(
+            f"{path}: localized statement structure is not aligned; "
+            f"expected={structural_counts} actual={counts}"
+        )
+
+english = (root / "site-data" / "why-story" / "en.md").read_text(encoding="utf-8")
+for locale in locales:
+    if locale == "en":
+        continue
+    localized = (
+        root / "site-data" / "why-story" / f"{locale}.md"
+    ).read_text(encoding="utf-8")
+    if localized == english:
+        raise SystemExit(f"why-story locale {locale} is an English fallback")
+PY
 
 python3 - "$ROOT_DIR" \
   "$ROOT_DIR/index.html" \
@@ -842,6 +968,8 @@ require_snippet "$ROOT_DIR/site-data/README.md" 'Edit only `compatibility-games.
 require_snippet "$ROOT_DIR/site-data/README.md" '`reporter`'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Developer app catalog'
 require_snippet "$ROOT_DIR/site-data/README.md" 'DeveloperAppCatalog.swift'
+require_snippet "$ROOT_DIR/site-data/README.md" 'Why ForgePlay exists — full text'
+require_snippet "$ROOT_DIR/site-data/README.md" 'raw Markdown is never inserted into the page'
 
 require_snippet "$ROOT_DIR/updates.html" 'data-announcement-list'
 require_snippet "$ROOT_DIR/updates.html" 'data-nav-page="updates"'
@@ -864,6 +992,23 @@ require_snippet "$ROOT_DIR/why.html" 'game engines and graphics—including the 
 require_snippet "$ROOT_DIR/why.html" '게임 엔진과 그래픽스, DirectX와 Metal 기술 스택'
 require_snippet "$ROOT_DIR/why.html" 'href="https://github.com/Facta-Leopard/ForgePlay/tree/main"'
 require_snippet "$ROOT_DIR/why.html" '공개 소스 보기 ↗'
+require_snippet "$ROOT_DIR/why.html" 'href="site-assets/why-story.css?v=20260730-2"'
+require_snippet "$ROOT_DIR/why.html" 'src="site-assets/why-story.js?v=20260730-1"'
+require_snippet "$ROOT_DIR/why.html" 'id="full-story"'
+require_snippet "$ROOT_DIR/why.html" 'data-why-story'
+require_snippet "$ROOT_DIR/why.html" 'data-why-story-toc'
+require_snippet "$ROOT_DIR/why.html" 'data-why-story-content'
+require_snippet "$ROOT_DIR/why.html" 'Why ForgePlay Exists — Full Text'
+require_snippet "$ROOT_DIR/site-assets/why-story.js" 'const storyDataRoot = "site-data/why-story"'
+require_snippet "$ROOT_DIR/site-assets/why-story.js" 'document.createTextNode'
+require_snippet "$ROOT_DIR/site-assets/why-story.js" 'content.replaceChildren'
+require_snippet "$ROOT_DIR/site-assets/why-story.js" 'cache: "no-store"'
+require_snippet "$ROOT_DIR/site-assets/why-story.js" 'forgeplay:localechange'
+require_snippet "$ROOT_DIR/site-assets/why-story.js" '"zh-Hans"'
+require_snippet "$ROOT_DIR/site-assets/why-story.js" '"zh-Hant"'
+if grep -Eq 'innerHTML|outerHTML|insertAdjacentHTML|document\\.write' "$ROOT_DIR/site-assets/why-story.js"; then
+  fail "why-story.js must render the statement without unsafe HTML insertion"
+fi
 
 require_snippet "$ROOT_DIR/license.html" 'ForgePlay does not have a single license.'
 require_snippet "$ROOT_DIR/license.html" 'GPL-3.0-only'
@@ -928,6 +1073,11 @@ require_snippet "$ROOT_DIR/site.css" '.nav-links a[aria-current="page"]'
 require_snippet "$ROOT_DIR/site.css" ".developer-app-grid"
 require_snippet "$ROOT_DIR/site.css" ".release-actions"
 require_snippet "$ROOT_DIR/site.css" ".release-status.live"
+require_snippet "$ROOT_DIR/site-assets/why-story.css" ".founder-note-cover"
+require_snippet "$ROOT_DIR/site-assets/why-story.css" ".founder-note-paper"
+require_snippet "$ROOT_DIR/site-assets/why-story.css" ".founder-note-toc"
+require_snippet "$ROOT_DIR/site-assets/why-story.css" "@media (max-width: 760px)"
+require_snippet "$ROOT_DIR/site-assets/why-story.css" "@media (prefers-reduced-motion: reduce)"
 require_snippet "$ROOT_DIR/locale-bootstrap.js" "const supportedLocales = Object.freeze(["
 require_snippet "$ROOT_DIR/locale-bootstrap.js" "navigator.languages"
 require_snippet "$ROOT_DIR/locale-bootstrap.js" "document.documentElement.lang = resolvedLocale"
