@@ -1,17 +1,13 @@
 (() => {
   "use strict";
 
-  const versionedDataURL = (path) => {
+  const cacheBustedDataURL = (path) => {
     const url = new URL(path, document.baseURI);
-    const scriptSource = document.currentScript?.src;
-    if (!scriptSource) return url.href;
-
-    const version = new URL(scriptSource, document.baseURI).searchParams.get("v");
-    if (version) url.searchParams.set("v", version);
+    url.searchParams.set("refresh", Date.now().toString());
     return url.href;
   };
 
-  const databaseURL = versionedDataURL("site-data/compatibility-games.json");
+  const databaseURL = cacheBustedDataURL("site-data/compatibility-games.json");
   const statusMessageKeys = {
     playable: "compat.statusPlayable",
     testing: "compat.statusTesting",
@@ -225,7 +221,7 @@
   const load = async () => {
     try {
       const response = await fetch(databaseURL, {
-        cache: "no-cache",
+        cache: "no-store",
         headers: { Accept: "application/json" }
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);

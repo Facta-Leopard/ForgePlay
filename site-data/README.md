@@ -4,6 +4,22 @@
 website. Games, test devices, and test reports are separate records so one game
 can accumulate results from multiple Macs without changing the page structure.
 
+## Compatibility-only update workflow
+
+Compatibility content has one source of truth:
+`site-data/compatibility-games.json`.
+
+For future compatibility updates:
+
+1. Edit only `compatibility-games.json`, including its `updatedAt` value.
+2. Commit and push that file to `main`.
+3. The GitHub Pages workflow validates and deploys the data automatically.
+
+Do not bump HTML or JavaScript cache versions for a data-only update. The
+website requests the compatibility database independently of asset versions,
+and both the homepage count and compatibility rows are derived from the JSON.
+New data appears the next time the page is loaded or refreshed.
+
 ## Excel / spreadsheet import contract
 
 Excel, CSV, and other tabular sources can be normalized into this structure.

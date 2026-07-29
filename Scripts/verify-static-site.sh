@@ -92,6 +92,7 @@ python3 - "$ROOT_DIR" \
 import json
 import re
 import sys
+from datetime import date
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -327,27 +328,7 @@ if not (
 ):
     raise SystemExit("compatibility profiles must support unreported unified memory")
 
-profiles = database.get("testProfiles")
-games = database.get("games")
-reports = database.get("reports")
-if not all(isinstance(collection, list) for collection in (profiles, games, reports)):
-    raise SystemExit("compatibility database collections must be arrays")
-
-def index_unique(items, collection_name):
-    indexed = {}
-    for item in items:
-        identifier = item.get("id") if isinstance(item, dict) else None
-        if not isinstance(identifier, str) or not identifier:
-            raise SystemExit(f"{collection_name} contains an invalid id")
-        if identifier in indexed:
-            raise SystemExit(f"{collection_name} contains duplicate id: {identifier}")
-        indexed[identifier] = item
-    return indexed
-
-profile_by_id = index_unique(profiles, "testProfiles")
-game_by_id = index_unique(games, "games")
-report_by_id = index_unique(reports, "reports")
-
+identifier_pattern = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 allowed_statuses = {"playable", "testing", "blocked", "unknown"}
 allowed_sources = {"project-test", "github-issue", "community-report"}
 allowed_blockers = {
@@ -359,194 +340,249 @@ allowed_blockers = {
     "unknown",
     None,
 }
-for game_id, game in game_by_id.items():
-    titles = game.get("titles")
-    if not isinstance(titles, dict) or not all(
-        isinstance(titles.get(locale), str) and titles[locale].strip()
-        for locale in ("en", "ko")
-    ):
-        raise SystemExit(f"game {game_id} must include non-empty English and Korean titles")
 
-for report_id, report in report_by_id.items():
-    if report.get("gameId") not in game_by_id:
-        raise SystemExit(f"report {report_id} references an unknown game")
-    test_profile_id = report.get("testProfileId")
-    if test_profile_id is not None and test_profile_id not in profile_by_id:
-        raise SystemExit(f"report {report_id} references an unknown test profile")
-    if report.get("status") not in allowed_statuses:
-        raise SystemExit(f"report {report_id} has an invalid status")
-    if report.get("source") not in allowed_sources:
-        raise SystemExit(f"report {report_id} has an invalid source")
-    reporter = report.get("reporter")
-    if reporter is not None and (
-        not isinstance(reporter, str) or not reporter.strip()
-    ):
-        raise SystemExit(f"report {report_id} has an invalid reporter")
-    if report.get("blocker") not in allowed_blockers:
-        raise SystemExit(f"report {report_id} has an invalid blocker")
-
-seed_game_ids = {
-    "stellar-blade",
-    "atomic-heart",
-    "overwatch",
-    "counter-strike-2",
-    "half-life-2",
-    "heroes-might-magic-olden-era",
-    "kingdom-come-deliverance",
-    "left-4-dead",
-    "once-human",
-    "pragmata",
-    "the-walking-dead",
-    "yu-gi-oh-master-duel",
-}
-missing_seed_games = seed_game_ids - game_by_id.keys()
-if missing_seed_games:
-    raise SystemExit(f"compatibility database is missing seed games: {sorted(missing_seed_games)}")
-
-profile = profile_by_id.get("apple-silicon-m4-pro-24gb")
-if not profile or profile.get("chip") != "M4 Pro" or profile.get("unifiedMemoryGB") != 24:
-    raise SystemExit("compatibility database must include the M4 Pro 24GB test profile")
-
-seed_reports = [
-    report for report in reports
-    if report.get("gameId") in seed_game_ids
-    and report.get("testProfileId") == "apple-silicon-m4-pro-24gb"
-    and report.get("status") == "playable"
-]
-if {report["gameId"] for report in seed_reports} != seed_game_ids:
-    raise SystemExit("every seed game must have a playable M4 Pro 24GB report")
-
-tekken_profile = profile_by_id.get("apple-silicon-m3-max-36gb-tahoe-26-5-1")
-if (
-    not tekken_profile
-    or tekken_profile.get("chip") != "M3 Max"
-    or tekken_profile.get("unifiedMemoryGB") != 36
-    or tekken_profile.get("macOSVersion") != "Tahoe 26.5.1"
-):
-    raise SystemExit(
-        "compatibility database must include the reported M3 Max 36GB "
-        "Tahoe 26.5.1 profile"
-    )
-
-tekken_report = report_by_id.get("tekken-8-m3-max-36gb-community-guswnswkd15")
-if (
-    "tekken-8" not in game_by_id
-    or not tekken_report
-    or tekken_report.get("gameId") != "tekken-8"
-    or tekken_report.get("testProfileId") != tekken_profile.get("id")
-    or tekken_report.get("status") != "playable"
-    or tekken_report.get("source") != "github-issue"
-    or tekken_report.get("reporter") != "guswnswkd15"
-):
-    raise SystemExit("compatibility database must include the Tekken 8 GitHub issue report")
-
-tekken_notes = tekken_report.get("notes")
-if not isinstance(tekken_notes, dict) or not all(
-    isinstance(tekken_notes.get(locale), str) and tekken_notes[locale].strip()
-    for locale in locale_names
-):
-    raise SystemExit("Tekken 8 report notes must cover all eight site locales")
-
-if database.get("updatedAt") != "2026-07-29":
-    raise SystemExit("compatibility database update date must reflect the latest reports")
-
-community_report_expectations = {
-    "umamusume-pretty-derby-community-lotus-20260729": {
-        "gameId": "umamusume-pretty-derby",
-        "testProfileId": None,
-        "reporter": "로투스홍차튀김",
-        "blocker": "unknown",
-    },
-    "grand-theft-auto-iv-community-anonymous-20260729": {
-        "gameId": "grand-theft-auto-iv",
-        "testProfileId": None,
-        "reporter": "ㅇㅇ",
-        "blocker": "launcher",
-    },
-    "blue-archive-m4-pro-24gb-community-macgallery-20260729": {
-        "gameId": "blue-archive",
-        "testProfileId": "apple-silicon-m4-pro-24gb",
-        "reporter": "맥갤러",
-        "blocker": "security-module",
-    },
-}
-for report_id, expected in community_report_expectations.items():
-    report = report_by_id.get(report_id)
-    if (
-        not report
-        or report.get("gameId") != expected["gameId"]
-        or report.get("testProfileId") != expected["testProfileId"]
-        or report.get("status") != "blocked"
-        or report.get("source") != "community-report"
-        or report.get("reporter") != expected["reporter"]
-        or report.get("blocker") != expected["blocker"]
-    ):
-        raise SystemExit(f"compatibility database has an invalid community report: {report_id}")
-    notes = report.get("notes")
-    if not isinstance(notes, dict) or not all(
-        isinstance(notes.get(locale), str) and notes[locale].strip()
-        for locale in locale_names
-    ):
-        raise SystemExit(f"community report notes must cover all eight locales: {report_id}")
-
-eternal_return_report = report_by_id.get(
-    "eternal-return-m4-pro-24gb-project-20260729"
-)
-if (
-    "eternal-return" not in game_by_id
-    or not eternal_return_report
-    or eternal_return_report.get("gameId") != "eternal-return"
-    or eternal_return_report.get("testProfileId") != "apple-silicon-m4-pro-24gb"
-    or eternal_return_report.get("status") != "playable"
-    or eternal_return_report.get("source") != "project-test"
-    or eternal_return_report.get("testedAt") != "2026-07-29"
-    or eternal_return_report.get("blocker") is not None
-):
-    raise SystemExit(
-        "compatibility database must include the Eternal Return M4 Pro 24GB test"
-    )
-
-m5_max_profile = profile_by_id.get("apple-silicon-m5-max")
-if (
-    not m5_max_profile
-    or m5_max_profile.get("chip") != "M5 Max"
-    or m5_max_profile.get("unifiedMemoryGB") is not None
-    or m5_max_profile.get("macOSVersion") is not None
-):
-    raise SystemExit(
-        "compatibility database must preserve unreported M5 Max profile details"
-    )
-
-m5_max_community_reports = {
-    "shape-of-dreams-m5-max-community-ieungieungi-20260729": (
-        "shape-of-dreams",
-        "Shape of Dreams",
-    ),
-    "meccha-chameleon-m5-max-community-ieungieungi-20260729": (
-        "meccha-chameleon",
-        "MECCHA CHAMELEON",
-    ),
-}
-for report_id, (game_id, official_title) in m5_max_community_reports.items():
-    game = game_by_id.get(game_id)
-    report = report_by_id.get(report_id)
-    if (
-        not game
-        or game.get("titles", {}).get("en") != official_title
-        or game.get("titles", {}).get("ko") != official_title
-        or not report
-        or report.get("gameId") != game_id
-        or report.get("testProfileId") != m5_max_profile.get("id")
-        or report.get("status") != "playable"
-        or report.get("source") != "community-report"
-        or report.get("reporter") != "ㅇ이응이ㅇ"
-        or report.get("testedAt") is not None
-        or report.get("notes") is not None
-        or report.get("blocker") is not None
-    ):
+def require_object_shape(item, required, allowed, label):
+    if not isinstance(item, dict):
+        raise SystemExit(f"{label} must be an object")
+    missing = required - item.keys()
+    extra = item.keys() - allowed
+    if missing or extra:
         raise SystemExit(
-            f"compatibility database has an invalid M5 Max community report: {report_id}"
+            f"{label} has invalid fields; missing={sorted(missing)} "
+            f"extra={sorted(extra)}"
         )
+
+def parse_iso_date(value, label):
+    if not isinstance(value, str):
+        raise SystemExit(f"{label} must be an ISO date")
+    try:
+        parsed = date.fromisoformat(value)
+    except ValueError as exc:
+        raise SystemExit(f"{label} must be an ISO date: {exc}")
+    if parsed.isoformat() != value:
+        raise SystemExit(f"{label} must use YYYY-MM-DD format")
+    return parsed
+
+def index_unique(items, collection_name):
+    indexed = {}
+    for item in items:
+        identifier = item.get("id") if isinstance(item, dict) else None
+        if (
+            not isinstance(identifier, str)
+            or not identifier_pattern.fullmatch(identifier)
+        ):
+            raise SystemExit(f"{collection_name} contains an invalid id")
+        if identifier in indexed:
+            raise SystemExit(f"{collection_name} contains duplicate id: {identifier}")
+        indexed[identifier] = item
+    return indexed
+
+def validate_compatibility_database(candidate):
+    require_object_shape(
+        candidate,
+        {"schemaVersion", "updatedAt", "testProfiles", "games", "reports"},
+        {"$schema", "schemaVersion", "updatedAt", "testProfiles", "games", "reports"},
+        "compatibility database",
+    )
+    if candidate.get("schemaVersion") != 1:
+        raise SystemExit("compatibility database schemaVersion must be 1")
+
+    updated_at = parse_iso_date(
+        candidate.get("updatedAt"),
+        "compatibility database updatedAt",
+    )
+    profiles = candidate.get("testProfiles")
+    games = candidate.get("games")
+    reports = candidate.get("reports")
+    if not all(
+        isinstance(collection, list)
+        for collection in (profiles, games, reports)
+    ):
+        raise SystemExit("compatibility database collections must be arrays")
+    if not games or not reports:
+        raise SystemExit("compatibility database must include games and reports")
+
+    profile_by_id = index_unique(profiles, "testProfiles")
+    game_by_id = index_unique(games, "games")
+    report_by_id = index_unique(reports, "reports")
+
+    for profile_id, profile in profile_by_id.items():
+        require_object_shape(
+            profile,
+            {"id", "platform", "chip", "unifiedMemoryGB", "macOSVersion"},
+            {"id", "platform", "chip", "unifiedMemoryGB", "macOSVersion"},
+            f"profile {profile_id}",
+        )
+        if not all(
+            isinstance(profile.get(field), str) and profile[field].strip()
+            for field in ("platform", "chip")
+        ):
+            raise SystemExit(f"profile {profile_id} has invalid platform or chip")
+        memory = profile.get("unifiedMemoryGB")
+        if memory is not None and (
+            isinstance(memory, bool)
+            or not isinstance(memory, int)
+            or memory < 1
+        ):
+            raise SystemExit(f"profile {profile_id} has invalid unified memory")
+        macos_version = profile.get("macOSVersion")
+        if macos_version is not None and (
+            not isinstance(macos_version, str) or not macos_version.strip()
+        ):
+            raise SystemExit(f"profile {profile_id} has invalid macOS version")
+
+    for game_id, game in game_by_id.items():
+        require_object_shape(
+            game,
+            {"id", "titles"},
+            {"id", "titles"},
+            f"game {game_id}",
+        )
+        titles = game.get("titles")
+        if not isinstance(titles, dict) or not all(
+            isinstance(titles.get(locale), str) and titles[locale].strip()
+            for locale in ("en", "ko")
+        ):
+            raise SystemExit(
+                f"game {game_id} must include non-empty English and Korean titles"
+            )
+        if not all(
+            isinstance(value, str) and value.strip()
+            for value in titles.values()
+        ):
+            raise SystemExit(f"game {game_id} contains an invalid localized title")
+
+    reported_game_ids = set()
+    for report_id, report in report_by_id.items():
+        require_object_shape(
+            report,
+            {
+                "id",
+                "gameId",
+                "testProfileId",
+                "status",
+                "source",
+                "testedAt",
+                "notes",
+                "blocker",
+            },
+            {
+                "id",
+                "gameId",
+                "testProfileId",
+                "status",
+                "source",
+                "reporter",
+                "testedAt",
+                "notes",
+                "blocker",
+            },
+            f"report {report_id}",
+        )
+        game_id = report.get("gameId")
+        if game_id not in game_by_id:
+            raise SystemExit(f"report {report_id} references an unknown game")
+        reported_game_ids.add(game_id)
+
+        test_profile_id = report.get("testProfileId")
+        if test_profile_id is not None and test_profile_id not in profile_by_id:
+            raise SystemExit(
+                f"report {report_id} references an unknown test profile"
+            )
+        status = report.get("status")
+        if status not in allowed_statuses:
+            raise SystemExit(f"report {report_id} has an invalid status")
+        source = report.get("source")
+        if source not in allowed_sources:
+            raise SystemExit(f"report {report_id} has an invalid source")
+        reporter = report.get("reporter")
+        if reporter is not None and (
+            not isinstance(reporter, str) or not reporter.strip()
+        ):
+            raise SystemExit(f"report {report_id} has an invalid reporter")
+        if source != "project-test" and not reporter:
+            raise SystemExit(
+                f"report {report_id} must attribute a non-project source"
+            )
+
+        blocker = report.get("blocker")
+        if blocker not in allowed_blockers:
+            raise SystemExit(f"report {report_id} has an invalid blocker")
+        if status == "playable" and blocker is not None:
+            raise SystemExit(f"playable report {report_id} cannot have a blocker")
+        if status == "blocked" and blocker is None:
+            raise SystemExit(f"blocked report {report_id} must include a blocker")
+
+        tested_at = report.get("testedAt")
+        if tested_at is not None:
+            tested_date = parse_iso_date(
+                tested_at,
+                f"report {report_id} testedAt",
+            )
+            if tested_date > updated_at:
+                raise SystemExit(
+                    f"report {report_id} is newer than database updatedAt"
+                )
+
+        notes = report.get("notes")
+        if notes is not None and (
+            not isinstance(notes, dict)
+            or not all(
+                isinstance(notes.get(locale), str) and notes[locale].strip()
+                for locale in locale_names
+            )
+        ):
+            raise SystemExit(
+                f"report {report_id} notes must cover all eight site locales"
+            )
+
+    unreported_games = game_by_id.keys() - reported_game_ids
+    if unreported_games:
+        raise SystemExit(
+            f"compatibility database contains games without reports: "
+            f"{sorted(unreported_games)}"
+        )
+
+validate_compatibility_database(database)
+
+# A minimal future database must pass without changing this verifier. This
+# guards the compatibility pipeline against content-specific hardcoding.
+validate_compatibility_database({
+    "$schema": "./compatibility.schema.json",
+    "schemaVersion": 1,
+    "updatedAt": "2099-01-02",
+    "testProfiles": [
+        {
+            "id": "apple-silicon-future-chip",
+            "platform": "Apple Silicon Mac",
+            "chip": "Future Chip",
+            "unifiedMemoryGB": None,
+            "macOSVersion": None,
+        }
+    ],
+    "games": [
+        {
+            "id": "future-test-game",
+            "titles": {
+                "en": "Future Test Game",
+                "ko": "Future Test Game",
+            },
+        }
+    ],
+    "reports": [
+        {
+            "id": "future-test-game-community-report",
+            "gameId": "future-test-game",
+            "testProfileId": "apple-silicon-future-chip",
+            "status": "playable",
+            "source": "community-report",
+            "reporter": "future-reporter",
+            "testedAt": "2099-01-02",
+            "notes": None,
+            "blocker": None,
+        }
+    ],
+})
 
 announcements_path = root / "site-data" / "announcements.json"
 announcements_schema_path = root / "site-data" / "announcements.schema.json"
@@ -758,7 +794,7 @@ require_snippet "$ROOT_DIR/index.html" 'href="compatibility.html"'
 require_snippet "$ROOT_DIR/index.html" 'PLAYABLE IN GAME MODE'
 require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
-require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260729-14"'
+require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260729-15"'
 require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260729-14"'
 require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260729-14"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
@@ -780,12 +816,12 @@ require_snippet "$ROOT_DIR/compatibility.html" 'Logs shorten the distance to a f
 require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.logLabel"'
 require_snippet "$ROOT_DIR/compatibility.html" 'issues/new?template=compatibility-report.yml'
 require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260729-14"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260729-15"'
 require_snippet "$ROOT_DIR/compatibility.js" 'site-data/compatibility-games.json'
 require_snippet "$ROOT_DIR/compatibility.js" 'forgeplay:localechange'
-require_snippet "$ROOT_DIR/compatibility.js" 'document.currentScript?.src'
-require_snippet "$ROOT_DIR/compatibility.js" 'url.searchParams.set("v", version)'
-require_snippet "$ROOT_DIR/compatibility.js" 'cache: "no-cache"'
+require_snippet "$ROOT_DIR/compatibility.js" 'const cacheBustedDataURL = (path) =>'
+require_snippet "$ROOT_DIR/compatibility.js" 'url.searchParams.set("refresh", Date.now().toString())'
+require_snippet "$ROOT_DIR/compatibility.js" 'cache: "no-store"'
 require_snippet "$ROOT_DIR/compatibility.js" 'const playableGameIds = new Set('
 require_snippet "$ROOT_DIR/compatibility.js" 'element.textContent = String(playableGameIds.size)'
 require_snippet "$ROOT_DIR/compatibility.js" '"github-issue": "compat.verificationGitHubIssue"'
@@ -801,6 +837,8 @@ require_snippet "$ROOT_DIR/site.js" '"compat.verificationCommunityReport": "커�
 require_snippet "$ROOT_DIR/site.js" '"compat.deviceNotReported": "기기 정보 없음"'
 require_snippet "$ROOT_DIR/site.js" '"compat.blockerSecurityModule": "보안 모듈로 인해 실행이 제한됩니다."'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Excel / spreadsheet import contract'
+require_snippet "$ROOT_DIR/site-data/README.md" 'Compatibility-only update workflow'
+require_snippet "$ROOT_DIR/site-data/README.md" 'Edit only `compatibility-games.json`'
 require_snippet "$ROOT_DIR/site-data/README.md" '`reporter`'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Developer app catalog'
 require_snippet "$ROOT_DIR/site-data/README.md" 'DeveloperAppCatalog.swift'
