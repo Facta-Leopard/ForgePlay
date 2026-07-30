@@ -1,7 +1,7 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 1,
-  "updatedAt": "2026-07-29",
+  "updatedAt": "2026-07-30",
   "testProfiles": [
     {
       "id": "apple-silicon-m4-pro-24gb",
@@ -171,6 +171,27 @@
       "titles": {
         "en": "Legend of Mortal",
         "ko": "활협전"
+      }
+    },
+    {
+      "id": "warno",
+      "titles": {
+        "en": "WARNO",
+        "ko": "WARNO"
+      }
+    },
+    {
+      "id": "djmax-respect-v",
+      "titles": {
+        "en": "DJMAX RESPECT V",
+        "ko": "DJMAX RESPECT V"
+      }
+    },
+    {
+      "id": "helldivers-2",
+      "titles": {
+        "en": "HELLDIVERS 2",
+        "ko": "헬다이버즈 2"
       }
     }
   ],
@@ -428,6 +449,48 @@
       "testedAt": null,
       "notes": null,
       "blocker": "unknown"
+    },
+    {
+      "id": "warno-community-anonymous-20260730",
+      "gameId": "warno",
+      "testProfileId": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "ㅇㅇ",
+      "testedAt": null,
+      "notes": null,
+      "blocker": null
+    },
+    {
+      "id": "djmax-respect-v-community-anonymous-20260730",
+      "gameId": "djmax-respect-v",
+      "testProfileId": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "ㅇㅇ",
+      "testedAt": null,
+      "notes": null,
+      "blocker": null
+    },
+    {
+      "id": "helldivers-2-community-anonymous-20260730",
+      "gameId": "helldivers-2",
+      "testProfileId": null,
+      "status": "blocked",
+      "source": "community-report",
+      "reporter": "ㅇㅇ",
+      "testedAt": null,
+      "notes": {
+        "en": "Launch is blocked by nProtect GameGuard before gameplay.",
+        "ko": "게임 진입 전에 nProtect GameGuard에서 차단됩니다.",
+        "ja": "ゲーム開始前にnProtect GameGuardによってブロックされます。",
+        "zh-Hans": "进入游戏前会被 nProtect GameGuard 阻止。",
+        "zh-Hant": "進入遊戲前會被 nProtect GameGuard 阻擋。",
+        "de": "Der Start wird vor dem Spiel durch nProtect GameGuard blockiert.",
+        "es": "nProtect GameGuard bloquea el inicio antes de entrar al juego.",
+        "fr": "nProtect GameGuard bloque le lancement avant l’accès au jeu."
+      },
+      "blocker": "anti-cheat"
     }
   ]
 }
