@@ -37,6 +37,13 @@
       "chip": "M4",
       "unifiedMemoryGB": 16,
       "macOSVersion": null
+    },
+    {
+      "id": "apple-silicon-m5-pro-24gb-tahoe-26-5-2",
+      "platform": "Apple Silicon Mac",
+      "chip": "M5 Pro",
+      "unifiedMemoryGB": 24,
+      "macOSVersion": "Tahoe 26.5.2"
     }
   ],
   "games": [
@@ -234,6 +241,20 @@
       "titles": {
         "en": "Spelunky 2",
         "ko": "스펠렁키 2"
+      }
+    },
+    {
+      "id": "fallout-4",
+      "titles": {
+        "en": "Fallout 4",
+        "ko": "폴아웃 4"
+      }
+    },
+    {
+      "id": "kingdom-come-deliverance-ii",
+      "titles": {
+        "en": "Kingdom Come: Deliverance II",
+        "ko": "킹덤 컴: 딜리버런스 II"
       }
     }
   ],
@@ -623,6 +644,48 @@
         "fr": "La modification des touches dans les paramètres du jeu affiche « Error », mais les touches configurées fonctionnent correctement en jeu."
       },
       "blocker": null
+    },
+    {
+      "id": "fallout-4-m5-pro-24gb-community-macgallery21-20260802",
+      "gameId": "fallout-4",
+      "testProfileId": "apple-silicon-m5-pro-24gb-tahoe-26-5-2",
+      "forgePlayVersion": "1.0",
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "맥갤러21",
+      "testedAt": null,
+      "notes": {
+        "en": "Runs smoothly using D3DMetal.",
+        "ko": "D3DMetal로 원활하게 플레이됩니다.",
+        "ja": "D3DMetalでスムーズにプレイできます。",
+        "zh-Hans": "使用 D3DMetal 可流畅游玩。",
+        "zh-Hant": "使用 D3DMetal 可流暢遊玩。",
+        "de": "Läuft mit D3DMetal flüssig.",
+        "es": "Funciona con fluidez usando D3DMetal.",
+        "fr": "Fonctionne de manière fluide avec D3DMetal."
+      },
+      "blocker": null
+    },
+    {
+      "id": "kingdom-come-deliverance-ii-m5-pro-24gb-community-macgallery21-20260802",
+      "gameId": "kingdom-come-deliverance-ii",
+      "testProfileId": "apple-silicon-m5-pro-24gb-tahoe-26-5-2",
+      "forgePlayVersion": "1.0",
+      "status": "blocked",
+      "source": "community-report",
+      "reporter": "맥갤러21",
+      "testedAt": null,
+      "notes": {
+        "en": "After launch, the screen remains black with only the cursor visible, preventing gameplay.",
+        "ko": "실행 후 검은 화면에 커서만 표시되어 게임을 진행할 수 없습니다.",
+        "ja": "起動後は黒い画面にカーソルだけが表示され、ゲームを進められません。",
+        "zh-Hans": "启动后只显示黑屏和光标，无法继续游戏。",
+        "zh-Hant": "啟動後只顯示黑畫面與游標，無法繼續遊戲。",
+        "de": "Nach dem Start bleibt der Bildschirm schwarz und nur der Mauszeiger ist sichtbar; das Spiel kann nicht fortgesetzt werden.",
+        "es": "Tras iniciarse, la pantalla queda negra y solo se ve el cursor, por lo que no es posible continuar.",
+        "fr": "Après le lancement, l’écran reste noir et seul le curseur est visible, ce qui empêche de poursuivre."
+      },
+      "blocker": "graphics"
     }
   ]
 }
