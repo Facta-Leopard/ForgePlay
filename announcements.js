@@ -55,6 +55,11 @@
     }).format(date);
   };
 
+  const announcementAnchorId = (identifier) => `update-${identifier}`;
+  const announcementDetailHref = (identifier) => (
+    `updates.html#${announcementAnchorId(identifier)}`
+  );
+
   const localizedHref = (href, selectedLocale) => {
     if (!href || href.startsWith("#") || /^[a-z][a-z0-9+.-]*:/i.test(href)) {
       return href;
@@ -119,6 +124,7 @@
     announcements.forEach((announcement, index) => {
       const article = document.createElement("article");
       article.className = "update-card";
+      article.id = announcementAnchorId(announcement.id);
       article.dataset.type = announcement.type;
 
       const meta = document.createElement("div");
@@ -152,13 +158,15 @@
         appendTextElement(copy, "p", "", localizedText(announcement.summaries, selectedLocale));
       }
 
-      const link = appendTextElement(
-        copy,
-        "a",
-        "text-link update-card-link",
-        message("updates.openLink", "Open update ↗")
-      );
-      applyLinkDestination(link, announcement.href, selectedLocale);
+      if (announcement.href !== announcementDetailHref(announcement.id)) {
+        const link = appendTextElement(
+          copy,
+          "a",
+          "text-link update-card-link",
+          message("updates.openLink", "Open update ↗")
+        );
+        applyLinkDestination(link, announcement.href, selectedLocale);
+      }
 
       article.append(meta, copy);
       fragment.append(article);
@@ -167,6 +175,11 @@
     list.replaceChildren(fragment);
     list.setAttribute("aria-busy", "false");
     if (emptyState) emptyState.hidden = announcements.length !== 0;
+
+    const requestedCard = document.getElementById(window.location.hash.slice(1));
+    if (requestedCard?.classList.contains("update-card")) {
+      window.requestAnimationFrame(() => requestedCard.scrollIntoView({ block: "center" }));
+    }
   };
 
   const render = () => {

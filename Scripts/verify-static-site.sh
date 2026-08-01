@@ -277,6 +277,35 @@ for path in paths:
     for reference in references:
         parsed = urlsplit(reference)
         if parsed.scheme or parsed.netloc:
+            if parsed.scheme.lower() != "https":
+                raise SystemExit(
+                    f"{path}: external references must use HTTPS: {reference}"
+                )
+            if (
+                parsed.netloc.lower() == "github.com"
+                and parsed.path.lower().startswith("/facta-leopard/forgeplay/issues")
+            ):
+                allowed_issue_destinations = {
+                    (
+                        "support.html",
+                        "/facta-leopard/forgeplay/issues/new/choose",
+                        "",
+                    ),
+                    (
+                        "compatibility.html",
+                        "/facta-leopard/forgeplay/issues/new",
+                        "template=compatibility-report.yml",
+                    ),
+                }
+                issue_destination = (
+                    path.name,
+                    parsed.path.lower(),
+                    parsed.query.lower(),
+                )
+                if issue_destination not in allowed_issue_destinations:
+                    raise SystemExit(
+                        f"{path}: unexpected GitHub Issues destination: {reference}"
+                    )
             continue
         target = parsed.path
         if target.startswith("/"):
@@ -820,6 +849,51 @@ for announcement in announcements:
     href = announcement.get("href")
     if not isinstance(href, str) or not href.strip():
         raise SystemExit(f"announcement {identifier} has an invalid destination")
+    parsed_href = urlsplit(href)
+    if parsed_href.scheme or parsed_href.netloc:
+        if parsed_href.scheme != "https":
+            raise SystemExit(
+                f"announcement {identifier} external destination must use HTTPS"
+            )
+        if (
+            parsed_href.netloc.lower() == "github.com"
+            and parsed_href.path.lower().startswith("/facta-leopard/forgeplay/issues")
+        ):
+            raise SystemExit(
+                f"announcement {identifier} must not use GitHub Issues as its detail link"
+            )
+    else:
+        if parsed_href.path.startswith("/"):
+            raise SystemExit(
+                f"announcement {identifier} destination must be relative to the site"
+            )
+        announcement_target = (root / (parsed_href.path or "updates.html")).resolve()
+        try:
+            announcement_target.relative_to(root_resolved)
+        except ValueError:
+            raise SystemExit(
+                f"announcement {identifier} destination escapes the project root"
+            )
+        if not announcement_target.is_file():
+            raise SystemExit(
+                f"announcement {identifier} destination does not exist: {href}"
+            )
+        expected_dynamic_fragment = f"update-{identifier}"
+        if parsed_href.fragment == expected_dynamic_fragment:
+            if announcement_target != (root / "updates.html").resolve():
+                raise SystemExit(
+                    f"announcement {identifier} detail anchor must target updates.html"
+                )
+        elif parsed_href.fragment:
+            if announcement_target.suffix.lower() != ".html":
+                raise SystemExit(
+                    f"announcement {identifier} fragment target is not an HTML page"
+                )
+            _, announcement_target_ids, _ = parse_page(announcement_target)
+            if parsed_href.fragment not in announcement_target_ids:
+                raise SystemExit(
+                    f"announcement {identifier} has a missing fragment target: {href}"
+                )
     if href.split("?", 1)[0].split("#", 1)[0] == "compatibility.html":
         raise SystemExit(
             "routine compatibility database changes must not become project notices"
@@ -833,6 +907,12 @@ for announcement in announcements:
 
     paragraphs = announcement.get("paragraphs")
     if paragraphs is not None:
+        expected_detail_href = f"updates.html#update-{identifier}"
+        if href != expected_detail_href:
+            raise SystemExit(
+                f"announcement {identifier} with full text must link to "
+                f"its internal detail card: {expected_detail_href}"
+            )
         if not isinstance(paragraphs, dict) or set(paragraphs) != set(locale_names):
             raise SystemExit(
                 f"announcement {identifier} paragraphs must contain all eight locales"
@@ -1047,7 +1127,7 @@ require_snippet "$ROOT_DIR/index.html" 'PLAYABLE IN GAME MODE'
 require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
 require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260802-19"'
-require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260801-17"'
+require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260802-20"'
 require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260729-14"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
 require_snippet "$ROOT_DIR/index.html" 'id="other-apps"'
@@ -1129,7 +1209,7 @@ require_snippet "$ROOT_DIR/.github/ISSUE_TEMPLATE/compatibility-report.yml" 'Thi
 
 require_snippet "$ROOT_DIR/updates.html" 'data-announcement-list'
 require_snippet "$ROOT_DIR/updates.html" 'data-nav-page="updates"'
-require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260801-17"'
+require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260802-20"'
 require_snippet "$ROOT_DIR/updates.html" 'Releases, project notices, and development updates in one place.'
 require_snippet "$ROOT_DIR/announcements.js" 'site-data/announcements.json'
 require_snippet "$ROOT_DIR/announcements.js" 'forgeplay:localechange'
@@ -1137,6 +1217,10 @@ require_snippet "$ROOT_DIR/announcements.js" 'applyLinkDestination'
 require_snippet "$ROOT_DIR/announcements.js" 'const cacheBustedDataURL = (path) =>'
 require_snippet "$ROOT_DIR/announcements.js" 'url.searchParams.set("refresh", Date.now().toString())'
 require_snippet "$ROOT_DIR/announcements.js" 'const localizedParagraphs = (value, selectedLocale) =>'
+require_snippet "$ROOT_DIR/announcements.js" 'const announcementAnchorId = (identifier) => `update-${identifier}`'
+require_snippet "$ROOT_DIR/announcements.js" 'article.id = announcementAnchorId(announcement.id)'
+require_snippet "$ROOT_DIR/announcements.js" 'announcement.href !== announcementDetailHref(announcement.id)'
+require_snippet "$ROOT_DIR/announcements.js" 'requestedCard.scrollIntoView({ block: "center" })'
 require_snippet "$ROOT_DIR/announcements.js" 'body.className = "update-card-body"'
 require_snippet "$ROOT_DIR/announcements.js" 'cache: "no-store"'
 require_snippet "$ROOT_DIR/site.css" '.update-card-body {'

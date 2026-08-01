@@ -1,7 +1,7 @@
 {
   "$schema": "./announcements.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-08-01",
+  "updatedAt": "2026-08-02",
   "announcements": [
     {
       "id": "next-forgeplay-update-underway",
@@ -78,7 +78,7 @@
           "ForgePlay 目前使用 Wine 11.12、Apple Game Porting Toolkit（GPTK）4.0 beta，以及自主開發的 macOS 遊戲模式進入流程，讓 Windows 遊戲能夠在 Mac 上執行。ForgePlay 開發或修改的相關原始碼，會在每次發布時依據各元件的授權條款一併公開。"
         ]
       },
-      "href": "https://github.com/Facta-Leopard/ForgePlay/issues"
+      "href": "updates.html#update-next-forgeplay-update-underway"
     },
     {
       "id": "game-mode-first",
