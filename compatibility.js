@@ -62,13 +62,19 @@
     return profile.chip + memory;
   };
 
-  const formatProfileDetails = (profile) => {
-    if (!profile) return "";
-    return [
-      profile.platform,
-      profile.macOSVersion ? "macOS " + profile.macOSVersion : null
-    ].filter(Boolean).join(" · ") || "—";
-  };
+  const formatProfilePlatform = (profile) => (
+    profile && typeof profile.platform === "string"
+      ? profile.platform.trim()
+      : ""
+  );
+
+  const formatMacOSVersion = (profile) => (
+    profile
+    && typeof profile.macOSVersion === "string"
+    && profile.macOSVersion.trim()
+      ? profile.macOSVersion.trim()
+      : message("compat.versionNotReported", "Version not provided")
+  );
 
   const formatDate = (value, selectedLocale) => {
     if (!value) return "";
@@ -140,6 +146,19 @@
       : message("compat.gameVersionNotReported", "Game version not provided")
   );
 
+  const appendVersionBadges = (cell, records, resolveVersion) => {
+    const seenVersions = new Set();
+    records.forEach((record) => {
+      const version = resolveVersion(record);
+      if (seenVersions.has(version)) return;
+      seenVersions.add(version);
+      appendTextElement(cell, "span", "compatibility-version", version);
+    });
+    if (!seenVersions.size) {
+      appendTextElement(cell, "span", "compatibility-version-empty", "—");
+    }
+  };
+
   const verificationDetails = (report, selectedLocale) => {
     const details = [
       report.reporter ? "@" + report.reporter : null,
@@ -190,10 +209,21 @@
       message("compat.columnDevice", "Tested device")
     );
     appendTextElement(deviceCell, "strong", "", formatProfile(profile));
-    const profileDetails = formatProfileDetails(profile);
-    if (profileDetails) {
-      appendTextElement(deviceCell, "span", "", profileDetails);
+    const profilePlatform = formatProfilePlatform(profile);
+    if (profilePlatform) {
+      appendTextElement(deviceCell, "span", "", profilePlatform);
     }
+
+    const macOSVersionCell = makeRecordCell(
+      "compatibility-record-version-cell compatibility-record-macos-cell",
+      message("compat.columnMacOSVersion", "macOS version")
+    );
+    appendTextElement(
+      macOSVersionCell,
+      "strong",
+      "",
+      formatMacOSVersion(profile)
+    );
 
     const verificationCell = makeRecordCell(
       "compatibility-verification-cell",
@@ -219,6 +249,7 @@
       forgePlayVersionCell,
       gameVersionCell,
       deviceCell,
+      macOSVersionCell,
       verificationCell,
       notesCell
     );
@@ -302,7 +333,7 @@
       const blockedRecords = sortedRecords.filter(({ report }) => (
         report.status === "blocked"
       ));
-      const versionSummaryRecords = playableRecords.length
+      const headlineRecords = playableRecords.length
         ? playableRecords
         : sortedRecords;
 
@@ -373,26 +404,21 @@
           "Tested ForgePlay versions"
         )
       );
-      const seenVersions = new Set();
-      versionSummaryRecords.forEach(({ report }) => {
-        const version = reportVersion(report);
-        if (seenVersions.has(version)) return;
-        seenVersions.add(version);
-        appendTextElement(
-          versionCell,
-          "span",
-          "compatibility-version",
-          version
-        );
-      });
-      if (!seenVersions.size) {
-        appendTextElement(
-          versionCell,
-          "span",
-          "compatibility-version-empty",
-          "—"
-        );
-      }
+      appendVersionBadges(
+        versionCell,
+        headlineRecords,
+        ({ report }) => reportVersion(report)
+      );
+
+      const macOSVersionCell = makeCell(
+        "compatibility-macos-version-cell",
+        message("compat.columnMacOSVersion", "macOS version")
+      );
+      appendVersionBadges(
+        macOSVersionCell,
+        headlineRecords,
+        ({ profile }) => formatMacOSVersion(profile)
+      );
 
       const recordsCell = makeCell(
         "compatibility-record-count-cell",
@@ -439,6 +465,7 @@
         gameCell,
         statusCell,
         versionCell,
+        macOSVersionCell,
         recordsCell,
         notesCell,
         expandCell
@@ -462,6 +489,7 @@
         message("compat.columnForgePlayVersion", "ForgePlay version"),
         message("compat.columnGameVersion", "Game version"),
         message("compat.columnDevice", "Tested device"),
+        message("compat.columnMacOSVersion", "macOS version"),
         message("compat.columnVerification", "Verification"),
         message("compat.columnNotes", "Notes")
       ].forEach((label) => appendTextElement(panelHead, "span", "", label));

@@ -3143,11 +3143,12 @@ html[lang="ko"] .compatibility-teaser-copy h2 {
 .compatibility-row {
   display: grid;
   grid-template-columns:
-    minmax(230px, 1.35fr)
-    minmax(190px, 0.95fr)
-    minmax(180px, 0.9fr)
-    minmax(120px, 0.55fr)
-    minmax(210px, 1.12fr)
+    minmax(210px, 1.25fr)
+    minmax(170px, 0.85fr)
+    minmax(140px, 0.68fr)
+    minmax(135px, 0.68fr)
+    minmax(95px, 0.45fr)
+    minmax(180px, 1fr)
     46px;
 }
 
@@ -3275,7 +3276,8 @@ html[lang="ko"] .compatibility-teaser-copy h2 {
   border-color: var(--orange);
 }
 
-.compatibility-version-cell {
+.compatibility-version-cell,
+.compatibility-macos-version-cell {
   flex-flow: row wrap !important;
   align-content: center;
   gap: 7px;
@@ -3374,12 +3376,13 @@ html[lang="ko"] .compatibility-teaser-copy h2 {
 .compatibility-record {
   display: grid;
   grid-template-columns:
-    minmax(155px, 0.72fr)
-    minmax(115px, 0.48fr)
-    minmax(130px, 0.55fr)
-    minmax(175px, 0.82fr)
-    minmax(155px, 0.72fr)
-    minmax(210px, 1.18fr);
+    minmax(135px, 0.64fr)
+    minmax(100px, 0.44fr)
+    minmax(110px, 0.48fr)
+    minmax(145px, 0.68fr)
+    minmax(120px, 0.56fr)
+    minmax(135px, 0.64fr)
+    minmax(180px, 1fr);
 }
 
 .compatibility-record-panel-head {
@@ -3650,6 +3653,10 @@ html[lang="ko"] .compatibility-teaser-copy h2 {
     border-bottom: 1px solid var(--line);
   }
 
+  .compatibility-record-notes-cell {
+    grid-column: 1 / -1;
+  }
+
   .compatibility-record-cell::before {
     content: attr(data-label);
     margin-bottom: 9px;
@@ -3852,6 +3859,7 @@ html[lang="ko"] .compatibility-teaser-copy h2 {
 
   .compatibility-status-cell,
   .compatibility-version-cell,
+  .compatibility-macos-version-cell,
   .compatibility-record-count-cell {
     grid-column: 1;
   }
@@ -3862,7 +3870,7 @@ html[lang="ko"] .compatibility-teaser-copy h2 {
 
   .compatibility-expand-cell {
     grid-column: 2;
-    grid-row: 1 / 6;
+    grid-row: 1 / 7;
   }
 
   .compatibility-record-panel {
