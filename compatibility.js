@@ -302,6 +302,9 @@
       const blockedRecords = sortedRecords.filter(({ report }) => (
         report.status === "blocked"
       ));
+      const versionSummaryRecords = playableRecords.length
+        ? playableRecords
+        : sortedRecords;
 
       const entry = document.createElement("article");
       entry.className = "compatibility-entry";
@@ -365,10 +368,13 @@
 
       const versionCell = makeCell(
         "compatibility-version-cell",
-        message("compat.columnPlayableVersions", "Playable versions")
+        message(
+          "compat.columnTestedForgePlayVersions",
+          "Tested ForgePlay versions"
+        )
       );
       const seenVersions = new Set();
-      playableRecords.forEach(({ report }) => {
+      versionSummaryRecords.forEach(({ report }) => {
         const version = reportVersion(report);
         if (seenVersions.has(version)) return;
         seenVersions.add(version);
