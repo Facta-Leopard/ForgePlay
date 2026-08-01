@@ -454,6 +454,17 @@ if not (
 ):
     raise SystemExit("compatibility profiles must support unreported unified memory")
 
+game_titles_schema = schema.get("$defs", {}).get("gameTitles", {})
+if not {"en", "ko"}.issubset(set(game_titles_schema.get("required", []))):
+    raise SystemExit("compatibility game titles must require English and Korean")
+if (
+    game_titles_schema.get("properties", {})
+    .get("ko", {})
+    .get("pattern")
+    != "[가-힣]"
+):
+    raise SystemExit("compatibility Korean game titles must require Hangul")
+
 identifier_pattern = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 allowed_statuses = {"playable", "testing", "blocked", "unknown"}
 allowed_sources = {"project-test", "github-issue", "community-report"}
@@ -577,6 +588,10 @@ def validate_compatibility_database(candidate):
             for value in titles.values()
         ):
             raise SystemExit(f"game {game_id} contains an invalid localized title")
+        if not re.search(r"[가-힣]", titles["ko"]):
+            raise SystemExit(
+                f"game {game_id} Korean title must contain Hangul"
+            )
 
     reported_game_ids = set()
     for report_id, report in report_by_id.items():
@@ -691,7 +706,7 @@ validate_compatibility_database({
             "id": "future-test-game",
             "titles": {
                 "en": "Future Test Game",
-                "ko": "Future Test Game",
+                "ko": "미래 테스트 게임",
             },
         }
     ],

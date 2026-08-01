@@ -29,7 +29,7 @@ One spreadsheet row should represent one test report. The preferred columns are:
 | --- | --- | --- |
 | `game_id` | yes | `stellar-blade` |
 | `title_en` | yes for a new game | `Stellar Blade` |
-| `title_ko` | optional | `스텔라 블레이드` |
+| `title_ko` | yes for a new game; include Hangul | `스텔라 블레이드` |
 | `status` | yes | `playable`, `testing`, `blocked`, or `unknown` |
 | `device_id` | yes; leave blank if not reported | `apple-silicon-m4-pro-24gb` |
 | `platform` | yes for a new device | `Apple Silicon Mac` |
@@ -45,6 +45,9 @@ One spreadsheet row should represent one test report. The preferred columns are:
 
 Imports must preserve existing identifiers, reject duplicate report IDs, and
 validate references against `compatibility.schema.json` before publication.
+Every game must keep both its official English title and a non-empty Korean
+title containing Hangul, including titles whose official branding is written
+only in Latin characters.
 
 ## Project notices
 

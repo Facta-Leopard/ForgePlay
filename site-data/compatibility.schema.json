@@ -54,6 +54,28 @@
         "minLength": 1
       }
     },
+    "gameTitles": {
+      "type": "object",
+      "required": [
+        "en",
+        "ko"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ko": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "[가-힣]"
+        }
+      },
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
     "testProfile": {
       "type": "object",
       "additionalProperties": false,
@@ -103,7 +125,7 @@
           "$ref": "#/$defs/identifier"
         },
         "titles": {
-          "$ref": "#/$defs/localizedText"
+          "$ref": "#/$defs/gameTitles"
         }
       }
     },

@@ -1,7 +1,7 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 1,
-  "updatedAt": "2026-07-30",
+  "updatedAt": "2026-08-01",
   "testProfiles": [
     {
       "id": "apple-silicon-m4-pro-24gb",
@@ -23,6 +23,13 @@
       "chip": "M5 Max",
       "unifiedMemoryGB": null,
       "macOSVersion": null
+    },
+    {
+      "id": "apple-silicon-m5-max-64gb-tahoe-26-5-2",
+      "platform": "Apple Silicon Mac",
+      "chip": "M5 Max",
+      "unifiedMemoryGB": 64,
+      "macOSVersion": "Tahoe 26.5.2"
     }
   ],
   "games": [
@@ -128,7 +135,7 @@
       "id": "grand-theft-auto-iv",
       "titles": {
         "en": "Grand Theft Auto IV",
-        "ko": "GTA 4"
+        "ko": "그랜드 테프트 오토 IV"
       }
     },
     {
@@ -177,14 +184,14 @@
       "id": "warno",
       "titles": {
         "en": "WARNO",
-        "ko": "WARNO"
+        "ko": "워노"
       }
     },
     {
       "id": "djmax-respect-v",
       "titles": {
         "en": "DJMAX RESPECT V",
-        "ko": "DJMAX RESPECT V"
+        "ko": "디제이맥스 리스펙트 V"
       }
     },
     {
@@ -192,6 +199,27 @@
       "titles": {
         "en": "HELLDIVERS 2",
         "ko": "헬다이버즈 2"
+      }
+    },
+    {
+      "id": "ready-or-not",
+      "titles": {
+        "en": "Ready or Not",
+        "ko": "레디 오어 낫"
+      }
+    },
+    {
+      "id": "inzoi",
+      "titles": {
+        "en": "inZOI",
+        "ko": "인조이"
+      }
+    },
+    {
+      "id": "platina-lab",
+      "titles": {
+        "en": "PLATiNA :: LAB",
+        "ko": "플라티나 :: 랩"
       }
     }
   ],
@@ -491,6 +519,48 @@
         "fr": "nProtect GameGuard bloque le lancement avant l’accès au jeu."
       },
       "blocker": "anti-cheat"
+    },
+    {
+      "id": "ready-or-not-m5-max-64gb-community-anonymous-20260801",
+      "gameId": "ready-or-not",
+      "testProfileId": "apple-silicon-m5-max-64gb-tahoe-26-5-2",
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "ㅇㅇ",
+      "testedAt": null,
+      "notes": null,
+      "blocker": null
+    },
+    {
+      "id": "inzoi-m5-max-64gb-community-anonymous-20260801",
+      "gameId": "inzoi",
+      "testProfileId": "apple-silicon-m5-max-64gb-tahoe-26-5-2",
+      "status": "blocked",
+      "source": "community-report",
+      "reporter": "ㅇㅇ",
+      "testedAt": null,
+      "notes": {
+        "en": "The game starts and finishes loading, but then remains on a black screen and cannot proceed.",
+        "ko": "게임 시작 후 로딩까지 완료되지만, 이후 검은 화면이 나타나 더 진행할 수 없습니다.",
+        "ja": "ゲームは起動して読み込みも完了しますが、その後は黒い画面のまま進行できません。",
+        "zh-Hans": "游戏能够启动并完成加载，但随后出现黑屏，无法继续。",
+        "zh-Hant": "遊戲能夠啟動並完成載入，但隨後出現黑畫面，無法繼續。",
+        "de": "Das Spiel startet und beendet den Ladevorgang, bleibt danach jedoch auf einem schwarzen Bildschirm hängen.",
+        "es": "El juego se inicia y termina de cargar, pero después queda en una pantalla negra y no permite continuar.",
+        "fr": "Le jeu démarre et termine son chargement, puis reste sur un écran noir sans permettre de continuer."
+      },
+      "blocker": "graphics"
+    },
+    {
+      "id": "platina-lab-m5-max-64gb-community-anonymous-20260801",
+      "gameId": "platina-lab",
+      "testProfileId": "apple-silicon-m5-max-64gb-tahoe-26-5-2",
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "ㅇㅇ",
+      "testedAt": null,
+      "notes": null,
+      "blocker": null
     }
   ]
 }
