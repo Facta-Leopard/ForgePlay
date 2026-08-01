@@ -1,5 +1,5 @@
 name: Compatibility report
-description: Report a game that works, fails, regresses, or is still being tested with ForgePlay.
+description: Report a game that works, fails, or is still being tested with ForgePlay.
 title: "[Compatibility] "
 labels:
   - compatibility
@@ -42,13 +42,25 @@ body:
       required: true
 
   - type: input
-    id: software
+    id: macos_version
     attributes:
-      label: Software versions
-      description: macOS version, ForgePlay version or commit, and game build when known.
-      placeholder: macOS / ForgePlay / game build
-    validations:
-      required: true
+      label: macOS version
+      description: Leave blank when the version is not available.
+      placeholder: macOS Tahoe 26.5.2
+
+  - type: input
+    id: forgeplay_version
+    attributes:
+      label: ForgePlay version
+      description: Release version or commit when known. This field is optional.
+      placeholder: v1.1.0
+
+  - type: input
+    id: game_version
+    attributes:
+      label: Game version or build
+      description: Game patch, version, or build ID when known. This field is optional.
+      placeholder: Version / patch / build ID
 
   - type: textarea
     id: behavior

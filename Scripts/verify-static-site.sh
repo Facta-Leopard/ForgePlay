@@ -33,6 +33,7 @@ PAGES=(
   site-data/why-story/ja.md
   site-data/why-story/zh-Hans.md
   site-data/why-story/zh-Hant.md
+  .github/ISSUE_TEMPLATE/compatibility-report.yml
   site-assets/forgeplay-favicon.png
   site-assets/forgeplay-hero.jpg
   site-assets/forgeplay-hero-3200.jpg
@@ -425,10 +426,22 @@ try:
 except (OSError, json.JSONDecodeError) as exc:
     raise SystemExit(f"compatibility JSON is invalid: {exc}")
 
-if database.get("schemaVersion") != 1:
-    raise SystemExit("compatibility database schemaVersion must be 1")
+if database.get("schemaVersion") != 2:
+    raise SystemExit("compatibility database schemaVersion must be 2")
 if schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
     raise SystemExit("compatibility schema must use JSON Schema draft 2020-12")
+if schema.get("properties", {}).get("schemaVersion", {}).get("const") != 2:
+    raise SystemExit("compatibility schema must require schemaVersion 2")
+report_properties = schema.get("$defs", {}).get("report", {}).get("properties", {})
+for version_field in ("forgePlayVersion", "gameVersion"):
+    version_types = report_properties.get(version_field, {}).get("type", [])
+    if not (
+        isinstance(version_types, list)
+        and {"string", "null"}.issubset(version_types)
+    ):
+        raise SystemExit(
+            f"compatibility report {version_field} must support a string or null"
+        )
 test_profile_reference_schema = (
     schema.get("$defs", {})
     .get("report", {})
@@ -521,8 +534,8 @@ def validate_compatibility_database(candidate):
         {"$schema", "schemaVersion", "updatedAt", "testProfiles", "games", "reports"},
         "compatibility database",
     )
-    if candidate.get("schemaVersion") != 1:
-        raise SystemExit("compatibility database schemaVersion must be 1")
+    if candidate.get("schemaVersion") != 2:
+        raise SystemExit("compatibility database schemaVersion must be 2")
 
     updated_at = parse_iso_date(
         candidate.get("updatedAt"),
@@ -614,6 +627,8 @@ def validate_compatibility_database(candidate):
                 "status",
                 "source",
                 "reporter",
+                "forgePlayVersion",
+                "gameVersion",
                 "testedAt",
                 "notes",
                 "blocker",
@@ -645,6 +660,15 @@ def validate_compatibility_database(candidate):
             raise SystemExit(
                 f"report {report_id} must attribute a non-project source"
             )
+
+        for version_field in ("forgePlayVersion", "gameVersion"):
+            version = report.get(version_field)
+            if version is not None and (
+                not isinstance(version, str) or not version.strip()
+            ):
+                raise SystemExit(
+                    f"report {report_id} has an invalid {version_field}"
+                )
 
         blocker = report.get("blocker")
         if blocker not in allowed_blockers:
@@ -690,7 +714,7 @@ validate_compatibility_database(database)
 # guards the compatibility pipeline against content-specific hardcoding.
 validate_compatibility_database({
     "$schema": "./compatibility.schema.json",
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "updatedAt": "2099-01-02",
     "testProfiles": [
         {
@@ -718,6 +742,8 @@ validate_compatibility_database({
             "status": "playable",
             "source": "community-report",
             "reporter": "future-reporter",
+            "forgePlayVersion": "vFuture",
+            "gameVersion": None,
             "testedAt": "2099-01-02",
             "notes": None,
             "blocker": None,
@@ -895,8 +921,13 @@ PY
 for html in index.html why.html license.html privacy.html support.html compatibility.html updates.html; do
   require_snippet "$ROOT_DIR/$html" '<html lang="en">'
   require_snippet "$ROOT_DIR/$html" 'src="locale-bootstrap.js?v=20260729-14"'
-  require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-14"'
-  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260729-14"'
+  if [[ "$html" == "compatibility.html" ]]; then
+    require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260801-16"'
+    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260801-16"'
+  else
+    require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-14"'
+    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260729-14"'
+  fi
   require_snippet "$ROOT_DIR/$html" 'data-language-select'
   require_snippet "$ROOT_DIR/$html" 'site-assets/forgeplay-icon.png'
   require_snippet "$ROOT_DIR/$html" 'target="_blank" rel="noopener noreferrer"'
@@ -935,7 +966,7 @@ require_snippet "$ROOT_DIR/index.html" 'href="compatibility.html"'
 require_snippet "$ROOT_DIR/index.html" 'PLAYABLE IN GAME MODE'
 require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
-require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260729-15"'
+require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260801-16"'
 require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260729-14"'
 require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260729-14"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
@@ -957,7 +988,11 @@ require_snippet "$ROOT_DIR/compatibility.html" 'Logs shorten the distance to a f
 require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.logLabel"'
 require_snippet "$ROOT_DIR/compatibility.html" 'issues/new?template=compatibility-report.yml'
 require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260729-15"'
+require_snippet "$ROOT_DIR/compatibility.html" 'href="site.css?v=20260801-16"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260801-16"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260801-16"'
+require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.columnPlayableVersions"'
+require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.columnRecords"'
 require_snippet "$ROOT_DIR/compatibility.js" 'site-data/compatibility-games.json'
 require_snippet "$ROOT_DIR/compatibility.js" 'forgeplay:localechange'
 require_snippet "$ROOT_DIR/compatibility.js" 'const cacheBustedDataURL = (path) =>'
@@ -969,10 +1004,22 @@ require_snippet "$ROOT_DIR/compatibility.js" '"github-issue": "compat.verificati
 require_snippet "$ROOT_DIR/compatibility.js" '"community-report": "compat.verificationCommunityReport"'
 require_snippet "$ROOT_DIR/compatibility.js" '"security-module": "compat.blockerSecurityModule"'
 require_snippet "$ROOT_DIR/compatibility.js" 'Number.isInteger(profile.unifiedMemoryGB)'
-require_snippet "$ROOT_DIR/compatibility.js" 'profile.macOSVersion ? `macOS ${profile.macOSVersion}` : null'
-require_snippet "$ROOT_DIR/compatibility.js" 'report.reporter ? `@${report.reporter}` : null'
+require_snippet "$ROOT_DIR/compatibility.js" 'profile.macOSVersion ? "macOS " + profile.macOSVersion : null'
+require_snippet "$ROOT_DIR/compatibility.js" 'report.reporter ? "@" + report.reporter : null'
 require_snippet "$ROOT_DIR/compatibility.js" 'const localizedNote = localizedText(report.notes, selectedLocale)'
+require_snippet "$ROOT_DIR/compatibility.js" 'const aggregateStatus = (records) => ('
+require_snippet "$ROOT_DIR/compatibility.js" 'records.some(({ report }) => report.status === status)'
+require_snippet "$ROOT_DIR/compatibility.js" 'report.status === "playable"'
+require_snippet "$ROOT_DIR/compatibility.js" 'report.forgePlayVersion'
+require_snippet "$ROOT_DIR/compatibility.js" 'report.gameVersion'
+require_snippet "$ROOT_DIR/compatibility.js" 'compatibility-blocked-button'
+require_snippet "$ROOT_DIR/compatibility.js" 'updatePanelState("blocked")'
 require_snippet "$ROOT_DIR/site.js" '"compat.statusPlayable": "게임 모드로 플레이 가능"'
+require_snippet "$ROOT_DIR/site.js" '"compat.columnPlayableVersions": "플레이 확인 버전"'
+require_snippet "$ROOT_DIR/site.js" '"compat.columnForgePlayVersion": "ForgePlay 버전"'
+require_snippet "$ROOT_DIR/site.js" '"compat.columnGameVersion": "게임 버전"'
+require_snippet "$ROOT_DIR/site.js" '"compat.versionNotReported": "버전 미기재"'
+require_snippet "$ROOT_DIR/site.js" '"compat.blockedRecords": "플레이 불가 기록 {count}건"'
 require_snippet "$ROOT_DIR/site.js" '"compat.verificationGitHubIssue": "GitHub 이슈 제보"'
 require_snippet "$ROOT_DIR/site.js" '"compat.verificationCommunityReport": "커뮤니티 제보"'
 require_snippet "$ROOT_DIR/site.js" '"compat.deviceNotReported": "기기 정보 없음"'
@@ -981,10 +1028,15 @@ require_snippet "$ROOT_DIR/site-data/README.md" 'Excel / spreadsheet import cont
 require_snippet "$ROOT_DIR/site-data/README.md" 'Compatibility-only update workflow'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Edit only `compatibility-games.json`'
 require_snippet "$ROOT_DIR/site-data/README.md" '`reporter`'
+require_snippet "$ROOT_DIR/site-data/README.md" '`forgeplay_version`'
+require_snippet "$ROOT_DIR/site-data/README.md" '`game_version`'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Developer app catalog'
 require_snippet "$ROOT_DIR/site-data/README.md" 'DeveloperAppCatalog.swift'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Why ForgePlay exists — full text'
 require_snippet "$ROOT_DIR/site-data/README.md" 'raw Markdown is never inserted into the page'
+require_snippet "$ROOT_DIR/.github/ISSUE_TEMPLATE/compatibility-report.yml" 'id: forgeplay_version'
+require_snippet "$ROOT_DIR/.github/ISSUE_TEMPLATE/compatibility-report.yml" 'id: game_version'
+require_snippet "$ROOT_DIR/.github/ISSUE_TEMPLATE/compatibility-report.yml" 'This field is optional.'
 
 require_snippet "$ROOT_DIR/updates.html" 'data-announcement-list'
 require_snippet "$ROOT_DIR/updates.html" 'data-nav-page="updates"'

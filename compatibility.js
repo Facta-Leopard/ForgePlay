@@ -14,6 +14,7 @@
     blocked: "compat.statusBlocked",
     unknown: "compat.statusUnknown"
   };
+  const statusPriority = ["playable", "testing", "blocked", "unknown"];
   const sourceMessageKeys = {
     "project-test": "compat.verificationProject",
     "github-issue": "compat.verificationGitHubIssue",
@@ -45,25 +46,33 @@
     return value[selectedLocale] || value.en || value.ko || Object.values(value)[0] || "";
   };
 
+  const formatNumber = (value, selectedLocale = locale()) => (
+    new Intl.NumberFormat(selectedLocale).format(value)
+  );
+
+  const formatCountMessage = (key, count, fallback) => (
+    message(key, fallback).replace("{count}", formatNumber(count))
+  );
+
   const formatProfile = (profile) => {
     if (!profile) return message("compat.deviceNotReported", "Not provided");
     const memory = Number.isInteger(profile.unifiedMemoryGB)
-      ? ` · ${profile.unifiedMemoryGB}GB`
+      ? " · " + profile.unifiedMemoryGB + "GB"
       : "";
-    return `${profile.chip}${memory}`;
+    return profile.chip + memory;
   };
 
   const formatProfileDetails = (profile) => {
     if (!profile) return "";
     return [
       profile.platform,
-      profile.macOSVersion ? `macOS ${profile.macOSVersion}` : null
+      profile.macOSVersion ? "macOS " + profile.macOSVersion : null
     ].filter(Boolean).join(" · ") || "—";
   };
 
   const formatDate = (value, selectedLocale) => {
     if (!value) return "";
-    const date = new Date(`${value}T00:00:00Z`);
+    const date = new Date(value + "T00:00:00Z");
     if (Number.isNaN(date.valueOf())) return value;
     return new Intl.DateTimeFormat(selectedLocale, {
       year: "numeric",
@@ -86,6 +95,134 @@
     cell.className = className;
     cell.dataset.label = label;
     return cell;
+  };
+
+  const reportNote = (report, selectedLocale) => {
+    const localizedNote = localizedText(report.notes, selectedLocale);
+    return localizedNote
+      || (report.blocker
+        ? message(blockerMessageKeys[report.blocker], report.blocker)
+        : message(
+          report.status === "playable" ? "compat.notePlayable" : "compat.notePending",
+          "No additional note."
+        ));
+  };
+
+  const aggregateStatus = (records) => (
+    statusPriority.find((status) => (
+      records.some(({ report }) => report.status === status)
+    )) || "unknown"
+  );
+
+  const sortRecords = (records) => (
+    [...records].sort((left, right) => {
+      const statusDifference = (
+        statusPriority.indexOf(left.report.status)
+        - statusPriority.indexOf(right.report.status)
+      );
+      if (statusDifference !== 0) return statusDifference;
+      const leftDate = left.report.testedAt || "";
+      const rightDate = right.report.testedAt || "";
+      if (leftDate !== rightDate) return rightDate.localeCompare(leftDate);
+      return left.databaseIndex - right.databaseIndex;
+    })
+  );
+
+  const reportVersion = (report) => (
+    typeof report.forgePlayVersion === "string" && report.forgePlayVersion.trim()
+      ? report.forgePlayVersion.trim()
+      : message("compat.versionNotReported", "Version not provided")
+  );
+
+  const gameVersion = (report) => (
+    typeof report.gameVersion === "string" && report.gameVersion.trim()
+      ? report.gameVersion.trim()
+      : message("compat.gameVersionNotReported", "Game version not provided")
+  );
+
+  const verificationDetails = (report, selectedLocale) => {
+    const details = [
+      report.reporter ? "@" + report.reporter : null,
+      report.testedAt
+        ? formatDate(report.testedAt, selectedLocale)
+        : report.reporter
+          ? null
+          : message("compat.verificationInitial", "Initial verification")
+    ].filter(Boolean);
+    return details.join(" · ");
+  };
+
+  const makeRecordCell = (className, label) => (
+    makeCell("compatibility-record-cell " + className, label)
+  );
+
+  const makeReportRecord = ({ report, profile }, selectedLocale) => {
+    const record = document.createElement("div");
+    record.className = "compatibility-record";
+    record.dataset.status = report.status;
+
+    const statusCell = makeRecordCell(
+      "compatibility-record-status-cell",
+      message("compat.columnStatus", "Status")
+    );
+    const status = appendTextElement(
+      statusCell,
+      "span",
+      "compatibility-status",
+      message(statusMessageKeys[report.status], report.status)
+    );
+    status.dataset.status = report.status;
+
+    const forgePlayVersionCell = makeRecordCell(
+      "compatibility-record-version-cell",
+      message("compat.columnForgePlayVersion", "ForgePlay version")
+    );
+    appendTextElement(forgePlayVersionCell, "strong", "", reportVersion(report));
+
+    const gameVersionCell = makeRecordCell(
+      "compatibility-record-version-cell",
+      message("compat.columnGameVersion", "Game version")
+    );
+    appendTextElement(gameVersionCell, "strong", "", gameVersion(report));
+
+    const deviceCell = makeRecordCell(
+      "compatibility-device-cell",
+      message("compat.columnDevice", "Tested device")
+    );
+    appendTextElement(deviceCell, "strong", "", formatProfile(profile));
+    const profileDetails = formatProfileDetails(profile);
+    if (profileDetails) {
+      appendTextElement(deviceCell, "span", "", profileDetails);
+    }
+
+    const verificationCell = makeRecordCell(
+      "compatibility-verification-cell",
+      message("compat.columnVerification", "Verification")
+    );
+    appendTextElement(
+      verificationCell,
+      "strong",
+      "",
+      message(sourceMessageKeys[report.source], report.source)
+    );
+    const details = verificationDetails(report, selectedLocale);
+    if (details) appendTextElement(verificationCell, "span", "", details);
+
+    const notesCell = makeRecordCell(
+      "compatibility-record-notes-cell",
+      message("compat.columnNotes", "Notes")
+    );
+    notesCell.textContent = reportNote(report, selectedLocale);
+
+    record.append(
+      statusCell,
+      forgePlayVersionCell,
+      gameVersionCell,
+      deviceCell,
+      verificationCell,
+      notesCell
+    );
+    return record;
   };
 
   const updateSummary = () => {
@@ -116,39 +253,83 @@
     const selectedLocale = locale();
     const query = (search?.value || "").trim().toLocaleLowerCase(selectedLocale);
     const selectedStatus = statusFilter?.value || "all";
-    const games = new Map(database.games.map((game) => [game.id, game]));
-    const profiles = new Map(database.testProfiles.map((profile) => [profile.id, profile]));
-    const rows = database.reports
-      .map((report) => ({
+    const profiles = new Map(
+      database.testProfiles.map((profile) => [profile.id, profile])
+    );
+    const recordsByGame = new Map();
+
+    database.reports.forEach((report, databaseIndex) => {
+      if (!recordsByGame.has(report.gameId)) recordsByGame.set(report.gameId, []);
+      recordsByGame.get(report.gameId).push({
         report,
-        game: games.get(report.gameId),
-        profile: profiles.get(report.testProfileId)
-      }))
-      .filter(({ game, report }) => {
-        if (!game) return false;
-        if (selectedStatus !== "all" && report.status !== selectedStatus) return false;
+        profile: profiles.get(report.testProfileId),
+        databaseIndex
+      });
+    });
+
+    const groups = database.games
+      .map((game, gameIndex) => {
+        const records = recordsByGame.get(game.id) || [];
+        return {
+          game,
+          gameIndex,
+          records,
+          status: aggregateStatus(records)
+        };
+      })
+      .filter(({ game, records, status }) => {
+        if (!records.length) return false;
+        if (selectedStatus !== "all" && status !== selectedStatus) return false;
         if (!query) return true;
         return Object.values(game.titles).some((title) => (
           title.toLocaleLowerCase(selectedLocale).includes(query)
         ));
+      })
+      .sort((left, right) => {
+        const statusDifference = (
+          statusPriority.indexOf(left.status)
+          - statusPriority.indexOf(right.status)
+        );
+        return statusDifference || left.gameIndex - right.gameIndex;
       });
 
     const fragment = document.createDocumentFragment();
-    rows.forEach(({ report, game, profile }, index) => {
-      const row = document.createElement("article");
+    groups.forEach(({ game, records, status }, index) => {
+      const sortedRecords = sortRecords(records);
+      const playableRecords = sortedRecords.filter(({ report }) => (
+        report.status === "playable"
+      ));
+      const blockedRecords = sortedRecords.filter(({ report }) => (
+        report.status === "blocked"
+      ));
+
+      const entry = document.createElement("article");
+      entry.className = "compatibility-entry";
+      entry.dataset.status = status;
+
+      const row = document.createElement("div");
       row.className = "compatibility-row";
-      row.dataset.status = report.status;
 
       const gameCell = makeCell(
         "compatibility-game-cell",
         message("compat.columnGame", "Game")
       );
-      appendTextElement(gameCell, "span", "compatibility-index", String(index + 1).padStart(2, "0"));
+      appendTextElement(
+        gameCell,
+        "span",
+        "compatibility-index",
+        String(index + 1).padStart(2, "0")
+      );
       const titleWrap = document.createElement("div");
       const displayTitle = localizedText(game.titles, selectedLocale);
       appendTextElement(titleWrap, "h2", "", displayTitle);
       if (displayTitle !== game.titles.en) {
-        appendTextElement(titleWrap, "span", "compatibility-official-title", game.titles.en);
+        appendTextElement(
+          titleWrap,
+          "span",
+          "compatibility-official-title",
+          game.titles.en
+        );
       }
       gameCell.append(titleWrap);
 
@@ -156,66 +337,207 @@
         "compatibility-status-cell",
         message("compat.columnStatus", "Status")
       );
-      const status = appendTextElement(
+      const statusBadge = appendTextElement(
         statusCell,
         "span",
         "compatibility-status",
-        message(statusMessageKeys[report.status], report.status)
+        message(statusMessageKeys[status], status)
       );
-      status.dataset.status = report.status;
+      statusBadge.dataset.status = status;
 
-      const deviceCell = makeCell(
-        "compatibility-device-cell",
-        message("compat.columnDevice", "Tested device")
-      );
-      appendTextElement(deviceCell, "strong", "", formatProfile(profile));
-      const profileDetails = formatProfileDetails(profile);
-      if (profileDetails) {
-        appendTextElement(deviceCell, "span", "", profileDetails);
+      const panelId = "compatibility-records-" + game.id;
+      let blockedButton = null;
+      if (blockedRecords.length) {
+        blockedButton = document.createElement("button");
+        blockedButton.type = "button";
+        blockedButton.className = "compatibility-blocked-button";
+        blockedButton.setAttribute("aria-controls", panelId);
+        blockedButton.setAttribute("aria-expanded", "false");
+        const blockedRecordsLabel = formatCountMessage(
+          "compat.blockedRecords",
+          blockedRecords.length,
+          "Blocked records · {count}"
+        );
+        blockedButton.setAttribute("aria-label", blockedRecordsLabel);
+        blockedButton.textContent = blockedRecordsLabel + " ▼";
+        statusCell.append(blockedButton);
       }
 
-      const verificationCell = makeCell(
-        "compatibility-verification-cell",
-        message("compat.columnVerification", "Verification")
+      const versionCell = makeCell(
+        "compatibility-version-cell",
+        message("compat.columnPlayableVersions", "Playable versions")
       );
-      const sourceKey = sourceMessageKeys[report.source];
+      const seenVersions = new Set();
+      playableRecords.forEach(({ report }) => {
+        const version = reportVersion(report);
+        if (seenVersions.has(version)) return;
+        seenVersions.add(version);
+        appendTextElement(
+          versionCell,
+          "span",
+          "compatibility-version",
+          version
+        );
+      });
+      if (!seenVersions.size) {
+        appendTextElement(
+          versionCell,
+          "span",
+          "compatibility-version-empty",
+          "—"
+        );
+      }
+
+      const recordsCell = makeCell(
+        "compatibility-record-count-cell",
+        message("compat.columnRecords", "Records")
+      );
       appendTextElement(
-        verificationCell,
+        recordsCell,
         "strong",
         "",
-        message(sourceKey, report.source)
+        formatCountMessage("compat.recordsCount", records.length, "{count} records")
       );
-      const verificationDetails = [
-        report.reporter ? `@${report.reporter}` : null,
-        report.testedAt
-          ? formatDate(report.testedAt, selectedLocale)
-          : report.reporter
-            ? null
-            : message("compat.verificationInitial", "Initial test")
-      ].filter(Boolean).join(" · ");
-      appendTextElement(verificationCell, "span", "", verificationDetails);
+      appendTextElement(
+        recordsCell,
+        "span",
+        "",
+        message("compat.allRecords", "All records")
+      );
 
+      const summaryRecord = sortedRecords[0];
       const notesCell = makeCell(
         "compatibility-notes-cell",
         message("compat.columnNotes", "Notes")
       );
-      const localizedNote = localizedText(report.notes, selectedLocale);
-      const note = localizedNote
-        || (report.blocker
-          ? message(blockerMessageKeys[report.blocker], report.blocker)
-          : message(
-            report.status === "playable" ? "compat.notePlayable" : "compat.notePending",
-            "No additional note."
-          ));
-      notesCell.textContent = note;
+      notesCell.textContent = reportNote(summaryRecord.report, selectedLocale);
 
-      row.append(gameCell, statusCell, deviceCell, verificationCell, notesCell);
-      fragment.append(row);
+      const expandCell = makeCell("compatibility-expand-cell", "");
+      const expandButton = document.createElement("button");
+      expandButton.type = "button";
+      expandButton.className = "compatibility-expand-button";
+      expandButton.setAttribute("aria-controls", panelId);
+      expandButton.setAttribute("aria-expanded", "false");
+      expandButton.setAttribute(
+        "aria-label",
+        formatCountMessage(
+          "compat.showAllRecords",
+          records.length,
+          "Show all {count} records"
+        )
+      );
+      expandButton.textContent = "⌄";
+      expandCell.append(expandButton);
+
+      row.append(
+        gameCell,
+        statusCell,
+        versionCell,
+        recordsCell,
+        notesCell,
+        expandCell
+      );
+
+      const panel = document.createElement("div");
+      panel.id = panelId;
+      panel.className = "compatibility-record-panel";
+      panel.hidden = true;
+      const panelTitle = appendTextElement(
+        panel,
+        "p",
+        "compatibility-record-panel-title",
+        ""
+      );
+      const panelHead = document.createElement("div");
+      panelHead.className = "compatibility-record-panel-head";
+      panelHead.setAttribute("aria-hidden", "true");
+      [
+        message("compat.columnStatus", "Status"),
+        message("compat.columnForgePlayVersion", "ForgePlay version"),
+        message("compat.columnGameVersion", "Game version"),
+        message("compat.columnDevice", "Tested device"),
+        message("compat.columnVerification", "Verification"),
+        message("compat.columnNotes", "Notes")
+      ].forEach((label) => appendTextElement(panelHead, "span", "", label));
+      const panelBody = document.createElement("div");
+      panelBody.className = "compatibility-record-panel-body";
+      panel.append(panelHead, panelBody);
+
+      let activeMode = null;
+      const closeLabel = message("compat.hideRecords", "Hide records");
+      const renderPanel = (mode) => {
+        const visibleRecords = mode === "blocked" ? blockedRecords : sortedRecords;
+        panel.dataset.mode = mode;
+        panelTitle.textContent = mode === "blocked"
+          ? formatCountMessage(
+            "compat.blockedRecords",
+            visibleRecords.length,
+            "Blocked records · {count}"
+          )
+          : formatCountMessage(
+            "compat.allRecordsPanel",
+            visibleRecords.length,
+            "All records · {count}"
+          );
+        panelBody.replaceChildren(
+          ...visibleRecords.map((record) => (
+            makeReportRecord(record, selectedLocale)
+          ))
+        );
+      };
+
+      const updatePanelState = (mode) => {
+        activeMode = activeMode === mode ? null : mode;
+        panel.hidden = activeMode === null;
+        if (activeMode) renderPanel(activeMode);
+
+        if (blockedButton) {
+          const blockedOpen = activeMode === "blocked";
+          blockedButton.setAttribute("aria-expanded", String(blockedOpen));
+          blockedButton.textContent = (
+            formatCountMessage(
+              "compat.blockedRecords",
+              blockedRecords.length,
+              "Blocked records · {count}"
+            ) + (blockedOpen ? " ▲" : " ▼")
+          );
+          blockedButton.setAttribute(
+            "aria-label",
+            blockedOpen
+              ? closeLabel
+              : formatCountMessage(
+                "compat.blockedRecords",
+                blockedRecords.length,
+                "Blocked records · {count}"
+              )
+          );
+        }
+
+        const allOpen = activeMode === "all";
+        expandButton.setAttribute("aria-expanded", String(allOpen));
+        expandButton.textContent = allOpen ? "⌃" : "⌄";
+        expandButton.setAttribute(
+          "aria-label",
+          allOpen
+            ? closeLabel
+            : formatCountMessage(
+              "compat.showAllRecords",
+              records.length,
+              "Show all {count} records"
+            )
+        );
+      };
+
+      blockedButton?.addEventListener("click", () => updatePanelState("blocked"));
+      expandButton.addEventListener("click", () => updatePanelState("all"));
+
+      entry.append(row, panel);
+      fragment.append(entry);
     });
 
     list.replaceChildren(fragment);
     list.setAttribute("aria-busy", "false");
-    if (emptyState) emptyState.hidden = rows.length !== 0;
+    if (emptyState) emptyState.hidden = groups.length !== 0;
   };
 
   const load = async () => {
@@ -224,7 +546,7 @@
         cache: "no-store",
         headers: { Accept: "application/json" }
       });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.ok) throw new Error("HTTP " + response.status);
       database = await response.json();
       render();
     } catch {

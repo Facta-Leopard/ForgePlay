@@ -1,6 +1,6 @@
 {
   "$schema": "./compatibility.schema.json",
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "updatedAt": "2026-08-01",
   "testProfiles": [
     {

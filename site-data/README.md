@@ -31,6 +31,8 @@ One spreadsheet row should represent one test report. The preferred columns are:
 | `title_en` | yes for a new game | `Stellar Blade` |
 | `title_ko` | yes for a new game; include Hangul | `스텔라 블레이드` |
 | `status` | yes | `playable`, `testing`, `blocked`, or `unknown` |
+| `forgeplay_version` | optional | `v1.1.0`; leave blank when not reported |
+| `game_version` | optional | Game version, patch, or build; leave blank when not reported |
 | `device_id` | yes; leave blank if not reported | `apple-silicon-m4-pro-24gb` |
 | `platform` | yes for a new device | `Apple Silicon Mac` |
 | `chip` | yes for a new device | `M4 Pro` |
