@@ -30,6 +30,13 @@
       "chip": "M5 Max",
       "unifiedMemoryGB": 64,
       "macOSVersion": "Tahoe 26.5.2"
+    },
+    {
+      "id": "apple-silicon-m4-air-16gb",
+      "platform": "MacBook Air",
+      "chip": "M4",
+      "unifiedMemoryGB": 16,
+      "macOSVersion": null
     }
   ],
   "games": [
@@ -220,6 +227,13 @@
       "titles": {
         "en": "PLATiNA :: LAB",
         "ko": "플라티나 :: 랩"
+      }
+    },
+    {
+      "id": "spelunky-2",
+      "titles": {
+        "en": "Spelunky 2",
+        "ko": "스펠렁키 2"
       }
     }
   ],
@@ -560,6 +574,26 @@
       "reporter": "ㅇㅇ",
       "testedAt": null,
       "notes": null,
+      "blocker": null
+    },
+    {
+      "id": "spelunky-2-m4-air-16gb-community-anonymous-20260801",
+      "gameId": "spelunky-2",
+      "testProfileId": "apple-silicon-m4-air-16gb",
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "ㅇㅇ",
+      "testedAt": null,
+      "notes": {
+        "en": "Changing key bindings in the in-game settings displays “Error,” but the configured keys work correctly during gameplay.",
+        "ko": "인게임 설정에서 키 바인딩을 변경하면 ‘Error’라고 표시되지만, 실제 플레이에서는 변경한 키가 정상적으로 동작합니다.",
+        "ja": "ゲーム内設定でキーバインドを変更すると「Error」と表示されますが、実際のプレイでは変更したキーが正常に動作します。",
+        "zh-Hans": "在游戏内设置中更改按键绑定时会显示“Error”，但实际游玩时更改后的按键可以正常使用。",
+        "zh-Hant": "在遊戲內設定中變更按鍵綁定時會顯示「Error」，但實際遊玩時變更後的按鍵可以正常使用。",
+        "de": "Beim Ändern der Tastenbelegung in den Spieleinstellungen wird „Error“ angezeigt; im Spiel funktionieren die neu belegten Tasten jedoch korrekt.",
+        "es": "Al cambiar la asignación de teclas en los ajustes del juego aparece «Error», pero durante la partida las teclas configuradas funcionan correctamente.",
+        "fr": "La modification des touches dans les paramètres du jeu affiche « Error », mais les touches configurées fonctionnent correctement en jeu."
+      },
       "blocker": null
     }
   ]
