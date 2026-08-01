@@ -759,23 +759,71 @@ try:
 except (OSError, json.JSONDecodeError) as exc:
     raise SystemExit(f"announcements JSON is invalid: {exc}")
 
-if announcement_database.get("schemaVersion") != 1:
-    raise SystemExit("announcements database schemaVersion must be 1")
+if announcement_database.get("schemaVersion") != 2:
+    raise SystemExit("announcements database schemaVersion must be 2")
 if announcement_schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
     raise SystemExit("announcements schema must use JSON Schema draft 2020-12")
+if announcement_schema.get("properties", {}).get("schemaVersion", {}).get("const") != 2:
+    raise SystemExit("announcements schema must require schemaVersion 2")
+paragraph_list_schema = announcement_schema.get("$defs", {}).get("paragraphList", {})
+if (
+    paragraph_list_schema.get("type") != "array"
+    or paragraph_list_schema.get("minItems") != 1
+    or paragraph_list_schema.get("items", {}).get("type") != "string"
+):
+    raise SystemExit("announcements schema must define non-empty paragraph lists")
+announcement_item_schema = announcement_schema.get("$defs", {}).get("announcement", {})
+if set(
+    announcement_item_schema.get("properties", {})
+    .get("type", {})
+    .get("enum", [])
+) != {"project", "release"}:
+    raise SystemExit("announcements schema must allow only project and release notices")
+if (
+    announcement_item_schema.get("properties", {})
+    .get("paragraphs", {})
+    .get("$ref")
+    != "#/$defs/localizedParagraphs"
+):
+    raise SystemExit("announcements schema must bind localized notice paragraphs")
 
 announcements = announcement_database.get("announcements")
 if not isinstance(announcements, list) or not announcements:
     raise SystemExit("announcements database must contain at least one announcement")
 
+announcement_updated_at = parse_iso_date(
+    announcement_database.get("updatedAt"),
+    "announcements database updatedAt",
+)
 announcement_ids = set()
 for announcement in announcements:
     identifier = announcement.get("id") if isinstance(announcement, dict) else None
     if not isinstance(identifier, str) or not identifier or identifier in announcement_ids:
         raise SystemExit(f"announcements database contains an invalid or duplicate id: {identifier}")
     announcement_ids.add(identifier)
-    if announcement.get("type") not in {"compatibility", "project", "release"}:
+    require_object_shape(
+        announcement,
+        {"id", "type", "publishedAt", "featured", "titles", "summaries", "href"},
+        {"id", "type", "publishedAt", "featured", "titles", "summaries", "paragraphs", "href"},
+        f"announcement {identifier}",
+    )
+    if announcement.get("type") not in {"project", "release"}:
         raise SystemExit(f"announcement {identifier} has an invalid type")
+    if not isinstance(announcement.get("featured"), bool):
+        raise SystemExit(f"announcement {identifier} featured must be a boolean")
+    published_at = parse_iso_date(
+        announcement.get("publishedAt"),
+        f"announcement {identifier} publishedAt",
+    )
+    if published_at > announcement_updated_at:
+        raise SystemExit(f"announcement {identifier} is newer than database updatedAt")
+    href = announcement.get("href")
+    if not isinstance(href, str) or not href.strip():
+        raise SystemExit(f"announcement {identifier} has an invalid destination")
+    if href.split("?", 1)[0].split("#", 1)[0] == "compatibility.html":
+        raise SystemExit(
+            "routine compatibility database changes must not become project notices"
+        )
     for field in ("titles", "summaries"):
         values = announcement.get(field)
         if not isinstance(values, dict) or set(values) != set(locale_names):
@@ -783,8 +831,37 @@ for announcement in announcements:
         if not all(isinstance(value, str) and value.strip() for value in values.values()):
             raise SystemExit(f"announcement {identifier} {field} contains an empty translation")
 
-if not any(announcement.get("featured") is True for announcement in announcements):
-    raise SystemExit("announcements database must contain a featured homepage notice")
+    paragraphs = announcement.get("paragraphs")
+    if paragraphs is not None:
+        if not isinstance(paragraphs, dict) or set(paragraphs) != set(locale_names):
+            raise SystemExit(
+                f"announcement {identifier} paragraphs must contain all eight locales"
+            )
+        paragraph_counts = set()
+        for localized_paragraphs in paragraphs.values():
+            if (
+                not isinstance(localized_paragraphs, list)
+                or not localized_paragraphs
+                or not all(
+                    isinstance(paragraph, str) and paragraph.strip()
+                    for paragraph in localized_paragraphs
+                )
+            ):
+                raise SystemExit(
+                    f"announcement {identifier} contains invalid localized paragraphs"
+                )
+            paragraph_counts.add(len(localized_paragraphs))
+        if len(paragraph_counts) != 1:
+            raise SystemExit(
+                f"announcement {identifier} paragraph structure differs by locale"
+            )
+
+featured_announcements = [
+    announcement for announcement in announcements
+    if announcement.get("featured") is True
+]
+if len(featured_announcements) != 1:
+    raise SystemExit("announcements database must contain exactly one featured homepage notice")
 
 developer_apps_path = root / "site-data" / "developer-apps.json"
 developer_apps_schema_path = root / "site-data" / "developer-apps.schema.json"
@@ -924,6 +1001,9 @@ for html in index.html why.html license.html privacy.html support.html compatibi
   if [[ "$html" == "compatibility.html" ]]; then
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260801-16"'
     require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260801-16"'
+  elif [[ "$html" == "updates.html" ]]; then
+    require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260801-17"'
+    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260801-17"'
   else
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-14"'
     require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260729-14"'
@@ -967,7 +1047,7 @@ require_snippet "$ROOT_DIR/index.html" 'PLAYABLE IN GAME MODE'
 require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
 require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260801-16"'
-require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260729-14"'
+require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260801-17"'
 require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260729-14"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
 require_snippet "$ROOT_DIR/index.html" 'id="other-apps"'
@@ -1034,17 +1114,25 @@ require_snippet "$ROOT_DIR/site-data/README.md" 'Developer app catalog'
 require_snippet "$ROOT_DIR/site-data/README.md" 'DeveloperAppCatalog.swift'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Why ForgePlay exists — full text'
 require_snippet "$ROOT_DIR/site-data/README.md" 'raw Markdown is never inserted into the page'
+require_snippet "$ROOT_DIR/site-data/README.md" 'Routine compatibility database additions and result changes must not create'
 require_snippet "$ROOT_DIR/.github/ISSUE_TEMPLATE/compatibility-report.yml" 'id: forgeplay_version'
 require_snippet "$ROOT_DIR/.github/ISSUE_TEMPLATE/compatibility-report.yml" 'id: game_version'
 require_snippet "$ROOT_DIR/.github/ISSUE_TEMPLATE/compatibility-report.yml" 'This field is optional.'
 
 require_snippet "$ROOT_DIR/updates.html" 'data-announcement-list'
 require_snippet "$ROOT_DIR/updates.html" 'data-nav-page="updates"'
-require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260729-14"'
+require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260801-17"'
+require_snippet "$ROOT_DIR/updates.html" 'Releases, project notices, and development updates in one place.'
 require_snippet "$ROOT_DIR/announcements.js" 'site-data/announcements.json'
 require_snippet "$ROOT_DIR/announcements.js" 'forgeplay:localechange'
 require_snippet "$ROOT_DIR/announcements.js" 'applyLinkDestination'
-require_snippet "$ROOT_DIR/announcements.js" 'site-data/announcements.json?v=20260728-9'
+require_snippet "$ROOT_DIR/announcements.js" 'const cacheBustedDataURL = (path) =>'
+require_snippet "$ROOT_DIR/announcements.js" 'url.searchParams.set("refresh", Date.now().toString())'
+require_snippet "$ROOT_DIR/announcements.js" 'const localizedParagraphs = (value, selectedLocale) =>'
+require_snippet "$ROOT_DIR/announcements.js" 'body.className = "update-card-body"'
+require_snippet "$ROOT_DIR/announcements.js" 'cache: "no-store"'
+require_snippet "$ROOT_DIR/site.css" '.update-card-body {'
+require_snippet "$ROOT_DIR/site.css" 'gap: 20px;'
 require_snippet "$ROOT_DIR/developer-apps.js" 'site-data/developer-apps.json'
 require_snippet "$ROOT_DIR/developer-apps.js" 'data-developer-platform'
 require_snippet "$ROOT_DIR/developer-apps.js" 'forgeplay:localechange'
@@ -1100,9 +1188,24 @@ require_snippet "$ROOT_DIR/site-data/announcements.json" '"de": "ForgePlay stell
 require_snippet "$ROOT_DIR/site-data/announcements.json" '"es": "ForgePlay sitúa el modo Juego de macOS en el centro."'
 require_snippet "$ROOT_DIR/site-data/announcements.json" '"fr": "ForgePlay place le mode Jeu de macOS au centre."'
 require_snippet "$ROOT_DIR/site-data/announcements.json" '"ja": "ForgePlayはmacOSのゲームモードを中核に据えました。"'
+require_snippet "$ROOT_DIR/site-data/announcements.json" '"id": "next-forgeplay-update-underway"'
+require_snippet "$ROOT_DIR/site-data/announcements.json" '"ko": "다음 ForgePlay 업데이트를 준비하고 있습니다."'
+require_snippet "$ROOT_DIR/site-data/announcements.json" 'Wine 11.12'
+require_snippet "$ROOT_DIR/site-data/announcements.json" 'Game Porting Toolkit(GPTK) 4.0 beta'
+require_snippet "$ROOT_DIR/site-data/announcements.json" 'GitHub Sponsors'
 require_snippet "$ROOT_DIR/site-data/announcements.json" '"id": "forgeplay-1-0-released"'
 require_snippet "$ROOT_DIR/site-data/announcements.json" '"ko": "ForgePlay 1.0을 공개했습니다."'
 require_snippet "$ROOT_DIR/site-data/announcements.json" '"href": "https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0"'
+
+if grep -Fq '"id": "compatibility-database-opens"' \
+  "$ROOT_DIR/site-data/announcements.json"; then
+  fail "routine compatibility database updates must not appear in project notices"
+fi
+
+if grep -Fq 'updates.typeCompatibility' \
+  "$ROOT_DIR/site.js" "$ROOT_DIR/announcements.js"; then
+  fail "the retired compatibility notice category must not remain in the site"
+fi
 
 require_snippet "$ROOT_DIR/privacy.html" "does not include advertising tracking"
 require_snippet "$ROOT_DIR/privacy.html" "Apple Foundation Models"

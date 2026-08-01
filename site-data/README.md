@@ -56,8 +56,15 @@ only in Latin characters.
 `announcements.json` is the single source for the latest notice shown on the
 homepage and the full project timeline on `updates.html`. Each notice carries a
 stable ID, publication date, category, destination, and title/summary text for
-all eight supported locales. Validate changes against
-`announcements.schema.json` before publication.
+all eight supported locales. An optional localized `paragraphs` collection
+provides the full notice on the updates page while the homepage keeps the short
+summary. Validate changes against `announcements.schema.json` before
+publication.
+
+Routine compatibility database additions and result changes must not create
+project notices. They belong only in `compatibility-games.json` and appear on
+the compatibility page and its live homepage count. This keeps the project
+timeline focused on releases and substantive project updates.
 
 ## Developer app catalog
 

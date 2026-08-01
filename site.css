@@ -2937,11 +2937,25 @@ html[lang="ko"] .compatibility-teaser-copy h2 {
   line-height: 0.98;
 }
 
-.update-card-copy p {
+.update-card-copy > p,
+.update-card-body {
   max-width: 760px;
   margin: 20px 0 22px;
+}
+
+.update-card-copy > p,
+.update-card-body p {
   color: var(--muted);
   font-size: 1.02rem;
+}
+
+.update-card-body {
+  display: grid;
+  gap: 20px;
+}
+
+.update-card-body p {
+  margin: 0;
 }
 
 .update-card-link {

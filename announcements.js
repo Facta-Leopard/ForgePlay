@@ -1,9 +1,14 @@
 (() => {
   "use strict";
 
-  const databaseURL = "site-data/announcements.json?v=20260728-9";
+  const cacheBustedDataURL = (path) => {
+    const url = new URL(path, document.baseURI);
+    url.searchParams.set("refresh", Date.now().toString());
+    return url.href;
+  };
+
+  const databaseURL = cacheBustedDataURL("site-data/announcements.json");
   const typeMessageKeys = {
-    compatibility: "updates.typeCompatibility",
     project: "updates.typeProject",
     release: "updates.typeRelease"
   };
@@ -22,6 +27,21 @@
     if (!value) return "";
     if (typeof value === "string") return value;
     return value[selectedLocale] || value.en || value.ko || Object.values(value)[0] || "";
+  };
+
+  const localizedParagraphs = (value, selectedLocale) => {
+    if (!value || typeof value !== "object") return [];
+    const paragraphs = (
+      value[selectedLocale]
+      || value.en
+      || value.ko
+      || Object.values(value)[0]
+    );
+    return Array.isArray(paragraphs)
+      ? paragraphs.filter((paragraph) => (
+        typeof paragraph === "string" && paragraph.trim()
+      ))
+      : [];
   };
 
   const formatDate = (value, selectedLocale) => {
@@ -120,7 +140,17 @@
       const copy = document.createElement("div");
       copy.className = "update-card-copy";
       appendTextElement(copy, "h2", "", localizedText(announcement.titles, selectedLocale));
-      appendTextElement(copy, "p", "", localizedText(announcement.summaries, selectedLocale));
+      const paragraphs = localizedParagraphs(announcement.paragraphs, selectedLocale);
+      if (paragraphs.length) {
+        const body = document.createElement("div");
+        body.className = "update-card-body";
+        paragraphs.forEach((paragraph) => {
+          appendTextElement(body, "p", "", paragraph);
+        });
+        copy.append(body);
+      } else {
+        appendTextElement(copy, "p", "", localizedText(announcement.summaries, selectedLocale));
+      }
 
       const link = appendTextElement(
         copy,
@@ -150,6 +180,7 @@
   const load = async () => {
     try {
       const response = await fetch(databaseURL, {
+        cache: "no-store",
         headers: { Accept: "application/json" }
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);

@@ -14,7 +14,7 @@
       "type": "string"
     },
     "schemaVersion": {
-      "const": 1
+      "const": 2
     },
     "updatedAt": {
       "type": "string",
@@ -52,6 +52,38 @@
         "zh-Hant": { "type": "string", "minLength": 1 }
       }
     },
+    "paragraphList": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "localizedParagraphs": {
+      "type": "object",
+      "required": [
+        "en",
+        "ko",
+        "de",
+        "es",
+        "fr",
+        "ja",
+        "zh-Hans",
+        "zh-Hant"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "en": { "$ref": "#/$defs/paragraphList" },
+        "ko": { "$ref": "#/$defs/paragraphList" },
+        "de": { "$ref": "#/$defs/paragraphList" },
+        "es": { "$ref": "#/$defs/paragraphList" },
+        "fr": { "$ref": "#/$defs/paragraphList" },
+        "ja": { "$ref": "#/$defs/paragraphList" },
+        "zh-Hans": { "$ref": "#/$defs/paragraphList" },
+        "zh-Hant": { "$ref": "#/$defs/paragraphList" }
+      }
+    },
     "announcement": {
       "type": "object",
       "additionalProperties": false,
@@ -71,7 +103,6 @@
         },
         "type": {
           "enum": [
-            "compatibility",
             "project",
             "release"
           ]
@@ -88,6 +119,9 @@
         },
         "summaries": {
           "$ref": "#/$defs/localizedText"
+        },
+        "paragraphs": {
+          "$ref": "#/$defs/localizedParagraphs"
         },
         "href": {
           "type": "string",

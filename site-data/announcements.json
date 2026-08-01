@@ -1,34 +1,84 @@
 {
   "$schema": "./announcements.schema.json",
-  "schemaVersion": 1,
-  "updatedAt": "2026-07-28",
+  "schemaVersion": 2,
+  "updatedAt": "2026-08-01",
   "announcements": [
     {
-      "id": "compatibility-database-opens",
-      "type": "compatibility",
-      "publishedAt": "2026-07-28",
-      "featured": false,
+      "id": "next-forgeplay-update-underway",
+      "type": "project",
+      "publishedAt": "2026-08-01",
+      "featured": true,
       "titles": {
-        "en": "Compatibility database opens with 12 tested games.",
-        "ko": "테스트 게임 12종과 함께 호환성 DB를 공개했습니다.",
-        "de": "Die Kompatibilitätsdatenbank startet mit 12 getesteten Spielen.",
-        "es": "La base de compatibilidad abre con 12 juegos probados.",
-        "fr": "La base de compatibilité ouvre avec 12 jeux testés.",
-        "ja": "12本のテスト済みタイトルとともに互換性DBを公開しました。",
-        "zh-Hans": "兼容性数据库首批公开 12 款实测游戏。",
-        "zh-Hant": "相容性資料庫首批公開 12 款實測遊戲。"
+        "en": "The next ForgePlay update is in development.",
+        "ko": "다음 ForgePlay 업데이트를 준비하고 있습니다.",
+        "de": "Das nächste ForgePlay-Update ist in Arbeit.",
+        "es": "Estamos preparando la próxima actualización de ForgePlay.",
+        "fr": "La prochaine mise à jour de ForgePlay est en préparation.",
+        "ja": "ForgePlayの次回アップデートを準備しています。",
+        "zh-Hans": "ForgePlay 下一次更新正在准备中。",
+        "zh-Hant": "ForgePlay 下一次更新正在準備中。"
       },
       "summaries": {
-        "en": "Results from an M4 Pro Mac with 24GB unified memory are now searchable by status, device, and notes.",
-        "ko": "M4 Pro·통합 메모리 24GB 환경의 결과를 상태, 기기, 비고와 함께 확인할 수 있습니다.",
-        "de": "Ergebnisse von einem M4 Pro Mac mit 24 GB gemeinsamem Arbeitsspeicher lassen sich nach Status, Gerät und Hinweisen durchsuchen.",
-        "es": "Ya se pueden consultar por estado, dispositivo y notas los resultados de un Mac M4 Pro con 24 GB de memoria unificada.",
-        "fr": "Les résultats obtenus sur un Mac M4 Pro avec 24 Go de mémoire unifiée sont consultables par état, appareil et remarques.",
-        "ja": "M4 Pro・ユニファイドメモリ24GBのMacで得た結果を、状態、検証機、備考とともに確認できます。",
-        "zh-Hans": "现在可按状态、测试设备和备注查看 M4 Pro、24GB 统一内存 Mac 的实测结果。",
-        "zh-Hant": "現在可依狀態、測試裝置與備註查看 M4 Pro、24GB 統一記憶體 Mac 的實測結果。"
+        "en": "The next release is being refined across graphics, UX, device connectivity, additional launch features, Wine optimization, and localization.",
+        "ko": "그래픽, UX, 장치 연동, 추가 실행 기능, Wine 최적화와 다국어 현지화를 중심으로 다음 릴리스를 개선하고 있습니다.",
+        "de": "Die nächste Version wird mit Verbesserungen an Grafik, UX, Geräteanbindung, zusätzlichen Startfunktionen, Wine-Optimierung und Lokalisierung vorbereitet.",
+        "es": "La próxima versión se está perfeccionando en gráficos, UX, conexión de dispositivos, nuevas funciones de ejecución, optimización de Wine y localización.",
+        "fr": "La prochaine version progresse sur les graphismes, l’UX, la connexion des appareils, de nouvelles fonctions de lancement, l’optimisation de Wine et la localisation.",
+        "ja": "グラフィックス、UX、機器連携、追加の実行機能、Wineの最適化、ローカライズを中心に次回リリースを改善しています。",
+        "zh-Hans": "下一版本正围绕图形、UX、设备连接、附加启动功能、Wine 优化和本地化持续改进。",
+        "zh-Hant": "下一個版本正圍繞圖形、UX、裝置連線、附加啟動功能、Wine 最佳化與在地化持續改進。"
       },
-      "href": "compatibility.html"
+      "paragraphs": {
+        "en": [
+          "We are currently working on improvements for the next release.",
+          "We are investigating cases where the DirectX 12 path is not applied correctly in some games, along with graphics features such as XeSS and DLSS. We are also preparing UX improvements to responsiveness and flow, better Bluetooth, Ethernet, and Wi‑Fi device connectivity, separate .exe launching, and VRAM-related features. Performance and compatibility optimization through ForgePlay-specific Wine customization is continuing as well, alongside localization improvements that refine translations and wording across supported languages.",
+          "We are working through the feedback you send through GitHub Issues one item at a time. We hope you will look forward to the next release. GitHub Stars and GitHub Sponsors support give ForgePlay real momentum. Thank you.",
+          "ForgePlay currently uses Wine 11.12, Apple’s Game Porting Toolkit (GPTK) 4.0 beta, and a macOS Game Mode entry flow developed in-house to run Windows games on Mac. Source code developed or modified by ForgePlay is published with each release under the license terms of its respective components."
+        ],
+        "ko": [
+          "현재 다음 릴리스를 위한 개선 작업을 진행하고 있습니다.",
+          "일부 게임에서 DirectX 12 경로가 정상적으로 적용되지 않는 현상과 XeSS·DLSS 등 그래픽 기능을 점검하고 있습니다. 앱의 반응성과 사용 흐름을 다듬는 UX 개선, Bluetooth·Ethernet·Wi‑Fi 장치 연동 개선, 별도 .exe 실행과 VRAM 관련 기능도 함께 준비 중입니다. ForgePlay 환경에 맞춘 Wine 커스텀 작업을 통한 성능 및 호환성 최적화와 지원 언어별 번역·표현을 다듬는 현지화 개선도 진행하고 있습니다.",
+          "GitHub 이슈를 통해 보내주신 피드백을 바탕으로 하나씩 개선하고 있으니 다음 릴리스를 기대해 주세요. GitHub Star와 GitHub Sponsors 후원은 ForgePlay를 계속 발전시키는 데 큰 힘이 됩니다. 감사합니다.",
+          "ForgePlay는 현재 Wine 11.12와 Apple의 Game Porting Toolkit(GPTK) 4.0 beta, 그리고 자체 개발한 macOS 게임 모드 진입 흐름을 활용해 Mac에서 Windows 게임을 실행하는 앱입니다. ForgePlay가 개발하거나 수정한 관련 소스는 각 구성 요소의 라이선스 조건에 따라 릴리스와 함께 공개합니다."
+        ],
+        "de": [
+          "Wir arbeiten derzeit an Verbesserungen für die nächste Version.",
+          "Wir untersuchen Fälle, in denen der DirectX-12-Pfad bei einigen Spielen nicht korrekt greift, sowie Grafikfunktionen wie XeSS und DLSS. Außerdem bereiten wir UX-Verbesserungen für Reaktionsverhalten und Abläufe, eine bessere Anbindung von Bluetooth-, Ethernet- und Wi‑Fi-Geräten, das separate Starten von .exe-Dateien und VRAM-bezogene Funktionen vor. Parallel dazu optimieren wir Leistung und Kompatibilität durch ForgePlay-spezifische Anpassungen an Wine und überarbeiten Übersetzungen und Formulierungen in allen unterstützten Sprachen.",
+          "Ihr Feedback aus GitHub Issues arbeiten wir Punkt für Punkt ein. Freuen Sie sich auf die nächste Version. GitHub Stars und Unterstützung über GitHub Sponsors geben der Weiterentwicklung von ForgePlay spürbaren Rückenwind. Vielen Dank.",
+          "ForgePlay verwendet derzeit Wine 11.12, Apples Game Porting Toolkit (GPTK) 4.0 beta und einen eigenständig entwickelten Einstiegspfad in den macOS-Spielmodus, um Windows-Spiele auf dem Mac auszuführen. Von ForgePlay entwickelter oder geänderter Quellcode wird mit jeder Version gemäß den Lizenzbedingungen der jeweiligen Komponenten veröffentlicht."
+        ],
+        "es": [
+          "Actualmente estamos trabajando en mejoras para la próxima versión.",
+          "Estamos investigando casos en los que la ruta de DirectX 12 no se aplica correctamente en algunos juegos, además de funciones gráficas como XeSS y DLSS. También preparamos mejoras de UX en la respuesta y el flujo de uso, una mejor conexión de dispositivos Bluetooth, Ethernet y Wi‑Fi, la ejecución independiente de archivos .exe y funciones relacionadas con la VRAM. A la vez, continuamos optimizando el rendimiento y la compatibilidad mediante ajustes de Wine específicos para ForgePlay y revisando las traducciones y expresiones de todos los idiomas compatibles.",
+          "Vamos incorporando, uno por uno, los comentarios que nos enviáis a través de GitHub Issues. Esperamos que tengáis ganas de probar la próxima versión. Las estrellas en GitHub y el apoyo mediante GitHub Sponsors dan un gran impulso a ForgePlay. Gracias.",
+          "ForgePlay utiliza actualmente Wine 11.12, Game Porting Toolkit (GPTK) 4.0 beta de Apple y un flujo propio de entrada al modo Juego de macOS para ejecutar juegos de Windows en Mac. El código fuente desarrollado o modificado por ForgePlay se publica con cada versión conforme a las condiciones de licencia de cada componente."
+        ],
+        "fr": [
+          "Nous travaillons actuellement aux améliorations de la prochaine version.",
+          "Nous examinons les cas où le chemin DirectX 12 ne s’applique pas correctement dans certains jeux, ainsi que des fonctions graphiques telles que XeSS et DLSS. Nous préparons également des améliorations de l’UX portant sur la réactivité et le parcours d’utilisation, une meilleure prise en charge des appareils Bluetooth, Ethernet et Wi‑Fi, le lancement séparé de fichiers .exe et des fonctions liées à la VRAM. En parallèle, nous poursuivons l’optimisation des performances et de la compatibilité grâce à des adaptations de Wine propres à ForgePlay, ainsi que la révision des traductions et des formulations dans toutes les langues prises en charge.",
+          "Nous intégrons un à un les retours transmis via GitHub Issues. Nous espérons que vous attendrez la prochaine version avec intérêt. Les étoiles GitHub et le soutien via GitHub Sponsors donnent un véritable élan à ForgePlay. Merci.",
+          "ForgePlay utilise actuellement Wine 11.12, le Game Porting Toolkit (GPTK) 4.0 beta d’Apple et un parcours d’accès au mode Jeu de macOS développé en interne afin d’exécuter des jeux Windows sur Mac. Le code source développé ou modifié par ForgePlay est publié avec chaque version conformément aux conditions de licence de chaque composant."
+        ],
+        "ja": [
+          "現在、次回リリースに向けた改善を進めています。",
+          "一部のゲームでDirectX 12の経路が正しく適用されない現象に加え、XeSSやDLSSなどのグラフィックス機能を確認しています。アプリの応答性と操作フローを整えるUX改善、Bluetooth・Ethernet・Wi‑Fi機器の連携改善、個別の.exe実行機能、VRAM関連機能も準備中です。ForgePlay向けのWineカスタマイズによる性能・互換性の最適化と、対応言語ごとの翻訳・表現を整えるローカライズ改善も進めています。",
+          "GitHub Issuesを通じてお寄せいただいたフィードバックを一つずつ反映しています。次回リリースにご期待ください。GitHub StarとGitHub Sponsorsによるご支援は、ForgePlayをさらに発展させる大きな力になります。ありがとうございます。",
+          "ForgePlayは現在、Wine 11.12、AppleのGame Porting Toolkit（GPTK）4.0 beta、そしてmacOSゲームモードへ移行する独自開発のフローを活用して、Mac上でWindowsゲームを実行するアプリです。ForgePlayが開発または変更した関連ソースコードは、各コンポーネントのライセンス条件に従い、リリースとともに公開します。"
+        ],
+        "zh-Hans": [
+          "我们正在为下一版本持续改进 ForgePlay。",
+          "我们正在排查部分游戏未能正确启用 DirectX 12 路径的情况，并检查 XeSS、DLSS 等图形功能。同时也在准备提升响应速度和操作流程的 UX 改进，改善 Bluetooth、Ethernet 与 Wi‑Fi 设备连接，加入单独运行 .exe 文件及 VRAM 相关功能。面向 ForgePlay 的 Wine 定制、性能与兼容性优化，以及各支持语言的翻译和措辞优化也在同步推进。",
+          "我们会逐项处理大家通过 GitHub Issues 提交的反馈，敬请期待下一版本。GitHub Star 和通过 GitHub Sponsors 提供的支持，都是 ForgePlay 持续发展的重要动力。感谢大家。",
+          "ForgePlay 目前使用 Wine 11.12、Apple Game Porting Toolkit（GPTK）4.0 beta，以及自主开发的 macOS 游戏模式进入流程，让 Windows 游戏能够在 Mac 上运行。ForgePlay 开发或修改的相关源代码会在每次发布时，依据各组件的许可条款一并公开。"
+        ],
+        "zh-Hant": [
+          "我們正在為下一個版本持續改進 ForgePlay。",
+          "我們正在排查部分遊戲未能正確啟用 DirectX 12 路徑的情況，並檢查 XeSS、DLSS 等圖形功能。同時也在準備提升反應速度與操作流程的 UX 改進，改善 Bluetooth、Ethernet 與 Wi‑Fi 裝置連線，加入單獨執行 .exe 檔案及 VRAM 相關功能。針對 ForgePlay 的 Wine 客製、效能與相容性最佳化，以及各支援語言的翻譯與措辭改善也在同步進行。",
+          "我們會逐項處理大家透過 GitHub Issues 提交的意見，敬請期待下一個版本。GitHub Star 與透過 GitHub Sponsors 提供的支持，都是 ForgePlay 持續發展的重要動力。感謝大家。",
+          "ForgePlay 目前使用 Wine 11.12、Apple Game Porting Toolkit（GPTK）4.0 beta，以及自主開發的 macOS 遊戲模式進入流程，讓 Windows 遊戲能夠在 Mac 上執行。ForgePlay 開發或修改的相關原始碼，會在每次發布時依據各元件的授權條款一併公開。"
+        ]
+      },
+      "href": "https://github.com/Facta-Leopard/ForgePlay/issues"
     },
     {
       "id": "game-mode-first",
@@ -61,7 +111,7 @@
       "id": "forgeplay-1-0-released",
       "type": "release",
       "publishedAt": "2026-07-28",
-      "featured": true,
+      "featured": false,
       "titles": {
         "en": "ForgePlay 1.0 is now available.",
         "ko": "ForgePlay 1.0을 공개했습니다.",
