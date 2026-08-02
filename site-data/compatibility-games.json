@@ -298,6 +298,13 @@
         "en": "eBaseball™: PRO SPIRIT 2026",
         "ko": "프로야구스피리츠 2026"
       }
+    },
+    {
+      "id": "marvels-spider-man-2",
+      "titles": {
+        "en": "Marvel's Spider-Man 2",
+        "ko": "마블 스파이더맨 2"
+      }
     }
   ],
   "reports": [
@@ -823,6 +830,27 @@
       "testedAt": null,
       "notes": null,
       "blocker": null
+    },
+    {
+      "id": "marvels-spider-man-2-community-macgallery-20260803",
+      "gameId": "marvels-spider-man-2",
+      "testProfileId": null,
+      "forgePlayVersion": "1.0",
+      "status": "blocked",
+      "source": "community-report",
+      "reporter": "맥갤러",
+      "testedAt": null,
+      "notes": {
+        "en": "Gameplay is currently blocked by what appears to be a Rosetta AVX issue. A ForgePlay release containing the fix is planned.",
+        "ko": "Rosetta AVX 관련 문제로 인해 게임을 플레이할 수 없는 것으로 보입니다. 수정 사항을 반영한 ForgePlay 릴리스를 준비하고 있습니다.",
+        "ja": "RosettaのAVX関連の問題により、現在はプレイできないとみられます。修正を含むForgePlayリリースを準備しています。",
+        "zh-Hans": "目前疑似受 Rosetta AVX 相关问题影响，无法游玩。正在准备包含修复的 ForgePlay 版本。",
+        "zh-Hant": "目前疑似受 Rosetta AVX 相關問題影響，無法遊玩。正在準備包含修正的 ForgePlay 版本。",
+        "de": "Das Spiel ist derzeit offenbar wegen eines Rosetta-AVX-Problems nicht spielbar. Eine ForgePlay-Version mit der Fehlerbehebung ist geplant.",
+        "es": "Actualmente no se puede jugar, al parecer debido a un problema de Rosetta relacionado con AVX. Está prevista una versión de ForgePlay con la corrección.",
+        "fr": "Le jeu n’est actuellement pas jouable, apparemment en raison d’un problème AVX lié à Rosetta. Une version de ForgePlay intégrant le correctif est prévue."
+      },
+      "blocker": "runtime"
     }
   ]
 }
