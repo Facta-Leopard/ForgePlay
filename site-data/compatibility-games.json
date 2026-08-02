@@ -1,7 +1,7 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-08-02",
+  "updatedAt": "2026-08-03",
   "testProfiles": [
     {
       "id": "apple-silicon-m4-pro-24gb",
@@ -58,6 +58,13 @@
       "chip": "M4 Pro",
       "unifiedMemoryGB": 24,
       "macOSVersion": "27 beta 3"
+    },
+    {
+      "id": "apple-silicon-m5-max-64gb-macos-26-4",
+      "platform": "Apple Silicon Mac",
+      "chip": "M5 Max",
+      "unifiedMemoryGB": 64,
+      "macOSVersion": "26.4"
     }
   ],
   "games": [
@@ -283,6 +290,13 @@
       "titles": {
         "en": "Satisfactory",
         "ko": "새티스팩토리"
+      }
+    },
+    {
+      "id": "ebaseball-pro-spirit-2026",
+      "titles": {
+        "en": "eBaseball™: PRO SPIRIT 2026",
+        "ko": "프로야구스피리츠 2026"
       }
     }
   ],
@@ -796,6 +810,18 @@
         "es": "Se ha confirmado que se puede jugar en el modo Juego con una compilación de desarrollo modificada a nivel de código fuente. Los cambios correspondientes están previstos para una futura versión de ForgePlay y aún no están incluidos en la versión 1.0 publicada actualmente.",
         "fr": "Il a été confirmé que le jeu fonctionne en mode Jeu avec une version de développement modifiée au niveau du code source. Les changements correspondants sont prévus pour une prochaine version de ForgePlay et ne figurent pas encore dans la version 1.0 actuellement publiée."
       },
+      "blocker": null
+    },
+    {
+      "id": "ebaseball-pro-spirit-2026-m5-max-64gb-community-macgallery-20260803",
+      "gameId": "ebaseball-pro-spirit-2026",
+      "testProfileId": "apple-silicon-m5-max-64gb-macos-26-4",
+      "forgePlayVersion": "1.0",
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "맥갤러",
+      "testedAt": null,
+      "notes": null,
       "blocker": null
     }
   ]
