@@ -44,6 +44,13 @@
       "chip": "M5 Pro",
       "unifiedMemoryGB": 24,
       "macOSVersion": "Tahoe 26.5.2"
+    },
+    {
+      "id": "apple-silicon-m5-max-128gb-tahoe-26-5-2",
+      "platform": "Apple Silicon Mac",
+      "chip": "M5 Max",
+      "unifiedMemoryGB": 128,
+      "macOSVersion": "Tahoe 26.5.2"
     }
   ],
   "games": [
@@ -255,6 +262,13 @@
       "titles": {
         "en": "Kingdom Come: Deliverance II",
         "ko": "킹덤 컴: 딜리버런스 II"
+      }
+    },
+    {
+      "id": "warframe",
+      "titles": {
+        "en": "Warframe",
+        "ko": "워프레임"
       }
     }
   ],
@@ -686,6 +700,47 @@
         "fr": "Après le lancement, l’écran reste noir et seul le curseur est visible, ce qui empêche de poursuivre."
       },
       "blocker": "graphics"
+    },
+    {
+      "id": "warframe-project-verification-20260727",
+      "gameId": "warframe",
+      "testProfileId": null,
+      "forgePlayVersion": "1.0",
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": "2026-07-27",
+      "notes": {
+        "en": "The launcher and game client both start normally, and actual gameplay was verified.",
+        "ko": "런처와 게임 본체가 정상적으로 실행되며 실제 게임플레이까지 확인했습니다.",
+        "ja": "ランチャーとゲーム本体がどちらも正常に起動し、実際のゲームプレイまで確認しました。",
+        "zh-Hans": "启动器和游戏客户端均可正常运行，并已确认能够实际游玩。",
+        "zh-Hant": "啟動器與遊戲用戶端均可正常執行，並已確認能夠實際遊玩。",
+        "de": "Launcher und Spielclient starten ordnungsgemäß; auch das tatsächliche Gameplay wurde bestätigt.",
+        "es": "Tanto el lanzador como el cliente del juego se inician correctamente y se ha verificado el juego real.",
+        "fr": "Le lanceur et le client du jeu démarrent correctement, et une session de jeu réelle a été vérifiée."
+      },
+      "blocker": null
+    },
+    {
+      "id": "warframe-m5-max-128gb-community-q60max-20260802",
+      "gameId": "warframe",
+      "testProfileId": "apple-silicon-m5-max-128gb-tahoe-26-5-2",
+      "forgePlayVersion": "1.0",
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "*Q60MAX*",
+      "testedAt": null,
+      "notes": {
+        "en": "Gameplay runs smoothly. In the Korean client, interaction prompts use Hangul characters instead of the Latin X and F labels; the reporter found the Korean UI visually cleaner.",
+        "ko": "게임플레이가 원활합니다. 한국어 클라이언트에서는 상호작용 버튼이 영문 X·F 대신 한글 자모로 표시되어, 한국어 UI가 시각적으로 더 깔끔하게 느껴졌다고 제보했습니다.",
+        "ja": "ゲームプレイは快適です。韓国語クライアントでは、操作ボタンが英字のX・Fではなくハングル字母で表示され、韓国語UIのほうが見た目も整っていると感じたとのことです。",
+        "zh-Hans": "游戏运行流畅。在韩语客户端中，交互按键会以韩文字母显示，而不是英文字母 X 和 F；报告者认为韩语界面在视觉上更加整洁。",
+        "zh-Hant": "遊戲執行流暢。在韓語用戶端中，互動按鍵會以韓文字母顯示，而不是英文字母 X 與 F；回報者認為韓語介面在視覺上更加整潔。",
+        "de": "Das Spiel läuft flüssig. Im koreanischen Client werden Interaktionshinweise mit Hangul-Zeichen statt der lateinischen Tastenbezeichnungen X und F dargestellt; die koreanische Oberfläche wirkte für den Melder optisch aufgeräumter.",
+        "es": "El juego funciona con fluidez. En el cliente coreano, los indicadores de interacción muestran caracteres hangul en lugar de las letras X y F; al informante le pareció que la interfaz en coreano se veía más limpia.",
+        "fr": "Le jeu fonctionne de manière fluide. Dans le client coréen, les indications d’interaction utilisent des caractères hangeul au lieu des lettres X et F ; la personne ayant fait le signalement a trouvé l’interface coréenne visuellement plus soignée."
+      },
+      "blocker": null
     }
   ]
 }
