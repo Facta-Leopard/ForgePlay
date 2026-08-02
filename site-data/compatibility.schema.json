@@ -164,7 +164,8 @@
             "string",
             "null"
           ],
-          "minLength": 1
+          "minLength": 1,
+          "description": "Published ForgePlay version, or the reserved value 'development' for an unreleased development build."
         },
         "gameVersion": {
           "type": [

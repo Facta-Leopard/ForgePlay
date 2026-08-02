@@ -20,6 +20,9 @@
     "github-issue": "compat.verificationGitHubIssue",
     "community-report": "compat.verificationCommunityReport"
   };
+  const forgePlayVersionMessageKeys = {
+    development: "compat.versionDevelopment"
+  };
   const blockerMessageKeys = {
     "anti-cheat": "compat.blockerAntiCheat",
     launcher: "compat.blockerLauncher",
@@ -134,11 +137,18 @@
     })
   );
 
-  const reportVersion = (report) => (
-    typeof report.forgePlayVersion === "string" && report.forgePlayVersion.trim()
+  const reportVersion = (report) => {
+    const version = typeof report.forgePlayVersion === "string"
       ? report.forgePlayVersion.trim()
-      : message("compat.versionNotReported", "Version not provided")
-  );
+      : "";
+    if (!version) {
+      return message("compat.versionNotReported", "Version not provided");
+    }
+    const versionMessageKey = forgePlayVersionMessageKeys[version];
+    return versionMessageKey
+      ? message(versionMessageKey, "Development build")
+      : version;
+  };
 
   const gameVersion = (report) => (
     typeof report.gameVersion === "string" && report.gameVersion.trim()

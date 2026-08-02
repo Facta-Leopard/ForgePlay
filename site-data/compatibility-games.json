@@ -51,6 +51,13 @@
       "chip": "M5 Max",
       "unifiedMemoryGB": 128,
       "macOSVersion": "Tahoe 26.5.2"
+    },
+    {
+      "id": "apple-silicon-m4-pro-24gb-macos-27-beta-3",
+      "platform": "Apple Silicon Mac",
+      "chip": "M4 Pro",
+      "unifiedMemoryGB": 24,
+      "macOSVersion": "27 beta 3"
     }
   ],
   "games": [
@@ -269,6 +276,13 @@
       "titles": {
         "en": "Warframe",
         "ko": "워프레임"
+      }
+    },
+    {
+      "id": "satisfactory",
+      "titles": {
+        "en": "Satisfactory",
+        "ko": "새티스팩토리"
       }
     }
   ],
@@ -739,6 +753,48 @@
         "de": "Das Spiel läuft flüssig. Im koreanischen Client werden Interaktionshinweise mit Hangul-Zeichen statt der lateinischen Tastenbezeichnungen X und F dargestellt; die koreanische Oberfläche wirkte für den Melder optisch aufgeräumter.",
         "es": "El juego funciona con fluidez. En el cliente coreano, los indicadores de interacción muestran caracteres hangul en lugar de las letras X y F; al informante le pareció que la interfaz en coreano se veía más limpia.",
         "fr": "Le jeu fonctionne de manière fluide. Dans le client coréen, les indications d’interaction utilisent des caractères hangeul au lieu des lettres X et F ; la personne ayant fait le signalement a trouvé l’interface coréenne visuellement plus soignée."
+      },
+      "blocker": null
+    },
+    {
+      "id": "satisfactory-m4-pro-24gb-community-macgallery22-20260802",
+      "gameId": "satisfactory",
+      "testProfileId": "apple-silicon-m4-pro-24gb-macos-27-beta-3",
+      "forgePlayVersion": "1.0",
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "맥갤러22",
+      "testedAt": null,
+      "notes": {
+        "en": "Runs smoothly using D3DMetal.",
+        "ko": "D3DMetal로 원활하게 플레이됩니다.",
+        "ja": "D3DMetalでスムーズにプレイできます。",
+        "zh-Hans": "使用 D3DMetal 可流畅游玩。",
+        "zh-Hant": "使用 D3DMetal 可流暢遊玩。",
+        "de": "Läuft mit D3DMetal flüssig.",
+        "es": "Funciona con fluidez usando D3DMetal.",
+        "fr": "Fonctionne de manière fluide avec D3DMetal."
+      },
+      "blocker": null
+    },
+    {
+      "id": "helldivers-2-development-github-ddol2ya-20260802",
+      "gameId": "helldivers-2",
+      "testProfileId": null,
+      "forgePlayVersion": "development",
+      "status": "playable",
+      "source": "github-issue",
+      "reporter": "ddol2ya",
+      "testedAt": null,
+      "notes": {
+        "en": "Gameplay was confirmed with a source-modified development build. The related changes are planned for a future ForgePlay release and are not included in the currently published 1.0 release.",
+        "ko": "소스 수정이 적용된 개발 빌드에서 게임 모드로 플레이할 수 있음을 확인했습니다. 관련 변경은 향후 ForgePlay 릴리스에 포함할 예정이며, 현재 공개된 1.0에는 아직 적용되지 않았습니다.",
+        "ja": "ソース修正を適用した開発ビルドで、ゲームモードによるプレイが可能であることを確認しました。関連する変更は今後のForgePlayリリースに含める予定で、現在公開中の1.0にはまだ反映されていません。",
+        "zh-Hans": "已确认在应用源代码修改的开发版本中可通过游戏模式游玩。相关更改计划在未来的 ForgePlay 版本中发布，目前公开的 1.0 尚未包含这些更改。",
+        "zh-Hant": "已確認在套用原始碼修改的開發版本中可透過遊戲模式遊玩。相關變更預計在未來的 ForgePlay 版本中發布，目前公開的 1.0 尚未包含這些變更。",
+        "de": "Mit einem quellcodeangepassten Entwicklungs-Build wurde bestätigt, dass das Spiel im Spielmodus spielbar ist. Die zugehörigen Änderungen sind für eine künftige ForgePlay-Version vorgesehen und noch nicht in der derzeit veröffentlichten Version 1.0 enthalten.",
+        "es": "Se ha confirmado que se puede jugar en el modo Juego con una compilación de desarrollo modificada a nivel de código fuente. Los cambios correspondientes están previstos para una futura versión de ForgePlay y aún no están incluidos en la versión 1.0 publicada actualmente.",
+        "fr": "Il a été confirmé que le jeu fonctionne en mode Jeu avec une version de développement modifiée au niveau du code source. Les changements correspondants sont prévus pour une prochaine version de ForgePlay et ne figurent pas encore dans la version 1.0 actuellement publiée."
       },
       "blocker": null
     }
