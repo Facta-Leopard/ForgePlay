@@ -65,6 +65,13 @@
       "chip": "M5 Max",
       "unifiedMemoryGB": 64,
       "macOSVersion": "26.4"
+    },
+    {
+      "id": "macbook-air-m5-16gb",
+      "platform": "MacBook Air",
+      "chip": "M5",
+      "unifiedMemoryGB": 16,
+      "macOSVersion": null
     }
   ],
   "games": [
@@ -851,6 +858,27 @@
         "fr": "Le jeu n’est actuellement pas jouable, apparemment en raison d’un problème AVX lié à Rosetta. Une version de ForgePlay intégrant le correctif est prévue."
       },
       "blocker": "runtime"
+    },
+    {
+      "id": "eternal-return-m5-air-16gb-community-kamael-20260803",
+      "gameId": "eternal-return",
+      "testProfileId": "macbook-air-m5-16gb",
+      "forgePlayVersion": "1.0",
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "카마엘",
+      "testedAt": null,
+      "notes": {
+        "en": "Runs normally at medium graphics settings. It uses slightly more memory than CrossOver, but not enough to cause a significant issue.",
+        "ko": "중간 그래픽 설정에서 정상적으로 플레이됩니다. CrossOver보다 메모리를 조금 더 사용하지만 플레이에 큰 문제는 없습니다.",
+        "ja": "グラフィック設定「中」で正常にプレイできます。CrossOverよりメモリ使用量はやや多いものの、大きな問題はありません。",
+        "zh-Hans": "在中等画质设置下可正常游玩。内存占用比 CrossOver 略高，但不会造成明显问题。",
+        "zh-Hant": "在中等畫質設定下可正常遊玩。記憶體占用比 CrossOver 略高，但不會造成明顯問題。",
+        "de": "Läuft mit mittleren Grafikeinstellungen einwandfrei. Der Speicherverbrauch ist etwas höher als bei CrossOver, stellt aber kein größeres Problem dar.",
+        "es": "Funciona correctamente con los ajustes gráficos en nivel medio. Usa algo más de memoria que CrossOver, pero no supone un problema importante.",
+        "fr": "Fonctionne correctement avec des réglages graphiques moyens. L’utilisation de la mémoire est légèrement supérieure à celle de CrossOver, sans que cela pose de problème important."
+      },
+      "blocker": null
     }
   ]
 }
