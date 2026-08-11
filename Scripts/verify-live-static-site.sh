@@ -13,9 +13,11 @@ PAGES=(
   compatibility.html
   updates.html
   site.css
+  site-assets/why-story.css
   locale-bootstrap.js
   site.js
   site-assets/current-release.js
+  site-assets/why-story.js
   compatibility.js
   announcements.js
   developer-apps.js
@@ -28,6 +30,14 @@ PAGES=(
   site-data/developer-apps.json
   site-data/developer-apps.schema.json
   site-data/README.md
+  site-data/why-story/ko.md
+  site-data/why-story/en.md
+  site-data/why-story/de.md
+  site-data/why-story/es.md
+  site-data/why-story/fr.md
+  site-data/why-story/ja.md
+  site-data/why-story/zh-Hans.md
+  site-data/why-story/zh-Hant.md
   site-assets/forgeplay-favicon.png
   site-assets/forgeplay-hero.jpg
   site-assets/forgeplay-hero-3200.jpg
