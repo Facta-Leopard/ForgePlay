@@ -3067,7 +3067,11 @@ html[lang="ko"] .compatibility-teaser-copy h2 {
 
 .compatibility-summary {
   display: grid;
-  grid-template-columns: 1fr 1fr minmax(300px, 1.5fr);
+  grid-template-columns:
+    minmax(190px, 0.9fr)
+    minmax(180px, 0.9fr)
+    minmax(180px, 0.9fr)
+    minmax(300px, 1.5fr);
   border-block: 1px solid var(--line-strong);
 }
 
@@ -3098,6 +3102,49 @@ html[lang="ko"] .compatibility-teaser-copy h2 {
 
 .compatibility-summary strong {
   font-size: clamp(1.4rem, 2.2vw, 2rem);
+}
+
+.compatibility-summary > .compatibility-release-summary {
+  background:
+    radial-gradient(circle at 0% 0%, rgb(196 255 70 / 0.13), transparent 68%),
+    rgb(196 255 70 / 0.025);
+}
+
+.compatibility-release-summary strong {
+  display: block;
+  color: var(--lime);
+  font-size: clamp(2.35rem, 4vw, 3.8rem);
+  font-weight: 950;
+  letter-spacing: -0.055em;
+  line-height: 0.95;
+}
+
+.compatibility-release-summary small {
+  display: block;
+  min-height: 1.45em;
+  margin-top: 12px;
+  color: #c9ced6;
+  font-size: 0.78rem;
+  font-weight: 720;
+  line-height: 1.45;
+}
+
+.compatibility-release-summary a {
+  display: inline-block;
+  margin-top: 15px;
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-decoration-color: var(--orange);
+  text-underline-offset: 0.25em;
+}
+
+.compatibility-release-summary a:hover {
+  color: var(--orange);
+}
+
+.compatibility-release-summary[data-release-state="error"] strong {
+  color: var(--muted);
 }
 
 .compatibility-toolbar {
@@ -3559,6 +3606,11 @@ html[lang="ko"] .compatibility-teaser-copy h2 {
 
   .compatibility-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .compatibility-release-summary {
+    grid-column: 1 / -1;
+    border-bottom: 1px solid var(--line);
   }
 
   .compatibility-summary > p {

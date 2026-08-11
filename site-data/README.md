@@ -4,6 +4,24 @@
 website. Games, test devices, and test reports are separate records so one game
 can accumulate results from multiple Macs without changing the page structure.
 
+## Current stable release manifest
+
+`current-release.json` is the machine-readable source of truth for the current
+stable ForgePlay release. The homepage and compatibility page render their
+current version and download destinations from this file. The app's future
+manual update check must fetch the same public JSON instead of parsing HTML or
+inferring a release from compatibility reports.
+
+The manifest keeps the user-facing `marketingVersion` separate from the
+monotonically increasing integer `buildNumber`. App update availability is
+decided by `buildNumber`; `marketingVersion` and `releaseTag` are display and
+release-identification values. Validate every change against
+`current-release.schema.json`.
+
+The complete consumer contract, validation rules, failure behavior, security
+boundary, and release workflow are documented in
+[`docs/update-check-contract.md`](https://github.com/Facta-Leopard/ForgePlay/blob/main/docs/update-check-contract.md).
+
 ## Compatibility-only update workflow
 
 Compatibility content has one source of truth:
@@ -19,6 +37,14 @@ Do not bump HTML or JavaScript cache versions for a data-only update. The
 website requests the compatibility database independently of asset versions,
 and both the homepage count and compatibility rows are derived from the JSON.
 New data appears the next time the page is loaded or refreshed.
+
+The ForgePlay app also consumes this public JSON through an explicit refresh.
+Its cache, rollback, same-date conflict, failure-preservation, and coordinated
+schema rules are documented in
+[`docs/compatibility-catalog-consumer-contract.md`](https://github.com/Facta-Leopard/ForgePlay/blob/main/docs/compatibility-catalog-consumer-contract.md).
+Under the current contract, a published `updatedAt` identifies one immutable
+payload; batch reports into a single publication when they arrive on the same
+date.
 
 ## Excel / spreadsheet import contract
 

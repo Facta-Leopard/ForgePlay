@@ -24,7 +24,8 @@
         imagesrcset="site-assets/forgeplay-hero.jpg 1600w, site-assets/forgeplay-hero-3200.jpg 3200w"
         imagesizes="100vw" fetchpriority="high">
   <link rel="stylesheet" href="site.css?v=20260729-14">
-  <script src="site.js?v=20260729-14" defer></script>
+  <script src="site.js?v=20260811-22" defer></script>
+  <script src="site-assets/current-release.js?v=20260811-22" defer></script>
   <script src="compatibility.js?v=20260802-21" defer></script>
   <script src="announcements.js?v=20260802-20" defer></script>
   <script src="developer-apps.js?v=20260729-14" defer></script>
@@ -83,7 +84,7 @@
             <span data-i18n="home.betaNote">The Game Mode path is an opt-in beta. Confirm activation on your Mac.</span>
           </p>
           <div class="hero-actions">
-            <a class="button primary" href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.0.0/ForgePlay-1.0-1.dmg" data-i18n="home.releaseButton">Download ForgePlay 1.0</a>
+            <a class="button primary" href="https://github.com/Facta-Leopard/ForgePlay/releases/latest" data-current-release-download data-current-release-download-label data-i18n="home.releaseButton">Download ForgePlay</a>
             <a class="button ghost" href="https://github.com/Facta-Leopard/ForgePlay/tree/main" target="_blank" rel="noopener noreferrer" data-i18n="home.sourceButton">View source on GitHub ↗</a>
             <a class="button ghost" href="#game-mode" data-i18n="home.ctaArchitecture">What is Game Mode?</a>
           </div>
@@ -113,7 +114,7 @@
       <div><span>HOST</span><strong data-i18n="home.statusApple">Apple Silicon</strong></div>
       <div><span>OS</span><strong data-i18n="home.statusOS">macOS 26+ · Rosetta required</strong></div>
       <div><span>GAME MODE</span><strong data-i18n="home.statusBeta">Opt-in beta</strong></div>
-      <div><span>RELEASE</span><strong data-i18n="home.statusRelease">ForgePlay 1.0 · available now</strong></div>
+      <div><span>RELEASE</span><strong data-current-release-status-summary data-i18n="home.statusRelease">Current release available</strong></div>
     </section>
 
     <section class="world-first-campaign" aria-labelledby="world-first-title">
@@ -304,18 +305,18 @@
       <div class="release-glow" aria-hidden="true"></div>
       <div class="release-layout">
         <div data-reveal>
-          <p class="section-label" data-i18n="home.releaseLabel">FORGEPLAY 1.0 · BUILD 1</p>
+          <p class="section-label" data-current-release-label data-i18n="home.releaseLabel">CURRENT STABLE RELEASE</p>
           <h2 data-i18n="home.releaseTitle">Released. Notarized. Open for inspection.</h2>
           <p data-i18n="home.releaseBody">Download the Apple-notarized DMG, inspect the version-matched source, and verify the release on GitHub.</p>
         </div>
         <div class="release-panel compact-panel" data-reveal>
           <div class="release-status live">
             <span class="status-light" aria-hidden="true"></span>
-            <strong data-i18n="home.releaseStatus">AVAILABLE NOW · v1.0.0</strong>
+            <strong data-current-release-status data-i18n="home.releaseStatus">AVAILABLE NOW</strong>
           </div>
           <div class="release-actions">
-            <a class="button primary" href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.0.0/ForgePlay-1.0-1.dmg" data-release-download data-i18n="home.releaseButton">Download ForgePlay 1.0</a>
-            <a class="button ghost" href="https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0" target="_blank" rel="noopener noreferrer" data-i18n="home.releaseNotesButton">Release notes &amp; verification ↗</a>
+            <a class="button primary" href="https://github.com/Facta-Leopard/ForgePlay/releases/latest" data-release-download data-current-release-download data-current-release-download-label data-i18n="home.releaseButton">Download ForgePlay</a>
+            <a class="button ghost" href="https://github.com/Facta-Leopard/ForgePlay/releases/latest" target="_blank" rel="noopener noreferrer" data-current-release-link data-i18n="home.releaseNotesButton">Release notes &amp; verification ↗</a>
             <a class="button ghost" href="https://github.com/Facta-Leopard/ForgePlay/tree/main" target="_blank" rel="noopener noreferrer" data-i18n="home.sourceButton">View source on GitHub ↗</a>
           </div>
         </div>
@@ -340,7 +341,7 @@
         <a href="license.html" data-locale-link data-i18n="shared.navLicense">License</a>
         <a href="privacy.html" data-locale-link data-i18n="shared.navPrivacy">Privacy</a>
         <a href="support.html" data-locale-link data-i18n="shared.navSupport">Support</a>
-        <a href="https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0" target="_blank" rel="noopener noreferrer" data-i18n="shared.navRelease">Release</a>
+        <a href="https://github.com/Facta-Leopard/ForgePlay/releases/latest" target="_blank" rel="noopener noreferrer" data-current-release-link data-i18n="shared.navRelease">Release</a>
         <a href="https://github.com/Facta-Leopard/ForgePlay/tree/main" target="_blank" rel="noopener noreferrer" data-i18n="shared.navSource">Source</a>
       </div>
       <p class="footer-note" data-i18n="shared.footerNote">Apple, macOS, Game Mode, Steam, Windows, Wine, and renderer names belong to their respective owners. ForgePlay is not affiliated with them.</p>

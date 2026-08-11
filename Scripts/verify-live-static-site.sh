@@ -15,11 +15,14 @@ PAGES=(
   site.css
   locale-bootstrap.js
   site.js
+  site-assets/current-release.js
   compatibility.js
   announcements.js
   developer-apps.js
   site-data/compatibility-games.json
   site-data/compatibility.schema.json
+  site-data/current-release.json
+  site-data/current-release.schema.json
   site-data/announcements.json
   site-data/announcements.schema.json
   site-data/developer-apps.json

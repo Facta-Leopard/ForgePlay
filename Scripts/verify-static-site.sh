@@ -14,12 +14,15 @@ PAGES=(
   site-assets/why-story.css
   locale-bootstrap.js
   site.js
+  site-assets/current-release.js
   site-assets/why-story.js
   compatibility.js
   announcements.js
   developer-apps.js
   site-data/compatibility-games.json
   site-data/compatibility.schema.json
+  site-data/current-release.json
+  site-data/current-release.schema.json
   site-data/announcements.json
   site-data/announcements.schema.json
   site-data/developer-apps.json
@@ -33,7 +36,6 @@ PAGES=(
   site-data/why-story/ja.md
   site-data/why-story/zh-Hans.md
   site-data/why-story/zh-Hant.md
-  .github/ISSUE_TEMPLATE/compatibility-report.yml
   site-assets/forgeplay-favicon.png
   site-assets/forgeplay-hero.jpg
   site-assets/forgeplay-hero-3200.jpg
@@ -219,7 +221,7 @@ python3 - "$ROOT_DIR" \
 import json
 import re
 import sys
-from datetime import date
+from datetime import date, datetime
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -780,6 +782,184 @@ validate_compatibility_database({
     ],
 })
 
+current_release_path = root / "site-data" / "current-release.json"
+current_release_schema_path = root / "site-data" / "current-release.schema.json"
+try:
+    current_release = json.loads(current_release_path.read_text(encoding="utf-8"))
+    current_release_schema = json.loads(
+        current_release_schema_path.read_text(encoding="utf-8")
+    )
+except (OSError, json.JSONDecodeError) as exc:
+    raise SystemExit(f"current release JSON is invalid: {exc}")
+
+current_release_fields = {
+    "$schema",
+    "schemaVersion",
+    "product",
+    "channel",
+    "marketingVersion",
+    "buildNumber",
+    "releaseTag",
+    "publishedAt",
+    "minimumMacOSVersion",
+    "releaseURL",
+    "download",
+}
+if current_release_schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
+    raise SystemExit("current release schema must use JSON Schema draft 2020-12")
+if current_release_schema.get("additionalProperties") is not False:
+    raise SystemExit("current release schema must reject unknown top-level fields")
+if set(current_release_schema.get("required", [])) != current_release_fields:
+    raise SystemExit("current release schema must require the complete field contract")
+if set(current_release_schema.get("properties", {})) != current_release_fields:
+    raise SystemExit("current release schema fields differ from the consumer contract")
+current_release_properties = current_release_schema["properties"]
+if current_release_properties.get("schemaVersion", {}).get("const") != 1:
+    raise SystemExit("current release schema must require schemaVersion 1")
+if current_release_properties.get("product", {}).get("const") != "ForgePlay":
+    raise SystemExit("current release schema must bind the ForgePlay product")
+if current_release_properties.get("channel", {}).get("const") != "stable":
+    raise SystemExit("current release schema must bind the stable channel")
+if current_release_properties.get("download", {}).get("$ref") != "#/$defs/download":
+    raise SystemExit("current release schema must use the shared download definition")
+current_release_download_schema = current_release_schema.get("$defs", {}).get("download", {})
+current_release_download_fields = {"assetName", "url", "sha256", "byteSize"}
+if current_release_download_schema.get("additionalProperties") is not False:
+    raise SystemExit("current release download schema must reject unknown fields")
+if set(current_release_download_schema.get("required", [])) != current_release_download_fields:
+    raise SystemExit("current release download schema must require every field")
+if set(current_release_download_schema.get("properties", {})) != current_release_download_fields:
+    raise SystemExit("current release download schema fields differ from the contract")
+
+release_version_pattern = re.compile(r"^[0-9]+(?:\.[0-9]+){1,2}$")
+release_tag_pattern = re.compile(
+    r"^v[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$"
+)
+release_asset_pattern = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+-]*$")
+release_sha256_pattern = re.compile(r"^[0-9a-f]{64}$")
+release_utc_pattern = re.compile(
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$"
+)
+
+def require_exact_github_release_url(value, expected_path, label):
+    if not isinstance(value, str):
+        raise SystemExit(f"{label} must be an HTTPS GitHub URL")
+    parsed = urlsplit(value)
+    if (
+        parsed.scheme != "https"
+        or parsed.hostname != "github.com"
+        or parsed.port is not None
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.query
+        or parsed.fragment
+        or parsed.path != expected_path
+    ):
+        raise SystemExit(f"{label} is outside the trusted ForgePlay release path")
+
+def normalized_release_version(value):
+    components = [int(component) for component in value.split(".")]
+    return tuple((components + [0, 0, 0])[:3])
+
+def validate_current_release(candidate):
+    require_object_shape(
+        candidate,
+        current_release_fields,
+        current_release_fields,
+        "current release manifest",
+    )
+    if candidate.get("$schema") != "./current-release.schema.json":
+        raise SystemExit("current release manifest references the wrong schema")
+    if candidate.get("schemaVersion") != 1:
+        raise SystemExit("current release manifest schemaVersion must be 1")
+    if candidate.get("product") != "ForgePlay":
+        raise SystemExit("current release manifest product must be ForgePlay")
+    if candidate.get("channel") != "stable":
+        raise SystemExit("current release manifest channel must be stable")
+
+    marketing_version = candidate.get("marketingVersion")
+    if not isinstance(marketing_version, str) or not release_version_pattern.fullmatch(
+        marketing_version
+    ):
+        raise SystemExit("current release marketingVersion is invalid")
+    build_number = candidate.get("buildNumber")
+    if isinstance(build_number, bool) or not isinstance(build_number, int) or build_number < 1:
+        raise SystemExit("current release buildNumber must be a positive integer")
+    release_tag = candidate.get("releaseTag")
+    if not isinstance(release_tag, str) or not release_tag_pattern.fullmatch(release_tag):
+        raise SystemExit("current release releaseTag is invalid")
+    tag_version = re.split(r"[-+]", release_tag[1:], maxsplit=1)[0]
+    if normalized_release_version(marketing_version) != normalized_release_version(tag_version):
+        raise SystemExit("current release marketingVersion and releaseTag disagree")
+
+    published_at = candidate.get("publishedAt")
+    if not isinstance(published_at, str) or not release_utc_pattern.fullmatch(published_at):
+        raise SystemExit("current release publishedAt must be an ISO 8601 UTC timestamp")
+    try:
+        parsed_published_at = datetime.fromisoformat(
+            published_at.removesuffix("Z") + "+00:00"
+        )
+    except ValueError as exc:
+        raise SystemExit(f"current release publishedAt is invalid: {exc}")
+    if parsed_published_at.utcoffset() is None:
+        raise SystemExit("current release publishedAt must include a UTC offset")
+
+    minimum_macos = candidate.get("minimumMacOSVersion")
+    if not isinstance(minimum_macos, str) or not release_version_pattern.fullmatch(
+        minimum_macos
+    ):
+        raise SystemExit("current release minimumMacOSVersion is invalid")
+
+    download = candidate.get("download")
+    require_object_shape(
+        download,
+        current_release_download_fields,
+        current_release_download_fields,
+        "current release download",
+    )
+    asset_name = download.get("assetName")
+    if not isinstance(asset_name, str) or not release_asset_pattern.fullmatch(asset_name):
+        raise SystemExit("current release download assetName is invalid")
+    require_exact_github_release_url(
+        candidate.get("releaseURL"),
+        f"/Facta-Leopard/ForgePlay/releases/tag/{release_tag}",
+        "current release releaseURL",
+    )
+    require_exact_github_release_url(
+        download.get("url"),
+        f"/Facta-Leopard/ForgePlay/releases/download/{release_tag}/{asset_name}",
+        "current release download URL",
+    )
+    sha256 = download.get("sha256")
+    if not isinstance(sha256, str) or not release_sha256_pattern.fullmatch(sha256):
+        raise SystemExit("current release download sha256 is invalid")
+    byte_size = download.get("byteSize")
+    if isinstance(byte_size, bool) or not isinstance(byte_size, int) or byte_size < 1:
+        raise SystemExit("current release download byteSize must be a positive integer")
+
+validate_current_release(current_release)
+
+# A future release must validate without teaching the verifier a specific app
+# version. This prevents the update source from becoming another hardcoded UI.
+validate_current_release({
+    "$schema": "./current-release.schema.json",
+    "schemaVersion": 1,
+    "product": "ForgePlay",
+    "channel": "stable",
+    "marketingVersion": "9.7",
+    "buildNumber": 42,
+    "releaseTag": "v9.7.0",
+    "publishedAt": "2099-01-02T03:04:05Z",
+    "minimumMacOSVersion": "26.1",
+    "releaseURL": "https://github.com/Facta-Leopard/ForgePlay/releases/tag/v9.7.0",
+    "download": {
+        "assetName": "ForgePlay-9.7-42.dmg",
+        "url": "https://github.com/Facta-Leopard/ForgePlay/releases/download/v9.7.0/ForgePlay-9.7-42.dmg",
+        "sha256": "0" * 64,
+        "byteSize": 123456,
+    },
+})
+
 announcements_path = root / "site-data" / "announcements.json"
 announcements_schema_path = root / "site-data" / "announcements.schema.json"
 try:
@@ -1079,11 +1259,14 @@ for html in index.html why.html license.html privacy.html support.html compatibi
   require_snippet "$ROOT_DIR/$html" '<html lang="en">'
   require_snippet "$ROOT_DIR/$html" 'src="locale-bootstrap.js?v=20260729-14"'
   if [[ "$html" == "compatibility.html" ]]; then
-    require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260802-19"'
-    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260802-21"'
+    require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260811-22"'
+    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260811-22"'
   elif [[ "$html" == "updates.html" ]]; then
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260801-17"'
     require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260801-17"'
+  elif [[ "$html" == "index.html" ]]; then
+    require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-14"'
+    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260811-22"'
   else
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-14"'
     require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260729-14"'
@@ -1091,7 +1274,7 @@ for html in index.html why.html license.html privacy.html support.html compatibi
   require_snippet "$ROOT_DIR/$html" 'data-language-select'
   require_snippet "$ROOT_DIR/$html" 'site-assets/forgeplay-icon.png'
   require_snippet "$ROOT_DIR/$html" 'target="_blank" rel="noopener noreferrer"'
-  require_snippet "$ROOT_DIR/$html" 'href="https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0"'
+  require_snippet "$ROOT_DIR/$html" 'href="https://github.com/Facta-Leopard/ForgePlay/releases/latest"'
   require_snippet "$ROOT_DIR/$html" 'href="https://github.com/Facta-Leopard/ForgePlay/tree/main"'
   require_snippet "$ROOT_DIR/$html" 'data-i18n="shared.navSource"'
   if grep -Fq 'gall.dcinside.com' "$ROOT_DIR/$html" || \
@@ -1113,9 +1296,15 @@ require_snippet "$ROOT_DIR/index.html" 'The published source includes ForgePlay,
 require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.sourceLink">Browse the published source ↗'
 require_snippet "$ROOT_DIR/index.html" 'href="why.html"'
 require_snippet "$ROOT_DIR/index.html" 'href="license.html"'
-require_snippet "$ROOT_DIR/index.html" 'AVAILABLE NOW · v1.0.0'
+require_snippet "$ROOT_DIR/index.html" 'CURRENT STABLE RELEASE'
+require_snippet "$ROOT_DIR/index.html" 'data-current-release-status-summary'
+require_snippet "$ROOT_DIR/index.html" 'data-current-release-label'
+require_snippet "$ROOT_DIR/index.html" 'data-current-release-status'
+require_snippet "$ROOT_DIR/index.html" 'data-current-release-download'
+require_snippet "$ROOT_DIR/index.html" 'data-current-release-download-label'
+require_snippet "$ROOT_DIR/index.html" 'data-current-release-link'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/current-release.js?v=20260811-22"'
 require_snippet "$ROOT_DIR/index.html" 'data-release-download'
-require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.0.0/ForgePlay-1.0-1.dmg"'
 require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.releaseNotesButton"'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/forgeplay-social.png'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/forgeplay-manifesto.jpg'
@@ -1148,9 +1337,16 @@ require_snippet "$ROOT_DIR/compatibility.html" 'Logs shorten the distance to a f
 require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.logLabel"'
 require_snippet "$ROOT_DIR/compatibility.html" 'issues/new?template=compatibility-report.yml'
 require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
-require_snippet "$ROOT_DIR/compatibility.html" 'href="site.css?v=20260802-19"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260802-21"'
+require_snippet "$ROOT_DIR/compatibility.html" 'href="site.css?v=20260811-22"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260811-22"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/current-release.js?v=20260811-22"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260802-21"'
+require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-card'
+require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-tag'
+require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-meta'
+require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.currentReleaseLabel"'
+require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.currentReleaseLoading"'
+require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.currentReleaseLink"'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.columnTestedForgePlayVersions"'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.columnMacOSVersion"'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.columnRecords"'
@@ -1181,6 +1377,21 @@ require_snippet "$ROOT_DIR/compatibility.js" 'const headlineRecords = playableRe
 require_snippet "$ROOT_DIR/compatibility.js" '({ profile }) => formatMacOSVersion(profile)'
 require_snippet "$ROOT_DIR/compatibility.js" 'compatibility-blocked-button'
 require_snippet "$ROOT_DIR/compatibility.js" 'updatePanelState("blocked")'
+require_snippet "$ROOT_DIR/site-assets/current-release.js" 'site-data/current-release.json'
+require_snippet "$ROOT_DIR/site-assets/current-release.js" 'const cacheBustedDataURL = (path) =>'
+require_snippet "$ROOT_DIR/site-assets/current-release.js" 'url.searchParams.set("refresh", Date.now().toString())'
+require_snippet "$ROOT_DIR/site-assets/current-release.js" 'cache: "no-store"'
+require_snippet "$ROOT_DIR/site-assets/current-release.js" 'const validateManifest = (candidate) =>'
+require_snippet "$ROOT_DIR/site-assets/current-release.js" 'candidate.buildNumber'
+require_snippet "$ROOT_DIR/site-assets/current-release.js" 'const trustedHost = "github.com"'
+require_snippet "$ROOT_DIR/site-assets/current-release.js" 'data-current-release-status-summary'
+require_snippet "$ROOT_DIR/site-assets/current-release.js" 'data-current-release-download'
+require_snippet "$ROOT_DIR/site-assets/current-release.js" 'forgeplay:localechange'
+require_snippet "$ROOT_DIR/site-assets/current-release.js" 'element.textContent = value'
+if grep -Eq 'innerHTML|outerHTML|insertAdjacentHTML|document\.write' \
+  "$ROOT_DIR/site-assets/current-release.js"; then
+  fail "current-release.js must render release data without unsafe HTML insertion"
+fi
 require_snippet "$ROOT_DIR/site.js" '"compat.statusPlayable": "게임 모드로 플레이 가능"'
 require_snippet "$ROOT_DIR/site.js" '"compat.columnTestedForgePlayVersions": "확인한 ForgePlay 버전"'
 require_snippet "$ROOT_DIR/site.js" '"compat.columnMacOSVersion": "macOS 버전"'
@@ -1195,6 +1406,12 @@ require_snippet "$ROOT_DIR/site.js" '"compat.deviceNotReported": "기기 정보 
 require_snippet "$ROOT_DIR/site.js" '"compat.blockerSecurityModule": "보안 모듈로 인해 실행이 제한됩니다."'
 require_snippet "$ROOT_DIR/site.css" '.compatibility-macos-version-cell {'
 require_snippet "$ROOT_DIR/site.css" 'grid-row: 1 / 7;'
+require_snippet "$ROOT_DIR/site.css" '.compatibility-release-summary strong {'
+require_snippet "$ROOT_DIR/site.css" '.compatibility-release-summary[data-release-state="error"] strong {'
+require_snippet "$ROOT_DIR/site-data/README.md" 'Current stable release manifest'
+require_snippet "$ROOT_DIR/site-data/README.md" '`current-release.json`'
+require_snippet "$ROOT_DIR/site-data/README.md" 'monotonically increasing integer `buildNumber`'
+require_snippet "$ROOT_DIR/site-data/README.md" '`docs/update-check-contract.md`'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Excel / spreadsheet import contract'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Compatibility-only update workflow'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Edit only `compatibility-games.json`'
@@ -1207,10 +1424,6 @@ require_snippet "$ROOT_DIR/site-data/README.md" 'DeveloperAppCatalog.swift'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Why ForgePlay exists — full text'
 require_snippet "$ROOT_DIR/site-data/README.md" 'raw Markdown is never inserted into the page'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Routine compatibility database additions and result changes must not create'
-require_snippet "$ROOT_DIR/.github/ISSUE_TEMPLATE/compatibility-report.yml" 'id: forgeplay_version'
-require_snippet "$ROOT_DIR/.github/ISSUE_TEMPLATE/compatibility-report.yml" 'id: game_version'
-require_snippet "$ROOT_DIR/.github/ISSUE_TEMPLATE/compatibility-report.yml" 'This field is optional.'
-
 require_snippet "$ROOT_DIR/updates.html" 'data-announcement-list'
 require_snippet "$ROOT_DIR/updates.html" 'data-nav-page="updates"'
 require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260802-20"'
@@ -1357,8 +1570,13 @@ require_snippet "$ROOT_DIR/site.js" 'new Set(["privacy", "support", "why", "lice
 require_snippet "$ROOT_DIR/site.js" 'window.ForgePlaySite = Object.freeze'
 require_snippet "$ROOT_DIR/site.js" 'document.dispatchEvent(new CustomEvent("forgeplay:localechange"'
 require_snippet "$ROOT_DIR/site.js" '"shared.navSource": "소스 코드"'
-require_snippet "$ROOT_DIR/site.js" '"home.releaseStatus": "지금 다운로드 가능 · v1.0.0"'
-require_snippet "$ROOT_DIR/site.js" '"home.releaseStatus": "AVAILABLE NOW · v1.0.0"'
+require_snippet "$ROOT_DIR/site.js" '"home.releaseStatus": "지금 다운로드 가능"'
+require_snippet "$ROOT_DIR/site.js" '"home.releaseStatusVersioned": "지금 다운로드 가능 · {tag}"'
+require_snippet "$ROOT_DIR/site.js" '"home.releaseStatus": "AVAILABLE NOW"'
+require_snippet "$ROOT_DIR/site.js" '"home.releaseStatusVersioned": "AVAILABLE NOW · {tag}"'
+require_snippet "$ROOT_DIR/site.js" '"home.releaseButtonVersioned": "Download {product} {version}"'
+require_snippet "$ROOT_DIR/site.js" '"compat.currentReleaseLabel": "현재 릴리스"'
+require_snippet "$ROOT_DIR/site.js" '"compat.currentReleaseUnavailable": "릴리스 정보를 일시적으로 불러올 수 없습니다."'
 
 if grep -Fq 'shared.navCommunity' "$ROOT_DIR/site.js"; then
   fail "site.js must not contain the retired DCInside navigation localization"
@@ -1372,11 +1590,45 @@ if grep -Fq '"compat.verificationCommunity":' "$ROOT_DIR/site.js"; then
   fail "site.js must not use the retired ambiguous community verification key"
 fi
 
-if [[ -d "$ROOT_DIR/.git" ]]; then
+if grep -Fq 'releases/download/v1.0.0' \
+  "$ROOT_DIR/index.html" "$ROOT_DIR/compatibility.html" "$ROOT_DIR/site.js"; then
+  fail "active release UI must obtain the versioned download from current-release.json"
+fi
+
+for script in \
+  locale-bootstrap.js \
+  site.js \
+  site-assets/current-release.js \
+  compatibility.js \
+  announcements.js \
+  developer-apps.js \
+  site-assets/why-story.js; do
+  node --check "$ROOT_DIR/$script" >/dev/null || fail "$script has invalid JavaScript syntax"
+done
+
+if [[ -e "$ROOT_DIR/.git" ]]; then
+  require_regular_file "$ROOT_DIR/docs/update-check-contract.md"
+  require_regular_file "$ROOT_DIR/docs/compatibility-catalog-consumer-contract.md"
+  require_snippet "$ROOT_DIR/docs/update-check-contract.md" 'https://facta-leopard.github.io/ForgePlay/site-data/current-release.json'
+  require_snippet "$ROOT_DIR/docs/update-check-contract.md" '`CFBundleVersion`'
+  require_snippet "$ROOT_DIR/docs/update-check-contract.md" '`buildNumber`'
+  require_snippet "$ROOT_DIR/docs/update-check-contract.md" '업데이트 확인 실패'
+  require_snippet "$ROOT_DIR/docs/update-check-contract.md" 'Developer ID 서명, Apple 공증'
+  require_snippet "$ROOT_DIR/docs/update-check-contract.md" '`releases/latest`'
+  require_snippet "$ROOT_DIR/docs/update-check-contract.md" '`compatibility-games.json`'
+  require_snippet "$ROOT_DIR/docs/compatibility-catalog-consumer-contract.md" 'https://facta-leopard.github.io/ForgePlay/site-data/compatibility-games.json'
+  require_snippet "$ROOT_DIR/docs/compatibility-catalog-consumer-contract.md" '`site-data/current-release.json`'
+  require_snippet "$ROOT_DIR/docs/compatibility-catalog-consumer-contract.md" '`updatedAt`과 검증된 JSON payload의 SHA-256'
+  require_snippet "$ROOT_DIR/docs/compatibility-catalog-consumer-contract.md" '같은 `updatedAt`, 다른 payload'
+  require_snippet "$ROOT_DIR/docs/compatibility-catalog-consumer-contract.md" '`catalogRevision`'
+  require_snippet "$ROOT_DIR/docs/compatibility-catalog-consumer-contract.md" '기존 캐시 보존'
   require_regular_file "$ROOT_DIR/.github/ISSUE_TEMPLATE/compatibility-report.yml"
   require_regular_file "$ROOT_DIR/.github/FUNDING.yml"
   require_snippet "$ROOT_DIR/.github/ISSUE_TEMPLATE/compatibility-report.yml" 'name: Compatibility report'
   require_snippet "$ROOT_DIR/.github/ISSUE_TEMPLATE/compatibility-report.yml" 'label: Reviewed diagnostics'
+  require_snippet "$ROOT_DIR/.github/ISSUE_TEMPLATE/compatibility-report.yml" 'id: forgeplay_version'
+  require_snippet "$ROOT_DIR/.github/ISSUE_TEMPLATE/compatibility-report.yml" 'id: game_version'
+  require_snippet "$ROOT_DIR/.github/ISSUE_TEMPLATE/compatibility-report.yml" 'This field is optional.'
   require_snippet "$ROOT_DIR/.github/FUNDING.yml" 'github:'
   require_snippet "$ROOT_DIR/.github/FUNDING.yml" 'facta-leopard'
 fi

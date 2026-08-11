@@ -12,8 +12,9 @@
   <meta property="og:image" content="https://facta-leopard.github.io/ForgePlay/site-assets/forgeplay-social.png">
   <link rel="icon" type="image/png" href="site-assets/forgeplay-favicon.png">
   <script src="locale-bootstrap.js?v=20260729-14"></script>
-  <link rel="stylesheet" href="site.css?v=20260802-19">
-  <script src="site.js?v=20260802-21" defer></script>
+  <link rel="stylesheet" href="site.css?v=20260811-22">
+  <script src="site.js?v=20260811-22" defer></script>
+  <script src="site-assets/current-release.js?v=20260811-22" defer></script>
   <script src="compatibility.js?v=20260802-21" defer></script>
 </head>
 <body class="compatibility-page" data-page="compatibility">
@@ -67,6 +68,14 @@
 
     <section class="compatibility-shell" aria-labelledby="compatibility-list-title">
       <div class="compatibility-summary" data-reveal>
+        <div class="compatibility-release-summary" data-current-release-card data-release-state="loading">
+          <span data-i18n="compat.currentReleaseLabel">CURRENT RELEASE</span>
+          <strong data-current-release-tag aria-live="polite">—</strong>
+          <small data-current-release-meta data-i18n="compat.currentReleaseLoading">Loading release information…</small>
+          <a href="https://github.com/Facta-Leopard/ForgePlay/releases/latest"
+             target="_blank" rel="noopener noreferrer"
+             data-current-release-link data-i18n="compat.currentReleaseLink">View release ↗</a>
+        </div>
         <div>
           <span data-i18n="compat.deviceLabel">CURRENT TEST DEVICE</span>
           <strong data-compatibility-device>M4 Pro · 24GB</strong>
@@ -150,7 +159,7 @@
         <a href="why.html" data-locale-link data-i18n="shared.navWhy">Why</a>
         <a href="license.html" data-locale-link data-i18n="shared.navLicense">License</a>
         <a href="support.html" data-locale-link data-i18n="shared.navSupport">Support</a>
-        <a href="https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0" target="_blank" rel="noopener noreferrer" data-i18n="shared.navRelease">Release</a>
+        <a href="https://github.com/Facta-Leopard/ForgePlay/releases/latest" target="_blank" rel="noopener noreferrer" data-current-release-link data-i18n="shared.navRelease">Release</a>
         <a href="https://github.com/Facta-Leopard/ForgePlay/tree/main" target="_blank" rel="noopener noreferrer" data-i18n="shared.navSource">Source</a>
       </div>
       <p class="footer-note" data-i18n="shared.footerNote">Apple, macOS, Game Mode, Steam, Windows, Wine, and renderer names belong to their respective owners. ForgePlay is not affiliated with them.</p>
