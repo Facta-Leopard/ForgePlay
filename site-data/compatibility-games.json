@@ -1,7 +1,7 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-08-03",
+  "updatedAt": "2026-08-13",
   "testProfiles": [
     {
       "id": "apple-silicon-m4-pro-24gb",
@@ -72,6 +72,13 @@
       "chip": "M5",
       "unifiedMemoryGB": 16,
       "macOSVersion": null
+    },
+    {
+      "id": "apple-silicon-m4-pro-24gb-macos-26-6-1",
+      "platform": "Apple Silicon Mac",
+      "chip": "M4 Pro",
+      "unifiedMemoryGB": 24,
+      "macOSVersion": "Tahoe 26.6.1"
     }
   ],
   "games": [
@@ -311,6 +318,13 @@
       "titles": {
         "en": "Marvel's Spider-Man 2",
         "ko": "마블 스파이더맨 2"
+      }
+    },
+    {
+      "id": "sekiro-shadows-die-twice-goty",
+      "titles": {
+        "en": "Sekiro™: Shadows Die Twice - GOTY Edition",
+        "ko": "세키로: 섀도우 다이 트와이스 - GOTY 에디션"
       }
     }
   ],
@@ -877,6 +891,28 @@
         "de": "Läuft mit mittleren Grafikeinstellungen einwandfrei. Der Speicherverbrauch ist etwas höher als bei CrossOver, stellt aber kein größeres Problem dar.",
         "es": "Funciona correctamente con los ajustes gráficos en nivel medio. Usa algo más de memoria que CrossOver, pero no supone un problema importante.",
         "fr": "Fonctionne correctement avec des réglages graphiques moyens. L’utilisation de la mémoire est légèrement supérieure à celle de CrossOver, sans que cela pose de problème important."
+      },
+      "blocker": null
+    },
+    {
+      "id": "sekiro-shadows-die-twice-goty-m4-pro-24gb-github-lionkingissimba-20260811",
+      "gameId": "sekiro-shadows-die-twice-goty",
+      "testProfileId": "apple-silicon-m4-pro-24gb-macos-26-6-1",
+      "forgePlayVersion": "1.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "github-issue",
+      "reporter": "lionkingissimba",
+      "testedAt": null,
+      "notes": {
+        "en": "Runs very well at 2K resolution with the quality preset set to High. No issues were observed during the brief test session.",
+        "ko": "2K 해상도와 고품질 설정에서 매우 원활하게 플레이됩니다. 짧은 테스트 동안 별다른 문제는 확인되지 않았습니다.",
+        "ja": "2K解像度・高品質設定で非常に快適にプレイできます。短時間のテストでは特に問題は確認されませんでした。",
+        "zh-Hans": "在 2K 分辨率和高画质设置下运行非常流畅。短时间测试期间未发现明显问题。",
+        "zh-Hant": "在 2K 解析度與高畫質設定下執行非常流暢。短時間測試期間未發現明顯問題。",
+        "de": "Läuft bei 2K-Auflösung und hoher Qualitätsstufe sehr flüssig. Während des kurzen Tests wurden keine Probleme festgestellt.",
+        "es": "Funciona muy bien a resolución 2K con el ajuste de calidad en alto. No se observaron problemas durante la breve sesión de prueba.",
+        "fr": "Fonctionne très bien en résolution 2K avec le préréglage de qualité élevé. Aucun problème n’a été constaté pendant la courte session de test."
       },
       "blocker": null
     }
