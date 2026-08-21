@@ -459,7 +459,7 @@
     },
     {
       "component": "proxy-libintl",
-      "componentVersion": "0.4",
+      "componentVersion": "0.5",
       "licenseExpression": "LGPL-2.0-or-later",
       "licensePaths": [
         "Legal/GStreamer/proxy-libintl/LGPL-2.0-or-later.txt",
@@ -715,14 +715,14 @@
     },
     {
       "component": "proxy-libintl",
-      "componentVersion": "0.4",
+      "componentVersion": "0.5",
       "sourcePath": "share/licenses/proxy-libintl/LGPL-2.0-or-later.txt",
       "sourceSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
       "targetPath": "Legal/GStreamer/proxy-libintl/LGPL-2.0-or-later.txt"
     },
     {
       "component": "proxy-libintl",
-      "componentVersion": "0.4",
+      "componentVersion": "0.5",
       "sourcePath": "share/licenses/proxy-libintl/README-LICENSE-INFO.txt",
       "sourceSHA256": "1b0ef316ea0204d4920b2695796f34683d3338a07a4db4d8597402ee54e83df7",
       "targetPath": "Legal/GStreamer/proxy-libintl/README-LICENSE-INFO.txt"

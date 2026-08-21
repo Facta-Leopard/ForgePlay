@@ -2,9 +2,8 @@ diff --git a/dlls/kernelbase/process.c b/dlls/kernelbase/process.c
 index 99b50ec..9a068ec 100644
 --- a/dlls/kernelbase/process.c
 +++ b/dlls/kernelbase/process.c
-@@ -184,37 +184,36 @@ done:
-  * Record the final command line only for the executable-scoped policy
-  * target. The host creates a unique observation file for each launch.
+@@ -184,36 +184,35 @@ done:
+  * Record the final command line only for the selected executable role.
   */
 -static void record_process_argument_observation( const WCHAR *cmdline, DWORD process_id )
 +static void record_process_observation( const char *record_prefix, const WCHAR *text, DWORD process_id )
@@ -50,7 +49,7 @@ index 99b50ec..9a068ec 100644
      {
          if (record[i] == '\r' || record[i] == '\n' || record[i] == '\t') record[i] = ' ';
      }
-@@ -234,6 +233,1448 @@ done:
+@@ -234,6 +233,1454 @@ done:
  }
  
  
@@ -1116,6 +1115,8 @@ index 99b50ec..9a068ec 100644
 +        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DMETAL_FRAMEWORK_PATH", L"D3DMETAL_FRAMEWORK_PATH" },
 +        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DMETAL_SHARED_LIBRARY", L"FORGEPLAY_D3DMETAL_SHARED_LIBRARY" },
 +        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_WINE_UNIX_CALL", L"D3DM_WINE_UNIX_CALL" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_ENABLE_METALFX", L"D3DM_ENABLE_METALFX" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_NVNGX_PATH", L"D3DM_NVNGX_PATH" },
 +        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_VK_ICD_FILENAMES", L"VK_ICD_FILENAMES" },
 +        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_VK_DRIVER_FILES", L"VK_DRIVER_FILES" },
 +        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_LOG_PATH", L"DXVK_LOG_PATH" },
@@ -1224,6 +1225,8 @@ index 99b50ec..9a068ec 100644
 +        { L"FORGEPLAY_GAME_RENDERER_ENV_D3DMETAL_FRAMEWORK_PATH", L"D3DMETAL_FRAMEWORK_PATH" },
 +        { L"FORGEPLAY_GAME_RENDERER_ENV_D3DMETAL_SHARED_LIBRARY", L"FORGEPLAY_D3DMETAL_SHARED_LIBRARY" },
 +        { L"FORGEPLAY_GAME_RENDERER_ENV_D3DM_WINE_UNIX_CALL", L"D3DM_WINE_UNIX_CALL" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_D3DM_ENABLE_METALFX", L"D3DM_ENABLE_METALFX" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_D3DM_NVNGX_PATH", L"D3DM_NVNGX_PATH" },
 +        { L"FORGEPLAY_GAME_RENDERER_ENV_VK_ICD_FILENAMES", L"VK_ICD_FILENAMES" },
 +        { L"FORGEPLAY_GAME_RENDERER_ENV_VK_DRIVER_FILES", L"VK_DRIVER_FILES" },
 +        { L"FORGEPLAY_GAME_RENDERER_ENV_DXVK_LOG_PATH", L"DXVK_LOG_PATH" },
@@ -1259,6 +1262,8 @@ index 99b50ec..9a068ec 100644
 +        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DMETAL_FRAMEWORK_PATH",
 +        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DMETAL_SHARED_LIBRARY",
 +        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_WINE_UNIX_CALL",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_ENABLE_METALFX",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_NVNGX_PATH",
 +        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_VK_ICD_FILENAMES",
 +        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_VK_DRIVER_FILES",
 +        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_LOG_PATH",
@@ -1499,7 +1504,7 @@ index 99b50ec..9a068ec 100644
  /***********************************************************************
   *           create_process_params
   */
-@@ -613,13 +2044,16 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
+@@ -662,13 +2093,16 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
  {
      const struct proc_thread_attr *handle_list = NULL, *job_list = NULL;
      WCHAR name[MAX_PATH];
@@ -1514,11 +1519,15 @@ index 99b50ec..9a068ec 100644
 -    NTSTATUS status;
 +    NTSTATUS status, renderer_status, fallback_status;
 +    BOOL game_renderer_route_observed = FALSE;
-     BOOL process_argument_policy_applied = FALSE;
+     BOOL observe_process_arguments = FALSE;
  
      /* Process the AppName and/or CmdLine to get module name and path */
-@@ -650,6 +2084,106 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
-         process_argument_policy_applied = TRUE;
+@@ -673,10 +2107,110 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
+     observe_process_arguments = process_argument_observation_target_matches( app_name );
+     if ((policy_cmdline = append_process_arguments_from_environment( app_name, tidy_cmdline )))
+     {
+         if (tidy_cmdline != cmd_line) HeapFree( GetProcessHeap(), 0, tidy_cmdline );
+         tidy_cmdline = policy_cmdline;
      }
  
 +    /* The PE scanner is authoritative when readable. If it cannot open the
@@ -1624,9 +1633,9 @@ index 99b50ec..9a068ec 100644
      /* Warn if unsupported features are used */
  
      if (flags & (IDLE_PRIORITY_CLASS | HIGH_PRIORITY_CLASS | REALTIME_PRIORITY_CLASS |
-@@ -791,10 +2325,14 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
+@@ -840,10 +2374,14 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
          TRACE( "started process pid %04lx tid %04lx\n", info->dwProcessId, info->dwThreadId );
-         if (process_argument_policy_applied)
+         if (observe_process_arguments)
              record_process_argument_observation( tidy_cmdline, info->dwProcessId );
 +        if (game_renderer_route_observed)
 +            record_forgeplay_game_renderer_observation( app_name, info->dwProcessId,

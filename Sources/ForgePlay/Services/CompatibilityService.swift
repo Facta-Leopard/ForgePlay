@@ -27,6 +27,7 @@ enum CompatibilityServiceError: LocalizedError {
     case storedRecipeDecodeFailed(String)
     case storedRecipeInvalid(String)
     case storedRecipeRecordMismatch(String)
+    case ambiguousSteamAppID(String)
 
     var errorDescription: String? {
         switch self {
@@ -52,6 +53,8 @@ enum CompatibilityServiceError: LocalizedError {
             "저장된 호환성 정보 내용이 제품 정책에 맞지 않습니다: \(id)"
         case .storedRecipeRecordMismatch(let id):
             "저장된 호환성 정보가 저장 레코드와 일치하지 않습니다: \(id)"
+        case .ambiguousSteamAppID(let steamAppID):
+            "같은 Steam App ID에 여러 호환성 정보가 있어 임의로 선택하지 않았습니다: \(steamAppID)"
         }
     }
 }
@@ -267,10 +270,13 @@ struct CompatibilityService {
     }
 
     func requiredRecipe(for game: SteamGame, bundle: Bundle = .main) throws -> CompatibilityRecipe? {
-        try loadBundledRecipes(bundle: bundle).first {
-            $0.steamAppId == game.steamAppId ||
-                $0.name.localizedCaseInsensitiveCompare(game.name) == .orderedSame
+        let matches = try loadBundledRecipes(bundle: bundle).filter {
+            $0.steamAppId == game.steamAppId
         }
+        guard matches.count <= 1 else {
+            throw CompatibilityServiceError.ambiguousSteamAppID(game.steamAppId)
+        }
+        return matches.first
     }
 
     func requiredRecipe(
@@ -278,14 +284,30 @@ struct CompatibilityService {
         records: [CompatibilityRecipeRecord],
         bundle: Bundle = .main
     ) throws -> CompatibilityRecipe? {
-        for record in records {
-            let recipe = try requiredDecodedRecipe(record)
-            if recipe.steamAppId == game.steamAppId ||
-                recipe.name.localizedCaseInsensitiveCompare(game.name) == .orderedSame {
-                return recipe
-            }
+        let matchingRecords = records.filter {
+            $0.steamAppId?.trimmingCharacters(in: .whitespacesAndNewlines) ==
+                game.steamAppId
+        }
+        guard matchingRecords.count <= 1 else {
+            throw CompatibilityServiceError.ambiguousSteamAppID(game.steamAppId)
+        }
+        if let matchingRecord = matchingRecords.first {
+            return try requiredDecodedRecipe(matchingRecord)
         }
         return try requiredRecipe(for: game, bundle: bundle)
+    }
+
+    /// Resolves schema-validated stored data first and bundled data second for
+    /// read-only diagnostic guidance. Signature verification remains owned by
+    /// the update service before storage; this boundary deliberately returns
+    /// data only and never mutates a prefix, launch configuration, or process
+    /// policy.
+    func diagnosticGuidanceRecipe(
+        for game: SteamGame,
+        storedRecords: [CompatibilityRecipeRecord],
+        bundle: Bundle = .main
+    ) throws -> CompatibilityRecipe? {
+        try requiredRecipe(for: game, records: storedRecords, bundle: bundle)
     }
 
     func importBundledRecipes(into records: [CompatibilityRecipeRecord], bundle: Bundle = .main) throws -> [CompatibilityRecipeRecord] {

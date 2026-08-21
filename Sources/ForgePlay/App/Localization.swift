@@ -197,6 +197,37 @@ enum ForgePlaySystemLanguageResolver {
     }
 }
 
+extension ForgePlayLanguageMode {
+    func resolvedSteamClientLanguage(
+        preferredLanguageIdentifiers: [String] =
+            ForgePlaySystemLanguageResolver.systemPreferredLanguageIdentifiers()
+    ) -> SteamClientLanguage {
+        let resolvedMode = self == .system
+            ? ForgePlaySystemLanguageResolver.resolvedLanguageMode(
+                preferredLanguageIdentifiers: preferredLanguageIdentifiers
+            )
+            : self
+        switch resolvedMode {
+        case .system, .english:
+            return .english
+        case .korean:
+            return .koreana
+        case .spanish:
+            return .spanish
+        case .german:
+            return .german
+        case .japanese:
+            return .japanese
+        case .simplifiedChinese:
+            return .schinese
+        case .traditionalChinese:
+            return .tchinese
+        case .french:
+            return .french
+        }
+    }
+}
+
 enum ForgePlayLocalization {
     static func localized(
         _ key: String,
@@ -274,12 +305,308 @@ protocol ForgePlayUserFacingLocalizedError: Error {
     func localizedDescription(appState: AppState) -> String
 }
 
-protocol ForgePlayTechnicalDescribingError: Error {
-    var forgePlayTechnicalDescription: String { get }
-}
-
 protocol ForgePlayDiagnosticLogProvidingError: Error {
     var forgePlayDiagnosticLogURL: URL? { get }
+}
+
+extension AWDLControlError:
+    ForgePlayUserFacingLocalizedError,
+    ForgePlayTechnicalDescribingError {
+    @MainActor
+    func localizedDescription(appState: AppState) -> String {
+        switch self {
+        case .unsupportedBuild:
+            appState.localized(
+                "이 빌드에서는 AWDL 수동 제어를 사용할 수 없습니다."
+            )
+        case .operationInProgress:
+            appState.localized("AWDL 상태 변경 중")
+        case .helperNotFound:
+            appState.localized(
+                "AWDL 제어 도우미를 찾을 수 없습니다. ForgePlay DMG를 다시 설치하세요."
+            )
+        case .helperRequiresApproval:
+            appState.localized(
+                "AWDL 제어 도우미를 사용하려면 시스템 설정의 로그인 항목에서 ForgePlay를 허용하세요."
+            )
+        case .registrationFailed:
+            appState.localized(
+                "AWDL 제어 도우미를 활성화하지 못했습니다."
+            )
+        case .connectionFailed:
+            appState.localized(
+                "AWDL 제어 도우미에 연결하지 못했습니다."
+            )
+        case .requestTimedOut:
+            appState.localized(
+                "AWDL 상태 변경 응답 시간이 초과되었습니다."
+            )
+        case .helperRejected:
+            appState.localized(
+                "AWDL 상태를 변경하지 못했습니다. 현재 상태를 다시 확인하세요."
+            )
+        case .readbackMismatch:
+            appState.localized(
+                "AWDL 상태 변경 결과가 요청과 일치하지 않습니다."
+            )
+        }
+    }
+
+    var forgePlayTechnicalDescription: String {
+        switch self {
+        case .unsupportedBuild:
+            "awdl-control error=unsupported-build"
+        case .operationInProgress:
+            "awdl-control error=operation-in-progress"
+        case .helperNotFound:
+            "awdl-control error=helper-not-found"
+        case .helperRequiresApproval:
+            "awdl-control error=helper-requires-approval"
+        case .registrationFailed(let detail):
+            "awdl-control error=registration-failed detail=\(detail)"
+        case .connectionFailed(let detail):
+            "awdl-control error=connection-failed detail=\(detail)"
+        case .requestTimedOut:
+            "awdl-control error=request-timed-out"
+        case .helperRejected(let code, let detail):
+            "awdl-control error=helper-rejected code=\(code) detail=\(detail)"
+        case .readbackMismatch:
+            "awdl-control error=readback-mismatch"
+        }
+    }
+}
+
+extension GameInputProtectionTerminalFailure:
+    ForgePlayUserFacingLocalizedError,
+    ForgePlayTechnicalDescribingError {
+    @MainActor
+    func localizedDescription(appState: AppState) -> String {
+        switch self {
+        case .timeoutReenableReadbackFailed:
+            appState.localized(
+                "macOS 게임 입력 필터가 시간 초과 후 다시 활성화되지 않아 보호된 Steam 실행을 중단합니다."
+            )
+        case .repeatedTapTimeout:
+            appState.localized(
+                "macOS 게임 입력 필터가 반복해서 시간 초과되어 보호된 Steam 실행을 중단합니다."
+            )
+        case .disabledByUserInput:
+            appState.localized(
+                "macOS가 게임 입력 필터를 비활성화하여 보호된 Steam 실행을 중단합니다."
+            )
+        case .pointerVisibilityRestoreFailed:
+            appState.localized(
+                "macOS 포인터를 다시 표시하지 못해 관리되는 Steam 실행을 중단하고 포인터 복원을 다시 시도합니다."
+            )
+        case .modifierReleaseEmissionFailed(let processIdentifier):
+            appState.localizedFormat(
+                "변환된 보조키를 해제하지 못해 관리되는 Steam 실행을 중단하고 입력 상태 복원을 다시 시도합니다. (프로세스 %lld)",
+                Int64(processIdentifier)
+            )
+        }
+    }
+
+    var forgePlayTechnicalDescription: String {
+        switch self {
+        case .timeoutReenableReadbackFailed:
+            "game-input-protection terminal=timeout-reenable-readback-failed"
+        case .repeatedTapTimeout:
+            "game-input-protection terminal=repeated-tap-timeout"
+        case .disabledByUserInput:
+            "game-input-protection terminal=disabled-by-user-input"
+        case .pointerVisibilityRestoreFailed(let resultCode):
+            "game-input-protection terminal=pointer-visibility-restore-failed" +
+                " cgError=\(resultCode)"
+        case .modifierReleaseEmissionFailed(let processIdentifier):
+            "game-input-protection terminal=modifier-release-emission-failed" +
+                " pid=\(processIdentifier)"
+        }
+    }
+}
+
+extension NavigationStableSessionOwnershipError:
+    ForgePlayUserFacingLocalizedError,
+    ForgePlayTechnicalDescribingError {
+    @MainActor
+    func localizedDescription(appState: AppState) -> String {
+        guard let errorDescription else { return "" }
+        return appState.localized(errorDescription)
+    }
+
+    var forgePlayTechnicalDescription: String {
+        switch self {
+        case .transitionInProgress:
+            "steam-session-ownership case=transition-in-progress"
+        case .sessionAlreadyActive:
+            "steam-session-ownership case=session-already-active"
+        case .noActiveSession:
+            "steam-session-ownership case=no-active-session"
+        case .preparationNotInProgress:
+            "steam-session-ownership case=preparation-not-in-progress"
+        case .standardSteamLaunchReserved:
+            "steam-session-ownership case=standard-steam-launch-reserved"
+        case .standardSteamLaunchReservationMismatch:
+            "steam-session-ownership case=standard-steam-launch-reservation-mismatch"
+        case .standardSteamLaunchNotReady:
+            "steam-session-ownership case=standard-steam-launch-not-ready"
+        case .windowsExecutableLaunchReserved:
+            "steam-session-ownership case=windows-executable-launch-reserved"
+        case .windowsExecutableLaunchBlockedByCompatibilitySession:
+            "steam-session-ownership case=windows-executable-blocked-by-compatibility-session"
+        case .windowsExecutableLaunchBlockedByCompatibilityTransition:
+            "steam-session-ownership case=windows-executable-blocked-by-compatibility-transition"
+        case .windowsExecutableLaunchNotReady:
+            "steam-session-ownership case=windows-executable-launch-not-ready"
+        }
+    }
+}
+
+extension GameInputProtectionTerminalCleanupError:
+    ForgePlayUserFacingLocalizedError,
+    ForgePlayTechnicalDescribingError {
+    @MainActor
+    func localizedDescription(appState: AppState) -> String {
+        terminalFailure.localizedDescription(appState: appState)
+    }
+
+    var forgePlayTechnicalDescription: String {
+        let maskedCommitFailure =
+            maskedCommitFailureTechnicalDescription.map {
+                " maskedCommitFailure=\($0)"
+            } ?? ""
+        return terminalFailure.forgePlayTechnicalDescription +
+            " cleanupCompleted=\(cleanupCompleted)" +
+            " callerCancellationObserved=\(callerCancellationObserved)" +
+            maskedCommitFailure
+    }
+}
+
+extension GameInputProtectionPostDispatchCleanupError:
+    ForgePlayUserFacingLocalizedError,
+    ForgePlayTechnicalDescribingError {
+    @MainActor
+    func localizedDescription(appState: AppState) -> String {
+        originalFailureDescription
+    }
+
+    var forgePlayTechnicalDescription: String {
+        "game-input-protection post-dispatch-original=" +
+            originalFailureTechnicalDescription +
+            " cleanupCompleted=\(cleanupCompleted)" +
+            " callerCancellationObserved=\(callerCancellationObserved)"
+    }
+}
+
+extension SteamCompatibilityLaunchProfileErrorV1:
+    ForgePlayUserFacingLocalizedError,
+    ForgePlayTechnicalDescribingError {
+    @MainActor
+    func localizedDescription(appState: AppState) -> String {
+        switch self {
+        case .unsupportedContractVersion(let version):
+            appState.localizedFormat(
+                "이 Steam 호환성 프로필 버전은 지원되지 않습니다(%lld). ForgePlay를 업데이트한 뒤 다시 시도하세요.",
+                Int64(version)
+            )
+        case .unsupportedRecipeSchemaVersion(let version):
+            appState.localizedFormat(
+                "이 Steam 호환성 레시피 버전은 지원되지 않습니다(%lld). ForgePlay를 업데이트한 뒤 다시 시도하세요.",
+                Int64(version)
+            )
+        case .invalidRecipe(let reason):
+            appState.localizedFormat(
+                "Steam 호환성 레시피를 사용할 수 없습니다(%@). 기본 설정으로 되돌린 뒤 다시 시도하세요.",
+                reason
+            )
+        case .identityMismatch:
+            appState.localized(
+                "선택한 게임과 저장된 Steam 호환성 프로필이 일치하지 않습니다. 해당 게임의 호환성 설정을 다시 여세요."
+            )
+        case .invalidPreference(let reason):
+            appState.localizedFormat(
+                "저장된 Steam 호환성 설정을 사용할 수 없습니다(%@). 설정을 기본값으로 재설정하세요.",
+                reason
+            )
+        case .invalidCanonicalPayload(let reason):
+            appState.localizedFormat(
+                "저장된 Steam 호환성 설정 파일을 읽을 수 없습니다(%@). 설정을 기본값으로 재설정하세요.",
+                reason
+            )
+        case .invalidManifestRootAuthorization(let reason):
+            appState.localizedFormat(
+                "Steam 라이브러리 접근 권한을 확인할 수 없습니다(%@). 라이브러리 폴더를 다시 연결하세요.",
+                reason
+            )
+        case .attemptedAutomaticPolicyRemoval:
+            appState.localized(
+                "필수 자동 호환성 정책은 끌 수 없습니다. 자동 정책을 복원한 뒤 다시 시도하세요."
+            )
+        case .unsupportedCapability(let category, let value):
+            appState.localizedFormat(
+                "현재 실행 환경은 선택한 Steam 호환성 옵션을 지원하지 않습니다(%@=%@). 지원되는 옵션을 선택하거나 기본값으로 되돌리세요.",
+                category,
+                value
+            )
+        case .invalidReceipt(let reason):
+            appState.localizedFormat(
+                "Steam 호환성 설정이 실행 전에 확인되지 않았습니다(%@). 다시 시도하고 문제가 계속되면 진단 정보를 확인하세요.",
+                reason
+            )
+        case .migrationRejected(let reason):
+            appState.localizedFormat(
+                "이전 Steam 호환성 설정을 변환할 수 없습니다(%@). 설정을 기본값으로 재설정하세요.",
+                reason
+            )
+        }
+    }
+
+    var forgePlayTechnicalDescription: String {
+        switch self {
+        case .unsupportedContractVersion(let version):
+            "SteamCompatibilityLaunchProfileErrorV1 case=unsupportedContractVersion version=\(version)"
+        case .unsupportedRecipeSchemaVersion(let version):
+            "SteamCompatibilityLaunchProfileErrorV1 case=unsupportedRecipeSchemaVersion version=\(version)"
+        case .invalidRecipe(let reason):
+            "SteamCompatibilityLaunchProfileErrorV1 case=invalidRecipe reason=\(Self.sanitizedDiagnosticValue(reason))"
+        case .identityMismatch(let expected, let actual):
+            "SteamCompatibilityLaunchProfileErrorV1 case=identityMismatch expected=\(Self.sanitizedDiagnosticValue(expected)) actual=\(Self.sanitizedDiagnosticValue(actual))"
+        case .invalidPreference(let reason):
+            "SteamCompatibilityLaunchProfileErrorV1 case=invalidPreference reason=\(Self.sanitizedDiagnosticValue(reason))"
+        case .invalidCanonicalPayload(let reason):
+            "SteamCompatibilityLaunchProfileErrorV1 case=invalidCanonicalPayload reason=\(Self.sanitizedDiagnosticValue(reason))"
+        case .invalidManifestRootAuthorization(let reason):
+            "SteamCompatibilityLaunchProfileErrorV1 case=invalidManifestRootAuthorization reason=\(Self.sanitizedDiagnosticValue(reason))"
+        case .attemptedAutomaticPolicyRemoval:
+            "SteamCompatibilityLaunchProfileErrorV1 case=attemptedAutomaticPolicyRemoval"
+        case .unsupportedCapability(let category, let value):
+            "SteamCompatibilityLaunchProfileErrorV1 case=unsupportedCapability category=\(Self.sanitizedDiagnosticValue(category)) value=\(Self.sanitizedDiagnosticValue(value))"
+        case .invalidReceipt(let reason):
+            "SteamCompatibilityLaunchProfileErrorV1 case=invalidReceipt reason=\(Self.sanitizedDiagnosticValue(reason))"
+        case .migrationRejected(let reason):
+            "SteamCompatibilityLaunchProfileErrorV1 case=migrationRejected reason=\(Self.sanitizedDiagnosticValue(reason))"
+        }
+    }
+
+    private static func sanitizedDiagnosticValue(_ value: String) -> String {
+        let maximumUTF8Bytes = 256
+        var result = ""
+        result.reserveCapacity(min(value.utf8.count, maximumUTF8Bytes))
+        var consumedBytes = 0
+        for byte in value.utf8 {
+            guard consumedBytes < maximumUTF8Bytes else {
+                result += "..."
+                break
+            }
+            switch byte {
+            case 45, 46, 47, 48 ... 57, 58, 65 ... 90, 92, 95, 97 ... 122:
+                result += String(decoding: [byte], as: UTF8.self)
+            default:
+                result += String(format: "%%%02X", byte)
+            }
+            consumedBytes += 1
+        }
+        return result
+    }
 }
 
 struct LocalizedText: View {
@@ -302,6 +629,10 @@ extension AppState {
     }
 
     var locale: Locale { effectiveLanguageMode.locale }
+
+    var effectiveSteamClientLanguage: SteamClientLanguage {
+        effectiveLanguageMode.resolvedSteamClientLanguage()
+    }
 
     func localized(_ key: String) -> String {
         ForgePlayLocalization.localized(key, language: effectiveLanguageMode)
@@ -363,6 +694,122 @@ extension SteamPrefixLifecycleError: ForgePlayUserFacingLocalizedError {
             appState.localized("다른 Steam 프리픽스 작업이 이미 진행 중입니다. 완료된 뒤 다시 시도하세요.")
         case .applicationTerminating:
             appState.localized("ForgePlay가 종료 중이어서 새 Steam 프리픽스 작업을 시작할 수 없습니다.")
+        }
+    }
+}
+
+extension WindowsExecutableExternalRootAccessError:
+    ForgePlayUserFacingLocalizedError,
+    ForgePlayTechnicalDescribingError {
+    @MainActor
+    func localizedDescription(appState: AppState) -> String {
+        switch self {
+        case .accessUnavailable(let root):
+            appState.localizedFormat(
+                "선택한 EXE 폴더의 보안 범위 접근을 시작할 수 없습니다: %@",
+                root.path
+            )
+        }
+    }
+
+    var forgePlayTechnicalDescription: String {
+        switch self {
+        case .accessUnavailable(let root):
+            "Windows executable external-root security-scope access is unavailable: \(root.path)"
+        }
+    }
+}
+
+extension WindowsExecutableLaunchServiceError:
+    ForgePlayUserFacingLocalizedError,
+    ForgePlayTechnicalDescribingError {
+    @MainActor
+    func localizedDescription(appState: AppState) -> String {
+        switch self {
+        case .unusableSharedPrefix(let prefix):
+            appState.localizedFormat(
+                "SteamShared 프리픽스를 사용할 수 없습니다: %@",
+                prefix.path
+            )
+        case .rendererCapabilityUnavailable:
+            appState.localized(
+                "선택한 그래픽 백엔드를 현재 ForgePlay Runtime에서 사용할 수 없습니다."
+            )
+        case .prefixShutdownNotConfirmed(let prefix):
+            appState.localizedFormat(
+                "실행 중인 Windows 프로세스 종료를 확인하지 못했습니다: %@",
+                prefix.path
+            )
+        }
+    }
+
+    var forgePlayTechnicalDescription: String {
+        switch self {
+        case .unusableSharedPrefix(let prefix):
+            "Windows executable launch cannot use the SteamShared prefix: \(prefix.path)"
+        case .rendererCapabilityUnavailable:
+            "Windows executable launch renderer capability unavailable"
+        case .prefixShutdownNotConfirmed(let prefix):
+            "Windows executable launch prefix shutdown not confirmed: \(prefix.path)"
+        }
+    }
+}
+
+extension GameInputProtectionError:
+    ForgePlayUserFacingLocalizedError,
+    ForgePlayTechnicalDescribingError {
+    @MainActor
+    func localizedDescription(appState: AppState) -> String {
+        switch self {
+        case .accessibilityPermissionRequired:
+            appState.localized(
+                "게임 입력 보호를 사용하려면 손쉬운 사용 권한이 필요합니다. 시스템 설정에서 권한을 허용한 뒤 다시 실행해 주세요."
+            )
+        case .inputMonitoringPermissionRequired:
+            appState.localized(
+                "게임 입력 보호를 사용하려면 입력 모니터링 권한이 필요합니다. 시스템 설정에서 권한을 허용한 뒤 다시 실행해 주세요."
+            )
+        case .accessibilityAndInputMonitoringPermissionsRequired:
+            appState.localized(
+                "게임 입력 보호를 사용하려면 손쉬운 사용 및 입력 모니터링 권한이 필요합니다. 시스템 설정에서 권한을 허용한 뒤 다시 실행해 주세요."
+            )
+        case .eventTapCreationFailed:
+            appState.localized(
+                "macOS에 저장된 권한 등록과 현재 ForgePlay.app이 일치하지 않거나 실제 입력 필터 승인이 갱신되지 않았습니다. 손쉬운 사용과 입력 모니터링에서 기존 ForgePlay 항목을 각각 제거한 뒤, Finder에서 보기로 현재 ForgePlay.app을 다시 추가해 두 권한을 켜고 ForgePlay를 완전히 종료했다가 다시 여세요."
+            )
+        case .eventTapEnableReadbackFailed:
+            appState.localized(
+                "macOS 게임 입력 필터가 활성화된 것으로 확인되지 않았습니다. 손쉬운 사용 및 입력 모니터링 권한을 확인한 뒤 다시 실행해 주세요."
+            )
+        case .managedProcessGroupUnavailable(let processIdentifier):
+            appState.localizedFormat(
+                "관리되는 게임 프로세스(%lld)의 입력 보호 대상을 확인할 수 없습니다. Steam을 종료한 뒤 다시 시도하세요.",
+                Int64(processIdentifier)
+            )
+        case .managedProcessBindingReadbackFailed(let processIdentifier):
+            appState.localizedFormat(
+                "관리되는 게임 프로세스(%lld)의 입력 보호 연결이 확인 중 변경되었습니다. Steam을 종료한 뒤 다시 시도하세요.",
+                Int64(processIdentifier)
+            )
+        }
+    }
+
+    var forgePlayTechnicalDescription: String {
+        switch self {
+        case .accessibilityPermissionRequired:
+            "GameInputProtectionError case=accessibilityPermissionRequired"
+        case .inputMonitoringPermissionRequired:
+            "GameInputProtectionError case=inputMonitoringPermissionRequired"
+        case .accessibilityAndInputMonitoringPermissionsRequired:
+            "GameInputProtectionError case=accessibilityAndInputMonitoringPermissionsRequired"
+        case .eventTapCreationFailed:
+            "GameInputProtectionError case=eventTapCreationFailed"
+        case .eventTapEnableReadbackFailed:
+            "GameInputProtectionError case=eventTapEnableReadbackFailed"
+        case .managedProcessGroupUnavailable(let processIdentifier):
+            "GameInputProtectionError case=managedProcessGroupUnavailable pid=\(processIdentifier)"
+        case .managedProcessBindingReadbackFailed(let processIdentifier):
+            "GameInputProtectionError case=managedProcessBindingReadbackFailed pid=\(processIdentifier)"
         }
     }
 }
@@ -487,7 +934,7 @@ extension PrefixUsabilityError: ForgePlayUserFacingLocalizedError {
             return appState.localizedFormat("Steam 프리픽스 메타데이터를 사용할 수 없습니다: %@. %@", url.path, message)
         case .architectureMismatch(let url, let expected, let actual):
             return appState.localizedFormat(
-                "Steam 프리픽스 아키텍처가 일치하지 않습니다: %@. expected %@, actual %@",
+                "Steam 프리픽스 아키텍처가 일치하지 않습니다: %@. 예상: %@, 실제: %@",
                 url.path,
                 expected,
                 actual ?? appState.localized("알 수 없음")
@@ -541,6 +988,12 @@ extension RuntimeManagerError: ForgePlayUserFacingLocalizedError {
                 "Runtime 설치 준비에 실패했고 임시 추출 폴더를 정리하지 못했습니다: %@. 원인: %@. 정리 오류: %@",
                 directory.path,
                 forgePlayTechnicalErrorSummary(originalError),
+                forgePlayTechnicalErrorSummary(cleanupError)
+            )
+        case .extractionCleanupAfterUseFailed(let directory, let cleanupError):
+            return appState.localizedFormat(
+                "Runtime 설치 후 임시 추출 폴더를 정리하지 못했습니다: %@. 정리 오류: %@",
+                directory.path,
                 forgePlayTechnicalErrorSummary(cleanupError)
             )
         case .cacheCleanupFailed(let target, let originalError, let cleanupError):
@@ -791,7 +1244,26 @@ extension SteamInstallError: ForgePlayUserFacingLocalizedError {
     }
 }
 
-extension SteamLaunchError: ForgePlayTechnicalDescribingError, ForgePlayDiagnosticLogProvidingError {
+extension SteamLaunchError:
+    ForgePlayUserFacingLocalizedError,
+    ForgePlayTechnicalDescribingError,
+    ForgePlayDiagnosticLogProvidingError {
+    @MainActor
+    func localizedDescription(appState: AppState) -> String {
+        switch self {
+        case .rendererBridgeInstallFailed(let url, let message):
+            return appState.localizedFormat(
+                "D3DMetal MetalFX/NGX 브리지를 준비하지 못했습니다: %@. %@",
+                url.path,
+                appState.localized(message)
+            )
+        case .rendererPolicyVerificationFailed(let message):
+            return appState.localized(message)
+        default:
+            return forgePlayTechnicalDescription
+        }
+    }
+
     var forgePlayTechnicalDescription: String {
         errorDescription ?? "Windows Steam launch failed"
     }
@@ -801,6 +1273,8 @@ extension SteamLaunchError: ForgePlayTechnicalDescribingError, ForgePlayDiagnost
         case .prefixShutdownFailed(let result),
              .steamClientCompatibilitySetupFailed(let result):
             result.preferredDiagnosticLog
+        case .rendererLifecycleFailed(let failure):
+            failure.processResults.first?.preferredDiagnosticLog
         case .rendererBridgeInstallFailed,
              .rendererPolicyUnavailable,
              .rendererPolicyVerificationFailed,
@@ -958,6 +1432,77 @@ extension WindowsFontCompatibilityProfileError:
                 "Windows 한글 글꼴 호환성 적용을 확인하지 못했습니다: %@",
                 missing.joined(separator: ", ")
             )
+        case .collision(let reason):
+            return appState.localizedFormat(
+                "기존 Windows 글꼴 호환성 상태와 충돌합니다: %@",
+                reason
+            )
+        case .overlappingLifecycle(let prefix):
+            return appState.localizedFormat(
+                "같은 Windows prefix에서 글꼴 수명주기 작업이 이미 실행 중입니다: %@",
+                prefix.path
+            )
+        case .malformedLifecycleEvidence:
+            return appState.localized(
+                "Windows 글꼴 수명주기 기록이 정규 형식이 아니므로 자동 복구하지 않았습니다."
+            )
+        case .registrySnapshotMalformed(let url):
+            return appState.localizedFormat(
+                "Wine 레지스트리 snapshot을 안전하게 읽지 못했습니다: %@",
+                url.path
+            )
+        case .journalDurabilityFailed(let reason):
+            return appState.localizedFormat(
+                "Windows 글꼴 transaction 기록을 내구성 있게 확정하지 못했습니다: %@",
+                reason
+            )
+        case .cleanupDurabilityUnknown(let reason):
+            return appState.localizedFormat(
+                "Windows 글꼴 정리 완료의 디렉터리 내구성을 확인하지 못했습니다: %@",
+                reason
+            )
+        case .commitCleanupDurabilityUnknown(let reason):
+            return appState.localizedFormat(
+                "Windows 글꼴 commit marker의 디렉터리 내구성을 확인하지 못했습니다: %@",
+                reason
+            )
+        case .uninstallDurabilityUnknown(let reason):
+            return appState.localizedFormat(
+                "Windows 글꼴 제거 marker의 디렉터리 내구성을 확인하지 못했습니다: %@",
+                reason
+            )
+        case .rollbackIncomplete(let reason, let remaining):
+            return appState.localizedFormat(
+                "Windows 글꼴 rollback이 완료되지 않았습니다: %@. 남은 항목: %@",
+                reason,
+                remaining.joined(separator: ", ")
+            )
+        case .uninstallIncomplete(let reason, let remaining):
+            return appState.localizedFormat(
+                "Windows 글꼴 제거가 완료되지 않았습니다: %@. 남은 항목: %@",
+                reason,
+                remaining.joined(separator: ", ")
+            )
+        case .recoveryConflict(let reason):
+            return appState.localizedFormat(
+                "Windows 글꼴 자동 복구가 현재 상태와 충돌합니다: %@",
+                reason
+            )
+        case .operationProjectionMismatch(let reason):
+            return appState.localizedFormat(
+                "Windows 글꼴 수명주기 작업 projection이 일치하지 않습니다: %@",
+                reason
+            )
+        case .interruptedAfterOperation(let operationID):
+            return appState.localizedFormat(
+                "Windows 글꼴 수명주기 작업 직후 중단을 시뮬레이션했습니다: %@",
+                operationID
+            )
+        case .filesystemFailure(let reason):
+            return appState.localizedFormat(
+                "Windows 글꼴 파일 시스템 작업이 실패했습니다: %@",
+                reason
+            )
         }
     }
 
@@ -969,6 +1514,34 @@ extension WindowsFontCompatibilityProfileError:
             "The Windows font compatibility destination is unsafe: \(url.path)"
         case .verificationFailed(let missing):
             "Windows font compatibility verification failed. Missing: \(missing.joined(separator: ", "))"
+        case .collision(let reason):
+            "The existing Windows font compatibility state conflicts with this operation: \(reason)"
+        case .overlappingLifecycle(let prefix):
+            "A Windows font lifecycle operation is already running for this prefix: \(prefix.path)"
+        case .malformedLifecycleEvidence:
+            "The Windows font lifecycle evidence is not canonical, so automatic recovery was not attempted."
+        case .registrySnapshotMalformed(let url):
+            "The Wine registry snapshot could not be read safely: \(url.path)"
+        case .journalDurabilityFailed(let reason):
+            "The Windows font transaction journal could not be committed durably: \(reason)"
+        case .cleanupDurabilityUnknown(let reason):
+            "The directory durability of Windows font cleanup could not be verified: \(reason)"
+        case .commitCleanupDurabilityUnknown(let reason):
+            "The directory durability of Windows font commit-marker cleanup could not be verified: \(reason)"
+        case .uninstallDurabilityUnknown(let reason):
+            "The directory durability of the Windows font uninstall marker could not be verified: \(reason)"
+        case .rollbackIncomplete(let reason, let remaining):
+            "Windows font rollback did not complete: \(reason). Remaining items: \(remaining.joined(separator: ", "))"
+        case .uninstallIncomplete(let reason, let remaining):
+            "Windows font removal did not complete: \(reason). Remaining items: \(remaining.joined(separator: ", "))"
+        case .recoveryConflict(let reason):
+            "Windows font automatic recovery conflicts with the current state: \(reason)"
+        case .operationProjectionMismatch(let reason):
+            "The Windows font lifecycle operation projection does not match: \(reason)"
+        case .interruptedAfterOperation(let operationID):
+            "Windows font lifecycle interruption was simulated immediately after operation: \(operationID)"
+        case .filesystemFailure(let reason):
+            "A Windows font filesystem operation failed: \(reason)"
         }
     }
 }
@@ -1031,6 +1604,17 @@ extension SteamExternalStorageProcessGrantError: ForgePlayUserFacingLocalizedErr
     }
 }
 
+extension SteamExternalStorageGrantPreparationError:
+    ForgePlayUserFacingLocalizedError
+{
+    @MainActor
+    func localizedDescription(appState: AppState) -> String {
+        appState.localized(
+            "외장 저장소 접근 권한을 Windows용 Steam에 전달하지 못했습니다. ForgePlay에서 저장공간을 다시 연결한 뒤 Steam을 다시 실행하세요."
+        )
+    }
+}
+
 extension SteamStorageAccessStage {
     var displayNameKey: String {
         switch self {
@@ -1064,6 +1648,11 @@ extension DiagnosticRecordDecodeError: ForgePlayUserFacingLocalizedError {
             return appState.localizedFormat("저장된 진단 기록이 너무 큽니다: %@ %d bytes / limit %d bytes", id, byteCount, limit)
         case .decodeFailed(let id):
             return appState.localizedFormat("저장된 진단 기록을 읽지 못했습니다: %@", id)
+        case .invalidAIEvidenceMetadata(let id):
+            return appState.localizedFormat(
+                "저장된 AI 진단 증거 또는 실행 영수증이 결과와 일치하지 않습니다: %@",
+                id
+            )
         }
     }
 }
@@ -1115,6 +1704,8 @@ extension LogRetentionServiceError: ForgePlayUserFacingLocalizedError {
             return appState.localizedFormat("로그 폴더를 검사하지 못했습니다: %@. %@", url.path, forgePlayTechnicalErrorSummary(error))
         case .metadataReadFailed(let url, let error):
             return appState.localizedFormat("로그 파일 정보를 읽지 못했습니다: %@. %@", url.path, forgePlayTechnicalErrorSummary(error))
+        case .cleanupInProgress:
+            return appState.localized("로그 정리가 이미 진행 중입니다. 완료된 뒤 다시 시도하세요.")
         }
     }
 }
@@ -1156,27 +1747,29 @@ extension CompatibilityServiceError: ForgePlayUserFacingLocalizedError {
     func localizedDescription(appState: AppState) -> String {
         switch self {
         case .decodeFailed(let url):
-            return appState.localizedFormat("호환성 정보를 읽을 수 없습니다: %@", url.lastPathComponent)
+            return appState.localizedFormat("실행 규칙을 읽을 수 없습니다: %@", url.lastPathComponent)
         case .unsafeRecipeFile(let url):
-            return appState.localizedFormat("호환성 정보 파일은 symlink/hardlink가 아닌 일반 파일이어야 합니다: %@", url.lastPathComponent)
+            return appState.localizedFormat("실행 규칙 파일은 symlink/hardlink가 아닌 일반 파일이어야 합니다: %@", url.lastPathComponent)
         case .recipeTooLarge(let url, let byteCount, let limit):
-            return appState.localizedFormat("호환성 정보 파일이 너무 큽니다: %@ %d bytes / limit %d bytes", url.lastPathComponent, byteCount, limit)
+            return appState.localizedFormat("실행 규칙 파일이 너무 큽니다: %@ %d bytes / limit %d bytes", url.lastPathComponent, byteCount, limit)
         case .invalidRecipe(let url):
-            return appState.localizedFormat("호환성 정보 내용이 제품 정책에 맞지 않습니다: %@", url.lastPathComponent)
+            return appState.localizedFormat("실행 규칙 내용이 제품 정책에 맞지 않습니다: %@", url.lastPathComponent)
         case .recipeDiscoveryFailed(let url, let error):
-            return appState.localizedFormat("호환성 정보 파일 목록을 검사하지 못했습니다: %@. %@", url.path, forgePlayTechnicalErrorSummary(error))
+            return appState.localizedFormat("실행 규칙 파일 목록을 검사하지 못했습니다: %@. %@", url.path, forgePlayTechnicalErrorSummary(error))
         case .recipeMetadataReadFailed(let url, let error):
-            return appState.localizedFormat("호환성 정보 파일 정보를 읽지 못했습니다: %@. %@", url.path, forgePlayTechnicalErrorSummary(error))
+            return appState.localizedFormat("실행 규칙 파일 정보를 읽지 못했습니다: %@. %@", url.path, forgePlayTechnicalErrorSummary(error))
         case .storedRecipeInvalidUTF8(let id):
-            return appState.localizedFormat("저장된 호환성 정보 JSON을 UTF-8로 읽지 못했습니다: %@", id)
+            return appState.localizedFormat("저장된 실행 규칙 JSON을 UTF-8로 읽지 못했습니다: %@", id)
         case .storedRecipeTooLarge(let id, let byteCount, let limit):
-            return appState.localizedFormat("저장된 호환성 정보가 너무 큽니다: %@ %d bytes / limit %d bytes", id, byteCount, limit)
+            return appState.localizedFormat("저장된 실행 규칙이 너무 큽니다: %@ %d bytes / limit %d bytes", id, byteCount, limit)
         case .storedRecipeDecodeFailed(let id):
-            return appState.localizedFormat("저장된 호환성 정보를 읽지 못했습니다: %@", id)
+            return appState.localizedFormat("저장된 실행 규칙을 읽지 못했습니다: %@", id)
         case .storedRecipeInvalid(let id):
-            return appState.localizedFormat("저장된 호환성 정보 내용이 제품 정책에 맞지 않습니다: %@", id)
+            return appState.localizedFormat("저장된 실행 규칙 내용이 제품 정책에 맞지 않습니다: %@", id)
         case .storedRecipeRecordMismatch(let id):
-            return appState.localizedFormat("저장된 호환성 정보가 저장 레코드와 일치하지 않습니다: %@", id)
+            return appState.localizedFormat("저장된 실행 규칙이 저장 레코드와 일치하지 않습니다: %@", id)
+        case .ambiguousSteamAppID(let steamAppID):
+            return appState.localizedFormat("같은 Steam App ID에 여러 실행 규칙이 있어 임의로 선택하지 않았습니다: %@", steamAppID)
         }
     }
 }
@@ -1186,9 +1779,9 @@ extension CompatibilityRecipeRecordProjectionError: ForgePlayUserFacingLocalized
     func localizedDescription(appState: AppState) -> String {
         switch self {
         case .encodeFailed(let recipeId):
-            return appState.localizedFormat("호환성 정보를 저장 가능한 JSON으로 변환할 수 없습니다: %@", recipeId)
+            return appState.localizedFormat("실행 규칙을 저장 가능한 JSON으로 변환할 수 없습니다: %@", recipeId)
         case .utf8ConversionFailed(let recipeId):
-            return appState.localizedFormat("호환성 정보 JSON을 UTF-8 문자열로 변환할 수 없습니다: %@", recipeId)
+            return appState.localizedFormat("실행 규칙 JSON을 UTF-8 문자열로 변환할 수 없습니다: %@", recipeId)
         }
     }
 }
@@ -1198,45 +1791,77 @@ extension CompatibilityDBUpdateError: ForgePlayUserFacingLocalizedError {
     func localizedDescription(appState: AppState) -> String {
         switch self {
         case .missingFeedURL:
-            return appState.localized("호환성 DB 업데이트 주소를 먼저 입력해야 합니다.")
+            return appState.localized("실행 규칙 DB 업데이트 주소를 먼저 입력해야 합니다.")
         case .insecureFeedURL:
-            return appState.localized("호환성 DB 업데이트는 HTTPS 주소만 사용할 수 있습니다.")
+            return appState.localized("실행 규칙 DB 업데이트는 HTTPS 주소만 사용할 수 있습니다.")
         case .invalidFeedURL:
-            return appState.localized("호환성 DB 업데이트 주소는 host가 있는 HTTPS 주소여야 하며 사용자 정보, fragment, secret query parameter를 포함할 수 없습니다.")
+            return appState.localized("실행 규칙 DB 업데이트 주소는 호스트가 있는 HTTPS URL이어야 하며, 사용자 정보나 프래그먼트 또는 민감한 쿼리 매개변수를 포함할 수 없습니다.")
         case .insecureRecipeURL(let id):
-            return appState.localizedFormat("호환성 정보 파일은 HTTPS 주소만 사용할 수 있습니다: %@", id)
+            return appState.localizedFormat("실행 규칙 파일은 HTTPS 주소만 사용할 수 있습니다: %@", id)
         case .invalidRecipeDescriptor(let id):
-            return appState.localizedFormat("호환성 정보 descriptor가 올바르지 않습니다: %@", id)
+            return appState.localizedFormat("실행 규칙 descriptor가 올바르지 않습니다: %@", id)
         case .duplicateRecipeDescriptor(let id):
-            return appState.localizedFormat("호환성 정보 descriptor ID가 중복되었습니다: %@", id)
+            return appState.localizedFormat("실행 규칙 descriptor ID가 중복되었습니다: %@", id)
         case .tooManyRecipes(let count, let limit):
-            return appState.localizedFormat("호환성 DB index에 포함된 recipe가 너무 많습니다: %d / limit %d", count, limit)
+            return appState.localizedFormat("실행 규칙 DB index에 포함된 recipe가 너무 많습니다: %d / limit %d", count, limit)
         case .insecureResolvedURL(let context):
-            return appState.localizedFormat("호환성 DB 업데이트가 공개 HTTPS 최종 주소가 아닌 곳으로 이동해 중단했습니다: %@", context)
+            return appState.localizedFormat("실행 규칙 DB 업데이트가 공개 HTTPS 최종 주소가 아닌 곳으로 이동해 중단했습니다: %@", context)
         case .invalidHTTPStatus(let context, let statusCode):
-            return appState.localizedFormat("호환성 DB 업데이트 서버 응답이 올바르지 않습니다: %@ HTTP %d", context, statusCode)
+            return appState.localizedFormat("실행 규칙 DB 업데이트 서버 응답이 올바르지 않습니다: %@ HTTP %d", context, statusCode)
         case .responseTooLarge(let context, let byteCount, let limit):
-            return appState.localizedFormat("호환성 DB 업데이트 응답이 너무 큽니다: %@ %d bytes / limit %d bytes", context, byteCount, limit)
+            return appState.localizedFormat("실행 규칙 DB 업데이트 응답이 너무 큽니다: %@ %d bytes / limit %d bytes", context, byteCount, limit)
         case .signatureVerifierMissing:
-            return appState.localized("이 앱에는 원격 호환성 DB 서명 검증 키가 포함되어 있지 않아 원격 업데이트를 적용하지 않습니다.")
+            return appState.localized("이 앱에는 원격 실행 규칙 DB 서명 검증 키가 포함되어 있지 않아 원격 업데이트를 적용하지 않습니다.")
         case .invalidPublicKey:
-            return appState.localized("호환성 DB 서명 검증 키를 읽을 수 없습니다.")
+            return appState.localized("실행 규칙 DB 서명 검증 키를 읽을 수 없습니다.")
         case .unsupportedSchemaVersion(let version):
-            return appState.localizedFormat("지원하지 않는 호환성 DB schema version입니다: %d", version)
+            return appState.localizedFormat("지원하지 않는 실행 규칙 DB schema version입니다: %d", version)
         case .invalidIndexSignature:
-            return appState.localized("호환성 DB index.json 서명이 올바르지 않습니다.")
+            return appState.localized("실행 규칙 DB index.json 서명이 올바르지 않습니다.")
         case .invalidRecipeSignature(let id):
-            return appState.localizedFormat("호환성 정보 파일 서명이 올바르지 않습니다: %@", id)
+            return appState.localizedFormat("실행 규칙 파일 서명이 올바르지 않습니다: %@", id)
         case .checksumMismatch(let id):
-            return appState.localizedFormat("호환성 정보 파일 무결성 검사가 실패했습니다: %@", id)
+            return appState.localizedFormat("실행 규칙 파일 무결성 검사가 실패했습니다: %@", id)
         case .recipeIdMismatch(let expected, let actual):
-            return appState.localizedFormat("호환성 정보 파일 ID가 index와 일치하지 않습니다: expected %@, actual %@", expected, actual)
+            return appState.localizedFormat("실행 규칙 파일 ID가 인덱스와 일치하지 않습니다. 예상: %@, 실제: %@", expected, actual)
         case .invalidRecipe(let id):
-            return appState.localizedFormat("호환성 정보 파일을 해석할 수 없습니다: %@", id)
+            return appState.localizedFormat("실행 규칙 파일을 해석할 수 없습니다: %@", id)
         case .duplicateStoredRecipeRecord(let id):
-            return appState.localizedFormat("저장된 호환성 정보 ID가 중복되었습니다: %@", id)
+            return appState.localizedFormat("저장된 실행 규칙 ID가 중복되었습니다: %@", id)
+        case .duplicateSteamAppID(let steamAppID):
+            return appState.localizedFormat("한 Steam App ID에 여러 실행 규칙을 적용할 수 없습니다: %@", steamAppID)
         case .updateInProgress:
-            return appState.localized("호환성 DB 업데이트가 이미 진행 중입니다. 완료된 뒤 다시 시도하세요.")
+            return appState.localized("실행 규칙 DB 업데이트가 이미 진행 중입니다. 완료된 뒤 다시 시도하세요.")
+        }
+    }
+}
+
+extension AppUpdateCheckError: ForgePlayUserFacingLocalizedError {
+    @MainActor
+    func localizedDescription(appState: AppState) -> String {
+        switch self {
+        case .invalidLocalVersion:
+            return appState.localized("현재 ForgePlay 버전 번호를 읽을 수 없습니다.")
+        case .invalidLocalBuild:
+            return appState.localized("현재 ForgePlay 빌드 번호를 읽을 수 없습니다.")
+        case .invalidManifest:
+            return appState.localized("공개 릴리스 정보가 예상 형식 또는 보안 검증을 통과하지 못했습니다.")
+        case .invalidHTTPStatus(let status):
+            return appState.localizedFormat("공개 릴리스 정보 서버 응답이 올바르지 않습니다: HTTP %d", status)
+        case .invalidResolvedURL:
+            return appState.localized("공개 릴리스 정보가 허용되지 않은 주소로 이동해 업데이트 확인을 중단했습니다.")
+        case .invalidMIMEType:
+            return appState.localized("공개 릴리스 정보 서버가 JSON 응답을 반환하지 않았습니다.")
+        case .responseTooLarge(let received, let limit):
+            return appState.localizedFormat(
+                "공개 릴리스 정보 응답이 너무 큽니다: %d bytes / limit %d bytes",
+                received,
+                limit
+            )
+        case .transport:
+            return appState.localized("공개 릴리스 정보를 가져오지 못했습니다.")
+        case .cancelled:
+            return appState.localized("업데이트 확인이 취소되었습니다.")
         }
     }
 }
@@ -1246,15 +1871,15 @@ extension CompatibilityDBPublicKeyResourceError: ForgePlayUserFacingLocalizedErr
     func localizedDescription(appState: AppState) -> String {
         switch self {
         case .unsafeResource(let url):
-            return appState.localizedFormat("호환성 DB 서명 검증 키는 symlink/hardlink가 아닌 일반 파일이어야 합니다: %@", url.path)
+            return appState.localizedFormat("실행 규칙 DB 서명 검증 키는 symlink/hardlink가 아닌 일반 파일이어야 합니다: %@", url.path)
         case .metadataReadFailed(let url, let message):
-            return appState.localizedFormat("호환성 DB 서명 검증 키 파일 정보를 읽지 못했습니다: %@. %@", url.path, message)
+            return appState.localizedFormat("실행 규칙 DB 서명 검증 키 파일 정보를 읽지 못했습니다: %@. %@", url.path, message)
         case .readFailed(let url, let message):
-            return appState.localizedFormat("호환성 DB 서명 검증 키 파일을 읽지 못했습니다: %@. %@", url.path, message)
+            return appState.localizedFormat("실행 규칙 DB 서명 검증 키 파일을 읽지 못했습니다: %@. %@", url.path, message)
         case .oversized(let url, let byteCount, let limit):
-            return appState.localizedFormat("호환성 DB 서명 검증 키 파일이 너무 큽니다: %@ %d bytes / limit %d bytes", url.path, byteCount, limit)
+            return appState.localizedFormat("실행 규칙 DB 서명 검증 키 파일이 너무 큽니다: %@ %d bytes / limit %d bytes", url.path, byteCount, limit)
         case .textDecodeFailed(let url):
-            return appState.localizedFormat("호환성 DB 서명 검증 키 파일은 UTF-8 텍스트여야 합니다: %@", url.path)
+            return appState.localizedFormat("실행 규칙 DB 서명 검증 키 파일은 UTF-8 텍스트여야 합니다: %@", url.path)
         }
     }
 }
@@ -1317,6 +1942,8 @@ extension SafeProcessRunnerError: ForgePlayUserFacingLocalizedError {
             return appState.localizedFormat("실행 파일은 symlink/hardlink가 아닌 일반 파일이어야 합니다: %@", url.path)
         case .unsafeActionInput(let url):
             return appState.localizedFormat("실행 입력 경로가 안전한 일반 파일/폴더가 아닙니다: %@", url.path)
+        case .unsafeCommandArgument(let name):
+            return appState.localizedFormat("Windows 명령 입력에 허용되지 않은 문자가 있습니다: %@", name)
         case .unsafeArchivePath(let url):
             return appState.localizedFormat("압축 파일 경로가 안전한 일반 경로가 아닙니다: %@", url.path)
         case .cannotCreateLog(let url):
@@ -1328,9 +1955,17 @@ extension SafeProcessRunnerError: ForgePlayUserFacingLocalizedError {
         case .prefixProcessVerificationFailed(let url, let message):
             return appState.localizedFormat("ForgePlay Runtime 프로세스 정리 상태를 확인하지 못했습니다: %@. %@", url.path, message)
         case .manualRendererSelectionRequired:
-            return appState.localized("Steam을 실행하기 전에 D3DMetal, DXMT, D9VK 또는 DXVK 중 하나를 직접 선택해야 합니다.")
+            return appState.localized("Steam을 실행하기 전에 D3DMetal 표준, D3DMetal NVIDIA, DXMT, D9VK 또는 DXVK 중 하나를 직접 선택해야 합니다.")
+        case .invalidSteamCompatibilitySelection:
+            return appState.localized("선택한 그래픽 백엔드와 Steam 실행 호환성 설정이 일치하지 않습니다.")
         case .gameRendererPayloadMissing(let url, let architecture):
             return appState.localizedFormat("선택한 게임 렌더러의 %@ DLL payload를 찾지 못했습니다: %@", architecture, url.path)
+        case .gameRendererBridgePreparationFailed(let url, let reason):
+            return appState.localizedFormat(
+                "D3DMetal MetalFX/NGX 브리지를 준비하지 못했습니다: %@. %@",
+                url.path,
+                reason
+            )
         case .invalidPrefixSynchronizationProfile(let url):
             return appState.localizedFormat("Steam 프리픽스의 Wine 동기화 설정을 읽을 수 없습니다: %@", url.path)
         case .sandboxIPCConfigurationMissing:
@@ -1340,6 +1975,10 @@ extension SafeProcessRunnerError: ForgePlayUserFacingLocalizedError {
                 "Wine 서버 경로를 안전하게 준비하지 못했습니다: %@. %@",
                 url.path,
                 reason
+            )
+        case .invalidRosettaAVXHostOverride:
+            return appState.localized(
+                "Rosetta AVX 설정 값이 올바르지 않습니다. FORGEPLAY_ROSETTA_ADVERTISE_AVX에는 0 또는 1만 사용하세요."
             )
         }
     }
@@ -1375,17 +2014,4 @@ extension ForgePlayRuntimeCapabilityError: ForgePlayUserFacingLocalizedError {
             )
         }
     }
-}
-
-func forgePlayTechnicalErrorSummary(_ error: Error) -> String {
-    if let technicalError = error as? ForgePlayTechnicalDescribingError {
-        let description = technicalError.forgePlayTechnicalDescription
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        if !description.isEmpty {
-            return description
-        }
-    }
-
-    let nsError = error as NSError
-    return "\(nsError.domain) \(nsError.code)"
 }

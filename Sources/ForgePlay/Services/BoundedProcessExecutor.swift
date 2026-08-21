@@ -12,6 +12,7 @@ struct BoundedProcessCaptureResult: Sendable, Hashable {
     var stderr: Data
     var didTimeOut: Bool
     var didExit: Bool
+    var wasCancelled: Bool
 }
 
 struct BoundedProcessExecutionResult: Sendable, Hashable {
@@ -24,11 +25,56 @@ struct BoundedProcessExecutionResult: Sendable, Hashable {
     var forgePlayStatusCode: Int32?
     var exitCode: Int32
     var waitOutcome: BoundedProcessWaitOutcome
+    var wasCancelled: Bool
     var terminationSignal: Int32?
     var rawWaitStatus: Int32?
     /// Present when the operating system no longer exposes the root child's
     /// wait status. Never synthesize an exit code or signal in this state.
     var waitStatusCaptureError: String?
+}
+
+/// Thread-safe cancellation state for the single process operation currently
+/// owned by a `SafeProcessRunner` actor. The requester only flips state; the
+/// execution thread retains the exact spawned process-group identity and is
+/// solely responsible for signaling it, avoiding PID-reuse races.
+final class BoundedProcessCancellationScope: @unchecked Sendable {
+    private let lock = NSLock()
+    private var operationIdentifier: UUID?
+    private var cancellationRequested = false
+
+    @discardableResult
+    func beginOperation() -> UUID {
+        lock.withLock {
+            precondition(operationIdentifier == nil)
+            let identifier = UUID()
+            operationIdentifier = identifier
+            cancellationRequested = false
+            return identifier
+        }
+    }
+
+    func endOperation(_ identifier: UUID) {
+        lock.withLock {
+            guard operationIdentifier == identifier else { return }
+            operationIdentifier = nil
+            cancellationRequested = false
+        }
+    }
+
+    @discardableResult
+    func requestCancellation() -> Bool {
+        lock.withLock {
+            guard operationIdentifier != nil else { return false }
+            cancellationRequested = true
+            return true
+        }
+    }
+
+    var isCancellationRequested: Bool {
+        lock.withLock {
+            operationIdentifier != nil && cancellationRequested
+        }
+    }
 }
 
 enum BoundedProcessExecutorError: LocalizedError {
@@ -50,6 +96,7 @@ enum BoundedProcessExecutorError: LocalizedError {
 
 enum BoundedProcessExecutor {
     static let forcedTimeoutExitCode: Int32 = 124
+    static let cancelledExitCode: Int32 = 130
 
     private final class SpawnedProcessGroup: @unchecked Sendable {
         let processIdentifier: pid_t
@@ -57,7 +104,9 @@ enum BoundedProcessExecutor {
         private let waitStateLock = NSLock()
         private var storedWaitStatus: Int32?
         private var storedWaitErrorCode: Int32?
-        private var waitCompleted = false
+        private var rootExitObserved = false
+        private var rootWasReaped = false
+        private var reapInProgress = false
 
         init(processIdentifier: pid_t) {
             self.processIdentifier = processIdentifier
@@ -73,7 +122,7 @@ enum BoundedProcessExecutor {
         }
 
         var isRootRunning: Bool {
-            waitStateLock.withLock { !waitCompleted }
+            waitStateLock.withLock { !rootExitObserved }
         }
 
         var exitCode: Int32 {
@@ -93,32 +142,73 @@ enum BoundedProcessExecutor {
 
         func startWaitingForRootStatus() {
             Thread.detachNewThread { [self] in
-                waitForRootStatus()
+                observeRootExitWithoutReaping()
             }
         }
 
-        private func waitForRootStatus() {
-            var status: Int32 = 0
+        /// Leave an exited leader waitable until every task-owned group member
+        /// is gone. The unreaped leader anchors its PID/PGID, so a cleanup
+        /// signal can never target a numerically reused process group.
+        private func observeRootExitWithoutReaping() {
+            var information = siginfo_t()
             while true {
-                let result = waitpid(processIdentifier, &status, 0)
-                if result == processIdentifier {
-                    finishWaiting(status: status, errorCode: nil)
+                let result = waitid(
+                    P_PID,
+                    id_t(processIdentifier),
+                    &information,
+                    WEXITED | WNOWAIT
+                )
+                if result == 0 {
+                    waitStateLock.withLock {
+                        rootExitObserved = true
+                    }
                     return
                 }
-                if result < 0, errno == EINTR {
-                    continue
+                if errno == EINTR { continue }
+                waitStateLock.withLock {
+                    storedWaitErrorCode = errno
+                    rootExitObserved = true
                 }
-                finishWaiting(status: nil, errorCode: result < 0 ? errno : ECHILD)
                 return
             }
         }
 
-        private func finishWaiting(status: Int32?, errorCode: Int32?) {
-            waitStateLock.withLock {
-                storedWaitStatus = status
-                storedWaitErrorCode = errorCode
-                waitCompleted = true
+        @discardableResult
+        func reapRootIfExited() -> Bool {
+            var alreadyReaped = false
+            let shouldReap = waitStateLock.withLock { () -> Bool in
+                guard rootExitObserved else { return false }
+                if rootWasReaped {
+                    alreadyReaped = true
+                    return false
+                }
+                guard !reapInProgress else { return false }
+                reapInProgress = true
+                return true
             }
+            if alreadyReaped { return true }
+            guard shouldReap else {
+                return waitStateLock.withLock { rootWasReaped }
+            }
+            var status: Int32 = 0
+            var result: pid_t
+            repeat {
+                result = waitpid(processIdentifier, &status, 0)
+            } while result < 0 && errno == EINTR
+            waitStateLock.withLock {
+                if result == processIdentifier {
+                    storedWaitStatus = status
+                } else {
+                    storedWaitErrorCode = result < 0 ? errno : ECHILD
+                }
+                rootWasReaped = true
+                reapInProgress = false
+            }
+            return result == processIdentifier
+        }
+
+        deinit {
+            _ = reapRootIfExited()
         }
     }
 
@@ -131,7 +221,8 @@ enum BoundedProcessExecutor {
         stderrDescriptor: Int32,
         timeout: TimeInterval,
         terminationGrace: TimeInterval = 2,
-        killGrace: TimeInterval = 2
+        killGrace: TimeInterval = 2,
+        cancellationScope: BoundedProcessCancellationScope? = nil
     ) throws -> BoundedProcessExecutionResult {
         let process = try spawnProcessGroup(
             executable: executable,
@@ -142,9 +233,11 @@ enum BoundedProcessExecutor {
             stderrDescriptor: stderrDescriptor
         )
         let deadline = Date().addingTimeInterval(max(timeout, 0))
-        while process.isRootRunning && Date() < deadline {
+        while process.isRootRunning && Date() < deadline &&
+                cancellationScope?.isCancellationRequested != true {
             Thread.sleep(forTimeInterval: 0.01)
         }
+        let wasCancelled = cancellationScope?.isCancellationRequested == true
         guard process.isRootRunning else {
             let descendantsExited = terminateRemainingProcessGroup(
                 process,
@@ -156,12 +249,15 @@ enum BoundedProcessExecutor {
                 processExitCode: process.terminationSignal == nil && process.waitStatus != nil
                     ? process.exitCode
                     : nil,
-                forgePlayStatusCode: descendantsExited ? nil : forcedTimeoutExitCode,
+                forgePlayStatusCode: wasCancelled
+                    ? cancelledExitCode
+                    : (descendantsExited ? nil : forcedTimeoutExitCode),
                 exitCode: descendantsExited ? process.exitCode : forcedTimeoutExitCode,
                 waitOutcome: BoundedProcessWaitOutcome(
                     didExit: descendantsExited,
                     didTimeOut: !descendantsExited
                 ),
+                wasCancelled: wasCancelled,
                 terminationSignal: process.terminationSignal,
                 rawWaitStatus: process.waitStatus,
                 waitStatusCaptureError: waitStatusCaptureError(for: process)
@@ -183,18 +279,27 @@ enum BoundedProcessExecutor {
             Thread.sleep(forTimeInterval: 0.01)
         }
         _ = process.isRootRunning
-        let didExit = !processGroupIsLive(process) && !process.isRootRunning
+        let groupDrained = !processGroupIsLive(process)
+        let didExit = groupDrained && process.reapRootIfExited()
         if !didExit {
-            startProcessGroupReaper(process.processGroupIdentifier)
+            startProcessGroupReaper(process)
         }
         return BoundedProcessExecutionResult(
             processIdentifier: process.processIdentifier,
             processExitCode: process.terminationSignal == nil && process.waitStatus != nil
                 ? process.exitCode
                 : nil,
-            forgePlayStatusCode: forcedTimeoutExitCode,
-            exitCode: didExit ? process.exitCode : forcedTimeoutExitCode,
-            waitOutcome: BoundedProcessWaitOutcome(didExit: didExit, didTimeOut: true),
+            forgePlayStatusCode: wasCancelled
+                ? cancelledExitCode
+                : forcedTimeoutExitCode,
+            exitCode: didExit
+                ? process.exitCode
+                : (wasCancelled ? cancelledExitCode : forcedTimeoutExitCode),
+            waitOutcome: BoundedProcessWaitOutcome(
+                didExit: didExit,
+                didTimeOut: !wasCancelled
+            ),
+            wasCancelled: wasCancelled,
             terminationSignal: process.terminationSignal,
             rawWaitStatus: process.waitStatus,
             waitStatusCaptureError: waitStatusCaptureError(for: process)
@@ -206,46 +311,97 @@ enum BoundedProcessExecutor {
         terminationGrace: TimeInterval,
         killGrace: TimeInterval
     ) -> Bool {
-        guard processGroupIsLive(process) else { return true }
+        guard processGroupIsLive(process) else {
+            return process.reapRootIfExited()
+        }
         signalProcessGroup(process, signal: SIGTERM)
         let terminationDeadline = Date().addingTimeInterval(max(terminationGrace, 0))
         while processGroupIsLive(process), Date() < terminationDeadline {
             Thread.sleep(forTimeInterval: 0.01)
         }
-        guard processGroupIsLive(process) else { return true }
+        guard processGroupIsLive(process) else {
+            return process.reapRootIfExited()
+        }
         signalProcessGroup(process, signal: SIGKILL)
         let killDeadline = Date().addingTimeInterval(max(killGrace, 0))
         while processGroupIsLive(process), Date() < killDeadline {
             Thread.sleep(forTimeInterval: 0.01)
         }
         if processGroupIsLive(process) {
-            startProcessGroupReaper(process.processGroupIdentifier)
+            startProcessGroupReaper(process)
             return false
         }
-        return true
+        return process.reapRootIfExited()
     }
 
     private nonisolated static func signalProcessGroup(
         _ process: SpawnedProcessGroup,
         signal: Int32
     ) {
-        _ = Darwin.kill(-process.processGroupIdentifier, signal)
+        if Darwin.kill(-process.processGroupIdentifier, signal) != 0,
+           errno == ESRCH,
+           process.isRootRunning {
+            // The still-unreaped leader is an exact task-owned PID. This
+            // fallback handles a child that unexpectedly leaves its original
+            // group without ever signaling a reused PID.
+            _ = Darwin.kill(process.processIdentifier, signal)
+        }
     }
 
     private nonisolated static func processGroupIsLive(_ process: SpawnedProcessGroup) -> Bool {
-        _ = process.isRootRunning
-        guard Darwin.kill(-process.processGroupIdentifier, 0) != 0 else { return true }
-        return errno == EPERM
+        if process.isRootRunning { return true }
+        guard let members = processGroupMemberPIDs(
+            process.processGroupIdentifier
+        ) else {
+            return true
+        }
+        return members.contains { $0 != process.processIdentifier }
     }
 
-    private nonisolated static func startProcessGroupReaper(_ processGroupIdentifier: pid_t) {
+    private nonisolated static func processGroupMemberPIDs(
+        _ processGroupIdentifier: pid_t
+    ) -> [pid_t]? {
+        let requiredBytes = proc_listpgrppids(
+            processGroupIdentifier,
+            nil,
+            0
+        )
+        guard requiredBytes >= 0 else { return nil }
+        var processIDs = [pid_t](
+            repeating: 0,
+            count: max(
+                1,
+                Int(requiredBytes) / MemoryLayout<pid_t>.stride + 16
+            )
+        )
+        let count = processIDs.withUnsafeMutableBytes { bytes in
+            proc_listpgrppids(
+                processGroupIdentifier,
+                bytes.baseAddress,
+                Int32(bytes.count)
+            )
+        }
+        guard count >= 0, count <= processIDs.count else { return nil }
+        return Array(processIDs.prefix(Int(count))).filter { $0 > 0 }
+    }
+
+    private nonisolated static func startProcessGroupReaper(
+        _ process: SpawnedProcessGroup
+    ) {
         Task.detached(priority: .utility) {
             let deadline = Date().addingTimeInterval(30)
             while Date() < deadline {
-                guard Darwin.kill(-processGroupIdentifier, 0) == 0 || errno == EPERM else { return }
-                _ = Darwin.kill(-processGroupIdentifier, SIGKILL)
+                guard processGroupIsLive(process) else {
+                    _ = process.reapRootIfExited()
+                    return
+                }
+                signalProcessGroup(process, signal: SIGKILL)
                 try? await Task.sleep(for: .milliseconds(100))
             }
+            // Stop signaling before releasing the PID/PGID anchor. A stubborn
+            // descendant may remain, but no later numeric reuse can be hit by
+            // this task after the leader is reaped.
+            _ = process.reapRootIfExited()
         }
     }
 
@@ -356,6 +512,7 @@ enum BoundedProcessExecutor {
         environment: [String: String]? = nil,
         workingDirectory: URL? = nil,
         timeout: TimeInterval,
+        cancellationScope: BoundedProcessCancellationScope? = nil,
         fileManager: FileManager = .default
     ) throws -> BoundedProcessCaptureResult {
         let captureDirectory = fileManager.temporaryDirectory.appending(
@@ -388,7 +545,8 @@ enum BoundedProcessExecutor {
             workingDirectory: workingDirectory,
             stdoutDescriptor: stdoutHandle.fileDescriptor,
             stderrDescriptor: stderrHandle.fileDescriptor,
-            timeout: timeout
+            timeout: timeout,
+            cancellationScope: cancellationScope
         )
         try? stdoutHandle.close()
         try? stderrHandle.close()
@@ -417,7 +575,8 @@ enum BoundedProcessExecutor {
             stdout: stdout,
             stderr: stderr,
             didTimeOut: execution.waitOutcome.didTimeOut,
-            didExit: execution.waitOutcome.didExit
+            didExit: execution.waitOutcome.didExit,
+            wasCancelled: execution.wasCancelled
         )
     }
 

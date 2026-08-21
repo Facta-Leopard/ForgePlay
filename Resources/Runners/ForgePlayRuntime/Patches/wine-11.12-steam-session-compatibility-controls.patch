@@ -1,0 +1,571 @@
+diff --git a/dlls/kernelbase/process.c b/dlls/kernelbase/process.c
+index 046a44c..318bf4f 100644
+--- a/dlls/kernelbase/process.c
++++ b/dlls/kernelbase/process.c
+@@ -332,6 +332,97 @@ static BOOL forgeplay_game_renderer_policy_enabled(void)
+ }
+ 
+ 
++static BOOL forgeplay_renderer_path_separator( WCHAR character )
++{
++    return character == L'\\' || character == L'/';
++}
++
++
++static BOOL forgeplay_renderer_path_suffix_character_equal( WCHAR left, WCHAR right )
++{
++    return RtlUpcaseUnicodeChar( left ) == RtlUpcaseUnicodeChar( right );
++}
++
++
++static BOOL forgeplay_renderer_path_has_exact_suffix( const WCHAR *path,
++                                                       const WCHAR *suffix,
++                                                       SIZE_T suffix_length )
++{
++    SIZE_T path_index, suffix_index;
++
++    if (!path || !suffix || !suffix_length ||
++        !forgeplay_renderer_path_separator( suffix[0] )) return FALSE;
++
++    path_index = wcslen( path );
++    suffix_index = suffix_length;
++    while (suffix_index)
++    {
++        if (!path_index) return FALSE;
++        if (forgeplay_renderer_path_separator( path[path_index - 1] ) &&
++            forgeplay_renderer_path_separator( suffix[suffix_index - 1] ))
++        {
++            while (path_index &&
++                   forgeplay_renderer_path_separator( path[path_index - 1] ))
++                --path_index;
++            while (suffix_index &&
++                   forgeplay_renderer_path_separator( suffix[suffix_index - 1] ))
++                --suffix_index;
++            continue;
++        }
++        if (!forgeplay_renderer_path_suffix_character_equal(
++                path[path_index - 1], suffix[suffix_index - 1] )) return FALSE;
++        --path_index;
++        --suffix_index;
++    }
++    return TRUE;
++}
++
++
++/* The host owns a bounded list of exact executable suffixes whose helper
++ * processes must remain on base Wine while their game keeps the selected
++ * renderer. This is used for architecture-incompatible service helpers, not
++ * for game-specific renderer selection or wildcard process suppression. */
++static BOOL is_forgeplay_game_renderer_base_helper( const WCHAR *path )
++{
++    static const WCHAR rules_name[] =
++        L"FORGEPLAY_GAME_RENDERER_BASE_HELPER_SUFFIX_RULES_V1";
++    WCHAR *rules, *cursor, *end, *rule;
++    DWORD size;
++    BOOL matched = FALSE;
++
++    if (!path || !*path) return FALSE;
++    size = GetEnvironmentVariableW( rules_name, NULL, 0 );
++    if (!size || size > 32767) return FALSE;
++    if (!(rules = RtlAllocateHeap(
++            GetProcessHeap(), 0, size * sizeof(WCHAR) ))) return FALSE;
++    if (!GetEnvironmentVariableW( rules_name, rules, size )) goto done;
++
++    cursor = rules;
++    end = rules + wcslen( rules );
++    while (cursor <= end)
++    {
++        SIZE_T rule_length;
++
++        rule = cursor;
++        while (cursor < end && *cursor != L';') ++cursor;
++        rule_length = cursor - rule;
++        if (rule_length && rule_length <= 1024 &&
++            forgeplay_renderer_path_has_exact_suffix(
++                path, rule, rule_length ))
++        {
++            matched = TRUE;
++            break;
++        }
++        if (cursor == end) break;
++        ++cursor;
++    }
++
++done:
++    RtlFreeHeap( GetProcessHeap(), 0, rules );
++    return matched;
++}
++
++
+ static BOOL forgeplay_steam_game_cef_browser_policy_enabled(void)
+ {
+     WCHAR value[8];
+@@ -1112,6 +1203,9 @@ static NTSTATUS create_forgeplay_base_renderer_environment( const void *environm
+         { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_WINE_UNIX_CALL", L"D3DM_WINE_UNIX_CALL" },
+         { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_ENABLE_METALFX", L"D3DM_ENABLE_METALFX" },
+         { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_NVNGX_PATH", L"D3DM_NVNGX_PATH" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_VENDOR_ID", L"D3DM_VENDOR_ID" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP", L"FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NETWORK_PROFILE", L"FORGEPLAY_NETWORK_PROFILE" },
+         { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_VK_ICD_FILENAMES", L"VK_ICD_FILENAMES" },
+         { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_VK_DRIVER_FILES", L"VK_DRIVER_FILES" },
+         { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_LOG_PATH", L"DXVK_LOG_PATH" },
+@@ -1135,6 +1229,7 @@ static NTSTATUS create_forgeplay_base_renderer_environment( const void *environm
+          * for its later game children. */
+         L"FORGEPLAY_D3DMETAL_BRIDGE",
+         L"FORGEPLAY_D3DMETAL_TARGET",
++        L"FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP",
+         L"D3DMETAL_SHARED_LIBRARY",
+     };
+     NTSTATUS status;
+@@ -1182,6 +1277,9 @@ static NTSTATUS create_forgeplay_game_renderer_environment( const void *environm
+         { L"FORGEPLAY_GAME_RENDERER_ENV_D3DM_WINE_UNIX_CALL", L"D3DM_WINE_UNIX_CALL" },
+         { L"FORGEPLAY_GAME_RENDERER_ENV_D3DM_ENABLE_METALFX", L"D3DM_ENABLE_METALFX" },
+         { L"FORGEPLAY_GAME_RENDERER_ENV_D3DM_NVNGX_PATH", L"D3DM_NVNGX_PATH" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_D3DM_VENDOR_ID", L"D3DM_VENDOR_ID" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP", L"FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NETWORK_PROFILE", L"FORGEPLAY_NETWORK_PROFILE" },
+         { L"FORGEPLAY_GAME_RENDERER_ENV_VK_ICD_FILENAMES", L"VK_ICD_FILENAMES" },
+         { L"FORGEPLAY_GAME_RENDERER_ENV_VK_DRIVER_FILES", L"VK_DRIVER_FILES" },
+         { L"FORGEPLAY_GAME_RENDERER_ENV_DXVK_LOG_PATH", L"DXVK_LOG_PATH" },
+@@ -1216,11 +1314,17 @@ static NTSTATUS create_forgeplay_game_renderer_environment( const void *environm
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_WINE_UNIX_CALL",
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_ENABLE_METALFX",
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_NVNGX_PATH",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_VENDOR_ID",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NETWORK_PROFILE",
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_VK_ICD_FILENAMES",
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_VK_DRIVER_FILES",
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_LOG_PATH",
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_LOG_LEVEL",
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_CONFIG",
++        L"FORGEPLAY_NETWORK_PROFILE_REQUESTED",
++        L"FORGEPLAY_AUDIO_INPUT_MODE",
++        L"FORGEPLAY_GAME_RENDERER_BASE_HELPER_SUFFIX_RULES_V1",
+         L"FORGEPLAY_STEAM_GAME_CEF_BROWSER_POLICY_ENABLED",
+     };
+     const WCHAR *target_name, *cursor;
+@@ -1355,6 +1459,28 @@ static void record_forgeplay_game_renderer_fallback( const WCHAR *stage, const W
+ }
+ 
+ 
++static void record_forgeplay_game_renderer_base_helper(
++    const WCHAR *filename, DWORD process_id )
++{
++    WCHAR *text;
++    SIZE_T text_size;
++
++    if (!filename) filename = L"<unknown>";
++    text_size = wcslen( filename ) + 96;
++    if (!(text = HeapAlloc(
++            GetProcessHeap(), 0, text_size * sizeof(WCHAR) ))) return;
++    swprintf(
++        text, text_size,
++        L"route=base-runtime | reason=host-owned-exact-suffix-rule | %s",
++        filename );
++    record_process_observation(
++        "FORGEPLAY_GAME_RENDERER_BASE_HELPER_V1\t",
++        text,
++        process_id );
++    HeapFree( GetProcessHeap(), 0, text );
++}
++
++
+ static void record_forgeplay_game_renderer_observation(
+     const WCHAR *filename, DWORD process_id,
+     const struct forgeplay_game_renderer_route *route )
+@@ -1787,6 +1913,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
+     USHORT machine = 0;
+     NTSTATUS status, renderer_status;
+     BOOL game_renderer_route_observed = FALSE;
++    BOOL game_renderer_base_helper_observed = FALSE;
+     BOOL observe_process_arguments = FALSE;
+ 
+     /* Process the AppName and/or CmdLine to get module name and path */
+@@ -1862,6 +1989,25 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
+                    debugstr_w(app_name) );
+         }
+     }
++    else if (forgeplay_game_renderer_policy_enabled() &&
++             is_forgeplay_game_renderer_base_helper( app_name ))
++    {
++        renderer_status = create_forgeplay_base_renderer_environment(
++            env, flags, &game_renderer_environment );
++        if (renderer_status)
++        {
++            record_forgeplay_game_renderer_fallback(
++                L"base-helper-environment", app_name, renderer_status,
++                L"process-creation-rejected" );
++            status = renderer_status;
++            goto done;
++        }
++        env = game_renderer_environment;
++        flags |= CREATE_UNICODE_ENVIRONMENT;
++        game_renderer_base_helper_observed = TRUE;
++        TRACE( "applied ForgePlay base runtime helper policy for %s\n",
++               debugstr_w(app_name) );
++    }
+     else if (forgeplay_game_renderer_policy_enabled() &&
+              (is_forgeplay_steam_game_path( app_name ) ||
+               is_forgeplay_steam_game_path( cur_dir ) ||
+@@ -2039,6 +2185,9 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
+         if (game_renderer_route_observed)
+             record_forgeplay_game_renderer_observation( app_name, info->dwProcessId,
+                                                         &game_renderer_route );
++        if (game_renderer_base_helper_observed)
++            record_forgeplay_game_renderer_base_helper(
++                app_name, info->dwProcessId );
+     }
+ 
+  done:
+diff --git a/dlls/nsi/nsi.c b/dlls/nsi/nsi.c
+index 14be842..ddfd67e 100644
+--- a/dlls/nsi/nsi.c
++++ b/dlls/nsi/nsi.c
+@@ -21,8 +21,10 @@
+ #include "winternl.h"
+ #include "ws2ipdef.h"
+ #include "iphlpapi.h"
++#include "ntddndis.h"
+ #include "netioapi.h"
+ #include "iptypes.h"
++#define __WINE_INIT_NPI_MODULEID
+ #include "netiodef.h"
+ #include "wine/nsi.h"
+ #include "wine/debug.h"
+@@ -32,6 +34,44 @@ WINE_DEFAULT_DEBUG_CHANNEL(nsi);
+ static HANDLE nsi_device = INVALID_HANDLE_VALUE;
+ static HANDLE nsi_device_async = INVALID_HANDLE_VALUE;
+ 
++static UINT forgeplay_network_adapter_type(void)
++{
++    char profile[32];
++    DWORD length;
++
++    length = GetEnvironmentVariableA( "FORGEPLAY_NETWORK_PROFILE", profile, ARRAY_SIZE(profile) );
++    if (!length || length >= ARRAY_SIZE(profile) || !strcmp( profile, "standard" )) return 0;
++    if (!strcmp( profile, "wifi-identity" )) return IF_TYPE_IEEE80211;
++    if (!strcmp( profile, "ethernet-identity" )) return IF_TYPE_ETHERNET_CSMACD;
++    WARN( "Ignoring unsupported ForgePlay network profile.\n" );
++    return 0;
++}
++
++static void forgeplay_normalize_network_adapter_types(
++    const NPI_MODULEID *module, DWORD table, void *static_data,
++    DWORD static_size, DWORD count )
++{
++    struct nsi_ndis_ifinfo_static *entry;
++    UINT type = forgeplay_network_adapter_type();
++    DWORD i;
++
++    if (!type || !module || table != NSI_NDIS_IFINFO_TABLE ||
++        !NmrIsEqualNpiModuleId( module, &NPI_MS_NDIS_MODULEID ) ||
++        !static_data || static_size < sizeof(*entry))
++        return;
++
++    for (i = 0; i < count; ++i)
++    {
++        entry = (struct nsi_ndis_ifinfo_static *)((BYTE *)static_data + i * static_size);
++        if (entry->type == IF_TYPE_SOFTWARE_LOOPBACK || !entry->conn_present) continue;
++        entry->type = type;
++        entry->media_type = NdisMedium802_3;
++        entry->phys_medium_type = type == IF_TYPE_IEEE80211
++            ? NdisPhysicalMediumNative802_11
++            : NdisPhysicalMedium802_3;
++    }
++}
++
+ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, void *reserved)
+ {
+     switch (reason)
+@@ -199,6 +239,9 @@ DWORD WINAPI NsiEnumerateObjectsAllParametersEx( struct nsi_enumerate_all_ex *pa
+         if (params->dynamic_size) memcpy( params->dynamic_data, ptr, params->dynamic_size * params->count );
+         ptr += params->dynamic_size * in.count;
+         if (params->static_size) memcpy( params->static_data, ptr, params->static_size * params->count );
++        forgeplay_normalize_network_adapter_types(
++            params->module, params->table, params->static_data,
++            params->static_size, params->count );
+     }
+ 
+     free( out );
+@@ -280,6 +323,9 @@ DWORD WINAPI NsiGetAllParametersEx( struct nsi_get_all_parameters_ex *params )
+         if (params->dynamic_size) memcpy( params->dynamic_data, ptr, params->dynamic_size );
+         ptr += params->dynamic_size;
+         if (params->static_size) memcpy( params->static_data, ptr, params->static_size );
++        forgeplay_normalize_network_adapter_types(
++            params->module, params->table, params->static_data,
++            params->static_size, 1 );
+     }
+ 
+ err:
+diff --git a/dlls/ntdll/loader.c b/dlls/ntdll/loader.c
+index 02f0b56..9fba824 100644
+--- a/dlls/ntdll/loader.c
++++ b/dlls/ntdll/loader.c
+@@ -70,7 +70,9 @@ typedef DWORD (CALLBACK *DLLENTRYPROC)(HMODULE,DWORD,LPVOID);
+ typedef void  (CALLBACK *LDRENUMPROC)(LDR_DATA_TABLE_ENTRY *, void *, BOOLEAN *);
+ 
+ static void __fastcall default_thread_init_func( DWORD unknown, LPTHREAD_START_ROUTINE entry, void *arg );
++static void __fastcall forgeplay_thread_init_func( DWORD unknown, LPTHREAD_START_ROUTINE entry, void *arg );
+ void (FASTCALL *pBaseThreadInitThunk)(DWORD,LPTHREAD_START_ROUTINE,void *) = default_thread_init_func;
++static void (FASTCALL *system_BaseThreadInitThunk)(DWORD,LPTHREAD_START_ROUTINE,void *);
+ NTSTATUS (WINAPI *__wine_unix_call_dispatcher)( unixlib_handle_t, unsigned int, void * ) = NULL;
+ 
+ static DWORD (WINAPI *pCtrlRoutine)(void *);
+@@ -93,6 +95,7 @@ static BOOL imports_fixup_done = FALSE;  /* set once the imports have been fixed
+ static BOOL process_detaching = FALSE;  /* set on process detach to avoid deadlocks with thread detach */
+ static int free_lib_count;   /* recursion depth of LdrUnloadDll calls */
+ static LONG path_safe_mode;  /* path mode set by RtlSetSearchPathMode */
++static LONG forgeplay_nvapi_bootstrap_state;
+ static LONG dll_safe_mode = 1;  /* dll search mode */
+ static UNICODE_STRING dll_directory;  /* extra path for LdrSetDllDirectory */
+ static UNICODE_STRING system_dll_path; /* path to search for system dependency dlls */
+@@ -3160,6 +3163,154 @@ static NTSTATUS get_env_var( const WCHAR *name, SIZE_T extra, UNICODE_STRING *re
+ }
+ 
+ 
++static BOOL forgeplay_environment_flag_is_enabled( const WCHAR *name )
++{
++    UNICODE_STRING value = { 0 };
++    BOOL enabled;
++
++    if (get_env_var( name, 0, &value )) return FALSE;
++    enabled = value.Length == sizeof(WCHAR) && value.Buffer[0] == L'1';
++    RtlFreeHeap( GetProcessHeap(), 0, value.Buffer );
++    return enabled;
++}
++
++
++static void record_forgeplay_nvapi_bootstrap(
++    NTSTATUS load_status, NTSTATUS procedure_status,
++    NTSTATUS exception_status, int initialize_result )
++{
++    UNICODE_STRING observation_path = { 0 }, nt_path = { 0 };
++    OBJECT_ATTRIBUTES attr;
++    IO_STATUS_BLOCK io;
++    LARGE_INTEGER offset;
++    HANDLE file;
++    char record[384];
++    const char *state;
++    int record_size;
++    NTSTATUS status;
++
++    state = !load_status && !procedure_status && !exception_status &&
++        !initialize_result ? "initialized" : "failed";
++    status = get_env_var(
++        L"FORGEPLAY_PROCESS_OBSERVATION_FILE", 0, &observation_path );
++    if (status) return;
++    if (!RtlDosPathNameToNtPathName_U(
++            observation_path.Buffer, &nt_path, NULL, NULL )) goto done;
++
++    InitializeObjectAttributes(
++        &attr, &nt_path, OBJ_CASE_INSENSITIVE, 0, NULL );
++    status = NtCreateFile(
++        &file, FILE_APPEND_DATA | SYNCHRONIZE, &attr, &io, NULL,
++        FILE_ATTRIBUTE_NORMAL,
++        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
++        FILE_OPEN_IF,
++        FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
++        NULL, 0 );
++    if (status) goto done_nt_path;
++
++    record_size = snprintf(
++        record, sizeof(record),
++        "FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP_V1\t%lu\t"
++        "state=%s | module=nvapi64.dll | load-status=0x%08lx | "
++        "procedure-status=0x%08lx | exception-status=0x%08lx | "
++        "initialize-result=%d\n",
++        (unsigned long)HandleToULong(
++            NtCurrentTeb()->ClientId.UniqueProcess ),
++        state,
++        (unsigned long)load_status,
++        (unsigned long)procedure_status,
++        (unsigned long)exception_status,
++        initialize_result );
++    if (record_size > 0 && (SIZE_T)record_size < sizeof(record))
++    {
++        offset.QuadPart = -1;
++        if (!NtWriteFile(
++                file, NULL, NULL, NULL, &io,
++                record, record_size, &offset, NULL ))
++            NtFlushBuffersFile( file, &io );
++    }
++    NtClose( file );
++
++done_nt_path:
++    RtlFreeUnicodeString( &nt_path );
++done:
++    RtlFreeHeap( GetProcessHeap(), 0, observation_path.Buffer );
++}
++
++
++static void forgeplay_initialize_nvapi_before_game_entry(void)
++{
++#ifdef _WIN64
++    static const unsigned int nvapi_initialize_id = 0x0150e828;
++    typedef void *(CDECL *nvapi_query_interface_fn)(unsigned int);
++    typedef int (CDECL *nvapi_initialize_fn)(void);
++    UNICODE_STRING module_name;
++    ANSI_STRING query_name;
++    nvapi_query_interface_fn query_interface = NULL;
++    nvapi_initialize_fn initialize = NULL;
++    NTSTATUS load_status, procedure_status = STATUS_PROCEDURE_NOT_FOUND;
++    NTSTATUS exception_status = STATUS_SUCCESS;
++    HMODULE module = NULL;
++    void *procedure = NULL;
++    int initialize_result = -999;
++
++    if (!forgeplay_environment_flag_is_enabled(
++            L"FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP" )) return;
++
++    RtlInitUnicodeString( &module_name, L"nvapi64.dll" );
++    load_status = LdrLoadDll( NULL, NULL, &module_name, &module );
++    if (!load_status)
++    {
++        RtlInitAnsiString( &query_name, "nvapi_QueryInterface" );
++        procedure_status = LdrGetProcedureAddress(
++            module, &query_name, 0, (void **)&query_interface );
++    }
++    if (!load_status && !procedure_status && query_interface)
++    {
++        __TRY
++        {
++            procedure = query_interface( nvapi_initialize_id );
++            if (procedure)
++            {
++                memcpy( &initialize, &procedure, sizeof(initialize) );
++                initialize_result = initialize();
++            }
++            else procedure_status = STATUS_PROCEDURE_NOT_FOUND;
++        }
++        __EXCEPT_ALL
++        {
++            exception_status = GetExceptionCode();
++        }
++        __ENDTRY
++    }
++
++    record_forgeplay_nvapi_bootstrap(
++        load_status, procedure_status,
++        exception_status, initialize_result );
++    if (load_status || procedure_status || exception_status ||
++        initialize_result)
++        WARN(
++            "ForgePlay NVAPI bootstrap failed: load %#lx, procedure %#lx, "
++            "exception %#lx, initialize %d.\n",
++            load_status, procedure_status,
++            exception_status, initialize_result );
++#endif
++}
++
++
++static void __fastcall forgeplay_thread_init_func(
++    DWORD unknown, LPTHREAD_START_ROUTINE entry, void *arg )
++{
++    if (!InterlockedCompareExchange(
++            &forgeplay_nvapi_bootstrap_state, 1, 0 ))
++    {
++        forgeplay_initialize_nvapi_before_game_entry();
++        InterlockedExchange( &forgeplay_nvapi_bootstrap_state, 2 );
++    }
++    system_BaseThreadInitThunk( unknown, entry, arg );
++}
++
++
+ /***********************************************************************
+  *	record_forgeplay_game_renderer_loader_error
+  *
+@@ -3246,7 +3397,7 @@ static BOOL forgeplay_is_renderer_module( const WCHAR *name )
+     {
+         L"d3d8.dll", L"d3d9.dll", L"d3d10.dll", L"d3d10_1.dll",
+         L"d3d10core.dll", L"d3d11.dll", L"d3d12.dll", L"d3d12core.dll",
+-        L"dxgi.dll", L"winemetal.dll", L"nvapi64.dll", L"nvngx.dll",
++        L"dxgi.dll", L"winemetal.dll", L"nvapi.dll", L"nvapi64.dll", L"nvngx.dll",
+         L"nvngx-on-metalfx.dll",
+     };
+     const WCHAR *basename = forgeplay_renderer_module_basename( name );
+@@ -4925,7 +5076,9 @@ void loader_init( CONTEXT *context, void **entry )
+             NtTerminateProcess( GetCurrentProcess(), status );
+         }
+         node_kernel32 = kernel32->ldr.DdagNode;
+-        pBaseThreadInitThunk = RtlFindExportedRoutineByName( kernel32->ldr.DllBase, "BaseThreadInitThunk" );
++        system_BaseThreadInitThunk = RtlFindExportedRoutineByName(
++            kernel32->ldr.DllBase, "BaseThreadInitThunk" );
++        pBaseThreadInitThunk = forgeplay_thread_init_func;
+         LdrGetProcedureAddress( kernel32->ldr.DllBase, &ctrl_routine, 0, (void **)&pCtrlRoutine );
+ 
+         actctx_init();
+diff --git a/dlls/ntdll/unix/process.c b/dlls/ntdll/unix/process.c
+index f30aa79..e2f5b39 100644
+--- a/dlls/ntdll/unix/process.c
++++ b/dlls/ntdll/unix/process.c
+@@ -562,6 +562,12 @@ static BOOL apply_forgeplay_steam_game_process_unix_environment(
+         "FORGEPLAY_D3DMETAL_BRIDGE",
+         "FORGEPLAY_D3DMETAL_TARGET",
+         "D3DM_WINE_UNIX_CALL",
++        "D3DM_ENABLE_METALFX",
++        "D3DM_NVNGX_PATH",
++        "D3DM_VENDOR_ID",
++        "FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP",
++        "FORGEPLAY_NETWORK_PROFILE",
++        "FORGEPLAY_AUDIO_INPUT_MODE",
+         "VK_ICD_FILENAMES",
+         "VK_DRIVER_FILES",
+         "DXVK_LOG_PATH",
+diff --git a/dlls/winecoreaudio.drv/coreaudio.c b/dlls/winecoreaudio.drv/coreaudio.c
+index c7e0dc2..fe05cbb 100644
+--- a/dlls/winecoreaudio.drv/coreaudio.c
++++ b/dlls/winecoreaudio.drv/coreaudio.c
+@@ -220,6 +220,23 @@ static NTSTATUS unix_get_endpoint_ids(void *args)
+     params->num = 0;
+     params->default_idx = 0;
+ 
++    if (params->flow == eCapture)
++    {
++        const char *input_mode = getenv("FORGEPLAY_AUDIO_INPUT_MODE");
++
++        if (input_mode && !strcmp(input_mode, "disabled"))
++        {
++            params->result = S_OK;
++            return STATUS_SUCCESS;
++        }
++        if (input_mode && strcmp(input_mode, "enabled"))
++        {
++            WARN("Unsupported ForgePlay audio input mode.\n");
++            params->result = E_INVALIDARG;
++            return STATUS_SUCCESS;
++        }
++    }
++
+     addr.mScope = kAudioObjectPropertyScopeGlobal;
+     addr.mElement = kAudioObjectPropertyElementMain;
+     if(params->flow == eRender) addr.mSelector = kAudioHardwarePropertyDefaultOutputDevice;
+diff --git a/dlls/ntdll/unix/socket.c b/dlls/ntdll/unix/socket.c
+--- a/dlls/ntdll/unix/socket.c
++++ b/dlls/ntdll/unix/socket.c
+@@ -426,16 +426,21 @@ static int convert_control_headers(struct msghdr *hdr, WSABUF *control)
+                     }
+ #endif /* IP_PKTINFO */
+-
++
++#if defined(IP_RECVTOS) && (!defined(IP_TOS) || IP_RECVTOS != IP_TOS)
++                    case IP_RECVTOS:
++#endif
+ #if defined(IP_TOS)
+                     case IP_TOS:
++#endif
++#if defined(IP_RECVTOS) || defined(IP_TOS)
+                     {
+                         INT tos = *(unsigned char *)CMSG_DATA(cmsg_unix);
+                         ptr = fill_control_message( WS_IPPROTO_IP, WS_IP_TOS, ptr, &ctlsize,
+                                                     &tos, sizeof(INT) );
+                         if (!ptr) goto error;
+                         break;
+                     }
+-#endif /* IP_TOS */
++#endif /* IP_RECVTOS || IP_TOS */
+-
++
+ #if defined(IP_TTL)
+                     case IP_TTL:

@@ -1,0 +1,98 @@
+diff --git a/dlls/winegstreamer/wg_format.c b/dlls/winegstreamer/wg_format.c
+--- a/dlls/winegstreamer/wg_format.c
++++ b/dlls/winegstreamer/wg_format.c
+@@ -643,15 +643,19 @@ void wg_format_from_caps(struct wg_format *format, const GstCaps *caps)
+     {
+         GstAudioInfo info;
+ 
+-        if (gst_audio_info_from_caps(&info, caps))
++        if (gst_caps_is_fixed(caps) && gst_audio_info_from_caps(&info, caps))
+             wg_format_from_audio_info(format, &info);
++        else
++            GST_WARNING("Unable to get audio info from non-fixed or invalid caps.");
+     }
+     else if (!strcmp(name, "video/x-raw"))
+     {
+         GstVideoInfo info;
+ 
+-        if (gst_video_info_from_caps(&info, caps))
++        if (gst_caps_is_fixed(caps) && gst_video_info_from_caps(&info, caps))
+             wg_format_from_video_info(format, &info);
++        else
++            GST_WARNING("Unable to get video info from non-fixed or invalid caps.");
+     }
+     else if (!strcmp(name, "audio/mpeg") && gst_structure_get_boolean(structure, "parsed", &parsed) && parsed)
+     {
+diff --git a/dlls/winegstreamer/wg_parser.c b/dlls/winegstreamer/wg_parser.c
+--- a/dlls/winegstreamer/wg_parser.c
++++ b/dlls/winegstreamer/wg_parser.c
+@@ -831,9 +831,38 @@ static gboolean sink_query_cb(GstPad *pad, GstObject *parent, GstQuery *query)
+             }
+ 
+             gst_query_parse_accept_caps(query, &caps);
+-            wg_format_from_caps(&format, caps);
+-            wg_format_from_caps(&current_format, stream->desired_caps);
+-            ret = wg_format_compare(&format, &current_format);
++            if (!gst_caps_is_fixed(caps))
++            {
++                GstCaps *candidate_caps = gst_caps_copy(caps);
++                GstCaps *desired_caps = gst_caps_copy(stream->desired_caps);
++                gsize i;
++
++                /*
++                 * ACCEPT_CAPS queries may describe a set of formats. Converting
++                 * those caps to one wg_format both violates the GStreamer API
++                 * contract and rejects a set that contains the requested Media
++                 * Foundation output format. Compare the sets directly; the
++                 * eventual negotiated CAPS event remains fixed and is still
++                 * converted through wg_format_from_caps().
++                 */
++                for (i = 0; i < gst_caps_get_size(candidate_caps); ++i)
++                    gst_structure_remove_fields(gst_caps_get_structure(candidate_caps, i),
++                            "framerate", "pixel-aspect-ratio", NULL);
++                for (i = 0; i < gst_caps_get_size(desired_caps); ++i)
++                    gst_structure_remove_fields(gst_caps_get_structure(desired_caps, i),
++                            "framerate", "pixel-aspect-ratio", NULL);
++
++                ret = gst_caps_can_intersect(candidate_caps, desired_caps);
++                GST_LOG("Non-fixed caps intersection result: %d.", ret);
++                gst_caps_unref(desired_caps);
++                gst_caps_unref(candidate_caps);
++            }
++            else
++            {
++                wg_format_from_caps(&format, caps);
++                wg_format_from_caps(&current_format, stream->desired_caps);
++                ret = wg_format_compare(&format, &current_format);
++            }
+ 
+             pthread_mutex_unlock(&parser->mutex);
+ 
+diff --git a/dlls/mfplat/sample.c b/dlls/mfplat/sample.c
+--- a/dlls/mfplat/sample.c
++++ b/dlls/mfplat/sample.c
+@@ -1309,6 +1309,24 @@ static HRESULT sample_allocator_get_surface_service(struct sample_allocator *al
+         }
+     }
+ 
++    if (service->d3d11_device)
++    {
++        UINT format_support = 0;
++        HRESULT format_hr;
++
++        format_hr = allocator->frame_desc.dxgi_format == DXGI_FORMAT_UNKNOWN ? E_INVALIDARG :
++                ID3D11Device_CheckFormatSupport(service->d3d11_device,
++                        allocator->frame_desc.dxgi_format, &format_support);
++        if (FAILED(format_hr) ||
++                !(format_support & D3D11_FORMAT_SUPPORT_TEXTURE2D))
++        {
++            WARN("DXGI format %#x is unavailable, using a system-memory video buffer.\n",
++                    allocator->frame_desc.dxgi_format);
++            ID3D11Device_Release(service->d3d11_device);
++            service->d3d11_device = NULL;
++        }
++    }
++
+     if (FAILED(hr))
+         memset(service, 0, sizeof(*service));
+ 

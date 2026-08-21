@@ -25,11 +25,16 @@ struct ManagedStorageLocationView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query private var settingsRecords: [AppSettingsRecord]
-    @Query(sort: \SteamGameRecord.name) private var games: [SteamGameRecord]
-    @Query(sort: \LaunchRecord.startedAt, order: .reverse) private var launchRecords: [LaunchRecord]
+    @Query private var games: [SteamGameRecord]
     @State private var isWorking = false
     @State private var isShowingFreshStartConfirmation = false
     @State private var pendingRelocation: RelocationRequest?
+
+    init() {
+        var gameDescriptor = FetchDescriptor<SteamGameRecord>()
+        gameDescriptor.fetchLimit = 1
+        _games = Query(gameDescriptor)
+    }
 
     @ViewBuilder
     var body: some View {
@@ -381,8 +386,7 @@ struct ManagedStorageLocationView: View {
                     destinationBookmark: bookmark,
                     appState: appState,
                     in: modelContext,
-                    hasSteamReferences: !games.isEmpty,
-                    launchRecords: launchRecords
+                    hasSteamReferences: !games.isEmpty
                 )
                 let successMessage = appState.localizedFormat(
                     "앱 데이터 위치를 변경했습니다: %d개 항목, %@.",
@@ -431,34 +435,6 @@ struct ManagedStorageLocationView: View {
         ) else { return }
 
         let source = selected.standardizedFileURL
-        do {
-            let containsManagedData: Bool
-            if request.kind == .current {
-                containsManagedData = try services.storageMigrationService.hasCurrentManagedStorageMarker(at: source)
-            } else {
-                containsManagedData = try services.storageMigrationService.hasManagedData(at: source)
-            }
-            guard containsManagedData else {
-                throw request.kind == .legacy
-                    ? ManagedStorageActivationError.legacyRootDoesNotContainManagedData(source)
-                    : ManagedStorageActivationError.managedRootDoesNotContainManagedData(source)
-            }
-            let bookmark = appState.bookmarkData(for: source, role: .selectedRoot)
-            guard !ForgePlaySandboxPolicy.isAppSandboxEnabled || bookmark != nil else { return }
-            let settings = try appState.loadOrCreateSettings(in: modelContext)
-            if request.kind == .current {
-                settings.selectedRootPath = source.path
-            }
-            settings.selectedRootBookmark = bookmark
-            settings.updatedAt = Date()
-            try modelContext.saveOrRollback()
-            appState.setPersistedFileSelection(source, for: .selectedRoot)
-        } catch {
-            modelContext.rollback()
-            appState.setError(error)
-            return
-        }
-
         isWorking = true
         let progressNotice = appState.setTask(appState.localized("ForgePlay 앱 데이터 접근을 복구하는 중입니다."))
         Task {
@@ -469,11 +445,36 @@ struct ManagedStorageLocationView: View {
                 }
             }
             do {
+                let containsManagedData: Bool
+                if request.kind == .current {
+                    containsManagedData = try await services.storageMigrationService
+                        .hasCurrentManagedStorageMarker(at: source)
+                } else {
+                    containsManagedData = try await services.storageMigrationService
+                        .hasManagedData(at: source)
+                }
+                guard containsManagedData else {
+                    throw request.kind == .legacy
+                        ? ManagedStorageActivationError.legacyRootDoesNotContainManagedData(source)
+                        : ManagedStorageActivationError.managedRootDoesNotContainManagedData(source)
+                }
+                let bookmark = appState.bookmarkData(for: source, role: .selectedRoot)
+                guard !ForgePlaySandboxPolicy.isAppSandboxEnabled || bookmark != nil else {
+                    return
+                }
+                let settings = try appState.loadOrCreateSettings(in: modelContext)
+                if request.kind == .current {
+                    settings.selectedRootPath = source.path
+                }
+                settings.selectedRootBookmark = bookmark
+                settings.updatedAt = Date()
+                try modelContext.saveOrRollback()
+                appState.setPersistedFileSelection(source, for: .selectedRoot)
+
                 let workflow = try await services.refreshSetupWorkflow(
                     appState: appState,
                     in: modelContext,
-                    hasSteamReferences: !games.isEmpty,
-                    launchRecords: launchRecords
+                    hasSteamReferences: !games.isEmpty
                 )
                 let message = workflow.storageActivation.didMigrateLegacyData
                     ? appState.localizedFormat(
@@ -485,6 +486,7 @@ struct ManagedStorageLocationView: View {
                 appState.setNotice(message, kind: .success)
                 dismiss()
             } catch {
+                modelContext.rollback()
                 appState.setError(error)
             }
         }
@@ -505,8 +507,7 @@ struct ManagedStorageLocationView: View {
                 let workflow = try await services.refreshSetupWorkflow(
                     appState: appState,
                     in: modelContext,
-                    hasSteamReferences: !games.isEmpty,
-                    launchRecords: launchRecords
+                    hasSteamReferences: !games.isEmpty
                 )
                 let message = workflow.storageActivation.didMigrateLegacyData
                     ? appState.localizedFormat(
@@ -538,8 +539,7 @@ struct ManagedStorageLocationView: View {
                 let workflow = try await services.migratePersistedLegacyManagedStorage(
                     appState: appState,
                     in: modelContext,
-                    hasSteamReferences: !games.isEmpty,
-                    launchRecords: launchRecords
+                    hasSteamReferences: !games.isEmpty
                 )
                 appState.setNotice(
                     appState.localizedFormat(
@@ -604,8 +604,7 @@ struct ManagedStorageLocationView: View {
                     sourceBookmark: bookmark,
                     appState: appState,
                     in: modelContext,
-                    hasSteamReferences: !games.isEmpty,
-                    launchRecords: launchRecords
+                    hasSteamReferences: !games.isEmpty
                 )
                 appState.setNotice(
                     appState.localizedFormat(

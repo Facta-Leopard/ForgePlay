@@ -97,8 +97,8 @@ enum DeveloperAppCompatibility: String, Identifiable, Hashable, Sendable {
 }
 
 struct DeveloperAppListing: Identifiable, Hashable, Sendable {
-    let appStoreID: String
-    let appStoreSlug: String
+    let appStoreID: String?
+    let appStoreSlug: String?
     let name: String
     let platform: DeveloperAppPlatform
     let kind: DeveloperAppKind
@@ -106,21 +106,137 @@ struct DeveloperAppListing: Identifiable, Hashable, Sendable {
     let supportedLanguages: [DeveloperAppLanguage]
     let compatibilities: [DeveloperAppCompatibility]
     let artworkURL: URL?
+    let artworkAssetName: String?
+    let homepageURL: URL?
+
+    init(
+        appStoreID: String?,
+        appStoreSlug: String?,
+        name: String,
+        platform: DeveloperAppPlatform,
+        kind: DeveloperAppKind,
+        summaryKey: String,
+        supportedLanguages: [DeveloperAppLanguage],
+        compatibilities: [DeveloperAppCompatibility],
+        artworkURL: URL?,
+        artworkAssetName: String? = nil,
+        homepageURL: URL? = nil
+    ) {
+        self.appStoreID = appStoreID
+        self.appStoreSlug = appStoreSlug
+        self.name = name
+        self.platform = platform
+        self.kind = kind
+        self.summaryKey = summaryKey
+        self.supportedLanguages = supportedLanguages
+        self.compatibilities = compatibilities
+        self.artworkURL = artworkURL
+        self.artworkAssetName = artworkAssetName
+        self.homepageURL = homepageURL
+    }
 
     var id: String {
-        "\(platform.rawValue)-\(appStoreID)"
+        "\(platform.rawValue)-\(appStoreID ?? name)"
     }
 
     var appStoreURL: URL? {
-        ExternalLinkPolicy.appStoreProductURL(
+        guard let appStoreID, let appStoreSlug else { return nil }
+        return ExternalLinkPolicy.appStoreProductURL(
             slug: appStoreSlug,
             appID: appStoreID
         )
     }
 }
 
+struct DeveloperProjectListing: Identifiable, Hashable, Sendable {
+    let name: String
+    let platform: DeveloperAppPlatform
+    let artworkAssetName: String
+    let summaryKey: String?
+
+    var id: String { name }
+}
+
 enum DeveloperAppCatalog {
+    // These local assets are first-party AppIcon sources from:
+    // - ForgePlay/Resources/Assets.xcassets/AppIcon.appiconset/icon_512x512@2x.png
+    // - MajorDex/App/Assets.xcassets/AppIcon.appiconset/MajorDexAppIcon-512.png
+    // - GameAppEditor/Apps/ForgeEditorApp/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon-512x512@1x.png
+    // - HareWatch/HareWatchMacApp/Resources/Assets.xcassets/AppIcon.appiconset/icon_512x512.png
+    // - WarrenNet/WarrenNet-macOS/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon-512.png
+    // - Hazel&Peanut/Trenchline/Resources/Assets.xcassets/AppIconPeanut.appiconset/AppIconPeanut-Dark.png
+    // - GrayLine/GrayLine/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon-Light-1024.png
+    // - Leporis Ascendant/Sources/LeporisAscendant/Resources/AppAssets.xcassets/AppIcon.appiconset/AppIcon-1024.png
+    // The 1024px sources are reduced to 512px for the catalog bundle.
+    // Keeping them bundled avoids external image or unreleased product URLs.
+    static let inDevelopmentListings: [DeveloperProjectListing] = [
+        DeveloperProjectListing(
+            name: "MajorDex",
+            platform: .mac,
+            artworkAssetName: "DeveloperAppMajorDex",
+            summaryKey: "선택한 프로젝트를 실행하지 않고 읽기 전용으로 분석해 구조와 실행 흐름을 시각적으로 살펴볼 수 있는 macOS 앱입니다."
+        ),
+        DeveloperProjectListing(
+            name: "ForgeKit",
+            platform: .mac,
+            artworkAssetName: "DeveloperAppForgeKit",
+            summaryKey: "Apple 플랫폼 전용 게임 엔진으로, Apple Intelligence 기반 AI를 활용해 2D·3D 게임을 제작할 수 있습니다."
+        ),
+        DeveloperProjectListing(
+            name: "HareWatch",
+            platform: .mac,
+            artworkAssetName: "DeveloperAppHareWatch",
+            summaryKey: "유틸리티"
+        ),
+        DeveloperProjectListing(
+            name: "WarrenNet",
+            platform: .mac,
+            artworkAssetName: "DeveloperAppWarrenNet",
+            summaryKey: "유틸리티"
+        ),
+        DeveloperProjectListing(
+            name: "Hazel&Peanut",
+            platform: .iPhone,
+            artworkAssetName: "DeveloperAppHazelAndPeanut",
+            summaryKey: "게임"
+        ),
+        DeveloperProjectListing(
+            name: "GrayLine",
+            platform: .iPhone,
+            artworkAssetName: "DeveloperAppGrayLine",
+            summaryKey: "게임"
+        ),
+        DeveloperProjectListing(
+            name: "Leporis Ascendant",
+            platform: .iPad,
+            artworkAssetName: "DeveloperAppLeporisAscendant",
+            summaryKey: "게임"
+        )
+    ]
+
     static let listings: [DeveloperAppListing] = [
+        DeveloperAppListing(
+            appStoreID: nil,
+            appStoreSlug: nil,
+            name: "ForgePlay",
+            platform: .mac,
+            kind: .app,
+            summaryKey: "세계최초, Apple Silicon Mac에서 Windows 게임을 맥 네이티브 게임모드로 실행하는 앱입니다.",
+            supportedLanguages: [
+                .english,
+                .korean,
+                .spanish,
+                .german,
+                .japanese,
+                .simplifiedChinese,
+                .traditionalChinese,
+                .french
+            ],
+            compatibilities: [],
+            artworkURL: nil,
+            artworkAssetName: "DeveloperAppForgePlay",
+            homepageURL: ExternalLinkPolicy.forgePlayHomepageURL
+        ),
         DeveloperAppListing(
             appStoreID: "6782226580",
             appStoreSlug: "hopdisk",
@@ -339,5 +455,11 @@ enum DeveloperAppCatalog {
 
     static func listings(for platform: DeveloperAppPlatform) -> [DeveloperAppListing] {
         listings.filter { $0.platform == platform }
+    }
+
+    static func inDevelopmentListings(
+        for platform: DeveloperAppPlatform
+    ) -> [DeveloperProjectListing] {
+        inDevelopmentListings.filter { $0.platform == platform }
     }
 }

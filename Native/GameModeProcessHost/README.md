@@ -47,8 +47,8 @@ game.
 The host:
 
 1. validates its fixed bundle and schema-3 Runtime identity;
-2. validates that its inherited parent sandbox grants the compiled App Group
-   container and fixed IPC/evidence paths;
+2. validates that its signed or inherited App Group grants the compiled
+   coordination container and fixed IPC/evidence paths;
 3. validates the inherited host contract and exact bundled loader paths;
 4. opens the coordinator's prefix lock without `FD_CLOEXEC`, verifies
    `FORGEPLAY_PREFIX_EXECUTION_LEASE_V1` prefix device/inode metadata, and holds
@@ -107,12 +107,19 @@ the host at a different app-group file that happens to contain similar
 metadata. Both that lock and the evidence file must remain owner-only `0600`
 regular files.
 
-The host code signature uses the same child contract as the bundled Wine
-executables: `app-sandbox + inherit + allow-unsigned-executable-memory +
-disable-library-validation`. It does not independently declare App Group,
-file-selection, bookmark, or network sandbox keys. Those static rights come
-from the signed parent ForgePlay app; mixing an independent sandbox profile
-with `inherit` causes macOS to abort the child before `main`.
+Sandboxed Distribution, App Store, and Debug hosts use the same child contract
+as their bundled Wine executables: `app-sandbox + inherit +
+allow-unsigned-executable-memory + disable-library-validation`. They do not
+independently declare App Group, file-selection, bookmark, or network sandbox
+keys; those static rights come from the signed parent ForgePlay app.
+
+The direct Developer ID Release host is not sandboxed and does not declare
+`inherit`. Its exact entitlements are the one ForgePlay App Group plus
+`allow-unsigned-executable-memory` and `disable-library-validation`. The direct
+profile name describes where the outer app keeps product data: the user's
+normal `~/Library/Application Support/ForgePlay`. The App Group remains a
+narrow coordination boundary for Game Mode IPC, evidence, Wine-server state,
+and prefix leases; prefixes and other product data are not moved into it.
 
 ## LaunchServices boundary
 
@@ -152,7 +159,8 @@ product type forces its generic embedded-plist switch off, so relying on that
 switch would produce a host that fails its own identity contract. The host
 compares the embedded and bundle plist identities before loading Wine.
 
-`build-game-mode-process-host.sh` requires:
+`build-game-mode-process-host.sh` produces the sandbox-inheriting profile and
+requires:
 
 - a clean schema-3 ForgePlay Wine 11.12 Runtime;
 - the corresponding validated Wine source tree;

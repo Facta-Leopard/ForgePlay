@@ -84,10 +84,17 @@ struct Redactor: Sendable {
 
     private let additionalSensitivePaths: [String]
     private let additionalSensitiveTerms: [String]
+    private let dynamicReplacements: [CompiledReplacement]?
 
     init(additionalSensitivePaths: [String] = [], additionalSensitiveTerms: [String] = []) {
-        self.additionalSensitivePaths = Self.normalizedSensitivePaths(additionalSensitivePaths)
-        self.additionalSensitiveTerms = Self.normalizedSensitiveTerms(additionalSensitiveTerms)
+        let normalizedPaths = Self.normalizedSensitivePaths(additionalSensitivePaths)
+        let normalizedTerms = Self.normalizedSensitiveTerms(additionalSensitiveTerms)
+        self.additionalSensitivePaths = normalizedPaths
+        self.additionalSensitiveTerms = normalizedTerms
+        self.dynamicReplacements = Self.makeDynamicReplacements(
+            sensitivePaths: normalizedPaths,
+            sensitiveTerms: normalizedTerms
+        )
     }
 
     func addingSensitivePaths(_ paths: [String]) -> Redactor {
@@ -106,47 +113,14 @@ struct Redactor: Sendable {
 
     func redact(_ text: String) -> String {
         var output = text
-        var dynamicReplacements: [(pattern: String, value: String)] = []
-
-        // Exact user-selected paths must be removed before broad /Users and
-        // /Volumes rules rewrite their prefixes and make the exact value
-        // impossible to match.
-        for path in additionalSensitivePaths {
-            dynamicReplacements.append((NSRegularExpression.escapedPattern(for: path), "[REDACTED_PATH]"))
+        guard let dynamicReplacements else {
+            return "[REDACTION_FAILED]"
         }
-        for term in additionalSensitiveTerms {
-            dynamicReplacements.append((NSRegularExpression.escapedPattern(for: term), "[REDACTED_VALUE]"))
-        }
-        let home = NSHomeDirectory()
-        if !home.isEmpty {
-            dynamicReplacements.append((NSRegularExpression.escapedPattern(for: home), "[HOME]"))
-        }
-        let userName = NSUserName()
-        if !userName.isEmpty {
-            dynamicReplacements.append((#"(?i)/users/\#(NSRegularExpression.escapedPattern(for: userName))"#, "/Users/[USER]"))
-            dynamicReplacements.append((#"(?i)c:\\users\\\#(NSRegularExpression.escapedPattern(for: userName))"#, #"C:\Users\[USER]"#))
-            if userName.count >= 3 {
-                let escapedUserName = NSRegularExpression.escapedPattern(for: userName)
-                dynamicReplacements.append((
-                    #"(?<![A-Za-z0-9_.-])\#(escapedUserName)(?![A-Za-z0-9_.-])"#,
-                    "[USER]"
-                ))
-            }
-        }
-
         for replacement in dynamicReplacements {
-            guard let expression = try? NSRegularExpression(
-                pattern: replacement.pattern,
-                options: [.caseInsensitive]
-            ) else {
-                // Redaction must fail closed. Returning partially redacted text
-                // would risk exposing a user-selected path or account value.
-                return "[REDACTION_FAILED]"
-            }
-            output = expression.stringByReplacingMatches(
+            output = replacement.expression.stringByReplacingMatches(
                 in: output,
                 range: NSRange(output.startIndex..<output.endIndex, in: output),
-                withTemplate: NSRegularExpression.escapedTemplate(for: replacement.value)
+                withTemplate: replacement.value
             )
         }
 
@@ -161,6 +135,68 @@ struct Redactor: Sendable {
             )
         }
         return output
+    }
+
+    private static func makeDynamicReplacements(
+        sensitivePaths: [String],
+        sensitiveTerms: [String]
+    ) -> [CompiledReplacement]? {
+        var replacements: [(pattern: String, value: String)] = []
+
+        // Exact user-selected paths must be removed before broad /Users and
+        // /Volumes rules rewrite their prefixes and make the exact value
+        // impossible to match. Compile this immutable policy once per Redactor
+        // instead of once per support-bundle artifact.
+        for path in sensitivePaths {
+            replacements.append((
+                NSRegularExpression.escapedPattern(for: path),
+                "[REDACTED_PATH]"
+            ))
+        }
+        for term in sensitiveTerms {
+            replacements.append((
+                NSRegularExpression.escapedPattern(for: term),
+                "[REDACTED_VALUE]"
+            ))
+        }
+        let home = NSHomeDirectory()
+        if !home.isEmpty {
+            replacements.append((
+                NSRegularExpression.escapedPattern(for: home),
+                "[HOME]"
+            ))
+        }
+        let userName = NSUserName()
+        if !userName.isEmpty {
+            let escapedUserName = NSRegularExpression.escapedPattern(for: userName)
+            replacements.append((
+                #"(?i)/users/\#(escapedUserName)"#,
+                "/Users/[USER]"
+            ))
+            replacements.append((
+                #"(?i)c:\\users\\\#(escapedUserName)"#,
+                #"C:\Users\[USER]"#
+            ))
+            if userName.count >= 3 {
+                replacements.append((
+                    #"(?<![A-Za-z0-9_.-])\#(escapedUserName)(?![A-Za-z0-9_.-])"#,
+                    "[USER]"
+                ))
+            }
+        }
+
+        do {
+            return try replacements.map { replacement in
+                try CompiledReplacement(
+                    replacement.pattern,
+                    NSRegularExpression.escapedTemplate(for: replacement.value)
+                )
+            }
+        } catch {
+            // Redaction must fail closed. A malformed dynamic policy must never
+            // fall back to partially redacted output.
+            return nil
+        }
     }
 
     private static let baseReplacements: [CompiledReplacement]? = try? [

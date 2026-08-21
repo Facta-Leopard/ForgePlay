@@ -1,1 +1,2 @@
 "NSBluetoothAlwaysUsageDescription" = "ForgePlayは、Windowsゲームコントローラに接続するためにBluetoothへのアクセスを使用します。";
+"NSMicrophoneUsageDescription" = "ForgePlayは、Steamセッションでオーディオ入力を有効にした場合に、Windowsゲームとボイスチャットへマイク入力を提供するためにアクセス権を使用します。";

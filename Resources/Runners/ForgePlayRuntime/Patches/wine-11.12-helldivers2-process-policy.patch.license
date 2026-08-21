@@ -1,0 +1,6 @@
+SPDX-License-Identifier: LGPL-2.1-or-later
+Component: ForgePlay Helldivers 2 Wine process policy
+Authorship: ForgePlay project
+Classification: ForgePlay-authored approved-derivative Wine modification
+Boundary: This artifact contains only ForgePlay-owned canonical-root, lineage, heap-scope transport, and GameGuard renderer-scrubbing policy. It does not contain or claim authorship of the Valve-derived ntdll heap adapter.
+License text: ../Legal/Wine/COPYING.LIB

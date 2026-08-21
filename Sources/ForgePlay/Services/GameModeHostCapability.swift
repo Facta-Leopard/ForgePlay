@@ -17,6 +17,11 @@ struct GameModeHostCapability: Hashable, Sendable {
     let isRosettaRuntimeComponent: Bool
 }
 
+enum GameModeHostSigningProfile: String, Hashable, Sendable {
+    case sandboxAppGroup = "sandbox-app-group"
+    case directUserDomain = "direct-user-domain"
+}
+
 struct GameModeSteamChildHostSelection: Hashable, Sendable {
     let host: GameModeHostCapability
     let runtimeNtdllURL: URL
@@ -30,7 +35,10 @@ enum SteamGameModeLaunchPolicy: String, Hashable, Sendable {
     case experimentalRequiredHost
 }
 
-enum GameModeHostCapabilityError: LocalizedError, Equatable {
+enum GameModeHostCapabilityError:
+    LocalizedError,
+    ForgePlayTechnicalDescribingError,
+    Equatable {
     case appMissing(URL)
     case unsafeAppBundle(URL)
     case infoPlistMissing(URL)
@@ -45,6 +53,7 @@ enum GameModeHostCapabilityError: LocalizedError, Equatable {
     case executableArchitectureUnsupported(URL)
     case signatureInvalid(URL)
     case sandboxInheritanceContractInvalid(URL, String)
+    case directUserDomainContractInvalid(URL, String)
     case executableReadFailed(URL, String)
     case applicationGroupRequired
     case runtimeLayoutUnsupported(URL)
@@ -68,6 +77,7 @@ enum GameModeHostCapabilityError: LocalizedError, Equatable {
         case .executableArchitectureUnsupported: "host-architecture-unsupported"
         case .signatureInvalid: "host-signature-invalid"
         case .sandboxInheritanceContractInvalid: "host-sandbox-inheritance-invalid"
+        case .directUserDomainContractInvalid: "host-direct-user-domain-invalid"
         case .executableReadFailed: "host-executable-unreadable"
         case .applicationGroupRequired: "host-application-group-required"
         case .runtimeLayoutUnsupported: "runtime-layout-unsupported"
@@ -107,10 +117,12 @@ enum GameModeHostCapabilityError: LocalizedError, Equatable {
             "Game Mode 프로세스 호스트의 코드 서명을 검증하지 못했습니다: \(url.path)"
         case .sandboxInheritanceContractInvalid(let url, let reason):
             "Game Mode 프로세스 호스트의 샌드박스 상속 서명이 올바르지 않습니다: \(url.path). \(reason)"
+        case .directUserDomainContractInvalid(let url, let reason):
+            "Game Mode 프로세스 호스트의 직접 실행 서명이 올바르지 않습니다: \(url.path). \(reason)"
         case .executableReadFailed(let url, let message):
             "Game Mode 프로세스 호스트를 읽지 못했습니다: \(url.path). \(message)"
         case .applicationGroupRequired:
-            "Game Mode 프로세스 호스트는 서명된 ForgePlay App Group이 있는 샌드박스 배포에서만 사용할 수 있습니다."
+            "Game Mode 프로세스 호스트는 서명된 ForgePlay App Group이 있는 빌드에서만 사용할 수 있습니다."
         case .runtimeLayoutUnsupported(let url):
             "Game Mode 프로세스 호스트와 연결할 ForgePlay Runtime 구조가 아닙니다: \(url.path)"
         case .runtimeNtdllMissing(let url):
@@ -125,6 +137,15 @@ enum GameModeHostCapabilityError: LocalizedError, Equatable {
             }
         }
     }
+
+    var forgePlayTechnicalDescription: String {
+        guard let detail = errorDescription?.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        ), !detail.isEmpty else {
+            return diagnosticCode
+        }
+        return "\(diagnosticCode): \(detail)"
+    }
 }
 
 struct GameModeHostCapabilityInspector {
@@ -134,20 +155,29 @@ struct GameModeHostCapabilityInspector {
 
     private let fileManager: FileManager
     private let signatureValidator: @Sendable (URL) -> Bool
-    private let sandboxInheritanceValidator: @Sendable (URL) -> String?
+    private let signingProfileValidator:
+        @Sendable (URL, GameModeHostSigningProfile, String?) -> String?
 
     init(
         fileManager: FileManager = .default,
         signatureValidator: @escaping @Sendable (URL) -> Bool = {
             GameModeHostCapabilityInspector.validateCodeSignature($0)
         },
-        sandboxInheritanceValidator: @escaping @Sendable (URL) -> String? = {
-            GameModeHostCapabilityInspector.sandboxInheritanceViolation($0)
+        signingProfileValidator: @escaping @Sendable (
+            URL,
+            GameModeHostSigningProfile,
+            String?
+        ) -> String? = {
+            GameModeHostCapabilityInspector.signingProfileViolation(
+                at: $0,
+                profile: $1,
+                applicationGroupIdentifier: $2
+            )
         }
     ) {
         self.fileManager = fileManager
         self.signatureValidator = signatureValidator
-        self.sandboxInheritanceValidator = sandboxInheritanceValidator
+        self.signingProfileValidator = signingProfileValidator
     }
 
     nonisolated static func bundledHostAppURL(mainBundleURL: URL = Bundle.main.bundleURL) -> URL {
@@ -169,7 +199,9 @@ struct GameModeHostCapabilityInspector {
 
     func inspectBundledHost(
         mainBundleURL: URL = Bundle.main.bundleURL,
-        mainBundleIdentifier: String? = Bundle.main.bundleIdentifier
+        mainBundleIdentifier: String? = Bundle.main.bundleIdentifier,
+        signingProfile: GameModeHostSigningProfile = .sandboxAppGroup,
+        applicationGroupIdentifier: String? = nil
     ) throws -> GameModeHostCapability {
         guard let expectedBundleIdentifier = Self.expectedBundleIdentifier(
             mainBundleIdentifier: mainBundleIdentifier
@@ -182,14 +214,46 @@ struct GameModeHostCapabilityInspector {
         return try inspect(
             appURL: Self.bundledHostAppURL(mainBundleURL: mainBundleURL),
             expectedBundleIdentifier: expectedBundleIdentifier,
-            expectedContainerURL: mainBundleURL.appending(path: "Contents/Helpers", directoryHint: .isDirectory)
+            expectedContainerURL: mainBundleURL.appending(path: "Contents/Helpers", directoryHint: .isDirectory),
+            signingProfile: signingProfile,
+            applicationGroupIdentifier: applicationGroupIdentifier
+        )
+    }
+
+    /// Performs only immutable host-artifact admission. This deliberately
+    /// avoids runtime, prefix-lock, and coordination-storage preparation so a
+    /// mis-signed distribution can be rejected before SteamShared is mutated.
+    func inspectBundledHostForSteamLaunchAdmission(
+        mainBundleURL: URL = Bundle.main.bundleURL,
+        mainBundleIdentifier: String? = Bundle.main.bundleIdentifier,
+        sandboxEnabled: Bool = ForgePlaySandboxPolicy.isAppSandboxEnabled,
+        primaryApplicationGroupIdentifier: String? =
+            ForgePlaySandboxPolicy.primaryApplicationGroupIdentifier
+    ) throws -> GameModeHostCapability {
+        let applicationGroupIdentifier = primaryApplicationGroupIdentifier?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let applicationGroupIdentifier,
+              !applicationGroupIdentifier.isEmpty,
+              !applicationGroupIdentifier.contains("$(") else {
+            throw GameModeHostCapabilityError.applicationGroupRequired
+        }
+        let signingProfile: GameModeHostSigningProfile = sandboxEnabled
+            ? .sandboxAppGroup
+            : .directUserDomain
+        return try inspectBundledHost(
+            mainBundleURL: mainBundleURL,
+            mainBundleIdentifier: mainBundleIdentifier,
+            signingProfile: signingProfile,
+            applicationGroupIdentifier: applicationGroupIdentifier
         )
     }
 
     func inspect(
         appURL: URL,
         expectedBundleIdentifier: String,
-        expectedContainerURL: URL? = nil
+        expectedContainerURL: URL? = nil,
+        signingProfile: GameModeHostSigningProfile = .sandboxAppGroup,
+        applicationGroupIdentifier: String? = nil
     ) throws -> GameModeHostCapability {
         let appURL = appURL.standardizedFileURL
         var isDirectory: ObjCBool = false
@@ -288,11 +352,23 @@ struct GameModeHostCapabilityInspector {
         guard signatureValidator(appURL) else {
             throw GameModeHostCapabilityError.signatureInvalid(appURL)
         }
-        if let violation = sandboxInheritanceValidator(appURL) {
-            throw GameModeHostCapabilityError.sandboxInheritanceContractInvalid(
-                appURL,
-                violation
-            )
+        if let violation = signingProfileValidator(
+            appURL,
+            signingProfile,
+            applicationGroupIdentifier
+        ) {
+            switch signingProfile {
+            case .sandboxAppGroup:
+                throw GameModeHostCapabilityError.sandboxInheritanceContractInvalid(
+                    appURL,
+                    violation
+                )
+            case .directUserDomain:
+                throw GameModeHostCapabilityError.directUserDomainContractInvalid(
+                    appURL,
+                    violation
+                )
+            }
         }
 
         let digest = SHA256.hash(data: executableData)
@@ -316,11 +392,7 @@ struct GameModeHostCapabilityInspector {
         mainBundleURL: URL = Bundle.main.bundleURL,
         mainBundleIdentifier: String? = Bundle.main.bundleIdentifier
     ) throws -> GameModeSteamChildHostSelection {
-        guard ForgePlaySandboxPolicy.isAppSandboxEnabled,
-              ForgePlaySandboxPolicy.primaryApplicationGroupIdentifier != nil else {
-            throw GameModeHostCapabilityError.applicationGroupRequired
-        }
-        let host = try inspectBundledHost(
+        let host = try inspectBundledHostForSteamLaunchAdmission(
             mainBundleURL: mainBundleURL,
             mainBundleIdentifier: mainBundleIdentifier
         )
@@ -416,13 +488,16 @@ struct GameModeHostCapabilityInspector {
         ) == errSecSuccess
     }
 
-    /// App Sandbox inheritance children may not combine `inherit` with their
-    /// own App Group, file, or network sandbox profile. macOS rejects that
-    /// mixed contract in secinit before `main`, which would make Wine report a
-    /// generic child-process startup failure. Keep this preflight in the
-    /// launcher so an incorrectly signed required host is never selected.
-    private nonisolated static func sandboxInheritanceViolation(
-        _ appURL: URL
+    /// Validates one of the two intentionally disjoint host signatures. A
+    /// sandbox host inherits the main app's profile, while a direct Release
+    /// host receives exactly one shared App Group plus the two hardened-runtime
+    /// exceptions required by Wine. Keeping both contracts exact prevents an
+    /// accidentally mixed sandbox/direct host from reaching secinit or the
+    /// Wine bootstrap path.
+    private nonisolated static func signingProfileViolation(
+        at appURL: URL,
+        profile: GameModeHostSigningProfile,
+        applicationGroupIdentifier: String?
     ) -> String? {
         var staticCode: SecStaticCode?
         guard SecStaticCodeCreateWithPath(
@@ -445,18 +520,51 @@ struct GameModeHostCapabilityInspector {
             return "signed entitlement dictionary is unavailable"
         }
 
-        let requiredKeys: Set<String> = [
-            "com.apple.security.app-sandbox",
-            "com.apple.security.inherit",
-            "com.apple.security.cs.allow-unsigned-executable-memory",
-            "com.apple.security.cs.disable-library-validation"
-        ]
-        for key in requiredKeys where entitlements[key] as? Bool != true {
+        return signingProfileViolation(
+            in: entitlements,
+            profile: profile,
+            applicationGroupIdentifier: applicationGroupIdentifier
+        )
+    }
+
+    nonisolated static func signingProfileViolation(
+        in entitlements: [String: Any],
+        profile: GameModeHostSigningProfile,
+        applicationGroupIdentifier: String? = nil
+    ) -> String? {
+        let requiredKeys: Set<String>
+        switch profile {
+        case .sandboxAppGroup:
+            requiredKeys = [
+                "com.apple.security.app-sandbox",
+                "com.apple.security.inherit",
+                "com.apple.security.cs.allow-unsigned-executable-memory",
+                "com.apple.security.cs.disable-library-validation"
+            ]
+        case .directUserDomain:
+            requiredKeys = [
+                "com.apple.security.application-groups",
+                "com.apple.security.cs.allow-unsigned-executable-memory",
+                "com.apple.security.cs.disable-library-validation"
+            ]
+        }
+        let booleanRequiredKeys = requiredKeys.subtracting([
+            "com.apple.security.application-groups"
+        ])
+        for key in booleanRequiredKeys where entitlements[key] as? Bool != true {
             return "required entitlement is missing: \(key)"
+        }
+        if profile == .directUserDomain {
+            guard let applicationGroupIdentifier,
+                  entitlements["com.apple.security.application-groups"] as? [String] == [
+                    applicationGroupIdentifier
+                  ] else {
+                return "required entitlement does not match: com.apple.security.application-groups"
+            }
         }
         let unexpectedKeys = Set(entitlements.keys).subtracting(requiredKeys)
         guard unexpectedKeys.isEmpty else {
-            return "independent entitlement is forbidden for an inheritance child: " +
+            return "entitlement is forbidden for \(profile.rawValue): " +
                 unexpectedKeys.sorted().joined(separator: ",")
         }
         return nil
@@ -468,19 +576,21 @@ enum GameModeHostCoordinationPaths {
     nonisolated static let evidenceFileName = "GameModeProcessHost-v1.jsonl"
 
     nonisolated static func existingEvidenceDirectoryURL(
-        fileManager: FileManager = .default
+        fileManager: FileManager = .default,
+        primaryApplicationGroupIdentifier: String? =
+            ForgePlaySandboxPolicy.primaryApplicationGroupIdentifier,
+        applicationGroupContainerResolver: ((String) -> URL?)? = nil
     ) -> URL? {
-        guard ForgePlaySandboxPolicy.isAppSandboxEnabled,
-              let applicationGroupIdentifier = ForgePlaySandboxPolicy.primaryApplicationGroupIdentifier,
-              let groupContainer = fileManager.containerURL(
-                forSecurityApplicationGroupIdentifier: applicationGroupIdentifier
-              ) else {
+        guard let applicationGroupIdentifier = validApplicationGroupIdentifier(
+            primaryApplicationGroupIdentifier
+        ), let groupContainer = resolveApplicationGroupContainer(
+            identifier: applicationGroupIdentifier,
+            fileManager: fileManager,
+            resolver: applicationGroupContainerResolver
+        ) else {
             return nil
         }
-        let directory = groupContainer
-            .appending(path: "Library/Application Support/ForgePlay", directoryHint: .isDirectory)
-            .appending(path: evidenceDirectoryName, directoryHint: .isDirectory)
-            .standardizedFileURL
+        let directory = evidenceDirectoryURL(groupContainer: groupContainer)
         return FileSystemItemPolicy.isNonSymlinkDirectory(directory, fileManager: fileManager)
             ? directory
             : nil
@@ -488,28 +598,33 @@ enum GameModeHostCoordinationPaths {
 
     nonisolated static func evidenceLogURL(
         fallbackLogURL: URL,
-        fileManager: FileManager = .default
+        fileManager: FileManager = .default,
+        primaryApplicationGroupIdentifier: String? =
+            ForgePlaySandboxPolicy.primaryApplicationGroupIdentifier,
+        applicationGroupContainerResolver: ((String) -> URL?)? = nil
     ) throws -> URL {
-        guard ForgePlaySandboxPolicy.isAppSandboxEnabled else {
-            return fallbackLogURL.standardizedFileURL
-        }
-        guard let applicationGroupIdentifier = ForgePlaySandboxPolicy.primaryApplicationGroupIdentifier,
-              let groupContainer = fileManager.containerURL(
-                forSecurityApplicationGroupIdentifier: applicationGroupIdentifier
-              ) else {
+        guard let applicationGroupIdentifier = validApplicationGroupIdentifier(
+            primaryApplicationGroupIdentifier
+        ), let groupContainer = resolveApplicationGroupContainer(
+            identifier: applicationGroupIdentifier,
+            fileManager: fileManager,
+            resolver: applicationGroupContainerResolver
+        ) else {
             throw GameModeHostCapabilityError.coordinationStorageUnavailable(
                 nil,
                 "signed App Group container is unavailable"
             )
         }
-        let directory = groupContainer
-            .appending(path: "Library/Application Support/ForgePlay", directoryHint: .isDirectory)
-            .appending(path: evidenceDirectoryName, directoryHint: .isDirectory)
-            .standardizedFileURL
+        let directory = evidenceDirectoryURL(groupContainer: groupContainer)
+        let trustedAncestor = groupContainer.standardizedFileURL
+        // Game Mode coordination is always confined to the signed App Group.
+        // The fallback remains an input only for call-site compatibility and
+        // is never an admissible native-host evidence destination.
+        _ = fallbackLogURL
         do {
             try FileSystemItemPolicy.prepareOwnedDirectoryTree(
                 directory,
-                trustedAncestor: groupContainer,
+                trustedAncestor: trustedAncestor,
                 privateTailComponentCount: 1
             )
             guard FileSystemItemPolicy.isNonSymlinkDirectory(
@@ -535,6 +650,42 @@ enum GameModeHostCoordinationPaths {
                 forgePlayTechnicalErrorSummary(error)
             )
         }
+    }
+
+    private nonisolated static func validApplicationGroupIdentifier(
+        _ value: String?
+    ) -> String? {
+        guard let identifier = value?.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        ), !identifier.isEmpty, !identifier.contains("$(") else {
+            return nil
+        }
+        return identifier
+    }
+
+    private nonisolated static func resolveApplicationGroupContainer(
+        identifier: String,
+        fileManager: FileManager,
+        resolver: ((String) -> URL?)?
+    ) -> URL? {
+        if let resolver {
+            return resolver(identifier)?.standardizedFileURL
+        }
+        return fileManager.containerURL(
+            forSecurityApplicationGroupIdentifier: identifier
+        )?.standardizedFileURL
+    }
+
+    private nonisolated static func evidenceDirectoryURL(
+        groupContainer: URL
+    ) -> URL {
+        groupContainer
+            .appending(
+                path: "Library/Application Support/ForgePlay",
+                directoryHint: .isDirectory
+            )
+            .appending(path: evidenceDirectoryName, directoryHint: .isDirectory)
+            .standardizedFileURL
     }
 }
 

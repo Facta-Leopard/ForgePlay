@@ -17,13 +17,18 @@ final class SetupResetService {
         var selectedRootURL: URL?
         var runtimeExecutableURL: URL?
         var steamInstallerURL: URL?
-        var selectedSteamReference: SteamGameRecord?
+        var selectedSteamReference: SteamGame?
         var activeDiagnostics: [DiagnosticResult]
         var latestChecks: [SystemCheckResult]
         var setupReadiness: SetupReadiness
         var setupStage: SetupStage
         var selectedSection: AppSection
         var presentedSheet: SheetDestination?
+    }
+
+    private enum WorkflowRecordDeletionStrategy {
+        case immediateBatch
+        case deferredRollbackCapable
     }
 
     init(
@@ -67,7 +72,8 @@ final class SetupResetService {
 
             let deletedRecords = try deleteWorkflowRecords(
                 in: context,
-                preservesSteamStorageMounts: true
+                preservesSteamStorageMounts: true,
+                strategy: .immediateBatch
             )
             settings.updatedAt = Date()
             try context.saveOrRollback()
@@ -86,7 +92,7 @@ final class SetupResetService {
     func startFreshWithDefaultManagedStorage(
         appState: AppState,
         in context: ModelContext
-    ) throws -> SetupResetResult {
+    ) async throws -> SetupResetResult {
         let snapshot = workflowStateSnapshot(appState)
         do {
             let settings = try appState.loadOrCreateSettings(in: context)
@@ -98,7 +104,7 @@ final class SetupResetService {
             let defaultManagedRoot = try defaultManagedRootURL().standardizedFileURL
 
             try pathManager.configureRoot(defaultManagedRoot)
-            try storageMigrationService.ensureManagedStorageMarker(
+            try await storageMigrationService.ensureManagedStorageMarker(
                 at: defaultManagedRoot,
                 migratedFrom: nil
             )
@@ -118,7 +124,8 @@ final class SetupResetService {
 
             let deletedRecords = try deleteWorkflowRecords(
                 in: context,
-                preservesSteamStorageMounts: true
+                preservesSteamStorageMounts: true,
+                strategy: .immediateBatch
             )
             settings.updatedAt = Date()
             try context.saveOrRollback()
@@ -161,7 +168,10 @@ final class SetupResetService {
             clearTransientWorkflowState(appState)
             let deletedRecords = try deleteWorkflowRecords(
                 in: context,
-                preservesSteamStorageMounts: false
+                preservesSteamStorageMounts: false,
+                strategy: saveImmediately
+                    ? .immediateBatch
+                    : .deferredRollbackCapable
             )
             settings.updatedAt = Date()
             if saveImmediately {
@@ -263,26 +273,48 @@ final class SetupResetService {
 
     private func deleteWorkflowRecords(
         in context: ModelContext,
-        preservesSteamStorageMounts: Bool
+        preservesSteamStorageMounts: Bool,
+        strategy: WorkflowRecordDeletionStrategy
     ) throws -> Int {
         var deletedRecords = 0
-        deletedRecords += try deleteRecords(PrefixRecord.self, in: context)
-        deletedRecords += try deleteRecords(RuntimeRecord.self, in: context)
-        deletedRecords += try deleteRecords(SteamGameRecord.self, in: context)
+        deletedRecords += try deleteRecords(PrefixRecord.self, in: context, strategy: strategy)
+        deletedRecords += try deleteRecords(RuntimeRecord.self, in: context, strategy: strategy)
+        deletedRecords += try deleteRecords(SteamGameRecord.self, in: context, strategy: strategy)
         if !preservesSteamStorageMounts {
-            deletedRecords += try deleteRecords(SteamStorageMountRecord.self, in: context)
+            deletedRecords += try deleteRecords(
+                SteamStorageMountRecord.self,
+                in: context,
+                strategy: strategy
+            )
         }
-        deletedRecords += try deleteRecords(LaunchRecord.self, in: context)
-        deletedRecords += try deleteRecords(DiagnosticRecord.self, in: context)
-        deletedRecords += try deleteRecords(AutoFixRecord.self, in: context)
+        deletedRecords += try deleteRecords(LaunchRecord.self, in: context, strategy: strategy)
+        deletedRecords += try deleteRecords(DiagnosticRecord.self, in: context, strategy: strategy)
+        deletedRecords += try deleteRecords(AutoFixRecord.self, in: context, strategy: strategy)
         return deletedRecords
     }
 
-    private func deleteRecords<T: PersistentModel>(_ type: T.Type, in context: ModelContext) throws -> Int {
-        let records = try context.fetch(FetchDescriptor<T>())
-        for record in records {
-            context.delete(record)
+    private func deleteRecords<T: PersistentModel>(
+        _ type: T.Type,
+        in context: ModelContext,
+        strategy: WorkflowRecordDeletionStrategy
+    ) throws -> Int {
+        switch strategy {
+        case .immediateBatch:
+            let count = try context.fetchCount(FetchDescriptor<T>())
+            guard count > 0 else { return 0 }
+            // Normal product resets commit immediately and may include years
+            // of history, so keep that path on SwiftData's batch deletion.
+            try context.delete(model: type)
+            return count
+        case .deferredRollbackCapable:
+            // SwiftData batch deletion is not restored by ModelContext.rollback().
+            // A caller that explicitly defers the save therefore needs tracked
+            // per-model deletes so its transaction remains genuinely reversible.
+            let records = try context.fetch(FetchDescriptor<T>())
+            for record in records {
+                context.delete(record)
+            }
+            return records.count
         }
-        return records.count
     }
 }

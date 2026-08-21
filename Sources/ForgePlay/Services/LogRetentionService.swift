@@ -1,7 +1,7 @@
 import Darwin
 import Foundation
 
-struct LogCleanupResult: Hashable {
+struct LogCleanupResult: Hashable, Sendable {
     var removedFiles: Int
     var freedBytes: Int64
 }
@@ -10,6 +10,141 @@ private struct LogRetentionRoots: Sendable {
     var managedRoot: URL
     var logsRoot: URL
     var launchLogs: URL
+}
+
+private struct LogRetentionDirectoryIdentity: Equatable, Sendable {
+    var device: UInt64
+    var inode: UInt64
+}
+
+private struct LogRetentionDirectoryBinding: Sendable {
+    var url: URL
+    var descriptor: Int32
+    var identity: LogRetentionDirectoryIdentity
+}
+
+/// Serializes log deletion with every other managed-root mutation and binds
+/// the cleanup to the exact directory objects captured after the lock was
+/// acquired. Keeping descriptors open is intentional: a relocation can rename
+/// a directory without invalidating an already-open descriptor, so each
+/// destructive checkpoint also compares that descriptor with the current path.
+final class LogRetentionRootMutationLease: @unchecked Sendable {
+    private let operationLease: ManagedRootOperationLease
+    private let bindings: [LogRetentionDirectoryBinding]
+
+    private init(
+        operationLease: ManagedRootOperationLease,
+        bindings: [LogRetentionDirectoryBinding]
+    ) {
+        self.operationLease = operationLease
+        self.bindings = bindings
+    }
+
+    deinit {
+        bindings.forEach { _ = Darwin.close($0.descriptor) }
+        operationLease.release()
+    }
+
+    nonisolated static func acquire(
+        managedRoot: URL,
+        logsRoot: URL,
+        launchLogs: URL
+    ) throws -> LogRetentionRootMutationLease {
+        let operationLease = try ManagedRootOperationLease.acquireExclusive(
+            forManagedRoot: managedRoot
+        )
+        do {
+            let bindings = try captureBindings(for: [
+                managedRoot,
+                logsRoot,
+                launchLogs
+            ])
+            let lease = LogRetentionRootMutationLease(
+                operationLease: operationLease,
+                bindings: bindings
+            )
+            try lease.validateBinding()
+            return lease
+        } catch {
+            operationLease.release()
+            throw error
+        }
+    }
+
+    nonisolated func validateBinding() throws {
+        for binding in bindings {
+            var descriptorStatus = stat()
+            var pathStatus = stat()
+            let didReadDescriptor = Darwin.fstat(
+                binding.descriptor,
+                &descriptorStatus
+            ) == 0
+            let didReadPath = binding.url.path.withCString {
+                Darwin.lstat($0, &pathStatus)
+            } == 0
+            guard didReadDescriptor,
+                  didReadPath,
+                  (descriptorStatus.st_mode & S_IFMT) == S_IFDIR,
+                  (pathStatus.st_mode & S_IFMT) == S_IFDIR,
+                  Self.directoryIdentity(for: descriptorStatus) == binding.identity,
+                  Self.directoryIdentity(for: pathStatus) == binding.identity else {
+                throw LogRetentionServiceError.scanFailed(
+                    binding.url,
+                    CocoaError(.fileReadUnknown)
+                )
+            }
+        }
+    }
+
+    private nonisolated static func captureBindings(
+        for urls: [URL]
+    ) throws -> [LogRetentionDirectoryBinding] {
+        var bindings: [LogRetentionDirectoryBinding] = []
+        do {
+            for url in urls.map(\.standardizedFileURL) {
+                let descriptor = Darwin.open(
+                    url.path,
+                    O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW
+                )
+                guard descriptor >= 0 else {
+                    throw LogRetentionServiceError.scanFailed(
+                        url,
+                        POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+                    )
+                }
+                var status = stat()
+                guard Darwin.fstat(descriptor, &status) == 0,
+                      (status.st_mode & S_IFMT) == S_IFDIR else {
+                    let failure = errno
+                    _ = Darwin.close(descriptor)
+                    throw LogRetentionServiceError.scanFailed(
+                        url,
+                        POSIXError(POSIXErrorCode(rawValue: failure) ?? .EIO)
+                    )
+                }
+                bindings.append(
+                    LogRetentionDirectoryBinding(
+                        url: url,
+                        descriptor: descriptor,
+                        identity: directoryIdentity(for: status)
+                    )
+                )
+            }
+            return bindings
+        } catch {
+            bindings.forEach { _ = Darwin.close($0.descriptor) }
+            throw error
+        }
+    }
+
+    private nonisolated static func directoryIdentity(
+        for status: stat
+    ) -> LogRetentionDirectoryIdentity {
+        LogRetentionDirectoryIdentity(
+            device: UInt64(status.st_dev),
+            inode: UInt64(status.st_ino)
+        )
+    }
 }
 
 private struct LaunchLogArtifact {
@@ -114,6 +249,7 @@ private struct LaunchGroupDisjointSet {
 enum LogRetentionServiceError: LocalizedError {
     case scanFailed(URL, Error)
     case metadataReadFailed(URL, Error)
+    case cleanupInProgress
 
     var errorDescription: String? {
         switch self {
@@ -121,40 +257,116 @@ enum LogRetentionServiceError: LocalizedError {
             "로그 폴더를 검사하지 못했습니다: \(url.path). \(forgePlayTechnicalErrorSummary(error))"
         case .metadataReadFailed(let url, let error):
             "로그 파일 정보를 읽지 못했습니다: \(url.path). \(forgePlayTechnicalErrorSummary(error))"
+        case .cleanupInProgress:
+            "로그 정리가 이미 진행 중입니다. 완료된 뒤 다시 시도하세요."
         }
     }
 }
 
 @MainActor
 final class LogRetentionService {
+    typealias BackgroundCleanupOperation = @Sendable (
+        _ managedRoot: URL,
+        _ logsRoot: URL,
+        _ launchLogs: URL,
+        _ retentionDays: Int,
+        _ launchLogLimit: Int,
+        _ rootMutationLease: LogRetentionRootMutationLease
+    ) throws -> LogCleanupResult
+
+    private struct ActiveCleanup {
+        let identifier: UUID
+        let task: Task<LogCleanupResult, Error>
+    }
+
     private let pathManager: PathManager
+    private let backgroundCleanupOperation: BackgroundCleanupOperation
+    private var activeCleanup: ActiveCleanup?
 
     init(pathManager: PathManager) {
         self.pathManager = pathManager
+        self.backgroundCleanupOperation = {
+            managedRoot,
+            logsRoot,
+            launchLogs,
+            retentionDays,
+            launchLogLimit,
+            rootMutationLease in
+            try LogRetentionWorker.cleanup(
+                managedRoot: managedRoot,
+                logsRoot: logsRoot,
+                launchLogs: launchLogs,
+                retentionDays: retentionDays,
+                launchLogLimit: launchLogLimit,
+                rootMutationLease: rootMutationLease
+            )
+        }
+    }
+
+    init(
+        pathManager: PathManager,
+        backgroundCleanupOperation: @escaping BackgroundCleanupOperation
+    ) {
+        self.pathManager = pathManager
+        self.backgroundCleanupOperation = backgroundCleanupOperation
+    }
+
+    deinit {
+        activeCleanup?.task.cancel()
     }
 
     func cleanup(retentionDays: Int, launchLogLimit: Int) throws -> LogCleanupResult {
         let roots = try resolvedRoots()
+        let rootMutationLease = try LogRetentionRootMutationLease.acquire(
+            managedRoot: roots.managedRoot,
+            logsRoot: roots.logsRoot,
+            launchLogs: roots.launchLogs
+        )
         return try LogRetentionWorker.cleanup(
             managedRoot: roots.managedRoot,
             logsRoot: roots.logsRoot,
             launchLogs: roots.launchLogs,
             retentionDays: retentionDays,
-            launchLogLimit: launchLogLimit
+            launchLogLimit: launchLogLimit,
+            rootMutationLease: rootMutationLease
         )
     }
 
     func cleanupInBackground(retentionDays: Int, launchLogLimit: Int) throws -> Task<LogCleanupResult, Error> {
-        let roots = try resolvedRoots()
-        return Task.detached(priority: .utility) {
-            try LogRetentionWorker.cleanup(
-                managedRoot: roots.managedRoot,
-                logsRoot: roots.logsRoot,
-                launchLogs: roots.launchLogs,
-                retentionDays: retentionDays,
-                launchLogLimit: launchLogLimit
-            )
+        guard activeCleanup == nil else {
+            throw LogRetentionServiceError.cleanupInProgress
         }
+        let roots = try resolvedRoots()
+        let rootMutationLease = try LogRetentionRootMutationLease.acquire(
+            managedRoot: roots.managedRoot,
+            logsRoot: roots.logsRoot,
+            launchLogs: roots.launchLogs
+        )
+        let operation = backgroundCleanupOperation
+        let task = Task.detached(priority: .utility) {
+            try rootMutationLease.validateBinding()
+            let result = try operation(
+                roots.managedRoot,
+                roots.logsRoot,
+                roots.launchLogs,
+                retentionDays,
+                launchLogLimit,
+                rootMutationLease
+            )
+            try rootMutationLease.validateBinding()
+            return result
+        }
+        let identifier = UUID()
+        activeCleanup = ActiveCleanup(identifier: identifier, task: task)
+        Task { [weak self] in
+            _ = await task.result
+            guard let self,
+                  self.activeCleanup?.identifier == identifier else {
+                return
+            }
+            self.activeCleanup = nil
+        }
+        return task
     }
 
     private func resolvedRoots() throws -> LogRetentionRoots {
@@ -166,6 +378,349 @@ final class LogRetentionService {
             logsRoot: try pathManager.url(for: .logs),
             launchLogs: try pathManager.url(for: .launchLogs)
         )
+    }
+}
+
+struct SteamClientLogRetentionPolicy: Hashable, Sendable {
+    var maximumLogBytes: Int64
+    var preservedTailBytes: Int
+
+    static let standard = SteamClientLogRetentionPolicy(
+        maximumLogBytes: 64 * 1_024 * 1_024,
+        preservedTailBytes: 2 * 1_024 * 1_024
+    )
+}
+
+struct SteamClientLogRetentionResult: Hashable, Sendable {
+    var rotatedFiles: Int
+    var freedBytes: Int64
+    var skippedFiles: [String]
+
+    var diagnosticMessage: String? {
+        var messages: [String] = []
+        if rotatedFiles > 0 {
+            messages.append(
+                "Rotated \(rotatedFiles) offline Steam client log(s) after preserving bounded tails; released \(freedBytes) bytes."
+            )
+        }
+        if !skippedFiles.isEmpty {
+            messages.append(
+                "Skipped unsafe or unstable Steam client logs: \(skippedFiles.joined(separator: ", "))."
+            )
+        }
+        return messages.isEmpty ? nil : messages.joined(separator: " ")
+    }
+}
+
+/// Bounds Steam-owned diagnostic files only while the prefix is offline and
+/// the caller owns its exclusive mutation lease. The source inventory is
+/// exact; this service never scans or truncates arbitrary prefix files.
+enum SteamClientLogRetentionService {
+    private struct SourceIdentity: Equatable {
+        var device: UInt64
+        var inode: UInt64
+        var byteCount: Int64
+        var modificationSeconds: Int64
+        var modificationNanoseconds: Int64
+        var changeSeconds: Int64
+        var changeNanoseconds: Int64
+    }
+
+    static let allowedLogFileNames = [
+        "bootstrap_log.txt",
+        "cef_log.txt",
+        "console_log.txt",
+        "content_log.txt",
+        "gameprocess_log.txt",
+        "shader_log.txt",
+        "steamui_html.txt",
+        "steamui_login.txt",
+        "webhelper.txt",
+        "webhelper_gpu.txt"
+    ]
+
+    nonisolated static func rotateOfflineLogs(
+        in prefix: URL,
+        managedLogsRoot: URL,
+        policy: SteamClientLogRetentionPolicy = .standard
+    ) throws -> SteamClientLogRetentionResult {
+        guard policy.maximumLogBytes >= 0,
+              policy.preservedTailBytes >= 0 else {
+            throw FileSystemItemPolicyError.unsafeManagedDirectory(
+                managedLogsRoot,
+                "Steam 로그 보존 정책 값이 유효하지 않습니다."
+            )
+        }
+
+        guard let steamLogsDescriptor = try openSteamLogsDirectory(in: prefix) else {
+            return SteamClientLogRetentionResult(
+                rotatedFiles: 0,
+                freedBytes: 0,
+                skippedFiles: []
+            )
+        }
+        defer { Darwin.close(steamLogsDescriptor) }
+
+        let snapshotDirectory = managedLogsRoot
+            .appending(path: "SteamClient", directoryHint: .isDirectory)
+        try FileSystemItemPolicy.prepareOwnedDirectoryTree(
+            snapshotDirectory,
+            trustedAncestor: managedLogsRoot,
+            privateTailComponentCount: 1
+        )
+        let snapshotDirectoryDescriptor = Darwin.open(
+            snapshotDirectory.path,
+            O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW
+        )
+        guard snapshotDirectoryDescriptor >= 0 else {
+            throw FileSystemItemPolicyError.unsafeManagedDirectory(
+                snapshotDirectory,
+                String(cString: strerror(errno))
+            )
+        }
+        defer { Darwin.close(snapshotDirectoryDescriptor) }
+        try requireOwnedDirectory(
+            descriptor: snapshotDirectoryDescriptor,
+            url: snapshotDirectory
+        )
+
+        var rotatedFiles = 0
+        var freedBytes: Int64 = 0
+        var skippedFiles: [String] = []
+        for fileName in allowedLogFileNames {
+            let sourceDescriptor = openat(
+                steamLogsDescriptor,
+                fileName,
+                O_RDWR | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK
+            )
+            guard sourceDescriptor >= 0 else {
+                if errno != ENOENT { skippedFiles.append(fileName) }
+                continue
+            }
+
+            do {
+                defer { Darwin.close(sourceDescriptor) }
+                var initialStatus = stat()
+                guard fstat(sourceDescriptor, &initialStatus) == 0 else {
+                    skippedFiles.append(fileName)
+                    continue
+                }
+                guard (initialStatus.st_mode & S_IFMT) == S_IFREG,
+                      initialStatus.st_nlink == 1,
+                      initialStatus.st_uid == geteuid() else {
+                    skippedFiles.append(fileName)
+                    continue
+                }
+                guard initialStatus.st_size > policy.maximumLogBytes else {
+                    continue
+                }
+
+                let initialIdentity = identity(for: initialStatus)
+                let tailByteCount = min(
+                    policy.preservedTailBytes,
+                    Int(clamping: initialStatus.st_size)
+                )
+                let tail = try readTail(
+                    descriptor: sourceDescriptor,
+                    fileSize: initialStatus.st_size,
+                    byteCount: tailByteCount
+                )
+                var postReadStatus = stat()
+                guard fstat(sourceDescriptor, &postReadStatus) == 0,
+                      identity(for: postReadStatus) == initialIdentity else {
+                    skippedFiles.append(fileName)
+                    continue
+                }
+
+                let header = Data(
+                    "ForgePlay offline Steam client log tail\nsource=\(fileName)\noriginalBytes=\(initialStatus.st_size)\n\n".utf8
+                )
+                try writeSnapshot(
+                    header + tail,
+                    fileName: "previous-\(fileName)",
+                    directoryDescriptor: snapshotDirectoryDescriptor
+                )
+
+                var preTruncateStatus = stat()
+                guard fstat(sourceDescriptor, &preTruncateStatus) == 0,
+                      identity(for: preTruncateStatus) == initialIdentity else {
+                    skippedFiles.append(fileName)
+                    continue
+                }
+                guard ftruncate(sourceDescriptor, 0) == 0 else {
+                    skippedFiles.append(fileName)
+                    continue
+                }
+                rotatedFiles += 1
+                freedBytes += initialStatus.st_size
+                if fsync(sourceDescriptor) != 0 {
+                    skippedFiles.append("\(fileName) (sync)")
+                }
+            } catch {
+                skippedFiles.append(fileName)
+            }
+        }
+
+        return SteamClientLogRetentionResult(
+            rotatedFiles: rotatedFiles,
+            freedBytes: freedBytes,
+            skippedFiles: Array(Set(skippedFiles)).sorted()
+        )
+    }
+
+    private nonisolated static func openSteamLogsDirectory(
+        in prefix: URL
+    ) throws -> Int32? {
+        let prefix = prefix.standardizedFileURL
+        var descriptor = Darwin.open(
+            prefix.path,
+            O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW
+        )
+        guard descriptor >= 0 else {
+            if errno == ENOENT { return nil }
+            throw FileSystemItemPolicyError.unsafeManagedDirectory(
+                prefix,
+                String(cString: strerror(errno))
+            )
+        }
+        do {
+            try requireOwnedDirectory(descriptor: descriptor, url: prefix)
+            for component in ["drive_c", "Program Files (x86)", "Steam", "logs"] {
+                let nextDescriptor = openat(
+                    descriptor,
+                    component,
+                    O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW
+                )
+                guard nextDescriptor >= 0 else {
+                    let openError = errno
+                    if openError == ENOENT {
+                        Darwin.close(descriptor)
+                        return nil
+                    }
+                    throw FileSystemItemPolicyError.unsafeManagedDirectory(
+                        prefix.appending(path: component, directoryHint: .isDirectory),
+                        String(cString: strerror(openError))
+                    )
+                }
+                Darwin.close(descriptor)
+                descriptor = nextDescriptor
+                try requireOwnedDirectory(
+                    descriptor: descriptor,
+                    url: prefix.appending(path: component, directoryHint: .isDirectory)
+                )
+            }
+            return descriptor
+        } catch {
+            Darwin.close(descriptor)
+            throw error
+        }
+    }
+
+    private nonisolated static func requireOwnedDirectory(
+        descriptor: Int32,
+        url: URL
+    ) throws {
+        var status = stat()
+        guard fstat(descriptor, &status) == 0,
+              (status.st_mode & S_IFMT) == S_IFDIR,
+              status.st_uid == geteuid() else {
+            throw FileSystemItemPolicyError.unsafeManagedDirectory(
+                url,
+                "폴더가 현재 사용자가 소유한 실제 디렉터리가 아닙니다."
+            )
+        }
+    }
+
+    private nonisolated static func identity(for status: stat) -> SourceIdentity {
+        SourceIdentity(
+            device: UInt64(status.st_dev),
+            inode: UInt64(status.st_ino),
+            byteCount: Int64(status.st_size),
+            modificationSeconds: Int64(status.st_mtimespec.tv_sec),
+            modificationNanoseconds: Int64(status.st_mtimespec.tv_nsec),
+            changeSeconds: Int64(status.st_ctimespec.tv_sec),
+            changeNanoseconds: Int64(status.st_ctimespec.tv_nsec)
+        )
+    }
+
+    private nonisolated static func readTail(
+        descriptor: Int32,
+        fileSize: Int64,
+        byteCount: Int
+    ) throws -> Data {
+        guard byteCount > 0 else { return Data() }
+        var data = Data(count: byteCount)
+        var readBytes = 0
+        let start = fileSize - Int64(byteCount)
+        try data.withUnsafeMutableBytes { rawBuffer in
+            guard let baseAddress = rawBuffer.baseAddress else { return }
+            while readBytes < byteCount {
+                let result = pread(
+                    descriptor,
+                    baseAddress.advanced(by: readBytes),
+                    byteCount - readBytes,
+                    off_t(start + Int64(readBytes))
+                )
+                if result < 0, errno == EINTR { continue }
+                guard result > 0 else {
+                    throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+                }
+                readBytes += result
+            }
+        }
+        return data
+    }
+
+    private nonisolated static func writeSnapshot(
+        _ data: Data,
+        fileName: String,
+        directoryDescriptor: Int32
+    ) throws {
+        let temporaryName = ".\(fileName).\(UUID().uuidString.lowercased()).tmp"
+        let descriptor = openat(
+            directoryDescriptor,
+            temporaryName,
+            O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC | O_NOFOLLOW,
+            S_IRUSR | S_IWUSR
+        )
+        guard descriptor >= 0 else {
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+        }
+        var shouldRemoveTemporary = true
+        defer {
+            Darwin.close(descriptor)
+            if shouldRemoveTemporary {
+                _ = unlinkat(directoryDescriptor, temporaryName, 0)
+            }
+        }
+
+        try data.withUnsafeBytes { rawBuffer in
+            guard let baseAddress = rawBuffer.baseAddress else { return }
+            var writtenBytes = 0
+            while writtenBytes < rawBuffer.count {
+                let result = Darwin.write(
+                    descriptor,
+                    baseAddress.advanced(by: writtenBytes),
+                    rawBuffer.count - writtenBytes
+                )
+                if result < 0, errno == EINTR { continue }
+                guard result > 0 else {
+                    throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+                }
+                writtenBytes += result
+            }
+        }
+        guard fsync(descriptor) == 0,
+              renameat(
+                  directoryDescriptor,
+                  temporaryName,
+                  directoryDescriptor,
+                  fileName
+              ) == 0,
+              fsync(directoryDescriptor) == 0 else {
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+        }
+        shouldRemoveTemporary = false
     }
 }
 
@@ -182,12 +737,15 @@ private enum LogRetentionWorker {
         launchLogs: URL,
         retentionDays: Int,
         launchLogLimit: Int,
+        rootMutationLease: LogRetentionRootMutationLease,
         fileManager: FileManager = .default
     ) throws -> LogCleanupResult {
+        try Task.checkCancellation()
         try validateCleanupRoots(
             managedRoot: managedRoot,
             logsRoot: logsRoot,
             launchLogs: launchLogs,
+            rootMutationLease: rootMutationLease,
             fileManager: fileManager
         )
         let cutoff = Calendar.current.date(
@@ -199,6 +757,7 @@ private enum LogRetentionWorker {
         var freedBytes: Int64 = 0
 
         for url in try logFiles(under: logsRoot, fileManager: fileManager) {
+            try Task.checkCancellation()
             // Launch evidence is retained as an atomic run group below. Aging
             // files independently can otherwise orphan stdout, stderr, the
             // process sidecar, observation journal, or renderer artifacts.
@@ -210,6 +769,7 @@ private enum LogRetentionWorker {
                 managedRoot: managedRoot,
                 logsRoot: logsRoot,
                 launchLogs: launchLogs,
+                rootMutationLease: rootMutationLease,
                 fileManager: fileManager
             )
             if try removeRegularFile(
@@ -218,6 +778,7 @@ private enum LogRetentionWorker {
                 managedRoot: managedRoot,
                 logsRoot: logsRoot,
                 launchLogs: launchLogs,
+                rootMutationLease: rootMutationLease,
                 fileManager: fileManager
             ) {
                 freedBytes += bytes
@@ -229,10 +790,13 @@ private enum LogRetentionWorker {
             managedRoot: managedRoot,
             logsRoot: logsRoot,
             launchLogs: launchLogs,
+            rootMutationLease: rootMutationLease,
             fileManager: fileManager
         )
         let launchScan = try scanLaunchLogs(under: launchLogs, fileManager: fileManager)
+        try Task.checkCancellation()
         let launchUnits = launchRetentionUnits(from: launchScan, launchLogs: launchLogs)
+        try Task.checkCancellation()
         let retainedUnitKeys = retainedLaunchUnitKeys(
             launchUnits,
             cutoff: cutoff,
@@ -241,6 +805,7 @@ private enum LogRetentionWorker {
         var directoryCleanupCandidates = Set<URL>()
         for unit in launchUnits where
             !retainedUnitKeys.contains(unit.key) && !unit.isProtected {
+            try Task.checkCancellation()
             // Scan the complete evidence graph again immediately before
             // planning deletion. New links, active markers, unsupported
             // siblings, or unsafe filesystem entries cancel this unit for the
@@ -259,6 +824,7 @@ private enum LogRetentionWorker {
                 managedRoot: managedRoot,
                 logsRoot: logsRoot,
                 launchLogs: launchLogs,
+                rootMutationLease: rootMutationLease,
                 fileManager: fileManager
             )
             guard try launchDeletionPlanMatchesCurrentScan(
@@ -275,6 +841,7 @@ private enum LogRetentionWorker {
                 managedRoot: managedRoot,
                 logsRoot: logsRoot,
                 launchLogs: launchLogs,
+                rootMutationLease: rootMutationLease,
                 fileManager: fileManager
             )
             removedFiles += result.removedFiles
@@ -291,8 +858,11 @@ private enum LogRetentionWorker {
             under: launchLogs,
             managedRoot: managedRoot,
             logsRoot: logsRoot,
+            rootMutationLease: rootMutationLease,
             fileManager: fileManager
         )
+        try Task.checkCancellation()
+        try rootMutationLease.validateBinding()
 
         return LogCleanupResult(removedFiles: removedFiles, freedBytes: freedBytes)
     }
@@ -322,6 +892,7 @@ private enum LogRetentionWorker {
         }
         var files: [URL] = []
         for case let url as URL in enumerator {
+            try Task.checkCancellation()
             let values: URLResourceValues
             do {
                 values = try url.resourceValues(
@@ -379,6 +950,7 @@ private enum LogRetentionWorker {
         var activeGroupKeys = Set<String>()
         var gameRunDirectories: [String: (url: URL, modificationDate: Date)] = [:]
         for case let url as URL in enumerator {
+            try Task.checkCancellation()
             let values: URLResourceValues
             do {
                 values = try url.resourceValues(forKeys: [
@@ -445,6 +1017,7 @@ private enum LogRetentionWorker {
         let referenceDate = Date()
         var expiredEmptyGameRunDirectoriesByGroup: [String: URL] = [:]
         for (runID, directoryEntry) in gameRunDirectories {
+            try Task.checkCancellation()
             do {
                 if try fileManager.contentsOfDirectory(atPath: directoryEntry.url.path).isEmpty {
                     if directoryEntry.modificationDate.addingTimeInterval(
@@ -467,6 +1040,7 @@ private enum LogRetentionWorker {
         )
         var relatedGroupEdges = Set<LaunchLogGroupEdge>()
         for artifact in safeEvidenceByPath.values {
+            try Task.checkCancellation()
             let groupKey = launchArtifactGroupKey(for: artifact.url, launchLogs: root)
             guard let runID = launchUUIDGroupKey(for: artifact.url, launchLogs: root) else {
                 blockedGroupKeys.insert(groupKey)
@@ -616,6 +1190,7 @@ private enum LogRetentionWorker {
         managedRoot: URL,
         logsRoot: URL,
         launchLogs: URL,
+        rootMutationLease: LogRetentionRootMutationLease,
         fileManager: FileManager
     ) throws -> LaunchArtifactDeletionPlan {
         let sortedArtifacts = unit.artifacts.sorted {
@@ -630,6 +1205,7 @@ private enum LogRetentionWorker {
                 managedRoot: managedRoot,
                 logsRoot: logsRoot,
                 launchLogs: launchLogs,
+                rootMutationLease: rootMutationLease,
                 fileManager: fileManager
             )
             entries.append(
@@ -650,6 +1226,7 @@ private enum LogRetentionWorker {
             managedRoot: managedRoot,
             logsRoot: logsRoot,
             launchLogs: launchLogs,
+            rootMutationLease: rootMutationLease,
             fileManager: fileManager
         )
         return LaunchArtifactDeletionPlan(
@@ -685,6 +1262,7 @@ private enum LogRetentionWorker {
         managedRoot: URL,
         logsRoot: URL,
         launchLogs: URL,
+        rootMutationLease: LogRetentionRootMutationLease,
         fileManager: FileManager
     ) throws -> LogCleanupResult {
         guard !plan.entries.isEmpty else {
@@ -703,19 +1281,23 @@ private enum LogRetentionWorker {
             managedRoot: managedRoot,
             logsRoot: logsRoot,
             launchLogs: launchLogs,
+            rootMutationLease: rootMutationLease,
             fileManager: fileManager
         )
         var removedFiles = 0
         var freedBytes: Int64 = 0
         for index in plan.entries.indices {
+            try Task.checkCancellation()
             try validateLaunchDeletionEntries(
                 Array(plan.entries[index...]),
                 managedRoot: managedRoot,
                 logsRoot: logsRoot,
                 launchLogs: launchLogs,
+                rootMutationLease: rootMutationLease,
                 fileManager: fileManager
             )
             let entry = plan.entries[index]
+            try rootMutationLease.validateBinding()
             let result = entry.artifact.url.path.withCString { Darwin.unlink($0) }
             guard result == 0 else {
                 let failure = errno
@@ -735,15 +1317,18 @@ private enum LogRetentionWorker {
         managedRoot: URL,
         logsRoot: URL,
         launchLogs: URL,
+        rootMutationLease: LogRetentionRootMutationLease,
         fileManager: FileManager
     ) throws {
         try validateCleanupRoots(
             managedRoot: managedRoot,
             logsRoot: logsRoot,
             launchLogs: launchLogs,
+            rootMutationLease: rootMutationLease,
             fileManager: fileManager
         )
         for entry in entries {
+            try Task.checkCancellation()
             let parent = entry.artifact.url.deletingLastPathComponent()
             guard fileManager.isWritableFile(atPath: parent.path) else {
                 throw LogRetentionServiceError.scanFailed(
@@ -757,6 +1342,7 @@ private enum LogRetentionWorker {
                 managedRoot: managedRoot,
                 logsRoot: logsRoot,
                 launchLogs: launchLogs,
+                rootMutationLease: rootMutationLease,
                 fileManager: fileManager
             )
             guard try launchArtifactIdentity(at: entry.artifact.url) == entry.identity else {
@@ -843,6 +1429,7 @@ private enum LogRetentionWorker {
         var data = Data()
         var buffer = [UInt8](repeating: 0, count: min(16_384, maximumBytes + 1))
         while data.count <= maximumBytes {
+            try Task.checkCancellation()
             let remaining = maximumBytes + 1 - data.count
             let count = buffer.withUnsafeMutableBytes { bytes in
                 Darwin.read(descriptor, bytes.baseAddress, min(bytes.count, remaining))
@@ -984,13 +1571,16 @@ private enum LogRetentionWorker {
         under root: URL,
         managedRoot: URL,
         logsRoot: URL,
+        rootMutationLease: LogRetentionRootMutationLease,
         fileManager: FileManager
     ) throws {
         for directory in candidates.sorted(by: { $0.pathComponents.count > $1.pathComponents.count }) {
+            try Task.checkCancellation()
             try validateCleanupRoots(
                 managedRoot: managedRoot,
                 logsRoot: logsRoot,
                 launchLogs: root,
+                rootMutationLease: rootMutationLease,
                 fileManager: fileManager
             )
             guard isDescendant(directory, of: root),
@@ -1019,6 +1609,7 @@ private enum LogRetentionWorker {
                 throw LogRetentionServiceError.scanFailed(directory, error)
             }
             if contents.isEmpty {
+                try rootMutationLease.validateBinding()
                 let result = directory.path.withCString { Darwin.rmdir($0) }
                 if result != 0 {
                     let failure = errno
@@ -1038,8 +1629,10 @@ private enum LogRetentionWorker {
         managedRoot: URL,
         logsRoot: URL,
         launchLogs: URL,
+        rootMutationLease: LogRetentionRootMutationLease,
         fileManager: FileManager
     ) throws {
+        try rootMutationLease.validateBinding()
         let managedRoot = managedRoot.standardizedFileURL
         let logsRoot = logsRoot.standardizedFileURL
         let launchLogs = launchLogs.standardizedFileURL
@@ -1095,6 +1688,7 @@ private enum LogRetentionWorker {
         managedRoot: URL,
         logsRoot: URL,
         launchLogs: URL,
+        rootMutationLease: LogRetentionRootMutationLease,
         fileManager: FileManager
     ) throws -> Int64 {
         try validateRemovableFile(
@@ -1103,6 +1697,7 @@ private enum LogRetentionWorker {
             managedRoot: managedRoot,
             logsRoot: logsRoot,
             launchLogs: launchLogs,
+            rootMutationLease: rootMutationLease,
             fileManager: fileManager
         )
         return try fileSize(url)
@@ -1114,6 +1709,7 @@ private enum LogRetentionWorker {
         managedRoot: URL,
         logsRoot: URL,
         launchLogs: URL,
+        rootMutationLease: LogRetentionRootMutationLease,
         fileManager: FileManager
     ) throws -> Bool {
         try validateRemovableFile(
@@ -1122,8 +1718,10 @@ private enum LogRetentionWorker {
             managedRoot: managedRoot,
             logsRoot: logsRoot,
             launchLogs: launchLogs,
+            rootMutationLease: rootMutationLease,
             fileManager: fileManager
         )
+        try rootMutationLease.validateBinding()
         let result = url.path.withCString { Darwin.unlink($0) }
         if result == 0 { return true }
         let failure = errno
@@ -1140,12 +1738,14 @@ private enum LogRetentionWorker {
         managedRoot: URL,
         logsRoot: URL,
         launchLogs: URL,
+        rootMutationLease: LogRetentionRootMutationLease,
         fileManager: FileManager
     ) throws {
         try validateCleanupRoots(
             managedRoot: managedRoot,
             logsRoot: logsRoot,
             launchLogs: launchLogs,
+            rootMutationLease: rootMutationLease,
             fileManager: fileManager
         )
         guard isDescendant(url, of: root),

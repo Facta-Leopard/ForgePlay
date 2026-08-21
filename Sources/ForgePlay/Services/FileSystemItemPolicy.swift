@@ -1,7 +1,11 @@
 import Darwin
 import Foundation
 
-enum FileSystemItemPolicyError: LocalizedError, Equatable {
+enum FileSystemItemPolicyError:
+    LocalizedError,
+    Equatable,
+    ForgePlayTechnicalDescribingError
+{
     case notRegularNonSymlinkFile(URL)
     case notNonSymlinkDirectory(URL)
     case metadataReadFailed(URL, String)
@@ -18,6 +22,10 @@ enum FileSystemItemPolicyError: LocalizedError, Equatable {
         case .unsafeManagedDirectory(let url, let message):
             "관리 경로를 안전하게 준비하지 못했습니다: \(url.path). \(message)"
         }
+    }
+
+    var forgePlayTechnicalDescription: String {
+        errorDescription ?? "파일 시스템 항목 정책을 확인하지 못했습니다."
     }
 }
 

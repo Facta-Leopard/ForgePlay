@@ -1,17 +1,6 @@
 # ForgePlay Source — 한국어
 
-[English](README_EN.md) | [통합 문서](README.md) | [Release v1.0.0](https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0)
-
-## 공개 경로
-
-- [현재 공개 소스(`main`)](https://github.com/Facta-Leopard/ForgePlay/tree/main)
-- [`v1.0.0` 소스 스냅샷](https://github.com/Facta-Leopard/ForgePlay/tree/v1.0.0)
-- [ForgePlay 1.0 (build 1) 릴리스](https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0)
-- [Apple 공증 DMG](https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.0.0/ForgePlay-1.0-1.dmg)
-- [SHA-256](https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.0.0/ForgePlay-1.0-1.dmg.sha256) · [공증·서명 증빙 JSON](https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.0.0/ForgePlay-1.0-1.dmg.release.json)
-
-기존 GitHub Pages 홈페이지 파일과 공개 소스는 `main`에 함께 있으며,
-DMG와 공증 증빙은 GitHub Releases에서 별도 배포한다.
+[English](README_EN.md) | [언어 선택](README.md)
 
 ## 먼저 밝히는 입장
 
@@ -65,8 +54,9 @@ Steam의 로컬 설치 메타데이터, 실제 Steam 클라이언트, 그리고 
    ForgePlay가 게임 실행 파일을 Steam인 것처럼 대신 실행하지 않는다.
 3. Steam이 Windows 쪽의 정식 부모 프로세스로 남아 게임 또는
    런처 자식을 생성한다.
-4. ForgePlay의 Wine 패치는 프로세스 생성 경계에서 선택된 렌더러
-   정책과 Steam 게임 계보를 자식에게 전달한다.
+4. ForgePlay의 Wine 패치는 프로세스 생성 경계에서 선택된 렌더러,
+   네트워크 어댑터 표현과 오디오 입력 정책 및 Steam 게임 계보를
+   자식에게 전달한다.
 5. Game Mode 대상 여부는 명령행, 게임 제목, 계정명, 볼륨명 또는
    Steam App ID를 신뢰해서 정하지 않는다. Wine이 해석한
    `RTL_USER_PROCESS_PARAMETERS.ImagePathName`을 Unix 쪽에서 검사한다.
@@ -82,15 +72,26 @@ Steam의 로컬 설치 메타데이터, 실제 Steam 클라이언트, 그리고 
 
 ## 렌더러 선택과 Game Mode는 분리되어 있다
 
-Steam 세션을 시작하기 전에 사용자는 D3DMetal, DXMT, D9VK, DXVK 중
-정확히 하나를 선택한다. Steam 클라이언트와 Steam WebHelper는 기본
-Wine 렌더러 경로에 남고, 선택된 렌더러는 `steamapps/common`에 속한
-게임 자식에만 적용된다. 선택이 없거나 잘못되면 다른 렌더러로
-조용히 대체하지 않고 실행을 거부한다.
+Steam 세션을 시작하기 전에 사용자는 D3DMetal 표준,
+D3DMetal NVIDIA/DLSS 호환성, DXMT, D9VK, DXVK 중 정확히 하나를
+선택한다. 두 D3DMetal 선택은 같은 렌더러를 사용하며, 실험적인
+NVIDIA 선택만 게임 자식에 `D3DM_VENDOR_ID=0x10de`를 추가한다.
+이 선택은 DirectX 11/12를 강제하거나 게임의 DLSS 동작을 보장하지
+않는다. Steam 클라이언트와 Steam WebHelper는 기본 Wine 렌더러
+경로에 남고, 선택된 렌더러는 `steamapps/common`에 속한 게임 자식에만
+적용된다. 선택이 없거나 잘못되면 다른 렌더러로 조용히 대체하지 않고
+실행을 거부한다.
 
 렌더러 선택과 Game Mode 대상 판정은 독립적이다. D3DMetal을
 선택했다고 Game Mode가 자동으로 켜지는 것도 아니고, Game Mode를
 선택했다고 렌더러가 바뀌는 것도 아니다.
+
+같은 화면에서 네트워크 어댑터 표현은 표준, Wi‑Fi, Ethernet 중 하나를,
+오디오 입력은 끔 또는 켬을 매 세션 직접 선택한다. 네트워크 선택은
+게임에 보이는 어댑터 종류만 바꾸며 TCP와 UDP를 서로 변환하지 않는다.
+오디오 입력 끔은 CoreAudio 입력 접근 전에 Windows capture endpoint를
+0개로 반환하며 오디오 출력은 유지한다. 이 값들은 게임별로 저장되거나
+자동 복원되지 않는다.
 
 ## Game Mode 구현
 
@@ -182,6 +183,10 @@ ForgePlay가 작성한 Game Mode 오케스트레이션이다.
   `Native/GameModeProcessHost/SOURCE-CONTRACT.md`
 - Wine 11.12 원본 URL, 해시, patch 및 재구축 정보:
   `Resources/Runners/ForgePlayRuntime/SOURCE-AVAILABILITY.md`
+- 수동 NVIDIA vendor, 네트워크 표현과 오디오 입력 Wine patch:
+  `Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-session-compatibility-controls.patch`
+- TCP/UDP·어댑터 종류·capture endpoint 자동 probe:
+  `Scripts/test-wine-session-compatibility.sh`
 - patch provenance lock:
   `Config/ForgePlayRuntimePatchProvenance.lock.json`
 
@@ -194,7 +199,7 @@ ForgePlay가 작성한 Game Mode 오케스트레이션이다.
 
 - ForgePlay Swift 및 Objective-C 소스
 - Game Mode process host의 소스와 build contract
-- Game Mode unit/routing test
+- Game Mode unit/routing test와 Steam 세션 호환성 probe 소스
 - ForgePlay가 작성한 Wine patch와 Windows launcher 소스
 - XcodeGen project specification과 비개인 build setting
 - 라이선스 원문, scope 기록, localized notice

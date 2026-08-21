@@ -4,6 +4,7 @@ import SwiftUI
 
 private enum SettingsPane: String, CaseIterable, Identifiable {
     case general
+    case input
     case environment
     case maintenance
     case about
@@ -13,6 +14,7 @@ private enum SettingsPane: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .general: "일반"
+        case .input: "입력 및 게임 보호"
         case .environment: "프리픽스 · 동기화"
         case .maintenance: "진단 및 데이터"
         case .about: "정보"
@@ -20,16 +22,39 @@ private enum SettingsPane: String, CaseIterable, Identifiable {
     }
 }
 
+enum AWDLTogglePresentation: Hashable, Sendable {
+    case unavailable
+    case enabled
+    case disabled
+
+    init(interfaceState: AWDLInterfaceState) {
+        switch interfaceState {
+        case .unavailable: self = .unavailable
+        case .enabled: self = .enabled
+        case .disabled: self = .disabled
+        }
+    }
+
+    var isOn: Bool? {
+        switch self {
+        case .unavailable: nil
+        case .enabled: true
+        case .disabled: false
+        }
+    }
+}
+
 struct SettingsView: View {
     var sheetPresenter: ((SheetDestination) -> Void)? = nil
     var opensMainWindowForNavigation = false
+    var performsInitialWorkflowRefresh = true
     @Environment(AppState.self) private var appState
     @Environment(AppServices.self) private var services
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.openWindow) private var openWindow
     @Query(sort: \SteamGameRecord.name) private var games: [SteamGameRecord]
-    @Query(sort: \LaunchRecord.startedAt, order: .reverse) private var launchRecords: [LaunchRecord]
+    @Query private var launchRecords: [LaunchRecord]
     @Query(sort: \CompatibilityRecipeRecord.name) private var compatibilityRecipes: [CompatibilityRecipeRecord]
     @State private var statusMessage = ""
     @State private var compatibilityDBURL = ""
@@ -43,8 +68,40 @@ struct SettingsView: View {
     @State private var selectedPane: SettingsPane = .general
     private let languageOptionMinimumWidth: CGFloat = 160
 
+    init(
+        sheetPresenter: ((SheetDestination) -> Void)? = nil,
+        opensMainWindowForNavigation: Bool = false,
+        performsInitialWorkflowRefresh: Bool = true
+    ) {
+        self.sheetPresenter = sheetPresenter
+        self.opensMainWindowForNavigation = opensMainWindowForNavigation
+        self.performsInitialWorkflowRefresh = performsInitialWorkflowRefresh
+        var launchDescriptor = FetchDescriptor<LaunchRecord>(
+            predicate: #Predicate {
+                $0.commandKind == "launchSteam" &&
+                    $0.prefixId == "prefix-steam-shared"
+            },
+            sortBy: [SortDescriptor(\LaunchRecord.startedAt, order: .reverse)]
+        )
+        launchDescriptor.fetchLimit = 1
+        _launchRecords = Query(launchDescriptor)
+    }
+
     private var readiness: SetupReadiness {
         appState.setupReadiness
+    }
+
+    private var setupReadinessObservationKey: SetupReadinessObservationKey? {
+        _ = launchRecords.first?.id
+        return try? services.setupReadinessObservationKey(
+            appState: appState,
+            in: modelContext,
+            hasSteamReferences: !games.isEmpty
+        )
+    }
+
+    private var runtimeSystemCheck: SystemCheckResult? {
+        appState.latestChecks.first { $0.category == .windowsRuntime }
     }
 
     private func presentSheet(_ destination: SheetDestination) {
@@ -125,7 +182,7 @@ struct SettingsView: View {
         let steamInstallActionTitle = readiness.hasSteamExecutable ? "다시 설치" : "설치"
 
         ForgePageScaffold(
-            "설정",
+            "환경 설정",
             subtitle: "앱 환경, 실행 데이터, 진단 보존 정책을 관리합니다.",
             systemImage: "gearshape"
         ) {
@@ -137,6 +194,13 @@ struct SettingsView: View {
 
             if selectedPane == .general {
                 generalPreferencesGrid(palette: palette)
+            }
+
+            if selectedPane == .input {
+                VStack(alignment: .leading, spacing: ForgePlayLayout.sectionSpacing) {
+                    gameInputPreferencesCard(palette: palette)
+                    awdlControlPreferencesCard(palette: palette)
+                }
             }
 
             if selectedPane == .environment {
@@ -222,7 +286,7 @@ struct SettingsView: View {
                         .frame(minWidth: 164, idealWidth: 190, maxWidth: 240)
 
                         ThemedActionButton(
-                            title: "처음 설정으로 이동",
+                            title: "설정으로 이동",
                             systemImage: "wand.and.sparkles",
                             prominence: .secondary,
                             controlSize: .small
@@ -243,7 +307,7 @@ struct SettingsView: View {
 
             if selectedPane == .maintenance {
                 ForgeCard("호환성 정보 업데이트", systemImage: "arrow.down.doc") {
-                    Text(appState.localized("서명된 HTTPS index.json만 반영합니다. 서명 검증에 실패하면 기존 호환성 정보를 그대로 사용합니다."))
+                    Text(appState.localized("서명된 HTTPS index.json의 호환성 안내만 저장합니다. 실행 설정을 자동 변경하지 않으며, 진단 화면에서 사용자가 확인할 권장 조치로만 제시합니다."))
                         .font(.callout)
                         .foregroundStyle(palette.secondaryText)
                         .lineLimit(nil)
@@ -353,7 +417,7 @@ struct SettingsView: View {
                         legalRow("Wine 기반 런타임을 포함하거나 제공할 때는 Wine 버전, 소스 URL, 라이선스 전문, 수정 사항, 빌드/소스 제공 정보를 함께 고지합니다.")
                         legalRow("Steam 계정, 비밀번호, Steam Guard 코드는 저장하거나 요청하지 않습니다.")
                         legalRow("Microsoft Runtime 설치 파일은 앱 서버에서 호스팅하지 않고 공식 페이지 또는 사용자가 가진 설치 파일을 사용합니다.")
-                        legalRow("Apple Foundation Models는 로컬 보조 진단에만 사용하며, 권장 조치는 앱 allowlist와 사용자 확인을 거친 뒤 적용합니다.")
+                        legalRow("Apple Foundation Models는 로컬 보조 진단에만 사용합니다. 권장 조치는 앱의 허용 목록과 사용자 확인을 모두 거친 뒤에만 적용됩니다.")
                         legalRow("ForgePlay의 공식 배포 형식은 Developer ID로 서명하고 Apple 공증을 거친 DMG입니다.")
                     }
                     ResponsiveActionRow {
@@ -380,23 +444,34 @@ struct SettingsView: View {
             }
         }
         .task {
-            do {
-                _ = try await services.refreshSetupWorkflow(
-                    appState: appState,
-                    in: modelContext,
-                    hasSteamReferences: !games.isEmpty,
-                    launchRecords: launchRecords
-                )
-            } catch {
-                appState.setError(error)
+            if performsInitialWorkflowRefresh {
+                do {
+                    try await refreshSetupWorkflowUntilCurrent()
+                } catch is CancellationError {
+                    return
+                } catch {
+                    appState.setError(error)
+                }
             }
             loadSettings()
-            refreshReadiness()
+            if appState.hasEnabledGameInputEventTapProtection {
+                services.refreshGameInputProtectionAuthorizationStatus()
+            }
+            services.synchronizeGameInputProtectionPolicy(from: appState)
+            await services.awdlControlService.refresh()
+            if performsInitialWorkflowRefresh {
+                refreshReadiness()
+            }
         }
-        .onChange(of: games.count) { _, _ in refreshReadiness() }
-        .onChange(of: appState.selectedRootURL?.path) { _, _ in refreshReadiness() }
-        .onChange(of: appState.runtimeExecutableURL?.path) { _, _ in refreshReadiness() }
-        .onChange(of: services.steamEnvironmentRevision) { _, _ in refreshReadiness() }
+        .onChange(of: selectedPane) { _, pane in
+            guard pane == .input else { return }
+            Task { @MainActor in
+                await services.awdlControlService.refresh()
+            }
+        }
+        .onChange(of: setupReadinessObservationKey) { _, _ in
+            if performsInitialWorkflowRefresh { refreshReadiness() }
+        }
         .confirmationDialog(
             appState.localized("Steam 프리픽스를 만들까요?"),
             isPresented: $isShowingSteamPrefixConfirmation,
@@ -528,6 +603,534 @@ struct SettingsView: View {
                 appearancePreferencesCard
                 aiDiagnosticsPreferencesCard(palette: palette)
             }
+        }
+    }
+
+    private func gameInputPreferencesCard(palette: ForgePlayPalette) -> some View {
+        ForgeCard("게임 입력 및 macOS 단축키 보호", systemImage: "keyboard.badge.ellipsis") {
+            Text(appState.localized("일반 Steam과 Steam 호환성 실행에 공통으로 적용됩니다. 각 Steam 세션은 시작 시점 설정의 변경 불가능한 스냅샷을 사용하므로 여기서 바꾼 내용은 다음 실행부터 적용됩니다. 필터는 관리되는 세션의 정상 종료가 확인되면 해제됩니다. 실행 중 필터가 상실되면 즉시 해제한 뒤 관리되는 Steam 세션을 자동 종료하고 입력 상태를 복원합니다."))
+                .font(.callout)
+                .foregroundStyle(palette.secondaryText)
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text(appState.localized(
+                "입력 보호는 선택 기능입니다. Steam 실행이나 게임 키 바인딩 자체에는 필요하지 않으며, ForgePlay가 보조키를 변환하고 macOS 단축키를 차단할 때만 손쉬운 사용과 입력 모니터링 권한을 사용합니다."
+            ))
+            .font(.caption)
+            .foregroundStyle(palette.secondaryText)
+            .lineLimit(nil)
+            .fixedSize(horizontal: false, vertical: true)
+
+            HStack(alignment: .center, spacing: 10) {
+                StatusBadge(
+                    label: gameInputProtectionStatusLabel,
+                    status: gameInputProtectionStatus
+                )
+            }
+
+            if gameInputProtectionNeedsAuthorization {
+                GameInputProtectionAuthorizationPanel(
+                    disablePermissionRequiredProtection:
+                        disablePermissionRequiredGameInputProtection
+                )
+            }
+
+            if !supportsGameInputProtectionInCurrentBuild {
+                Text(appState.localized("이 빌드에서는 게임 입력 보호를 사용할 수 없습니다."))
+                    .font(.caption)
+                    .foregroundStyle(palette.warning)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Divider()
+
+            Toggle(
+                appState.localized(
+                    "게임이 전면일 때 macOS 포인터 숨기기 (베타)"
+                ),
+                isOn: Binding(
+                    get: {
+                        appState.hidesPointerWhileManagedGameFrontmost
+                    },
+                    set: { value in
+                        saveGameInputPreferences {
+                            appState.hidesPointerWhileManagedGameFrontmost =
+                                value
+                        }
+                    }
+                )
+            )
+            .disabled(!supportsGameInputProtectionInCurrentBuild)
+
+            Text(appState.localized("실험 단계의 기능으로 동작을 보장하지 않습니다. 관리 중인 Steam 또는 게임이 전면에 있을 때 공개 macOS API를 통해 시스템 포인터 숨김을 요청합니다. 포인터 잠금, 상대 이동, 입력 지연 개선 기능은 제공하지 않습니다. macOS에서는 포인터가 실제로 숨겨졌는지 앱이 확인할 수 없으며, ForgePlay가 백그라운드에 있으면 적용되지 않을 수 있습니다."))
+                .font(.caption)
+                .foregroundStyle(palette.secondaryText)
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Divider()
+
+            Toggle(appState.localized("게임용 보조키 매핑 사용"), isOn: Binding(
+                get: { appState.isGameInputModifierMappingEnabled },
+                set: { isEnabled in
+                    saveGameInputPreferences {
+                        appState.isGameInputModifierMappingEnabled = isEnabled
+                    }
+                }
+            ))
+            .disabled(!supportsGameInputProtectionInCurrentBuild)
+
+            Text(appState.localized("관리되는 게임이 전면일 때 macOS 호스트의 물리 Command·Option·Control 이벤트를 Ctrl·Alt 또는 전달 안 함으로 각각 독립 변환하려고 시도합니다. 여러 키를 같은 대상으로 연결할 수 있고 Windows 키는 만들지 않습니다. 실제 Wine·게임 자식의 수신은 별도로 확인하지 않으며 문자 키나 게임 내부 단축키를 바꾸지 않습니다."))
+                .font(.caption)
+                .foregroundStyle(palette.secondaryText)
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
+
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(HostModifierKey.allCases, id: \.self) { hostKey in
+                    HStack(spacing: 12) {
+                        Text(appState.localized(hostModifierTitle(hostKey)))
+                            .frame(minWidth: 120, alignment: .leading)
+                        Picker(
+                            appState.localized(hostModifierTitle(hostKey)),
+                            selection: Binding(
+                                get: { appState.gameInputModifierBinding(for: hostKey) },
+                                set: { binding in
+                                    saveGameInputPreferences {
+                                        appState.setGameInputModifierBinding(hostKey, to: binding)
+                                    }
+                                }
+                            )
+                        ) {
+                            ForEach(
+                                [GameInputModifierBinding.control, .alt, .disabled],
+                                id: \.self
+                            ) { binding in
+                                Text(appState.localized(gameInputModifierTitle(binding)))
+                                    .tag(binding)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .frame(maxWidth: 260, alignment: .leading)
+                    }
+                }
+            }
+            .disabled(
+                !supportsGameInputProtectionInCurrentBuild ||
+                    !appState.isGameInputModifierMappingEnabled
+            )
+
+            Divider()
+
+            Toggle(appState.localized("게임 중 앱 종료·창 관리 단축키 차단"), isOn: Binding(
+                get: { appState.blocksGameAppWindowManagementShortcuts },
+                set: { value in
+                    saveGameInputPreferences {
+                        appState.blocksGameAppWindowManagementShortcuts = value
+                    }
+                }
+            ))
+            .disabled(!supportsGameInputProtectionInCurrentBuild)
+
+            Text(appState.localized("Command-Q·W·H·M을 대상으로 합니다."))
+                .font(.caption)
+                .foregroundStyle(palette.secondaryText)
+
+            Toggle(appState.localized("게임 중 앱 전환·검색 단축키 차단"), isOn: Binding(
+                get: { appState.blocksGameAppSwitchingShortcuts },
+                set: { value in
+                    saveGameInputPreferences {
+                        appState.blocksGameAppSwitchingShortcuts = value
+                    }
+                }
+            ))
+            .disabled(!supportsGameInputProtectionInCurrentBuild)
+
+            Text(appState.localized("Command-Tab·Shift-Command-Tab과 Command-Space를 대상으로 합니다."))
+                .font(.caption)
+                .foregroundStyle(palette.secondaryText)
+
+            Toggle(appState.localized("게임 중 Mission Control·Spaces 키보드 단축키 차단"), isOn: Binding(
+                get: { appState.blocksGameMissionControlSpaceShortcuts },
+                set: { value in
+                    saveGameInputPreferences {
+                        appState.blocksGameMissionControlSpaceShortcuts = value
+                    }
+                }
+            ))
+            .disabled(!supportsGameInputProtectionInCurrentBuild)
+
+            Text(appState.localized("Control-방향키와 macOS가 일반 키 이벤트로 전달하는 F3·F11을 대상으로 합니다. 트랙패드 제스처는 대상이 아닙니다."))
+                .font(.caption)
+                .foregroundStyle(palette.secondaryText)
+
+            Toggle(appState.localized("게임 중 macOS 기본 스크린샷 단축키 차단"), isOn: Binding(
+                get: { appState.blocksGameScreenshotShortcuts },
+                set: { value in
+                    saveGameInputPreferences { appState.blocksGameScreenshotShortcuts = value }
+                }
+            ))
+            .disabled(!supportsGameInputProtectionInCurrentBuild)
+
+            Text(appState.localized("스크린샷 옵션은 Command-Shift-3·4·5·6과 Control 변형만 대상으로 합니다. 다른 캡처 앱·화면 공유·Dock·트랙패드 제스처는 차단하지 않습니다. Option-Command-Escape 강제 종료, Control-Command-Q 화면 잠금, 전원·비상 입력은 항상 허용합니다."))
+                .font(.caption)
+                .foregroundStyle(palette.secondaryText)
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if gameInputProtectionNeedsAuthorization {
+                Text(appState.localized(gameInputProtectionAuthorizationRequirementMessage))
+                    .font(.caption)
+                    .foregroundStyle(palette.warning)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    private var supportsGameInputProtectionInCurrentBuild: Bool {
+        GameInputProtectionBuildCapability.isSupportedInCurrentBuild
+    }
+
+    private var gameInputProtectionIsAuthorized: Bool {
+        guard supportsGameInputProtectionInCurrentBuild else { return false }
+        switch gameInputProtectionAuthorizationStatus {
+        case .authorized:
+            return true
+        case .accessibilityRequired,
+             .inputMonitoringRequired,
+             .accessibilityAndInputMonitoringRequired:
+            return false
+        }
+    }
+
+    private var gameInputProtectionNeedsAuthorization: Bool {
+        supportsGameInputProtectionInCurrentBuild &&
+            appState.hasEnabledGameInputEventTapProtection &&
+            !gameInputProtectionIsAuthorized
+    }
+
+    private var gameInputProtectionStatus: CheckStatus {
+        guard supportsGameInputProtectionInCurrentBuild else { return .warning }
+        guard appState.hasEnabledGameInputProtection else { return .unknown }
+        guard appState.hasEnabledGameInputEventTapProtection else { return .ok }
+        return gameInputProtectionIsAuthorized ? .ok : .warning
+    }
+
+    private var gameInputProtectionStatusLabel: String {
+        if !supportsGameInputProtectionInCurrentBuild {
+            return appState.localized("이 빌드에서 지원 안 함")
+        }
+        if !appState.hasEnabledGameInputProtection {
+            return appState.localized("입력 보호 꺼짐")
+        }
+        if !appState.hasEnabledGameInputEventTapProtection {
+            return appState.localized("포인터 숨김 사용 준비됨")
+        }
+        switch gameInputProtectionAuthorizationStatus {
+        case .authorized:
+            return appState.localized("입력 보호 사용 준비됨")
+        case .accessibilityRequired:
+            return appState.localized("손쉬운 사용 권한 필요")
+        case .inputMonitoringRequired:
+            return appState.localized("입력 모니터링 권한 필요")
+        case .accessibilityAndInputMonitoringRequired:
+            return appState.localized("손쉬운 사용·입력 모니터링 권한 필요")
+        }
+    }
+
+    private var gameInputProtectionAuthorizationStatus:
+        GameInputProtectionAuthorizationStatus {
+        services.gameInputProtectionAuthorizationStatus
+    }
+
+    private var gameInputProtectionAuthorizationRequirementMessage: String {
+        switch gameInputProtectionAuthorizationStatus {
+        case .authorized:
+            return "게임 입력 보호 권한이 준비되었습니다."
+        case .accessibilityRequired:
+            return "선택한 보호 기능에는 macOS 손쉬운 사용 권한이 필요합니다. 권한이 없으면 해당 설정으로 Steam을 실행하지 않습니다."
+        case .inputMonitoringRequired:
+            return "선택한 보호 기능에는 macOS 입력 모니터링 권한이 필요합니다. 권한이 없으면 해당 설정으로 Steam을 실행하지 않습니다."
+        case .accessibilityAndInputMonitoringRequired:
+            return "선택한 보호 기능에는 macOS 손쉬운 사용 및 입력 모니터링 권한이 필요합니다. 권한이 없으면 해당 설정으로 Steam을 실행하지 않습니다."
+        }
+    }
+
+    private func saveGameInputPreferences(_ mutation: () -> Void) {
+        let warning = appState.saveUserPreferencesAfterMutation(
+            to: modelContext,
+            mutation
+        )
+        guard warning == nil else { return }
+        services.synchronizeGameInputProtectionPolicy(from: appState)
+        if appState.hasEnabledGameInputEventTapProtection {
+            services.refreshGameInputProtectionAuthorizationStatus()
+        }
+    }
+
+    private func disablePermissionRequiredGameInputProtection() {
+        let warning = appState.saveUserPreferencesAfterMutation(
+            to: modelContext
+        ) {
+            appState.disableGameInputEventTapProtection()
+        }
+        guard warning == nil else { return }
+        services.synchronizeGameInputProtectionPolicy(from: appState)
+        appState.setNotice(
+            appState.localized(
+                "권한이 필요한 입력 보호를 껐습니다. Steam은 권한이 필요한 보호 없이 실행할 수 있습니다."
+            ),
+            kind: .success
+        )
+    }
+
+    private func hostModifierTitle(_ key: HostModifierKey) -> String {
+        switch key {
+        case .command: "물리 Command 키"
+        case .option: "물리 Option 키"
+        case .control: "물리 Control 키"
+        }
+    }
+
+    private func gameInputModifierTitle(_ binding: GameInputModifierBinding) -> String {
+        switch binding {
+        case .control: "Ctrl로 전달"
+        case .alt: "Alt로 전달"
+        case .disabled: "전달 안 함"
+        }
+    }
+
+    private func awdlControlPreferencesCard(
+        palette: ForgePlayPalette
+    ) -> some View {
+        let control = services.awdlControlService
+        return ForgeCard(
+            "게임 네트워크 · AWDL 제어 (기본 켬 · 베타)",
+            systemImage: "network.badge.shield.half.filled"
+        ) {
+            Text(appState.localized("AWDL은 AirDrop·AirPlay·Sidecar·Handoff 같은 Apple 기기 간 기능에 쓰이는 무선 인터페이스입니다. 일부 환경에서는 게임 중 간헐적인 무선 지연에 영향을 줄 수 있어 수동으로 끄고 다시 켤 수 있게 합니다. 지연 개선을 보장하지 않으며 시스템 전체에 적용됩니다."))
+                .font(.callout)
+                .foregroundStyle(palette.secondaryText)
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
+
+            VStack(alignment: .leading, spacing: 10) {
+                awdlStatusRow(
+                    title: "기본 상태",
+                    label: "AWDL 켜짐",
+                    status: .ok,
+                    palette: palette
+                )
+                awdlStatusRow(
+                    title: "현재 시스템 상태",
+                    label: awdlControlStatusLabel,
+                    status: awdlControlStatus,
+                    palette: palette
+                )
+            }
+
+            Text(appState.localized("AWDL 제어 도우미를 처음 활성화하면 AWDL을 켜고 실제 인터페이스 상태를 다시 확인합니다. 이후에는 위의 현재 시스템 상태가 실제 켜짐·꺼짐 여부를 표시합니다."))
+                .font(.caption)
+                .foregroundStyle(palette.secondaryText)
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text(appState.localized("AWDL을 끄면 AirDrop·AirPlay·Sidecar·Handoff와 연속성 기능이 중단될 수 있습니다. 꺼진 상태는 ForgePlay를 종료해도 유지되므로 게임을 마친 뒤 반드시 다시 켜세요."))
+                .font(.caption)
+                .foregroundStyle(palette.warning)
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
+
+            ResponsiveActionRow {
+                if control.registrationState == .notRegistered ||
+                    control.registrationState == .notFound {
+                    ThemedActionButton(
+                        title: "AWDL 제어 도우미 활성화",
+                        systemImage: "person.badge.key",
+                        prominence: .secondary,
+                        isDisabled: control.isWorking ||
+                            !AWDLControlBuildCapability.isSupportedInCurrentBuild,
+                        controlSize: .small
+                    ) {
+                        Task { @MainActor in
+                            await registerAWDLControlHelper()
+                        }
+                    }
+                    .frame(minWidth: 180, idealWidth: 230, maxWidth: 300)
+                }
+
+                if control.registrationState == .requiresApproval {
+                    ThemedActionButton(
+                        title: "로그인 항목 설정 열기",
+                        systemImage: "gearshape",
+                        prominence: .secondary,
+                        controlSize: .small
+                    ) {
+                        control.openApprovalSettings()
+                    }
+                    .frame(minWidth: 170, idealWidth: 210, maxWidth: 280)
+                }
+
+                ThemedActionButton(
+                    title: "AWDL 켜기",
+                    systemImage: "wifi",
+                    prominence: control.interfaceState == .enabled
+                        ? .primary
+                        : .secondary,
+                    isDisabled: awdlCommandIsDisabled ||
+                        control.interfaceState == .enabled,
+                    controlSize: .small
+                ) {
+                    Task { @MainActor in
+                        await setAWDLInterfaceEnabled(true)
+                    }
+                }
+                .frame(minWidth: 130, idealWidth: 170, maxWidth: 220)
+
+                ThemedActionButton(
+                    title: "AWDL 끄기",
+                    systemImage: "wifi.slash",
+                    prominence: control.interfaceState == .disabled
+                        ? .primary
+                        : .secondary,
+                    isDisabled: awdlCommandIsDisabled ||
+                        control.interfaceState == .disabled,
+                    controlSize: .small
+                ) {
+                    Task { @MainActor in
+                        await setAWDLInterfaceEnabled(false)
+                    }
+                }
+                .frame(minWidth: 130, idealWidth: 170, maxWidth: 220)
+
+                ThemedActionButton(
+                    title: "AWDL 상태 새로고침",
+                    systemImage: "arrow.clockwise",
+                    prominence: .secondary,
+                    isDisabled: control.isWorking,
+                    controlSize: .small
+                ) {
+                    Task { @MainActor in
+                        await control.refresh()
+                    }
+                }
+                .frame(minWidth: 160, idealWidth: 210, maxWidth: 280)
+            }
+
+            if let error = control.lastError {
+                Text(appState.localizedError(error))
+                    .font(.caption)
+                    .foregroundStyle(palette.warning)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    private func awdlStatusRow(
+        title: String,
+        label: String,
+        status: CheckStatus,
+        palette: ForgePlayPalette
+    ) -> some View {
+        HStack(alignment: .center, spacing: 10) {
+            Text(appState.localized(title))
+                .font(.callout.weight(.semibold))
+                .foregroundStyle(palette.text)
+            Spacer(minLength: 12)
+            StatusBadge(label: label, status: status)
+            if services.awdlControlService.isWorking,
+               title == "현재 시스템 상태" {
+                ProgressView()
+                    .controlSize(.small)
+                    .accessibilityLabel(
+                        appState.localized("AWDL 상태 변경 중")
+                    )
+            }
+        }
+    }
+
+    private var awdlCommandIsDisabled: Bool {
+        let control = services.awdlControlService
+        return !AWDLControlBuildCapability.isSupportedInCurrentBuild ||
+            control.isWorking
+    }
+
+    private var awdlControlStatus: CheckStatus {
+        let control = services.awdlControlService
+        switch control.registrationState {
+        case .unsupported, .notFound, .requiresApproval:
+            return .warning
+        case .notRegistered:
+            return .unknown
+        case .enabled:
+            return control.interfaceState == .unavailable ? .warning : .ok
+        }
+    }
+
+    private var awdlControlStatusLabel: String {
+        let control = services.awdlControlService
+        if control.isWorking { return appState.localized("AWDL 상태 변경 중") }
+        switch control.registrationState {
+        case .unsupported:
+            return appState.localized("이 빌드에서 AWDL 제어 지원 안 함")
+        case .notRegistered:
+            return appState.localized("AWDL 제어 도우미 미설정")
+        case .requiresApproval:
+            return appState.localized("AWDL 제어 도우미 승인 필요")
+        case .notFound:
+            return appState.localized("AWDL 제어 도우미 없음")
+        case .enabled:
+            switch control.interfaceState {
+            case .enabled:
+                return appState.localized("AWDL 켜짐")
+            case .disabled:
+                return appState.localized("AWDL 꺼짐")
+            case .unavailable:
+                return appState.localized("AWDL 상태 확인 필요")
+            }
+        }
+    }
+
+    private func registerAWDLControlHelper() async {
+        do {
+            try await services.awdlControlService.registerHelper(
+                defaultInterfaceEnabled: true
+            )
+            appState.setNotice(
+                appState.localized("AWDL 제어 도우미를 활성화하고 AWDL을 켰습니다."),
+                kind: .success
+            )
+        } catch AWDLControlError.helperRequiresApproval {
+            services.awdlControlService.openApprovalSettings()
+            appState.setNotice(
+                appState.localizedError(AWDLControlError.helperRequiresApproval),
+                kind: .warning
+            )
+        } catch {
+            appState.setNotice(appState.localizedError(error), kind: .failure)
+        }
+    }
+
+    private func setAWDLInterfaceEnabled(_ enabled: Bool) async {
+        do {
+            try await services.awdlControlService.setInterfaceEnabled(enabled)
+            appState.setNotice(
+                appState.localized(enabled ? "AWDL을 켰습니다." : "AWDL을 껐습니다."),
+                kind: enabled ? .success : .warning
+            )
+        } catch AWDLControlError.helperRequiresApproval {
+            services.awdlControlService.openApprovalSettings()
+            appState.setNotice(
+                appState.localizedError(AWDLControlError.helperRequiresApproval),
+                kind: .warning
+            )
+        } catch {
+            appState.setNotice(appState.localizedError(error), kind: .failure)
         }
     }
 
@@ -742,17 +1345,26 @@ struct SettingsView: View {
     private var runtimeStatus: CheckStatus {
         if isAppStoreScreenshotFixture { return .ok }
         if !canRunBundledWindowsRuntime { return .warning }
-        guard let url = appState.runtimeExecutableURL else { return .warning }
-        guard FileManager.default.fileExists(atPath: url.path) else { return .error }
-        let capability: WindowsRuntimeCapability
-        do {
-            capability = try services.windowsRuntimeService.inspectRuntimeCapability(executable: url)
-        } catch {
+        guard appState.runtimeExecutableURL != nil else { return .warning }
+        guard let runtimeSystemCheck else { return .unknown }
+        switch runtimeSystemCheck.status {
+        case .error:
             return .error
+        case .unknown:
+            return .unknown
+        case .ok:
+            return .ok
+        case .warning:
+            guard let rendererInspection = readiness.rendererInspection else { return .warning }
+            if rendererInspection.effectiveRecoveryKind == .runtimeUnavailable ||
+                rendererInspection.requiresRepair {
+                return .error
+            }
+            if rendererInspection.requiresApply || rendererInspection.status != .ok {
+                return .warning
+            }
+            return .ok
         }
-        let verification = SteamClientCompatibilityVerifier.verify(capability: capability)
-        if !verification.canLaunchWindowsSteam { return .error }
-        return verification.canLaunchManagedSteamGames ? .ok : .warning
     }
 
     private var steamPrefixStatus: CheckStatus {
@@ -770,28 +1382,13 @@ struct SettingsView: View {
         if let bundledRuntimeUnavailableReason {
             return bundledRuntimeUnavailableReason
         }
-        guard let url = appState.runtimeExecutableURL else {
+        guard appState.runtimeExecutableURL != nil else {
             return appState.localized("ForgePlay Runtime을 확인하지 못했습니다.")
         }
-        guard FileManager.default.fileExists(atPath: url.path) else {
-            return appState.localizedFormat("선택했던 파일을 찾을 수 없습니다: %@", url.path)
+        guard let runtimeSystemCheck else {
+            return appState.localized("ForgePlay Runtime을 확인하는 중입니다.")
         }
-        do {
-            let verification = try services.steamPrefixService.inspectSteamClientCompatibility(url)
-            if !verification.canLaunchWindowsSteam {
-                return appState.localized(verification.userMessage)
-            }
-            let productRuntimeName = appState.localized(
-                WindowsRuntimeDisplayName.productRuntimeName(for: verification.capability)
-            )
-            return appState.localizedFormat(
-                "%@ · %@",
-                productRuntimeName,
-                appState.localized(WindowsRuntimeDisplayName.statusSummary(for: verification.capability))
-            )
-        } catch {
-            return appState.localizedError(error)
-        }
+        return appState.localized(runtimeSystemCheck.detail)
     }
 
     private var steamStatusText: String {
@@ -909,11 +1506,15 @@ struct SettingsView: View {
     }
 
     private func refreshReadiness() {
-        services.synchronizeSetupWorkflow(
-            appState: appState,
-            hasSteamReferences: !games.isEmpty,
-            launchRecords: launchRecords
-        )
+        do {
+            try services.synchronizeSetupWorkflow(
+                appState: appState,
+                in: modelContext,
+                hasSteamReferences: !games.isEmpty
+            )
+        } catch {
+            appState.setError(error)
+        }
     }
 
     private func runSystemChecks() {
@@ -925,14 +1526,32 @@ struct SettingsView: View {
                 }
             }
             do {
+                try await refreshSetupWorkflowUntilCurrent()
+            } catch is CancellationError {
+                return
+            } catch {
+                appState.setError(error)
+            }
+        }
+    }
+
+    private func refreshSetupWorkflowUntilCurrent() async throws {
+        while true {
+            try Task.checkCancellation()
+            do {
                 _ = try await services.refreshSetupWorkflow(
                     appState: appState,
                     in: modelContext,
-                    hasSteamReferences: !games.isEmpty,
-                    launchRecords: launchRecords
+                    hasSteamReferences: !games.isEmpty
                 )
-            } catch {
-                appState.setError(error)
+                return
+            } catch SetupWorkflowRefreshControlError.superseded {
+                guard SetupWorkflowRefreshRetryPolicy.shouldRetryAfterSupersession(
+                    outerTaskIsCancelled: Task.isCancelled
+                ) else {
+                    throw CancellationError()
+                }
+                await Task.yield()
             }
         }
     }

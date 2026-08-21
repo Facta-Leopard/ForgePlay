@@ -12,18 +12,39 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 PATCH_FILE="$REPO_ROOT/Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-game-mode-process-host-routing.patch"
 SCOPE_PATCH_FILE="$REPO_ROOT/Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-game-mode-direct-target-scope.patch"
 HOST_CONFIG="$REPO_ROOT/Config/ForgePlayGameModeProcessHost.xcconfig"
+HOST_RELEASE_CONFIG="$REPO_ROOT/Config/ForgePlayGameModeProcessHostRelease.xcconfig"
+HOST_DISTRIBUTION_CONFIG="$REPO_ROOT/Config/ForgePlayGameModeProcessHostDistribution.xcconfig"
+HOST_APP_STORE_CONFIG="$REPO_ROOT/Config/ForgePlayGameModeProcessHostAppStore.xcconfig"
+HOST_DEVELOPMENT_ENTITLEMENTS="$REPO_ROOT/Native/GameModeProcessHost/GameModeProcessHost-Development.entitlements"
+HOST_RELEASE_ENTITLEMENTS="$REPO_ROOT/Native/GameModeProcessHost/GameModeProcessHost-Release.entitlements"
+HOST_IDENTITY_PREPARER="$REPO_ROOT/Scripts/prepare-game-mode-host-build-identity.sh"
 HOST_SOURCE="$REPO_ROOT/Native/GameModeProcessHost/GameModeProcessHost.m"
 HOST_IDENTITY_SOURCE="$REPO_ROOT/Native/GameModeProcessHost/GameModeRuntimeIdentity.m"
 HOST_EXECUTION_SOURCE="$REPO_ROOT/Native/GameModeProcessHost/GameModeInheritedExecution.m"
+HOST_EVIDENCE_SOURCE="$REPO_ROOT/Native/GameModeProcessHost/GameModeApplicationGroup.m"
+HOST_BUILDER="$REPO_ROOT/Native/GameModeProcessHost/build-game-mode-process-host.sh"
+APP_SECURITY_VERIFIER="$REPO_ROOT/Scripts/verify-app-store-app-security.sh"
+WARNING_CHECKER="$REPO_ROOT/Scripts/check-project-build-warnings.sh"
 
 python3 - \
     "$PATCH_FILE" \
     "$SCOPE_PATCH_FILE" \
     "$HOST_CONFIG" \
+    "$HOST_RELEASE_CONFIG" \
+    "$HOST_DISTRIBUTION_CONFIG" \
+    "$HOST_APP_STORE_CONFIG" \
+    "$HOST_DEVELOPMENT_ENTITLEMENTS" \
+    "$HOST_RELEASE_ENTITLEMENTS" \
+    "$HOST_IDENTITY_PREPARER" \
     "$HOST_SOURCE" \
     "$HOST_IDENTITY_SOURCE" \
-    "$HOST_EXECUTION_SOURCE" <<'PY'
+    "$HOST_EXECUTION_SOURCE" \
+    "$HOST_EVIDENCE_SOURCE" \
+    "$HOST_BUILDER" \
+    "$APP_SECURITY_VERIFIER" \
+    "$WARNING_CHECKER" <<'PY'
 import sys
+import plistlib
 from pathlib import Path
 
 
@@ -31,9 +52,19 @@ from pathlib import Path
     patch_path,
     scope_patch_path,
     host_config_path,
+    host_release_config_path,
+    host_distribution_config_path,
+    host_app_store_config_path,
+    host_development_entitlements_path,
+    host_release_entitlements_path,
+    host_identity_preparer_path,
     host_source_path,
     host_identity_source_path,
     host_execution_source_path,
+    host_evidence_source_path,
+    host_builder_path,
+    app_security_verifier_path,
+    warning_checker_path,
 ) = map(Path, sys.argv[1:])
 
 
@@ -54,12 +85,26 @@ require(host_identity_source_path.is_file() and not host_identity_source_path.is
         f"Game Mode host Runtime identity source is missing or unsafe: {host_identity_source_path}")
 require(host_execution_source_path.is_file() and not host_execution_source_path.is_symlink(),
         f"Game Mode host execution source is missing or unsafe: {host_execution_source_path}")
+require(host_evidence_source_path.is_file() and not host_evidence_source_path.is_symlink(),
+        f"Game Mode host evidence source is missing or unsafe: {host_evidence_source_path}")
 patch = patch_path.read_text(encoding="utf-8")
 scope_patch = scope_patch_path.read_text(encoding="utf-8")
 host_config = host_config_path.read_text(encoding="utf-8")
+host_release_config = host_release_config_path.read_text(encoding="utf-8")
+host_distribution_config = host_distribution_config_path.read_text(encoding="utf-8")
+host_app_store_config = host_app_store_config_path.read_text(encoding="utf-8")
+host_identity_preparer = host_identity_preparer_path.read_text(encoding="utf-8")
+with host_development_entitlements_path.open("rb") as stream:
+    host_development_entitlements = plistlib.load(stream)
+with host_release_entitlements_path.open("rb") as stream:
+    host_release_entitlements = plistlib.load(stream)
 host_source = host_source_path.read_text(encoding="utf-8")
 host_identity_source = host_identity_source_path.read_text(encoding="utf-8")
 host_execution_source = host_execution_source_path.read_text(encoding="utf-8")
+host_evidence_source = host_evidence_source_path.read_text(encoding="utf-8")
+host_builder = host_builder_path.read_text(encoding="utf-8")
+app_security_verifier = app_security_verifier_path.read_text(encoding="utf-8")
+warning_checker = warning_checker_path.read_text(encoding="utf-8")
 added_source = "\n".join(
     line[1:]
     for line in patch.splitlines()
@@ -156,6 +201,66 @@ require("ENABLE_DEBUG_DYLIB = NO" in host_config,
         "Xcode Debug Dylib would apply fixed-address loader flags to a dylib link")
 require("STRIP_STYLE = non-global" in host_config,
         "Xcode install/archive must preserve the host dlsym preload export")
+require("FORGEPLAY_GAME_MODE_COORDINATION_PROFILE = sandbox-app-group" in host_config,
+        "Debug host no longer preserves the sandbox-inheritance profile")
+for configuration, label in (
+    (host_distribution_config, "Distribution"),
+    (host_app_store_config, "App Store"),
+):
+    require("FORGEPLAY_GAME_MODE_COORDINATION_PROFILE = sandbox-app-group" in configuration,
+            f"{label} host no longer selects sandbox App Group coordination")
+require("FORGEPLAY_GAME_MODE_COORDINATION_PROFILE = direct-user-domain" in host_release_config,
+        "direct Release host profile is unavailable")
+require("FORGEPLAY_REQUIRE_GAME_MODE_PRODUCTION_IDENTITY = YES" in host_release_config and
+        "FORGEPLAY_GAME_MODE_APPLICATION_GROUP = $(DEVELOPMENT_TEAM).$(FORGEPLAY_APP_BUNDLE_ID)" in
+        host_release_config,
+        "direct Release host is not bound to its production App Group identity")
+require(set(host_development_entitlements) == {
+            "com.apple.security.app-sandbox",
+            "com.apple.security.inherit",
+            "com.apple.security.cs.allow-unsigned-executable-memory",
+            "com.apple.security.cs.disable-library-validation",
+        } and all(value is True for value in host_development_entitlements.values()),
+        "Debug host sandbox-inheritance entitlements changed")
+require(host_release_entitlements == {
+            "com.apple.security.application-groups": [
+                "$(FORGEPLAY_GAME_MODE_APPLICATION_GROUP)"
+            ],
+            "com.apple.security.cs.allow-unsigned-executable-memory": True,
+            "com.apple.security.cs.disable-library-validation": True,
+        },
+        "direct Release host entitlements must contain only App Group and Wine execution rights")
+for fragment in (
+    'sandbox-app-group|direct-user-domain',
+    'direct-user-domain requires a production Game Mode identity',
+    'compile-only.invalid',
+    'FORGEPLAY_GAME_MODE_PRODUCTION_IDENTITY %s',
+    'FORGEPLAY_GAME_MODE_HOST_RUNNABLE %s',
+    'FORGEPLAY_GAME_MODE_COORDINATION_PROFILE "%s"',
+    'FORGEPLAY_GAME_MODE_COORDINATION_SANDBOX_APP_GROUP 1',
+    'FORGEPLAY_GAME_MODE_COORDINATION_DIRECT_USER_DOMAIN 1',
+):
+    require(fragment in host_identity_preparer,
+            f"generated host identity lacks the dual coordination profile contract: {fragment}")
+require("-DFORGEPLAY_GAME_MODE_PRODUCTION_IDENTITY=1" in host_builder and
+        "-DFORGEPLAY_GAME_MODE_HOST_RUNNABLE=1" in host_builder,
+        "standalone production host builder lost its runnable identity bits")
+require("if (!FPBuildIdentityAllowsExecution())" in host_source and
+        'compile_only_identity' in host_source,
+        "compile-only Game Mode host does not fail before coordination access")
+require("LD_NO_PIE = YES" in host_config and "-Wl,-no_pie" in host_builder,
+        "fixed-address host must remain a non-PIE executable in both build paths")
+for verifier, label in (
+    (host_builder, "direct host builder"),
+    (app_security_verifier, "app security verifier"),
+):
+    require('print $5' in verifier and '== "EXECUTE"' in verifier,
+            f"{label} does not require an executable Mach-O")
+    require('must not carry the MH_PIE flag' in verifier,
+            f"{label} does not reject a PIE host")
+require("KNOWN_GAME_MODE_NO_PIE_WARNING" in warning_checker and
+        "grep -Fvx \"$KNOWN_GAME_MODE_NO_PIE_WARNING\"" in warning_checker,
+        "warning gate does not isolate the one required no-PIE linker warning exactly")
 for fragment in (
     "sha256-macho-signature-independent-v1",
     "forgeplay-runtime-core-payload-v2",
@@ -212,6 +317,10 @@ require('"FORGEPLAY_GAME_MODE_PROCESS_NAME"' not in host_execution_source and
         "processDisplayName" not in host_execution_source and
         "setprogname(" not in host_source,
         "fixed host identity must not be replaced with a per-game process name")
+require("PROC_PIDTBSDINFO" in host_evidence_source and
+        'process_started_at_unix_microseconds' in host_evidence_source and
+        "if (!processStartedAt)" in host_evidence_source,
+        "Game Mode evidence must fail closed unless it records the kernel process-start identity")
 
 require("forgeplay_game_mode_image_path_is_eligible" in scope_patch and
         "&params->ImagePathName" in scope_patch,
@@ -255,7 +364,7 @@ for fragment in (
 for forbidden in (
     "/Users/",
     "/Volumes/",
-    "EnclosureDisk",
+    "ForgePlayFixtureVolume",
     "SteamLibrary",
     "E:\\\\",
 ):
@@ -279,3 +388,35 @@ print("activity_monitor_process_label=fixed-host-identity")
 print("fixed_address_host_debug_dylib=disabled")
 print("distant_reservation_rip_reference=absent")
 PY
+
+warning_fixture_root="$(mktemp -d "${TMPDIR:-/tmp}/forgeplay-game-mode-warning-gate.XXXXXX")"
+cleanup_warning_fixture() {
+  /bin/rm -rf "$warning_fixture_root"
+}
+trap cleanup_warning_fixture EXIT
+
+known_warning_log="$warning_fixture_root/known.log"
+printf '%s\n' \
+  "$REPO_ROOT/ForgePlay.xcodeproj: GameModeProcessHost: ld: warning: -no_pie is deprecated when targeting new OS versions" \
+  > "$known_warning_log"
+/bin/bash "$WARNING_CHECKER" "$REPO_ROOT" "$known_warning_log"
+
+unexpected_warning_log="$warning_fixture_root/unexpected.log"
+printf '%s\n' \
+  "$REPO_ROOT/Native/GameModeProcessHost/GameModeProcessHost.m:1:1: warning: synthetic warning" \
+  > "$unexpected_warning_log"
+if /bin/bash "$WARNING_CHECKER" "$REPO_ROOT" "$unexpected_warning_log" >/dev/null 2>&1; then
+  echo "error: warning gate accepted an unrelated Native warning" >&2
+  exit 1
+fi
+
+wrong_target_warning_log="$warning_fixture_root/wrong-target.log"
+printf '%s\n' \
+  "$REPO_ROOT/ForgePlay.xcodeproj: ForgePlay: ld: warning: -no_pie is deprecated when targeting new OS versions" \
+  > "$wrong_target_warning_log"
+if /bin/bash "$WARNING_CHECKER" "$REPO_ROOT" "$wrong_target_warning_log" >/dev/null 2>&1; then
+  echo "error: warning gate accepted the no-PIE warning for the wrong target" >&2
+  exit 1
+fi
+
+echo "game_mode_warning_gate=PASS"

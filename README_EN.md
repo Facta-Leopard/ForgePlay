@@ -1,17 +1,6 @@
 # ForgePlay Source — English
 
-[한국어](README_KO.md) | [Combined README](README.md) | [Release v1.0.0](https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0)
-
-## Published paths
-
-- [Current published source (`main`)](https://github.com/Facta-Leopard/ForgePlay/tree/main)
-- [`v1.0.0` source snapshot](https://github.com/Facta-Leopard/ForgePlay/tree/v1.0.0)
-- [ForgePlay 1.0 (build 1) release](https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0)
-- [Apple-notarized DMG](https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.0.0/ForgePlay-1.0-1.dmg)
-- [SHA-256](https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.0.0/ForgePlay-1.0-1.dmg.sha256) · [notarization and signing evidence JSON](https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.0.0/ForgePlay-1.0-1.dmg.release.json)
-
-The existing GitHub Pages files and the published source share `main`. The DMG
-and notarization evidence are distributed separately through GitHub Releases.
+[한국어](README_KO.md) | [Language index](README.md)
 
 ## The position, stated plainly
 
@@ -65,8 +54,9 @@ and the normal process lineage created by Steam.
    does not impersonate Steam by directly substituting a game executable.
 3. Steam remains the canonical Windows parent and creates the game or launcher
    child.
-4. ForgePlay's Wine patches carry the selected renderer policy and Steam-game
-   lineage across the process-creation boundary.
+4. ForgePlay's Wine patches carry the selected renderer, network-adapter
+   presentation, audio-input policy, and Steam-game lineage across the
+   process-creation boundary.
 5. Game Mode eligibility does not trust a command line, game title, account
    name, volume name, or Steam App ID. It is derived on the Unix side from
    Wine's resolved `RTL_USER_PROCESS_PARAMETERS.ImagePathName`.
@@ -81,15 +71,25 @@ lineage and applies compatibility policy at Wine's process boundary.
 
 ## Renderer selection is separate from Game Mode
 
-Before a Steam session begins, the user selects exactly one of D3DMetal, DXMT,
-D9VK, or DXVK. Steam and Steam WebHelper remain on the base Wine renderer path.
-The selected renderer is applied only to game children under
-`steamapps/common`. A missing or invalid selection is rejected instead of
-silently falling back to another renderer.
+Before a Steam session begins, the user selects exactly one of D3DMetal
+Standard, D3DMetal NVIDIA/DLSS Compatibility, DXMT, D9VK, or DXVK. Both
+D3DMetal choices use the same renderer; only the experimental NVIDIA choice
+adds `D3DM_VENDOR_ID=0x10de` to routed game children. It does not force
+DirectX 11/12 or guarantee that a game's DLSS path will work. Steam and Steam
+WebHelper remain on the base Wine renderer path. The selected renderer is
+applied only to game children under `steamapps/common`. A missing or invalid
+selection is rejected instead of silently falling back to another renderer.
 
 Renderer selection and Game Mode eligibility are independent. Selecting
 D3DMetal does not automatically enable Game Mode, and selecting Game Mode does
 not replace the chosen renderer.
+
+On the same launch screen, the user explicitly selects Standard, Wi-Fi, or
+Ethernet adapter presentation and audio input disabled or enabled for every
+session. The network choice changes only the adapter type visible to games; it
+does not convert TCP and UDP. Audio input disabled exposes zero Windows capture
+endpoints before CoreAudio input access while preserving audio output. These
+values are neither stored per game nor restored automatically.
 
 ## How Game Mode is implemented
 
@@ -182,6 +182,10 @@ discloses the former and does not claim to have done the latter.
   `Native/GameModeProcessHost/SOURCE-CONTRACT.md`
 - Wine 11.12 source URL, hashes, patches, and reconstruction record:
   `Resources/Runners/ForgePlayRuntime/SOURCE-AVAILABILITY.md`
+- Wine patch for manual NVIDIA vendor, network presentation, and audio input:
+  `Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-session-compatibility-controls.patch`
+- TCP/UDP, adapter-type, and capture-endpoint probe:
+  `Scripts/test-wine-session-compatibility.sh`
 - Patch provenance lock:
   `Config/ForgePlayRuntimePatchProvenance.lock.json`
 
@@ -195,7 +199,7 @@ Included:
 
 - ForgePlay Swift and Objective-C source
 - Game Mode process-host source and build contract
-- Game Mode unit and routing tests
+- Game Mode unit/routing tests and the Steam session compatibility probe source
 - ForgePlay-authored Wine patches and Windows launcher source
 - XcodeGen project specification and non-personal build settings
 - Canonical license texts, scope records, and localized notices

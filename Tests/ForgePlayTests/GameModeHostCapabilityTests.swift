@@ -9,6 +9,25 @@ import XCTest
 @testable import ForgePlay
 
 final class GameModeHostCapabilityTests: XCTestCase {
+    func testCapabilityErrorProvidesStableTechnicalDescription() {
+        let error = GameModeHostCapabilityError.applicationGroupRequired
+
+        XCTAssertTrue(
+            error.forgePlayTechnicalDescription.hasPrefix(
+                "host-application-group-required:"
+            )
+        )
+        XCTAssertEqual(
+            forgePlayTechnicalErrorSummary(error),
+            error.forgePlayTechnicalDescription
+        )
+        XCTAssertFalse(
+            forgePlayTechnicalErrorSummary(error).contains(
+                "GameModeHostCapabilityError 19"
+            )
+        )
+    }
+
     func testValidFixedHostProducesCapabilityAndEnvironment() throws {
         let fixture = try makeFixture(assetCatalogCompatibilityIconFile: true)
         defer { try? FileManager.default.removeItem(at: fixture.root) }
@@ -28,6 +47,268 @@ final class GameModeHostCapabilityTests: XCTestCase {
         XCTAssertEqual(environment[GameModeHostEnvironment.enabledKey], "1")
         XCTAssertEqual(environment[GameModeHostEnvironment.executableKey], fixture.executable.path)
         XCTAssertEqual(environment["BASE"], "1")
+    }
+
+    func testSteamLaunchAdmissionRequiresApplicationGroupForBothProfiles() throws {
+        let fixture = try makeFixture(assetCatalogCompatibilityIconFile: true)
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let inspector = testInspector()
+
+        for (sandboxEnabled, applicationGroupIdentifier) in [
+            (false, nil),
+            (false, "" as String?),
+            (false, "$(FORGEPLAY_APPLICATION_GROUP)" as String?),
+            (true, nil),
+            (true, "" as String?),
+            (true, "$(FORGEPLAY_APPLICATION_GROUP)" as String?)
+        ] {
+            XCTAssertThrowsError(
+                try inspector.inspectBundledHostForSteamLaunchAdmission(
+                    mainBundleURL: fixture.root,
+                    mainBundleIdentifier: "com.forgeplay.client",
+                    sandboxEnabled: sandboxEnabled,
+                    primaryApplicationGroupIdentifier:
+                        applicationGroupIdentifier
+                )
+            ) { error in
+                XCTAssertEqual(
+                    error as? GameModeHostCapabilityError,
+                    .applicationGroupRequired
+                )
+            }
+        }
+    }
+
+    func testSteamLaunchAdmissionSelectsProfileFromMainSandboxState() throws {
+        let fixture = try makeFixture(assetCatalogCompatibilityIconFile: true)
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let selectedProfiles = GameModeTestLockedValues<GameModeHostSigningProfile>()
+        let inspector = testInspector { profile, applicationGroupIdentifier in
+            selectedProfiles.append(profile)
+            XCTAssertEqual(
+                applicationGroupIdentifier,
+                "group.com.forgeplay.client"
+            )
+            return nil
+        }
+
+        let sandboxCapability = try inspector
+            .inspectBundledHostForSteamLaunchAdmission(
+                mainBundleURL: fixture.root,
+                mainBundleIdentifier: "com.forgeplay.client",
+                sandboxEnabled: true,
+                primaryApplicationGroupIdentifier:
+                    "group.com.forgeplay.client"
+            )
+        let directCapability = try inspector
+            .inspectBundledHostForSteamLaunchAdmission(
+                mainBundleURL: fixture.root,
+                mainBundleIdentifier: "com.forgeplay.client",
+                sandboxEnabled: false,
+                primaryApplicationGroupIdentifier:
+                    "group.com.forgeplay.client"
+            )
+
+        XCTAssertEqual(sandboxCapability.appURL, fixture.app.standardizedFileURL)
+        XCTAssertEqual(directCapability.appURL, fixture.app.standardizedFileURL)
+        XCTAssertEqual(
+            selectedProfiles.values,
+            [.sandboxAppGroup, .directUserDomain]
+        )
+    }
+
+    func testSteamLaunchAdmissionValidatesBundledHostWithoutPrefixInputs() throws {
+        let fixture = try makeFixture(assetCatalogCompatibilityIconFile: true)
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+
+        let capability = try testInspector()
+            .inspectBundledHostForSteamLaunchAdmission(
+                mainBundleURL: fixture.root,
+                mainBundleIdentifier: "com.forgeplay.client",
+                sandboxEnabled: true,
+                primaryApplicationGroupIdentifier:
+                    "group.com.forgeplay.client"
+            )
+
+        XCTAssertEqual(capability.appURL, fixture.app.standardizedFileURL)
+        XCTAssertEqual(
+            capability.bundleIdentifier,
+            "com.forgeplay.client.game-mode-host"
+        )
+    }
+
+    func testSandboxSigningProfileRequiresExactInheritanceEntitlements() {
+        let required: [String: Any] = [
+            "com.apple.security.app-sandbox": true,
+            "com.apple.security.inherit": true,
+            "com.apple.security.cs.allow-unsigned-executable-memory": true,
+            "com.apple.security.cs.disable-library-validation": true
+        ]
+
+        XCTAssertNil(
+            GameModeHostCapabilityInspector.signingProfileViolation(
+                in: required,
+                profile: .sandboxAppGroup
+            )
+        )
+        var missing = required
+        missing.removeValue(forKey: "com.apple.security.inherit")
+        XCTAssertEqual(
+            GameModeHostCapabilityInspector.signingProfileViolation(
+                in: missing,
+                profile: .sandboxAppGroup
+            ),
+            "required entitlement is missing: com.apple.security.inherit"
+        )
+        var mixed = required
+        mixed["com.apple.security.application-groups"] = [
+            "group.com.forgeplay.client"
+        ]
+        XCTAssertEqual(
+            GameModeHostCapabilityInspector.signingProfileViolation(
+                in: mixed,
+                profile: .sandboxAppGroup
+            ),
+            "entitlement is forbidden for sandbox-app-group: " +
+                "com.apple.security.application-groups"
+        )
+    }
+
+    func testDirectSigningProfileRequiresExactApplicationGroupAndRuntimeEntitlements() {
+        let group = "group.com.forgeplay.client"
+        let required: [String: Any] = [
+            "com.apple.security.application-groups": [group],
+            "com.apple.security.cs.allow-unsigned-executable-memory": true,
+            "com.apple.security.cs.disable-library-validation": true
+        ]
+
+        XCTAssertNil(
+            GameModeHostCapabilityInspector.signingProfileViolation(
+                in: required,
+                profile: .directUserDomain,
+                applicationGroupIdentifier: group
+            )
+        )
+        for invalidGroups: [String] in [
+            [],
+            ["group.other"],
+            [group, "group.other"]
+        ] {
+            var invalid = required
+            invalid["com.apple.security.application-groups"] = invalidGroups
+            XCTAssertNotNil(
+                GameModeHostCapabilityInspector.signingProfileViolation(
+                    in: invalid,
+                    profile: .directUserDomain,
+                    applicationGroupIdentifier: group
+                )
+            )
+        }
+        for forbiddenKey in [
+            "com.apple.security.app-sandbox",
+            "com.apple.security.inherit",
+            "com.apple.security.files.user-selected.read-write",
+            "com.apple.security.network.client"
+        ] {
+            var invalid = required
+            invalid[forbiddenKey] = true
+            XCTAssertEqual(
+                GameModeHostCapabilityInspector.signingProfileViolation(
+                    in: invalid,
+                    profile: .directUserDomain,
+                    applicationGroupIdentifier: group
+                ),
+                "entitlement is forbidden for direct-user-domain: \(forbiddenKey)"
+            )
+        }
+    }
+
+    func testDirectSigningProfileViolationUsesDirectDiagnostic() throws {
+        let fixture = try makeFixture(assetCatalogCompatibilityIconFile: true)
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let inspector = testInspector { profile, _ in
+            profile == .directUserDomain ? "direct contract mismatch" : nil
+        }
+
+        XCTAssertThrowsError(
+            try inspector.inspectBundledHostForSteamLaunchAdmission(
+                mainBundleURL: fixture.root,
+                mainBundleIdentifier: "com.forgeplay.client",
+                sandboxEnabled: false,
+                primaryApplicationGroupIdentifier:
+                    "group.com.forgeplay.client"
+            )
+        ) { error in
+            XCTAssertEqual(
+                error as? GameModeHostCapabilityError,
+                .directUserDomainContractInvalid(
+                    fixture.app.standardizedFileURL,
+                    "direct contract mismatch"
+                )
+            )
+        }
+    }
+
+    func testCoordinationEvidenceAlwaysUsesPreparedApplicationGroupPath() throws {
+        let fileManager = FileManager.default
+        let root = fileManager.temporaryDirectory.appending(
+            path: "forgeplay-game-mode-coordination-tests-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        defer { try? fileManager.removeItem(at: root) }
+        try fileManager.createDirectory(at: root, withIntermediateDirectories: true)
+        let fallback = root.appending(path: "arbitrary/fallback.jsonl")
+        let group = "group.com.forgeplay.client"
+
+        let evidence = try GameModeHostCoordinationPaths.evidenceLogURL(
+            fallbackLogURL: fallback,
+            fileManager: fileManager,
+            primaryApplicationGroupIdentifier: group,
+            applicationGroupContainerResolver: { identifier in
+                XCTAssertEqual(identifier, group)
+                return root
+            }
+        )
+
+        XCTAssertEqual(
+            evidence.path,
+            root.appending(
+                path: "Library/Application Support/ForgePlay/" +
+                    "GameModeProcessHostEvidence/GameModeProcessHost-v1.jsonl"
+            ).path
+        )
+        XCTAssertNotEqual(evidence.standardizedFileURL, fallback.standardizedFileURL)
+        XCTAssertEqual(
+            GameModeHostCoordinationPaths.existingEvidenceDirectoryURL(
+                fileManager: fileManager,
+                primaryApplicationGroupIdentifier: group,
+                applicationGroupContainerResolver: { _ in root }
+            ),
+            evidence.deletingLastPathComponent()
+        )
+        let attributes = try fileManager.attributesOfItem(
+            atPath: evidence.deletingLastPathComponent().path
+        )
+        XCTAssertEqual(
+            (attributes[.posixPermissions] as? NSNumber)?.intValue ?? 0,
+            0o700
+        )
+    }
+
+    func testCoordinationEvidenceFailsClosedWithoutApplicationGroupContainer() {
+        XCTAssertThrowsError(
+            try GameModeHostCoordinationPaths.evidenceLogURL(
+                fallbackLogURL: URL(fileURLWithPath: "/tmp/fallback.jsonl"),
+                primaryApplicationGroupIdentifier:
+                    "group.com.forgeplay.client",
+                applicationGroupContainerResolver: { _ in nil }
+            )
+        ) { error in
+            guard case .coordinationStorageUnavailable(nil, _) =
+                    error as? GameModeHostCapabilityError else {
+                return XCTFail("unexpected error: \(error)")
+            }
+        }
     }
 
     func testStandardLaunchExplicitlyRemovesExperimentalHostSelection() {
@@ -174,11 +455,16 @@ final class GameModeHostCapabilityTests: XCTestCase {
     }
 
     private func testInspector(
-        sandboxViolation: String? = nil
+        signingProfileViolation: @escaping @Sendable (
+            GameModeHostSigningProfile,
+            String?
+        ) -> String? = { _, _ in nil }
     ) -> GameModeHostCapabilityInspector {
         GameModeHostCapabilityInspector(
             signatureValidator: { _ in true },
-            sandboxInheritanceValidator: { _ in sandboxViolation }
+            signingProfileValidator: { _, profile, applicationGroupIdentifier in
+                signingProfileViolation(profile, applicationGroupIdentifier)
+            }
         )
     }
 
@@ -230,5 +516,23 @@ final class GameModeHostCapabilityTests: XCTestCase {
             ofItemAtPath: executable.path
         )
         return (root, helpers, app, executable)
+    }
+}
+
+private final class GameModeTestLockedValues<Value: Sendable>:
+    @unchecked Sendable {
+    private let lock = NSLock()
+    private var storage: [Value] = []
+
+    func append(_ value: Value) {
+        lock.lock()
+        defer { lock.unlock() }
+        storage.append(value)
+    }
+
+    var values: [Value] {
+        lock.lock()
+        defer { lock.unlock() }
+        return storage
     }
 }

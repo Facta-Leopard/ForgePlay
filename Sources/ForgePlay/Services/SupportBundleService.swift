@@ -477,6 +477,27 @@ final class SupportBundleService {
     private let encoder: JSONEncoder
     private let prepareEvidenceForCapture: EvidencePreCaptureHook
 
+    /// `Task.detached` does not inherit cancellation from the caller. Support
+    /// bundle collection is explicitly user-owned UI work, so bridge that
+    /// cancellation into the filesystem worker and re-check it before any
+    /// later archive process can be started.
+    private nonisolated static func runDetached<T: Sendable>(
+        priority: TaskPriority,
+        operation: @escaping @Sendable () throws -> T
+    ) async throws -> T {
+        try Task.checkCancellation()
+        let worker = Task.detached(priority: priority) {
+            try operation()
+        }
+        return try await withTaskCancellationHandler {
+            let value = try await worker.value
+            try Task.checkCancellation()
+            return value
+        } onCancel: {
+            worker.cancel()
+        }
+    }
+
     init(
         pathManager: PathManager,
         runner: SafeProcessRunner,
@@ -506,6 +527,7 @@ final class SupportBundleService {
         resolvedVideoMemoryMB: Int? = nil,
         incident: SupportIncidentContext? = nil
     ) async throws -> URL {
+        try Task.checkCancellation()
         let managedRoot = try pathManager.validateCurrentManagedRoot()
         let destinationRoot = try pathManager.url(for: .supportBundles)
         try pathManager.createDirectoryIfNeeded(destinationRoot)
@@ -524,8 +546,10 @@ final class SupportBundleService {
             .appending(path: "ForgePlaySupport_\(stamp)_\(UUID().uuidString)", directoryHint: .isDirectory)
         let redactedLogs = staging.appending(path: "redacted-logs", directoryHint: .isDirectory)
         let metadata = staging.appending(path: "metadata", directoryHint: .isDirectory)
-        defer { try? fileManager.removeItem(at: staging) }
+        let supportBundleFileManager = SupportBundleFileManagerReference(value: fileManager)
 
+        var incompleteArchiveURL: URL?
+        do {
         var inputIssues: [SupportBundleCollectionIssue] = []
         let boundedSteamStoragePaths = Array(steamStoragePaths.prefix(Self.maxSteamStoragePaths))
         Self.recordInputLimitIssue(
@@ -547,14 +571,13 @@ final class SupportBundleService {
             .addingSensitiveTerms(DiagnosticPathRedactionPolicy.sensitiveTerms(
                 selectedSteamReference: selectedSteamReference
             ))
-        let supportBundleFileManager = SupportBundleFileManagerReference(value: fileManager)
-        let runtimeIdentity = await Task.detached(priority: .utility) {
+        let runtimeIdentity = try await Self.runDetached(priority: .utility) {
             DiagnosticEnvironmentSnapshotCollector.resolveRuntimeIdentity(
                 for: runtimeExecutable,
                 fileManager: supportBundleFileManager.value
             )
-        }.value
-        let environment = DiagnosticEnvironmentSnapshotCollector.capture(
+        }
+        let environment = try await DiagnosticEnvironmentSnapshotCollector.captureInBackground(
             managedRoot: managedRoot,
             selectedSteamReference: selectedSteamReference,
             runtimeExecutable: runtimeExecutable,
@@ -674,6 +697,7 @@ final class SupportBundleService {
             launchRecords: boundedLaunchRecords,
             incidentLaunchRecordIdentifier: incidentSnapshot?.launchRecordIdentifier
         ))
+        try Task.checkCancellation()
         switch evidencePreparationResult {
         case .captured, .notApplicable:
             break
@@ -690,7 +714,9 @@ final class SupportBundleService {
                 message: "game launch evidence refresh failed: \(reason)"
             ), to: &inputIssues)
         }
-        try await Task.detached(priority: .userInitiated) {
+        let inputIssueSnapshot = inputIssues
+        try await Self.runDetached(priority: .userInitiated) {
+            try Task.checkCancellation()
             let fileManager = supportBundleFileManager.value
             var budget = SupportBundleBudget()
             try fileManager.createDirectory(at: redactedLogs, withIntermediateDirectories: true)
@@ -701,6 +727,7 @@ final class SupportBundleService {
             var includedFiles: [SupportBundleIncludedFile] = []
             var skippedFiles: [SupportBundleSkippedFile] = []
             for (name, data) in metadataPayloads.sorted(by: { $0.key < $1.key }) {
+                try Task.checkCancellation()
                 let archiveEntry = "metadata/\(name)"
                 if let reason = budget.reserve(byteCount: Int64(data.count)) {
                     skippedFiles.append(Self.metadataSkippedFile(name: name, byteCount: data.count, reason: reason))
@@ -725,6 +752,7 @@ final class SupportBundleService {
                 excludedRoots: [destinationRoot],
                 fileManager: fileManager
             )
+            try Task.checkCancellation()
             var collectedCopy = Self.copyRedactedTree(
                 from: logsRoot,
                 to: redactedLogs,
@@ -738,6 +766,7 @@ final class SupportBundleService {
                 fileManager: fileManager,
                 budget: &budget
             )
+            try Task.checkCancellation()
             collectedCopy.appendCollectionIssues(expandedPriority.issues)
             if let gameModeHostEvidenceRoot {
                 let evidenceFile = gameModeHostEvidenceRoot.appending(
@@ -760,6 +789,7 @@ final class SupportBundleService {
                     budget: &budget
                 )
                 collectedCopy.merge(gameModeHostCopy)
+                try Task.checkCancellation()
             }
             let steamLateCopy = Self.copySteamLateEvidence(
                 from: steamSharedPrefix,
@@ -770,6 +800,7 @@ final class SupportBundleService {
                 budget: &budget
             )
             collectedCopy.merge(steamLateCopy)
+            try Task.checkCancellation()
             let logCopy = Self.copyRedactedTree(
                 from: logsRoot,
                 to: redactedLogs,
@@ -781,6 +812,7 @@ final class SupportBundleService {
                 budget: &budget
             )
             collectedCopy.merge(logCopy)
+            try Task.checkCancellation()
             if FileSystemItemPolicy.isNonSymlinkDirectory(
                 emergencyDiagnosticsRoot,
                 fileManager: fileManager
@@ -799,6 +831,7 @@ final class SupportBundleService {
                     budget: &budget
                 )
                 collectedCopy.merge(emergencyCopy)
+                try Task.checkCancellation()
             }
             let prefixCopy = Self.copyPrefixMetadata(
                 from: prefixesRoot,
@@ -809,12 +842,13 @@ final class SupportBundleService {
                 budget: &budget
             )
             collectedCopy.merge(prefixCopy)
+            try Task.checkCancellation()
 
             includedFiles.append(contentsOf: collectedCopy.includedFiles)
             skippedFiles.append(contentsOf: collectedCopy.skippedFiles)
             var collectionIssues: [SupportBundleCollectionIssue] = []
             appendBoundedSupportBundleIssues(collectedCopy.collectionIssues, to: &collectionIssues)
-            appendBoundedSupportBundleIssues(inputIssues, to: &collectionIssues)
+            appendBoundedSupportBundleIssues(inputIssueSnapshot, to: &collectionIssues)
             appendBoundedSupportBundleIssues(environment.collectionIssues.map {
                 SupportBundleCollectionIssue(
                     component: $0.component,
@@ -842,6 +876,7 @@ final class SupportBundleService {
                 skippedFiles: skippedFiles,
                 collectionIssues: collectionIssues
             )
+            try Task.checkCancellation()
             let readmeData = Data(supportRedactor.redact(readme).utf8)
             guard readmeData.count <= Self.readmeByteReserve else {
                 throw SupportBundleConstructionError.readmeExceedsReservedBytes(
@@ -858,6 +893,7 @@ final class SupportBundleService {
             ))
 
             if !skippedFiles.isEmpty {
+                try Task.checkCancellation()
                 let encodedSkippedFiles = try Self.makeEncoder().encode(skippedFiles)
                 let redactedSkippedFiles = try supportRedactor.redactedJSONData(encodedSkippedFiles)
                 _ = try JSONSerialization.jsonObject(with: redactedSkippedFiles)
@@ -928,22 +964,30 @@ final class SupportBundleService {
                 to: metadata.appending(path: "bundle-manifest.json"),
                 options: [.atomic]
             )
+            try Task.checkCancellation()
             try Self.validateRedactionClosure(
                 in: staging,
                 redactor: supportRedactor,
                 fileManager: fileManager
             )
-        }.value
+        }
 
+        try Task.checkCancellation()
         let destinationZip = destinationRoot.appending(path: "ForgePlaySupport_\(stamp)_\(UUID().uuidString).zip")
+        incompleteArchiveURL = destinationZip
         let result = try await runner.run(.createSupportArchive(
             sourceDirectory: staging,
             destinationZip: destinationZip,
             logDirectory: destinationRoot
         ))
+        try Task.checkCancellation()
         guard result.succeeded else {
             do {
-                try removeSupportArchiveIfPresent(destinationZip)
+                try await Self.removeSupportArchiveIfPresent(
+                    destinationZip,
+                    fileManager: supportBundleFileManager
+                )
+                incompleteArchiveURL = nil
             } catch let cleanupError {
                 throw SupportBundleServiceError.archiveCleanupFailed(
                     destination: destinationZip,
@@ -954,13 +998,22 @@ final class SupportBundleService {
             throw SupportBundleServiceError.archiveFailed(result)
         }
         do {
-            guard chmod(destinationZip.path, S_IRUSR | S_IWUSR) == 0 else {
-                throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EACCES)
+            try await Self.runDetached(priority: .utility) {
+                guard chmod(destinationZip.path, S_IRUSR | S_IWUSR) == 0 else {
+                    throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EACCES)
+                }
+                try Self.validateCreatedArchive(
+                    destinationZip,
+                    fileManager: supportBundleFileManager.value
+                )
             }
-            try Self.validateCreatedArchive(destinationZip, fileManager: fileManager)
         } catch {
             do {
-                try removeSupportArchiveIfPresent(destinationZip)
+                try await Self.removeSupportArchiveIfPresent(
+                    destinationZip,
+                    fileManager: supportBundleFileManager
+                )
+                incompleteArchiveURL = nil
             } catch let cleanupError {
                 throw SupportBundleServiceError.archiveCleanupFailed(
                     destination: destinationZip,
@@ -973,15 +1026,57 @@ final class SupportBundleService {
                 forgePlayTechnicalErrorSummary(error)
             )
         }
+        incompleteArchiveURL = nil
+        await Self.removeTemporaryStagingDirectory(
+            staging,
+            fileManager: supportBundleFileManager
+        )
         return destinationZip
+        } catch {
+            let constructionError = error
+            if let incompleteArchiveURL {
+                try? await Self.removeSupportArchiveIfPresent(
+                    incompleteArchiveURL,
+                    fileManager: supportBundleFileManager
+                )
+            }
+            await Self.removeTemporaryStagingDirectory(
+                staging,
+                fileManager: supportBundleFileManager
+            )
+            throw constructionError
+        }
     }
 
-    private func removeSupportArchiveIfPresent(_ url: URL) throws {
-        guard fileManager.fileExists(atPath: url.path) ||
-            (try? fileManager.destinationOfSymbolicLink(atPath: url.path)) != nil else {
-            return
+    /// Recursive removal of a bounded support-bundle staging tree can still be
+    /// expensive enough to stall AppKit when performed from this MainActor
+    /// service. Keep the cleanup owned by the request (the request awaits it),
+    /// but execute the filesystem work off the main actor. Cleanup remains
+    /// best-effort, matching the previous `defer { try? removeItem(...) }`
+    /// contract, and is intentionally allowed to finish after caller
+    /// cancellation so temporary evidence is not abandoned merely because the
+    /// user dismissed the sheet.
+    private nonisolated static func removeTemporaryStagingDirectory(
+        _ staging: URL,
+        fileManager: SupportBundleFileManagerReference
+    ) async {
+        let worker = Task.detached(priority: .utility) {
+            try? fileManager.value.removeItem(at: staging)
         }
-        try fileManager.removeItem(at: url)
+        await worker.value
+    }
+
+    private nonisolated static func removeSupportArchiveIfPresent(
+        _ url: URL,
+        fileManager: SupportBundleFileManagerReference
+    ) async throws {
+        try await Task.detached(priority: .utility) {
+            guard fileManager.value.fileExists(atPath: url.path) ||
+                (try? fileManager.value.destinationOfSymbolicLink(atPath: url.path)) != nil else {
+                return
+            }
+            try fileManager.value.removeItem(at: url)
+        }.value
     }
 
     private func makeDiagnosticPayloads(
@@ -1057,6 +1152,7 @@ final class SupportBundleService {
         budget: inout SupportBundleBudget
     ) -> SupportBundleCopyResult {
         var result = SupportBundleCopyResult()
+        guard !Task.isCancelled else { return result }
         var steamDirectoryAvailable = false
         var logsDirectoryState = "notPresent"
         var dumpsDirectoryState = "notPresent"
@@ -1153,6 +1249,7 @@ final class SupportBundleService {
                    ) {
                     logsDirectoryState = "available"
                     for (index, candidate) in steamLateLogAllowlist.enumerated() {
+                        guard !Task.isCancelled else { return finishedResult() }
                         let sourceID = anonymousIdentifier(prefix: "steam-late", index: index + 1)
                         let identity = SupportBundleArtifactIdentity(
                             sourceCategory: "steamLateEvidence",
@@ -1297,6 +1394,7 @@ final class SupportBundleService {
 
                     var inventoryItems: [SupportBundleSteamDumpInventoryItem] = []
                     for (index, item) in dumpScan.items.enumerated() {
+                        guard !Task.isCancelled else { return finishedResult() }
                         let sourceID = anonymousIdentifier(prefix: "steam-dump", index: index + 1)
                         let identity = SupportBundleArtifactIdentity(
                             sourceCategory: "steamLateEvidence",
@@ -1441,6 +1539,7 @@ final class SupportBundleService {
         budget: inout SupportBundleBudget
     ) -> SupportBundleCopyResult {
         var result = SupportBundleCopyResult()
+        guard !Task.isCancelled else { return result }
         guard fileManager.fileExists(atPath: prefixes.path) else {
             result.appendCollectionIssue(.init(
                 component: "prefixMetadata",
@@ -1463,6 +1562,7 @@ final class SupportBundleService {
         result.appendCollectionIssues(scan.issues)
         var sourceIndex = 0
         for item in scan.items where item.url.lastPathComponent == "prefix.json" {
+            guard !Task.isCancelled else { return result }
             sourceIndex += 1
             let sourceID = anonymousIdentifier(prefix: "prefix", index: sourceIndex)
             let identity = SupportBundleArtifactIdentity(
@@ -1564,6 +1664,7 @@ final class SupportBundleService {
         budget: inout SupportBundleBudget
     ) -> SupportBundleCopyResult {
         var result = SupportBundleCopyResult()
+        guard !Task.isCancelled else { return result }
         do {
             try validateSecureDirectory(source, anchoredAt: filesystemAnchor)
         } catch {
@@ -1608,6 +1709,7 @@ final class SupportBundleService {
             return !prioritizedPaths.contains(path) && !excludedSourcePaths.contains(path)
         }
         for item in orderedItems {
+            guard !Task.isCancelled else { return result }
             if item.isDirectory, !item.isSymbolicLink { continue }
             sourceIndex += 1
             let sourceID = anonymousIdentifier(prefix: sourceIdentifierPrefix, index: sourceIndex)
@@ -1761,6 +1863,7 @@ final class SupportBundleService {
         var limitReached = false
 
         runLoop: for (index, identifier) in runIdentifiers.prefix(maxPrioritizedLaunchArtifactPaths).enumerated() {
+            if Task.isCancelled { break }
             if scannedItemCount >= maxPrioritizedGameRunScannedItems {
                 limitReached = true
                 break
@@ -1822,6 +1925,7 @@ final class SupportBundleService {
 
             var runItems: [SupportBundleSourceItem] = []
             for case let url as URL in enumerator {
+                if Task.isCancelled { break }
                 if scannedItemCount >= maxPrioritizedGameRunScannedItems {
                     limitReached = true
                     break
@@ -1967,6 +2071,7 @@ final class SupportBundleService {
         decoder.dateDecodingStrategy = .iso8601
 
         documentLoop: while queueIndex < documentQueue.count {
+            if Task.isCancelled { break }
             guard visitedDocumentCount < maxProcessRunEvidenceDocuments else {
                 documentLimitReached = true
                 break
@@ -2082,6 +2187,7 @@ final class SupportBundleService {
                     .map { ($0, true) }
 
                 for reference in artifactReferences {
+                    if Task.isCancelled { break documentLoop }
                     guard reference.path.hasPrefix("/") else {
                         issues.appendBounded(.init(
                             component: "launchArtifact.runEvidenceExpansion",
@@ -2167,6 +2273,7 @@ final class SupportBundleService {
         var issues: [SupportBundleCollectionIssue] = []
 
         for (index, rawPath) in sourcePaths.enumerated() {
+            if Task.isCancelled { break }
             let sourceID = anonymousIdentifier(prefix: "launch-artifact", index: index + 1)
             let candidate = URL(fileURLWithPath: rawPath).standardizedFileURL
             let candidatePath = candidate.path
@@ -2261,6 +2368,7 @@ final class SupportBundleService {
         var items: [SupportBundleSourceItem] = []
         var visitedItemCount = 0
         for case let url as URL in enumerator {
+            if Task.isCancelled { break }
             if visitedItemCount >= maxScannedItemsPerRoot {
                 issues.appendBounded(.init(
                     component: "scan",
@@ -2351,6 +2459,7 @@ final class SupportBundleService {
         var scannedItemCount = 0
         var limitReached = false
         for case let url as URL in enumerator {
+            if Task.isCancelled { break }
             if scannedItemCount >= maxSteamDumpScannedItems {
                 limitReached = true
                 issues.appendBounded(.init(
@@ -2479,6 +2588,7 @@ final class SupportBundleService {
         var visitedItemCount = 0
         var limitReached = false
         for case let child as URL in enumerator {
+            if Task.isCancelled { break }
             if visitedItemCount >= maxScannedItemsPerRoot {
                 limitReached = true
                 break
@@ -2502,6 +2612,7 @@ final class SupportBundleService {
             ))
         }
         for child in sortedChildren {
+            if Task.isCancelled { break }
             do {
                 let childValues = try child.resourceValues(forKeys: keys)
                 let candidate: URL
@@ -2749,6 +2860,7 @@ final class SupportBundleService {
         output.reserveCapacity(count)
         var currentOffset = offset
         while output.count < count {
+            try Task.checkCancellation()
             let requested = min(64 * 1024, count - output.count)
             var buffer = [UInt8](repeating: 0, count: requested)
             let readCount = Darwin.pread(descriptor, &buffer, requested, off_t(currentOffset))
@@ -3500,6 +3612,7 @@ final class SupportBundleService {
 
         var inspectedFileCount = 0
         for case let url as URL in enumerator {
+            try Task.checkCancellation()
             let values = try url.resourceValues(forKeys: [
                 .isRegularFileKey,
                 .isSymbolicLinkKey,
@@ -3818,7 +3931,7 @@ final class EmergencySupportBundleService {
                     "File existence is observational and does not prove that a store is valid or corrupt."
                 ]
             ),
-            privacyNotice: "This local report applies best-effort redaction. Review it before sharing; do not add passwords, Steam Guard codes, or tokens."
+            privacyNotice: "This local report automatically removes recognized sensitive data, but some data may remain. Review it before sharing; never add passwords, Steam Guard codes, or tokens."
         )
 
         let encoder = JSONEncoder()

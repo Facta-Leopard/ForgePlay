@@ -171,6 +171,11 @@ private struct AppNoticeFailureEvidenceError: LocalizedError {
     var errorDescription: String? { message }
 }
 
+private struct GameInputProtectionFailureNoticeBinding {
+    let lossNoticeIdentifier: UUID
+    let evidenceURL: URL?
+}
+
 private struct PersistedFileSelectionLoadResult {
     var url: URL?
     var refreshedBookmark: Data?
@@ -190,7 +195,9 @@ final class AppState {
     var selectedSection: AppSection = .dashboard
     var setupStage: SetupStage = .chooseRoot
     var selectedRootURL: URL?
-    var selectedSteamReference: SteamGameRecord?
+    /// Session-scoped diagnostic context. Keep a detached value snapshot
+    /// instead of retaining a SwiftData row that a library rescan may delete.
+    var selectedSteamReference: SteamGame?
     var activeDiagnostics: [DiagnosticResult] = []
     var latestChecks: [SystemCheckResult] = []
     var setupReadiness: SetupReadiness = .empty
@@ -206,6 +213,15 @@ final class AppState {
     var steamRendererPolicySelection: SteamRendererPolicySelection = .d3dMetal
     var wineSynchronizationSelection: WineSynchronizationSelection = .automatic
     var steamVideoMemorySelection: SteamVideoMemorySelection = .automatic
+    var isGameInputModifierMappingEnabled = false
+    var gameInputCommandBinding: GameInputModifierBinding = .control
+    var gameInputOptionBinding: GameInputModifierBinding = .alt
+    var gameInputControlBinding: GameInputModifierBinding = .control
+    var blocksGameAppWindowManagementShortcuts = false
+    var blocksGameAppSwitchingShortcuts = false
+    var blocksGameMissionControlSpaceShortcuts = false
+    var blocksGameScreenshotShortcuts = false
+    var hidesPointerWhileManagedGameFrontmost = true
     var isSteamLaunchInProgress = false
     var isAdvancedModeEnabled = false
     var isLLMDiagnosticsEnabled = false
@@ -234,6 +250,9 @@ final class AppState {
     @ObservationIgnored private var failureDiagnosticEvidenceService: FailureDiagnosticEvidenceService?
     @ObservationIgnored private var failureDiagnosticPathManager: PathManager?
     @ObservationIgnored private var steamStorageConnectionTask: Task<Void, Never>?
+    @ObservationIgnored private var gameInputProtectionFailureNoticeBindings:
+        [GameInputProtectionSessionIdentity:
+            GameInputProtectionFailureNoticeBinding] = [:]
 
     private struct PersistentLoadStateSnapshot {
         var selectedRootURL: URL?
@@ -245,6 +264,15 @@ final class AppState {
         var steamRendererPolicySelection: SteamRendererPolicySelection
         var wineSynchronizationSelection: WineSynchronizationSelection
         var steamVideoMemorySelection: SteamVideoMemorySelection
+        var isGameInputModifierMappingEnabled: Bool
+        var gameInputCommandBinding: GameInputModifierBinding
+        var gameInputOptionBinding: GameInputModifierBinding
+        var gameInputControlBinding: GameInputModifierBinding
+        var blocksGameAppWindowManagementShortcuts: Bool
+        var blocksGameAppSwitchingShortcuts: Bool
+        var blocksGameMissionControlSpaceShortcuts: Bool
+        var blocksGameScreenshotShortcuts: Bool
+        var hidesPointerWhileManagedGameFrontmost: Bool
         var isAdvancedModeEnabled: Bool
         var isLLMDiagnosticsEnabled: Bool
         var isLogAutoCleanupEnabled: Bool
@@ -261,6 +289,15 @@ final class AppState {
         var steamRendererPolicySelection: SteamRendererPolicySelection
         var wineSynchronizationSelection: WineSynchronizationSelection
         var steamVideoMemorySelection: SteamVideoMemorySelection
+        var isGameInputModifierMappingEnabled: Bool
+        var gameInputCommandBinding: GameInputModifierBinding
+        var gameInputOptionBinding: GameInputModifierBinding
+        var gameInputControlBinding: GameInputModifierBinding
+        var blocksGameAppWindowManagementShortcuts: Bool
+        var blocksGameAppSwitchingShortcuts: Bool
+        var blocksGameMissionControlSpaceShortcuts: Bool
+        var blocksGameScreenshotShortcuts: Bool
+        var hidesPointerWhileManagedGameFrontmost: Bool
         var isAdvancedModeEnabled: Bool
         var isLLMDiagnosticsEnabled: Bool
         #if DEBUG
@@ -281,6 +318,16 @@ final class AppState {
         var steamGraphicsBackendSelection: String?
         var wineSynchronizationSelection: String?
         var steamVideoMemorySelection: String?
+        var isGameInputModifierMappingEnabled: Bool?
+        var gameInputCommandBinding: String?
+        var gameInputOptionBinding: String?
+        var gameInputControlBinding: String?
+        var blocksGameAppWindowManagementShortcuts: Bool?
+        var blocksGameAppSwitchingShortcuts: Bool?
+        var blocksGameMissionControlSpaceShortcuts: Bool?
+        var blocksGameScreenshotShortcuts: Bool?
+        var hidesPointerWhileManagedGameFrontmost: Bool?
+        var gameInputProtectionPreferenceVersion: Int?
         var updatedAt: Date
 
         init(settings: AppSettingsRecord) {
@@ -296,6 +343,20 @@ final class AppState {
             steamGraphicsBackendSelection = settings.steamGraphicsBackendSelection
             wineSynchronizationSelection = settings.wineSynchronizationSelection
             steamVideoMemorySelection = settings.steamVideoMemorySelection
+            isGameInputModifierMappingEnabled = settings.isGameInputModifierMappingEnabled
+            gameInputCommandBinding = settings.gameInputCommandBinding
+            gameInputOptionBinding = settings.gameInputOptionBinding
+            gameInputControlBinding = settings.gameInputControlBinding
+            blocksGameAppWindowManagementShortcuts =
+                settings.blocksGameAppWindowManagementShortcuts
+            blocksGameAppSwitchingShortcuts = settings.blocksGameAppSwitchingShortcuts
+            blocksGameMissionControlSpaceShortcuts =
+                settings.blocksGameMissionControlSpaceShortcuts
+            blocksGameScreenshotShortcuts = settings.blocksGameScreenshotShortcuts
+            hidesPointerWhileManagedGameFrontmost =
+                settings.hidesPointerWhileManagedGameFrontmost
+            gameInputProtectionPreferenceVersion =
+                settings.gameInputProtectionPreferenceVersion
             updatedAt = settings.updatedAt
         }
 
@@ -312,12 +373,89 @@ final class AppState {
             settings.steamGraphicsBackendSelection = steamGraphicsBackendSelection
             settings.wineSynchronizationSelection = wineSynchronizationSelection
             settings.steamVideoMemorySelection = steamVideoMemorySelection
+            settings.isGameInputModifierMappingEnabled = isGameInputModifierMappingEnabled
+            settings.gameInputCommandBinding = gameInputCommandBinding
+            settings.gameInputOptionBinding = gameInputOptionBinding
+            settings.gameInputControlBinding = gameInputControlBinding
+            settings.blocksGameAppWindowManagementShortcuts =
+                blocksGameAppWindowManagementShortcuts
+            settings.blocksGameAppSwitchingShortcuts = blocksGameAppSwitchingShortcuts
+            settings.blocksGameMissionControlSpaceShortcuts =
+                blocksGameMissionControlSpaceShortcuts
+            settings.blocksGameScreenshotShortcuts = blocksGameScreenshotShortcuts
+            settings.hidesPointerWhileManagedGameFrontmost =
+                hidesPointerWhileManagedGameFrontmost
+            settings.gameInputProtectionPreferenceVersion =
+                gameInputProtectionPreferenceVersion
             settings.updatedAt = updatedAt
         }
     }
 
     var isRootConfigured: Bool { selectedRootURL != nil }
     var isRuntimeConfigured: Bool { runtimeExecutableURL != nil }
+
+    var gameInputModifierMap: GameInputModifierMap? {
+        guard isGameInputModifierMappingEnabled else { return nil }
+        return GameInputModifierMap(
+            command: gameInputCommandBinding,
+            option: gameInputOptionBinding,
+            control: gameInputControlBinding
+        )
+    }
+
+    var hasEnabledGameInputEventTapProtection: Bool {
+        isGameInputModifierMappingEnabled ||
+            blocksGameAppWindowManagementShortcuts ||
+            blocksGameAppSwitchingShortcuts ||
+            blocksGameMissionControlSpaceShortcuts ||
+            blocksGameScreenshotShortcuts
+    }
+
+    var hasEnabledGameInputProtection: Bool {
+        hasEnabledGameInputEventTapProtection ||
+            hidesPointerWhileManagedGameFrontmost
+    }
+
+    func disableGameInputEventTapProtection() {
+        isGameInputModifierMappingEnabled = false
+        blocksGameAppWindowManagementShortcuts = false
+        blocksGameAppSwitchingShortcuts = false
+        blocksGameMissionControlSpaceShortcuts = false
+        blocksGameScreenshotShortcuts = false
+    }
+
+    var gameInputProtectionSettingsFingerprint: String {
+        [
+            isGameInputModifierMappingEnabled ? "1" : "0",
+            gameInputCommandBinding.rawValue,
+            gameInputOptionBinding.rawValue,
+            gameInputControlBinding.rawValue,
+            blocksGameAppWindowManagementShortcuts ? "1" : "0",
+            blocksGameAppSwitchingShortcuts ? "1" : "0",
+            blocksGameMissionControlSpaceShortcuts ? "1" : "0",
+            blocksGameScreenshotShortcuts ? "1" : "0",
+            hidesPointerWhileManagedGameFrontmost ? "1" : "0"
+        ].joined(separator: "|")
+    }
+
+    func setGameInputModifierBinding(
+        _ hostKey: HostModifierKey,
+        to binding: GameInputModifierBinding
+    ) {
+        switch hostKey {
+        case .command: gameInputCommandBinding = binding
+        case .option: gameInputOptionBinding = binding
+        case .control: gameInputControlBinding = binding
+        }
+    }
+
+    func gameInputModifierBinding(for hostKey: HostModifierKey) -> GameInputModifierBinding {
+        switch hostKey {
+        case .command: gameInputCommandBinding
+        case .option: gameInputOptionBinding
+        case .control: gameInputControlBinding
+        }
+    }
 
     #if DEBUG
     var retainedSteamLibrarySecurityScopedPathsForTesting: Set<String> {
@@ -336,6 +474,17 @@ final class AppState {
             steamRendererPolicySelection: steamRendererPolicySelection,
             wineSynchronizationSelection: wineSynchronizationSelection,
             steamVideoMemorySelection: steamVideoMemorySelection,
+            isGameInputModifierMappingEnabled: isGameInputModifierMappingEnabled,
+            gameInputCommandBinding: gameInputCommandBinding,
+            gameInputOptionBinding: gameInputOptionBinding,
+            gameInputControlBinding: gameInputControlBinding,
+            blocksGameAppWindowManagementShortcuts:
+                blocksGameAppWindowManagementShortcuts,
+            blocksGameAppSwitchingShortcuts: blocksGameAppSwitchingShortcuts,
+            blocksGameMissionControlSpaceShortcuts: blocksGameMissionControlSpaceShortcuts,
+            blocksGameScreenshotShortcuts: blocksGameScreenshotShortcuts,
+            hidesPointerWhileManagedGameFrontmost:
+                hidesPointerWhileManagedGameFrontmost,
             isAdvancedModeEnabled: isAdvancedModeEnabled,
             isLLMDiagnosticsEnabled: isLLMDiagnosticsEnabled,
             isLogAutoCleanupEnabled: isLogAutoCleanupEnabled,
@@ -362,6 +511,19 @@ final class AppState {
                 steamRendererPolicySelection = previousState.steamRendererPolicySelection
                 wineSynchronizationSelection = previousState.wineSynchronizationSelection
                 steamVideoMemorySelection = previousState.steamVideoMemorySelection
+                isGameInputModifierMappingEnabled = previousState.isGameInputModifierMappingEnabled
+                gameInputCommandBinding = previousState.gameInputCommandBinding
+                gameInputOptionBinding = previousState.gameInputOptionBinding
+                gameInputControlBinding = previousState.gameInputControlBinding
+                blocksGameAppWindowManagementShortcuts =
+                    previousState.blocksGameAppWindowManagementShortcuts
+                blocksGameAppSwitchingShortcuts =
+                    previousState.blocksGameAppSwitchingShortcuts
+                blocksGameMissionControlSpaceShortcuts =
+                    previousState.blocksGameMissionControlSpaceShortcuts
+                blocksGameScreenshotShortcuts = previousState.blocksGameScreenshotShortcuts
+                hidesPointerWhileManagedGameFrontmost =
+                    previousState.hidesPointerWhileManagedGameFrontmost
                 isAdvancedModeEnabled = previousState.isAdvancedModeEnabled
                 isLLMDiagnosticsEnabled = previousState.isLLMDiagnosticsEnabled
                 isLogAutoCleanupEnabled = previousState.isLogAutoCleanupEnabled
@@ -424,6 +586,73 @@ final class AppState {
         }
         steamVideoMemorySelection = settings.steamVideoMemorySelection
             .flatMap(SteamVideoMemorySelection.init(rawValue:)) ?? .automatic
+        if (settings.gameInputProtectionPreferenceVersion ?? 0) <
+            GameInputProtectionPreferenceSchema.optInMigrationVersion {
+            // Version 1 changes event-tap protection from implicit defaults to
+            // explicit opt-in. Existing beta records cannot distinguish a
+            // deliberate choice from the old default-on values, so migrate
+            // only the permission-requiring switches once and preserve the
+            // independent pointer preference.
+            settings.isGameInputModifierMappingEnabled = false
+            settings.blocksGameAppWindowManagementShortcuts = false
+            settings.blocksGameAppSwitchingShortcuts = false
+            settings.blocksGameMissionControlSpaceShortcuts = false
+            settings.blocksGameScreenshotShortcuts = false
+            settings.gameInputProtectionPreferenceVersion =
+                max(
+                    settings.gameInputProtectionPreferenceVersion ?? 0,
+                    GameInputProtectionPreferenceSchema.currentVersion
+                )
+            settings.updatedAt = Date()
+            didNormalizeSettings = true
+        }
+        let persistedCommandBinding = settings.gameInputCommandBinding
+            .flatMap(GameInputModifierBinding.init(rawValue:))
+        let persistedOptionBinding = settings.gameInputOptionBinding
+            .flatMap(GameInputModifierBinding.init(rawValue:))
+        let persistedControlBinding = settings.gameInputControlBinding
+            .flatMap(GameInputModifierBinding.init(rawValue:))
+        let persistedGameInputBindingsAreAbsent =
+            settings.gameInputCommandBinding == nil &&
+            settings.gameInputOptionBinding == nil &&
+            settings.gameInputControlBinding == nil
+        let hasValidGameInputBindings: Bool
+        if let persistedCommandBinding,
+           let persistedOptionBinding,
+           let persistedControlBinding {
+            gameInputCommandBinding = persistedCommandBinding
+            gameInputOptionBinding = persistedOptionBinding
+            gameInputControlBinding = persistedControlBinding
+            hasValidGameInputBindings = true
+        } else {
+            let recommendedMap = GameInputModifierMap.recommended
+            gameInputCommandBinding = recommendedMap.command
+            gameInputOptionBinding = recommendedMap.option
+            gameInputControlBinding = recommendedMap.control
+            hasValidGameInputBindings = persistedGameInputBindingsAreAbsent
+            if persistedGameInputBindingsAreAbsent {
+                if settings.isGameInputModifierMappingEnabled == nil {
+                    settings.isGameInputModifierMappingEnabled = false
+                }
+            } else {
+                settings.isGameInputModifierMappingEnabled = false
+            }
+            settings.gameInputCommandBinding = gameInputCommandBinding.rawValue
+            settings.gameInputOptionBinding = gameInputOptionBinding.rawValue
+            settings.gameInputControlBinding = gameInputControlBinding.rawValue
+            settings.updatedAt = Date()
+            didNormalizeSettings = true
+        }
+        isGameInputModifierMappingEnabled = hasValidGameInputBindings &&
+            (settings.isGameInputModifierMappingEnabled ?? false)
+        blocksGameAppWindowManagementShortcuts =
+            settings.blocksGameAppWindowManagementShortcuts ?? false
+        blocksGameAppSwitchingShortcuts = settings.blocksGameAppSwitchingShortcuts ?? false
+        blocksGameMissionControlSpaceShortcuts =
+            settings.blocksGameMissionControlSpaceShortcuts ?? false
+        blocksGameScreenshotShortcuts = settings.blocksGameScreenshotShortcuts ?? false
+        hidesPointerWhileManagedGameFrontmost =
+            settings.hidesPointerWhileManagedGameFrontmost ?? true
         if settings.normalizeAIDiagnosticProviderConfiguration() {
             didNormalizeSettings = true
         }
@@ -605,6 +834,22 @@ final class AppState {
         settings.steamVideoMemorySelection = steamVideoMemorySelection == .automatic
             ? nil
             : steamVideoMemorySelection.rawValue
+        settings.isGameInputModifierMappingEnabled = isGameInputModifierMappingEnabled
+        settings.gameInputCommandBinding = gameInputCommandBinding.rawValue
+        settings.gameInputOptionBinding = gameInputOptionBinding.rawValue
+        settings.gameInputControlBinding = gameInputControlBinding.rawValue
+        settings.blocksGameAppWindowManagementShortcuts =
+            blocksGameAppWindowManagementShortcuts
+        settings.blocksGameAppSwitchingShortcuts = blocksGameAppSwitchingShortcuts
+        settings.blocksGameMissionControlSpaceShortcuts = blocksGameMissionControlSpaceShortcuts
+        settings.blocksGameScreenshotShortcuts = blocksGameScreenshotShortcuts
+        settings.hidesPointerWhileManagedGameFrontmost =
+            hidesPointerWhileManagedGameFrontmost
+        settings.gameInputProtectionPreferenceVersion =
+            max(
+                settings.gameInputProtectionPreferenceVersion ?? 0,
+                GameInputProtectionPreferenceSchema.currentVersion
+            )
         settings.normalizeAIDiagnosticProviderConfiguration()
         settings.updatedAt = Date()
     }
@@ -618,6 +863,17 @@ final class AppState {
             steamRendererPolicySelection: steamRendererPolicySelection,
             wineSynchronizationSelection: wineSynchronizationSelection,
             steamVideoMemorySelection: steamVideoMemorySelection,
+            isGameInputModifierMappingEnabled: isGameInputModifierMappingEnabled,
+            gameInputCommandBinding: gameInputCommandBinding,
+            gameInputOptionBinding: gameInputOptionBinding,
+            gameInputControlBinding: gameInputControlBinding,
+            blocksGameAppWindowManagementShortcuts:
+                blocksGameAppWindowManagementShortcuts,
+            blocksGameAppSwitchingShortcuts: blocksGameAppSwitchingShortcuts,
+            blocksGameMissionControlSpaceShortcuts: blocksGameMissionControlSpaceShortcuts,
+            blocksGameScreenshotShortcuts: blocksGameScreenshotShortcuts,
+            hidesPointerWhileManagedGameFrontmost:
+                hidesPointerWhileManagedGameFrontmost,
             isAdvancedModeEnabled: isAdvancedModeEnabled,
             isLLMDiagnosticsEnabled: isLLMDiagnosticsEnabled,
             debugLanguageModeOverride: debugLanguageModeOverride
@@ -630,6 +886,17 @@ final class AppState {
             steamRendererPolicySelection: steamRendererPolicySelection,
             wineSynchronizationSelection: wineSynchronizationSelection,
             steamVideoMemorySelection: steamVideoMemorySelection,
+            isGameInputModifierMappingEnabled: isGameInputModifierMappingEnabled,
+            gameInputCommandBinding: gameInputCommandBinding,
+            gameInputOptionBinding: gameInputOptionBinding,
+            gameInputControlBinding: gameInputControlBinding,
+            blocksGameAppWindowManagementShortcuts:
+                blocksGameAppWindowManagementShortcuts,
+            blocksGameAppSwitchingShortcuts: blocksGameAppSwitchingShortcuts,
+            blocksGameMissionControlSpaceShortcuts: blocksGameMissionControlSpaceShortcuts,
+            blocksGameScreenshotShortcuts: blocksGameScreenshotShortcuts,
+            hidesPointerWhileManagedGameFrontmost:
+                hidesPointerWhileManagedGameFrontmost,
             isAdvancedModeEnabled: isAdvancedModeEnabled,
             isLLMDiagnosticsEnabled: isLLMDiagnosticsEnabled
         )
@@ -643,6 +910,18 @@ final class AppState {
         steamRendererPolicySelection = snapshot.steamRendererPolicySelection
         wineSynchronizationSelection = snapshot.wineSynchronizationSelection
         steamVideoMemorySelection = snapshot.steamVideoMemorySelection
+        isGameInputModifierMappingEnabled = snapshot.isGameInputModifierMappingEnabled
+        gameInputCommandBinding = snapshot.gameInputCommandBinding
+        gameInputOptionBinding = snapshot.gameInputOptionBinding
+        gameInputControlBinding = snapshot.gameInputControlBinding
+        blocksGameAppWindowManagementShortcuts =
+            snapshot.blocksGameAppWindowManagementShortcuts
+        blocksGameAppSwitchingShortcuts = snapshot.blocksGameAppSwitchingShortcuts
+        blocksGameMissionControlSpaceShortcuts =
+            snapshot.blocksGameMissionControlSpaceShortcuts
+        blocksGameScreenshotShortcuts = snapshot.blocksGameScreenshotShortcuts
+        hidesPointerWhileManagedGameFrontmost =
+            snapshot.hidesPointerWhileManagedGameFrontmost
         isAdvancedModeEnabled = snapshot.isAdvancedModeEnabled
         isLLMDiagnosticsEnabled = snapshot.isLLMDiagnosticsEnabled
         #if DEBUG
@@ -856,12 +1135,13 @@ final class AppState {
         failureDiagnosticPathManager = pathManager
     }
 
+    @discardableResult
     func setError(
         _ error: Error,
         operationIdentifier: String = #function,
         surfaceIdentifier: String? = nil,
         captureFailureEvidence: Bool = true
-    ) {
+    ) -> AppNotice {
         var preferredLogURL: URL?
         if let diagnosticError = error as? ForgePlayDiagnosticLogProvidingError {
             preferredLogURL = diagnosticError.forgePlayDiagnosticLogURL
@@ -884,10 +1164,62 @@ final class AppState {
             localizedError(error),
             evidenceWarning
         ) ?? localizedError(error)
-        setNotice(
+        return setNotice(
             message,
             kind: .failure,
             logURL: preferredLogURL,
+            captureFailureEvidence: false
+        )
+    }
+
+    func handleGameInputProtectionLifecycleEvent(
+        _ event: GameInputProtectionLifecycleEvent
+    ) {
+        switch event {
+        case .protectionLost(let session, let failure):
+            let lossNotice = setError(
+                failure,
+                operationIdentifier: "steam.game-input-protection",
+                surfaceIdentifier:
+                    "steam.game-input-protection.terminal-protection-loss"
+            )
+            gameInputProtectionFailureNoticeBindings[session] =
+                GameInputProtectionFailureNoticeBinding(
+                    lossNoticeIdentifier: lossNotice.id,
+                    evidenceURL: lossNotice.logURL
+                )
+        case .containmentCompleted(let session, let failure):
+            guard let binding = gameInputProtectionFailureNoticeBindings
+                .removeValue(forKey: session)
+            else { return }
+            guard currentNotice == nil ||
+                    currentNotice?.id == binding.lossNoticeIdentifier else {
+                return
+            }
+            setNotice(
+                localizedFormat(
+                    "게임 입력 보호가 %@ 이유로 중단되어 관리되는 Steam 세션을 종료하고 입력 상태를 복원했습니다. 진단 기록을 확인하세요.",
+                    localizedError(failure)
+                ),
+                kind: .warning,
+                logURL: binding.evidenceURL,
+                captureFailureEvidence: false,
+                operationIdentifier: "steam.game-input-protection",
+                surfaceIdentifier:
+                    "steam.game-input-protection.containment-completed"
+            )
+        }
+    }
+
+    func handleGameInputPointerHideFailure(
+        _ event: GameInputProtectionPointerHideFailureEvent
+    ) {
+        _ = event
+        setNotice(
+            localized(
+                "macOS가 이번 포인터 숨김 요청을 수락하지 않았습니다. Steam 실행은 계속되며 다음에 관리되는 게임이 전면으로 전환되면 다시 시도할 수 있습니다 (베타)."
+            ),
+            kind: .warning,
             captureFailureEvidence: false
         )
     }
@@ -902,7 +1234,7 @@ final class AppState {
             return (nil, nil)
         }
 
-        let selectedGame = selectedSteamReference?.game
+        let selectedGame = selectedSteamReference
         let additionalSensitivePaths = DiagnosticPathRedactionPolicy.sensitivePaths(
             rootURL: selectedRootURL ?? failureDiagnosticPathManager.rootURL,
             selectedSteamReference: selectedGame,
@@ -2368,7 +2700,8 @@ extension ModelContext {
         _ diagnostics: [DiagnosticResult],
         gameId: String? = nil,
         launchRecordId: String? = nil,
-        source: DiagnosticRecordSource = .ruleEngine
+        source: DiagnosticRecordSource = .ruleEngine,
+        aiMetadata: AIDiagnosticRecordMetadataV1? = nil
     ) throws -> Int {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -2382,7 +2715,12 @@ extension ModelContext {
                 gameId: gameId,
                 launchRecordId: launchRecordId,
                 source: source.rawValue,
-                resultJSON: json
+                resultJSON: json,
+                evidenceEnvelopeJSON: aiMetadata?.evidenceEnvelopeJSON,
+                evidenceEnvelopeSHA256: aiMetadata?.evidenceEnvelopeSHA256,
+                executionReceiptJSON: aiMetadata?.executionReceiptJSON,
+                normalizedResultSHA256: aiMetadata?.normalizedResultSHA256,
+                proposalDisposition: aiMetadata?.proposalDisposition
             ))
             insertedCount += 1
         }
@@ -2394,14 +2732,16 @@ extension ModelContext {
         _ diagnostics: [DiagnosticResult],
         gameId: String? = nil,
         launchRecordId: String? = nil,
-        source: DiagnosticRecordSource = .ruleEngine
+        source: DiagnosticRecordSource = .ruleEngine,
+        aiMetadata: AIDiagnosticRecordMetadataV1? = nil
     ) throws -> Int {
         do {
             let insertedCount = try insertDiagnosticRecords(
                 diagnostics,
                 gameId: gameId,
                 launchRecordId: launchRecordId,
-                source: source
+                source: source,
+                aiMetadata: aiMetadata
             )
             guard insertedCount > 0 else { return 0 }
             try saveOrRollback()

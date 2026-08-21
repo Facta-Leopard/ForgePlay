@@ -14,7 +14,7 @@ struct SetupProgressResetCard: View {
     var body: some View {
         let palette = ForgePlayTheme.palette(mode: appState.themeMode, colorScheme: colorScheme)
 
-        ForgeCard("처음 설정 다시 검증", systemImage: "arrow.counterclockwise.circle") {
+        ForgeCard("설정 다시 검증", systemImage: "arrow.counterclockwise.circle") {
             Text(appState.localized("내부 앱 데이터 위치는 유지하고 Runtime 확인부터 설정 진행 상태를 다시 검증합니다."))
                 .font(.callout)
                 .foregroundStyle(palette.secondaryText)
@@ -22,7 +22,7 @@ struct SetupProgressResetCard: View {
             VStack(alignment: .leading, spacing: 8) {
                 ResponsiveActionRow {
                     ThemedActionButton(
-                        title: "처음 설정 다시 시작",
+                        title: "설정 다시 시작",
                         systemImage: "arrow.counterclockwise",
                         prominence: .secondary,
                         isDisabled: isResetting || services.steamPrefixLifecycleCoordinator.isBusy,
@@ -40,7 +40,7 @@ struct SetupProgressResetCard: View {
             }
         }
         .confirmationDialog(
-            appState.localized("처음 설정 상태로 되돌릴까요?"),
+            appState.localized("설정 상태로 되돌릴까요?"),
             isPresented: $isShowingConfirmation,
             titleVisibility: .visible
         ) {
@@ -66,7 +66,7 @@ struct SetupProgressResetCard: View {
                 onReset?()
                 let notice = appState.setNotice(
                     appState.localizedFormat(
-                        "처음 설정 상태로 되돌렸습니다. 앱 기록 %d개를 초기화했습니다.",
+                        "설정 상태로 되돌렸습니다. 앱 기록 %d개를 초기화했습니다.",
                         result.deletedRecordCount
                     ),
                     kind: .success

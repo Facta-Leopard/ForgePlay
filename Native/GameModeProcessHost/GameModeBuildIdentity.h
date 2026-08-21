@@ -16,6 +16,41 @@
 #error "FORGEPLAY_GAME_MODE_HOST_BUNDLE_IDENTIFIER must be supplied by the host build"
 #endif
 
+#ifndef FORGEPLAY_GAME_MODE_COORDINATION_PROFILE
+#error "FORGEPLAY_GAME_MODE_COORDINATION_PROFILE must be supplied by the host build"
+#endif
+
+#ifndef FORGEPLAY_GAME_MODE_PRODUCTION_IDENTITY
+#error "FORGEPLAY_GAME_MODE_PRODUCTION_IDENTITY must be supplied by the host build"
+#endif
+
+#if FORGEPLAY_GAME_MODE_PRODUCTION_IDENTITY != 0 && \
+    FORGEPLAY_GAME_MODE_PRODUCTION_IDENTITY != 1
+#error "Game Mode production-identity state must be boolean"
+#endif
+
+#ifndef FORGEPLAY_GAME_MODE_HOST_RUNNABLE
+#error "FORGEPLAY_GAME_MODE_HOST_RUNNABLE must be supplied by the host build"
+#endif
+
+#if FORGEPLAY_GAME_MODE_HOST_RUNNABLE != 0 && \
+    FORGEPLAY_GAME_MODE_HOST_RUNNABLE != 1
+#error "Game Mode host-runnable state must be boolean"
+#endif
+
+#ifndef FORGEPLAY_GAME_MODE_COORDINATION_SANDBOX_APP_GROUP
+#error "FORGEPLAY_GAME_MODE_COORDINATION_SANDBOX_APP_GROUP must be supplied by the host build"
+#endif
+
+#ifndef FORGEPLAY_GAME_MODE_COORDINATION_DIRECT_USER_DOMAIN
+#error "FORGEPLAY_GAME_MODE_COORDINATION_DIRECT_USER_DOMAIN must be supplied by the host build"
+#endif
+
+#if (FORGEPLAY_GAME_MODE_COORDINATION_SANDBOX_APP_GROUP + \
+     FORGEPLAY_GAME_MODE_COORDINATION_DIRECT_USER_DOMAIN) != 1
+#error "exactly one Game Mode coordination profile must be selected"
+#endif
+
 #ifndef FORGEPLAY_GAME_MODE_APPLICATION_GROUP
 #error "FORGEPLAY_GAME_MODE_APPLICATION_GROUP must be supplied by the host build"
 #endif

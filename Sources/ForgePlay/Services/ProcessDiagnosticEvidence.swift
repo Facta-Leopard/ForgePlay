@@ -641,7 +641,7 @@ final class FailureDiagnosticEvidenceService {
                     redactor: reportRedactor
                 )
             ),
-            privacyNotice: "This local failure report uses best-effort redaction. Review it before sharing."
+            privacyNotice: "This local failure report automatically removes recognized sensitive data, but some data may remain. Review it before sharing."
         )
         try ProcessRunEvidenceWriter.writeStructuredDocument(
             document,
@@ -681,7 +681,7 @@ final class FailureDiagnosticEvidenceService {
         let cacheRoot = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first ??
             fileManager.temporaryDirectory
         return cacheRoot
-            .appending(path: "com.forgeplay.ForgePlay", directoryHint: .isDirectory)
+            .appending(path: "ForgePlay", directoryHint: .isDirectory)
             .appending(path: "EmergencyDiagnostics", directoryHint: .isDirectory)
             .standardizedFileURL
     }
@@ -816,12 +816,14 @@ extension RuntimeManagerError: DiagnosticEvidenceProvidingError {
     var diagnosticProcessResult: ProcessRunResult? { processResult }
 }
 
-extension SteamLaunchError: DiagnosticEvidenceProvidingError {
-    var diagnosticProcessResult: ProcessRunResult? {
+extension SteamLaunchError: DiagnosticEvidenceCollectionProvidingError {
+    var diagnosticProcessResults: [ProcessRunResult] {
         switch self {
         case .prefixShutdownFailed(let result),
              .steamClientCompatibilitySetupFailed(let result):
-            return result
+            return [result]
+        case .rendererLifecycleFailed(let failure):
+            return failure.processResults
         case .rendererBridgeInstallFailed,
              .rendererPolicyUnavailable,
              .rendererPolicyVerificationFailed,
@@ -829,7 +831,7 @@ extension SteamLaunchError: DiagnosticEvidenceProvidingError {
              .steamClientCompatibilityVerificationFailed,
              .steamExecutableUnavailable,
              .steamExecutableMetadataReadFailed:
-            return nil
+            return []
         }
     }
 }

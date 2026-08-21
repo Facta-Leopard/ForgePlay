@@ -8,9 +8,31 @@ struct DashboardView: View {
     @Environment(\.colorScheme) private var colorScheme
     @Query(sort: \SteamGameRecord.name) private var games: [SteamGameRecord]
     @Query(sort: \DiagnosticRecord.createdAt, order: .reverse) private var diagnostics: [DiagnosticRecord]
-    @Query(sort: \LaunchRecord.startedAt, order: .reverse) private var launchRecords: [LaunchRecord]
+    @Query private var launchRecords: [LaunchRecord]
+
+    init() {
+        var diagnosticDescriptor = FetchDescriptor<DiagnosticRecord>(
+            sortBy: [SortDescriptor(\DiagnosticRecord.createdAt, order: .reverse)]
+        )
+        diagnosticDescriptor.fetchLimit = 1
+        _diagnostics = Query(diagnosticDescriptor)
+        var launchDescriptor = FetchDescriptor<LaunchRecord>(
+            predicate: #Predicate {
+                $0.commandKind == "launchSteam" &&
+                    $0.prefixId == "prefix-steam-shared"
+            },
+            sortBy: [SortDescriptor(\LaunchRecord.startedAt, order: .reverse)]
+        )
+        launchDescriptor.fetchLimit = 1
+        _launchRecords = Query(launchDescriptor)
+    }
+
     private var readiness: SetupReadiness {
         appState.setupReadiness
+    }
+
+    private var runtimeSystemCheck: SystemCheckResult? {
+        appState.latestChecks.first { $0.category == .windowsRuntime }
     }
 
     private var palette: ForgePlayPalette {
@@ -54,18 +76,6 @@ struct DashboardView: View {
                 }
             }
         }
-        .task {
-            refreshSetupReadiness()
-        }
-        .onChange(of: games.count) { _, _ in
-            refreshSetupReadiness()
-        }
-        .onChange(of: SteamLaunchRecordLookup.stateFingerprint(from: launchRecords)) { _, _ in
-            refreshSetupReadiness()
-        }
-        .onChange(of: services.steamEnvironmentRevision) { _, _ in
-            refreshSetupReadiness()
-        }
     }
 
     private var refreshStatusButton: some View {
@@ -107,14 +117,14 @@ struct DashboardView: View {
                     PrimaryActionButton(title: "백엔드 선택 후 실행", systemImage: "slider.horizontal.3") {
                         appState.selectedSection = .steamLaunch
                     }
-                    SecondaryActionButton(title: "문제 진단", systemImage: "waveform.path.ecg.rectangle") {
+                    SecondaryActionButton(title: "문제 진단 (베타)", systemImage: "waveform.path.ecg.rectangle") {
                         appState.selectedSection = .diagnostics
                     }
                 } else {
                     PrimaryActionButton(title: "설정 계속", systemImage: "arrow.right") {
                         appState.selectedSection = .setup
                     }
-                    SecondaryActionButton(title: "문제 진단", systemImage: "waveform.path.ecg.rectangle") {
+                    SecondaryActionButton(title: "문제 진단 (베타)", systemImage: "waveform.path.ecg.rectangle") {
                         appState.selectedSection = .diagnostics
                     }
                 }
@@ -246,7 +256,7 @@ struct DashboardView: View {
                     status: steamRendererPolicyDisplayStatus
                 )
                 ResponsiveActionRow {
-                    SecondaryActionButton(title: "처음 설정 열기", systemImage: "wand.and.sparkles") {
+                    SecondaryActionButton(title: "설정 열기", systemImage: "wand.and.sparkles") {
                         appState.selectedSection = .setup
                     }
                     ThemedActionButton(
@@ -265,7 +275,7 @@ struct DashboardView: View {
         ForgeCard("실행 전 점검", systemImage: "checklist") {
             VStack(alignment: .leading, spacing: 10) {
                 if appState.latestChecks.isEmpty {
-                    Text(appState.localized("아직 점검 결과가 없습니다. 처음 설정에서 저장 위치를 고른 뒤 상태 새로고침을 누르세요."))
+                    Text(appState.localized("아직 점검 결과가 없습니다. 설정에서 저장 위치를 고른 뒤 상태 새로고침을 누르세요."))
                         .font(.callout)
                         .foregroundStyle(palette.secondaryText)
                         .fixedSize(horizontal: false, vertical: true)
@@ -345,7 +355,7 @@ struct DashboardView: View {
                     .foregroundStyle(palette.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
                 ThemedActionButton(
-                    title: "문제 진단 보기",
+                    title: "문제 진단 (베타) 보기",
                     systemImage: "stethoscope",
                     prominence: .secondary,
                     controlSize: .small
@@ -367,7 +377,7 @@ struct DashboardView: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .textSelection(.enabled)
                 ThemedActionButton(
-                    title: "문제 진단 보기",
+                    title: "문제 진단 (베타) 보기",
                     systemImage: "stethoscope",
                     prominence: .secondary,
                     controlSize: .small
@@ -437,72 +447,41 @@ struct DashboardView: View {
         if let bundledRuntimeUnavailableReason {
             return bundledRuntimeUnavailableReason
         }
-        guard let executable = appState.runtimeExecutableURL else {
+        guard appState.runtimeExecutableURL != nil else {
             return appState.localized("선택 필요")
         }
-        do {
-            let verification = try services.steamPrefixService.inspectSteamClientCompatibility(executable)
-            if !verification.canLaunchWindowsSteam {
-                return appState.localized(verification.userMessage)
-            }
-            let productRuntimeName = appState.localized(
-                WindowsRuntimeDisplayName.productRuntimeName(for: verification.capability)
-            )
-            return appState.localizedFormat(
-                "%@ · %@",
-                productRuntimeName,
-                appState.localized(WindowsRuntimeDisplayName.statusSummary(for: verification.capability))
-            )
-        } catch {
-            return appState.localizedError(error)
+        guard let runtimeSystemCheck else {
+            return appState.localized("확인 중")
         }
+        return appState.localized(runtimeSystemCheck.detail)
     }
 
     private var gameEngineDisplayStatus: CheckStatus {
         if !canRunBundledWindowsRuntime { return .warning }
-        guard let executable = appState.runtimeExecutableURL else { return .warning }
-        let capability: WindowsRuntimeCapability
-        do {
-            capability = try services.windowsRuntimeService.inspectRuntimeCapability(executable: executable)
-        } catch {
-            return .error
-        }
-        let verification = SteamClientCompatibilityVerifier.verify(capability: capability)
-        if !verification.canLaunchWindowsSteam { return .error }
-        return verification.canLaunchManagedSteamGames ? .ok : .warning
+        guard appState.runtimeExecutableURL != nil else { return .warning }
+        return runtimeSystemCheck?.status ?? .unknown
     }
 
     private var steamRendererPolicyDisplayValue: String {
         if let rendererInspection = readiness.rendererInspection {
             return appState.localized(rendererInspection.userMessage)
         }
-        guard let executable = appState.runtimeExecutableURL else {
+        guard appState.runtimeExecutableURL != nil else {
             return appState.localized("ForgePlay Runtime을 먼저 확인하세요.")
         }
-        do {
-            let capability = try services.windowsRuntimeService.inspectRuntimeCapability(executable: executable)
-            if let blocker = steamRendererPolicyBlocker(capability: capability) {
-                return blocker
-            }
-            return appState.localized(appState.steamRendererPolicySelection.labelKey)
-        } catch {
-            return appState.localizedError(error)
+        if let runtimeSystemCheck, runtimeSystemCheck.status == .error {
+            return appState.localized(runtimeSystemCheck.detail)
         }
+        return appState.localized("확인 중")
     }
 
     private var steamRendererPolicyDisplayStatus: CheckStatus {
         if let rendererInspection = readiness.rendererInspection {
             return rendererInspection.status
         }
-        guard let executable = appState.runtimeExecutableURL else { return .warning }
-        let capability: WindowsRuntimeCapability
-        do {
-            capability = try services.windowsRuntimeService.inspectRuntimeCapability(executable: executable)
-        } catch {
-            return .error
-        }
-        if steamRendererPolicyBlocker(capability: capability) != nil { return .error }
-        return capability.supportsModernDirect3DGames ? .ok : .warning
+        guard appState.runtimeExecutableURL != nil else { return .warning }
+        if let runtimeSystemCheck, runtimeSystemCheck.status == .error { return .error }
+        return .unknown
     }
 
     private var canRunBundledWindowsRuntime: Bool {
@@ -580,16 +559,17 @@ struct DashboardView: View {
         if let issue = readiness.rootIssue {
             return appState.localizedError(issue)
         }
-        guard let runtimeExecutable = appState.runtimeExecutableURL else {
+        guard appState.runtimeExecutableURL != nil else {
             return appState.localized("ForgePlay Runtime을 먼저 확인하세요.")
         }
-        do {
-            let verification = try services.steamPrefixService.inspectSteamClientCompatibility(runtimeExecutable)
-            guard verification.canLaunchWindowsSteam else {
-                return appState.localized(verification.userMessage)
-            }
-        } catch {
-            return appState.localizedError(error)
+        guard let runtimeSystemCheck else {
+            return appState.localized("ForgePlay Runtime을 확인하는 중입니다.")
+        }
+        if runtimeSystemCheck.status == .error {
+            return appState.localized(runtimeSystemCheck.detail)
+        }
+        if runtimeSystemCheck.status == .unknown {
+            return appState.localized("ForgePlay Runtime을 확인하는 중입니다.")
         }
         if let issue = readiness.steamPrefixIssue {
             return appState.localizedError(issue)
@@ -612,27 +592,6 @@ struct DashboardView: View {
             : appState.localized(ForgePlayRuntimeCapabilityPolicy.unavailableReasonKey)
     }
 
-    private func steamRendererPolicyBlocker(capability: WindowsRuntimeCapability) -> String? {
-        guard let forced = appState.steamRendererPolicySelection.forcedPreference else {
-            return nil
-        }
-        guard forced.isSatisfied(by: capability) else {
-            return appState.localizedFormat(
-                "선택한 게임 렌더러 payload(%@)는 앱에 포함된 ForgePlay Runtime에서 사용할 수 없습니다. Steam 실행 화면에서 다른 수동 백엔드를 선택하거나 렌더러 설치 상태를 확인하세요.",
-                appState.localized(forced.labelKey)
-            )
-        }
-        return nil
-    }
-
-    private func refreshSetupReadiness() {
-        services.synchronizeSetupWorkflow(
-            appState: appState,
-            hasSteamReferences: !games.isEmpty,
-            launchRecords: launchRecords
-        )
-    }
-
     private func refreshSystemStatus() async {
         let progressNotice = appState.setTask(appState.localized("Mac 상태를 확인하는 중입니다."))
         defer {
@@ -640,23 +599,39 @@ struct DashboardView: View {
                 appState.clearNotice(id: progressNotice.id)
             }
         }
-        do {
-            _ = try await services.refreshSetupWorkflow(
-                appState: appState,
-                in: modelContext,
-                hasSteamReferences: !games.isEmpty,
-                launchRecords: launchRecords
-            )
-        } catch {
-            appState.setError(error)
+        while true {
+            do {
+                try Task.checkCancellation()
+                _ = try await services.refreshSetupWorkflow(
+                    appState: appState,
+                    in: modelContext,
+                    hasSteamReferences: !games.isEmpty
+                )
+                return
+            } catch SetupWorkflowRefreshControlError.superseded {
+                guard SetupWorkflowRefreshRetryPolicy.shouldRetryAfterSupersession(
+                    outerTaskIsCancelled: Task.isCancelled
+                ) else {
+                    return
+                }
+                await Task.yield()
+            } catch is CancellationError {
+                return
+            } catch {
+                appState.setError(error)
+                return
+            }
         }
     }
 
     private var latestSteamLaunchRecord: LaunchRecord? {
-        SteamLaunchRecordLookup.latestSteamLaunchRecord(
-            from: launchRecords,
-            environmentGenerationID: readiness.steamEnvironmentGenerationID,
-            environmentCreatedAt: readiness.steamEnvironmentCreatedAt,
+        _ = launchRecords.first?.id
+        return try? services.steamLaunchReadinessRepository.latestDisplayRecord(
+            in: modelContext,
+            environmentIdentity: SteamEnvironmentIdentity(
+                generationID: readiness.steamEnvironmentGenerationID,
+                createdAt: readiness.steamEnvironmentCreatedAt
+            ),
             currentAppSessionID: services.appSessionID
         )
     }

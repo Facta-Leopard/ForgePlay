@@ -1,0 +1,437 @@
+diff --git a/dlls/kernelbase/process.c b/dlls/kernelbase/process.c
+--- a/dlls/kernelbase/process.c
++++ b/dlls/kernelbase/process.c
+@@ -1413,8 +1413,363 @@ failed:
+     *result = NULL;
+     return status;
+ }
+ 
+ 
++enum forgeplay_helldivers2_policy_state
++{
++    FORGEPLAY_HELLDIVERS2_POLICY_ABSENT,
++    FORGEPLAY_HELLDIVERS2_POLICY_VALID,
++    FORGEPLAY_HELLDIVERS2_POLICY_INVALID,
++};
++
++
++static BOOL forgeplay_helldivers2_exact_environment_value( const WCHAR *name,
++                                                           const WCHAR *expected )
++{
++    WCHAR value[128];
++    DWORD size = GetEnvironmentVariableW( name, value, ARRAY_SIZE(value) );
++
++    return size == wcslen( expected ) && !wcscmp( value, expected );
++}
++
++
++static BOOL forgeplay_helldivers2_nonce_environment_value( const WCHAR *name,
++                                                           WCHAR *value,
++                                                           DWORD count )
++{
++    DWORD size = GetEnvironmentVariableW( name, value, count );
++    unsigned int i;
++
++    if (size != 36 || count < 37) return FALSE;
++    for (i = 0; i < 36; ++i)
++    {
++        if (i == 8 || i == 13 || i == 18 || i == 23)
++        {
++            if (value[i] != L'-') return FALSE;
++        }
++        else if (!((value[i] >= L'0' && value[i] <= L'9') ||
++                   (value[i] >= L'a' && value[i] <= L'f'))) return FALSE;
++    }
++    return TRUE;
++}
++
++
++/* Digests are copied only for host readback correlation. They never grant
++ * lineage or substitute for the host-owned canonical object check. */
++static enum forgeplay_helldivers2_policy_state forgeplay_helldivers2_policy_state(void)
++{
++    WCHAR root[32768], nonce[37];
++    DWORD root_size;
++
++    if (!GetEnvironmentVariableW( L"FORGEPLAY_HELLDIVERS2_PROCESS_POLICY_VERSION",
++                                  NULL, 0 ))
++        return FORGEPLAY_HELLDIVERS2_POLICY_ABSENT;
++    root_size = GetEnvironmentVariableW( L"FORGEPLAY_HELLDIVERS2_CANONICAL_ROOT",
++                                         root, ARRAY_SIZE(root) );
++    if (!forgeplay_helldivers2_exact_environment_value(
++            L"FORGEPLAY_HELLDIVERS2_PROCESS_POLICY_VERSION", L"1" ) ||
++        !forgeplay_helldivers2_exact_environment_value(
++            L"FORGEPLAY_HELLDIVERS2_HOST_AUTHORIZATION",
++            L"canonical-root-current-lineage-v1" ) ||
++        !forgeplay_helldivers2_exact_environment_value(
++            L"FORGEPLAY_HELLDIVERS2_STEAM_APP_ID", L"553850" ) ||
++        root_size < 4 || root_size >= ARRAY_SIZE(root) ||
++        !forgeplay_helldivers2_nonce_environment_value(
++            L"FORGEPLAY_HELLDIVERS2_LINEAGE_NONCE", nonce, ARRAY_SIZE(nonce) ) ||
++        !(forgeplay_helldivers2_exact_environment_value(
++              L"FORGEPLAY_HELLDIVERS2_HEAP_ZERO_MEMORY_REQUESTED", L"0" ) ||
++          forgeplay_helldivers2_exact_environment_value(
++              L"FORGEPLAY_HELLDIVERS2_HEAP_ZERO_MEMORY_REQUESTED", L"1" )) ||
++        !forgeplay_helldivers2_exact_environment_value(
++            L"FORGEPLAY_HELLDIVERS2_GAMEGUARD_RENDERER_EXCLUSION_REQUESTED", L"1" ))
++        return FORGEPLAY_HELLDIVERS2_POLICY_INVALID;
++    return FORGEPLAY_HELLDIVERS2_POLICY_VALID;
++}
++
++
++static BOOL forgeplay_helldivers2_path_character_equal( WCHAR left, WCHAR right )
++{
++    if ((left == L'\\' || left == L'/') && (right == L'\\' || right == L'/'))
++        return TRUE;
++    return RtlUpcaseUnicodeChar( left ) == RtlUpcaseUnicodeChar( right );
++}
++
++
++static BOOL forgeplay_helldivers2_resolve_image_path( const WCHAR *filename,
++                                                      const WCHAR *cur_dir,
++                                                      WCHAR *resolved,
++                                                      DWORD resolved_count )
++{
++    WCHAR candidate[32768], full_path[32768], final_path[32768];
++    const WCHAR *input = filename, *final_source = final_path;
++    DWORD length;
++    int written;
++    HANDLE file;
++
++    if (!filename || !*filename || resolved_count < 4) return FALSE;
++    if (!(filename[1] == L':' || filename[0] == L'\\' || filename[0] == L'/'))
++    {
++        if (!cur_dir || !*cur_dir) return FALSE;
++        written = swprintf( candidate, ARRAY_SIZE(candidate), L"%s\\%s",
++                            cur_dir, filename );
++        if (written < 0 || (SIZE_T)written >= ARRAY_SIZE(candidate)) return FALSE;
++        input = candidate;
++    }
++    length = GetFullPathNameW( input, ARRAY_SIZE(full_path), full_path, NULL );
++    if (!length || length >= ARRAY_SIZE(full_path)) return FALSE;
++    file = CreateFileW( full_path, 0,
++                        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
++                        NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL );
++    if (file == INVALID_HANDLE_VALUE) return FALSE;
++    length = GetFinalPathNameByHandleW( file, final_path, ARRAY_SIZE(final_path),
++                                        FILE_NAME_NORMALIZED | VOLUME_NAME_DOS );
++    CloseHandle( file );
++    if (!length || length >= ARRAY_SIZE(final_path)) return FALSE;
++    if (!wcsncmp( final_source, L"\\\\?\\", 4 )) final_source += 4;
++    if (wcslen( final_source ) >= resolved_count) return FALSE;
++    lstrcpyW( resolved, final_source );
++    return TRUE;
++}
++
++
++static BOOL forgeplay_helldivers2_image_relative_to_canonical_root(
++    const WCHAR *resolved, const WCHAR **relative )
++{
++    WCHAR root[32768], candidate[32768];
++    BY_HANDLE_FILE_INFORMATION root_identity, candidate_identity;
++    HANDLE handle;
++    DWORD root_length, i;
++    SIZE_T resolved_length, candidate_length;
++    BOOL have_root_identity = FALSE;
++
++    root_length = GetEnvironmentVariableW( L"FORGEPLAY_HELLDIVERS2_CANONICAL_ROOT",
++                                           root, ARRAY_SIZE(root) );
++    if (!root_length || root_length >= ARRAY_SIZE(root)) return FALSE;
++    while (root_length && (root[root_length - 1] == L'\\' ||
++                           root[root_length - 1] == L'/')) --root_length;
++    root[root_length] = 0;
++    resolved_length = wcslen( resolved );
++    if (!resolved_length || resolved_length >= ARRAY_SIZE(candidate)) return FALSE;
++
++    for (i = 0; resolved_length > root_length && i < root_length; ++i)
++        if (!forgeplay_helldivers2_path_character_equal( resolved[i], root[i] ))
++            break;
++    if (resolved_length > root_length && i == root_length &&
++        (resolved[root_length] == L'\\' || resolved[root_length] == L'/'))
++    {
++        *relative = resolved + root_length + 1;
++        return **relative != 0;
++    }
++
++    /* Steam may launch an external library through its stable Wine drive
++     * letter while the host authorization is transported through Z:. Resolve
++     * that alias by directory object identity, never by a path prefix or a
++     * user-controlled display name. */
++    handle = CreateFileW( root, FILE_READ_ATTRIBUTES,
++                          FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
++                          NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL );
++    if (handle != INVALID_HANDLE_VALUE)
++    {
++        have_root_identity = GetFileInformationByHandle( handle, &root_identity ) &&
++            (root_identity.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
++            (root_identity.nFileIndexHigh || root_identity.nFileIndexLow);
++        CloseHandle( handle );
++    }
++    if (!have_root_identity) return FALSE;
++
++    lstrcpyW( candidate, resolved );
++    candidate_length = resolved_length;
++    while (candidate_length > 3)
++    {
++        while (candidate_length > 3 &&
++               candidate[candidate_length - 1] != L'\\' &&
++               candidate[candidate_length - 1] != L'/') --candidate_length;
++        if (candidate_length <= 3) break;
++        candidate[candidate_length - 1] = 0;
++        handle = CreateFileW( candidate, FILE_READ_ATTRIBUTES,
++                              FILE_SHARE_READ | FILE_SHARE_WRITE |
++                                  FILE_SHARE_DELETE,
++                              NULL, OPEN_EXISTING,
++                              FILE_FLAG_BACKUP_SEMANTICS, NULL );
++        if (handle != INVALID_HANDLE_VALUE)
++        {
++            BOOL same_identity =
++                GetFileInformationByHandle( handle, &candidate_identity ) &&
++                (candidate_identity.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
++                candidate_identity.dwVolumeSerialNumber ==
++                    root_identity.dwVolumeSerialNumber &&
++                candidate_identity.nFileIndexHigh == root_identity.nFileIndexHigh &&
++                candidate_identity.nFileIndexLow == root_identity.nFileIndexLow;
++            CloseHandle( handle );
++            if (same_identity)
++            {
++                *relative = resolved + candidate_length;
++                return **relative != 0;
++            }
++        }
++        --candidate_length;
++    }
++    return FALSE;
++}
++
++
++static BOOL forgeplay_helldivers2_current_lineage( const WCHAR *name )
++{
++    WCHAR expected[37], actual[37];
++
++    return forgeplay_helldivers2_nonce_environment_value(
++               L"FORGEPLAY_HELLDIVERS2_LINEAGE_NONCE", expected,
++               ARRAY_SIZE(expected) ) &&
++           forgeplay_helldivers2_nonce_environment_value(
++               name, actual, ARRAY_SIZE(actual) ) &&
++           !wcscmp( expected, actual );
++}
++
++
++static BOOL forgeplay_helldivers2_known_gameguard_component( const WCHAR *value,
++                                                             SIZE_T value_length )
++{
++    static const WCHAR known_component[] = L"GameGuard";
++
++    return value_length == ARRAY_SIZE(known_component) - 1 &&
++           !wcsnicmp( value, known_component, ARRAY_SIZE(known_component) - 1 );
++}
++
++
++static BOOL forgeplay_helldivers2_gameguard_component( const WCHAR *path )
++{
++    const WCHAR *cursor, *component, *dot;
++    SIZE_T length, stem_length;
++
++    if (!path || !*path) return FALSE;
++    component = path;
++    for (cursor = path;; ++cursor)
++    {
++        if (*cursor && *cursor != L'\\' && *cursor != L'/') continue;
++        length = cursor - component;
++        if (!*cursor)
++        {
++            if (forgeplay_helldivers2_known_gameguard_component(
++                    component, length )) return TRUE;
++            dot = wcsrchr( component, L'.' );
++            stem_length = dot && dot > component && dot[1]
++                ? (SIZE_T)(dot - component) : length;
++            return forgeplay_helldivers2_known_gameguard_component(
++                       component, stem_length );
++        }
++        if (forgeplay_helldivers2_known_gameguard_component(
++                component, length )) return TRUE;
++        component = cursor + 1;
++    }
++}
++
++
++static NTSTATUS forgeplay_helldivers2_scrub_d3dmetal_environment(
++    WCHAR **environment )
++{
++    static const WCHAR *variables[] =
++    {
++        L"D3DMETAL_FRAMEWORK_PATH",
++        L"D3DMETAL_SHARED_LIBRARY",
++        L"FORGEPLAY_D3DMETAL_SHARED_LIBRARY",
++        L"D3DM_WINE_UNIX_CALL",
++        L"D3DM_ENABLE_METALFX",
++        L"D3DM_NVNGX_PATH",
++        L"D3DM_VENDOR_ID",
++        L"FORGEPLAY_D3DMETAL_BRIDGE",
++        L"FORGEPLAY_D3DMETAL_TARGET",
++        L"FORGEPLAY_D3DMETAL_NATIVE_THREAD_CONTEXT",
++        L"FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP",
++    };
++    NTSTATUS status;
++    unsigned int i;
++
++    for (i = 0; i < ARRAY_SIZE(variables); ++i)
++        if ((status = remove_forgeplay_renderer_variable(
++                 environment, variables[i] ))) return status;
++    return STATUS_SUCCESS;
++}
++
++
++static NTSTATUS create_forgeplay_helldivers2_environment(
++    const void *environment, DWORD flags, BOOL trusted_lineage,
++    BOOL gameguard_lineage, WCHAR **result )
++{
++    static const WCHAR *required_policy_variables[] =
++    {
++        L"FORGEPLAY_HELLDIVERS2_PROCESS_POLICY_VERSION",
++        L"FORGEPLAY_HELLDIVERS2_HOST_AUTHORIZATION",
++        L"FORGEPLAY_HELLDIVERS2_STEAM_APP_ID",
++        L"FORGEPLAY_HELLDIVERS2_CANONICAL_ROOT",
++        L"FORGEPLAY_HELLDIVERS2_LINEAGE_NONCE",
++        L"FORGEPLAY_HELLDIVERS2_HEAP_ZERO_MEMORY_REQUESTED",
++        L"FORGEPLAY_HELLDIVERS2_GAMEGUARD_RENDERER_EXCLUSION_REQUESTED",
++    };
++    static const WCHAR *telemetry_variables[] =
++    {
++        L"FORGEPLAY_HELLDIVERS2_ROOT_IDENTITY_TELEMETRY_SHA256",
++        L"FORGEPLAY_HELLDIVERS2_MANIFEST_AUTHORIZATION_TELEMETRY_SHA256",
++    };
++    WCHAR nonce[37];
++    NTSTATUS status;
++    unsigned int i;
++
++    if (gameguard_lineage)
++    {
++        status = create_forgeplay_base_renderer_environment(
++            environment, flags, result );
++        if (!status)
++            status = forgeplay_helldivers2_scrub_d3dmetal_environment( result );
++    }
++    else
++        status = clone_forgeplay_process_environment( environment, flags, result );
++    if (status)
++    {
++        if (*result) RtlDestroyEnvironment( *result );
++        *result = NULL;
++        return status;
++    }
++
++    if ((status = remove_forgeplay_renderer_variable(
++             result, L"WINE_HEAP_ZERO_MEMORY" ))) goto failed;
++    if ((status = remove_forgeplay_renderer_variable(
++             result, L"FORGEPLAY_HELLDIVERS2_ACTIVE_LINEAGE_NONCE" ))) goto failed;
++    if ((status = remove_forgeplay_renderer_variable(
++             result, L"FORGEPLAY_HELLDIVERS2_GAMEGUARD_LINEAGE_NONCE" ))) goto failed;
++    for (i = 0; i < ARRAY_SIZE(required_policy_variables); ++i)
++        if ((status = copy_forgeplay_renderer_variable(
++                 result, required_policy_variables[i],
++                 required_policy_variables[i], TRUE ))) goto failed;
++    for (i = 0; i < ARRAY_SIZE(telemetry_variables); ++i)
++        if ((status = copy_forgeplay_renderer_variable(
++                 result, telemetry_variables[i],
++                 telemetry_variables[i], FALSE ))) goto failed;
++
++    if (!trusted_lineage) return STATUS_SUCCESS;
++    if (!forgeplay_helldivers2_nonce_environment_value(
++            L"FORGEPLAY_HELLDIVERS2_LINEAGE_NONCE", nonce, ARRAY_SIZE(nonce) ))
++    {
++        status = STATUS_INVALID_PARAMETER;
++        goto failed;
++    }
++    if ((status = set_forgeplay_renderer_literal(
++             result, L"FORGEPLAY_HELLDIVERS2_ACTIVE_LINEAGE_NONCE", nonce )))
++        goto failed;
++    if (forgeplay_helldivers2_exact_environment_value(
++            L"FORGEPLAY_HELLDIVERS2_HEAP_ZERO_MEMORY_REQUESTED", L"1" ) &&
++        (status = set_forgeplay_renderer_literal(
++             result, L"WINE_HEAP_ZERO_MEMORY", L"1" ))) goto failed;
++    if (gameguard_lineage &&
++        (status = set_forgeplay_renderer_literal(
++             result, L"FORGEPLAY_HELLDIVERS2_GAMEGUARD_LINEAGE_NONCE", nonce )))
++        goto failed;
++    return STATUS_SUCCESS;
++
++failed:
++    RtlDestroyEnvironment( *result );
++    *result = NULL;
++    return status;
++}
+ static void record_forgeplay_game_renderer_fallback( const WCHAR *stage, const WCHAR *filename,
+                                                      NTSTATUS status, const WCHAR *result )
+ {
+diff --git a/dlls/kernelbase/process.c b/dlls/kernelbase/process.c
+--- a/dlls/kernelbase/process.c
++++ b/dlls/kernelbase/process.c
+@@ -1882,8 +1882,9 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
+ {
+     const struct proc_thread_attr *handle_list = NULL, *job_list = NULL;
+     WCHAR name[MAX_PATH];
+     WCHAR *game_renderer_environment = NULL;
+     WCHAR *game_cef_policy_cmdline = NULL;
++    WCHAR *helldivers2_environment = NULL;
+     WCHAR *p, *policy_cmdline, *tidy_cmdline = cmd_line;
+     struct forgeplay_game_renderer_route game_renderer_route = {0};
+     RTL_USER_PROCESS_PARAMETERS *params = NULL;
+@@ -2080,4 +2081,49 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
+                debugstr_w(app_name) );
+     }
+ 
++    {
++        enum forgeplay_helldivers2_policy_state policy_state =
++            forgeplay_helldivers2_policy_state();
++
++        if (policy_state == FORGEPLAY_HELLDIVERS2_POLICY_INVALID)
++        {
++            status = STATUS_INVALID_PARAMETER;
++            goto done;
++        }
++        if (policy_state == FORGEPLAY_HELLDIVERS2_POLICY_VALID)
++        {
++            WCHAR resolved_image[32768];
++            const WCHAR *relative_image = NULL;
++            BOOL image_identity_valid = forgeplay_helldivers2_resolve_image_path(
++                app_name, cur_dir, resolved_image, ARRAY_SIZE(resolved_image) );
++            BOOL initial_root = image_identity_valid &&
++                forgeplay_helldivers2_image_relative_to_canonical_root(
++                    resolved_image, &relative_image );
++            BOOL active_lineage = forgeplay_helldivers2_current_lineage(
++                L"FORGEPLAY_HELLDIVERS2_ACTIVE_LINEAGE_NONCE" );
++            BOOL other_steam_game = image_identity_valid &&
++                is_forgeplay_steam_game_path( resolved_image ) && !initial_root;
++            BOOL trusted_lineage = image_identity_valid &&
++                !is_forgeplay_game_renderer_excluded_role( resolved_image ) &&
++                (initial_root || (active_lineage && !other_steam_game));
++            BOOL gameguard_lineage = trusted_lineage &&
++                ((initial_root && forgeplay_helldivers2_gameguard_component(
++                                      relative_image )) ||
++                 forgeplay_helldivers2_current_lineage(
++                     L"FORGEPLAY_HELLDIVERS2_GAMEGUARD_LINEAGE_NONCE" ));
++            NTSTATUS helldivers2_status =
++                create_forgeplay_helldivers2_environment(
++                    env, flags, trusted_lineage, gameguard_lineage,
++                    &helldivers2_environment );
++
++            if (helldivers2_status)
++            {
++                status = helldivers2_status;
++                goto done;
++            }
++            env = helldivers2_environment;
++            flags |= CREATE_UNICODE_ENVIRONMENT;
++        }
++    }
++
+     /* Warn if unsupported features are used */
+@@ -2194,5 +2236,6 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
+  done:
+     RtlDestroyProcessParameters( params );
++    if (helldivers2_environment) RtlDestroyEnvironment( helldivers2_environment );
+     if (game_renderer_environment) RtlDestroyEnvironment( game_renderer_environment );
+     if (tidy_cmdline != cmd_line) HeapFree( GetProcessHeap(), 0, tidy_cmdline );
+     return set_ntstatus( status );

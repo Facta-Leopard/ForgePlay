@@ -101,27 +101,6 @@ struct RuleEngine {
             ))
         }
 
-        if let game, game.name.localizedCaseInsensitiveContains("elden ring") {
-            matches.append(RuleEngineMatch(
-                category: .graphicsIssue,
-                confidence: 0.62,
-                userMessage: "ELDEN RING은 최신 ForgePlay Runtime과 그래픽 호환성이 중요합니다.",
-                technicalSummary: "Known high-demand D3D12 title; verify Runtime/D3DMetal version and launch path.",
-                riskLevel: .medium,
-                actions: [RecommendedAction(
-                    type: .importAppleSupplementalRenderer,
-                    runtime: nil,
-                    windowsVersion: nil,
-                    dll: nil,
-                    override: nil,
-                    launchOption: nil,
-                    requiresUserConfirmation: true,
-                    riskLevel: .low,
-                    reason: "Direct3D 12용 Apple 보조 렌더러가 준비되어 있는지 확인합니다."
-                )]
-            ))
-        }
-
         return merge(matches)
     }
 
@@ -197,7 +176,7 @@ struct RuleEngine {
 
     private func graphicsMatches(in text: String) -> [RuleEngineMatch] {
         var matches: [RuleEngineMatch] = []
-        if ["d3dmetal", "metal error", "mtldevice", "dxgi_error", "d3d12", "vkd3d"].contains(where: text.contains) {
+        if hasRendererBackendFailureEvidence(in: text) {
             matches.append(RuleEngineMatch(
                 category: .graphicsIssue,
                 confidence: 0.74,
@@ -297,7 +276,70 @@ struct RuleEngine {
         return matches
     }
 
+    private func hasRendererBackendFailureEvidence(in text: String) -> Bool {
+        let explicitFailurePatterns = [
+            "metal error",
+            "dxgi_error"
+        ]
+        if explicitFailurePatterns.contains(where: text.contains) {
+            return true
+        }
+
+        let rendererBackendMarkers = [
+            "d3dmetal",
+            "mtldevice",
+            "d3d12",
+            "vkd3d"
+        ]
+        let failureContextMarkers = [
+            ":err:",
+            "fatal error",
+            "fatal failure",
+            "failed",
+            "failure",
+            "unable to",
+            "could not",
+            "cannot ",
+            "unsupported",
+            "unavailable",
+            "device removed",
+            "device hung"
+        ]
+
+        return text.components(separatedBy: .newlines).contains { line in
+            rendererBackendMarkers.contains(where: line.contains) &&
+                failureContextMarkers.contains(where: line.contains)
+        }
+    }
+
     private func steamMatches(in text: String) -> [RuleEngineMatch] {
+        let steamWebHelperSharedContextFailed = [
+            "contextresult::kfatalfailure: failed to create shared context",
+            "failed to create gles3 context",
+            "failed to create gles2 context",
+            "sharedimagestub: unable to create context",
+            "killing unresponsive browser"
+        ].contains(where: text.contains)
+        if steamWebHelperSharedContextFailed {
+            return [RuleEngineMatch(
+                category: .steamIssue,
+                confidence: 0.98,
+                userMessage: "Windows용 Steam UI 그래픽 컨텍스트 초기화가 실패해 표시 가능한 창을 만들지 못했습니다.",
+                technicalSummary: "Steam CEF reported a fatal shared graphics-context failure or killed an unresponsive user-visible browser.",
+                riskLevel: .medium,
+                actions: [RecommendedAction(
+                    type: .askUserToUpdateRuntime,
+                    runtime: nil,
+                    windowsVersion: nil,
+                    dll: nil,
+                    override: nil,
+                    launchOption: nil,
+                    requiresUserConfirmation: false,
+                    riskLevel: .low,
+                    reason: "앱에 포함된 ForgePlay Runtime과 최신 Windows용 Steam CEF/WebHelper 조합이 맞지 않습니다. 최신 ForgePlay 빌드로 업데이트하거나 앱을 다시 설치한 뒤 재확인하세요."
+                )]
+            )]
+        }
         let steamCEFWindowFailed =
             text.contains("windows steam cef login ui was created, but steam webhelper rendering failed") ||
             text.contains("windows steam cef login ui was created while webhelper gpu initialization reported the black-window signature") ||
@@ -330,31 +372,6 @@ struct RuleEngine {
                     requiresUserConfirmation: true,
                     riskLevel: .low,
                     reason: "Windows용 Steam 창이 실제로 검은 화면이면 Steam CEF/WebHelper 렌더링을 지원하는 ForgePlay Runtime으로 다시 실행하세요."
-                )]
-            )]
-        }
-        if text.contains("the executable-scoped steam webhelper process policy reached") ||
-            text.contains("steam cef gpu mitigation reached steam webhelper") ||
-            text.contains("steam cef gpu/compositing mitigation flags reached steam webhelper") ||
-            text.contains("disabling gpu acceleration: disabled/commandline") ||
-            text.contains("--in-process-gpu") ||
-            text.contains("disabling gpu acceleration due to --disable-gpu-compositing") {
-            return [RuleEngineMatch(
-                category: .steamIssue,
-                confidence: 0.62,
-                userMessage: "Steam WebHelper 프로세스 정책은 적용됐지만 화면 렌더링은 별도 확인이 필요합니다.",
-                technicalSummary: "Matched the executable-scoped Steam WebHelper process policy. This confirms the bundled Wine CreateProcess policy reached WebHelper, but it is not proof that the Windows Steam UI rendered.",
-                riskLevel: .medium,
-                actions: [RecommendedAction(
-                    type: .noAction,
-                    runtime: nil,
-                    windowsVersion: nil,
-                    dll: nil,
-                    override: nil,
-                    launchOption: nil,
-                    requiresUserConfirmation: false,
-                    riskLevel: .low,
-                    reason: "Windows Steam 화면은 실행 인자 수가 아니라 ForgePlay Runtime의 WebHelper 프로세스 정책과 교차 프로세스 창 표면 경로로 확인해야 합니다."
                 )]
             )]
         }
@@ -397,6 +414,32 @@ struct RuleEngine {
                     requiresUserConfirmation: true,
                     riskLevel: .low,
                     reason: "앱에 포함된 ForgePlay Runtime과 최신 Windows용 Steam CEF/WebHelper 조합이 맞지 않습니다. 최신 ForgePlay 빌드로 업데이트하거나 앱을 다시 설치한 뒤 재확인하세요."
+                )]
+            )]
+        }
+        if text.contains("the executable-scoped steam webhelper process policy reached") ||
+            text.contains("steam cef gpu mitigation reached steam webhelper") ||
+            text.contains("steam cef gpu/compositing mitigation flags reached steam webhelper") ||
+            SteamWebHelperLaunchPolicy
+                .textContainsRequiredRootProcessCommandLine(text) ||
+            text.contains("disabling gpu acceleration: disabled/commandline") ||
+            text.contains("disabling gpu acceleration due to --disable-gpu-compositing") {
+            return [RuleEngineMatch(
+                category: .steamIssue,
+                confidence: 0.62,
+                userMessage: "Steam WebHelper 프로세스 정책은 적용됐지만 화면 렌더링은 별도 확인이 필요합니다.",
+                technicalSummary: "Matched the executable-scoped Steam WebHelper process policy. This confirms the bundled Wine CreateProcess policy reached WebHelper, but it is not proof that the Windows Steam UI rendered.",
+                riskLevel: .medium,
+                actions: [RecommendedAction(
+                    type: .noAction,
+                    runtime: nil,
+                    windowsVersion: nil,
+                    dll: nil,
+                    override: nil,
+                    launchOption: nil,
+                    requiresUserConfirmation: false,
+                    riskLevel: .low,
+                    reason: "Windows Steam 화면은 실행 인자 수가 아니라 ForgePlay Runtime의 WebHelper 프로세스 정책과 교차 프로세스 창 표면 경로로 확인해야 합니다."
                 )]
             )]
         }
@@ -852,4 +895,5 @@ struct RuleEngine {
         let order: [RiskLevel: Int] = [.low: 0, .medium: 1, .high: 2]
         return (order[lhs, default: 0] >= order[rhs, default: 0]) ? lhs : rhs
     }
+
 }

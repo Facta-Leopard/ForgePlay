@@ -80,12 +80,25 @@ private struct ManagedStorageStagingOwnershipMarker: Codable {
     var destinationPath: String
 }
 
-private enum MigratableExternalSymlinkPolicy: Equatable {
+private struct StorageMigrationCopyPreparation: Sendable {
+    var externalizedLibraries: [URL]
+    var excludedPaths: Set<String>
+    var sourceSize: Int64
+}
+
+/// Storage transfers deliberately run recursive filesystem work away from the
+/// main actor. `FileManager` supports concurrent use, but older deployment SDKs
+/// do not expose its Sendable conformance, so keep the transfer explicit.
+private struct StorageMigrationFileManagerReference: @unchecked Sendable {
+    let value: FileManager
+}
+
+private enum MigratableExternalSymlinkPolicy: Equatable, Sendable {
     case none
     case winePrefix
 }
 
-enum ManagedStorageTransferPurpose: Equatable {
+enum ManagedStorageTransferPurpose: Equatable, Sendable {
     case legacyImport
     case currentRelocation
 
@@ -120,6 +133,35 @@ final class StorageMigrationService {
         self.metadataDecoder.dateDecodingStrategy = .iso8601
     }
 
+    private nonisolated static func runCancellableFilesystemTask<T: Sendable>(
+        priority: TaskPriority = .userInitiated,
+        operation: @escaping @Sendable () throws -> T
+    ) async throws -> T {
+        try Task.checkCancellation()
+        let worker = Task.detached(priority: priority) {
+            try operation()
+        }
+        return try await withTaskCancellationHandler {
+            let value = try await worker.value
+            try Task.checkCancellation()
+            return value
+        } onCancel: {
+            worker.cancel()
+        }
+    }
+
+    /// Rollback and post-commit cleanup must finish even if the initiating UI
+    /// task disappears. It is still detached so recursive deletion cannot
+    /// block the main actor.
+    private nonisolated static func runMandatoryFilesystemTask<T: Sendable>(
+        priority: TaskPriority = .utility,
+        operation: @escaping @Sendable () throws -> T
+    ) async throws -> T {
+        try await Task.detached(priority: priority) {
+            try operation()
+        }.value
+    }
+
     func configureFreshRoot(_ destinationRoot: URL) throws {
         try pathManager.configureRoot(destinationRoot.standardizedFileURL)
     }
@@ -141,14 +183,13 @@ final class StorageMigrationService {
               !Self.isNested(destination, inside: source) else {
             throw StorageMigrationError.nestedLocation
         }
-        try Self.validateMigratableLinks(in: source)
-
         try ensureEmptyDestination(destination)
         let destinationExistedBeforeCopy = fileManager.fileExists(atPath: destination.path)
         let copiedTopLevelNames = try Self.topLevelMigratableItemNames(in: source)
-        let sourceSize = try await Task.detached(priority: .userInitiated) {
-            try Self.directoryAllocatedSize(source)
-        }.value
+        let sourceSize = try await Self.runCancellableFilesystemTask {
+            try Self.validateMigratableLinks(in: source)
+            return try Self.directoryAllocatedSize(source)
+        }
         let available = try availableCapacity(for: destination)
         guard available >= sourceSize else {
             throw StorageMigrationError.insufficientSpace(required: sourceSize, available: available)
@@ -159,27 +200,29 @@ final class StorageMigrationService {
 
         let copiedFiles: Int
         do {
-            copiedFiles = try await Task.detached(priority: .userInitiated) {
+            copiedFiles = try await Self.runCancellableFilesystemTask {
                 let copiedFiles = try Self.copyContents(of: source, to: destination)
                 try Self.rebasePrefixMetadata(in: destination, from: source, to: destination)
                 return copiedFiles
-            }.value
+            }
             try pathManager.configureRoot(destination)
-        } catch {
+        } catch let originalError {
             do {
-                try Self.cleanupPartialMigrationDestination(
-                    destination,
-                    removeDestinationDirectory: !destinationExistedBeforeCopy,
-                    copiedTopLevelNames: copiedTopLevelNames
-                )
+                try await Self.runMandatoryFilesystemTask {
+                    try Self.cleanupPartialMigrationDestination(
+                        destination,
+                        removeDestinationDirectory: !destinationExistedBeforeCopy,
+                        copiedTopLevelNames: copiedTopLevelNames
+                    )
+                }
             } catch let cleanupError {
                 throw StorageMigrationError.cleanupFailed(
                     destination: destination,
-                    originalError: error,
+                    originalError: originalError,
                     cleanupError: cleanupError
                 )
             }
-            throw error
+            throw originalError
         }
 
         return StorageMigrationResult(
@@ -190,7 +233,17 @@ final class StorageMigrationService {
         )
     }
 
-    func hasManagedData(at rootURL: URL) throws -> Bool {
+    func hasManagedData(at rootURL: URL) async throws -> Bool {
+        let filesystem = StorageMigrationFileManagerReference(value: fileManager)
+        return try await Self.runCancellableFilesystemTask {
+            try Self.hasManagedData(at: rootURL, fileManager: filesystem.value)
+        }
+    }
+
+    private nonisolated static func hasManagedData(
+        at rootURL: URL,
+        fileManager: FileManager
+    ) throws -> Bool {
         let root = rootURL.standardizedFileURL
         var isDirectory: ObjCBool = false
         guard fileManager.fileExists(atPath: root.path, isDirectory: &isDirectory) else {
@@ -201,7 +254,7 @@ final class StorageMigrationService {
         }
         try Self.requireNonSymlinkDirectory(root, fileManager: fileManager)
 
-        if try hasCurrentManagedStorageMarker(at: root) {
+        if try hasCurrentManagedStorageMarker(at: root, fileManager: fileManager) {
             return true
         }
 
@@ -221,11 +274,24 @@ final class StorageMigrationService {
         return false
     }
 
-    func hasCurrentManagedStorageMarker(at rootURL: URL) throws -> Bool {
+    func hasCurrentManagedStorageMarker(at rootURL: URL) async throws -> Bool {
+        let filesystem = StorageMigrationFileManagerReference(value: fileManager)
+        return try await Self.runCancellableFilesystemTask {
+            try Self.hasCurrentManagedStorageMarker(
+                at: rootURL,
+                fileManager: filesystem.value
+            )
+        }
+    }
+
+    private nonisolated static func hasCurrentManagedStorageMarker(
+        at rootURL: URL,
+        fileManager: FileManager
+    ) throws -> Bool {
         let root = rootURL.standardizedFileURL
         let marker = root.appending(path: ForgePlayManagedStorageLayout.markerFileName)
         guard fileManager.fileExists(atPath: marker.path) else { return false }
-        if try isRecoverableFreshManagedDestination(at: root) {
+        if try isRecoverableFreshManagedDestination(at: root, fileManager: fileManager) {
             return false
         }
         do {
@@ -335,11 +401,19 @@ final class StorageMigrationService {
 
         try pathManager.validateExistingManagedRoot(source)
 
+        let filesystem = StorageMigrationFileManagerReference(value: fileManager)
         let hasRecoverableFreshDestination: Bool
         let hasFreshDestinationMarker: Bool
         if purpose == .legacyImport {
             hasFreshDestinationMarker = try hasFreshManagedDestinationMarker(at: destination)
-            hasRecoverableFreshDestination = try isRecoverableFreshManagedDestination(at: destination)
+            hasRecoverableFreshDestination = hasFreshDestinationMarker
+                ? try await Self.runCancellableFilesystemTask {
+                    try Self.isRecoverableFreshManagedDestination(
+                        at: destination,
+                        fileManager: filesystem.value
+                    )
+                }
+                : false
         } else {
             hasFreshDestinationMarker = false
             hasRecoverableFreshDestination = false
@@ -359,22 +433,31 @@ final class StorageMigrationService {
             in: source,
             topLevelDirectoryNames: purpose.topLevelDirectoryNames
         )
-        for item in sourceItems {
-            let externalSymlinkPolicy: MigratableExternalSymlinkPolicy =
-                item.lastPathComponent == ForgePlayPathRole.prefixes.rawValue ? .winePrefix : .none
-            try Self.validateMigratableLinks(
-                in: item,
-                externalSymlinkPolicy: externalSymlinkPolicy
+        let preparation = try await Self.runCancellableFilesystemTask {
+            for item in sourceItems {
+                try Task.checkCancellation()
+                let externalSymlinkPolicy: MigratableExternalSymlinkPolicy =
+                    item.lastPathComponent == ForgePlayPathRole.prefixes.rawValue ? .winePrefix : .none
+                try Self.validateMigratableLinks(
+                    in: item,
+                    externalSymlinkPolicy: externalSymlinkPolicy
+                )
+            }
+            let externalizedLibraries = try Self.externalizedSteamAppsDirectories(in: source)
+            let excludedPaths = Set(externalizedLibraries.map { $0.standardizedFileURL.path })
+            let sourceSize = try sourceItems.reduce(Int64(0)) { partial, item in
+                try Task.checkCancellation()
+                return partial + (try Self.directoryAllocatedSize(item, excluding: excludedPaths))
+            }
+            return StorageMigrationCopyPreparation(
+                externalizedLibraries: externalizedLibraries,
+                excludedPaths: excludedPaths,
+                sourceSize: sourceSize
             )
         }
-        let externalizedLibraries = try Self.externalizedSteamAppsDirectories(in: source)
-        let excludedPaths = Set(externalizedLibraries.map { $0.standardizedFileURL.path })
-
-        let sourceSize = try await Task.detached(priority: .userInitiated) {
-            try sourceItems.reduce(Int64(0)) { partial, item in
-                partial + (try Self.directoryAllocatedSize(item, excluding: excludedPaths))
-            }
-        }.value
+        let externalizedLibraries = preparation.externalizedLibraries
+        let excludedPaths = preparation.excludedPaths
+        let sourceSize = preparation.sourceSize
         let available = try availableCapacity(for: destination)
         guard available >= sourceSize else {
             throw StorageMigrationError.insufficientSpace(required: sourceSize, available: available)
@@ -391,7 +474,12 @@ final class StorageMigrationService {
             ) != nil
         }
 
-        try cleanupAbandonedManagedStorageStagingDirectories(for: destination)
+        try await Self.runCancellableFilesystemTask(priority: .utility) {
+            try Self.cleanupAbandonedManagedStorageStagingDirectories(
+                for: destination,
+                fileManager: filesystem.value
+            )
+        }
         let replacesExistingDestination = try shouldReplaceDestinationForManagedMigration(
             destination,
             allowsRecoverableFreshDestination: hasRecoverableFreshDestination,
@@ -411,10 +499,11 @@ final class StorageMigrationService {
                 destination: destination
             )
             try pathManager.validateWritable(staging)
-            let copiedFiles = try await Task.detached(priority: .userInitiated) {
-                let fileManager = FileManager.default
+            let copiedFiles = try await Self.runCancellableFilesystemTask {
+                let fileManager = filesystem.value
                 var count = 0
                 for item in sourceItems {
+                    try Task.checkCancellation()
                     let target = staging.appending(path: item.lastPathComponent, directoryHint: .isDirectory)
                     count += try Self.copyItem(
                         at: item,
@@ -450,13 +539,14 @@ final class StorageMigrationService {
                     physicalSource: source,
                     externalizedLibraryPaths: relativeExternalizedPaths
                 )
+                if hasRecoverableFreshDestination {
+                    try Self.preserveRecoverableFreshDestinationLogs(
+                        from: destination,
+                        in: staging,
+                        fileManager: fileManager
+                    )
+                }
                 return count
-            }.value
-            if hasRecoverableFreshDestination {
-                try preserveRecoverableFreshDestinationLogs(
-                    from: destination,
-                    in: staging
-                )
             }
             if replacesExistingDestination {
                 _ = try fileManager.replaceItemAt(
@@ -482,7 +572,7 @@ final class StorageMigrationService {
                 destinationRoot: destination,
                 externalizedLibraryPaths: externalizedLibraries.map(\.path)
             )
-        } catch {
+        } catch let originalError {
             if !movedToDestination,
                Self.isOwnedManagedStorageStagingDirectory(
                     staging,
@@ -491,23 +581,41 @@ final class StorageMigrationService {
                     fileManager: fileManager
                ) {
                 do {
-                    try fileManager.removeItem(at: staging)
+                    try await Self.runMandatoryFilesystemTask {
+                        try filesystem.value.removeItem(at: staging)
+                    }
                 } catch let cleanupError {
                     throw StorageMigrationError.cleanupFailed(
                         destination: staging,
-                        originalError: error,
+                        originalError: originalError,
                         cleanupError: cleanupError
                     )
                 }
             }
-            throw error
+            throw originalError
         }
     }
 
-    func ensureManagedStorageMarker(at root: URL, migratedFrom source: URL?) throws {
+    func ensureManagedStorageMarker(at root: URL, migratedFrom source: URL?) async throws {
+        let filesystem = StorageMigrationFileManagerReference(value: fileManager)
+        try await Self.runCancellableFilesystemTask {
+            try Self.ensureManagedStorageMarker(
+                at: root,
+                migratedFrom: source,
+                fileManager: filesystem.value
+            )
+        }
+    }
+
+    private nonisolated static func ensureManagedStorageMarker(
+        at root: URL,
+        migratedFrom source: URL?,
+        fileManager: FileManager
+    ) throws {
         let marker = root.appending(path: ForgePlayManagedStorageLayout.markerFileName)
         if fileManager.fileExists(atPath: marker.path) {
-            if try isRecoverableFreshManagedDestination(at: root) {
+            if try isRecoverableFreshManagedDestination(at: root, fileManager: fileManager) {
+                try Task.checkCancellation()
                 try FileSystemItemPolicy.requireRegularNonSymlinkFile(marker, fileManager: fileManager)
                 try fileManager.removeItem(at: marker)
             } else {
@@ -525,6 +633,7 @@ final class StorageMigrationService {
                 }
             }
         }
+        try Task.checkCancellation()
         try Self.writeManagedStorageMarker(
             at: root,
             logicalSource: source,
@@ -537,37 +646,20 @@ final class StorageMigrationService {
     func cleanupRelocatedManagedData(
         at sourceRoot: URL,
         preserving protectedPaths: [String]
-    ) throws -> Bool {
+    ) async throws -> Bool {
         let source = sourceRoot.standardizedFileURL
         try pathManager.validateExistingManagedRoot(source)
         let protectedURLs = protectedPaths.map {
             URL(fileURLWithPath: $0, isDirectory: true).standardizedFileURL
         }
-
-        for name in ForgePlayManagedStorageLayout.relocatedTopLevelDirectoryNames.sorted() {
-            let item = source.appending(path: name, directoryHint: .isDirectory)
-            guard fileManager.fileExists(atPath: item.path) ||
-                    (try? fileManager.destinationOfSymbolicLink(atPath: item.path)) != nil else {
-                continue
-            }
-            try Self.removeItem(
-                at: item,
+        let filesystem = StorageMigrationFileManagerReference(value: fileManager)
+        return try await Self.runMandatoryFilesystemTask {
+            try Self.cleanupRelocatedManagedData(
+                at: source,
                 preserving: protectedURLs,
-                fileManager: fileManager
+                fileManager: filesystem.value
             )
         }
-
-        let marker = source.appending(path: ForgePlayManagedStorageLayout.markerFileName)
-        if fileManager.fileExists(atPath: marker.path) {
-            try FileSystemItemPolicy.requireRegularNonSymlinkFile(marker, fileManager: fileManager)
-            try fileManager.removeItem(at: marker)
-        }
-
-        guard try Self.isEmptyManagedSkeleton(source, fileManager: fileManager) else {
-            return false
-        }
-        try fileManager.removeItem(at: source)
-        return true
     }
 
     nonisolated static func rebasedPath(_ path: String?, from sourceRoot: URL, to destinationRoot: URL) -> String? {
@@ -871,7 +963,10 @@ final class StorageMigrationService {
         return items
     }
 
-    private func isRecoverableFreshManagedDestination(at rootURL: URL) throws -> Bool {
+    private nonisolated static func isRecoverableFreshManagedDestination(
+        at rootURL: URL,
+        fileManager: FileManager
+    ) throws -> Bool {
         let root = rootURL.standardizedFileURL
         var isDirectory: ObjCBool = false
         guard fileManager.fileExists(atPath: root.path, isDirectory: &isDirectory) else {
@@ -880,7 +975,9 @@ final class StorageMigrationService {
         guard isDirectory.boolValue else { return false }
         try Self.requireNonSymlinkDirectory(root, fileManager: fileManager)
 
-        guard try hasFreshManagedDestinationMarker(at: root) else { return false }
+        guard try hasFreshManagedDestinationMarker(at: root, fileManager: fileManager) else {
+            return false
+        }
         let marker = root.appending(path: ForgePlayManagedStorageLayout.markerFileName)
 
         let logsRoot = root.appending(path: ForgePlayPathRole.logs.rawValue, directoryHint: .isDirectory)
@@ -908,6 +1005,7 @@ final class StorageMigrationService {
         }
 
         for case let item as URL in enumerator {
+            try Task.checkCancellation()
             let values = try item.resourceValues(forKeys: [
                 .isDirectoryKey,
                 .isRegularFileKey,
@@ -958,6 +1056,16 @@ final class StorageMigrationService {
     }
 
     private func hasFreshManagedDestinationMarker(at rootURL: URL) throws -> Bool {
+        try Self.hasFreshManagedDestinationMarker(
+            at: rootURL,
+            fileManager: fileManager
+        )
+    }
+
+    private nonisolated static func hasFreshManagedDestinationMarker(
+        at rootURL: URL,
+        fileManager: FileManager
+    ) throws -> Bool {
         let root = rootURL.standardizedFileURL
         let marker = root.appending(path: ForgePlayManagedStorageLayout.markerFileName)
         guard fileManager.fileExists(atPath: marker.path) else { return false }
@@ -965,9 +1073,10 @@ final class StorageMigrationService {
         return try Self.markerRepresentsFreshDestination(marker)
     }
 
-    private func preserveRecoverableFreshDestinationLogs(
+    private nonisolated static func preserveRecoverableFreshDestinationLogs(
         from root: URL,
-        in staging: URL
+        in staging: URL,
+        fileManager: FileManager
     ) throws {
         let logs = root.appending(path: ForgePlayPathRole.logs.rawValue, directoryHint: .isDirectory)
         var isDirectory: ObjCBool = false
@@ -1044,8 +1153,9 @@ final class StorageMigrationService {
         }
     }
 
-    private func cleanupAbandonedManagedStorageStagingDirectories(
-        for destination: URL
+    private nonisolated static func cleanupAbandonedManagedStorageStagingDirectories(
+        for destination: URL,
+        fileManager: FileManager
     ) throws {
         let parent = destination.deletingLastPathComponent()
         let prefix = ".\(destination.lastPathComponent)-migration-"
@@ -1055,6 +1165,7 @@ final class StorageMigrationService {
             options: []
         )
         for item in contents {
+            try Task.checkCancellation()
             guard item.lastPathComponent.hasPrefix(prefix),
                   let identity = UUID(
                     uuidString: String(item.lastPathComponent.dropFirst(prefix.count))
@@ -1069,6 +1180,37 @@ final class StorageMigrationService {
             }
             try fileManager.removeItem(at: item)
         }
+    }
+
+    private nonisolated static func cleanupRelocatedManagedData(
+        at source: URL,
+        preserving protectedURLs: [URL],
+        fileManager: FileManager
+    ) throws -> Bool {
+        for name in ForgePlayManagedStorageLayout.relocatedTopLevelDirectoryNames.sorted() {
+            let item = source.appending(path: name, directoryHint: .isDirectory)
+            guard fileManager.fileExists(atPath: item.path) ||
+                    (try? fileManager.destinationOfSymbolicLink(atPath: item.path)) != nil else {
+                continue
+            }
+            try removeItem(
+                at: item,
+                preserving: protectedURLs,
+                fileManager: fileManager
+            )
+        }
+
+        let marker = source.appending(path: ForgePlayManagedStorageLayout.markerFileName)
+        if fileManager.fileExists(atPath: marker.path) {
+            try FileSystemItemPolicy.requireRegularNonSymlinkFile(marker, fileManager: fileManager)
+            try fileManager.removeItem(at: marker)
+        }
+
+        guard try isEmptyManagedSkeleton(source, fileManager: fileManager) else {
+            return false
+        }
+        try fileManager.removeItem(at: source)
+        return true
     }
 
     private nonisolated static let managedStorageStagingOwnershipMarkerFileName =
@@ -1313,6 +1455,7 @@ final class StorageMigrationService {
         }
 
         for case let item as URL in enumerator {
+            try Task.checkCancellation()
             let values: URLResourceValues
             do {
                 values = try item.resourceValues(forKeys: [.isDirectoryKey, .isRegularFileKey, .isSymbolicLinkKey, .linkCountKey])
@@ -1445,6 +1588,7 @@ final class StorageMigrationService {
             options: [.skipsHiddenFiles]
         )
         for candidate in candidates {
+            try Task.checkCancellation()
             let values = try candidate.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
             guard values.isDirectory == true, values.isSymbolicLink != true else { continue }
             let candidateSteamApps = candidate.appending(path: "steamapps", directoryHint: .isDirectory)
@@ -1472,6 +1616,7 @@ final class StorageMigrationService {
             includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey],
             options: [.skipsHiddenFiles]
         )
+        try Task.checkCancellation()
         if contents.contains(where: {
             $0.lastPathComponent.hasPrefix("appmanifest_") && $0.pathExtension.lowercased() == "acf"
         }) {
@@ -1487,6 +1632,7 @@ final class StorageMigrationService {
             "workshop"
         ]
         for item in contents where payloadDirectoryNames.contains(item.lastPathComponent.lowercased()) {
+            try Task.checkCancellation()
             let values = try item.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
             guard values.isDirectory == true, values.isSymbolicLink != true else {
                 throw PathManagerError.unsafeDirectory(item)
@@ -1504,6 +1650,7 @@ final class StorageMigrationService {
         excluding excludedPaths: Set<String>,
         fileManager: FileManager
     ) throws -> Int {
+        try Task.checkCancellation()
         let sourcePath = source.standardizedFileURL.path
         if excludedPaths.contains(sourcePath) {
             return 0
@@ -1512,6 +1659,7 @@ final class StorageMigrationService {
         let nestedExclusions = excludedPaths.filter { $0.hasPrefix(sourcePrefix) }
         if nestedExclusions.isEmpty {
             try fileManager.copyItem(at: source, to: destination)
+            try Task.checkCancellation()
             return try copiedFileCount(at: source, fileManager: fileManager)
         }
 
@@ -1528,6 +1676,7 @@ final class StorageMigrationService {
         )
         var count = 0
         for child in children {
+            try Task.checkCancellation()
             count += try copyItem(
                 at: child,
                 to: destination.appending(path: child.lastPathComponent),
@@ -1622,6 +1771,7 @@ final class StorageMigrationService {
             throw StorageMigrationError.scanFailed(prefixes, "could not enumerate copied prefix symlinks")
         }
         for case let item as URL in enumerator {
+            try Task.checkCancellation()
             let values = try item.resourceValues(forKeys: [.isSymbolicLinkKey])
             guard values.isSymbolicLink == true else { continue }
             guard let relativeItemPath = relativePath(of: item, under: stagingRoot) else {
@@ -1705,8 +1855,10 @@ final class StorageMigrationService {
         )
         var copiedFiles = 0
         for item in contents {
+            try Task.checkCancellation()
             let target = destination.appending(path: item.lastPathComponent)
             try fileManager.copyItem(at: item, to: target)
+            try Task.checkCancellation()
             copiedFiles += try copiedFileCount(at: item, fileManager: fileManager)
         }
         return copiedFiles
@@ -1763,6 +1915,7 @@ final class StorageMigrationService {
         }
         var count = 0
         for case let fileURL as URL in enumerator {
+            try Task.checkCancellation()
             let values: URLResourceValues
             do {
                 values = try fileURL.resourceValues(forKeys: [.isDirectoryKey])
@@ -1812,6 +1965,7 @@ final class StorageMigrationService {
         }
         var total: Int64 = 0
         for case let fileURL as URL in enumerator {
+            try Task.checkCancellation()
             if excludedPaths.contains(fileURL.standardizedFileURL.path) {
                 enumerator.skipDescendants()
                 continue
@@ -1870,6 +2024,7 @@ final class StorageMigrationService {
         }
 
         for case let metadataURL as URL in enumerator {
+            try Task.checkCancellation()
             let values: URLResourceValues
             do {
                 values = try metadataURL.resourceValues(forKeys: [.isDirectoryKey, .isRegularFileKey, .isSymbolicLinkKey])

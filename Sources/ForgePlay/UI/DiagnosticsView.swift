@@ -2,7 +2,7 @@ import AppKit
 import SwiftData
 import SwiftUI
 
-private enum DiagnosticEvidenceSelectionError: Error, ForgePlayUserFacingLocalizedError {
+private enum DiagnosticEvidenceSelectionError: Error, Sendable, ForgePlayUserFacingLocalizedError {
     case noLinkedEvidence(String)
     case noRecentEvidence
 
@@ -20,30 +20,163 @@ private enum DiagnosticEvidenceSelectionError: Error, ForgePlayUserFacingLocaliz
     }
 }
 
+private struct DiagnosticLogEvidenceSnapshot: Sendable {
+    let text: String
+    let context: DiagnosticEvidenceAssociation
+    let readError: (any Error)?
+}
+
+private struct DiagnosticLogEvidenceRequest: Sendable {
+    let logsRoot: URL
+    let supportBundlesRoot: URL?
+    let linkedPaths: [String]?
+    let launchRecordIdentifier: String?
+    let context: DiagnosticEvidenceAssociation
+
+    func readAsync() async throws -> DiagnosticLogEvidenceSnapshot {
+        let worker = Task.detached(priority: .userInitiated) {
+            try read()
+        }
+        return try await withTaskCancellationHandler {
+            try await worker.value
+        } onCancel: {
+            worker.cancel()
+        }
+    }
+
+    func read() throws -> DiagnosticLogEvidenceSnapshot {
+        try Task.checkCancellation()
+        let maxFiles = 8
+        let recentFiles: [URL]
+        if let linkedPaths {
+            var seen = Set<String>()
+            recentFiles = linkedPaths.compactMap { path -> URL? in
+                let url = URL(fileURLWithPath: path).standardizedFileURL
+                guard url.path.hasPrefix(logsRoot.standardizedFileURL.path + "/"),
+                      supportBundlesRoot.map({
+                        url.path != $0.standardizedFileURL.path &&
+                            !url.path.hasPrefix($0.standardizedFileURL.path + "/")
+                      }) ?? true,
+                      FileSystemItemPolicy.isRegularNonSymlinkFile(url),
+                      seen.insert(url.path).inserted else {
+                    return nil
+                }
+                return url
+            }.prefix(maxFiles).map { $0 }
+            guard !recentFiles.isEmpty else {
+                throw DiagnosticEvidenceSelectionError.noLinkedEvidence(
+                    launchRecordIdentifier ?? "unknown"
+                )
+            }
+        } else {
+            recentFiles = try LogTextReader.mostRecentRunLogFiles(
+                under: logsRoot,
+                maxFiles: maxFiles
+            ).filter { url in
+                supportBundlesRoot.map {
+                    url.standardizedFileURL.path != $0.standardizedFileURL.path &&
+                        !url.standardizedFileURL.path.hasPrefix($0.standardizedFileURL.path + "/")
+                } ?? true
+            }
+        }
+        try Task.checkCancellation()
+        guard !recentFiles.isEmpty else {
+            throw DiagnosticEvidenceSelectionError.noRecentEvidence
+        }
+        let snapshot = LogTextReader.tolerantDiagnosticSnapshot(from: recentFiles)
+        try Task.checkCancellation()
+        if snapshot.text.isEmpty, let readError = snapshot.readError {
+            throw readError
+        }
+        return DiagnosticLogEvidenceSnapshot(
+            text: snapshot.text,
+            context: context,
+            readError: snapshot.readError
+        )
+    }
+}
+
+private struct DiagnosticPresentationRecordKey: Hashable {
+    let identifier: String
+    let createdAt: Date
+    let normalizedResultSHA256: String?
+    let proposalDisposition: String?
+}
+
+private enum DiagnosticRecordPresentationState: Sendable {
+    case decoded(DiagnosticResult)
+    case failed(DiagnosticRecordDecodeError)
+}
+
+struct AIDiagnosticPreviewActionPolicy: Equatable {
+    let isAvailable: Bool
+    let messageKey: String
+    let status: CheckStatus
+
+    init(
+        isUserEnabled: Bool,
+        providerAvailability: AIDiagnosticProviderAvailability
+    ) {
+        if !isUserEnabled {
+            isAvailable = false
+            messageKey = "AI 문제 진단이 꺼져 있습니다."
+            status = .warning
+        } else {
+            isAvailable = providerAvailability.isAvailable
+            messageKey = providerAvailability.message
+            status = providerAvailability.status
+        }
+    }
+}
+
 struct DiagnosticsView: View {
     @Environment(AppState.self) private var appState
     @Environment(AppServices.self) private var services
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
-    @Query(sort: \DiagnosticRecord.createdAt, order: .reverse) private var records: [DiagnosticRecord]
-    @Query(sort: \LaunchRecord.startedAt, order: .reverse) private var launchRecords: [LaunchRecord]
+    @Query private var records: [DiagnosticRecord]
+    @Query private var launchRecords: [LaunchRecord]
     @Query(sort: \SteamStorageMountRecord.path) private var steamStorageMounts: [SteamStorageMountRecord]
+    @Query(sort: \PrefixRecord.displayName) private var prefixes: [PrefixRecord]
+    @Query(sort: \SteamGameRecord.name) private var games: [SteamGameRecord]
+    @Query(sort: \RuntimeRecord.runtime) private var runtimes: [RuntimeRecord]
     @State private var aiPreview: LLMRequestSnapshot?
-    @State private var aiPreviewEvidenceContext: DiagnosticEvidenceContext?
+    @State private var aiPreviewEvidenceContext: DiagnosticEvidenceAssociation?
     @State private var selectedEvidenceLaunchRecordID: String?
     @State private var supportIncidentDraft: SupportIncidentDraft?
     @State private var isCreatingSupportBundle = false
+    @State private var diagnosticPresentationStates: [String: DiagnosticRecordPresentationState] = [:]
+    @State private var diagnosticDecodeGate = DiagnosticExactTaskTokenGate()
+    @State private var aiRequestGate = DiagnosticExactTaskTokenGate()
+    @State private var evidenceRequestGate = DiagnosticExactTaskTokenGate()
+    @State private var supportBundleRequestGate = DiagnosticExactTaskTokenGate()
+    @State private var aiDiagnosisTask: Task<Void, Never>?
+    @State private var evidenceTask: Task<Void, Never>?
+    @State private var supportBundleTask: Task<Void, Never>?
 
-    private struct DiagnosticEvidenceContext: Hashable {
-        var gameID: String?
-        var launchRecordID: String?
+    init() {
+        var diagnosticDescriptor = FetchDescriptor<DiagnosticRecord>(
+            sortBy: [SortDescriptor(\DiagnosticRecord.createdAt, order: .reverse)]
+        )
+        diagnosticDescriptor.fetchLimit = DiagnosticPresentationLimits.diagnosticQueryFetchLimit
+        _records = Query(diagnosticDescriptor)
+
+        var launchDescriptor = FetchDescriptor<LaunchRecord>(
+            sortBy: [SortDescriptor(\LaunchRecord.startedAt, order: .reverse)]
+        )
+        launchDescriptor.fetchLimit = DiagnosticPresentationLimits.launchQueryFetchLimit
+        _launchRecords = Query(launchDescriptor)
     }
 
     var body: some View {
         let palette = ForgePlayTheme.palette(mode: appState.themeMode, colorScheme: colorScheme)
+        let aiPreviewActionPolicy = AIDiagnosticPreviewActionPolicy(
+            isUserEnabled: appState.isLLMDiagnosticsEnabled,
+            providerAvailability: services.llmService.availability
+        )
 
         ForgePageScaffold(
-            "문제 진단",
+            "문제 진단 (베타)",
             subtitle: "최근 실행 기록과 로그를 분석하고 필요한 조치를 확인합니다.",
             systemImage: "waveform.path.ecg.rectangle"
         ) {
@@ -54,14 +187,72 @@ struct DiagnosticsView: View {
                 subtitle: "로그는 먼저 로컬 규칙으로 분석하며, AI 분석은 미리보기 확인 후 실행합니다.",
                 systemImage: "cpu"
             ) {
+                Toggle(
+                    appState.localized("AI 문제 진단(베타) 사용"),
+                    isOn: Binding(
+                        get: { appState.isLLMDiagnosticsEnabled },
+                        set: { saveAIDiagnosticsEnabled($0) }
+                    )
+                )
+                .font(.headline)
+                Text(appState.localized(
+                    "기본값은 꺼짐입니다. 켜면 로그를 외부 서버로 보내지 않고, 분석 전 가려진 내용을 확인한 뒤 이 Mac의 Apple Foundation Models로만 분석합니다."
+                ))
+                    .font(.caption)
+                    .foregroundStyle(palette.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+
                 diagnosticEvidenceSelector(palette: palette)
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .center, spacing: 10) {
+                        StatusBadge(
+                            label: aiPreviewActionPolicy.status.label,
+                            status: aiPreviewActionPolicy.status
+                        )
+                        Text(appState.localized(aiPreviewActionPolicy.messageKey))
+                            .font(.caption)
+                            .foregroundStyle(palette.secondaryText)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    VStack(alignment: .leading, spacing: 8) {
+                        StatusBadge(
+                            label: aiPreviewActionPolicy.status.label,
+                            status: aiPreviewActionPolicy.status
+                        )
+                        Text(appState.localized(aiPreviewActionPolicy.messageKey))
+                            .font(.caption)
+                            .foregroundStyle(palette.secondaryText)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                if !aiPreviewActionPolicy.isAvailable {
+                    ThemedActionButton(
+                        title: "환경 설정",
+                        systemImage: "gearshape",
+                        prominence: .secondary,
+                        controlSize: .small
+                    ) {
+                        appState.selectedSection = .settings
+                    }
+                    .frame(minWidth: 150, idealWidth: 190, maxWidth: 240)
+                }
                 ResponsiveActionRow {
                     SecondaryActionButton(title: "최근 로그 다시 분석", systemImage: "arrow.clockwise") {
                         runLocalAnalysis()
                     }
+                    .disabled(evidenceRequestGate.isActive || aiRequestGate.isActive)
                     SecondaryActionButton(title: "AI 로컬 분석(베타) 전 미리보기", systemImage: "eye") {
                         prepareAIPreview()
                     }
+                    .disabled(
+                        evidenceRequestGate.isActive ||
+                            aiRequestGate.isActive ||
+                            !aiPreviewActionPolicy.isAvailable
+                    )
+                    .help(appState.localized(aiPreviewActionPolicy.messageKey))
+                    .accessibilityHint(
+                        appState.localized(aiPreviewActionPolicy.messageKey)
+                    )
                 }
                 .frame(maxWidth: 520)
                 if let aiPreview {
@@ -77,6 +268,19 @@ struct DiagnosticsView: View {
                             .font(.caption)
                             .foregroundStyle(palette.secondaryText)
                             .fixedSize(horizontal: false, vertical: true)
+                        Text(appState.localized(
+                            "베타 — 사용 가능 여부, 결과와 문맥 크기는 Mac, macOS 릴리스와 설치된 온디바이스 모델에 따라 달라질 수 있습니다."
+                        ))
+                            .font(.caption)
+                            .foregroundStyle(palette.secondaryText)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text(appState.localizedFormat(
+                            "검토할 증거 봉투 SHA-256: %@",
+                            aiPreview.evidenceEnvelopeSHA256
+                        ))
+                            .font(.caption.monospaced())
+                            .foregroundStyle(palette.secondaryText)
+                            .textSelection(.enabled)
                         ScrollView {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text(aiPreview.systemInstructions)
@@ -95,6 +299,7 @@ struct DiagnosticsView: View {
                         PrimaryActionButton(title: "이 내용으로 로컬 AI 진단(베타) 실행", systemImage: "brain") {
                             runAIDiagnostics()
                         }
+                        .disabled(aiRequestGate.isActive || evidenceRequestGate.isActive)
                         .frame(maxWidth: 300)
                     }
                 }
@@ -107,11 +312,11 @@ struct DiagnosticsView: View {
                 subtitle: "최근 진단이 위에 표시됩니다.",
                 systemImage: "doc.text.magnifyingglass"
             ) {
-                ForEach(records) { record in
+                ForEach(diagnosticRecordWindow.values) { record in
                     diagnosticRecordCard(record)
                 }
 
-                if records.isEmpty {
+                if diagnosticRecordWindow.values.isEmpty {
                     EmptyStateView(
                         systemImage: "doc.text",
                         title: "저장된 진단 없음",
@@ -120,18 +325,33 @@ struct DiagnosticsView: View {
                     )
                     .frame(minHeight: 180)
                 }
+
+                if presentationIsTruncated {
+                    Label(
+                        appState.localizedFormat(
+                            "성능을 위해 이 화면은 최신 진단 기록 최대 %d개와 실행 기록 최대 %d개만 불러옵니다. 더 오래된 기록이 있어 일부가 표시되지 않습니다.",
+                            DiagnosticPresentationLimits.diagnosticRecords,
+                            DiagnosticPresentationLimits.launchRecords
+                        ),
+                        systemImage: "clock.badge.exclamationmark"
+                    )
+                    .font(.caption)
+                }
             }
         }
         .sheet(item: $supportIncidentDraft) { draft in
-            SupportBundlePreparationView(
-                initialDraft: draft,
-                launchOptions: supportIncidentLaunchOptions,
-                onCancel: { supportIncidentDraft = nil },
-                onCreate: { completedDraft in
-                    supportIncidentDraft = nil
-                    createSupportBundle(incident: completedDraft.context)
-                }
-            )
+            ForgeSheetChrome(onClose: { supportIncidentDraft = nil }) {
+                SupportBundlePreparationView(
+                    initialDraft: draft,
+                    launchOptions: supportIncidentLaunchOptions,
+                    truncationWarning: supportBundleTruncationWarning,
+                    onCancel: { supportIncidentDraft = nil },
+                    onCreate: { completedDraft in
+                        supportIncidentDraft = nil
+                        createSupportBundle(incident: completedDraft.context)
+                    }
+                )
+            }
         }
         #if DEBUG
         .task(id: appState.debugDiagnosticsPreviewFixture) {
@@ -139,14 +359,64 @@ struct DiagnosticsView: View {
         }
         #endif
         .onChange(of: selectedEvidenceLaunchRecordID) { _, _ in
+            cancelEvidenceOperation()
+            cancelAIDiagnostics()
             aiPreview = nil
             aiPreviewEvidenceContext = nil
+        }
+        .task(id: diagnosticPresentationKey) {
+            await refreshDiagnosticPresentations()
+        }
+        .onDisappear {
+            cancelEvidenceOperation()
+            cancelAIDiagnostics()
+            cancelSupportBundleCreation()
+        }
+    }
+
+    private var diagnosticRecordWindow: DiagnosticPresentationWindow<DiagnosticRecord> {
+        DiagnosticPresentationWindow(
+            records,
+            limit: DiagnosticPresentationLimits.diagnosticRecords
+        )
+    }
+
+    private var launchRecordWindow: DiagnosticPresentationWindow<LaunchRecord> {
+        DiagnosticPresentationWindow(
+            launchRecords,
+            limit: DiagnosticPresentationLimits.launchRecords
+        )
+    }
+
+    private var presentationIsTruncated: Bool {
+        diagnosticRecordWindow.isTruncated || launchRecordWindow.isTruncated
+    }
+
+    private var supportBundleTruncationWarning: String? {
+        guard presentationIsTruncated else { return nil }
+        return appState.localizedFormat(
+            "지원 번들은 저장된 기록 중 최신 진단 최대 %d개와 실행 기록 최대 %d개만 포함합니다. 더 오래된 기록이 있어 이번 번들에서 제외되었습니다.",
+            DiagnosticPresentationLimits.diagnosticRecords,
+            DiagnosticPresentationLimits.launchRecords
+        )
+    }
+
+    private var diagnosticPresentationKey: [DiagnosticPresentationRecordKey] {
+        diagnosticRecordWindow.values.map {
+            DiagnosticPresentationRecordKey(
+                identifier: $0.id,
+                createdAt: $0.createdAt,
+                normalizedResultSHA256: $0.normalizedResultSHA256,
+                proposalDisposition: $0.proposalDisposition
+            )
         }
     }
 
     @ViewBuilder
     private func diagnosticEvidenceSelector(palette: ForgePlayPalette) -> some View {
-        let candidates = Array(launchRecords.prefix(20))
+        let candidates = Array(launchRecordWindow.values.prefix(
+            DiagnosticPresentationLimits.supportIncidentLaunchOptions
+        ))
         if candidates.isEmpty {
             Text(appState.localized("연결된 실행 기록이 없어 지원 번들을 제외한 최신 실행 로그만 분석합니다."))
                 .font(.caption)
@@ -179,23 +449,23 @@ struct DiagnosticsView: View {
     }
 
     private var recentSteamLaunchRecords: [LaunchRecord] {
-        Array(launchRecords
+        Array(launchRecordWindow.values
             .filter { $0.commandKind == "launchSteam" && $0.prefixId == PrefixIdentifier.steamShared }
             .prefix(3))
     }
 
     private var diagnosticEvidenceLaunchRecord: LaunchRecord? {
         if let selectedEvidenceLaunchRecordID,
-           let selected = launchRecords.first(where: { $0.id == selectedEvidenceLaunchRecordID }) {
+           let selected = launchRecordWindow.values.first(where: { $0.id == selectedEvidenceLaunchRecordID }) {
             return selected
         }
-        return launchRecords.first { record in
+        return launchRecordWindow.values.first { record in
             record.status == "failed" ||
                 record.steamUIVerificationState == .failed ||
                 record.steamUIVerificationState == .blackScreenSuspected ||
                 record.didTimeOut == true ||
                 (record.exitCode.map { $0 != 0 } ?? false)
-        } ?? launchRecords.first
+        } ?? launchRecordWindow.values.first
     }
 
     private func recentSteamLaunchRecordsCard(palette: ForgePlayPalette) -> some View {
@@ -308,92 +578,210 @@ struct DiagnosticsView: View {
     }
 
     private func runLocalAnalysis() {
+        guard let token = evidenceRequestGate.beginIfIdle() else { return }
+        let request: DiagnosticLogEvidenceRequest
         do {
-            let evidence = try recentLogEvidence()
-            let result = services.ruleEngine.analyze(logText: evidence.text)
-            try save(
-                results: result,
-                source: .ruleEngine,
-                evidenceContext: evidence.context
-            )
-            try modelContext.saveOrRollback()
-            let notice = evidence.readError.map {
-                appState.setNotice(forgePlayTechnicalErrorSummary($0), kind: .warning)
-            } ?? appState.setNotice(appState.localized("최근 로그 분석을 저장했습니다."), kind: .success)
-            clearTaskLater(notice.id)
+            request = try makeRecentLogEvidenceRequest()
         } catch {
+            _ = evidenceRequestGate.release(token)
             appState.setError(error)
+            return
+        }
+
+        evidenceTask = Task { @MainActor in
+            defer {
+                if evidenceRequestGate.release(token) {
+                    evidenceTask = nil
+                }
+            }
+            do {
+                let evidence = try await request.readAsync()
+                try Task.checkCancellation()
+                guard evidenceRequestGate.owns(token) else { return }
+                let game = diagnosticGame(for: evidence.context)
+                let compatibilityGuidance = diagnosticCompatibilityGuidance(
+                    for: game
+                )
+                let result = services.ruleEngine.analyze(
+                    logText: evidence.text,
+                    game: game,
+                    recipe: compatibilityGuidance.recipe,
+                    context: .manualLog
+                )
+                guard evidenceRequestGate.owns(token) else { return }
+                try save(
+                    results: result,
+                    source: .ruleEngine,
+                    evidenceContext: evidence.context
+                )
+                try modelContext.saveOrRollback()
+                let analysisWarning = DiagnosticWarningText.combined(
+                    evidence.readError.map(forgePlayTechnicalErrorSummary),
+                    compatibilityGuidance.warning
+                )
+                let notice = analysisWarning.map {
+                    appState.setNotice($0, kind: .warning)
+                } ?? appState.setNotice(
+                    appState.localized("최근 로그 분석을 저장했습니다."),
+                    kind: .success
+                )
+                clearTaskLater(notice.id)
+            } catch is CancellationError {
+                return
+            } catch {
+                guard evidenceRequestGate.owns(token) else { return }
+                appState.setError(error)
+            }
         }
     }
 
     private func prepareAIPreview() {
+        guard let token = evidenceRequestGate.beginIfIdle() else { return }
+        let settings: AppSettingsRecord
+        let request: DiagnosticLogEvidenceRequest
         do {
-            let settings = try appState.loadOrCreateSettings(in: modelContext)
-            let evidence = try recentLogEvidence()
-            let game = appState.selectedSteamReference?.game
-            let language = appState.effectiveLanguageMode
-            aiPreview = try services.llmService.preparePreview(
-                logText: evidence.text,
-                settings: settings,
-                game: game,
-                language: language,
-                sensitivePaths: aiDiagnosticSensitivePaths(),
-                sensitiveTerms: aiDiagnosticSensitiveTerms()
-            )
-            aiPreviewEvidenceContext = evidence.context
-            if let readError = evidence.readError {
-                appState.setNotice(forgePlayTechnicalErrorSummary(readError), kind: .warning)
-            }
+            settings = try appState.loadOrCreateSettings(in: modelContext)
+            request = try makeRecentLogEvidenceRequest()
         } catch {
+            _ = evidenceRequestGate.release(token)
             appState.setError(error)
+            return
+        }
+
+        evidenceTask = Task { @MainActor in
+            defer {
+                if evidenceRequestGate.release(token) {
+                    evidenceTask = nil
+                }
+            }
+            do {
+                let evidence = try await request.readAsync()
+                try Task.checkCancellation()
+                guard evidenceRequestGate.owns(token) else { return }
+                let game = diagnosticGame(for: evidence.context)
+                let preview = try services.llmService.preparePreview(
+                    logText: evidence.text,
+                    settings: settings,
+                    game: game,
+                    language: appState.effectiveLanguageMode,
+                    sensitivePaths: aiDiagnosticSensitivePaths(),
+                    sensitiveTerms: aiDiagnosticSensitiveTerms(),
+                    evidenceID: evidence.context.launchRecordID.map { "launch-record-\($0)" },
+                    sourceLaunchRecordID: evidence.context.launchRecordID,
+                    sourceSteamAppID: evidence.context.gameID
+                )
+                try Task.checkCancellation()
+                guard evidenceRequestGate.owns(token) else { return }
+                aiPreview = preview
+                aiPreviewEvidenceContext = evidence.context
+                if let readError = evidence.readError {
+                    appState.setNotice(forgePlayTechnicalErrorSummary(readError), kind: .warning)
+                }
+            } catch is CancellationError {
+                return
+            } catch {
+                guard evidenceRequestGate.owns(token) else { return }
+                appState.setError(error)
+            }
         }
     }
 
+    private func saveAIDiagnosticsEnabled(_ isEnabled: Bool) {
+        let warning = appState.saveUserPreferencesAfterMutation(
+            to: modelContext
+        ) {
+            appState.isLLMDiagnosticsEnabled = isEnabled
+        }
+        guard warning == nil else { return }
+
+        if !isEnabled {
+            cancelAIDiagnostics()
+            aiPreview = nil
+            aiPreviewEvidenceContext = nil
+        }
+        appState.setNotice(
+            appState.localized(
+                isEnabled
+                    ? "AI 문제 진단을 켰습니다. Apple Foundation Models를 사용할 수 있을 때만 실행됩니다."
+                    : "AI 문제 진단을 껐습니다. 로컬 자동 문제 분석은 계속 사용할 수 있습니다."
+            ),
+            kind: .success
+        )
+    }
+
     private func runAIDiagnostics() {
-        guard let snapshot = aiPreview else { return }
+        guard let snapshot = aiPreview,
+              let token = aiRequestGate.beginIfIdle() else { return }
+        let evidenceContext = aiPreviewEvidenceContext ?? DiagnosticEvidenceAssociation(
+            gameID: appState.selectedSteamReference?.steamAppId,
+            launchRecordID: nil
+        )
+        let request = DiagnosticAIRequestEnvelope(
+            preview: snapshot,
+            evidenceAssociation: evidenceContext
+        )
+        let settings: AppSettingsRecord
         do {
-            let settings = try appState.loadOrCreateSettings(in: modelContext)
+            settings = try appState.loadOrCreateSettings(in: modelContext)
             appState.setTask(appState.localized("Apple Foundation Models로 AI 문제 진단을 실행하는 중입니다."))
-            Task {
-                do {
-                    let result = try await services.llmService.diagnose(
-                        snapshot: snapshot,
-                        settings: settings
-                    )
-                    try save(
-                        results: [result],
-                        source: .appleFoundationModels,
-                        evidenceContext: aiPreviewEvidenceContext ?? DiagnosticEvidenceContext(
-                            gameID: appState.selectedSteamReference?.steamAppId,
-                            launchRecordID: nil
-                        )
-                    )
-                    try modelContext.saveOrRollback()
-                    aiPreview = nil
-                    aiPreviewEvidenceContext = nil
-                    let notice = appState.setNotice(appState.localized("AI 문제 진단 결과를 저장했습니다."), kind: .success)
-                    clearTaskLater(notice.id)
-                } catch {
-                    appState.setError(error)
+        } catch {
+            _ = aiRequestGate.release(token)
+            appState.setError(error)
+            return
+        }
+
+        aiDiagnosisTask = Task { @MainActor in
+            defer {
+                if aiRequestGate.release(token) {
+                    aiDiagnosisTask = nil
                 }
             }
-        } catch {
-            appState.setError(error)
+            do {
+                let execution = try await services.llmService.diagnoseWithReceipt(
+                    snapshot: request.preview,
+                    settings: settings
+                )
+                try Task.checkCancellation()
+                guard aiRequestGate.owns(token) else { return }
+                let aiMetadata = try AIDiagnosticRecordMetadataV1.make(
+                    snapshot: request.preview,
+                    execution: execution
+                )
+                try save(
+                    results: [execution.result],
+                    source: .appleFoundationModels,
+                    evidenceContext: request.evidenceAssociation,
+                    aiMetadata: aiMetadata
+                )
+                try modelContext.saveOrRollback()
+                guard aiRequestGate.owns(token) else { return }
+                aiPreview = nil
+                aiPreviewEvidenceContext = nil
+                let notice = appState.setNotice(appState.localized("AI 문제 진단 결과를 저장했습니다."), kind: .success)
+                clearTaskLater(notice.id)
+            } catch is CancellationError {
+                return
+            } catch {
+                guard aiRequestGate.owns(token) else { return }
+                appState.setError(error)
+            }
         }
     }
 
     private var supportIncidentLaunchOptions: [SupportIncidentLaunchOption] {
-        launchRecords.prefix(20).map(SupportIncidentLaunchOption.init)
+        launchRecordWindow.values.prefix(
+            DiagnosticPresentationLimits.supportIncidentLaunchOptions
+        ).map(SupportIncidentLaunchOption.init)
     }
 
     private var defaultSupportIncidentLaunchRecord: LaunchRecord? {
-        launchRecords.first { record in
+        launchRecordWindow.values.first { record in
             record.status == "failed" ||
                 record.steamUIVerificationState == .failed ||
                 record.steamUIVerificationState == .blackScreenSuspected ||
                 record.didTimeOut == true ||
                 (record.exitCode.map { $0 != 0 } ?? false)
-        } ?? launchRecords.first
+        } ?? launchRecordWindow.values.first
     }
 
     private func prepareSupportBundle() {
@@ -402,26 +790,36 @@ struct DiagnosticsView: View {
     }
 
     private func createSupportBundle(incident: SupportIncidentContext) {
-        guard !isCreatingSupportBundle else { return }
+        guard let token = supportBundleRequestGate.beginIfIdle() else { return }
         isCreatingSupportBundle = true
         let progressNotice = appState.setTask(appState.localized("지원 번들을 만드는 중입니다."))
-        let decoded = decodedDiagnosticsForSupportBundle()
+        let diagnosticSnapshots = diagnosticRecordWindow.values.map { $0.decodeSnapshot() }
         let steamStoragePaths = Array(Set(steamStorageMounts.map(\.path))).sorted()
         let synchronizationSelection = appState.wineSynchronizationSelection
         let rendererSelection = appState.steamRendererPolicySelection
         let videoMemorySelection = appState.steamVideoMemorySelection
-        let supportBundleLaunchRecords = Array(launchRecords)
+        let supportBundleLaunchRecords = launchRecordWindow.values
         let systemChecks = appState.latestChecks
-        let selectedSteamReference = appState.selectedSteamReference?.game
+        let selectedSteamReference = appState.selectedSteamReference
         let runtimeExecutable = appState.runtimeExecutableURL
-        Task {
+        let truncationWarning = supportBundleTruncationWarning
+        supportBundleTask = Task { @MainActor in
             defer {
-                isCreatingSupportBundle = false
-                if let progressNotice {
-                    appState.clearNotice(id: progressNotice.id)
+                if supportBundleRequestGate.release(token) {
+                    supportBundleTask = nil
+                    isCreatingSupportBundle = false
+                    if let progressNotice {
+                        appState.clearNotice(id: progressNotice.id)
+                    }
                 }
             }
             do {
+                let outcomes = try await DiagnosticPresentationDecodePipeline.decode(
+                    diagnosticSnapshots
+                )
+                try Task.checkCancellation()
+                guard supportBundleRequestGate.owns(token) else { return }
+                let decoded = decodedDiagnosticsForSupportBundle(outcomes: outcomes)
                 let url = try await services.supportBundleService.createSupportBundle(
                     diagnostics: decoded.results,
                     checks: systemChecks,
@@ -436,27 +834,33 @@ struct DiagnosticsView: View {
                     resolvedVideoMemoryMB: videoMemorySelection.resolvedSizeMB(),
                     incident: incident
                 )
+                try Task.checkCancellation()
+                guard supportBundleRequestGate.owns(token) else { return }
                 appState.lastSupportBundleURL = url
                 appState.presentedSheet = .supportBundle(url)
-                if let warning = decoded.warning {
+                if let warning = DiagnosticWarningText.combined(
+                    decoded.warning,
+                    truncationWarning
+                ) {
                     appState.setNotice(warning, kind: .warning)
                 }
+            } catch is CancellationError {
+                return
             } catch {
+                guard supportBundleRequestGate.owns(token) else { return }
                 appState.setError(error)
             }
         }
     }
 
-    private func recentLogEvidence() throws -> (
-        text: String,
-        context: DiagnosticEvidenceContext,
-        readError: Error?
-    ) {
-        let maxFiles = 8
+    private func makeRecentLogEvidenceRequest() throws -> DiagnosticLogEvidenceRequest {
         let logsRoot = try services.pathManager.url(for: .logs)
         let supportBundlesRoot = try? services.pathManager.url(for: .supportBundles)
         let launchRecord = diagnosticEvidenceLaunchRecord
-        let recentFiles: [URL]
+        let context = DiagnosticEvidenceAssociation(
+            gameID: launchRecord?.gameId ?? appState.selectedSteamReference?.steamAppId,
+            launchRecordID: launchRecord?.id
+        )
         if let launchRecord {
             let directArtifactPaths = [
                 launchRecord.stdoutPath,
@@ -466,67 +870,114 @@ struct DiagnosticsView: View {
                 launchRecord.runEvidencePath
             ].compactMap { $0 }
             let linkedPaths = directArtifactPaths + launchRecord.relatedRunEvidencePaths
-            var seen = Set<String>()
-            recentFiles = linkedPaths.compactMap { path -> URL? in
-                let url = URL(fileURLWithPath: path).standardizedFileURL
-                guard url.path.hasPrefix(logsRoot.standardizedFileURL.path + "/"),
-                      supportBundlesRoot.map({
-                        url.path != $0.standardizedFileURL.path &&
-                            !url.path.hasPrefix($0.standardizedFileURL.path + "/")
-                      }) ?? true,
-                      FileSystemItemPolicy.isRegularNonSymlinkFile(url),
-                      seen.insert(url.path).inserted else {
-                    return nil
-                }
-                return url
-            }.prefix(maxFiles).map { $0 }
-            guard !recentFiles.isEmpty else {
-                throw DiagnosticEvidenceSelectionError.noLinkedEvidence(launchRecord.id)
-            }
-        } else {
-            recentFiles = try LogTextReader.mostRecentRunLogFiles(
-                under: logsRoot,
-                maxFiles: maxFiles
-            ).filter { url in
-                supportBundlesRoot.map {
-                    url.standardizedFileURL.path != $0.standardizedFileURL.path &&
-                        !url.standardizedFileURL.path.hasPrefix($0.standardizedFileURL.path + "/")
-                } ?? true
-            }
+            return DiagnosticLogEvidenceRequest(
+                logsRoot: logsRoot,
+                supportBundlesRoot: supportBundlesRoot,
+                linkedPaths: linkedPaths,
+                launchRecordIdentifier: launchRecord.id,
+                context: context
+            )
         }
-        guard !recentFiles.isEmpty else {
-            throw DiagnosticEvidenceSelectionError.noRecentEvidence
-        }
-        let snapshot = LogTextReader.tolerantDiagnosticSnapshot(from: recentFiles)
-        if snapshot.text.isEmpty, let readError = snapshot.readError {
-            throw readError
-        }
-
-        return (
-            snapshot.text,
-            DiagnosticEvidenceContext(
-                gameID: launchRecord?.gameId ?? appState.selectedSteamReference?.steamAppId,
-                launchRecordID: launchRecord?.id
-            ),
-            snapshot.readError
+        return DiagnosticLogEvidenceRequest(
+            logsRoot: logsRoot,
+            supportBundlesRoot: supportBundlesRoot,
+            linkedPaths: nil,
+            launchRecordIdentifier: nil,
+            context: context
         )
+    }
+
+    private func diagnosticGame(
+        for context: DiagnosticEvidenceAssociation
+    ) -> SteamGame? {
+        guard let steamAppID = context.gameID else { return nil }
+        if let selected = appState.selectedSteamReference,
+           selected.steamAppId == steamAppID {
+            return selected
+        }
+        return games.first { $0.steamAppId == steamAppID }?.game
+    }
+
+    private func diagnosticCompatibilityGuidance(
+        for game: SteamGame?
+    ) -> (recipe: CompatibilityRecipe?, warning: String?) {
+        guard let game else { return (nil, nil) }
+        do {
+            let steamAppID = game.steamAppId
+            var descriptor = FetchDescriptor<CompatibilityRecipeRecord>(
+                predicate: #Predicate {
+                    $0.steamAppId == steamAppID
+                },
+                sortBy: [SortDescriptor(\.recipeId)]
+            )
+            descriptor.fetchLimit = 2
+            let storedRecords = try modelContext.fetch(descriptor)
+            return (
+                try services.compatibilityService.diagnosticGuidanceRecipe(
+                    for: game,
+                    storedRecords: storedRecords
+                ),
+                nil
+            )
+        } catch {
+            return (
+                nil,
+                appState.localizedFormat(
+                    "선택한 게임의 호환성 안내를 읽지 못했습니다: %@",
+                    appState.localizedError(error)
+                )
+            )
+        }
     }
 
     @ViewBuilder
     private func diagnosticRecordCard(_ record: DiagnosticRecord) -> some View {
-        switch diagnosticDecodeResult(record) {
-        case .success(let result):
-            DiagnosticResultCard(record: record, result: result)
-        case .failure(let error):
+        switch diagnosticPresentationStates[record.id] {
+        case .decoded(let result):
+            DiagnosticResultCard(
+                record: record,
+                result: result,
+                prefixes: prefixes,
+                games: games,
+                runtimes: runtimes
+            )
+        case .failed(let error):
             InvalidDiagnosticRecordCard(record: record, error: error)
+        case nil:
+            DiagnosticRecordLoadingCard(record: record)
         }
     }
 
-    private func diagnosticDecodeResult(_ record: DiagnosticRecord) -> Result<DiagnosticResult, Error> {
-        Result { try record.requiredDecodedResult() }
+    @MainActor
+    private func refreshDiagnosticPresentations() async {
+        let token = diagnosticDecodeGate.beginReplacingCurrent()
+        let snapshots = diagnosticRecordWindow.values.map { $0.decodeSnapshot() }
+        diagnosticPresentationStates = [:]
+        do {
+            let outcomes = try await DiagnosticPresentationDecodePipeline.decode(snapshots)
+            try Task.checkCancellation()
+            guard diagnosticDecodeGate.owns(token) else { return }
+            diagnosticPresentationStates = Dictionary(uniqueKeysWithValues: outcomes.map { outcome in
+                switch outcome {
+                case .success(let snapshot, let result):
+                    (snapshot.id, DiagnosticRecordPresentationState.decoded(result))
+                case .failure(let snapshot, let error):
+                    (snapshot.id, DiagnosticRecordPresentationState.failed(error))
+                }
+            })
+            _ = diagnosticDecodeGate.release(token)
+        } catch is CancellationError {
+            _ = diagnosticDecodeGate.release(token)
+        } catch {
+            guard diagnosticDecodeGate.owns(token) else { return }
+            _ = diagnosticDecodeGate.release(token)
+            appState.setError(error)
+        }
     }
 
-    private func decodedDiagnosticsForSupportBundle() -> (
+    private func decodedDiagnosticsForSupportBundle(
+        outcomes: [DiagnosticRecordDecodeOutcome]
+    ) -> (
         results: [DiagnosticResult],
         recordSummaries: [SupportBundleDiagnosticRecordSummary],
         warning: String?
@@ -534,23 +985,23 @@ struct DiagnosticsView: View {
         var results: [DiagnosticResult] = []
         var recordSummaries: [SupportBundleDiagnosticRecordSummary] = []
         var skippedCount = 0
-        for record in records {
-            do {
-                let result = try record.requiredDecodedResult()
+        for outcome in outcomes {
+            switch outcome {
+            case .success(let snapshot, let result):
                 results.append(result)
                 recordSummaries.append(
                     supportBundleDiagnosticRecordSummary(
-                        record,
+                        snapshot,
                         decodeStatus: "decoded",
                         resultIdentifier: result.id.uuidString,
                         decodeError: nil
                     )
                 )
-            } catch {
+            case .failure(let snapshot, let error):
                 skippedCount += 1
                 recordSummaries.append(
                     supportBundleDiagnosticRecordSummary(
-                        record,
+                        snapshot,
                         decodeStatus: "failed",
                         resultIdentifier: nil,
                         decodeError: supportBundleDiagnosticDecodeError(error)
@@ -565,17 +1016,17 @@ struct DiagnosticsView: View {
     }
 
     private func supportBundleDiagnosticRecordSummary(
-        _ record: DiagnosticRecord,
+        _ snapshot: DiagnosticRecordDecodeSnapshot,
         decodeStatus: String,
         resultIdentifier: String?,
         decodeError: String?
     ) -> SupportBundleDiagnosticRecordSummary {
         SupportBundleDiagnosticRecordSummary(
-            recordIdentifier: record.id,
-            gameID: record.gameId,
-            launchRecordIdentifier: record.launchRecordId,
-            source: record.source,
-            createdAt: record.createdAt,
+            recordIdentifier: snapshot.id,
+            gameID: snapshot.gameID,
+            launchRecordIdentifier: snapshot.launchRecordID,
+            source: snapshot.source,
+            createdAt: snapshot.createdAt,
             decodeStatus: decodeStatus,
             resultIdentifier: resultIdentifier,
             decodeError: decodeError
@@ -593,32 +1044,48 @@ struct DiagnosticsView: View {
             "The stored diagnostic result is too large to decode: \(byteCount) bytes / limit \(limit) bytes."
         case .decodeFailed:
             "The stored diagnostic result could not be decoded as DiagnosticResult."
+        case .invalidAIEvidenceMetadata(let identifier):
+            "The stored AI diagnostic evidence or execution receipt does not match the result: \(identifier)."
         }
     }
 
     private func aiDiagnosticSensitivePaths() -> [String] {
         DiagnosticPathRedactionPolicy.sensitivePaths(
             rootURL: services.pathManager.rootURL,
-            selectedSteamReference: appState.selectedSteamReference?.game,
+            selectedSteamReference: appState.selectedSteamReference,
             runtimeExecutable: appState.runtimeExecutableURL
         )
     }
 
     private func aiDiagnosticSensitiveTerms() -> [String] {
-        DiagnosticPathRedactionPolicy.sensitiveTerms(selectedSteamReference: appState.selectedSteamReference?.game)
+        DiagnosticPathRedactionPolicy.sensitiveTerms(selectedSteamReference: appState.selectedSteamReference)
     }
 
     private func save(
         results: [DiagnosticResult],
         source: DiagnosticRecordSource,
-        evidenceContext: DiagnosticEvidenceContext
+        evidenceContext: DiagnosticEvidenceAssociation,
+        aiMetadata: AIDiagnosticRecordMetadataV1? = nil
     ) throws {
         try modelContext.insertDiagnosticRecords(
             results,
             gameId: evidenceContext.gameID,
             launchRecordId: evidenceContext.launchRecordID,
-            source: source
+            source: source,
+            aiMetadata: aiMetadata
         )
+    }
+
+    private func cancelEvidenceOperation() {
+        evidenceTask?.cancel()
+    }
+
+    private func cancelAIDiagnostics() {
+        aiDiagnosisTask?.cancel()
+    }
+
+    private func cancelSupportBundleCreation() {
+        supportBundleTask?.cancel()
     }
 
     private var steamLaunchRecordLifecycle: SteamLaunchRecordLifecycle {
@@ -672,11 +1139,15 @@ struct DiagnosticsView: View {
         }
         let redactor = services.redactor
         let redacted = redactor.redact(rawLog)
-        aiPreview = LLMService.makeRequestSnapshot(
-            redactedLog: redacted,
-            redactionPreview: redactor.preview(for: rawLog),
-            language: appState.effectiveLanguageMode
-        )
+        do {
+            aiPreview = try LLMService.makeRequestSnapshot(
+                redactedLog: redacted,
+                redactionPreview: redactor.preview(for: rawLog),
+                language: appState.effectiveLanguageMode
+            )
+        } catch {
+            appState.setError(error)
+        }
     }
     #endif
 }
@@ -755,17 +1226,20 @@ private struct SupportBundlePreparationView: View {
     @State private var draft: SupportIncidentDraft
 
     let launchOptions: [SupportIncidentLaunchOption]
+    let truncationWarning: String?
     let onCancel: () -> Void
     let onCreate: (SupportIncidentDraft) -> Void
 
     init(
         initialDraft: SupportIncidentDraft,
         launchOptions: [SupportIncidentLaunchOption],
+        truncationWarning: String?,
         onCancel: @escaping () -> Void,
         onCreate: @escaping (SupportIncidentDraft) -> Void
     ) {
         _draft = State(initialValue: initialDraft)
         self.launchOptions = launchOptions
+        self.truncationWarning = truncationWarning
         self.onCancel = onCancel
         self.onCreate = onCreate
     }
@@ -848,6 +1322,10 @@ private struct SupportBundlePreparationView: View {
                     Text(appState.localized("스크린샷과 바이너리 크래시 덤프는 포함하지 않습니다."))
                     Text(appState.localized("가림 처리는 완전한 보장이 아닙니다. 비밀번호, Steam Guard 코드, 토큰을 입력하지 말고 공유 전에 README와 파일 내용을 확인하세요."))
                         .fontWeight(.semibold)
+                    if let truncationWarning {
+                        Label(truncationWarning, systemImage: "clock.badge.exclamationmark")
+                            .fontWeight(.semibold)
+                    }
                 }
                 .font(.callout)
                 .foregroundStyle(palette.secondaryText)
@@ -902,16 +1380,35 @@ private struct SupportBundlePreparationView: View {
     }
 }
 
+private struct DiagnosticRecordLoadingCard: View {
+    let record: DiagnosticRecord
+    @Environment(AppState.self) private var appState
+
+    var body: some View {
+        ForgeCard("저장된 진단", systemImage: "doc.text.magnifyingglass") {
+            HStack(spacing: 10) {
+                ProgressView()
+                    .controlSize(.small)
+                Text(appState.localized("저장된 진단 기록을 읽는 중입니다."))
+                    .font(.callout)
+                Spacer()
+                Text(record.createdAt, style: .date)
+                    .font(.caption)
+            }
+        }
+    }
+}
+
 private struct DiagnosticResultCard: View {
     var record: DiagnosticRecord
     var result: DiagnosticResult
+    var prefixes: [PrefixRecord]
+    var games: [SteamGameRecord]
+    var runtimes: [RuntimeRecord]
     @Environment(AppState.self) private var appState
     @Environment(AppServices.self) private var services
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
-    @Query(sort: \PrefixRecord.displayName) private var prefixes: [PrefixRecord]
-    @Query(sort: \SteamGameRecord.name) private var games: [SteamGameRecord]
-    @Query(sort: \RuntimeRecord.runtime) private var runtimes: [RuntimeRecord]
     @State private var pendingAction: RecommendedAction?
     @State private var isApplying = false
     @State private var isShowingDeleteConfirmation = false
@@ -944,6 +1441,29 @@ private struct DiagnosticResultCard: View {
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                if let envelopeDigest = record.evidenceEnvelopeSHA256 {
+                    DisclosureGroup(appState.localized("AI 증거·정책 정보(베타)")) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(appState.localizedFormat("증거 봉투 SHA-256: %@", envelopeDigest))
+                            if let resultDigest = record.normalizedResultSHA256 {
+                                Text(appState.localizedFormat("정규화 결과 SHA-256: %@", resultDigest))
+                            }
+                            if let disposition = record.proposalDisposition {
+                                Text(appState.localizedFormat(
+                                    "권장 조치 상태: %@",
+                                    proposalDispositionLabel(disposition)
+                                ))
+                            }
+                            Text(appState.localized(
+                                "베타 — 사용 가능 여부, 결과와 문맥 크기는 Mac, macOS 릴리스와 설치된 온디바이스 모델에 따라 달라질 수 있습니다."
+                            ))
+                        }
+                        .font(.caption.monospaced())
+                        .foregroundStyle(palette.secondaryText)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
                 if !result.recommendedActions.isEmpty {
                     Divider()
                     Text(appState.localized("권장 조치"))
@@ -969,7 +1489,10 @@ private struct DiagnosticResultCard: View {
                     apply(pendingAction)
                 }
             }
-            Button(appState.localized("취소"), role: .cancel) {}
+            Button(appState.localized("취소"), role: .cancel) {
+                updateAIProposalDisposition("rejected")
+                pendingAction = nil
+            }
         } message: {
             if let pendingAction {
                 Text(pendingAction.localizedReason(appState: appState))
@@ -1174,7 +1697,15 @@ private struct DiagnosticResultCard: View {
 
     private func apply(_ action: RecommendedAction) {
         if action.requiresWindowsRuntime && !canRunBundledWindowsRuntime {
+            updateAIProposalDisposition("stale")
             appState.setNotice(bundledRuntimeUnavailableReason, kind: .warning)
+            pendingAction = nil
+            return
+        }
+        do {
+            try persistAIProposalDisposition("explicitly-approved")
+        } catch {
+            appState.setError(error)
             pendingAction = nil
             return
         }
@@ -1244,6 +1775,32 @@ private struct DiagnosticResultCard: View {
             } catch {
                 appState.setError(error)
             }
+        }
+    }
+
+    private func updateAIProposalDisposition(_ value: String) {
+        do {
+            try persistAIProposalDisposition(value)
+        } catch {
+            appState.setError(error)
+        }
+    }
+
+    private func persistAIProposalDisposition(_ value: String) throws {
+        guard case .appleFoundationModels? = DiagnosticRecordSource(storageValue: record.source) else {
+            return
+        }
+        record.proposalDisposition = value
+        try modelContext.saveOrRollback()
+    }
+
+    private func proposalDispositionLabel(_ value: String) -> String {
+        switch value {
+        case "shown-unapplied": appState.localized("표시됨 · 미적용")
+        case "explicitly-approved": appState.localized("사용자 승인")
+        case "rejected": appState.localized("사용자 거절")
+        case "stale": appState.localized("현재 상태와 불일치")
+        default: appState.localized("알 수 없음")
         }
     }
 

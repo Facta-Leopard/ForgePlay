@@ -72,6 +72,11 @@ struct SteamClientCompatibilityVerifier {
             return "다른 macOS 앱에 포함된 실행 파일은 ForgePlay 런타임으로 실행하거나 성공 판정에 사용할 수 없습니다. 앱에 포함된 ForgePlay Runtime을 사용하세요."
         }
         let limitations = Set(capability.limitations)
+        if limitations.contains(
+            "missing-steam-webhelper-root-scoped-executable-argument-policy"
+        ) {
+            return "앱에 포함된 ForgePlay Runtime의 32비트/64비트 Wine kernelbase 중 하나 이상에 선택한 자식 실행 파일의 루트 프로세스로만 호환성 인자를 한정하고 유형이 지정된 Chromium 자식 프로세스에는 추가하지 않는 정책이 없습니다. 이 상태에서는 Steam WebHelper 실행 정책을 적용할 수 없으므로 최신 ForgePlay 빌드로 업데이트하거나 앱을 다시 설치하세요."
+        }
         if limitations.contains("steam-cef-child-window-metal-swapchain-unsupported"),
            isFatalSteamUIRendererLimitation(
             "steam-cef-child-window-metal-swapchain-unsupported",
@@ -114,7 +119,8 @@ struct SteamClientCompatibilityVerifier {
 
     static func hasExplicitSteamUIBlocker(in limitations: [String]) -> Bool {
         let limitations = Set(limitations)
-        return limitations.contains("steam-cef-child-window-metal-swapchain-unsupported") ||
+        return limitations.contains("missing-steam-webhelper-root-scoped-executable-argument-policy") ||
+            limitations.contains("steam-cef-child-window-metal-swapchain-unsupported") ||
             limitations.contains("active-d3dmetal-overlay-in-wine-modules") ||
             limitations.contains("missing-steam-cef-d3d9-renderer") ||
             limitations.contains("steam-ui-failed-known-bad")
@@ -130,7 +136,8 @@ struct SteamClientCompatibilityVerifier {
         _ limitation: String,
         for capability: WindowsRuntimeCapability
     ) -> Bool {
-        return limitation == "steam-cef-child-window-metal-swapchain-unsupported" ||
+        return limitation == "missing-steam-webhelper-root-scoped-executable-argument-policy" ||
+            limitation == "steam-cef-child-window-metal-swapchain-unsupported" ||
             limitation == "active-d3dmetal-overlay-in-wine-modules" ||
             limitation == "missing-steam-cef-d3d9-renderer"
     }
@@ -166,6 +173,11 @@ struct SteamClientCompatibilityVerifier {
             "missing-steam-cef-d3d9-renderer",
             for: capability
         ) {
+            blockers.append(.unsupportedSteamUIRenderer)
+        }
+        if limitations.contains(
+            "missing-steam-webhelper-root-scoped-executable-argument-policy"
+        ), !blockers.contains(.unsupportedSteamUIRenderer) {
             blockers.append(.unsupportedSteamUIRenderer)
         }
         if limitations.contains("steam-ui-failed-known-bad") {

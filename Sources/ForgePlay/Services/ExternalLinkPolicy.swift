@@ -10,9 +10,70 @@ enum ExternalLinkPolicy {
         host: "developer.apple.com",
         path: "/games/game-porting-toolkit/"
     )
+    static let forgePlayHomepageURL = httpsURL(
+        host: "facta-leopard.github.io",
+        path: "/ForgePlay/"
+    )
+    static let forgePlayAnnouncementsURL = httpsURL(
+        host: "facta-leopard.github.io",
+        path: "/ForgePlay/updates.html"
+    )
+    static let forgePlayWhyURL = httpsURL(
+        host: "facta-leopard.github.io",
+        path: "/ForgePlay/why.html"
+    )
+    static let forgePlayRepositoryStarURL = httpsURL(
+        host: "github.com",
+        path: "/Facta-Leopard/ForgePlay"
+    )
+    static let forgePlayRepositoryURL = httpsURL(
+        host: "github.com",
+        path: "/Facta-Leopard/ForgePlay/tree/main"
+    )
+    static let forgePlaySponsorsURL = httpsURL(
+        host: "github.com",
+        path: "/sponsors/Facta-Leopard"
+    )
+    static let forgePlayReleasesURL = httpsURL(
+        host: "github.com",
+        path: "/Facta-Leopard/ForgePlay/releases"
+    )
+    static let compatibilityWebsiteURL = httpsURL(
+        host: "facta-leopard.github.io",
+        path: "/ForgePlay/compatibility.html"
+    )
+    static let compatibilityReportURL = httpsURL(
+        host: "github.com",
+        path: "/facta-leopard/ForgePlay/issues/new"
+    ).flatMap { baseURL in
+        var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)
+        components?.queryItems = [URLQueryItem(name: "template", value: "compatibility-report.yml")]
+        return components?.url
+    }
     static let macOSSoftwareUpdateSettingsURL = URL(
         string: "x-apple.systempreferences:com.apple.Software-Update-Settings.extension"
     )
+
+    static func forgePlayWhyStoryURL(
+        language: ForgePlayLanguageMode
+    ) -> URL? {
+        let resolvedLanguage = language == .system
+            ? ForgePlaySystemLanguageResolver.resolvedLanguageMode()
+            : language
+        guard let languageIdentifier = resolvedLanguage.localeIdentifier,
+              let baseURL = forgePlayWhyURL,
+              var components = URLComponents(
+                url: baseURL,
+                resolvingAgainstBaseURL: false
+              ) else {
+            return nil
+        }
+        components.queryItems = [
+            URLQueryItem(name: "lang", value: languageIdentifier)
+        ]
+        components.fragment = "full-story"
+        return components.url
+    }
 
     static func appStoreProductURL(
         slug: String,

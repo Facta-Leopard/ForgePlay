@@ -104,17 +104,45 @@ final class PrefixExecutionLease: @unchecked Sendable {
         )
     }
 
-    private nonisolated static func defaultCoordinationApplicationSupportURL(
-        fileManager: FileManager
+    nonisolated static func defaultCoordinationApplicationSupportURL(
+        fileManager: FileManager = .default,
+        sandboxEnabled: Bool = ForgePlaySandboxPolicy.isAppSandboxEnabled,
+        applicationGroupIdentifier: String? =
+            ForgePlaySandboxPolicy.primaryApplicationGroupIdentifier,
+        applicationGroupContainerResolver: ((String) -> URL?)? = nil
     ) throws -> URL {
-        if ForgePlaySandboxPolicy.isAppSandboxEnabled,
-           let applicationGroupIdentifier = ForgePlaySandboxPolicy.primaryApplicationGroupIdentifier,
-           let groupContainer = fileManager.containerURL(
-               forSecurityApplicationGroupIdentifier: applicationGroupIdentifier
-           ) {
+        let normalizedGroupIdentifier = applicationGroupIdentifier?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if let normalizedGroupIdentifier,
+           !normalizedGroupIdentifier.isEmpty,
+           !normalizedGroupIdentifier.contains("$(") {
+            let groupContainer: URL?
+            if let applicationGroupContainerResolver {
+                groupContainer = applicationGroupContainerResolver(
+                    normalizedGroupIdentifier
+                )
+            } else {
+                groupContainer = fileManager.containerURL(
+                    forSecurityApplicationGroupIdentifier:
+                        normalizedGroupIdentifier
+                )
+            }
+            guard let groupContainer else {
+                throw PathManagerError.validationFailed(
+                    nil,
+                    "Game Mode App Group container is unavailable: " +
+                        normalizedGroupIdentifier
+                )
+            }
             return groupContainer
                 .appending(path: "Library/Application Support", directoryHint: .isDirectory)
                 .standardizedFileURL
+        }
+        if sandboxEnabled {
+            throw PathManagerError.validationFailed(
+                nil,
+                "Game Mode App Group identifier is unavailable"
+            )
         }
         guard let applicationSupport = fileManager.urls(
             for: .applicationSupportDirectory,
@@ -432,5 +460,55 @@ final class PrefixExecutionLease: @unchecked Sendable {
         guard let descriptorToClose else { return }
         _ = flock(descriptorToClose, LOCK_UN)
         _ = close(descriptorToClose)
+    }
+}
+
+/// Explicit ownership adapter for the Windows helper control plane. The scope
+/// digest is supplied by the already-authenticated prepared bootstrap; the
+/// path lock itself is never reinterpreted as cryptographic identity.
+final class WindowsHelperPrefixExecutionLeaseOwnership:
+    WindowsHelperPrefixLeaseOwning,
+    @unchecked Sendable {
+    let windowsHelperLeaseScopeSHA256: WindowsExecutionSHA256
+
+    private let lock = NSLock()
+    private var lease: PrefixExecutionLease?
+
+    init(
+        lease: PrefixExecutionLease,
+        preparedPrefixScopeSHA256: WindowsExecutionSHA256
+    ) throws {
+        guard !preparedPrefixScopeSHA256.isZero else {
+            throw WindowsExecutionContractError(
+                reason: .capabilityFingerprintMismatch,
+                stage: .lifecycle,
+                detail: "prefix lease ownership requires a prepared scope"
+            )
+        }
+        self.lease = lease
+        windowsHelperLeaseScopeSHA256 = preparedPrefixScopeSHA256
+    }
+
+    func releaseWindowsHelperLease() async throws {
+        let ownedLease = lock.withLock { () -> PrefixExecutionLease? in
+            defer { lease = nil }
+            return lease
+        }
+        ownedLease?.release()
+    }
+
+    var isReleased: Bool {
+        lock.withLock { lease == nil }
+    }
+}
+
+extension PrefixExecutionLease {
+    func windowsHelperOwnership(
+        preparedPrefixScopeSHA256: WindowsExecutionSHA256
+    ) throws -> WindowsHelperPrefixExecutionLeaseOwnership {
+        try WindowsHelperPrefixExecutionLeaseOwnership(
+            lease: self,
+            preparedPrefixScopeSHA256: preparedPrefixScopeSHA256
+        )
     }
 }

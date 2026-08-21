@@ -1,7 +1,91 @@
 import AppKit
 import Darwin
+import Observation
 import SwiftData
 import SwiftUI
+
+enum ForgePlayLaunchSplashPolicy {
+    static let assetName = "LaunchSplash"
+}
+
+@MainActor
+@Observable
+final class ForgePlayModelContainerBootstrap {
+    typealias Factory = @Sendable () async throws -> ModelContainer
+
+    private(set) var result: Result<ModelContainer, Error>?
+    @ObservationIgnored
+    private(set) var completedPublicationCount = 0
+    @ObservationIgnored
+    private(set) var startedAttemptCount = 0
+
+    @ObservationIgnored
+    private let makeContainer: Factory
+    @ObservationIgnored
+    private var didStart = false
+    @ObservationIgnored
+    private var publicationTask: Task<Void, Never>?
+    @ObservationIgnored
+    private var currentAttemptToken: UUID?
+
+    init(makeContainer: @escaping Factory) {
+        self.makeContainer = makeContainer
+    }
+
+    func startIfNeeded() {
+        guard !didStart else { return }
+        beginAttempt()
+    }
+
+    @discardableResult
+    func retryAfterFailure() -> Bool {
+        guard case .failure? = result,
+              publicationTask == nil else {
+            return false
+        }
+        beginAttempt()
+        return true
+    }
+
+    private func beginAttempt() {
+        publicationTask?.cancel()
+        let attemptToken = UUID()
+        currentAttemptToken = attemptToken
+        didStart = true
+        startedAttemptCount += 1
+        result = nil
+
+        let makeContainer = makeContainer
+        publicationTask = Task { @MainActor [weak self] in
+            let attemptResult: Result<ModelContainer, Error>
+            do {
+                attemptResult = .success(try await makeContainer())
+            } catch {
+                attemptResult = .failure(error)
+            }
+            guard !Task.isCancelled,
+                  let self,
+                  self.currentAttemptToken == attemptToken else {
+                return
+            }
+            self.publicationTask = nil
+            self.completedPublicationCount += 1
+            self.result = attemptResult
+        }
+    }
+
+    func cancel() {
+        publicationTask?.cancel()
+        publicationTask = nil
+        currentAttemptToken = nil
+        didStart = false
+        result = nil
+    }
+
+    deinit {
+        publicationTask?.cancel()
+    }
+}
 
 private final class ForgePlayStoreMigrationLease {
     /// `flock` coordinates separate processes, but does not reliably serialize
@@ -61,44 +145,136 @@ private final class ForgePlayStoreMigrationLease {
     }
 }
 
+private struct ForgePlayPreparedPersistentStore {
+    let url: URL
+    let migrationLease: ForgePlayStoreMigrationLease?
+}
+
+struct ForgePlayStartupFailureRecoveryPartition: Equatable {
+    let failureFrame: CGRect
+    let actionFrame: CGRect
+}
+
+struct ForgePlayStartupFailureRecoveryLayout: Layout {
+    static let minimumActionRegionHeight: CGFloat = 88
+
+    nonisolated static func partition(
+        in bounds: CGRect,
+        measuredActionHeight: CGFloat
+    ) -> ForgePlayStartupFailureRecoveryPartition {
+        let availableWidth = max(0, bounds.width)
+        let availableHeight = max(0, bounds.height)
+        let measuredHeight = measuredActionHeight.isFinite
+            ? max(0, measuredActionHeight)
+            : 0
+        let actionHeight = min(
+            availableHeight,
+            max(minimumActionRegionHeight, measuredHeight)
+        )
+        let failureHeight = availableHeight - actionHeight
+        return ForgePlayStartupFailureRecoveryPartition(
+            failureFrame: CGRect(
+                x: bounds.minX,
+                y: bounds.minY,
+                width: availableWidth,
+                height: failureHeight
+            ),
+            actionFrame: CGRect(
+                x: bounds.minX,
+                y: bounds.maxY - actionHeight,
+                width: availableWidth,
+                height: actionHeight
+            )
+        )
+    }
+
+    func sizeThatFits(
+        proposal: ProposedViewSize,
+        subviews: Subviews,
+        cache: inout ()
+    ) -> CGSize {
+        guard subviews.count >= 2 else { return .zero }
+        let contentSize = subviews[0].sizeThatFits(
+            ProposedViewSize(width: proposal.width, height: nil)
+        )
+        let actionSize = subviews[1].sizeThatFits(
+            ProposedViewSize(width: proposal.width, height: nil)
+        )
+        return CGSize(
+            width: max(0, proposal.width ?? max(contentSize.width, actionSize.width)),
+            height: max(
+                0,
+                proposal.height ?? contentSize.height + max(
+                    Self.minimumActionRegionHeight,
+                    actionSize.height
+                )
+            )
+        )
+    }
+
+    func placeSubviews(
+        in bounds: CGRect,
+        proposal: ProposedViewSize,
+        subviews: Subviews,
+        cache: inout ()
+    ) {
+        guard subviews.count >= 2 else { return }
+        let actionSize = subviews[1].sizeThatFits(
+            ProposedViewSize(width: bounds.width, height: nil)
+        )
+        let partition = Self.partition(
+            in: bounds,
+            measuredActionHeight: actionSize.height
+        )
+        subviews[0].place(
+            at: partition.failureFrame.origin,
+            anchor: .topLeading,
+            proposal: ProposedViewSize(
+                width: partition.failureFrame.width,
+                height: partition.failureFrame.height
+            )
+        )
+        subviews[1].place(
+            at: partition.actionFrame.origin,
+            anchor: .topLeading,
+            proposal: ProposedViewSize(
+                width: partition.actionFrame.width,
+                height: partition.actionFrame.height
+            )
+        )
+    }
+}
+
 @main
 struct ForgePlayApp: App {
     @NSApplicationDelegateAdaptor(ForgePlayApplicationDelegate.self) private var applicationDelegate
     @State private var appState = AppState()
     @State private var services = AppServices()
-    @State private var isShowingLaunchSplash = true
-
-    private let modelContainerResult: Result<ModelContainer, Error>
+    @State private var modelContainerBootstrap: ForgePlayModelContainerBootstrap
 
     init() {
-        #if DEBUG
-        if Self.debugLaunchBooleanValue(key: "FORGEPLAY_QA_STARTUP_FAILURE") == true {
-            modelContainerResult = .failure(DebugStartupFailure())
-            return
-        }
-        if Self.isRunningUnitTests {
-            modelContainerResult = Result {
-                try Self.makeModelContainer(isStoredInMemoryOnly: true)
-            }
-            return
-        }
-        if Self.debugLaunchBooleanValue(key: "FORGEPLAY_QA_IN_MEMORY_STORE") == true ||
-            Self.debugLaunchRequiresEphemeralStore() {
-            modelContainerResult = Result {
-                try Self.makeModelContainer(isStoredInMemoryOnly: true)
-            }
-            return
-        }
-        #endif
-
-        modelContainerResult = Result {
-            try Self.makeModelContainer()
-        }
+        _modelContainerBootstrap = State(
+            initialValue: ForgePlayModelContainerBootstrap(
+                makeContainer: Self.modelContainerFactory()
+            )
+        )
     }
 
     var body: some Scene {
         WindowGroup(id: ForgePlaySceneID.main) {
             windowContent
+                .task {
+                    await Task.yield()
+                    guard !Task.isCancelled else { return }
+                    modelContainerBootstrap.startIfNeeded()
+                }
+                .task(id: appState.effectiveLanguageMode) {
+                    await Task.yield()
+                    guard !Task.isCancelled else { return }
+                    await services.activateFontCompatibilityPack(
+                        for: appState.effectiveLanguageMode
+                    )
+                }
                 .frame(minWidth: 1_020, minHeight: 700)
         }
         .commands {
@@ -112,52 +288,59 @@ struct ForgePlayApp: App {
 
         Settings {
             settingsContent
+                .task {
+                    modelContainerBootstrap.startIfNeeded()
+                }
+                .task(id: appState.effectiveLanguageMode) {
+                    await services.activateFontCompatibilityPack(
+                        for: appState.effectiveLanguageMode
+                    )
+                }
         }
     }
 
     @ViewBuilder
     private var windowContent: some View {
-        if isShowingLaunchSplash {
-            ForgePlayLaunchSplashView()
-                .task {
-                    try? await Task.sleep(for: .seconds(1))
-                    isShowingLaunchSplash = false
+        switch modelContainerBootstrap.result {
+        case .some(.success(let modelContainer)):
+            RootView()
+                .onAppear {
+                    applicationDelegate.configure(appState: appState, services: services)
                 }
-        } else {
-            switch modelContainerResult {
-            case .success(let modelContainer):
-                RootView()
-                    .onAppear {
-                        applicationDelegate.configure(appState: appState, services: services)
-                    }
-                    #if DEBUG
-                    .forgePlayDebugDynamicType(appState.debugDynamicTypeSize)
-                    #endif
-                    .environment(appState)
-                    .environment(services)
-                    .environment(\.locale, appState.locale)
-                    .modelContainer(modelContainer)
-            case .failure(let error):
-                StartupFailureView(error: error)
-                    .onAppear {
-                        applicationDelegate.configure(appState: appState, services: services)
-                    }
-                    #if DEBUG
-                    .forgePlayDebugDynamicType(appState.debugDynamicTypeSize)
-                    .task {
-                        appState.applyDebugLaunchOptionsIfNeeded()
-                    }
-                    #endif
-                    .environment(appState)
-                    .environment(\.locale, appState.locale)
-            }
+                #if DEBUG
+                .forgePlayDebugDynamicType(appState.debugDynamicTypeSize)
+                #endif
+                .environment(appState)
+                .environment(services)
+                .environment(\.locale, appState.locale)
+                .modelContainer(modelContainer)
+        case .some(.failure(let error)):
+            startupFailureRecoveryView(error: error)
+                .onAppear {
+                    applicationDelegate.configure(appState: appState, services: services)
+                }
+                #if DEBUG
+                .forgePlayDebugDynamicType(appState.debugDynamicTypeSize)
+                .task {
+                    appState.applyDebugLaunchOptionsIfNeeded()
+                }
+                #endif
+                .environment(appState)
+                .environment(\.locale, appState.locale)
+        case .none:
+            ForgePlayLaunchSplashView()
+                #if DEBUG
+                .forgePlayDebugDynamicType(appState.debugDynamicTypeSize)
+                #endif
+                .environment(appState)
+                .environment(\.locale, appState.locale)
         }
     }
 
     @ViewBuilder
     private var settingsContent: some View {
-        switch modelContainerResult {
-        case .success(let modelContainer):
+        switch modelContainerBootstrap.result {
+        case .some(.success(let modelContainer)):
             SettingsSceneView()
                 .onAppear {
                     applicationDelegate.configure(appState: appState, services: services)
@@ -170,8 +353,8 @@ struct ForgePlayApp: App {
                 .environment(services)
                 .environment(\.locale, appState.locale)
                 .modelContainer(modelContainer)
-        case .failure(let error):
-            StartupFailureView(
+        case .some(.failure(let error)):
+            startupFailureRecoveryView(
                 title: "설정 저장소를 열 수 없어 설정 화면을 사용할 수 없습니다.",
                 error: error
             )
@@ -187,7 +370,70 @@ struct ForgePlayApp: App {
             .environment(appState)
             .environment(\.locale, appState.locale)
             .frame(minWidth: 520, minHeight: 420)
+        case .none:
+            ForgePlayStartupLoadingView()
+                #if DEBUG
+                .forgePlayDebugDynamicType(appState.debugDynamicTypeSize)
+                #endif
+                .environment(appState)
+                .environment(\.locale, appState.locale)
+                .frame(minWidth: 520, minHeight: 420)
         }
+    }
+
+    @ViewBuilder
+    private func startupFailureRecoveryView(
+        title: String? = nil,
+        error: Error
+    ) -> some View {
+        ForgePlayStartupFailureRecoveryLayout {
+            if let title {
+                StartupFailureView(title: title, error: error)
+            } else {
+                StartupFailureView(error: error)
+            }
+
+            VStack(spacing: 0) {
+                Divider()
+                    .accessibilityHidden(true)
+                Button(appState.localized("다시 시도")) {
+                    modelContainerBootstrap.retryAfterFailure()
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .keyboardShortcut(.defaultAction)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 16)
+            }
+            .frame(
+                maxWidth: .infinity,
+                minHeight: ForgePlayStartupFailureRecoveryLayout.minimumActionRegionHeight,
+                alignment: .center
+            )
+            .background(.regularMaterial)
+        }
+    }
+
+    private static func modelContainerFactory() -> ForgePlayModelContainerBootstrap.Factory {
+        #if DEBUG
+        if Self.debugLaunchBooleanValue(key: "FORGEPLAY_QA_STARTUP_FAILURE") == true {
+            return { throw DebugStartupFailure() }
+        }
+        if Self.isRunningUnitTests {
+            return {
+                try await Self.makeModelContainerOffMain(isStoredInMemoryOnly: true)
+            }
+        }
+        if Self.debugLaunchBooleanValue(key: "FORGEPLAY_QA_IN_MEMORY_STORE") == true ||
+            Self.debugLaunchRequiresEphemeralStore() {
+            return {
+                try await Self.makeModelContainerOffMain(isStoredInMemoryOnly: true)
+            }
+        }
+        #endif
+
+        return { try await Self.makeModelContainerOffMain() }
     }
 
     nonisolated static let applicationSupportDirectoryName = PathManager.applicationSupportDirectoryName
@@ -220,12 +466,14 @@ struct ForgePlayApp: App {
     }
     #endif
 
-    static func makeModelContainer(
+    nonisolated static func makeModelContainer(
         isStoredInMemoryOnly: Bool = false,
         applicationSupportDirectory: URL? = nil
     ) throws -> ModelContainer {
         let schema = Schema([
             AppSettingsRecord.self,
+            StandardSteamLaunchConfigurationRecord.self,
+            CompatibilitySteamLaunchPreferenceRecord.self,
             PrefixRecord.self,
             RuntimeRecord.self,
             SteamGameRecord.self,
@@ -235,14 +483,35 @@ struct ForgePlayApp: App {
             CompatibilityRecipeRecord.self,
             AutoFixRecord.self
         ])
-        let configuration: ModelConfiguration
         if isStoredInMemoryOnly {
-            configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
-        } else {
-            let storeURL = try preparePersistentStoreURL(applicationSupportDirectory: applicationSupportDirectory)
-            configuration = ModelConfiguration("ForgePlay", schema: schema, url: storeURL)
+            let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+            return try ModelContainer(for: schema, configurations: [configuration])
         }
+
+        let preparedStore = try preparePersistentStore(
+            applicationSupportDirectory: applicationSupportDirectory
+        )
+        defer { preparedStore.migrationLease?.release() }
+        let configuration = ModelConfiguration("ForgePlay", schema: schema, url: preparedStore.url)
         return try ModelContainer(for: schema, configurations: [configuration])
+    }
+
+    private nonisolated static func makeModelContainerOffMain(
+        isStoredInMemoryOnly: Bool = false,
+        applicationSupportDirectory: URL? = nil
+    ) async throws -> ModelContainer {
+        let workerTask = Task.detached(priority: .userInitiated) {
+            try Task.checkCancellation()
+            return try Self.makeModelContainer(
+                isStoredInMemoryOnly: isStoredInMemoryOnly,
+                applicationSupportDirectory: applicationSupportDirectory
+            )
+        }
+        return try await withTaskCancellationHandler {
+            try await workerTask.value
+        } onCancel: {
+            workerTask.cancel()
+        }
     }
 
     nonisolated static func applicationSupportDirectory(
@@ -260,7 +529,7 @@ struct ForgePlayApp: App {
         }
 
         let directory = base.appending(path: applicationSupportDirectoryName, directoryHint: .isDirectory)
-        if fileManager.fileExists(atPath: directory.path) {
+        if try nonFollowingStatus(at: directory) != nil {
             try requireStoreDirectory(directory, fileManager: fileManager, unsafeError: ForgePlayStoreConfigurationError.unsafeStoreDirectory)
         } else if creatingIfNeeded {
             do {
@@ -276,6 +545,18 @@ struct ForgePlayApp: App {
         applicationSupportDirectory baseDirectory: URL? = nil,
         fileManager: FileManager = .default
     ) throws -> URL {
+        let preparedStore = try preparePersistentStore(
+            applicationSupportDirectory: baseDirectory,
+            fileManager: fileManager
+        )
+        defer { preparedStore.migrationLease?.release() }
+        return preparedStore.url
+    }
+
+    private nonisolated static func preparePersistentStore(
+        applicationSupportDirectory baseDirectory: URL? = nil,
+        fileManager: FileManager = .default
+    ) throws -> ForgePlayPreparedPersistentStore {
         let base: URL
         if let baseDirectory {
             base = baseDirectory
@@ -285,7 +566,7 @@ struct ForgePlayApp: App {
             throw ForgePlayStoreConfigurationError.applicationSupportUnavailable
         }
 
-        if fileManager.fileExists(atPath: base.path) {
+        if try nonFollowingStatus(at: base) != nil {
             try requireStoreDirectory(
                 base,
                 fileManager: fileManager,
@@ -305,11 +586,6 @@ struct ForgePlayApp: App {
             fileManager: fileManager
         )
         let storeURL = directory.appending(path: persistentStoreFileName, directoryHint: .notDirectory)
-        if fileManager.fileExists(atPath: storeURL.path) {
-            try requireStoreFile(storeURL, fileManager: fileManager, unsafeError: ForgePlayStoreConfigurationError.unsafeStoreFile)
-            return storeURL
-        }
-
         let migrationLockURL = directory.appending(
             path: ".\(persistentStoreFileName)-migration.lock",
             directoryHint: .notDirectory
@@ -323,18 +599,29 @@ struct ForgePlayApp: App {
                 forgePlayTechnicalErrorSummary(error)
             )
         }
-        defer { migrationLease.release() }
+        do {
+            if try validateStoreAndSidecarsIfPresent(at: storeURL) {
+                migrationLease.release()
+                return ForgePlayPreparedPersistentStore(url: storeURL, migrationLease: nil)
+            }
 
-        if fileManager.fileExists(atPath: storeURL.path) {
-            try requireStoreFile(storeURL, fileManager: fileManager, unsafeError: ForgePlayStoreConfigurationError.unsafeStoreFile)
-            return storeURL
+            let legacyStoreURL = base.appending(path: legacyDefaultStoreFileName, directoryHint: .notDirectory)
+            if try nonFollowingStatus(at: legacyStoreURL) != nil {
+                try migrateLegacyDefaultStoreIfNeeded(
+                    from: legacyStoreURL,
+                    to: storeURL,
+                    fileManager: fileManager
+                )
+            }
+            _ = try validateStoreAndSidecarsIfPresent(at: storeURL)
+            return ForgePlayPreparedPersistentStore(
+                url: storeURL,
+                migrationLease: migrationLease
+            )
+        } catch {
+            migrationLease.release()
+            throw error
         }
-
-        let legacyStoreURL = base.appending(path: legacyDefaultStoreFileName, directoryHint: .notDirectory)
-        if fileManager.fileExists(atPath: legacyStoreURL.path) {
-            try migrateLegacyDefaultStoreIfNeeded(from: legacyStoreURL, to: storeURL, fileManager: fileManager)
-        }
-        return storeURL
     }
 
     private nonisolated static func migrateLegacyDefaultStoreIfNeeded(
@@ -356,7 +643,7 @@ struct ForgePlayApp: App {
         do {
             for suffix in ["", "-wal", "-shm"] {
                 let source = URL(fileURLWithPath: legacyStoreURL.path + suffix)
-                guard fileManager.fileExists(atPath: source.path) else { continue }
+                guard try nonFollowingStatus(at: source) != nil else { continue }
                 try requireStoreFile(source, fileManager: fileManager, unsafeError: ForgePlayStoreConfigurationError.unsafeLegacyStoreFile)
                 let temporary = URL(fileURLWithPath: temporaryBaseURL.path + suffix)
                 let final = URL(fileURLWithPath: storeURL.path + suffix)
@@ -365,12 +652,7 @@ struct ForgePlayApp: App {
                 migrationComponents.append((temporary, final, suffix))
             }
 
-            if fileManager.fileExists(atPath: storeURL.path) {
-                try requireStoreFile(
-                    storeURL,
-                    fileManager: fileManager,
-                    unsafeError: ForgePlayStoreConfigurationError.unsafeStoreFile
-                )
+            if try validateStoreAndSidecarsIfPresent(at: storeURL) {
                 for temporary in temporaryURLs {
                     try removeMigrationArtifactIfPresent(temporary, fileManager: fileManager)
                 }
@@ -426,23 +708,98 @@ struct ForgePlayApp: App {
         fileManager: FileManager,
         unsafeError: (URL) -> ForgePlayStoreConfigurationError
     ) throws {
-        do {
-            try FileSystemItemPolicy.requireRegularNonSymlinkFile(url, fileManager: fileManager)
-        } catch FileSystemItemPolicyError.notRegularNonSymlinkFile {
+        _ = fileManager
+        guard let status = try nonFollowingStatus(at: url) else {
             throw unsafeError(url)
-        } catch FileSystemItemPolicyError.metadataReadFailed(_, let message) {
-            throw ForgePlayStoreConfigurationError.metadataReadFailed(url, message)
-        } catch {
-            throw ForgePlayStoreConfigurationError.metadataReadFailed(url, forgePlayTechnicalErrorSummary(error))
         }
+        try requireSecureRegularFile(
+            at: url,
+            nonFollowingStatus: status,
+            unsafeError: unsafeError
+        )
+    }
+
+    private nonisolated static func validateStoreAndSidecarsIfPresent(
+        at storeURL: URL
+    ) throws -> Bool {
+        let storeStatus = try nonFollowingStatus(at: storeURL)
+        if let storeStatus {
+            try requireSecureRegularFile(
+                at: storeURL,
+                nonFollowingStatus: storeStatus,
+                unsafeError: ForgePlayStoreConfigurationError.unsafeStoreFile
+            )
+        }
+
+        for suffix in ["-wal", "-shm"] {
+            let sidecarURL = URL(fileURLWithPath: storeURL.path + suffix)
+            guard let sidecarStatus = try nonFollowingStatus(at: sidecarURL) else { continue }
+            try requireSecureRegularFile(
+                at: sidecarURL,
+                nonFollowingStatus: sidecarStatus,
+                unsafeError: ForgePlayStoreConfigurationError.unsafeStoreFile
+            )
+        }
+        return storeStatus != nil
+    }
+
+    private nonisolated static func requireSecureRegularFile(
+        at url: URL,
+        nonFollowingStatus: stat,
+        unsafeError: (URL) -> ForgePlayStoreConfigurationError
+    ) throws {
+        guard (nonFollowingStatus.st_mode & S_IFMT) == S_IFREG,
+              nonFollowingStatus.st_nlink == 1 else {
+            throw unsafeError(url)
+        }
+
+        let descriptor = Darwin.open(url.path, O_RDONLY | O_CLOEXEC | O_NOFOLLOW)
+        guard descriptor >= 0 else {
+            let failure = POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+            throw ForgePlayStoreConfigurationError.metadataReadFailed(
+                url,
+                forgePlayTechnicalErrorSummary(failure)
+            )
+        }
+        defer { Darwin.close(descriptor) }
+
+        var descriptorStatus = stat()
+        guard fstat(descriptor, &descriptorStatus) == 0 else {
+            let failure = POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+            throw ForgePlayStoreConfigurationError.metadataReadFailed(
+                url,
+                forgePlayTechnicalErrorSummary(failure)
+            )
+        }
+        guard (descriptorStatus.st_mode & S_IFMT) == S_IFREG,
+              descriptorStatus.st_nlink == 1,
+              descriptorStatus.st_dev == nonFollowingStatus.st_dev,
+              descriptorStatus.st_ino == nonFollowingStatus.st_ino else {
+            throw unsafeError(url)
+        }
+    }
+
+    private nonisolated static func nonFollowingStatus(at url: URL) throws -> stat? {
+        var status = stat()
+        guard Darwin.lstat(url.path, &status) == 0 else {
+            let failureCode = errno
+            if failureCode == ENOENT {
+                return nil
+            }
+            let failure = POSIXError(POSIXErrorCode(rawValue: failureCode) ?? .EIO)
+            throw ForgePlayStoreConfigurationError.metadataReadFailed(
+                url,
+                forgePlayTechnicalErrorSummary(failure)
+            )
+        }
+        return status
     }
 
     private nonisolated static func removeMigrationArtifactIfPresent(
         _ url: URL,
         fileManager: FileManager
     ) throws {
-        guard fileManager.fileExists(atPath: url.path) ||
-            (try? fileManager.destinationOfSymbolicLink(atPath: url.path)) != nil else {
+        guard try nonFollowingStatus(at: url) != nil else {
             return
         }
         try fileManager.removeItem(at: url)
@@ -498,10 +855,12 @@ struct ForgePlayApp: App {
     #endif
 }
 
-private struct ForgePlayLaunchSplashView: View {
+struct ForgePlayLaunchSplashView: View {
+    @Environment(AppState.self) private var appState
+
     var body: some View {
         GeometryReader { geometry in
-            Image("LaunchSplash")
+            Image(ForgePlayLaunchSplashPolicy.assetName)
                 .resizable()
                 .scaledToFill()
                 .frame(width: geometry.size.width, height: geometry.size.height)
@@ -509,7 +868,74 @@ private struct ForgePlayLaunchSplashView: View {
         }
         .background(Color.black)
         .ignoresSafeArea()
-        .accessibilityHidden(true)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("ForgePlay"))
+        .accessibilityValue(Text(appState.localized("실행 준비 중…")))
+    }
+}
+
+struct ForgePlayStartupLoadingView: View {
+    @Environment(AppState.self) private var appState
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        let palette = ForgePlayTheme.palette(
+            mode: appState.themeMode,
+            colorScheme: colorScheme
+        )
+
+        ZStack {
+            palette.background.ignoresSafeArea()
+
+            VStack(spacing: 18) {
+                Image(nsImage: NSApplication.shared.applicationIconImage)
+                    .resizable()
+                    .interpolation(.high)
+                    .scaledToFit()
+                    .frame(width: 88, height: 88)
+                    .accessibilityHidden(true)
+
+                VStack(spacing: 6) {
+                    Text("ForgePlay")
+                        .font(.largeTitle.weight(.bold))
+                        .foregroundStyle(palette.text)
+                    Text(appState.localized("Windows 게임을 Mac에서 더 쉽게."))
+                        .font(.callout)
+                        .foregroundStyle(palette.secondaryText)
+                }
+
+                HStack(spacing: 9) {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(palette.primary)
+                        .accessibilityHidden(true)
+                    Text(appState.localized("실행 준비 중…"))
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(palette.secondaryText)
+                }
+                .padding(.top, 4)
+            }
+            .padding(36)
+            .frame(maxWidth: 460)
+            .background(palette.surface)
+            .clipShape(
+                RoundedRectangle(
+                    cornerRadius: ForgePlayLayout.panelCornerRadius,
+                    style: .continuous
+                )
+            )
+            .overlay {
+                RoundedRectangle(
+                    cornerRadius: ForgePlayLayout.panelCornerRadius,
+                    style: .continuous
+                )
+                .stroke(palette.border, lineWidth: 1)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("ForgePlay"))
+        .accessibilityValue(Text(appState.localized("실행 준비 중…")))
     }
 }
 
@@ -548,7 +974,7 @@ private struct SettingsSceneView: View {
 }
 
 #if DEBUG
-private struct DebugStartupFailure: LocalizedError {
+private struct DebugStartupFailure: LocalizedError, Sendable {
     var errorDescription: String? {
         "Debug startup failure fixture: SwiftData container creation did not complete."
     }
@@ -594,6 +1020,7 @@ final class ForgePlayApplicationDelegate: NSObject, NSApplicationDelegate {
             service: services.failureDiagnosticEvidenceService,
             pathManager: services.pathManager
         )
+        services.connectGameInputProtectionLifecycle(to: appState)
         #if DEBUG
         guard !ForgePlayApp.isRunningUnitTests else { return }
         #endif
@@ -743,7 +1170,7 @@ final class ForgePlayApplicationDelegate: NSObject, NSApplicationDelegate {
                 "ForgePlay termination Steam cleanup did not finish cleanly: %@",
                 summary.diagnosticDescription
             )
-            services.steamPrefixLifecycleCoordinator.cancelApplicationTermination()
+            services.cancelApplicationTermination()
             let message: String
             if let prefix = summary.prefix ?? summary.prefixes.first {
                 message = appState?.localizedError(
@@ -803,18 +1230,34 @@ final class ForgePlayApplicationDelegate: NSObject, NSApplicationDelegate {
         }
 
         isTerminationCleanupRunning = true
-        let plan = services.appTerminationSteamShutdownPlan(
-            runtimeExecutable: appState?.runtimeExecutableURL,
+        let plan = services.emergencyAppTerminationSteamShutdownPlan(
             selectedRootURL: appState?.selectedRootURL,
             includeDefaultApplicationSupportRoot: true
         )
         let safeProcessRunner = services.safeProcessRunner
+        let windowsExecutablePrefixExecutionLifetimeOwner =
+            services.windowsExecutablePrefixExecutionLifetimeOwner
         let resultStore = AppTerminationShutdownResultStore()
         let completion = DispatchSemaphore(value: 0)
         Task.detached(priority: .userInitiated) {
             let summary = await AppServices.executeAppTerminationSteamShutdown(
                 plan,
-                safeProcessRunner: safeProcessRunner
+                safeProcessRunner: safeProcessRunner,
+                completeRetainedWindowsExecutableLeases: { prefix in
+                    try await windowsExecutablePrefixExecutionLifetimeOwner
+                        .completeAfterConfirmedPrefixShutdown(
+                            prefix: prefix,
+                            inactivityWaiter: { prefix, timeout, pollInterval in
+                                try await safeProcessRunner
+                                    .waitForManagedPrefixProcessesToExit(
+                                        prefix,
+                                        timeout: timeout,
+                                        pollInterval: pollInterval
+                                    )
+                            }
+                        )
+                },
+                requiresExclusiveOwnerVerification: false
             )
             resultStore.store(summary)
             completion.signal()

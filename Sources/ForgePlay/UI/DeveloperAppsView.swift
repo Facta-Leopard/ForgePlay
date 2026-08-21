@@ -1,8 +1,30 @@
 import SwiftUI
 
+private enum DeveloperAppsTab: String, CaseIterable, Identifiable {
+    case appCatalog
+    case inDevelopment
+
+    var id: String { rawValue }
+
+    var titleKey: String {
+        switch self {
+        case .appCatalog: "앱 카탈로그"
+        case .inDevelopment: "개발 중"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .appCatalog: "rectangle.3.group"
+        case .inDevelopment: "hammer.fill"
+        }
+    }
+}
+
 struct DeveloperAppsView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.colorScheme) private var colorScheme
+    @State private var selectedTab: DeveloperAppsTab = .appCatalog
     @State private var selectedPlatform: DeveloperAppPlatform = .mac
     @State private var searchText = ""
 
@@ -12,6 +34,10 @@ struct DeveloperAppsView: View {
 
     private var platformListings: [DeveloperAppListing] {
         DeveloperAppCatalog.listings(for: selectedPlatform)
+    }
+
+    private var developmentListings: [DeveloperProjectListing] {
+        DeveloperAppCatalog.inDevelopmentListings(for: selectedPlatform)
     }
 
     private var visibleListings: [DeveloperAppListing] {
@@ -28,25 +54,83 @@ struct DeveloperAppsView: View {
     var body: some View {
         ForgePageScaffold(
             "제작자의 다른 앱",
-            subtitle: "Mac, iPad, iPhone 앱을 플랫폼별로 살펴보세요.",
+            subtitle: "출시된 앱과 개발 중인 프로젝트를 살펴보세요.",
             systemImage: "square.grid.3x3.square"
         ) {
             SectionHelpButton(section: .developerApps)
         } content: {
-            catalogControls
+            tabPicker
 
-            if platformListings.isEmpty {
-                emptyPlatformCard
-            } else if visibleListings.isEmpty {
-                emptySearchCard
-            } else {
-                appGrid
+            switch selectedTab {
+            case .appCatalog:
+                appCatalogContent
+            case .inDevelopment:
+                inDevelopmentContent
             }
         }
     }
 
+    @ViewBuilder
+    private var inDevelopmentContent: some View {
+        developmentControls
+
+        if developmentListings.isEmpty {
+            emptyDevelopmentPlatformCard
+        } else {
+            inDevelopmentGrid
+        }
+    }
+
+    private var tabPicker: some View {
+        Picker(appState.localized("제작자의 다른 앱 보기"), selection: $selectedTab) {
+            ForEach(DeveloperAppsTab.allCases) { tab in
+                Label(appState.localized(tab.titleKey), systemImage: tab.systemImage)
+                    .tag(tab)
+            }
+        }
+        .labelsHidden()
+        .pickerStyle(.segmented)
+        .frame(maxWidth: 520, alignment: .leading)
+        .accessibilityLabel(appState.localized("제작자의 다른 앱 보기"))
+        .onChange(of: selectedTab) { _, _ in
+            searchText = ""
+        }
+    }
+
+    @ViewBuilder
+    private var appCatalogContent: some View {
+        catalogControls
+
+        if platformListings.isEmpty {
+            emptyPlatformCard
+        } else if visibleListings.isEmpty {
+            emptySearchCard
+        } else {
+            appGrid
+        }
+    }
+
+    private var inDevelopmentGrid: some View {
+        LazyVGrid(
+            columns: [
+                GridItem(
+                    .adaptive(minimum: 220, maximum: 320),
+                    spacing: ForgePlayLayout.sectionSpacing,
+                    alignment: .top
+                )
+            ],
+            alignment: .leading,
+            spacing: ForgePlayLayout.sectionSpacing
+        ) {
+            ForEach(developmentListings) { listing in
+                DeveloperInDevelopmentProjectTile(listing: listing)
+            }
+        }
+        .animation(.easeInOut(duration: 0.18), value: developmentListings.map(\.id))
+    }
+
     private var catalogControls: some View {
-        ForgeCard("앱 카탈로그", systemImage: "rectangle.3.group") {
+        ForgeCard {
             ViewThatFits(in: .horizontal) {
                 HStack(alignment: .center, spacing: 16) {
                     platformPicker
@@ -60,6 +144,17 @@ struct DeveloperAppsView: View {
             }
 
             Text(appState.localizedFormat("%d개의 앱", visibleListings.count))
+                .font(.caption)
+                .foregroundStyle(palette.secondaryText)
+                .contentTransition(.numericText())
+        }
+    }
+
+    private var developmentControls: some View {
+        ForgeCard {
+            platformPicker
+
+            Text(appState.localizedFormat("%d개의 프로젝트", developmentListings.count))
                 .font(.caption)
                 .foregroundStyle(palette.secondaryText)
                 .contentTransition(.numericText())
@@ -156,6 +251,14 @@ struct DeveloperAppsView: View {
         )
     }
 
+    private var emptyDevelopmentPlatformCard: some View {
+        emptyStateCard(
+            title: "이 디바이스에서 개발 중인 프로젝트가 아직 없습니다.",
+            detail: "다른 디바이스를 선택해 보세요.",
+            systemImage: selectedPlatform.systemImage
+        )
+    }
+
     private func emptyStateCard(
         title: String,
         detail: String,
@@ -181,6 +284,44 @@ struct DeveloperAppsView: View {
     }
 }
 
+private struct DeveloperInDevelopmentProjectTile: View {
+    var listing: DeveloperProjectListing
+    @Environment(AppState.self) private var appState
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var palette: ForgePlayPalette {
+        ForgePlayTheme.palette(mode: appState.themeMode, colorScheme: colorScheme)
+    }
+
+    var body: some View {
+        ForgeCard {
+            VStack(spacing: 14) {
+                DeveloperProjectArtwork(
+                    name: listing.name,
+                    artworkAssetName: listing.artworkAssetName,
+                    size: 96
+                )
+
+                VStack(spacing: 5) {
+                    Text(listing.name)
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(palette.text)
+                        .multilineTextAlignment(.center)
+                        .textSelection(.enabled)
+
+                    if let summaryKey = listing.summaryKey {
+                        Text(appState.localized(summaryKey))
+                            .font(.callout)
+                            .foregroundStyle(palette.secondaryText)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, minHeight: 178)
+        }
+    }
+}
+
 private struct DeveloperAppCard: View {
     var listing: DeveloperAppListing
     @Environment(AppState.self) private var appState
@@ -200,10 +341,18 @@ private struct DeveloperAppCard: View {
         ForgeCard {
             VStack(alignment: .leading, spacing: 15) {
                 HStack(alignment: .top, spacing: 14) {
-                    DeveloperAppArtwork(
-                        name: listing.name,
-                        artworkURL: listing.artworkURL
-                    )
+                    if let artworkAssetName = listing.artworkAssetName {
+                        DeveloperProjectArtwork(
+                            name: listing.name,
+                            artworkAssetName: artworkAssetName,
+                            size: 74
+                        )
+                    } else {
+                        DeveloperAppArtwork(
+                            name: listing.name,
+                            artworkURL: listing.artworkURL
+                        )
+                    }
 
                     VStack(alignment: .leading, spacing: 7) {
                         Text(listing.name)
@@ -260,13 +409,24 @@ private struct DeveloperAppCard: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                ThemedActionButton(
-                    title: "App Store에서 보기",
-                    systemImage: "arrow.up.right.square",
-                    prominence: .secondary,
-                    controlSize: .small
-                ) {
-                    appState.openExternalURL(listing.appStoreURL)
+                if let appStoreURL = listing.appStoreURL {
+                    ThemedActionButton(
+                        title: "App Store에서 보기",
+                        systemImage: "arrow.up.right.square",
+                        prominence: .secondary,
+                        controlSize: .small
+                    ) {
+                        appState.openExternalURL(appStoreURL)
+                    }
+                } else if let homepageURL = listing.homepageURL {
+                    ThemedActionButton(
+                        title: "홈페이지 열기",
+                        systemImage: "arrow.up.right.square",
+                        prominence: .secondary,
+                        controlSize: .small
+                    ) {
+                        appState.openExternalURL(homepageURL)
+                    }
                 }
             }
         }
@@ -336,5 +496,32 @@ private struct DeveloperAppArtwork: View {
             .font(.system(size: 30, weight: .medium))
             .foregroundStyle(palette.secondaryText)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+private struct DeveloperProjectArtwork: View {
+    var name: String
+    var artworkAssetName: String
+    var size: CGFloat
+    @Environment(AppState.self) private var appState
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var palette: ForgePlayPalette {
+        ForgePlayTheme.palette(mode: appState.themeMode, colorScheme: colorScheme)
+    }
+
+    var body: some View {
+        Image(artworkAssetName)
+            .resizable()
+            .interpolation(.high)
+            .scaledToFit()
+            .frame(width: size, height: size)
+            .background(palette.surfaceElevated)
+            .clipShape(RoundedRectangle(cornerRadius: size * 0.22, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
+                    .stroke(palette.border, lineWidth: 1)
+            }
+            .accessibilityLabel(appState.localizedFormat("%@ 앱 아이콘", name))
     }
 }

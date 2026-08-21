@@ -1,0 +1,3 @@
+#include "ForgePlayNetworkControlHelper.xcconfig"
+
+PRODUCT_BUNDLE_IDENTIFIER = $(FORGEPLAY_DISTRIBUTION_BUNDLE_ID).network-control-helper

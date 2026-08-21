@@ -5,29 +5,78 @@ private struct StorageCheckInspection: Sendable {
     var errorSummary: String?
 }
 
+struct SystemCheckRunOutcome: Hashable, Sendable {
+    var checks: [SystemCheckResult]
+    var authenticatedRuntimeManifest: RuntimeManifest?
+    var runtimeCapability: WindowsRuntimeCapability?
+}
+
+private struct RuntimeSystemCheckSnapshot: Hashable, Sendable {
+    var result: SystemCheckResult
+    var capability: WindowsRuntimeCapability
+}
+
+private enum RuntimeAuthenticationInspection {
+    case unavailable
+    case permittedWithoutManifest
+    case authenticated(RuntimeAuthenticatedContext)
+
+    var manifest: RuntimeManifest? {
+        guard case .authenticated(let context) = self else { return nil }
+        return context.manifest
+    }
+
+    var isAvailable: Bool {
+        switch self {
+        case .unavailable:
+            false
+        case .permittedWithoutManifest, .authenticated:
+            true
+        }
+    }
+}
+
 @MainActor
 final class SystemCheckService {
+    typealias RuntimeAuthenticationProvider = @Sendable (URL) async throws ->
+        RuntimeAuthenticatedContext
+    typealias RuntimeCapabilitySnapshotProvider = @MainActor @Sendable (
+        URL
+    ) async throws -> WindowsRuntimeCapabilitySnapshot
+    typealias RuntimeCapabilitySnapshotInvalidator = @MainActor @Sendable (
+        URL
+    ) async throws -> Void
+
     private let windowsRuntimeService: WindowsRuntimeService
     private let prefixManager: PrefixManager
     private let steamClientCompatibilityVerifier: SteamClientCompatibilityVerifier
-    private let canRunBundledWindowsRuntime: () -> Bool
-    private let bundledRuntimeUnavailableReasonKey: () -> String
+    private let canRunBundledWindowsRuntime: (() -> Bool)?
+    private let bundledRuntimeUnavailableReasonKey: @MainActor () -> String
     private let runtimeTranslationAvailability: () -> String
+    private let runtimeAuthenticationProvider: RuntimeAuthenticationProvider
+    private let runtimeCapabilitySnapshotProvider:
+        RuntimeCapabilitySnapshotProvider
+    private let runtimeCapabilitySnapshotInvalidator:
+        RuntimeCapabilitySnapshotInvalidator
+    private var lastRuntimeExecutable: URL?
 
     init(
         pathManager _: PathManager,
         windowsRuntimeService: WindowsRuntimeService,
         prefixManager: PrefixManager,
         steamClientCompatibilityVerifier: SteamClientCompatibilityVerifier = SteamClientCompatibilityVerifier(),
-        canRunBundledWindowsRuntime: @escaping () -> Bool = {
-            ForgePlayRuntimeCapabilityPolicy.canRunBundledWindowsRuntime
-        },
-        bundledRuntimeUnavailableReasonKey: @escaping () -> String = {
+        canRunBundledWindowsRuntime: (() -> Bool)? = nil,
+        bundledRuntimeUnavailableReasonKey: @escaping @MainActor () -> String = {
             ForgePlayRuntimeCapabilityPolicy.unavailableReasonKey
         },
         runtimeTranslationAvailability: @escaping () -> String = {
             ProcessRunHostContext.capture().rosettaTranslationAvailability ?? "unknown"
-        }
+        },
+        runtimeAuthenticationProvider: RuntimeAuthenticationProvider? = nil,
+        runtimeCapabilitySnapshotProvider:
+            RuntimeCapabilitySnapshotProvider? = nil,
+        runtimeCapabilitySnapshotInvalidator:
+            RuntimeCapabilitySnapshotInvalidator? = nil
     ) {
         self.windowsRuntimeService = windowsRuntimeService
         self.prefixManager = prefixManager
@@ -35,10 +84,42 @@ final class SystemCheckService {
         self.canRunBundledWindowsRuntime = canRunBundledWindowsRuntime
         self.bundledRuntimeUnavailableReasonKey = bundledRuntimeUnavailableReasonKey
         self.runtimeTranslationAvailability = runtimeTranslationAvailability
+        self.runtimeAuthenticationProvider = runtimeAuthenticationProvider ?? {
+            try await ForgePlayRuntimeCapabilityPolicy
+                .authenticatedBundledRuntimeContext(
+                    executable: $0,
+                    actionName: "systemCheck"
+                )
+        }
+        self.runtimeCapabilitySnapshotProvider =
+            runtimeCapabilitySnapshotProvider ?? { executable in
+                try await windowsRuntimeService.runtimeCapabilitySnapshot(
+                    executable: executable
+                )
+            }
+        self.runtimeCapabilitySnapshotInvalidator =
+            runtimeCapabilitySnapshotInvalidator ?? { executable in
+                try await windowsRuntimeService
+                    .invalidateRuntimeCapabilitySnapshot(
+                        executable: executable
+                    )
+            }
     }
 
     func runChecks(rootURL: URL?, runtimeExecutable: URL?) async -> [SystemCheckResult] {
+        await runChecksWithRuntimeContext(
+            rootURL: rootURL,
+            runtimeExecutable: runtimeExecutable
+        ).checks
+    }
+
+    func runChecksWithRuntimeContext(
+        rootURL: URL?,
+        runtimeExecutable: URL?
+    ) async -> SystemCheckRunOutcome {
         var results: [SystemCheckResult] = []
+        var authenticatedRuntimeManifest: RuntimeManifest?
+        var runtimeCapability: WindowsRuntimeCapability?
 
         #if arch(arm64)
         results.append(SystemCheckResult(
@@ -107,43 +188,41 @@ final class SystemCheckService {
                     status: .error,
                     technicalDetail: "rosetta-translation-not-detected"
                 ))
-            } else if !canRunBundledWindowsRuntime() {
-                results.append(SystemCheckResult(
-                    category: .windowsRuntime,
-                    title: "ForgePlay Runtime",
-                    detail: bundledRuntimeUnavailableReasonKey(),
-                    status: .error,
-                    technicalDetail: "bundled-runtime-unavailable"
-                ))
             } else {
+                let authentication = await inspectRuntimeAuthentication(
+                    runtimeExecutable
+                )
+                authenticatedRuntimeManifest = authentication.manifest
+                guard authentication.isAvailable else {
+                    results.append(SystemCheckResult(
+                        category: .windowsRuntime,
+                        title: "ForgePlay Runtime",
+                        detail: bundledRuntimeUnavailableReasonKey(),
+                        status: .error,
+                        technicalDetail: "bundled-runtime-unavailable"
+                    ))
+                    return finishChecks(
+                        results: results,
+                        rootURL: rootURL,
+                        authenticatedRuntimeManifest:
+                            authenticatedRuntimeManifest,
+                        runtimeCapability: nil
+                    )
+                }
                 do {
-                    let validation = try windowsRuntimeService.validateExecutableStrict(runtimeExecutable)
+                    lastRuntimeExecutable = runtimeExecutable
+                    let validation = try windowsRuntimeService
+                        .validateExecutableStrict(runtimeExecutable)
                     if validation.isValid, rootURL != nil {
                         do {
-                            _ = try await windowsRuntimeService.probeAndValidate(executable: runtimeExecutable)
-                            let capability = try windowsRuntimeService.inspectRuntimeCapability(executable: runtimeExecutable)
-                            let verification = steamClientCompatibilityVerifier.verify(capability: capability)
-                            if verification.canLaunchWindowsSteam {
-                                let detail = capability.steamUIRenderingValidationWarningMessage
-                                    ?? (capability.supportsModernDirect3DGames
-                                        ? "ForgePlay Runtime 실행 파일, Steam TLS 구성, Steam 클라이언트 호환 프로필, 게임 렌더러를 확인했습니다."
-                                        : "Steam TLS 구성은 일부 확인됐지만, 현대 Direct3D 게임용 D3DMetal/DXVK renderer payload는 포함되어 있지 않습니다.")
-                                results.append(SystemCheckResult(
-                                    category: .windowsRuntime,
-                                    title: "ForgePlay Runtime",
-                                    detail: detail,
-                                    status: .warning,
-                                    technicalDetail: "\(validation.message). \(capability.technicalSummary)"
-                                ))
-                            } else {
-                                results.append(SystemCheckResult(
-                                    category: .windowsRuntime,
-                                    title: "ForgePlay Runtime",
-                                    detail: verification.userMessage,
-                                    status: .error,
-                                    technicalDetail: capability.technicalSummary
-                                ))
-                            }
+                            let snapshot = try await runtimeSystemCheckSnapshot(
+                                executable: runtimeExecutable,
+                                validation: validation
+                            )
+                            results.append(snapshot.result)
+                            runtimeCapability = snapshot.capability
+                            BundledRuntimeAuthenticationViewState.shared
+                                .publishAuthenticated(runtimeExecutable)
                         } catch WindowsRuntimeServiceError.probeFailed(let result) {
                             results.append(SystemCheckResult(
                                 category: .windowsRuntime,
@@ -172,7 +251,7 @@ final class SystemCheckService {
                     }
                 } catch {
                     results.append(SystemCheckResult(
-                            category: .windowsRuntime,
+                        category: .windowsRuntime,
                         title: "ForgePlay Runtime",
                         detail: "앱에 포함된 ForgePlay Runtime을 확인하는 중 오류가 발생했습니다.",
                         status: .error,
@@ -181,7 +260,9 @@ final class SystemCheckService {
                 }
             }
         } else {
-            if !canRunBundledWindowsRuntime() {
+            let authentication = await inspectRuntimeAuthentication(nil)
+            authenticatedRuntimeManifest = authentication.manifest
+            if !authentication.isAvailable {
                 results.append(SystemCheckResult(
                     category: .windowsRuntime,
                     title: "ForgePlay Runtime",
@@ -200,6 +281,21 @@ final class SystemCheckService {
             }
         }
 
+        return finishChecks(
+            results: results,
+            rootURL: rootURL,
+            authenticatedRuntimeManifest: authenticatedRuntimeManifest,
+            runtimeCapability: runtimeCapability
+        )
+    }
+
+    private func finishChecks(
+        results: [SystemCheckResult],
+        rootURL: URL?,
+        authenticatedRuntimeManifest: RuntimeManifest?,
+        runtimeCapability: WindowsRuntimeCapability?
+    ) -> SystemCheckRunOutcome {
+        var results = results
         if let rootURL {
             let steamPrefix = rootURL.appending(
                 path: ForgePlayPathRole.steamSharedPrefix.rawValue,
@@ -226,7 +322,7 @@ final class SystemCheckService {
                 results.append(SystemCheckResult(
                     category: .steamPrefix,
                     title: "Steam 프리픽스",
-                    detail: "Steam 프리픽스를 사용할 수 없습니다. 처음 설정 또는 설정 화면에서 오류를 확인하세요.",
+                    detail: "Steam 프리픽스를 사용할 수 없습니다. 설정 또는 설정 화면에서 오류를 확인하세요.",
                     status: .error,
                     technicalDetail: forgePlayTechnicalErrorSummary(error)
                 ))
@@ -241,7 +337,91 @@ final class SystemCheckService {
             ))
         }
 
-        return results
+        return SystemCheckRunOutcome(
+            checks: results,
+            authenticatedRuntimeManifest: authenticatedRuntimeManifest,
+            runtimeCapability: runtimeCapability
+        )
+    }
+
+    func invalidateRuntimeCapabilitySnapshots() async {
+        guard let executable = lastRuntimeExecutable else { return }
+        try? await runtimeCapabilitySnapshotInvalidator(
+            executable
+        )
+    }
+
+    private func inspectRuntimeAuthentication(
+        _ configuredExecutable: URL?
+    ) async -> RuntimeAuthenticationInspection {
+        if let canRunBundledWindowsRuntime {
+            return canRunBundledWindowsRuntime()
+                ? .permittedWithoutManifest
+                : .unavailable
+        }
+        guard let executable = configuredExecutable ??
+                ForgePlayRuntimeCapabilityPolicy
+                    .bundledWindowsRuntimeExecutableURL else {
+            return .unavailable
+        }
+        do {
+            return .authenticated(
+                try await runtimeAuthenticationProvider(executable)
+            )
+        } catch {
+            return .unavailable
+        }
+    }
+
+    private func runtimeSystemCheckSnapshot(
+        executable: URL,
+        validation: WindowsRuntimeValidation
+    ) async throws -> RuntimeSystemCheckSnapshot {
+        _ = try await windowsRuntimeService.probeAndValidate(
+            executable: executable
+        )
+        try Task.checkCancellation()
+        let capabilitySnapshot = try await runtimeCapabilitySnapshotProvider(
+            executable
+        )
+        try Task.checkCancellation()
+        return RuntimeSystemCheckSnapshot(
+            result: runtimeSystemCheckResult(
+                validation: validation,
+                capability: capabilitySnapshot.capability
+            ),
+            capability: capabilitySnapshot.capability
+        )
+    }
+
+    private func runtimeSystemCheckResult(
+        validation: WindowsRuntimeValidation,
+        capability: WindowsRuntimeCapability
+    ) -> SystemCheckResult {
+        let verification = steamClientCompatibilityVerifier.verify(
+            capability: capability
+        )
+        if verification.canLaunchWindowsSteam {
+            let detail = capability.steamUIRenderingValidationWarningMessage
+                ?? (capability.supportsModernDirect3DGames
+                    ? "ForgePlay Runtime 실행 파일, Steam TLS 구성, Steam 클라이언트 호환 프로필, 게임 렌더러를 확인했습니다."
+                    : "Steam TLS 구성은 일부 확인됐지만, 현대 Direct3D 게임용 D3DMetal/DXVK renderer payload는 포함되어 있지 않습니다.")
+            return SystemCheckResult(
+                category: .windowsRuntime,
+                title: "ForgePlay Runtime",
+                detail: detail,
+                status: .warning,
+                technicalDetail:
+                    "\(validation.message). \(capability.technicalSummary)"
+            )
+        }
+        return SystemCheckResult(
+            category: .windowsRuntime,
+            title: "ForgePlay Runtime",
+            detail: verification.userMessage,
+            status: .error,
+            technicalDetail: capability.technicalSummary
+        )
     }
 
     private nonisolated static func inspectStorageRoot(_ rootURL: URL) async -> StorageCheckInspection {

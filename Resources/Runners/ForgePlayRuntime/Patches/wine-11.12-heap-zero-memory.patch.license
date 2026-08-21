@@ -1,0 +1,8 @@
+SPDX-License-Identifier: LGPL-2.1-or-later
+Component: Wine 11.12 ntdll heap-zero-memory adapter
+Classification: approved-derivative
+Upstream provenance:
+- https://github.com/ValveSoftware/wine/commit/2bf5a5799faa5d56e99a1ad4a507dbffc05facee
+- https://github.com/ValveSoftware/wine/commit/870373c99ae553dea449f1ff14a9c14caf630c36
+This artifact contains only the Wine-derived ntdll process/private heap-zero adapter.
+License text: ../Legal/Wine/COPYING.LIB

@@ -3,6 +3,28 @@ import SwiftData
 import SwiftUI
 import UniformTypeIdentifiers
 
+enum LaunchAvailability: Equatable {
+    case available(message: String)
+    case unavailable(reason: String)
+
+    var isAvailable: Bool {
+        if case .available = self { return true }
+        return false
+    }
+
+    var message: String {
+        switch self {
+        case let .available(message): message
+        case let .unavailable(reason): reason
+        }
+    }
+
+    var disabledReason: String? {
+        guard case let .unavailable(reason) = self else { return nil }
+        return reason
+    }
+}
+
 enum ForgePanelEmphasis {
     case standard
     case accent
@@ -835,7 +857,7 @@ struct SteamLaunchRecordStatusPanel: View {
                                 }
                             }
                             ThemedActionButton(
-                                title: "문제 진단 열기",
+                                title: "문제 진단 (베타) 열기",
                                 systemImage: "stethoscope",
                                 prominence: .secondary,
                                 controlSize: .small
@@ -1115,7 +1137,7 @@ struct RuntimeDependencyWorkflowCard: View {
                     }
 
                     ThemedActionButton(
-                        title: "문제 진단 열기",
+                        title: "문제 진단 (베타) 열기",
                         systemImage: "stethoscope",
                         prominence: .secondary
                     ) {
@@ -1214,6 +1236,84 @@ struct PrimaryActionButton: View {
         .buttonStyle(ForgeActionButtonStyle())
         .opacity(isDisabled ? 0.64 : 1)
         .disabled(isDisabled)
+    }
+}
+
+/// Shared sheet chrome that mirrors the close affordance used by native macOS
+/// windows while keeping the sheet's content and actions independent.
+struct ForgeSheetChrome<Content: View>: View {
+    let onClose: () -> Void
+    let content: Content
+    @Environment(AppState.self) private var appState
+    @Environment(\.colorScheme) private var colorScheme
+
+    init(
+        onClose: @escaping () -> Void,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.onClose = onClose
+        self.content = content()
+    }
+
+    var body: some View {
+        let palette = ForgePlayTheme.palette(
+            mode: appState.themeMode,
+            colorScheme: colorScheme
+        )
+
+        VStack(spacing: 0) {
+            HStack {
+                MacSheetCloseButton(action: onClose)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 11)
+            .frame(height: 32)
+            .background(palette.background)
+
+            Divider()
+                .overlay(palette.border.opacity(0.75))
+
+            content
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity,
+                    alignment: .topLeading
+                )
+        }
+        .background(palette.background)
+        .onExitCommand(perform: onClose)
+    }
+}
+
+private struct MacSheetCloseButton: View {
+    let action: () -> Void
+    @Environment(AppState.self) private var appState
+    @State private var isHovering = false
+
+    var body: some View {
+        Button(action: action) {
+            ZStack {
+                Circle()
+                    .fill(Color(red: 1.00, green: 0.37, blue: 0.34))
+                Circle()
+                    .stroke(
+                        Color(red: 0.79, green: 0.18, blue: 0.16)
+                            .opacity(0.75),
+                        lineWidth: 0.65
+                    )
+                Image(systemName: "xmark")
+                    .font(.system(size: 7.5, weight: .bold))
+                    .foregroundStyle(Color.black.opacity(0.62))
+                    .opacity(isHovering ? 1 : 0)
+            }
+            .frame(width: 14, height: 14)
+            .frame(width: 24, height: 24)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovering = $0 }
+        .help(appState.localized("닫기"))
+        .accessibilityLabel(appState.localized("닫기"))
     }
 }
 
@@ -1370,6 +1470,181 @@ struct EmptyStateView: View {
                 .frame(maxWidth: .infinity)
                 .padding(32)
         }
+    }
+}
+
+enum SteamLaunchGameInputProtectionAdmissionPolicy {
+    static func blockerLocalizationKey(
+        policy: GameInputProtectionPolicy,
+        authorizationStatus: GameInputProtectionAuthorizationStatus
+    ) -> String? {
+        guard policy.requiresEventTap, authorizationStatus != .authorized else {
+            return nil
+        }
+        return switch authorizationStatus {
+        case .authorized:
+            nil
+        case .accessibilityRequired:
+            "선택한 보호 기능에는 macOS 손쉬운 사용 권한이 필요합니다. 권한이 없으면 해당 설정으로 Steam을 실행하지 않습니다."
+        case .inputMonitoringRequired:
+            "선택한 보호 기능에는 macOS 입력 모니터링 권한이 필요합니다. 권한이 없으면 해당 설정으로 Steam을 실행하지 않습니다."
+        case .accessibilityAndInputMonitoringRequired:
+            "선택한 보호 기능에는 macOS 손쉬운 사용 및 입력 모니터링 권한이 필요합니다. 권한이 없으면 해당 설정으로 Steam을 실행하지 않습니다."
+        }
+    }
+
+    static func authorizationActionLocalizationKey(
+        _ status: GameInputProtectionAuthorizationStatus
+    ) -> String {
+        switch status {
+        case .authorized:
+            "게임 입력 보호 권한을 확인했습니다."
+        case .accessibilityRequired:
+            "시스템 설정의 개인정보 보호 및 보안 > 손쉬운 사용에서 ForgePlay를 허용한 뒤 앱으로 돌아오세요."
+        case .inputMonitoringRequired:
+            "시스템 설정의 개인정보 보호 및 보안 > 입력 모니터링에서 ForgePlay를 허용한 뒤 앱으로 돌아오세요."
+        case .accessibilityAndInputMonitoringRequired:
+            "시스템 설정의 개인정보 보호 및 보안 > 손쉬운 사용과 입력 모니터링에서 ForgePlay를 허용한 뒤 앱으로 돌아오세요."
+        }
+    }
+}
+
+struct GameInputProtectionAuthorizationPanel: View {
+    let disablePermissionRequiredProtection: () -> Void
+    @Environment(AppState.self) private var appState
+    @Environment(AppServices.self) private var services
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        let palette = ForgePlayTheme.palette(
+            mode: appState.themeMode,
+            colorScheme: colorScheme
+        )
+
+        VStack(alignment: .leading, spacing: 8) {
+            Text(appState.localized(
+                "입력 보호는 선택 기능입니다. Steam 실행이나 게임 키 바인딩 자체에는 필요하지 않으며, ForgePlay가 보조키를 변환하고 macOS 단축키를 차단할 때만 손쉬운 사용과 입력 모니터링 권한을 사용합니다."
+            ))
+            .font(.caption)
+            .foregroundStyle(palette.secondaryText)
+            .fixedSize(horizontal: false, vertical: true)
+
+            permissionRow(
+                title: "손쉬운 사용 권한",
+                pane: .accessibility
+            )
+            permissionRow(
+                title: "입력 모니터링 권한",
+                pane: .inputMonitoring
+            )
+
+            Text(appState.localized(
+                "‘사전 확인 통과’는 macOS 권한 API의 응답이며 실제 입력 필터 생성 성공을 보장하지 않습니다. 앱을 새 빌드로 교체한 뒤 필터가 거부되면 두 권한 목록에서 기존 ForgePlay를 제거하고 현재 앱을 다시 추가하세요."
+            ))
+            .font(.caption2)
+            .foregroundStyle(palette.secondaryText)
+            .fixedSize(horizontal: false, vertical: true)
+
+            ResponsiveActionRow {
+                ThemedActionButton(
+                    title: "권한 상태 다시 확인",
+                    systemImage: "arrow.clockwise",
+                    prominence: .secondary,
+                    controlSize: .small
+                ) {
+                    refreshAuthorizationStatus()
+                }
+                ThemedActionButton(
+                    title: "권한 필요 보호 끄기",
+                    systemImage: "keyboard.badge.ellipsis",
+                    prominence: .secondary,
+                    controlSize: .small
+                ) {
+                    disablePermissionRequiredProtection()
+                }
+                ThemedActionButton(
+                    title: "Finder에서 보기",
+                    systemImage: "magnifyingglass",
+                    prominence: .secondary,
+                    controlSize: .small
+                ) {
+                    appState.revealInFinder(Bundle.main.bundleURL)
+                }
+            }
+
+            Text(appState.localized(
+                "권한 요청 후 열린 개인정보 보호 및 보안 화면에서 ForgePlay를 켜세요. 목록에 없으면 +를 누르고 Finder에서 보기를 사용해 현재 ForgePlay.app을 선택하세요. 두 권한이 모두 필요한 경우 앱으로 돌아와 권한 버튼을 다시 누르면 남은 설정을 엽니다. macOS가 재실행을 요청하면 ForgePlay를 종료했다가 다시 여세요."
+            ))
+            .font(.caption2)
+            .foregroundStyle(palette.secondaryText)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func permissionRow(
+        title: String,
+        pane: GameInputProtectionPrivacyPane
+    ) -> some View {
+        let isAuthorized = services.gameInputProtectionAuthorizationStatus
+            .isAuthorized(for: pane)
+
+        return HStack(alignment: .center, spacing: 10) {
+            Text(appState.localized(title))
+                .font(.caption.weight(.semibold))
+            Spacer(minLength: 8)
+            StatusBadge(
+                label: isAuthorized ? "사전 확인 통과" : "허용 필요",
+                status: isAuthorized ? .ok : .warning
+            )
+            ThemedActionButton(
+                title: pane == .accessibility
+                    ? "손쉬운 사용 설정 열기"
+                    : "입력 모니터링 설정 열기",
+                systemImage: "gearshape",
+                prominence: .secondary,
+                controlSize: .small
+            ) {
+                requestAuthorizationAndOpenSettings(for: pane)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func requestAuthorizationAndOpenSettings(
+        for pane: GameInputProtectionPrivacyPane
+    ) {
+        let paneAuthorized = services
+            .requestGameInputProtectionAuthorization(for: pane)
+        let openedSettings = paneAuthorized ||
+            services.openGameInputProtectionPrivacyPane(pane)
+        let messageKey = SteamLaunchGameInputProtectionAdmissionPolicy
+            .authorizationActionLocalizationKey(
+                services.gameInputProtectionAuthorizationStatus
+            )
+        var message = appState.localized(messageKey)
+        if !openedSettings {
+            message += " " + appState.localized(
+                "시스템 설정을 자동으로 열지 못했습니다. 개인정보 보호 및 보안에서 손쉬운 사용과 입력 모니터링을 직접 여세요."
+            )
+        }
+        appState.setNotice(
+            message,
+            kind: paneAuthorized ? .success : .warning
+        )
+    }
+
+    private func refreshAuthorizationStatus() {
+        services.refreshGameInputProtectionAuthorizationStatus()
+        let messageKey = SteamLaunchGameInputProtectionAdmissionPolicy
+            .authorizationActionLocalizationKey(
+                services.gameInputProtectionAuthorizationStatus
+            )
+        appState.setNotice(
+            appState.localized(messageKey),
+            kind: services.gameInputProtectionAuthorizationStatus ==
+                .authorized ? .success : .warning
+        )
     }
 }
 

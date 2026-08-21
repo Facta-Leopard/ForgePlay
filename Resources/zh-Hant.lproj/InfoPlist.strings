@@ -1,1 +1,2 @@
 "NSBluetoothAlwaysUsageDescription" = "ForgePlay 使用藍牙存取權限來連接 Windows 遊戲控制器。";
+"NSMicrophoneUsageDescription" = "當您為 Steam 工作階段啟用音訊輸入時，ForgePlay 會使用麥克風權限，為 Windows 遊戲與語音聊天提供輸入。";

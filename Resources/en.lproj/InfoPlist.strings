@@ -1,1 +1,2 @@
 "NSBluetoothAlwaysUsageDescription" = "ForgePlay uses Bluetooth access to connect Windows game controllers.";
+"NSMicrophoneUsageDescription" = "ForgePlay uses microphone access to provide audio input to Windows games and voice chat when you enable audio input for a Steam session.";

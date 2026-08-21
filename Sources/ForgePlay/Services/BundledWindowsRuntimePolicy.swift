@@ -22,12 +22,43 @@ enum ForgePlayBundledWindowsRuntimePolicy {
     static let runtimeDirectoryName = "ForgePlayRuntime"
     static let runtimeExecutableRelativePath = "wine/bin/wine"
 
+    // Bundle.main is immutable for the lifetime of this app process. Resolve
+    // its bundled Runtime location and path-safety contract once so SwiftUI
+    // availability reads do not repeat synchronous filesystem inspection.
+    // Operational launch boundaries still authenticate and revalidate the
+    // selected objects immediately before use.
+    private static let processBundledRuntimeExecutableSnapshot: URL? = {
+        guard let resourceURL = Bundle.main.resourceURL else { return nil }
+        return findBundledRuntimeExecutable(
+            inResourceRoot: resourceURL,
+            fileManager: .default
+        )
+    }()
+
+    static func bundledRuntimeExecutableURL() -> URL? {
+        processBundledRuntimeExecutableSnapshot
+    }
+
+    /// Dependency-injected bundle resolution intentionally remains uncached.
+    /// Fixtures and non-production callers must observe their current input.
     static func bundledRuntimeExecutableURL(
-        bundle: Bundle = .main,
+        bundle: Bundle,
         fileManager: FileManager = .default
     ) -> URL? {
         guard let resourceURL = bundle.resourceURL else { return nil }
         return findBundledRuntimeExecutable(inResourceRoot: resourceURL, fileManager: fileManager)
+    }
+
+    /// Dependency-injected filesystem resolution intentionally remains
+    /// uncached even when the production bundle is used.
+    static func bundledRuntimeExecutableURL(
+        fileManager: FileManager
+    ) -> URL? {
+        guard let resourceURL = Bundle.main.resourceURL else { return nil }
+        return findBundledRuntimeExecutable(
+            inResourceRoot: resourceURL,
+            fileManager: fileManager
+        )
     }
 
     static func requiredBundledRuntimeExecutableURL(

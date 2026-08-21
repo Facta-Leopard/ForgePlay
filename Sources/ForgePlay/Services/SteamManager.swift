@@ -13,6 +13,8 @@ struct SteamBootstrapLogSourceAssessment: Sendable, Hashable {
     var state: SteamEvidenceReadState
     var detail: String
     var text: String
+    /// Next exact source generation, present only after a stable append read.
+    var nextCursor: SteamLogFileCursor? = nil
 
     var evidenceUnavailable: Bool {
         switch state {
@@ -20,8 +22,10 @@ struct SteamBootstrapLogSourceAssessment: Sendable, Hashable {
             true
         case .missing:
             required
-        case .captured, .truncated:
+        case .captured:
             false
+        case .truncated:
+            true
         }
     }
 }
@@ -32,27 +36,485 @@ struct SteamBootstrapUpdateLogAssessment: Sendable, Hashable {
     var state: SteamEvidenceReadState
     var detail: String
     var sources: [SteamBootstrapLogSourceAssessment]
+    /// Stable identity of the safely captured updater-progress lines. A live
+    /// Steam process plus an old progress string is not current updater
+    /// activity; the bootstrap lifecycle extends its nominal wait only while
+    /// this identity is new or was observed advancing recently.
+    var progressIdentity: String?
+    var observedProgress: Bool = false
+    var observedCompletion: Bool = false
+    var nextCursor: SteamBootstrapUpdateSourceCursor? = nil
+    /// Every updater event captured in this append generation, ordered within
+    /// its own source. There is intentionally no synthetic ordering between
+    /// stdout and bootstrap_log.txt.
+    var sourceEvents: [SteamBootstrapOrderedEvent] = []
 
     var evidenceUnavailable: Bool {
         sources.contains(where: \.evidenceUnavailable)
     }
 }
 
+struct SteamBootstrapUpdateSourceCursor: Sendable, Hashable {
+    var stdout: SteamLogFileCursor
+    var bootstrapLog: SteamLogFileCursor
+}
+
+enum SteamBootstrapOrderedEventKind: Sendable, Hashable {
+    case progress
+    case completion
+}
+
+enum SteamBootstrapUpdaterEvidenceSource: String, Sendable, Hashable, CaseIterable {
+    case stdout
+    case bootstrapLog
+}
+
+struct SteamBootstrapOrderedEvent: Sendable, Hashable {
+    var source: SteamBootstrapUpdaterEvidenceSource
+    var kind: SteamBootstrapOrderedEventKind
+    var normalizedLine: String
+    var sourceURL: URL
+    var lineIndex: Int
+    var generationCursor: SteamLogFileCursor
+
+    var identity: String {
+        [
+            source.rawValue,
+            sourceURL.standardizedFileURL.path,
+            String(generationCursor.deviceNumber ?? 0),
+            String(generationCursor.fileNumber ?? 0),
+            String(generationCursor.byteCount),
+            String(lineIndex),
+            normalizedLine
+        ].joined(separator: "|")
+    }
+}
+
+enum SteamBootstrapUpdaterLifecycleState: Sendable, Hashable {
+    case inProgress
+    case notInProgress
+    case evidenceUnavailable
+
+    init(_ assessment: SteamBootstrapUpdateLogAssessment) {
+        switch assessment.hasProgress {
+        case true:
+            self = .inProgress
+        case false:
+            self = .notInProgress
+        case nil:
+            self = .evidenceUnavailable
+        }
+    }
+}
+
+enum SteamBootstrapUpdaterEvidenceContinuity: Sendable, Hashable {
+    case notInProgress
+    case recentOrAdvancing
+    /// A verified per-architecture completion is held for the fixed two-second
+    /// stabilization interval while Steam replaces its updater process.
+    case stageTransition
+    case stale
+    case evidenceUnavailable
+}
+
+/// Availability of the updater evidence read performed for this exact poll.
+/// This remains separate from retained lifecycle continuity: a recent verified
+/// progress observation may safely keep waiting through a transient read
+/// failure, but that failed read must never authorize destructive recovery.
+enum SteamBootstrapUpdaterEvidenceAvailability: Sendable, Hashable {
+    case verified
+    case transientlyUnavailable
+    case unavailable
+
+    init(_ assessment: SteamBootstrapUpdateLogAssessment) {
+        guard assessment.evidenceUnavailable else {
+            self = .verified
+            return
+        }
+        let unavailableSources = assessment.sources.filter(
+            \.evidenceUnavailable
+        )
+        self = !unavailableSources.isEmpty && unavailableSources.allSatisfy {
+            $0.state == .missing || $0.state == .unreadable
+        } ? .transientlyUnavailable : .unavailable
+    }
+}
+
+struct SteamBootstrapUpdaterEvidenceTracker: Sendable, Hashable {
+    /// The real updater can emit a per-architecture "update complete" row,
+    /// restart, and begin the next architecture about one second later. Hold a
+    /// completion candidate briefly so that later source-ordered progress can
+    /// supersede it instead of letting a poll in that gap terminate the wait.
+    private static let completionStabilizationInterval: TimeInterval = 2
+
+    private(set) var progressIdentity: String? = nil
+    private(set) var lastAdvancedAt: Date? = nil
+    private(set) var updaterIsInProgress = false
+    private(set) var cursor: SteamBootstrapUpdateSourceCursor
+    private var stdoutEvent: SteamBootstrapOrderedEvent?
+    private var bootstrapLogEvent: SteamBootstrapOrderedEvent?
+    private var completionCandidateObservedAt: Date?
+
+    init(cursor: SteamBootstrapUpdateSourceCursor) {
+        self.cursor = cursor
+    }
+
+    mutating func observe(
+        assessment: SteamBootstrapUpdateLogAssessment,
+        at now: Date,
+        idleTimeout: TimeInterval
+    ) -> (
+        state: SteamBootstrapUpdaterLifecycleState,
+        continuity: SteamBootstrapUpdaterEvidenceContinuity
+    ) {
+        let currentEvidenceAvailability =
+            SteamBootstrapUpdaterEvidenceAvailability(assessment)
+        if currentEvidenceAvailability != .verified {
+            guard currentEvidenceAvailability == .transientlyUnavailable else {
+                return (.evidenceUnavailable, .evidenceUnavailable)
+            }
+            // Do not advance the cursor, source-event identities, or
+            // lastAdvancedAt from a partially unreadable poll. A previously
+            // verified updater remains continuous only within its original
+            // idle window, so repeated failures cannot manufacture freshness.
+            if let completionCandidateObservedAt,
+               now.timeIntervalSince(completionCandidateObservedAt) <
+                Self.completionStabilizationInterval {
+                return (.inProgress, .stageTransition)
+            }
+            guard updaterIsInProgress else {
+                return (.evidenceUnavailable, .evidenceUnavailable)
+            }
+            guard let lastAdvancedAt,
+                  now.timeIntervalSince(lastAdvancedAt) <= max(0, idleTimeout)
+            else {
+                return (.inProgress, .stale)
+            }
+            return (.inProgress, .recentOrAdvancing)
+        }
+        if let nextCursor = assessment.nextCursor {
+            cursor = nextCursor
+        }
+        if !assessment.sourceEvents.isEmpty {
+            let wasInProgress = updaterIsInProgress
+            var observedAdvancingProgress = false
+            for event in assessment.sourceEvents {
+                let previousEvent: SteamBootstrapOrderedEvent?
+                switch event.source {
+                case .stdout:
+                    previousEvent = stdoutEvent
+                    stdoutEvent = event
+                case .bootstrapLog:
+                    previousEvent = bootstrapLogEvent
+                    bootstrapLogEvent = event
+                }
+                if event.kind == .progress,
+                   previousEvent?.identity != event.identity {
+                    observedAdvancingProgress = true
+                }
+            }
+
+            let activeProgressEvents = [stdoutEvent, bootstrapLogEvent]
+                .compactMap { $0 }
+                .filter { $0.kind == .progress }
+                .sorted { $0.source.rawValue < $1.source.rawValue }
+            if activeProgressEvents.isEmpty {
+                updaterIsInProgress = false
+                progressIdentity = nil
+                lastAdvancedAt = nil
+                let observedCompletion = assessment.sourceEvents.contains {
+                    $0.kind == .completion
+                }
+                let completionFollowedProgress =
+                    wasInProgress ||
+                    assessment.sourceEvents.contains { $0.kind == .progress } ||
+                    completionCandidateObservedAt != nil
+                if observedCompletion, completionFollowedProgress {
+                    completionCandidateObservedAt = now
+                }
+            } else {
+                updaterIsInProgress = true
+                completionCandidateObservedAt = nil
+                let combinedIdentity = activeProgressEvents
+                    .map(\.identity)
+                    .joined(separator: "\n")
+                progressIdentity = SHA256.hash(data: Data(combinedIdentity.utf8))
+                    .map { String(format: "%02x", $0) }
+                    .joined()
+                if observedAdvancingProgress {
+                    lastAdvancedAt = now
+                }
+            }
+        }
+        if let completionCandidateObservedAt {
+            if now.timeIntervalSince(completionCandidateObservedAt) <
+                Self.completionStabilizationInterval {
+                return (.inProgress, .stageTransition)
+            }
+            self.completionCandidateObservedAt = nil
+        }
+        if !assessment.sourceEvents.isEmpty {
+            guard updaterIsInProgress else {
+                return (.notInProgress, .notInProgress)
+            }
+            guard let lastAdvancedAt,
+                  now.timeIntervalSince(lastAdvancedAt) <= max(0, idleTimeout)
+            else {
+                return (.inProgress, .stale)
+            }
+            return (.inProgress, .recentOrAdvancing)
+        }
+
+        // Compatibility path for focused lifecycle fixtures that construct an
+        // assessment directly rather than reading a concrete source append.
+        if assessment.observedCompletion {
+            updaterIsInProgress = false
+            progressIdentity = nil
+            lastAdvancedAt = nil
+            return (.notInProgress, .notInProgress)
+        }
+        if assessment.observedProgress {
+            guard let nextIdentity = assessment.progressIdentity,
+                  !nextIdentity.isEmpty else {
+                return (.evidenceUnavailable, .evidenceUnavailable)
+            }
+            updaterIsInProgress = true
+            if progressIdentity != nextIdentity {
+                progressIdentity = nextIdentity
+                lastAdvancedAt = now
+                return (.inProgress, .recentOrAdvancing)
+            }
+        }
+        guard updaterIsInProgress else {
+            return (.notInProgress, .notInProgress)
+        }
+        guard let lastAdvancedAt,
+              now.timeIntervalSince(lastAdvancedAt) <= max(0, idleTimeout)
+        else {
+            return (.inProgress, .stale)
+        }
+        return (.inProgress, .recentOrAdvancing)
+    }
+}
+
+/// One launch-dispatch-owned updater cursor. The final launch assessment keeps
+/// this cursor stable so an old updater batch cannot become "fresh" merely
+/// because the assessment rereads the launch baseline.
+final class SteamBootstrapUpdaterEvidenceSession {
+    var tracker: SteamBootstrapUpdaterEvidenceTracker
+
+    init(cursor: SteamBootstrapUpdateSourceCursor) {
+        tracker = SteamBootstrapUpdaterEvidenceTracker(cursor: cursor)
+    }
+}
+
+enum SteamLaunchDispatchDisposition: Equatable, Sendable {
+    case runningDetachedProcess
+    case successfulForgePlayLauncherHandoff
+    case completedOrFailed
+
+    static func resolve(_ result: ProcessRunResult) -> Self {
+        guard result.actionName == "launchSteam",
+              !result.didTimeOut else {
+            return .completedOrFailed
+        }
+        if !result.waitedForExit,
+           result.outcome == .runningDetached {
+            return .runningDetachedProcess
+        }
+        guard result.waitedForExit,
+              result.outcome == .exited,
+              result.processExitCode == 0,
+              result.terminationSignal == nil,
+              result.arguments.count >= 3,
+              URL(fileURLWithPath: result.arguments[0])
+                .lastPathComponent
+                .caseInsensitiveCompare("forgeplay-steam-launcher.exe") ==
+                .orderedSame,
+              result.arguments[1] == "--detach",
+              result.arguments[2] == "--" else {
+            return .completedOrFailed
+        }
+        return .successfulForgePlayLauncherHandoff
+    }
+
+    var acceptsSessionLifetime: Bool {
+        self != .completedOrFailed
+    }
+
+    var isSuccessfulDetachedHelperHandoff: Bool {
+        self == .successfulForgePlayLauncherHandoff
+    }
+}
+
+private enum SteamCompatibilitySessionCommitAdmission {
+    case providerReceiptsVerified
+    case successfulDetachedHandoff(rendererPreparationVerified: Bool)
+}
+
 /// Keeps prefix mutation and execution ownership explicit across Steam's
-/// bootstrap/retry state machine. Direct callers that do not own a coordinated
-/// prefix lease can omit it; `SteamPrefixService` always supplies one.
+/// bootstrap/retry state machine. Mutating Steam launches cannot be created
+/// without this transition owner.
 struct SteamPrefixExecutionLeaseTransition {
     let prepareForMutation: () throws -> Void
     let prepareForExecution: () throws -> Void
+    let restorationLease: SteamCompatibilityRestorationPrefixLease?
+
+    init(
+        prepareForMutation: @escaping () throws -> Void,
+        prepareForExecution: @escaping () throws -> Void,
+        restorationLease: SteamCompatibilityRestorationPrefixLease? = nil
+    ) {
+        self.prepareForMutation = prepareForMutation
+        self.prepareForExecution = prepareForExecution
+        self.restorationLease = restorationLease
+    }
+}
+
+/// Gives the termination-restoration lifecycle exclusive-mutation authority.
+/// Direct launches also transfer release ownership; coordinated provider
+/// launches delegate mutation while their retained transaction remains the
+/// sole owner responsible for releasing the underlying prefix lease.
+@MainActor
+final class SteamCompatibilityRestorationPrefixLease {
+    private let prepareForMutationImplementation: () throws -> Void
+    private let releaseImplementation: () -> Void
+    private(set) var isTransferred = false
+    private var isReleased = false
+
+    init(
+        prepareForMutation: @escaping () throws -> Void,
+        release: @escaping () -> Void
+    ) {
+        prepareForMutationImplementation = prepareForMutation
+        releaseImplementation = release
+    }
+
+    func markTransferred() {
+        precondition(!isReleased)
+        isTransferred = true
+    }
+
+    func prepareForMutation() throws {
+        precondition(!isReleased)
+        try prepareForMutationImplementation()
+    }
+
+    func release() {
+        guard !isReleased else { return }
+        isReleased = true
+        releaseImplementation()
+    }
 }
 
 struct SteamLibraryDrivePreparation: Hashable {
     var mappings: [SteamLibraryDriveMapping]
+    var pendingMappings: [SteamLibraryDriveMapping]
+    var externalStorageRoots: [URL]
     var discoveries: [SteamLibraryRootDiscoveryResult]
+}
+
+struct SteamCompatibilityPersistentPrefixSnapshot: Hashable, Sendable {
+    let prefixMetadata: Data?
+    let steamLibraryFolders: Data?
+    let dosDeviceSymlinkTargets: [String: String]
+    let digest: String
+}
+
+struct GameInputProtectionContainmentDiagnosticError:
+    LocalizedError,
+    ForgePlayUserFacingLocalizedError,
+    ForgePlayTechnicalDescribingError,
+    DiagnosticEvidenceCollectionProvidingError,
+    ForgePlayDiagnosticLogProvidingError,
+    @unchecked Sendable {
+    let underlyingError: Error
+    let diagnosticProcessResults: [ProcessRunResult]
+
+    var errorDescription: String? {
+        (underlyingError as? LocalizedError)?.errorDescription ??
+            (underlyingError as NSError).localizedDescription
+    }
+
+    var forgePlayTechnicalDescription: String {
+        forgePlayTechnicalErrorSummary(underlyingError)
+    }
+
+    var forgePlayDiagnosticLogURL: URL? {
+        diagnosticProcessResults.first?.preferredDiagnosticLog
+    }
+
+    @MainActor
+    func localizedDescription(appState: AppState) -> String {
+        appState.localizedError(underlyingError)
+    }
+}
+
+@MainActor
+final class GameInputProtectionContainmentProcessEvidence {
+    private(set) var processResults: [ProcessRunResult] = []
+
+    func preparingForFinalization(
+        _ input: ProcessRunResult
+    ) -> ProcessRunResult {
+        var result = input
+        SteamManager.attachLaunchChainEvidence(
+            [],
+            auxiliaryResults: processResults,
+            to: &result
+        )
+        return result
+    }
+
+    func recordFinalized(_ result: ProcessRunResult) {
+        let evidencePath = result.runEvidenceLog?.standardizedFileURL.path
+        guard !processResults.contains(where: {
+            if let evidencePath {
+                return $0.runEvidenceLog?.standardizedFileURL.path == evidencePath
+            }
+            return $0 == result
+        }) else { return }
+        processResults.append(result)
+    }
 }
 
 @MainActor
 final class SteamManager {
+    typealias CompatibilityPrefixExitWaiter = @Sendable (
+        _ prefix: URL,
+        _ timeout: TimeInterval,
+        _ pollInterval: TimeInterval
+    ) async throws -> Bool
+    typealias DetachedHandoffManagedWineReadbackProvider = @Sendable (
+        _ prefix: URL
+    ) async throws -> ManagedWineChildSynchronizationReadback?
+    typealias ManagedWineLaunchProcessIdentityProvider = @Sendable (
+        _ prefix: URL,
+        _ runIdentifier: String
+    ) async throws -> Set<ManagedWineLaunchProcessIdentity>
+    typealias ManagedWineJournalProcessSnapshotProvider = (
+        _ identities: Set<ManagedWineLaunchProcessIdentity>
+    ) -> SteamLaunchProcessSnapshot
+    typealias GameInputProtectionDriverFactory = @MainActor () ->
+        any GameInputProtectionDriving
+    typealias GameModeHostLaunchAdmission = () throws -> Void
+    typealias SteamClientServicePreparer = @MainActor (
+        _ runtimeExecutable: URL,
+        _ prefix: URL,
+        _ logDirectory: URL
+    ) async throws -> Void
+
+    private struct ActiveNVIDIARendererSession: Hashable {
+        let prefix: URL
+        let runtimeExecutable: URL
+        let logDirectory: URL
+    }
+
+    private struct CompatibilityRestorationMonitor {
+        let token: UUID
+        let task: Task<Void, Never>
+    }
+
     private struct GameLaunchDiagnosticMonitorKey: Equatable {
         var steamDirectory: String
         var processObservationLog: String
@@ -62,7 +524,7 @@ final class SteamManager {
         var gameRunDirectory: String?
     }
 
-    private struct BootstrapEvidenceFileMetadata: Equatable {
+    struct BootstrapEvidenceFileMetadata: Equatable, Sendable {
         var deviceNumber: UInt64
         var fileNumber: UInt64
         var byteCount: UInt64
@@ -82,35 +544,63 @@ final class SteamManager {
         case failed(state: SteamEvidenceReadState, detail: String)
     }
 
+    nonisolated static func bootstrapEvidenceReadWindowIsStable(
+        initialMetadata: BootstrapEvidenceFileMetadata,
+        postReadMetadata: BootstrapEvidenceFileMetadata?,
+        postRereadMetadata: BootstrapEvidenceFileMetadata?,
+        capturedData: Data,
+        rereadData: Data
+    ) -> Bool {
+        guard let postReadMetadata,
+              let postRereadMetadata else { return false }
+        let metadataRemainsSameNonshrinkingFile = [
+            postReadMetadata,
+            postRereadMetadata
+        ].allSatisfy {
+            $0.deviceNumber == initialMetadata.deviceNumber &&
+                $0.fileNumber == initialMetadata.fileNumber &&
+                $0.byteCount >= initialMetadata.byteCount
+        }
+        return metadataRemainsSameNonshrinkingFile &&
+            capturedData == rereadData
+    }
+
     static let officialDownloadURL = ExternalLinkPolicy.steamOfficialDownloadURL
     private nonisolated static let steamRenderingObservationTimeout: TimeInterval = 45
     private nonisolated static let steamRenderingObservationPollInterval: TimeInterval = 1
     private nonisolated static let steamProcessEvidenceTimeout: TimeInterval = 20
     private nonisolated static let steamProcessEvidencePollInterval: TimeInterval = 0.5
-    private nonisolated static let steamBootstrapCompletionTimeout: TimeInterval = 600
-    private nonisolated static let steamBootstrapCompletionPollInterval: TimeInterval = 1
+    private nonisolated static let steamBootstrapProgressIdleTimeout: TimeInterval = 900
     private nonisolated static let steamUIStartupObservationTimeout: TimeInterval = 60
     private nonisolated static let steamUIStartupObservationPollInterval: TimeInterval = 0.25
+    private nonisolated static let steamUIProvisionalSurfaceStabilizationInterval: TimeInterval = 3
     nonisolated static let defaultSteamLaunchArguments = SteamClientCompatibilityProfile.defaultLaunchArguments
+
+    nonisolated static func shouldDeferSteamUIVerification(
+        bootstrapUpdateInProgress: Bool,
+        operationalProcessVerificationUnavailable: Bool,
+        didObserveExternalRunnerDuringConformance: Bool,
+        hasTerminalSteamUIFailure: Bool
+    ) -> Bool {
+        !hasTerminalSteamUIFailure &&
+            !didObserveExternalRunnerDuringConformance &&
+            (bootstrapUpdateInProgress || operationalProcessVerificationUnavailable)
+    }
+
     private static let logTimestampFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
         return formatter
     }()
-    private static let steamLogTimestampFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-        return formatter
-    }()
-
     private let pathManager: PathManager
     private let runner: SafeProcessRunner
     private let fileManager: FileManager
     private let rendererPolicyManager: SteamRendererPolicyManager
     private let windowsFontCompatibilityProfile: WindowsFontCompatibilityProfile
     private let steamClientCompatibilityProfile: SteamClientCompatibilityProfile
+    private let steamClientLanguageOwnershipPolicy:
+        SteamClientLanguageOwnershipPolicy
     private let steamClientCompatibilityVerifier: SteamClientCompatibilityVerifier
     private let libraryDriveMapper: SteamLibraryDriveMapper
     private let libraryScanner: SteamLibraryScanner
@@ -122,13 +612,47 @@ final class SteamManager {
     private let processEvidencePollInterval: TimeInterval
     private let renderingObservationTimeout: TimeInterval
     private let renderingObservationPollInterval: TimeInterval
-    private let bootstrapCompletionTimeout: TimeInterval
-    private let bootstrapCompletionPollInterval: TimeInterval
+    private let bootstrapProgressIdleTimeout: TimeInterval
     private let steamUIStartupObservationTimeout: TimeInterval
     private let steamUIStartupObservationPollInterval: TimeInterval
+    private let compatibilityPrefixExitWaiter: CompatibilityPrefixExitWaiter
+    private let detachedHandoffManagedWineReadbackProvider:
+        DetachedHandoffManagedWineReadbackProvider
+    private let managedWineLaunchProcessIdentityProvider:
+        ManagedWineLaunchProcessIdentityProvider
+    private let managedWineJournalProcessSnapshotProvider:
+        ManagedWineJournalProcessSnapshotProvider
+    private let gameInputProtectionDriverFactory:
+        GameInputProtectionDriverFactory
+    private let gameInputProtectionPolicyStore: GameInputProtectionPolicyStore
+    private let gameModeHostLaunchAdmission: GameModeHostLaunchAdmission
+    private let steamClientServicePreparationOverride:
+        SteamClientServicePreparer?
     private var gameLaunchDiagnosticMonitorTask: Task<Void, Never>?
     private var gameLaunchDiagnosticMonitorKey: GameLaunchDiagnosticMonitorKey?
     private var monitoredGameLaunchDiagnostic: SteamGameLaunchDiagnostic?
+    private var steamLanguageUserControlMonitorTask: Task<Void, Never>?
+    private var steamLanguageUserControlMonitorToken: UUID?
+    private var activeInputCompatibilitySessions:
+        [String: SteamInputCompatibilitySession] = [:]
+    private var activeControllerCompatibilitySessions:
+        [String: SteamControllerCompatibilitySession] = [:]
+    private var activeNVIDIARendererSessions:
+        [String: ActiveNVIDIARendererSession] = [:]
+    private var activeCompatibilityRestorationPrefixLeases:
+        [String: SteamCompatibilityRestorationPrefixLease] = [:]
+    private var inputCompatibilityTerminationMonitors:
+        [String: CompatibilityRestorationMonitor] = [:]
+    private var gameInputProtectionTerminalContainmentTasks:
+        [String: Task<Void, Never>] = [:]
+    private var gameInputProtectionContainmentClaims =
+        GameInputProtectionContainmentClaimRegistry()
+    private var gameInputProtectionLifecycleEventHandler:
+        GameInputProtectionLifecycleEventHandler?
+    private var compatibilityRestorationClaims = Set<String>()
+    private var compatibilitySessionRestorationFailures:
+        [String: String] = [:]
+    private var isApplicationTerminationContainmentDrainActive = false
 
     init(
         pathManager: PathManager,
@@ -139,11 +663,26 @@ final class SteamManager {
         processEvidencePollInterval: TimeInterval = SteamManager.steamProcessEvidencePollInterval,
         renderingObservationTimeout: TimeInterval = SteamManager.steamRenderingObservationTimeout,
         renderingObservationPollInterval: TimeInterval = SteamManager.steamRenderingObservationPollInterval,
-        bootstrapCompletionTimeout: TimeInterval = SteamManager.steamBootstrapCompletionTimeout,
-        bootstrapCompletionPollInterval: TimeInterval = SteamManager.steamBootstrapCompletionPollInterval,
+        bootstrapProgressIdleTimeout: TimeInterval = SteamManager.steamBootstrapProgressIdleTimeout,
         steamUIStartupObservationTimeout: TimeInterval = SteamManager.steamUIStartupObservationTimeout,
         steamUIStartupObservationPollInterval: TimeInterval = SteamManager.steamUIStartupObservationPollInterval,
-        screenEvidenceProvider: ((ProcessRunResult) -> SteamLaunchScreenEvidence)? = nil
+        compatibilityPrefixExitWaiter: CompatibilityPrefixExitWaiter? = nil,
+        detachedHandoffManagedWineReadbackProvider:
+            DetachedHandoffManagedWineReadbackProvider? = nil,
+        managedWineLaunchProcessIdentityProvider:
+            ManagedWineLaunchProcessIdentityProvider? = nil,
+        managedWineJournalProcessSnapshotProvider:
+            ManagedWineJournalProcessSnapshotProvider? = nil,
+        gameInputProtectionDriverFactory:
+            GameInputProtectionDriverFactory? = nil,
+        screenEvidenceProvider: ((ProcessRunResult) -> SteamLaunchScreenEvidence)? = nil,
+        gameInputProtectionPolicyStore: GameInputProtectionPolicyStore =
+            GameInputProtectionPolicyStore(),
+        steamClientServicePreparer: SteamClientServicePreparer? = nil,
+        gameModeHostLaunchAdmission: @escaping GameModeHostLaunchAdmission = {
+            _ = try GameModeHostCapabilityInspector()
+                .inspectBundledHostForSteamLaunchAdmission()
+        }
     ) {
         self.pathManager = pathManager
         self.runner = runner
@@ -153,11 +692,45 @@ final class SteamManager {
         self.processEvidencePollInterval = max(processEvidencePollInterval, 0.1)
         self.renderingObservationTimeout = max(renderingObservationTimeout, 0)
         self.renderingObservationPollInterval = max(renderingObservationPollInterval, 0.1)
-        self.bootstrapCompletionTimeout = max(bootstrapCompletionTimeout, 0)
-        self.bootstrapCompletionPollInterval = max(bootstrapCompletionPollInterval, 0.1)
+        self.bootstrapProgressIdleTimeout = max(bootstrapProgressIdleTimeout, 0)
         self.steamUIStartupObservationTimeout = max(steamUIStartupObservationTimeout, 0)
         self.steamUIStartupObservationPollInterval = max(steamUIStartupObservationPollInterval, 0.1)
+        self.compatibilityPrefixExitWaiter =
+            compatibilityPrefixExitWaiter ?? { prefix, timeout, pollInterval in
+                try await runner.waitForManagedPrefixProcessesToExit(
+                    prefix,
+                    timeout: timeout,
+                    pollInterval: pollInterval
+                )
+            }
+        self.detachedHandoffManagedWineReadbackProvider =
+            detachedHandoffManagedWineReadbackProvider ?? { prefix in
+                try await runner.detachedHandoffManagedWineReadback(
+                    for: prefix
+                )
+            }
+        self.managedWineLaunchProcessIdentityProvider =
+            managedWineLaunchProcessIdentityProvider ?? { prefix, runIdentifier in
+                try await runner.verifiedManagedWineProcessIdentities(
+                    under: prefix,
+                    runIdentifier: runIdentifier
+                )
+            }
+        self.managedWineJournalProcessSnapshotProvider =
+            managedWineJournalProcessSnapshotProvider ?? { identities in
+                SteamLaunchProcessSnapshot.currentManagedWineJournalProcesses(
+                    identities
+                )
+            }
+        self.gameInputProtectionDriverFactory =
+            gameInputProtectionDriverFactory ?? {
+                GameInputProtectionController()
+            }
         self.screenEvidenceProvider = screenEvidenceProvider
+        self.gameInputProtectionPolicyStore = gameInputProtectionPolicyStore
+        self.steamClientServicePreparationOverride =
+            steamClientServicePreparer
+        self.gameModeHostLaunchAdmission = gameModeHostLaunchAdmission
         self.rendererPolicyManager = SteamRendererPolicyManager(fileManager: fileManager)
         self.windowsFontCompatibilityProfile = WindowsFontCompatibilityProfile(
             runner: runner,
@@ -167,6 +740,11 @@ final class SteamManager {
             runner: runner,
             fileManager: fileManager
         )
+        self.steamClientLanguageOwnershipPolicy =
+            SteamClientLanguageOwnershipPolicy(
+                runner: runner,
+                fileManager: fileManager
+            )
         self.steamClientCompatibilityVerifier = SteamClientCompatibilityVerifier(fileManager: fileManager)
         self.libraryDriveMapper = SteamLibraryDriveMapper(fileManager: fileManager)
         self.libraryScanner = SteamLibraryScanner(fileManager: fileManager)
@@ -176,6 +754,63 @@ final class SteamManager {
 
     deinit {
         gameLaunchDiagnosticMonitorTask?.cancel()
+        steamLanguageUserControlMonitorTask?.cancel()
+        for monitor in inputCompatibilityTerminationMonitors.values {
+            monitor.task.cancel()
+        }
+        for containment in gameInputProtectionTerminalContainmentTasks.values {
+            containment.cancel()
+        }
+    }
+
+    func setGameInputProtectionLifecycleEventHandler(
+        _ handler: GameInputProtectionLifecycleEventHandler?
+    ) {
+        gameInputProtectionLifecycleEventHandler = handler
+    }
+
+    /// Stops admission synchronously before the termination coordinator waits
+    /// on any other owner. Existing workers are cancelled but remain the owner
+    /// of their claim cleanup until the bounded drain observes both registries
+    /// empty.
+    func beginApplicationTerminationInputContainmentDrain() {
+        isApplicationTerminationContainmentDrainActive = true
+        for task in gameInputProtectionTerminalContainmentTasks.values {
+            task.cancel()
+        }
+    }
+
+    /// A task can be inside a synchronous runner boundary when termination is
+    /// requested. Do not await `task.value` without a bound: the runner and
+    /// lifecycle cancellation owners make progress independently, while this
+    /// method observes the authoritative task/claim postcondition.
+    func waitForApplicationTerminationInputContainmentDrain(
+        timeout: TimeInterval = 10
+    ) async -> Bool {
+        let deadline = Date().addingTimeInterval(max(timeout, 0))
+        while !gameInputProtectionTerminalContainmentTasks.isEmpty ||
+                !gameInputProtectionContainmentClaims.isEmpty {
+            for task in gameInputProtectionTerminalContainmentTasks.values {
+                task.cancel()
+            }
+            guard Date() < deadline else { return false }
+            do {
+                try await Task.sleep(for: .milliseconds(50))
+            } catch {
+                return false
+            }
+        }
+        return true
+    }
+
+    var canCancelApplicationTerminationContainmentDrain: Bool {
+        gameInputProtectionTerminalContainmentTasks.isEmpty &&
+            gameInputProtectionContainmentClaims.isEmpty
+    }
+
+    func cancelApplicationTerminationContainmentDrain() {
+        guard canCancelApplicationTerminationContainmentDrain else { return }
+        isApplicationTerminationContainmentDrainActive = false
     }
 
     func validateSteamInstaller(_ url: URL) -> Bool {
@@ -217,6 +852,7 @@ final class SteamManager {
     /// Windows Steam session. The UI may observe its cached result, but evidence
     /// generation continues even when the Steam page is not visible.
     func ensureGameLaunchDiagnosticMonitoring(
+        managedPrefix: URL,
         in steamDirectory: URL,
         processObservationLog: URL,
         launchStdoutLog: URL? = nil,
@@ -239,7 +875,13 @@ final class SteamManager {
         gameLaunchDiagnosticMonitorKey = key
         monitoredGameLaunchDiagnostic = nil
         let reporter = steamLaunchDiagnosticsReporter
+        let prefixExitWaiter = compatibilityPrefixExitWaiter
         gameLaunchDiagnosticMonitorTask = Task { [weak self, reporter] in
+            defer {
+                if self?.gameLaunchDiagnosticMonitorKey == key {
+                    self?.gameLaunchDiagnosticMonitorTask = nil
+                }
+            }
             while !Task.isCancelled {
                 guard self?.gameLaunchDiagnosticMonitorKey == key else { return }
                 let diagnostic = await Task.detached(priority: .utility) {
@@ -256,6 +898,17 @@ final class SteamManager {
                     diagnostic,
                     monitorKey: key
                 ) else { return }
+                // A missing terminal log record must not leave a service-owned
+                // polling task alive after every managed Wine/Steam process
+                // has gone. The process journal is the lifecycle authority;
+                // diagnostics remain observational.
+                if (try? await prefixExitWaiter(
+                    managedPrefix,
+                    0,
+                    0.1
+                )) == true {
+                    return
+                }
                 do {
                     try await Task.sleep(for: .seconds(pollInterval))
                 } catch {
@@ -386,7 +1039,7 @@ final class SteamManager {
         case .running, .runningHeadless:
             15
         case .earlyExit, .exitedWithError, .exited, .rendererError:
-            60
+            nil
         case nil:
             15
         }
@@ -412,12 +1065,28 @@ final class SteamManager {
         return monitoredGameLaunchDiagnostic
     }
 
-    func installSteam(runtimeExecutable: URL, installer: URL) async throws -> SteamInstallResult {
+    func installSteam(
+        runtimeExecutable: URL,
+        installer: URL,
+        language: SteamClientLanguage
+    ) async throws -> SteamInstallResult {
         try requireSteamInstaller(installer)
         let prefix = try steamPrefixURL(for: runtimeExecutable)
         let logDirectory = try pathManager.url(for: .installLogs)
         let steamExecutable = steamExecutableURL(in: prefix)
         let executableFingerprintBefore = steamExecutableFingerprint(steamExecutable)
+        // A failed installer may have created steam.exe before the transaction
+        // completed. Let the ownership policy distinguish that exact pending
+        // retry from an unowned installation or one where Steam has already
+        // exposed a usable login/desktop surface and owns its language.
+        let didClaimSteamLanguageOwnership =
+            try await steamClientLanguageOwnershipPolicy
+                .claimFreshInstallation(
+                    runtimeExecutable: runtimeExecutable,
+                    prefix: prefix,
+                    logDirectory: logDirectory,
+                    language: language
+                ) != nil
         let processResult = try await runner.run(.installSteam(
             runtimeExecutable: runtimeExecutable,
             prefix: prefix,
@@ -425,12 +1094,27 @@ final class SteamManager {
             logDirectory: logDirectory
         ))
         let executableFingerprintAfter = steamExecutableFingerprint(steamExecutable)
+        let clientServiceInspection = SteamClientServiceContract.inspect(
+            prefix: prefix,
+            fileManager: fileManager
+        )
+        let observedSteamLanguage = try steamClientLanguageOwnershipPolicy
+            .observedRegistryLanguageToken(in: prefix)
+        let hasVerifiedSteamLanguageProjection =
+            didClaimSteamLanguageOwnership &&
+            observedSteamLanguage?
+                .caseInsensitiveCompare(language.rawValue) == .orderedSame
         return SteamInstallResult(
             processResult: processResult,
             steamExecutableURL: steamExecutable,
             hasSteamExecutable: executableFingerprintAfter != nil,
             hadSteamExecutableBeforeInstall: executableFingerprintBefore != nil,
-            didObserveSteamExecutableMutation: executableFingerprintBefore != executableFingerprintAfter
+            didObserveSteamExecutableMutation: executableFingerprintBefore != executableFingerprintAfter,
+            requestedSteamLanguage: language,
+            didClaimSteamLanguageOwnership: didClaimSteamLanguageOwnership,
+            hasVerifiedSteamLanguageProjection:
+                hasVerifiedSteamLanguageProjection,
+            hasVerifiedSteamClientService: clientServiceInspection.isReady
         )
     }
 
@@ -442,13 +1126,45 @@ final class SteamManager {
         return SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
 
+    func hasVerifiedSteamClientLanguageProjection(
+        runtimeExecutable: URL,
+        language: SteamClientLanguage
+    ) throws -> Bool {
+        let prefix = try steamPrefixURL(for: runtimeExecutable)
+        guard try steamClientLanguageOwnershipPolicy
+            .hasOwnershipMarker(in: prefix) else {
+            return false
+        }
+        return try steamClientLanguageOwnershipPolicy
+            .observedRegistryLanguageToken(in: prefix)?
+            .caseInsensitiveCompare(language.rawValue) == .orderedSame
+    }
+
     func prepareInstalledSteamForFirstLaunch(
         runtimeExecutable: URL,
+        language: SteamClientLanguage?,
         videoMemorySizeMB: Int = SteamClientCompatibilityProfileContract.recommendedVideoMemorySizeMB
-    ) async throws {
+    ) async throws -> Bool {
         let prefix = try steamPrefixURL(for: runtimeExecutable)
         let logDirectory = try pathManager.url(for: .installLogs)
         _ = try await prefixProcessSupervisor.shutdownBeforeLaunch(
+            runtimeExecutable: runtimeExecutable,
+            prefix: prefix,
+            logDirectory: logDirectory
+        )
+        let languageLease: SteamClientLanguageOwnershipLease?
+        if let language {
+            languageLease = try await steamClientLanguageOwnershipPolicy
+                .resumeFreshInstallation(
+                    runtimeExecutable: runtimeExecutable,
+                    prefix: prefix,
+                    logDirectory: logDirectory,
+                    language: language
+                )
+        } else {
+            languageLease = nil
+        }
+        try await prepareSteamClientServiceForLaunch(
             runtimeExecutable: runtimeExecutable,
             prefix: prefix,
             logDirectory: logDirectory
@@ -458,33 +1174,209 @@ final class SteamManager {
             prefix: prefix,
             videoMemorySizeMB: videoMemorySizeMB
         )
-        try restoreSteamRendererBridgeModules(
+        try await restoreSteamRendererBridgeModules(
             prefix: prefix,
-            runtimeExecutable: runtimeExecutable
+            runtimeExecutable: runtimeExecutable,
+            logDirectory: logDirectory
+        )
+        if let languageLease {
+            _ = try await steamClientLanguageOwnershipPolicy.reaffirm(
+                languageLease,
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix,
+                logDirectory: logDirectory
+            )
+        }
+        _ = try await reconcileWindowsFontCompatibilityProfile(
+            runtimeExecutable: runtimeExecutable,
+            prefix: prefix
         )
         _ = try await prefixProcessSupervisor.shutdownBeforeLaunch(
             runtimeExecutable: runtimeExecutable,
             prefix: prefix,
             logDirectory: logDirectory
         )
+        return true
+    }
+
+    func prepareSteamClientServiceForLaunch(
+        runtimeExecutable: URL,
+        prefix: URL,
+        logDirectory: URL
+    ) async throws {
+        if let steamClientServicePreparationOverride {
+            try await steamClientServicePreparationOverride(
+                runtimeExecutable,
+                prefix,
+                logDirectory
+            )
+            return
+        }
+
+        let initialInspection = SteamClientServiceContract.inspect(
+            prefix: prefix,
+            fileManager: fileManager
+        )
+        guard !initialInspection.isReady else { return }
+
+        let sourceExecutable = SteamClientServiceContract.sourceExecutable(
+            in: prefix
+        )
+        guard FileSystemItemPolicy.isRegularNonSymlinkFile(
+            sourceExecutable,
+            fileManager: fileManager
+        ) else {
+            throw SteamLaunchError.steamClientCompatibilityFileInstallFailed(
+                sourceExecutable,
+                initialInspection.failureDetail
+            )
+        }
+        let serviceControlExecutable =
+            SteamClientServiceContract.serviceControlExecutable(in: prefix)
+        guard FileSystemItemPolicy.isRegularNonSymlinkFile(
+            serviceControlExecutable,
+            fileManager: fileManager
+        ) else {
+            throw SteamLaunchError.steamClientCompatibilityFileInstallFailed(
+                serviceControlExecutable,
+                "Windows service control executable is missing"
+            )
+        }
+
+        let installResult = try await runner.run(.maintainSteamClientService(
+            runtimeExecutable: runtimeExecutable,
+            prefix: prefix,
+            operation: .install,
+            logDirectory: logDirectory
+        ))
+        guard installResult.succeeded else {
+            throw SteamLaunchError.steamClientCompatibilitySetupFailed(
+                installResult
+            )
+        }
+        let queryResult = try await runner.run(.maintainSteamClientService(
+            runtimeExecutable: runtimeExecutable,
+            prefix: prefix,
+            operation: .query,
+            logDirectory: logDirectory
+        ))
+        guard queryResult.succeeded else {
+            throw SteamLaunchError.steamClientCompatibilitySetupFailed(
+                queryResult
+            )
+        }
+        let flushResult = try await runner.run(.waitForWinePrefix(
+            runtimeExecutable: runtimeExecutable,
+            prefix: prefix,
+            logDirectory: logDirectory
+        ))
+        guard flushResult.succeeded else {
+            throw SteamLaunchError.steamClientCompatibilitySetupFailed(
+                flushResult
+            )
+        }
+
+        let finalInspection = SteamClientServiceContract.inspect(
+            prefix: prefix,
+            fileManager: fileManager
+        )
+        guard finalInspection.isReady else {
+            throw SteamLaunchError.steamClientCompatibilityVerificationFailed(
+                finalInspection.failureDetail
+            )
+        }
+    }
+
+    /// Direct-call boundary that owns the prefix lease for the entire launch
+    /// transaction. Higher-level orchestrators can use the overload below to
+    /// extend the same lease across their own preparation work.
+    func launchSteam(
+        runtimeExecutable: URL,
+        verificationMode: SteamLaunchVerificationMode,
+        steamClientLanguage: SteamClientLanguage? = nil,
+        rendererPolicy requestedRendererPolicy: SteamRendererPolicyPreference? = nil,
+        runtimeCapability: WindowsRuntimeCapability? = nil,
+        compatibilitySelection requestedCompatibilitySelection:
+            SteamPrelaunchCompatibilitySelection? = nil,
+        gameModePolicy: SteamGameModeLaunchPolicy = .standard,
+        videoMemorySizeMB: Int = SteamClientCompatibilityProfileContract.recommendedVideoMemorySizeMB,
+        steamArguments: [String]? = nil,
+        libraryRoots: [URL] = [],
+        reservedLibraryRoots: [URL] = []
+    ) async throws -> ProcessRunResult {
+        // The direct boundary checks before acquiring a prefix lease because
+        // lease preparation itself creates coordination state.
+        try requireGameModeHostLaunchAdmission(for: gameModePolicy)
+        let prefix = try steamPrefixURL(for: runtimeExecutable)
+        let prefixExecutionLease = try PrefixExecutionLease
+            .acquireExclusiveMutation(
+                forPrefix: prefix,
+                fileManager: fileManager
+            )
+        let restorationLease = SteamCompatibilityRestorationPrefixLease(
+            prepareForMutation: {
+                try prefixExecutionLease.transitionToExclusiveMutation()
+            },
+            release: {
+                prefixExecutionLease.release()
+            }
+        )
+        defer {
+            if !restorationLease.isTransferred {
+                restorationLease.release()
+            }
+        }
+        return try await launchSteam(
+            runtimeExecutable: runtimeExecutable,
+            verificationMode: verificationMode,
+            steamClientLanguage: steamClientLanguage,
+            rendererPolicy: requestedRendererPolicy,
+            runtimeCapability: runtimeCapability,
+            compatibilitySelection: requestedCompatibilitySelection,
+            gameModePolicy: gameModePolicy,
+            videoMemorySizeMB: videoMemorySizeMB,
+            steamArguments: steamArguments,
+            libraryRoots: libraryRoots,
+            reservedLibraryRoots: reservedLibraryRoots,
+            prefixExecutionLeaseTransition: SteamPrefixExecutionLeaseTransition(
+                prepareForMutation: {
+                    try prefixExecutionLease.transitionToExclusiveMutation()
+                },
+                prepareForExecution: {
+                    try prefixExecutionLease.transitionToSharedExecution()
+                },
+                restorationLease: restorationLease
+            )
+        )
     }
 
     func launchSteam(
         runtimeExecutable: URL,
         verificationMode: SteamLaunchVerificationMode,
+        steamClientLanguage: SteamClientLanguage? = nil,
         rendererPolicy requestedRendererPolicy: SteamRendererPolicyPreference? = nil,
+        runtimeCapability: WindowsRuntimeCapability? = nil,
+        compatibilitySelection requestedCompatibilitySelection:
+            SteamPrelaunchCompatibilitySelection? = nil,
         gameModePolicy: SteamGameModeLaunchPolicy = .standard,
         videoMemorySizeMB: Int = SteamClientCompatibilityProfileContract.recommendedVideoMemorySizeMB,
         steamArguments: [String]? = nil,
         libraryRoots: [URL] = [],
         reservedLibraryRoots: [URL] = [],
-        prefixExecutionLeaseTransition: SteamPrefixExecutionLeaseTransition? = nil
+        prefixExecutionLeaseTransition: SteamPrefixExecutionLeaseTransition
     ) async throws -> ProcessRunResult {
+        // Recheck at the lease-aware boundary. Besides covering orchestrators
+        // that already own a lease, this closes the host-artifact TOCTOU window
+        // before any compatibility profile or renderer staging begins.
+        try requireGameModeHostLaunchAdmission(for: gameModePolicy)
         do {
             let result = try await launchSteamUnfinalized(
                 runtimeExecutable: runtimeExecutable,
                 verificationMode: verificationMode,
+                steamClientLanguage: steamClientLanguage,
                 rendererPolicy: requestedRendererPolicy,
+                runtimeCapability: runtimeCapability,
+                compatibilitySelection: requestedCompatibilitySelection,
                 gameModePolicy: gameModePolicy,
                 videoMemorySizeMB: videoMemorySizeMB,
                 steamArguments: steamArguments,
@@ -511,10 +1403,108 @@ final class SteamManager {
                 to: &primaryResult
             )
             primaryResult = await runner.finalizeProcessEvidence(primaryResult)
-            let underlyingError = (error as? ProcessExecutionEvidenceError)?.underlyingError ?? error
+            let underlyingError = Self.processDiagnosticUnderlyingError(
+                from: error
+            )
             throw ProcessExecutionEvidenceError(
                 underlyingError: underlyingError,
                 result: primaryResult
+            )
+        }
+    }
+
+    private func requireGameModeHostLaunchAdmission(
+        for policy: SteamGameModeLaunchPolicy
+    ) throws {
+        guard policy == .experimentalRequiredHost else { return }
+        try gameModeHostLaunchAdmission()
+    }
+
+    /// Runs a user-selected Windows maintenance utility in the existing
+    /// SteamShared prefix. An explicitly selected renderer is validated and
+    /// composed at the direct execution boundary; Steam network, audio-input,
+    /// controller, compatibility-profile, and Game Mode policies remain out
+    /// of scope.
+    func launchWindowsUtility(
+        runtimeExecutable: URL,
+        prefix: URL,
+        executable: URL,
+        arguments: [String] = [],
+        rendererPolicy requestedRendererPolicy:
+            SteamRendererPolicyPreference? = nil,
+        runtimeCapability suppliedRuntimeCapability:
+            WindowsRuntimeCapability? = nil,
+        externalStorageRoots: [URL] = []
+    ) async throws -> ProcessRunResult {
+        let logDirectory = try pathManager.url(for: .launchLogs)
+        let resolvedRendererPolicy: SteamRendererPolicyPreference?
+        let rendererReceipt: SteamRendererRouteApplicationReceipt?
+        if let requestedRendererPolicy {
+            guard let capability = suppliedRuntimeCapability else {
+                throw SteamLaunchError.rendererPolicyUnavailable(
+                    "직접 실행 과정에서 검증된 Runtime 기능 정보가 전달되지 않았습니다."
+                )
+            }
+            let resolved = try rendererPolicyManager.resolvedPolicy(
+                requestedRendererPolicy,
+                capability: capability
+            )
+            let selection = SteamRendererPolicyManager.selection(for: resolved)
+            let videoMemorySizeMB =
+                SteamClientCompatibilityProfileContract
+                    .recommendedVideoMemorySizeMB
+            let inspection = rendererPolicyManager.inspect(
+                prefix: prefix,
+                runtimeExecutable: runtimeExecutable,
+                runtimeCapability: capability,
+                selection: selection,
+                videoMemorySizeMB: videoMemorySizeMB
+            )
+            guard inspection.status == .ok else {
+                throw SteamLaunchError.rendererPolicyVerificationFailed(
+                    inspection.userMessage
+                )
+            }
+            resolvedRendererPolicy = resolved
+            rendererReceipt = try rendererPolicyManager.applicationReceipt(
+                prefix: prefix,
+                runtimeExecutable: runtimeExecutable,
+                runtimeCapability: capability,
+                selection: selection,
+                videoMemorySizeMB: videoMemorySizeMB
+            )
+        } else {
+            resolvedRendererPolicy = nil
+            rendererReceipt = nil
+        }
+        do {
+            var result = try await runner.run(.launchWindowsUtility(
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix,
+                executable: executable,
+                arguments: arguments,
+                graphicsBackend: resolvedRendererPolicy,
+                logDirectory: logDirectory,
+                externalStorageRoots: externalStorageRoots
+            ))
+            result.rendererRouteApplicationReceipt = rendererReceipt
+            return await runner.finalizeProcessEvidence(result)
+        } catch {
+            guard let evidenceResult = diagnosticProcessRunResult(from: error) else {
+                throw error
+            }
+            var rendererEvidenceResult = evidenceResult
+            rendererEvidenceResult.rendererRouteApplicationReceipt =
+                rendererReceipt
+            let finalizedResult = await runner.finalizeProcessEvidence(
+                rendererEvidenceResult
+            )
+            let underlyingError =
+                (error as? ProcessExecutionEvidenceError)?.underlyingError ??
+                error
+            throw ProcessExecutionEvidenceError(
+                underlyingError: underlyingError,
+                result: finalizedResult
             )
         }
     }
@@ -531,6 +1521,7 @@ final class SteamManager {
             )
         }
         ensureGameLaunchDiagnosticMonitoring(
+            managedPrefix: prefix,
             in: steamDirectory,
             processObservationLog: processObservationLog,
             launchStdoutLog: result.stdoutLog,
@@ -540,25 +1531,240 @@ final class SteamManager {
         )
     }
 
+    /// Keeps a fresh-install language claim pending until this launch produces
+    /// a fresh, non-zero login or desktop surface and the same launch's process
+    /// journal proves that WebHelper consumed the expected ICU locale.
+    /// Installer, updater, process liveness, message-loop, `BrowserReady`, and
+    /// registry state alone are intentionally excluded. Missing process
+    /// evidence keeps the claim pending until evidence appears, prefix exit, or
+    /// cancellation instead of turning observation failure into ownership.
+    private func monitorSteamLanguageOwnershipUntilUserControlAvailable(
+        _ lease: SteamClientLanguageOwnershipLease,
+        prefix: URL,
+        steamDirectory: URL,
+        logCursor: SteamWebHelperStartupLogCursor,
+        processObservationLog: URL?,
+        result: ProcessRunResult,
+        launchTarget: SteamLaunchTarget,
+        initialObservation: SteamWebHelperStartupObservation? = nil
+    ) {
+        cancelSteamLanguageUserControlMonitor()
+        let token = UUID()
+        steamLanguageUserControlMonitorToken = token
+        let reporter = steamLaunchDiagnosticsReporter
+        let policy = steamClientLanguageOwnershipPolicy
+        let prefixExitWaiter = compatibilityPrefixExitWaiter
+        let fileManager = fileManager
+        let pollInterval = max(steamUIStartupObservationPollInterval, 0.25)
+        let provisionalSurfaceStabilizationInterval =
+            Self.steamUIProvisionalSurfaceStabilizationInterval
+        steamLanguageUserControlMonitorTask = Task { [weak self] in
+            var didLogReadinessTransferFailure = false
+            var nextPrefixExitObservation = Date()
+            var nextLanguageReadbackObservation = Date.distantPast
+            var consecutivePrefixExitObservations = 0
+            var pendingInitialObservation = initialObservation
+            var rendererStabilization =
+                SteamWebHelperRendererStabilizationTracker()
+            var languageReadback = SteamWebHelperLanguageReadback(
+                state: .pending,
+                observedLocaleIdentifiers: []
+            )
+            defer {
+                if self?.steamLanguageUserControlMonitorToken == token {
+                    self?.steamLanguageUserControlMonitorTask = nil
+                    self?.steamLanguageUserControlMonitorToken = nil
+                }
+            }
+            while !Task.isCancelled {
+                var observation: SteamWebHelperStartupObservation
+                if let initialObservation = pendingInitialObservation {
+                    observation = initialObservation
+                    pendingInitialObservation = nil
+                } else {
+                    observation = await Task.detached(priority: .utility) {
+                        reporter.detectSteamWebHelperStartup(
+                            in: steamDirectory,
+                            since: logCursor
+                        )
+                    }.value
+                }
+                let now = Date()
+                if now >= nextLanguageReadbackObservation {
+                    let observationRead = SteamProcessCreationObservationLog.read(
+                        at: processObservationLog,
+                        fileManager: fileManager
+                    )
+                    let sameRunSnapshot = SteamLaunchProcessSnapshot(
+                        processes: observationRead.processes,
+                        processObservationReadState: observationRead.state,
+                        processObservationReadIssues: observationRead.issues
+                    )
+                    languageReadback = sameRunSnapshot
+                        .webHelperLanguageReadback(
+                            for: launchTarget,
+                            expected: lease.language
+                        )
+                    nextLanguageReadbackObservation =
+                        now.addingTimeInterval(1)
+                }
+                if observation.state == .provisionalSurface {
+                    let currentSnapshot = await self?
+                        .verifiedCurrentLaunchProcessSnapshot(
+                            result: result,
+                            prefix: prefix,
+                            target: launchTarget
+                        )
+                    let processBoundObservation = currentSnapshot.flatMap {
+                        Self.processBoundRendererObservation(
+                            observation,
+                            snapshot: $0,
+                            launchTarget: launchTarget
+                        )
+                    }
+                    if let processBoundObservation,
+                       rendererStabilization.observePositiveRenderer(
+                            in: processBoundObservation,
+                            at: now,
+                            requiredInterval:
+                                provisionalSurfaceStabilizationInterval
+                       ) {
+                        observation.state = .ready
+                        observation.usableUIReadiness =
+                            observation.provisionalSurfaceReadiness
+                    } else if processBoundObservation == nil {
+                        rendererStabilization.reset()
+                    }
+                } else if observation.state != .ready {
+                    rendererStabilization.reset()
+                }
+                if let readiness = SteamClientLanguageUserControlReadiness(
+                    observation: observation,
+                    language: lease.language,
+                    webHelperLanguageReadback: languageReadback
+                ) {
+                    do {
+                        try policy.markSteamUserControlAvailable(
+                            lease,
+                            readiness: readiness,
+                            in: prefix
+                        )
+                        return
+                    } catch {
+                        if !didLogReadinessTransferFailure {
+                            NSLog(
+                                "ForgePlay could not transfer Steam language ownership after verified Steam UI readiness: %@",
+                                forgePlayTechnicalErrorSummary(error)
+                            )
+                            didLogReadinessTransferFailure = true
+                        }
+                    }
+                }
+                do {
+                    if Date() >= nextPrefixExitObservation {
+                        if try await prefixExitWaiter(prefix, 0, 0.1) {
+                            consecutivePrefixExitObservations += 1
+                            if consecutivePrefixExitObservations >= 2 {
+                                return
+                            }
+                        } else {
+                            consecutivePrefixExitObservations = 0
+                        }
+                        nextPrefixExitObservation = Date().addingTimeInterval(1)
+                    }
+                    try await Task.sleep(for: .seconds(pollInterval))
+                } catch {
+                    return
+                }
+            }
+        }
+    }
+
+    private func cancelSteamLanguageUserControlMonitor() {
+        steamLanguageUserControlMonitorTask?.cancel()
+        steamLanguageUserControlMonitorTask = nil
+        steamLanguageUserControlMonitorToken = nil
+    }
+
     private func launchSteamUnfinalized(
         runtimeExecutable: URL,
         verificationMode: SteamLaunchVerificationMode,
+        steamClientLanguage: SteamClientLanguage? = nil,
         rendererPolicy requestedRendererPolicy: SteamRendererPolicyPreference? = nil,
+        runtimeCapability suppliedRuntimeCapability: WindowsRuntimeCapability? = nil,
+        compatibilitySelection requestedCompatibilitySelection:
+            SteamPrelaunchCompatibilitySelection? = nil,
         gameModePolicy: SteamGameModeLaunchPolicy = .standard,
         videoMemorySizeMB: Int = SteamClientCompatibilityProfileContract.recommendedVideoMemorySizeMB,
         steamArguments: [String]? = nil,
         libraryRoots: [URL] = [],
         reservedLibraryRoots: [URL] = [],
-        prefixExecutionLeaseTransition: SteamPrefixExecutionLeaseTransition? = nil
+        prefixExecutionLeaseTransition: SteamPrefixExecutionLeaseTransition
     ) async throws -> ProcessRunResult {
         let prefix = try steamPrefixURL(for: runtimeExecutable)
-        let capability = WindowsRuntimeService.inspectRuntimeCapability(
-            for: runtimeExecutable,
-            supplementalRendererRoot: ForgePlaySupplementalRendererPolicy.rendererRoot(containingPrefix: prefix),
+        let prefixKey = prefix.standardizedFileURL.path
+        try await GameInputProtectionContainmentAdmissionWaiter.wait(
+            whileActive: { [weak self] in
+                self?.gameInputProtectionContainmentClaims.hasClaim(
+                    prefixKey: prefixKey
+                ) == true
+            }
+        )
+        let logDirectory = try pathManager.url(for: .launchLogs)
+        let capability = suppliedRuntimeCapability ??
+            WindowsRuntimeService.inspectRuntimeCapability(
+                for: runtimeExecutable,
+                supplementalRendererRoot: ForgePlaySupplementalRendererPolicy
+                    .rendererRoot(containingPrefix: prefix),
+                fileManager: fileManager
+            )
+        let steamCompatibility = steamClientCompatibilityVerifier.verify(capability: capability)
+        let steamRendererPolicy = try rendererPolicyManager.resolvedPolicy(
+            requestedRendererPolicy,
+            capability: capability
+        )
+        let launchCompatibilitySelection =
+            requestedCompatibilitySelection ??
+            SteamPrelaunchCompatibilitySelection(
+                rendererSelection: SteamRendererPolicyManager.selection(
+                    for: steamRendererPolicy
+                ),
+                networkSelection: .standard,
+                audioInputSelection: .enabled,
+                keyboardMapping: .systemDefault
+            )
+        guard launchCompatibilitySelection.rendererPreference ==
+                steamRendererPolicy else {
+            throw SteamLaunchError.rendererPolicyUnavailable(
+                "선택한 그래픽 백엔드와 Steam 실행 호환성 설정이 일치하지 않습니다."
+            )
+        }
+        let rendererSelection =
+            launchCompatibilitySelection.rendererSelection
+        // Admission precedes process snapshots and the conformance preflight,
+        // which may execute an isolated Wine smoke prefix. Unsupported input
+        // requests therefore cannot cause even temporary preflight effects.
+        let inputCompatibilitySession = try SteamInputCompatibilitySession(
+            cursorPolicy: launchCompatibilitySelection.fpsCursorPolicy,
+            keyboardMapping: launchCompatibilitySelection.keyboardMapping,
+            gameInputProtectionPolicy:
+                gameInputProtectionPolicyStore.snapshot(),
+            gameInputProtection: gameInputProtectionDriverFactory(),
+            terminalFailureHandler: { [weak self] session, failure in
+                self?.scheduleGameInputProtectionTerminalContainment(
+                    session: session,
+                    failure: failure,
+                    runtimeExecutable: runtimeExecutable,
+                    prefix: prefix,
+                    logDirectory: logDirectory
+                )
+            }
+        )
+        let controllerCompatibilitySession = try SteamControllerCompatibilitySession(
+            runtimeExecutable: runtimeExecutable,
+            policy: launchCompatibilitySelection.controllerPolicy,
             fileManager: fileManager
         )
-        let steamCompatibility = steamClientCompatibilityVerifier.verify(capability: capability)
-        let logDirectory = try pathManager.url(for: .launchLogs)
         let steamExecutable = steamExecutableURL(in: prefix)
         let expectedLaunchRunner = steamLaunchObservedRunnerExecutable(for: runtimeExecutable)
         let launchTarget = SteamLaunchTarget(
@@ -603,18 +1809,23 @@ final class SteamManager {
             )
         }
         try requireSteamExecutable(steamExecutable)
-        let steamRendererPolicy = try rendererPolicyManager.resolvedPolicy(
-            requestedRendererPolicy,
-            capability: capability
-        )
-        let rendererSelection = SteamRendererPolicyManager.selection(for: steamRendererPolicy)
         let initialRendererInspection = inspectSteamRendererPolicy(
             prefix: prefix,
             runtimeExecutable: runtimeExecutable,
+            runtimeCapability: capability,
             selection: rendererSelection,
             videoMemorySizeMB: videoMemorySizeMB
         )
-        guard initialRendererInspection.status == .ok || initialRendererInspection.requiresApply else {
+        let hasRecoverableNVIDIAMetalFXResidue =
+            rendererPolicyManager
+                .isRecoverableNVIDIAMetalFXSessionResidue(
+                    initialRendererInspection,
+                    prefix: prefix,
+                    runtimeExecutable: runtimeExecutable
+                )
+        guard initialRendererInspection.status == .ok ||
+                initialRendererInspection.requiresApply ||
+                hasRecoverableNVIDIAMetalFXResidue else {
             throw SteamLaunchError.rendererPolicyVerificationFailed(initialRendererInspection.userMessage)
         }
         let runnerVersionEvidence = await captureWineVersionEvidence(for: expectedLaunchRunner)
@@ -623,24 +1834,151 @@ final class SteamManager {
             prefix: prefix,
             logDirectory: logDirectory
         )
-        let clientPayloadWasMissingBeforeLaunch = !SteamClientCompatibilityProfileContract.hasSteamClientPayload(
-            in: prefix,
-            fileManager: fileManager
+        try prefixExecutionLeaseTransition.prepareForMutation()
+        preflightShutdown.diagnosticCaptureWarning = DiagnosticWarningText.combined(
+            preflightShutdown.diagnosticCaptureWarning,
+            await rotateOfflineSteamClientLogsIfNeeded(prefix: prefix)
+        )
+        try await reconcileCompatibilitySessionsAfterSuccessfulShutdown(
+            prefix: prefix
+        )
+        cancelSteamLanguageUserControlMonitor()
+        let steamLanguageOwnershipLease = try await
+            steamClientLanguageOwnershipPolicy.prepareForLaunch(
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix,
+                logDirectory: logDirectory,
+                desiredLanguage: steamClientLanguage
+            )
+        try await prepareSteamClientServiceForLaunch(
+            runtimeExecutable: runtimeExecutable,
+            prefix: prefix,
+            logDirectory: logDirectory
         )
         try await applySteamClientCompatibilityProfile(
             runtimeExecutable: runtimeExecutable,
             prefix: prefix,
             videoMemorySizeMB: videoMemorySizeMB
         )
+        try await rendererPolicyManager
+            .restoreNVIDIAMetalFXRegistrySessionIfNeeded(
+                prefix: prefix,
+                runtimeExecutable: runtimeExecutable,
+                runner: runner,
+                logDirectory: logDirectory,
+                phase: .priorSessionRestoration
+            )
+        // Wine registry tools can resynchronize System32. Re-inspect after
+        // every registry mutation, then normalize only the exact three files
+        // owned by a prior NVIDIA MetalFX session. Unrelated renderer
+        // contamination remains blocked by the final inspection.
+        let postRegistryRendererInspection = inspectSteamRendererPolicy(
+            prefix: prefix,
+            runtimeExecutable: runtimeExecutable,
+            runtimeCapability: capability,
+            selection: rendererSelection,
+            videoMemorySizeMB: videoMemorySizeMB
+        )
+        if rendererPolicyManager
+            .isRecoverableNVIDIAMetalFXSessionResidue(
+                postRegistryRendererInspection,
+                prefix: prefix,
+                runtimeExecutable: runtimeExecutable
+            ) {
+            try rendererPolicyManager
+                .restoreNVIDIAMetalFXSessionModules(
+                    prefix: prefix,
+                    runtimeExecutable: runtimeExecutable
+                )
+        }
         let rendererInspection = inspectSteamRendererPolicy(
             prefix: prefix,
             runtimeExecutable: runtimeExecutable,
+            runtimeCapability: capability,
             selection: rendererSelection,
             videoMemorySizeMB: videoMemorySizeMB
         )
         guard rendererInspection.status == .ok else {
             throw SteamLaunchError.rendererPolicyVerificationFailed(rendererInspection.userMessage)
         }
+        var rendererSessionStaged = false
+        if rendererSelection.usesD3DMetalNVIDIACompatibility {
+            do {
+                try await rendererPolicyManager
+                    .stageNVIDIAMetalFXRegistrySession(
+                        prefix: prefix,
+                        runtimeExecutable: runtimeExecutable,
+                        runner: runner,
+                        logDirectory: logDirectory
+                    )
+                _ = try rendererPolicyManager
+                    .stageNVIDIAMetalFXBridgeModules(
+                        prefix: prefix,
+                        runtimeExecutable: runtimeExecutable
+                    )
+                rendererSessionStaged = true
+            } catch let stageError {
+                let registryRollbackError: Error?
+                do {
+                    try await rendererPolicyManager
+                        .restoreNVIDIAMetalFXRegistrySessionIfNeeded(
+                            prefix: prefix,
+                            runtimeExecutable: runtimeExecutable,
+                            runner: runner,
+                            logDirectory: logDirectory,
+                            phase: .preparationRollback
+                        )
+                    registryRollbackError = nil
+                } catch {
+                    registryRollbackError = error
+                }
+                let preservationSource: Error
+                let fallbackPhase: SteamRendererLifecyclePhase
+                let fallbackOperation: SteamRendererLifecycleOperation
+                let fallbackDetail: String?
+                let additionalDetail: String?
+                if let registryRollbackError {
+                    preservationSource = registryRollbackError
+                    fallbackPhase = .preparationRollback
+                    fallbackOperation = .sessionRestoration
+                    fallbackDetail =
+                        "NGXCore registry rollback failed: " +
+                        forgePlayTechnicalErrorSummary(registryRollbackError)
+                    additionalDetail =
+                        "renderer preparation failed before rollback: " +
+                        forgePlayTechnicalErrorSummary(stageError)
+                } else {
+                    preservationSource = stageError
+                    fallbackPhase = .preparation
+                    fallbackOperation = .ngxCoreFullPathRegistration
+                    fallbackDetail = nil
+                    additionalDetail = nil
+                }
+                let lifecycleFailure = Self
+                    .rendererLifecycleFailurePreservingStructuredError(
+                        preservationSource,
+                        fallbackPhase: fallbackPhase,
+                        fallbackOperation: fallbackOperation,
+                        fallbackTarget: prefix,
+                        fallbackDetail: fallbackDetail,
+                        additionalDetail: additionalDetail,
+                        additionalProcessResults:
+                            diagnosticProcessRunResults(from: stageError) +
+                            (registryRollbackError.map {
+                                diagnosticProcessRunResults(from: $0)
+                            } ?? [])
+                    )
+                throw SteamLaunchError.rendererLifecycleFailed(
+                    lifecycleFailure
+                )
+            }
+        }
+        let postDispatchRollbackOwnership =
+            GameInputProtectionPostDispatchRollbackOwnership(
+                requiresRendererRollback: rendererSessionStaged
+            )
+        var launchResultForRestorationRecovery: ProcessRunResult?
+        do {
         let libraryDrivePreparation = try prepareSteamLibraryDriveLinksWithEvidence(
             prefix: prefix,
             libraryRoots: libraryRoots,
@@ -651,15 +1989,89 @@ final class SteamManager {
         try synchronizeSteamLibraryRegistrations(
             prefix: prefix,
             mappings: libraryDriveMappings,
+            pendingMappings: libraryDrivePreparation.pendingMappings,
             discoveries: libraryDrivePreparation.discoveries,
             logDirectory: logDirectory
         )
-        let launchExternalStorageRoots = libraryDriveMappings.map(\.macDriveRootURL)
-        let resolvedSteamArguments = steamArguments
-            ?? SteamClientCompatibilityProfile.defaultLaunchArguments
-        var processSnapshotBeforeLaunch = processSnapshotProvider()
-        var hostSteamProcessesBeforeLaunch = processSnapshotBeforeLaunch.hostMacOSSteamProcesses
-        var externalRunnerProcessesBeforeLaunch = processSnapshotBeforeLaunch.externalApplicationRunnerProcesses
+        if let steamLanguageOwnershipLease {
+            _ = try await steamClientLanguageOwnershipPolicy.reaffirm(
+                steamLanguageOwnershipLease,
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix,
+                logDirectory: logDirectory
+            )
+        }
+        let fontProvisioningReceipt = try await
+            reconcileWindowsFontCompatibilityProfile(
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix
+            )
+        let finalRendererInspection = inspectSteamRendererPolicy(
+            prefix: prefix,
+            runtimeExecutable: runtimeExecutable,
+            runtimeCapability: capability,
+            selection: rendererSelection,
+            videoMemorySizeMB: videoMemorySizeMB
+        )
+        let finalRendererSessionIsExact = rendererSessionStaged &&
+            rendererPolicyManager.isRecoverableNVIDIAMetalFXSessionResidue(
+                finalRendererInspection,
+                prefix: prefix,
+                runtimeExecutable: runtimeExecutable
+            )
+        guard finalRendererInspection.status == .ok ||
+                finalRendererSessionIsExact else {
+            throw SteamLaunchError.rendererPolicyVerificationFailed(
+                finalRendererInspection.userMessage
+            )
+        }
+        let launchExternalStorageRoots = libraryDrivePreparation.externalStorageRoots
+        let resolvedSteamArguments =
+            SteamClientLanguageOwnershipPolicy.launchArguments(
+                baseArguments: steamArguments ??
+                    SteamClientCompatibilityProfile.defaultLaunchArguments,
+                lease: steamLanguageOwnershipLease
+            )
+        let rendererRouteReceipt = try rendererPolicyManager.applicationReceipt(
+            prefix: prefix,
+            runtimeExecutable: runtimeExecutable,
+            runtimeCapability: capability,
+            selection: rendererSelection,
+            videoMemorySizeMB: videoMemorySizeMB
+        )
+        var compatibilitySessionsCommitted = false
+        defer {
+            if !compatibilitySessionsCommitted &&
+                !postDispatchRollbackOwnership
+                    .localInputAndControllerRollbackCompleted {
+                let prefixKey = prefix.standardizedFileURL.path
+                GameInputProtectionPrecommitRestorationHandoff
+                    .restoreOrInstallRetryOwner(
+                        restore: { inputCompatibilitySession.restore() },
+                        retain: {
+                            activeInputCompatibilitySessions[prefixKey] =
+                                inputCompatibilitySession
+                        },
+                        startMonitor: {
+                            startInputOnlyCompatibilityRestorationMonitor(
+                                prefix: prefix,
+                                prefixKey: prefixKey
+                            )
+                        }
+                    )
+                controllerCompatibilitySession.restore()
+            }
+        }
+        // Start host input interception only after every prefix/service/
+        // renderer preparation step has succeeded. Pre-dispatch preparation
+        // failures must not leave an input session active, and failures after
+        // this point are covered by the restoration defer above.
+        try inputCompatibilitySession.captureBeforeLaunch()
+        let processSnapshotBeforeLaunch = processSnapshotProvider()
+        let hostSteamProcessesBeforeLaunch =
+            processSnapshotBeforeLaunch.hostMacOSSteamProcesses
+        let externalRunnerProcessesBeforeLaunch =
+            processSnapshotBeforeLaunch.externalApplicationRunnerProcesses
         let dumpsBeforeLaunchScan = steamLaunchDiagnosticsReporter.recentSteamCrashDumpScan(
             in: dumpsDirectory,
             since: Date(timeIntervalSince1970: 0),
@@ -667,402 +2079,138 @@ final class SteamManager {
         )
         let dumpsBeforeLaunch = dumpsBeforeLaunchScan.urls
         let dumpFingerprintsBeforeLaunch = dumpsBeforeLaunchScan.fingerprints
-        var dumpFingerprintsObservedAcrossAttempts = dumpFingerprintsBeforeLaunch
-        var priorLaunchAttempts: [SteamLaunchAttemptEvidence] = []
-        var steamUIStartupLogCursor = steamLaunchDiagnosticsReporter
+        let priorLaunchAttempts: [SteamLaunchAttemptEvidence] = []
+        let steamUIStartupLogCursor = steamLaunchDiagnosticsReporter
             .captureSteamWebHelperStartupLogCursor(in: steamDirectory)
-        try prefixExecutionLeaseTransition?.prepareForExecution()
-        var result = try await runner.run(.launchSteam(
+        try await awaitGameInputProtectionDispatchAdmission(
+            prefixKey: prefixKey,
+            site: .initial
+        )
+        try prefixExecutionLeaseTransition.prepareForExecution()
+        try controllerCompatibilitySession.revalidateBeforeSpawn()
+        try inputCompatibilitySession.requireNoTerminalFailure()
+        var result = try await runManagedSteamLaunchDispatch(
             runtimeExecutable: runtimeExecutable,
             prefix: prefix,
-            steamExecutable: steamExecutable,
-            steamArguments: resolvedSteamArguments,
-            graphicsBackend: steamRendererPolicy,
-            gameModePolicy: gameModePolicy,
-            logDirectory: logDirectory,
-            externalStorageRoots: launchExternalStorageRoots
-        ))
-        if verificationMode == .operational {
-            let immediateProcessSnapshot = currentSteamLaunchProcessSnapshot(
-                for: result,
-                target: launchTarget
-            )
-            let initialBootstrapLogAssessment = steamBootstrapUpdateLogAssessment(
-                result: result,
-                steamDirectory: steamDirectory
-            )
-            let initialBootstrapUpdateInProgress = initialBootstrapLogAssessment.hasProgress == true
-            let processSnapshotAfterLaunch: SteamLaunchProcessSnapshot
-            if result.succeeded, !initialBootstrapUpdateInProgress {
-                processSnapshotAfterLaunch = await waitForSteamLaunchProcessEvidence(
-                    for: launchTarget,
-                    initialSnapshot: immediateProcessSnapshot,
-                    result: result,
-                    verificationMode: .operational
-                )
-            } else {
-                processSnapshotAfterLaunch = immediateProcessSnapshot
-            }
-            let launchCommandSucceeded = result.succeeded
-            let hostSteamProcessesAfterLaunch = processSnapshotAfterLaunch.hostMacOSSteamProcesses
-            let newlyLaunchedHostSteamProcesses = MacOSSteamProcessSnapshot(
-                processes: hostSteamProcessesAfterLaunch
-            )
-            .newProcesses(since: MacOSSteamProcessSnapshot(processes: hostSteamProcessesBeforeLaunch))
-            let externalRunnerProcessesAfterLaunch = processSnapshotAfterLaunch.externalApplicationRunnerProcesses
-            let newlyLaunchedExternalRunnerProcesses = SteamLaunchProcessSnapshot(
-                processes: externalRunnerProcessesAfterLaunch
-            )
-            .newProcesses(since: SteamLaunchProcessSnapshot(processes: externalRunnerProcessesBeforeLaunch))
-            let dumpCandidates = steamLaunchDiagnosticsReporter.recentSteamCrashDumpScan(
-                in: dumpsDirectory,
-                since: Date(timeIntervalSince1970: 0),
-                observationContext: crashDumpObservationContext
-            )
-            let newDumps = Self.newSteamCrashDumps(
-                in: dumpCandidates,
-                excluding: dumpFingerprintsBeforeLaunch
-            )
-            let fatalCrashDumps = Self.fatalSteamCrashDumps(in: newDumps)
-            let assertDumps = Self.assertSteamDumps(in: newDumps)
-            let launchLogCutoff = result.startedAt.addingTimeInterval(-2)
-            let renderingIssue = steamLaunchDiagnosticsReporter.detectSteamWebHelperRenderingFailure(
-                in: steamDirectory,
-                since: launchLogCutoff,
-                logCursor: steamUIStartupLogCursor
-            )
-            let screenEvidence = SteamLaunchScreenEvidence.notCaptured(
-                "operational launch does not capture the user's screen or claim visible UI conformance"
-            )
-            let launchAssessment = steamLaunchHardGateAssessment(
-                target: launchTarget,
-                after: processSnapshotAfterLaunch,
-                hostSteamProcessesBeforeLaunch: hostSteamProcessesBeforeLaunch,
-                hostSteamProcessesAfterLaunch: hostSteamProcessesAfterLaunch,
-                newlyLaunchedHostSteamProcesses: newlyLaunchedHostSteamProcesses,
-                externalRunnerProcessesBeforeLaunch: externalRunnerProcessesBeforeLaunch,
-                externalRunnerProcessesAfterLaunch: externalRunnerProcessesAfterLaunch,
-                launchCommandSucceeded: launchCommandSucceeded,
-                crashDumps: fatalCrashDumps,
-                assertDumps: assertDumps,
-                renderingIssue: renderingIssue,
-                runnerVersionEvidence: runnerVersionEvidence,
-                screenEvidence: screenEvidence,
-                verificationMode: .operational,
-                steamUIStartupFailure: nil
-            )
-            let finalBootstrapLogAssessment = steamBootstrapUpdateLogAssessment(
-                result: result,
-                steamDirectory: steamDirectory
-            )
-            let bootstrapUpdateInProgress = steamBootstrapUpdateIsInProgress(
-                result: result,
-                launchTarget: launchTarget,
-                processSnapshot: processSnapshotAfterLaunch,
-                renderingIssue: renderingIssue,
-                fatalCrashDumps: fatalCrashDumps,
-                hasBootstrapUpdateProgress: initialBootstrapUpdateInProgress ||
-                    finalBootstrapLogAssessment.hasProgress == true
-            )
-            let effectiveLaunchAssessment = bootstrapUpdateInProgress
-                ? steamBootstrapUpdateDeferredAssessment(from: launchAssessment)
-                : launchAssessment
-            let shouldDeferSteamUIVerification = effectiveLaunchAssessment.status == .deferred
-            let processVerificationUnavailable = shouldDeferSteamUIVerification && !bootstrapUpdateInProgress
-            let launchAssessmentAccepted = effectiveLaunchAssessment.status == .launched
-            if bootstrapUpdateInProgress {
-                result.forgePlayStatusCode = Self.steamBootstrapUpdateInProgressExitCode
-            } else if processVerificationUnavailable {
-                result.forgePlayStatusCode = Self.steamLaunchProcessVerificationUnavailableExitCode
-            } else if launchCommandSucceeded, !launchAssessmentAccepted {
-                result.forgePlayStatusCode = Self.hardGateEvidenceIncompleteExitCode
-            }
-            var failureShutdown: ProcessRunResult?
-            var failureShutdownError: Error?
-            if !shouldDeferSteamUIVerification && (!launchCommandSucceeded || !launchAssessmentAccepted) {
-                let shutdownOutcome = await prefixProcessSupervisor.shutdownAfterFailure(
-                    runtimeExecutable: runtimeExecutable,
-                    prefix: prefix,
-                    logDirectory: logDirectory
-                )
-                failureShutdown = shutdownOutcome.result
-                failureShutdownError = shutdownOutcome.error
-            }
-            Self.attachLaunchChainEvidence(
-                priorLaunchAttempts,
-                auxiliaryResults: [preflightShutdown] + [failureShutdown].compactMap { $0 },
-                to: &result
-            )
-            let diagnosticCapture = Result {
-                try steamLaunchDiagnosticsReporter.writeDiagnostics(
-                    for: result,
-                preflightShutdown: preflightShutdown,
-                failureShutdown: failureShutdown,
-                failureShutdownError: failureShutdownError,
-                priorLaunchAttempts: priorLaunchAttempts,
-                dumps: fatalCrashDumps,
-                steamDirectory: steamDirectory,
-                renderingIssue: renderingIssue,
-                hostSteamProcesses: newlyLaunchedHostSteamProcesses,
-                hostSteamProcessesBefore: hostSteamProcessesBeforeLaunch,
-                hostSteamProcessesAfter: hostSteamProcessesAfterLaunch,
-                externalApplicationRunnerProcesses: newlyLaunchedExternalRunnerProcesses,
-                externalApplicationRunnerProcessesBefore: externalRunnerProcessesBeforeLaunch,
-                externalApplicationRunnerProcessesAfter: externalRunnerProcessesAfterLaunch,
-                processSnapshotBefore: processSnapshotBeforeLaunch.processes,
-                processSnapshotAfter: processSnapshotAfterLaunch.processes,
-                launchTarget: launchTarget,
-                runnerCapability: capability,
-                runnerVersionEvidence: runnerVersionEvidence,
-                dumpsBefore: dumpsBeforeLaunch,
-                dumpsAfter: newDumps,
-                gateStatus: effectiveLaunchAssessment.status,
-                reasonCodes: effectiveLaunchAssessment.reasonCodes,
-                hardGateFailureReasons: effectiveLaunchAssessment.diagnosticReasons,
-                webHelperCommandLines: processSnapshotAfterLaunch.webHelperCommandLines(for: launchTarget),
-                screenEvidence: screenEvidence,
-                launchEnvironmentSummary: steamLaunchDiagnosticsReporter.launchEnvironmentSummary(
-                    runtimeExecutable: runtimeExecutable,
-                    prefix: prefix,
-                    rendererPolicy: steamRendererPolicy
-                ),
-                logCursor: steamUIStartupLogCursor,
-                crashDumpObservationContext: crashDumpObservationContext,
-                    since: launchLogCutoff
-                )
-            }
-            _ = applyDiagnosticsCapture(diagnosticCapture, to: &result)
-            applyProcessObservationReadWarning(processSnapshotAfterLaunch, to: &result)
-            applyBootstrapLogEvidenceWarnings(
-                [initialBootstrapLogAssessment, finalBootstrapLogAssessment],
-                to: &result
-            )
-            if shouldDeferSteamUIVerification {
-                result.steamUIVerificationState = .launchedButUnverified
-            } else {
-                result.steamUIVerificationState = result.succeeded && launchAssessmentAccepted
-                    ? .launchedButUnverified
-                    : .failed
-            }
-            return result
-        }
-        let clientMutationDetectedAfterLaunch = clientPayloadWasMissingBeforeLaunch
-            ? false
-            : await waitForSteamClientMutationAfterLaunch(
-                result: result,
+            logDirectory: logDirectory
+        ) {
+            try await runner.run(.launchSteam(
+                runtimeExecutable: runtimeExecutable,
                 prefix: prefix,
-                steamDirectory: steamDirectory,
-                videoMemorySizeMB: videoMemorySizeMB
-            )
-        if (clientPayloadWasMissingBeforeLaunch || clientMutationDetectedAfterLaunch),
-           result.succeeded,
-           !result.waitedForExit,
-           await waitForSteamClientBootstrapCompletion(
-               result: result,
-               prefix: prefix,
-               steamDirectory: steamDirectory,
-               launchTarget: launchTarget,
-               requiresUpdaterCompletion: clientMutationDetectedAfterLaunch
-           ) {
-            appendPriorLaunchAttempt(
-                result,
-                reason: clientPayloadWasMissingBeforeLaunch
-                    ? .clientBootstrapCompleted
-                    : .steamClientUpdated,
-                preLaunchShutdownResult: preflightShutdown,
-                dumpsDirectory: dumpsDirectory,
-                crashDumpObservationContext: crashDumpObservationContext,
-                knownDumpFingerprints: &dumpFingerprintsObservedAcrossAttempts,
-                attempts: &priorLaunchAttempts
-            )
-            do {
-                preflightShutdown = try await prefixProcessSupervisor.shutdownBeforeLaunch(
-                    runtimeExecutable: runtimeExecutable,
-                    prefix: prefix,
-                    logDirectory: logDirectory
-                )
-                try prefixExecutionLeaseTransition?.prepareForMutation()
-                try await applySteamClientCompatibilityProfile(
-                    runtimeExecutable: runtimeExecutable,
-                    prefix: prefix,
-                    videoMemorySizeMB: videoMemorySizeMB
-                )
-                let postBootstrapRendererInspection = inspectSteamRendererPolicy(
-                    prefix: prefix,
-                    runtimeExecutable: runtimeExecutable,
-                    selection: rendererSelection,
-                    videoMemorySizeMB: videoMemorySizeMB
-                )
-                guard postBootstrapRendererInspection.status == .ok else {
-                    throw SteamLaunchError.rendererPolicyVerificationFailed(
-                        postBootstrapRendererInspection.userMessage
-                    )
-                }
-                processSnapshotBeforeLaunch = processSnapshotProvider()
-                hostSteamProcessesBeforeLaunch = processSnapshotBeforeLaunch.hostMacOSSteamProcesses
-                externalRunnerProcessesBeforeLaunch = processSnapshotBeforeLaunch.externalApplicationRunnerProcesses
-                steamUIStartupLogCursor = steamLaunchDiagnosticsReporter
-                    .captureSteamWebHelperStartupLogCursor(in: steamDirectory)
-                try prefixExecutionLeaseTransition?.prepareForExecution()
-                result = try await runner.run(.launchSteam(
-                    runtimeExecutable: runtimeExecutable,
-                    prefix: prefix,
-                    steamExecutable: steamExecutable,
-                    steamArguments: resolvedSteamArguments,
-                    graphicsBackend: steamRendererPolicy,
-                    gameModePolicy: gameModePolicy,
-                    logDirectory: logDirectory,
-                    externalStorageRoots: launchExternalStorageRoots
-                ))
-                Self.attachLaunchChainEvidence(
-                    priorLaunchAttempts,
-                    auxiliaryResults: [preflightShutdown],
-                    to: &result
-                )
-            } catch {
-                var failedResult = result
-                failedResult.diagnosticCaptureWarning = DiagnosticWarningText.combined(
-                    failedResult.diagnosticCaptureWarning,
-                    "Steam bootstrap relaunch preparation failed: \(forgePlayTechnicalErrorSummary(error))"
-                )
-                Self.attachLaunchChainEvidence(
-                    priorLaunchAttempts,
-                    auxiliaryResults: [preflightShutdown],
-                    to: &failedResult
-                )
-                throw ProcessExecutionEvidenceError(
-                    underlyingError: error,
-                    result: failedResult
-                )
-            }
+                steamExecutable: steamExecutable,
+                steamArguments: resolvedSteamArguments,
+                graphicsBackend: steamRendererPolicy,
+                compatibilitySelection: launchCompatibilitySelection,
+                gameModePolicy: gameModePolicy,
+                logDirectory: logDirectory,
+                externalStorageRoots: launchExternalStorageRoots
+            ))
         }
-        var steamUIStartupObservation = await observeSteamUIStartup(
+        defer { launchResultForRestorationRecovery = result }
+        let steamBootstrapUpdaterEvidenceSession =
+            SteamBootstrapUpdaterEvidenceSession(
+                cursor: bootstrapUpdateSourceCursor(
+                    from: steamUIStartupLogCursor
+                )
+            )
+        if result.succeeded,
+           SteamLaunchDispatchDisposition.resolve(result)
+            .acceptsSessionLifetime {
+            try await attachProviderApplicationReceipts(
+                to: &result,
+                inputSession: inputCompatibilitySession,
+                controllerSession: controllerCompatibilitySession,
+                fontReceipt: fontProvisioningReceipt,
+                rendererReceipt: rendererRouteReceipt,
+                prefix: prefix,
+                runtimeExecutable: runtimeExecutable,
+                logDirectory: logDirectory,
+                expectedCompatibilitySelection: launchCompatibilitySelection
+            )
+        }
+        let steamUIStartupObservation = await observeSteamUIStartup(
             result: result,
             prefix: prefix,
             steamDirectory: steamDirectory,
             launchTarget: launchTarget,
             logCursor: steamUIStartupLogCursor
         )
-        if steamUIStartupObservation.shouldRetry {
-            let recoveryReason = steamUIStartupObservation.reason ??
-                "Steam WebHelper startup failed before the shared UI context became ready"
-            appendPriorLaunchAttempt(
-                result,
-                reason: .webHelperStartupRecovery,
-                preLaunchShutdownResult: preflightShutdown,
-                dumpsDirectory: dumpsDirectory,
-                crashDumpObservationContext: crashDumpObservationContext,
-                knownDumpFingerprints: &dumpFingerprintsObservedAcrossAttempts,
-                attempts: &priorLaunchAttempts
-            )
-            do {
-                preflightShutdown = try await prefixProcessSupervisor.shutdownBeforeLaunch(
-                    runtimeExecutable: runtimeExecutable,
-                    prefix: prefix,
-                    logDirectory: logDirectory
-                )
-                try prefixExecutionLeaseTransition?.prepareForMutation()
-                try await applySteamClientCompatibilityProfile(
-                    runtimeExecutable: runtimeExecutable,
-                    prefix: prefix,
-                    videoMemorySizeMB: videoMemorySizeMB
-                )
-                let retryRendererInspection = inspectSteamRendererPolicy(
-                    prefix: prefix,
-                    runtimeExecutable: runtimeExecutable,
-                    selection: rendererSelection,
-                    videoMemorySizeMB: videoMemorySizeMB
-                )
-                guard retryRendererInspection.status == .ok else {
-                    throw SteamLaunchError.rendererPolicyVerificationFailed(
-                        retryRendererInspection.userMessage
-                    )
-                }
-                processSnapshotBeforeLaunch = processSnapshotProvider()
-                hostSteamProcessesBeforeLaunch = processSnapshotBeforeLaunch.hostMacOSSteamProcesses
-                externalRunnerProcessesBeforeLaunch = processSnapshotBeforeLaunch.externalApplicationRunnerProcesses
-                steamUIStartupLogCursor = steamLaunchDiagnosticsReporter
-                    .captureSteamWebHelperStartupLogCursor(in: steamDirectory)
-                try prefixExecutionLeaseTransition?.prepareForExecution()
-                result = try await runner.run(.launchSteam(
-                    runtimeExecutable: runtimeExecutable,
-                    prefix: prefix,
-                    steamExecutable: steamExecutable,
-                    steamArguments: resolvedSteamArguments,
-                    graphicsBackend: steamRendererPolicy,
-                    gameModePolicy: gameModePolicy,
-                    logDirectory: logDirectory,
-                    externalStorageRoots: launchExternalStorageRoots
-                ))
-                result.steamUIStartupRecoveryAttemptCount = 1
-                result.steamUIStartupRecoveryReason = recoveryReason
-                Self.attachLaunchChainEvidence(
-                    priorLaunchAttempts,
-                    auxiliaryResults: [preflightShutdown],
-                    to: &result
-                )
-            } catch {
-                var failedResult = result
-                failedResult.diagnosticCaptureWarning = DiagnosticWarningText.combined(
-                    failedResult.diagnosticCaptureWarning,
-                    "Steam UI recovery relaunch failed: \(forgePlayTechnicalErrorSummary(error))"
-                )
-                Self.attachLaunchChainEvidence(
-                    priorLaunchAttempts,
-                    auxiliaryResults: [preflightShutdown],
-                    to: &failedResult
-                )
-                throw ProcessExecutionEvidenceError(
-                    underlyingError: error,
-                    result: failedResult
-                )
-            }
-            steamUIStartupObservation = await observeSteamUIStartup(
-                result: result,
-                prefix: prefix,
-                steamDirectory: steamDirectory,
-                launchTarget: launchTarget,
-                logCursor: steamUIStartupLogCursor
-            )
-        }
-        let steamUIStartupRecoveryExhausted =
-            result.steamUIStartupRecoveryAttemptCount > 0 && steamUIStartupObservation.state != .ready
-        let steamUIStartupFailureReason = steamUIStartupRecoveryExhausted
-            ? (steamUIStartupObservation.reason ?? "Steam WebHelper did not become ready before the startup timeout")
+        // The accepted Steam dispatch owns a live user session. Cancellation
+        // of the view/task that requested startup observation must not unwind
+        // into renderer rollback, which first terminates the entire Prefix.
+        let steamUIStartupFailureReason =
+            verificationMode == .conformance &&
+            steamUIStartupObservation.state != .ready
+            ? (steamUIStartupObservation.reason ??
+                "Steam WebHelper did not expose a usable login or desktop surface before the startup observation ended")
             : nil
         let launchLogCutoff = result.startedAt.addingTimeInterval(-2)
-        let immediateProcessSnapshot = currentSteamLaunchProcessSnapshot(
-            for: result,
-            target: launchTarget
-        )
+        let immediateProcessSnapshot: SteamLaunchProcessSnapshot
+        if verificationMode == .conformance {
+            immediateProcessSnapshot = await currentSteamLaunchProcessSnapshot(
+                result: result,
+                prefix: prefix,
+                target: launchTarget
+            )
+        } else {
+            immediateProcessSnapshot = await verifiedCurrentLaunchProcessSnapshot(
+                result: result,
+                prefix: prefix,
+                target: launchTarget
+            )
+        }
         let initialBootstrapLogAssessment = steamBootstrapUpdateLogAssessment(
             result: result,
-            steamDirectory: steamDirectory
+            steamDirectory: steamDirectory,
+            since: steamBootstrapUpdaterEvidenceSession.tracker.cursor
         )
-        let initialBootstrapUpdateInProgress = initialBootstrapLogAssessment.hasProgress == true
+        let initialBootstrapLifecycle =
+            steamBootstrapUpdaterEvidenceSession.tracker.observe(
+                assessment: initialBootstrapLogAssessment,
+                at: Date(),
+                idleTimeout: bootstrapProgressIdleTimeout
+            )
+        let initialBootstrapUpdateInProgress =
+            initialBootstrapLifecycle.state == .inProgress &&
+            initialBootstrapLifecycle.continuity == .recentOrAdvancing
         let observedProcessSnapshot: SteamLaunchProcessSnapshot
-        if result.succeeded, !result.waitedForExit, !initialBootstrapUpdateInProgress {
+        if result.succeeded,
+           SteamLaunchDispatchDisposition.resolve(result)
+                .acceptsSessionLifetime,
+           !initialBootstrapUpdateInProgress {
             observedProcessSnapshot = await waitForSteamLaunchProcessEvidence(
                 for: launchTarget,
                 initialSnapshot: immediateProcessSnapshot,
                 result: result,
                 verificationMode: verificationMode
             )
-        } else if result.succeeded, !result.waitedForExit, initialBootstrapUpdateInProgress {
+        } else if result.succeeded,
+                  SteamLaunchDispatchDisposition.resolve(result)
+                    .acceptsSessionLifetime,
+                  initialBootstrapUpdateInProgress {
             observedProcessSnapshot = immediateProcessSnapshot
         } else {
             observedProcessSnapshot = immediateProcessSnapshot
         }
         let finalBootstrapLogAssessment = steamBootstrapUpdateLogAssessment(
             result: result,
-            steamDirectory: steamDirectory
+            steamDirectory: steamDirectory,
+            since: steamBootstrapUpdaterEvidenceSession.tracker.cursor
         )
-        let bootstrapUpdateInProgressBeforeRenderingObservation = initialBootstrapUpdateInProgress ||
-            finalBootstrapLogAssessment.hasProgress == true
+        let finalBootstrapLifecycle =
+            steamBootstrapUpdaterEvidenceSession.tracker.observe(
+                assessment: finalBootstrapLogAssessment,
+                at: Date(),
+                idleTimeout: bootstrapProgressIdleTimeout
+            )
+        let bootstrapUpdateInProgressBeforeRenderingObservation =
+            finalBootstrapLifecycle.state == .inProgress &&
+            finalBootstrapLifecycle.continuity == .recentOrAdvancing
         let renderingIssue: SteamWebHelperRenderingIssue?
         if verificationMode == .conformance,
            result.succeeded,
-           !result.waitedForExit,
+           SteamLaunchDispatchDisposition.resolve(result)
+                .acceptsSessionLifetime,
            !bootstrapUpdateInProgressBeforeRenderingObservation,
            observedProcessSnapshot.containsExpectedPrefixSteamProcess(for: launchTarget) {
             renderingIssue = await steamLaunchDiagnosticsReporter.waitForSteamWebHelperRenderingFailure(
@@ -1134,34 +2282,59 @@ final class SteamManager {
             !externalRunnerProcessesAfterLaunch.isEmpty ||
             !newlyLaunchedExternalRunnerProcesses.isEmpty
         let didObserveExternalRunnerDuringConformance = verificationMode == .conformance && didObserveExternalRunner
+        let liveBootstrapProcessSnapshot =
+            await verifiedCurrentLaunchProcessSnapshot(
+                result: result,
+                prefix: prefix,
+                target: launchTarget
+            )
         let bootstrapUpdateInProgress = steamBootstrapUpdateIsInProgress(
             result: result,
             launchTarget: launchTarget,
-            processSnapshot: processSnapshotAfterLaunch,
+            processSnapshot: liveBootstrapProcessSnapshot,
             renderingIssue: renderingIssue,
             fatalCrashDumps: fatalCrashDumps,
             hasBootstrapUpdateProgress: bootstrapUpdateInProgressBeforeRenderingObservation
         )
-        let shouldDeferSteamUIVerification = bootstrapUpdateInProgress && !didObserveExternalRunnerDuringConformance
-        let effectiveHardGateAssessment = shouldDeferSteamUIVerification
+        let operationalProcessVerificationUnavailable =
+            verificationMode == .operational &&
+            hardGateAssessment.status == .deferred &&
+            hardGateAssessment.reasonCodes.contains(
+                .operationalProcessEvidenceUnavailable
+            )
+        let hasTerminalSteamUIFailure =
+            !launchCommandSucceeded ||
+            steamUIStartupFailureReason != nil ||
+            !fatalCrashDumps.isEmpty ||
+            renderingIssue != nil
+        let shouldDeferSteamUIVerification = Self.shouldDeferSteamUIVerification(
+            bootstrapUpdateInProgress: bootstrapUpdateInProgress,
+            operationalProcessVerificationUnavailable:
+                operationalProcessVerificationUnavailable,
+            didObserveExternalRunnerDuringConformance:
+                didObserveExternalRunnerDuringConformance,
+            hasTerminalSteamUIFailure: hasTerminalSteamUIFailure
+        )
+        let effectiveHardGateAssessment = bootstrapUpdateInProgress
             ? steamBootstrapUpdateDeferredAssessment(from: hardGateAssessment)
             : hardGateAssessment
         let acceptedGateStatus: SteamLaunchGateStatus = verificationMode == .conformance ? .success : .launched
         let launchAssessmentAccepted = effectiveHardGateAssessment.status == acceptedGateStatus
         if shouldDeferSteamUIVerification {
-            result.forgePlayStatusCode = Self.steamBootstrapUpdateInProgressExitCode
+            result.forgePlayStatusCode = bootstrapUpdateInProgress
+                ? Self.steamBootstrapUpdateInProgressExitCode
+                : Self.steamLaunchProcessVerificationUnavailableExitCode
         }
-        let shouldStopSteamAfterLaunch = !shouldDeferSteamUIVerification && (
+        // Once the user's Steam session has been dispatched, operational
+        // diagnostics never acquire authority to terminate it. Cleanup after
+        // dispatch is limited to a failed dispatch or an explicit conformance
+        // run whose assessment reached a failed state.
+        let shouldStopSteamAfterLaunch =
             !launchCommandSucceeded ||
-            steamUIStartupRecoveryExhausted ||
-            (verificationMode == .conformance && (
-                !fatalCrashDumps.isEmpty ||
-                renderingIssue != nil ||
-                didLaunchHostSteam ||
-                didObserveExternalRunnerDuringConformance ||
-                !launchAssessmentAccepted
-            ))
-        )
+            (verificationMode == .conformance &&
+                (hasTerminalSteamUIFailure ||
+                    hardGateAssessment.status == .failed))
+        var didRequestFailureShutdown = false
         if shouldStopSteamAfterLaunch {
             let failureShutdown: ProcessRunResult?
             let failureShutdownError: Error?
@@ -1172,10 +2345,10 @@ final class SteamManager {
                     result.forgePlayStatusCode = Self.externalRunnerContaminationExitCode
                 } else if !fatalCrashDumps.isEmpty {
                     result.forgePlayStatusCode = Self.steamCrashDumpExitCode
-                } else if steamUIStartupRecoveryExhausted {
-                    result.forgePlayStatusCode = Self.steamRenderingFailureExitCode
                 } else if renderingIssue != nil {
                     result.forgePlayStatusCode = Self.steamRenderingFailureExitCode
+                } else if steamUIStartupFailureReason != nil {
+                    result.forgePlayStatusCode = Self.steamUIStartupFailureExitCode
                 } else if !launchAssessmentAccepted {
                     result.forgePlayStatusCode = Self.hardGateEvidenceIncompleteExitCode
                 } else {
@@ -1187,6 +2360,7 @@ final class SteamManager {
                 prefix: prefix,
                 logDirectory: logDirectory
             )
+            didRequestFailureShutdown = true
             failureShutdown = shutdownOutcome.result
             failureShutdownError = shutdownOutcome.error
             Self.attachLaunchChainEvidence(
@@ -1288,6 +2462,7 @@ final class SteamManager {
                     prefix: prefix,
                     logDirectory: logDirectory
                 )
+                didRequestFailureShutdown = true
                 Self.attachLaunchChainEvidence(
                     priorLaunchAttempts,
                     auxiliaryResults: [preflightShutdown] +
@@ -1301,13 +2476,1443 @@ final class SteamManager {
             [initialBootstrapLogAssessment, finalBootstrapLogAssessment],
             to: &result
         )
-        if result.forgePlayStatusCode == Self.steamBootstrapUpdateInProgressExitCode {
+        if result.forgePlayStatusCode == Self.steamBootstrapUpdateInProgressExitCode ||
+            result.forgePlayStatusCode == Self.steamLaunchProcessVerificationUnavailableExitCode {
             result.steamUIVerificationState = .launchedButUnverified
         } else if result.succeeded {
             result.steamUIVerificationState = verificationMode == .conformance ? .rendered : .launchedButUnverified
+        } else if result.forgePlayStatusCode == Self.steamRenderingFailureExitCode {
+            result.steamUIVerificationState = .blackScreenSuspected
+        } else {
+            result.steamUIVerificationState = .failed
         }
         result.steamUISurface = screenEvidence.surface
+        let providerReceiptsVerified =
+            result.inputCompatibilityReceipt?
+                .isLifecycleAdmissionVerified == true &&
+            result.controllerCompatibilityReceipt?
+                .isStaticPreparationVerified == true
+        let detachedHandoffAccepted =
+            SteamLaunchDispatchDisposition.resolve(result)
+                .isSuccessfulDetachedHelperHandoff
+        if (providerReceiptsVerified || detachedHandoffAccepted),
+           launchCommandSucceeded,
+           !shouldStopSteamAfterLaunch,
+           !didRequestFailureShutdown {
+            try await commitCompatibilitySessionsAfterLaunch(
+                inputCompatibilitySession,
+                controllerSession: controllerCompatibilitySession,
+                prefix: prefix,
+                runtimeExecutable: runtimeExecutable,
+                logDirectory: logDirectory,
+                restorationLease:
+                    prefixExecutionLeaseTransition.restorationLease,
+                rendererSession: rendererSessionStaged
+                    ? ActiveNVIDIARendererSession(
+                        prefix: prefix,
+                        runtimeExecutable: runtimeExecutable,
+                        logDirectory: logDirectory
+                    )
+                    : nil,
+                admission: providerReceiptsVerified
+                    ? .providerReceiptsVerified
+                    : .successfulDetachedHandoff(
+                        rendererPreparationVerified:
+                            rendererRouteReceipt.isPreparationVerified
+                    ),
+                result: &result,
+                fontReceipt: fontProvisioningReceipt,
+                rendererReceipt: rendererRouteReceipt,
+                prepareForMutation:
+                    prefixExecutionLeaseTransition.prepareForMutation,
+                rollbackOwnership: postDispatchRollbackOwnership
+            )
+            compatibilitySessionsCommitted = true
+            rendererSessionStaged = false
+        }
+        if rendererSessionStaged,
+           launchCommandSucceeded,
+           !shouldStopSteamAfterLaunch,
+           !didRequestFailureShutdown {
+            let admissionFailure =
+                SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                    "renderer-session-lifetime-admission-unavailable"
+                )
+            try await containForegroundPostDispatchCommitFailure(
+                admissionFailure,
+                initialTerminalResolution: nil,
+                inputSession: inputCompatibilitySession,
+                controllerSession: controllerCompatibilitySession,
+                rendererSession: ActiveNVIDIARendererSession(
+                    prefix: prefix,
+                    runtimeExecutable: runtimeExecutable,
+                    logDirectory: logDirectory
+                ),
+                rollbackOwnership: postDispatchRollbackOwnership,
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix,
+                logDirectory: logDirectory,
+                prepareForMutation:
+                    prefixExecutionLeaseTransition.prepareForMutation
+            )
+        }
+        if rendererSessionStaged {
+            try await requireManagedPrefixInactivityBeforeRendererRestoration(
+                prefix
+            )
+            try prefixExecutionLeaseTransition.prepareForMutation()
+            try await restoreNVIDIARendererSession(
+                ActiveNVIDIARendererSession(
+                    prefix: prefix,
+                    runtimeExecutable: runtimeExecutable,
+                    logDirectory: logDirectory
+                )
+            )
+            rendererSessionStaged = false
+        }
+        if let steamLanguageOwnershipLease,
+           launchCommandSucceeded,
+           !shouldStopSteamAfterLaunch,
+           !didRequestFailureShutdown {
+            // Language ownership crosses the same typed usable-UI boundary as
+            // launch readiness. Registry readback races remain pending and
+            // retryable instead of failing an otherwise successful launch.
+            monitorSteamLanguageOwnershipUntilUserControlAvailable(
+                steamLanguageOwnershipLease,
+                prefix: prefix,
+                steamDirectory: steamDirectory,
+                logCursor: steamUIStartupLogCursor,
+                processObservationLog: result.processObservationLog,
+                result: result,
+                launchTarget: launchTarget,
+                initialObservation: steamUIStartupObservation
+            )
+        }
         return result
+        } catch let launchError {
+            if postDispatchRollbackOwnership.rendererRollbackCompleted {
+                throw launchError
+            }
+            guard rendererSessionStaged else { throw launchError }
+            var rendererRecoveryShutdownResult: ProcessRunResult?
+            do {
+                rendererRecoveryShutdownResult =
+                    try await shutdownAndRequireManagedPrefixInactivityForRendererRestoration(
+                        runtimeExecutable: runtimeExecutable,
+                        prefix: prefix,
+                        logDirectory: logDirectory
+                    )
+                try prefixExecutionLeaseTransition.prepareForMutation()
+                try await restoreNVIDIARendererSession(
+                    ActiveNVIDIARendererSession(
+                        prefix: prefix,
+                        runtimeExecutable: runtimeExecutable,
+                        logDirectory: logDirectory
+                    )
+                )
+                rendererSessionStaged = false
+            } catch let rollbackError {
+                let processResults = (
+                    diagnosticProcessRunResults(from: launchError) +
+                    [rendererRecoveryShutdownResult].compactMap { $0 } +
+                    diagnosticProcessRunResults(from: rollbackError)
+                ).reduce(into: [ProcessRunResult]()) {
+                    if !$0.contains($1) { $0.append($1) }
+                }
+                let lifecycleFailure = Self
+                    .rendererLifecycleFailurePreservingStructuredError(
+                        rollbackError,
+                        fallbackPhase: .postLaunchRestoration,
+                        fallbackOperation: .sessionRestoration,
+                        fallbackTarget: prefix,
+                        fallbackDetail:
+                            "renderer rollback failed: " +
+                            forgePlayTechnicalErrorSummary(rollbackError),
+                        additionalDetail:
+                            "launch or initial renderer restoration failed: " +
+                            forgePlayTechnicalErrorSummary(launchError),
+                        additionalProcessResults: processResults
+                    )
+                throw SteamLaunchError.rendererLifecycleFailed(
+                    lifecycleFailure
+                )
+            }
+            if let steamLaunchError = launchError as? SteamLaunchError,
+               case .rendererLifecycleFailed(let failure) = steamLaunchError,
+               failure.phase == .postLaunchRestoration,
+               var recoveredResult = launchResultForRestorationRecovery {
+                Self.attachLaunchChainEvidence(
+                    [],
+                    auxiliaryResults: failure.processResults +
+                        [rendererRecoveryShutdownResult].compactMap { $0 },
+                    to: &recoveredResult
+                )
+                recoveredResult.diagnosticCaptureWarning =
+                    DiagnosticWarningText.combined(
+                        recoveredResult.diagnosticCaptureWarning,
+                        "The first renderer restoration attempt failed, but " +
+                            "a bounded retry restored the session: " +
+                            failure.detail
+                    )
+                return recoveredResult
+            }
+            throw launchError
+        }
+    }
+
+    private func awaitGameInputProtectionDispatchAdmission(
+        prefixKey: String,
+        site: GameInputProtectionDispatchAdmissionSite
+    ) async throws {
+        _ = site
+        try await GameInputProtectionContainmentAdmissionWaiter.wait(
+            whileActive: { [weak self] in
+                self?.gameInputProtectionContainmentClaims.hasClaim(
+                    prefixKey: prefixKey
+                ) == true
+            }
+        )
+    }
+
+    /// Once dispatch begins, a thrown runner error is not proof that no child
+    /// was created. Always stop and observe the managed prefix before allowing
+    /// the error to escape, preserving both launch and cleanup evidence.
+    private func runManagedSteamLaunchDispatch(
+        runtimeExecutable: URL,
+        prefix: URL,
+        logDirectory: URL,
+        operation: () async throws -> ProcessRunResult
+    ) async throws -> ProcessRunResult {
+        do {
+            return try await operation()
+        } catch let dispatchError {
+            let cleanup = await prefixProcessSupervisor.shutdownAfterFailure(
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix,
+                logDirectory: logDirectory
+            )
+            var cleanupFailure = cleanup.error
+            if cleanupFailure == nil {
+                if let cleanupResult = cleanup.result {
+                    if !cleanupResult.succeeded {
+                        cleanupFailure = SteamLaunchError.prefixShutdownFailed(
+                            cleanupResult
+                        )
+                    }
+                } else {
+                    cleanupFailure = SteamCompatibilityLaunchProfileErrorV1
+                        .invalidReceipt("post-dispatch-shutdown-missing-result")
+                }
+            }
+            if cleanupFailure == nil {
+                do {
+                    guard try await compatibilityPrefixExitWaiter(
+                        prefix,
+                        30,
+                        0.2
+                    ) else {
+                        throw SteamCompatibilityLaunchProfileErrorV1
+                            .invalidReceipt(
+                                "post-dispatch-failure-prefix-still-active"
+                            )
+                    }
+                } catch {
+                    cleanupFailure = error
+                }
+            }
+
+            let dispatchEvidence = diagnosticProcessRunResults(
+                from: dispatchError
+            )
+            let cleanupEvidence = Array(dispatchEvidence.dropFirst()) +
+                [cleanup.result].compactMap { $0 }
+            throw SteamPrefixLifecycleCleanupError(
+                originalDescription:
+                    forgePlayTechnicalErrorSummary(dispatchError),
+                cleanupDescription: cleanupFailure.map {
+                    forgePlayTechnicalErrorSummary($0)
+                } ?? "managed prefix shutdown and inactivity verified",
+                originalError: dispatchError,
+                cleanupError: cleanupFailure,
+                originalProcessResult: dispatchEvidence.first,
+                cleanupProcessResults: cleanupEvidence
+            )
+        }
+    }
+
+    private func attachProviderApplicationReceipts(
+        to result: inout ProcessRunResult,
+        inputSession: SteamInputCompatibilitySession,
+        controllerSession: SteamControllerCompatibilitySession,
+        fontReceipt: WindowsFontProvisioningApplicationReceipt,
+        rendererReceipt: SteamRendererRouteApplicationReceipt,
+        prefix: URL,
+        runtimeExecutable: URL,
+        logDirectory: URL,
+        expectedCompatibilitySelection: SteamPrelaunchCompatibilitySelection
+    ) async throws {
+        do {
+            try await populateProviderApplicationReceipts(
+                to: &result,
+                inputSession: inputSession,
+                controllerSession: controllerSession,
+                fontReceipt: fontReceipt,
+                rendererReceipt: rendererReceipt,
+                prefix: prefix,
+                expectedCompatibilitySelection: expectedCompatibilitySelection
+            )
+        } catch let receiptError {
+            // Receipt construction occurs after the detached launcher exists.
+            // A failed readback must therefore shut down the prefix before the
+            // error is allowed to escape; otherwise a failed launch can leave
+            // an unmanaged Steam process running.
+            let cleanup = await prefixProcessSupervisor.shutdownAfterFailure(
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix,
+                logDirectory: logDirectory
+            )
+            if let cleanupError = cleanup.error {
+                throw SteamPrefixLifecycleCleanupError(
+                    originalDescription:
+                        forgePlayTechnicalErrorSummary(receiptError),
+                    cleanupDescription:
+                        forgePlayTechnicalErrorSummary(cleanupError),
+                    originalError: receiptError,
+                    cleanupError: cleanupError,
+                    cleanupProcessResults: cleanup.result.map { [$0] } ?? []
+                )
+            }
+            guard let cleanupResult = cleanup.result,
+                  cleanupResult.succeeded else {
+                let cleanupError = cleanup.result.map {
+                    SteamLaunchError.prefixShutdownFailed($0)
+                }
+                throw SteamPrefixLifecycleCleanupError(
+                    originalDescription:
+                        forgePlayTechnicalErrorSummary(receiptError),
+                    cleanupDescription: cleanupError.map {
+                        forgePlayTechnicalErrorSummary($0)
+                    } ?? "prefix shutdown returned no result",
+                    originalError: receiptError,
+                    cleanupError: cleanupError,
+                    cleanupProcessResults: cleanup.result.map { [$0] } ?? []
+                )
+            }
+            do {
+                guard try await compatibilityPrefixExitWaiter(
+                    prefix,
+                    30,
+                    0.2
+                ) else {
+                    throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                        "post-receipt-failure-prefix-still-active"
+                    )
+                }
+            } catch let cleanupVerificationError {
+                throw SteamPrefixLifecycleCleanupError(
+                    originalDescription:
+                        forgePlayTechnicalErrorSummary(receiptError),
+                    cleanupDescription:
+                        forgePlayTechnicalErrorSummary(cleanupVerificationError),
+                    originalError: receiptError,
+                    cleanupError: cleanupVerificationError,
+                    cleanupProcessResults: [cleanupResult]
+                )
+            }
+            throw receiptError
+        }
+    }
+
+    private func populateProviderApplicationReceipts(
+        to result: inout ProcessRunResult,
+        inputSession: SteamInputCompatibilitySession,
+        controllerSession: SteamControllerCompatibilitySession,
+        fontReceipt: WindowsFontProvisioningApplicationReceipt,
+        rendererReceipt: SteamRendererRouteApplicationReceipt,
+        prefix: URL,
+        expectedCompatibilitySelection: SteamPrelaunchCompatibilitySelection
+    ) async throws {
+        let currentFontReadback =
+            WindowsFontCompatibilityProfileContract.inspect(
+                prefix: prefix,
+                fileManager: fileManager,
+                requiresProfileMarker: true
+            )
+        let disposition = SteamLaunchDispatchDisposition.resolve(result)
+        let processIdentifier: pid_t
+        switch disposition {
+        case .runningDetachedProcess:
+            guard let launchedProcessIdentifier = result.processIdentifier,
+                  launchedProcessIdentifier > 0 else {
+                throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                    "launch-provider-boundary-readback"
+                )
+            }
+            processIdentifier = launchedProcessIdentifier
+        case .successfulForgePlayLauncherHandoff:
+            guard let detachedReadback = try await
+                    detachedHandoffManagedWineReadbackProvider(prefix),
+                  detachedReadback.processIdentifier > 0 else {
+                throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                    "detached-helper-managed-wine-readback"
+                )
+            }
+            result.managedWineChildSynchronizationReadback = detachedReadback
+            processIdentifier = detachedReadback.processIdentifier
+        case .completedOrFailed:
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "launch-provider-boundary-readback"
+            )
+        }
+        guard result.succeeded,
+              let childSynchronizationReadback =
+                result.managedWineChildSynchronizationReadback,
+              childSynchronizationReadback.processIdentifier ==
+                processIdentifier,
+              childSynchronizationReadback.selection == .automatic,
+              childSynchronizationReadback.backend == .server,
+              let environmentProjection =
+                result.managedWineLaunchEnvironmentProjection,
+              environmentProjection.rendererSelection ==
+                expectedCompatibilitySelection.rendererSelection.rawValue,
+              environmentProjection.networkSelection ==
+                expectedCompatibilitySelection.networkSelection.rawValue,
+              environmentProjection.audioInputSelection ==
+                expectedCompatibilitySelection.audioInputSelection.rawValue,
+              fontReceipt.isAppliedAndReadBack,
+              currentFontReadback.isSatisfied,
+              rendererReceipt.isPreparationVerified else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "launch-provider-boundary-readback"
+            )
+        }
+        try inputSession.bindManagedWineTransport(
+            processIdentifier: processIdentifier
+        )
+        try controllerSession.bindManagedWineTransport(
+            processIdentifier: processIdentifier
+        )
+        let inputReceipt = try inputSession.applicationReceipt()
+        let controllerReceipt = try controllerSession.applicationReceipt()
+        guard inputReceipt.isLifecycleAdmissionVerified,
+              controllerReceipt.isStaticPreparationVerified else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "input-provider-readback"
+            )
+        }
+        result.inputCompatibilityReceipt = inputReceipt
+        result.controllerCompatibilityReceipt = controllerReceipt
+        result.windowsFontProvisioningReceipt = fontReceipt
+        result.rendererRouteApplicationReceipt = rendererReceipt
+    }
+
+    private func commitCompatibilitySessions(
+        _ inputSession: SteamInputCompatibilitySession,
+        controllerSession: SteamControllerCompatibilitySession,
+        prefix: URL,
+        restorationLease: SteamCompatibilityRestorationPrefixLease?,
+        rendererSession: ActiveNVIDIARendererSession?,
+        admission: SteamCompatibilitySessionCommitAdmission
+    ) async throws {
+        let key = prefix.standardizedFileURL.path
+        try inputSession.requireNoTerminalFailure()
+        let inputRequiresRetention: Bool
+        let controllerRequiresRetention: Bool
+        switch admission {
+        case .providerReceiptsVerified:
+            inputRequiresRetention = inputSession.requiresLifecycleRetention
+            controllerRequiresRetention =
+                controllerSession.requiresLifecycleRetention
+        case .successfulDetachedHandoff(
+            let rendererPreparationVerified
+        ):
+            guard rendererPreparationVerified else {
+                throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                    "detached-handoff-renderer-preparation"
+                )
+            }
+            guard !inputSession
+                    .requiresFailClosedManagedTransportBinding,
+                  inputSession.permitsDetachedHandoffDegradation,
+                  !controllerSession.requiresLifecycleRetention else {
+                throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                    "detached-helper-input-binding-unavailable"
+                )
+            }
+            inputRequiresRetention = false
+            controllerRequiresRetention = false
+        }
+        let requiresPrefixMutationRestoration =
+            controllerRequiresRetention ||
+            rendererSession != nil
+        let restorationPlan = GameInputProtectionRestorationPlan.resolve(
+            inputRequiresRetention: inputRequiresRetention,
+            prefixMutationRequiresRetention:
+                requiresPrefixMutationRestoration,
+            hasRestorationLease: restorationLease != nil
+        )
+        guard restorationPlan != .invalidMissingMutationLease else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "prefix-mutation-restoration-lease-required"
+            )
+        }
+        await quiesceCompatibilityRestorationMonitor(forPrefixKey: key)
+        try inputSession.requireNoTerminalFailure()
+        if hasCompatibilityRestorationState(forPrefixKey: key) ||
+            activeCompatibilityRestorationPrefixLeases[key] != nil {
+            try await restoreCompatibilitySessions(forPrefixKey: key)
+        }
+        try inputSession.requireNoTerminalFailure()
+        if restorationLease != nil,
+           activeCompatibilityRestorationPrefixLeases[key] != nil {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "duplicate-restoration-prefix-lease"
+            )
+        }
+        if inputRequiresRetention {
+            activeInputCompatibilitySessions[key] = inputSession
+        } else {
+            guard inputSession.restore() else {
+                throw SteamInputCompatibilitySessionError.cursorRestoreFailed(
+                    "resource-free-session"
+                )
+            }
+        }
+        if controllerRequiresRetention {
+            activeControllerCompatibilitySessions[key] = controllerSession
+        } else {
+            controllerSession.restore()
+        }
+        if let rendererSession {
+            activeNVIDIARendererSessions[key] = rendererSession
+        }
+        guard activeInputCompatibilitySessions[key] != nil ||
+                activeControllerCompatibilitySessions[key] != nil ||
+                activeNVIDIARendererSessions[key] != nil else {
+            compatibilitySessionRestorationFailures.removeValue(forKey: key)
+            return
+        }
+        if restorationPlan == .leaseBacked,
+           let restorationLease {
+            activeCompatibilityRestorationPrefixLeases[key] = restorationLease
+            restorationLease.markTransferred()
+            startCompatibilityRestorationMonitor(prefix: prefix, prefixKey: key)
+        } else if restorationPlan == .inputOnly,
+                  activeInputCompatibilitySessions[key] != nil {
+            startInputOnlyCompatibilityRestorationMonitor(
+                prefix: prefix,
+                prefixKey: key
+            )
+        }
+    }
+
+    private func commitCompatibilitySessionsAfterLaunch(
+        _ inputSession: SteamInputCompatibilitySession,
+        controllerSession: SteamControllerCompatibilitySession,
+        prefix: URL,
+        runtimeExecutable: URL,
+        logDirectory: URL,
+        restorationLease: SteamCompatibilityRestorationPrefixLease?,
+        rendererSession: ActiveNVIDIARendererSession?,
+        admission: SteamCompatibilitySessionCommitAdmission,
+        result: inout ProcessRunResult,
+        fontReceipt: WindowsFontProvisioningApplicationReceipt,
+        rendererReceipt: SteamRendererRouteApplicationReceipt,
+        prepareForMutation: @escaping () throws -> Void,
+        rollbackOwnership:
+            GameInputProtectionPostDispatchRollbackOwnership
+    ) async throws {
+        do {
+            if case .successfulDetachedHandoff = admission {
+                try populateDetachedHandoffApplicationReceipts(
+                    to: &result,
+                    inputSession: inputSession,
+                    controllerSession: controllerSession,
+                    fontReceipt: fontReceipt,
+                    rendererReceipt: rendererReceipt
+                )
+                if rendererSession != nil {
+                    guard try await !compatibilityPrefixExitWaiter(
+                        prefix,
+                        0,
+                        0.2
+                    ) else {
+                        throw SteamCompatibilityLaunchProfileErrorV1
+                            .invalidReceipt(
+                                "detached-helper-prefix-inactive"
+                            )
+                    }
+                }
+            }
+            try await commitCompatibilitySessions(
+                inputSession,
+                controllerSession: controllerSession,
+                prefix: prefix,
+                restorationLease: restorationLease,
+                rendererSession: rendererSession,
+                admission: admission
+            )
+        } catch {
+            let commitFailure = error
+            let resolution = GameInputProtectionCommitFailureResolver
+                .resolve(
+                    sessionTerminalFailure: inputSession.terminalFailure,
+                    commitFailure: commitFailure,
+                    technicalDescription: {
+                        forgePlayTechnicalErrorSummary($0)
+                    }
+                )
+            try await containForegroundPostDispatchCommitFailure(
+                commitFailure,
+                initialTerminalResolution: resolution,
+                inputSession: inputSession,
+                controllerSession: controllerSession,
+                rendererSession: rendererSession,
+                rollbackOwnership: rollbackOwnership,
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix,
+                logDirectory: logDirectory,
+                prepareForMutation: prepareForMutation
+            )
+        }
+    }
+
+    private func populateDetachedHandoffApplicationReceipts(
+        to result: inout ProcessRunResult,
+        inputSession: SteamInputCompatibilitySession,
+        controllerSession: SteamControllerCompatibilitySession,
+        fontReceipt: WindowsFontProvisioningApplicationReceipt,
+        rendererReceipt: SteamRendererRouteApplicationReceipt
+    ) throws {
+        guard SteamLaunchDispatchDisposition.resolve(result) ==
+                .successfulForgePlayLauncherHandoff,
+              inputSession.permitsDetachedHandoffDegradation,
+              !inputSession.requiresFailClosedManagedTransportBinding,
+              fontReceipt.isAppliedAndReadBack,
+              rendererReceipt.isPreparationVerified else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "detached-handoff-resource-free-readback"
+            )
+        }
+        let controllerReceipt = try controllerSession
+            .resourceFreeDetachedHandoffReceipt()
+        guard controllerReceipt.isStaticPreparationVerified else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "detached-handoff-resource-free-receipt"
+            )
+        }
+        if inputSession.isResourceFreeProtectionPolicy {
+            let inputReceipt = try inputSession.applicationReceipt()
+            guard inputReceipt.isResourceFreeNoMutation else {
+                throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                    "detached-handoff-resource-free-receipt"
+                )
+            }
+            result.inputCompatibilityReceipt = inputReceipt
+        } else {
+            result.inputCompatibilityReceipt = nil
+            result.inputProtectionDegradedForDetachedHandoff = true
+            result.diagnosticCaptureWarning = DiagnosticWarningText.combined(
+                result.diagnosticCaptureWarning,
+                "Pointer-only game protection was not bound because the " +
+                    "detached Steam launcher had already exited; Steam and " +
+                    "the renderer session remain managed."
+            )
+        }
+        result.controllerCompatibilityReceipt = controllerReceipt
+        result.windowsFontProvisioningReceipt = fontReceipt
+        result.rendererRouteApplicationReceipt = rendererReceipt
+    }
+
+    private func containForegroundPostDispatchCommitFailure(
+        _ commitFailure: any Error,
+        initialTerminalResolution:
+            GameInputProtectionCommitFailureResolution?,
+        inputSession: SteamInputCompatibilitySession,
+        controllerSession: SteamControllerCompatibilitySession,
+        rendererSession: ActiveNVIDIARendererSession?,
+        rollbackOwnership:
+            GameInputProtectionPostDispatchRollbackOwnership,
+        runtimeExecutable: URL,
+        prefix: URL,
+        logDirectory: URL,
+        prepareForMutation: @escaping () throws -> Void
+    ) async throws -> Never {
+        let key = prefix.standardizedFileURL.path
+        let token = await GameInputProtectionForegroundClaimAcquirer
+            .acquireFreshClaim(
+                acquire: {
+                    self.gameInputProtectionContainmentClaims.acquire(
+                        prefixKey: key
+                    )
+                },
+                waitForCompletion: { existingToken in
+                    await GameInputProtectionContainmentClaimCompletionWaiter
+                        .wait(
+                            whileCurrent: {
+                                self.gameInputProtectionContainmentClaims
+                                    .isCurrent(
+                                        prefixKey: key,
+                                        token: existingToken
+                                    )
+                            }
+                        )
+                }
+            )
+        let processEvidence =
+            GameInputProtectionContainmentProcessEvidence()
+        let cleanup = await
+            GameInputProtectionForegroundContainmentCleanup.run(
+                attempt: { [weak self] phase in
+                    guard let self else { return .cancelled }
+                    return await self
+                        .performForegroundPostDispatchContainmentAttempt(
+                            phase: phase,
+                            inputSession: inputSession,
+                            controllerSession: controllerSession,
+                            rendererSession: rendererSession,
+                            rollbackOwnership: rollbackOwnership,
+                            runtimeExecutable: runtimeExecutable,
+                            prefix: prefix,
+                            prefixKey: key,
+                            logDirectory: logDirectory,
+                            processEvidence: processEvidence,
+                            prepareForMutation: prepareForMutation
+                        )
+                },
+                failureRecorded: { [weak self] state, detail in
+                    self?.compatibilitySessionRestorationFailures[key] =
+                        "foreground post-dispatch containment " +
+                        "\(state.phase) attempt " +
+                        "\(state.consecutiveFailures) failed: " +
+                        "\(detail); retrying"
+                },
+                cleanupFinished: { [weak self] completed in
+                    guard completed else { return }
+                    self?.compatibilitySessionRestorationFailures
+                        .removeValue(forKey: key)
+                    if let self {
+                        GameInputProtectionPostDispatchClaimReleaseGate
+                            .releaseIfRollbackCompleted(
+                                ownership: rollbackOwnership,
+                                registry:
+                                    &self.gameInputProtectionContainmentClaims,
+                                prefixKey: key,
+                                token: token
+                            )
+                    }
+                }
+            )
+        let terminalResolution = GameInputProtectionCommitFailureResolver
+            .resolve(
+                sessionTerminalFailure: inputSession.terminalFailure,
+                commitFailure: commitFailure,
+                technicalDescription: {
+                    forgePlayTechnicalErrorSummary($0)
+                }
+            ) ?? initialTerminalResolution
+        let prioritizedError = GameInputProtectionPostDispatchFailurePriority.error(
+            originalCommitFailure: commitFailure,
+            originalFailureTechnicalDescription:
+                forgePlayTechnicalErrorSummary(commitFailure),
+            terminalResolution: terminalResolution,
+            cleanupCompleted: cleanup.cleanupCompleted,
+            callerCancellationObserved:
+                cleanup.callerCancellationObserved
+        )
+        guard !processEvidence.processResults.isEmpty else {
+            throw prioritizedError
+        }
+        throw GameInputProtectionContainmentDiagnosticError(
+            underlyingError: prioritizedError,
+            diagnosticProcessResults: processEvidence.processResults
+        )
+    }
+
+    private func scheduleGameInputProtectionTerminalContainment(
+        session: GameInputProtectionSessionIdentity,
+        failure: GameInputProtectionTerminalFailure,
+        runtimeExecutable: URL,
+        prefix: URL,
+        logDirectory: URL
+    ) {
+        let key = prefix.standardizedFileURL.path
+        guard !isApplicationTerminationContainmentDrainActive else { return }
+        guard GameInputProtectionCommittedSessionGate
+            .permitsBackgroundContainment(
+                terminalSession: session,
+                committedSession:
+                    activeInputCompatibilitySessions[key]?.identity,
+                hasExistingContainment:
+                    gameInputProtectionContainmentClaims.hasClaim(
+                        prefixKey: key
+                    )
+            ) else {
+            return
+        }
+        guard case .acquired(let claimToken) =
+                gameInputProtectionContainmentClaims.acquire(prefixKey: key)
+        else { return }
+        compatibilitySessionRestorationFailures[key] =
+            "game input protection terminal failure; containment started: " +
+            (failure.errorDescription ?? String(describing: failure))
+        let lifecycleGate = GameInputProtectionSafetyFirstLifecycleGate()
+        let lifecycleHandler = gameInputProtectionLifecycleEventHandler
+        let protectionLostDelivery: (@MainActor @Sendable () -> Void)?
+        let containmentCompletedDelivery: (@MainActor @Sendable () -> Void)?
+        if let lifecycleHandler {
+            protectionLostDelivery = {
+                lifecycleHandler(
+                    .protectionLost(session: session, failure: failure)
+                )
+            }
+            containmentCompletedDelivery = {
+                lifecycleHandler(
+                    .containmentCompleted(session: session, failure: failure)
+                )
+            }
+        } else {
+            protectionLostDelivery = nil
+            containmentCompletedDelivery = nil
+        }
+        let processEvidence =
+            GameInputProtectionContainmentProcessEvidence()
+        gameInputProtectionTerminalContainmentTasks[key] = Task { [weak self] in
+            let completed = await
+                GameInputProtectionTerminalContainmentCoordinator.run(
+                    attempt: { phase in
+                        guard let self else { return .cancelled }
+                        if phase == .shutdown {
+                            lifecycleGate
+                                .admitShutdownAttemptAndQueueLossEvent(
+                                    protectionLostDelivery
+                                )
+                        }
+                        return await self
+                            .performGameInputProtectionTerminalContainmentAttempt(
+                                phase: phase,
+                                runtimeExecutable: runtimeExecutable,
+                                prefix: prefix,
+                                prefixKey: key,
+                                logDirectory: logDirectory,
+                                processEvidence: processEvidence
+                            )
+                    },
+                    failureRecorded: { state, detail in
+                        self?.compatibilitySessionRestorationFailures[key] =
+                            "game input protection terminal containment " +
+                            "\(state.phase) attempt " +
+                            "\(state.consecutiveFailures) failed after " +
+                            "\(failure): \(detail); retrying"
+                    }
+                )
+            guard let self else { return }
+            guard self.gameInputProtectionContainmentClaims.release(
+                prefixKey: key,
+                token: claimToken
+            ) else { return }
+            self.gameInputProtectionTerminalContainmentTasks.removeValue(
+                forKey: key
+            )
+            guard completed else {
+                self.compatibilitySessionRestorationFailures[key] =
+                    "game input protection terminal containment was drained; " +
+                    "retained compatibility state awaits the termination " +
+                    "coordinator"
+                return
+            }
+            self.compatibilitySessionRestorationFailures.removeValue(
+                forKey: key
+            )
+            if let containmentCompletedDelivery {
+                lifecycleGate.queueCompletionAfterLossEvent(
+                    containmentCompletedDelivery
+                )
+            }
+        }
+    }
+
+    private func performForegroundPostDispatchContainmentAttempt(
+        phase: GameInputProtectionTerminalContainmentState.Phase,
+        inputSession: SteamInputCompatibilitySession,
+        controllerSession: SteamControllerCompatibilitySession,
+        rendererSession: ActiveNVIDIARendererSession?,
+        rollbackOwnership:
+            GameInputProtectionPostDispatchRollbackOwnership,
+        runtimeExecutable: URL,
+        prefix: URL,
+        prefixKey key: String,
+        logDirectory: URL,
+        processEvidence: GameInputProtectionContainmentProcessEvidence,
+        prepareForMutation: @escaping () throws -> Void
+    ) async -> GameInputProtectionTerminalContainmentCoordinator.AttemptResult {
+        guard phase == .restoration else {
+            return await performGameInputProtectionTerminalContainmentAttempt(
+                phase: phase,
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix,
+                prefixKey: key,
+                logDirectory: logDirectory,
+                processEvidence: processEvidence
+            )
+        }
+        await quiesceCompatibilityRestorationMonitor(forPrefixKey: key)
+        do {
+            try prepareForMutation()
+            try await restoreCompatibilitySessions(forPrefixKey: key)
+            guard inputSession.restore() else {
+                return .failure("local input session restore failed")
+            }
+            controllerSession.restore()
+            rollbackOwnership.markLocalInputAndControllerRollbackCompleted()
+            if let rendererSession {
+                try await restoreNVIDIARendererSession(rendererSession)
+            }
+            rollbackOwnership.markRendererRollbackCompleted()
+            return .success
+        } catch {
+            return .failure(forgePlayTechnicalErrorSummary(error))
+        }
+    }
+
+    private func performGameInputProtectionTerminalContainmentAttempt(
+        phase: GameInputProtectionTerminalContainmentState.Phase,
+        runtimeExecutable: URL,
+        prefix: URL,
+        prefixKey key: String,
+        logDirectory: URL,
+        processEvidence: GameInputProtectionContainmentProcessEvidence
+    ) async -> GameInputProtectionTerminalContainmentCoordinator.AttemptResult {
+        switch phase {
+        case .shutdown:
+            let outcome = await prefixProcessSupervisor.shutdownAfterFailure(
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix,
+                logDirectory: logDirectory
+            )
+            await retainGameInputProtectionContainmentShutdownEvidence(
+                outcome,
+                processEvidence: processEvidence
+            )
+            do {
+                if try await compatibilityPrefixExitWaiter(prefix, 30, 0.2) {
+                    return .success
+                }
+            } catch {
+                return .failure(forgePlayTechnicalErrorSummary(error))
+            }
+            let detail = outcome.error.map {
+                forgePlayTechnicalErrorSummary($0)
+            } ?? outcome.result.map {
+                let status = $0.forgePlayStatusCode.map(String.init) ?? "unavailable"
+                return "shutdown status \(status); " +
+                "managed prefix remained active"
+            } ?? "shutdown produced no result and managed prefix remained active"
+            return .failure(detail)
+        case .restoration:
+            await quiesceCompatibilityRestorationMonitor(forPrefixKey: key)
+            do {
+                try await restoreCompatibilitySessions(forPrefixKey: key)
+                return .success
+            } catch {
+                return .failure(forgePlayTechnicalErrorSummary(error))
+            }
+        case .complete:
+            return .success
+        }
+    }
+
+    private func retainGameInputProtectionContainmentShutdownEvidence(
+        _ outcome: (result: ProcessRunResult?, error: Error?),
+        processEvidence: GameInputProtectionContainmentProcessEvidence
+    ) async {
+        var candidates = [outcome.result].compactMap { $0 }
+        if let error = outcome.error {
+            candidates.append(contentsOf: diagnosticProcessRunResults(from: error))
+        }
+        var seen = Set<ProcessRunResult>()
+        for candidate in candidates where seen.insert(candidate).inserted {
+            let linkedResult = processEvidence.preparingForFinalization(candidate)
+            let finalizedResult = await runner.finalizeProcessEvidence(linkedResult)
+            processEvidence.recordFinalized(finalizedResult)
+        }
+    }
+
+    /// Host input filtering owns no prefix mutation. This monitor is the only
+    /// nil-restoration-lease path and must never absorb controller/renderer
+    /// restoration responsibilities.
+#if DEBUG
+    /// Debug-only lifecycle seam. It installs the same retained session and
+    /// production monitor used by the precommit handoff, allowing cancellation
+    /// and owner-deallocation behavior to be verified without launching Wine.
+    func debugInstallInputOnlyCompatibilityRestorationMonitor(
+        session: SteamInputCompatibilitySession,
+        prefix: URL
+    ) {
+        let key = prefix.standardizedFileURL.path
+        precondition(!hasCompatibilityRestorationState(forPrefixKey: key))
+        precondition(activeCompatibilityRestorationPrefixLeases[key] == nil)
+        activeInputCompatibilitySessions[key] = session
+        startInputOnlyCompatibilityRestorationMonitor(
+            prefix: prefix,
+            prefixKey: key
+        )
+    }
+#endif
+
+    private func startInputOnlyCompatibilityRestorationMonitor(
+        prefix: URL,
+        prefixKey key: String
+    ) {
+        guard inputCompatibilityTerminationMonitors[key] == nil,
+              activeInputCompatibilitySessions[key] != nil,
+              activeControllerCompatibilitySessions[key] == nil,
+              activeNVIDIARendererSessions[key] == nil,
+              activeCompatibilityRestorationPrefixLeases[key] == nil else {
+            return
+        }
+        let token = UUID()
+        let prefixExitWaiter = compatibilityPrefixExitWaiter
+        let task = Task { @MainActor [weak self] in
+            defer {
+                self?.removeCompatibilityRestorationMonitor(
+                    forPrefixKey: key,
+                    ownedBy: token
+                )
+            }
+            let completed = await
+                GameInputProtectionRestorationMonitorLoop.run(
+                    observeInactivity: { @MainActor in
+                        do {
+                            return try await Self
+                                .waitForCompatibilityPrefixToBecomeInactive(
+                                    prefix,
+                                    using: prefixExitWaiter
+                                )
+                                ? .success
+                                : .stop
+                        } catch {
+                            return .retry(
+                                forgePlayTechnicalErrorSummary(error)
+                            )
+                        }
+                    },
+                    restore: { @MainActor [weak self] in
+                        guard let self else {
+                            return .stop
+                        }
+                        do {
+                            try restoreInputOnlyCompatibilitySession(
+                                forPrefixKey: key
+                            )
+                            return .success
+                        } catch {
+                            return .retry(
+                                forgePlayTechnicalErrorSummary(error)
+                            )
+                        }
+                    },
+                    failureRecorded: { @MainActor [weak self]
+                        kind, failureCount, detail in
+                        let label = kind == .observation
+                            ? "input-only process observation"
+                            : "input-only restoration"
+                        self?.compatibilitySessionRestorationFailures[key] =
+                            "\(label) attempt \(failureCount) " +
+                            "failed closed: \(detail)"
+                    }
+                )
+            if completed {
+                self?.compatibilitySessionRestorationFailures.removeValue(
+                    forKey: key
+                )
+            }
+        }
+        inputCompatibilityTerminationMonitors[key] =
+            CompatibilityRestorationMonitor(token: token, task: task)
+    }
+
+    private func startCompatibilityRestorationMonitor(
+        prefix: URL,
+        prefixKey key: String
+    ) {
+        guard inputCompatibilityTerminationMonitors[key] == nil,
+              hasCompatibilityRestorationState(forPrefixKey: key),
+              activeCompatibilityRestorationPrefixLeases[key] != nil else {
+            return
+        }
+        let token = UUID()
+        let prefixExitWaiter = compatibilityPrefixExitWaiter
+        let task = Task { @MainActor [weak self] in
+            defer {
+                self?.removeCompatibilityRestorationMonitor(
+                    forPrefixKey: key,
+                    ownedBy: token
+                )
+            }
+            let completed = await
+                GameInputProtectionRestorationMonitorLoop.run(
+                    observeInactivity: { @MainActor in
+                        do {
+                            return try await Self
+                                .waitForCompatibilityPrefixToBecomeInactive(
+                                    prefix,
+                                    using: prefixExitWaiter
+                                )
+                                ? .success
+                                : .stop
+                        } catch {
+                            return .retry(
+                                forgePlayTechnicalErrorSummary(error)
+                            )
+                        }
+                    },
+                    restore: { @MainActor [weak self] in
+                        guard let self else {
+                            return .stop
+                        }
+                        do {
+                            try await restoreCompatibilitySessions(
+                                forPrefixKey: key
+                            )
+                            return .success
+                        } catch {
+                            return .retry(
+                                forgePlayTechnicalErrorSummary(error)
+                            )
+                        }
+                    },
+                    failureRecorded: { @MainActor [weak self]
+                        kind, failureCount, detail in
+                        let label = kind == .observation
+                            ? "process observation"
+                            : "restoration"
+                        self?.compatibilitySessionRestorationFailures[key] =
+                            "\(label) attempt \(failureCount) failed: " +
+                            detail
+                    }
+                )
+            if completed {
+                self?.compatibilitySessionRestorationFailures.removeValue(
+                    forKey: key
+                )
+            }
+        }
+        inputCompatibilityTerminationMonitors[key] =
+            CompatibilityRestorationMonitor(token: token, task: task)
+    }
+
+    private func removeCompatibilityRestorationMonitor(
+        forPrefixKey key: String,
+        ownedBy token: UUID
+    ) {
+        guard GameInputProtectionRestorationMonitorOwnerGate.permitsRemoval(
+            currentToken: inputCompatibilityTerminationMonitors[key]?.token,
+            ownerToken: token
+        ) else {
+            return
+        }
+        inputCompatibilityTerminationMonitors.removeValue(forKey: key)
+    }
+
+    private func hasCompatibilityRestorationState(
+        forPrefixKey key: String
+    ) -> Bool {
+        activeInputCompatibilitySessions[key] != nil ||
+            activeControllerCompatibilitySessions[key] != nil ||
+            activeNVIDIARendererSessions[key] != nil
+    }
+
+    private func quiesceCompatibilityRestorationMonitor(
+        forPrefixKey key: String
+    ) async {
+        guard let previousMonitor = inputCompatibilityTerminationMonitors
+            .removeValue(forKey: key) else {
+            return
+        }
+        previousMonitor.task.cancel()
+        await previousMonitor.task.value
+    }
+
+    private func restoreCompatibilitySessions(
+        forPrefixKey key: String
+    ) async throws {
+        guard compatibilityRestorationClaims.insert(key).inserted else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "compatibility-restoration-already-in-progress"
+            )
+        }
+        defer { compatibilityRestorationClaims.remove(key) }
+        let requiresPrefixMutationRestoration =
+            activeControllerCompatibilitySessions[key] != nil ||
+            activeNVIDIARendererSessions[key] != nil
+        guard activeCompatibilityRestorationPrefixLeases[key] != nil ||
+                !requiresPrefixMutationRestoration else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "prefix-mutation-restoration-lease-missing"
+            )
+        }
+        if let restorationLease =
+                activeCompatibilityRestorationPrefixLeases[key] {
+            try restorationLease.prepareForMutation()
+        }
+        if let inputSession = activeInputCompatibilitySessions[key] {
+            guard inputSession.restore() else {
+                throw SteamInputCompatibilitySessionError.cursorRestoreFailed(
+                    "active-session"
+                )
+            }
+            activeInputCompatibilitySessions.removeValue(forKey: key)
+        }
+        if let controllerSession = activeControllerCompatibilitySessions[key] {
+            controllerSession.restore()
+            activeControllerCompatibilitySessions.removeValue(forKey: key)
+        }
+        if let rendererSession = activeNVIDIARendererSessions[key] {
+            try await restoreNVIDIARendererSession(rendererSession)
+            activeNVIDIARendererSessions.removeValue(forKey: key)
+        }
+        if !hasCompatibilityRestorationState(forPrefixKey: key),
+           let restorationLease = activeCompatibilityRestorationPrefixLeases
+            .removeValue(forKey: key) {
+            restorationLease.release()
+        }
+    }
+
+    private func restoreInputOnlyCompatibilitySession(
+        forPrefixKey key: String
+    ) throws {
+        guard compatibilityRestorationClaims.insert(key).inserted else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "compatibility-restoration-already-in-progress"
+            )
+        }
+        defer { compatibilityRestorationClaims.remove(key) }
+        guard activeControllerCompatibilitySessions[key] == nil,
+              activeNVIDIARendererSessions[key] == nil,
+              activeCompatibilityRestorationPrefixLeases[key] == nil else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "input-only-restoration-scope-expanded"
+            )
+        }
+        if let inputSession = activeInputCompatibilitySessions[key] {
+            guard inputSession.restore() else {
+                throw SteamInputCompatibilitySessionError.cursorRestoreFailed(
+                    "input-only-active-session"
+                )
+            }
+            activeInputCompatibilitySessions.removeValue(forKey: key)
+        }
+    }
+
+    /// Completes every session-scoped compatibility owner after the managed
+    /// Wine prefix has been stopped during application termination or a root
+    /// transition. The termination coordinator must await this barrier before
+    /// it accepts the prefix as clean; otherwise a renderer restoration monitor
+    /// can be cancelled with ForgePlay-owned NVIDIA registry/modules still
+    /// staged, or its retained prefix lease can race the final shutdown check.
+    func completeRetainedCompatibilitySessionsAfterPrefixShutdown(
+        prefix: URL
+    ) async throws {
+        let key = prefix.standardizedFileURL.path
+        await quiesceCompatibilityRestorationMonitor(forPrefixKey: key)
+
+        guard try await compatibilityPrefixExitWaiter(prefix, 30, 0.2) else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "application-termination-managed-prefix-still-active"
+            )
+        }
+
+        try await restoreCompatibilitySessions(forPrefixKey: key)
+
+        guard !hasCompatibilityRestorationState(forPrefixKey: key),
+              activeCompatibilityRestorationPrefixLeases[key] == nil else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "application-termination-compatibility-restoration-incomplete"
+            )
+        }
+        guard try await compatibilityPrefixExitWaiter(prefix, 30, 0.2) else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "application-termination-restoration-prefix-still-active"
+            )
+        }
+        compatibilitySessionRestorationFailures.removeValue(forKey: key)
+    }
+
+    /// A successful wineserver shutdown can wake the previous launch's
+    /// termination monitor. Quiesce that task before the new launch mutates
+    /// renderer or prefix state, then perform any remaining restoration while
+    /// the caller still owns the exclusive mutation lease.
+    private func reconcileCompatibilitySessionsAfterSuccessfulShutdown(
+        prefix: URL
+    ) async throws {
+        let key = prefix.standardizedFileURL.path
+        await quiesceCompatibilityRestorationMonitor(forPrefixKey: key)
+        do {
+            try await restoreCompatibilitySessions(
+                forPrefixKey: key
+            )
+            compatibilitySessionRestorationFailures.removeValue(forKey: key)
+        } catch {
+            compatibilitySessionRestorationFailures[key] =
+                "exclusive reconciliation restoration failed; retry monitor re-armed: " +
+                forgePlayTechnicalErrorSummary(error)
+            if hasCompatibilityRestorationState(forPrefixKey: key) {
+                if activeCompatibilityRestorationPrefixLeases[key] != nil {
+                    startCompatibilityRestorationMonitor(
+                        prefix: prefix,
+                        prefixKey: key
+                    )
+                } else {
+                    startInputOnlyCompatibilityRestorationMonitor(
+                        prefix: prefix,
+                        prefixKey: key
+                    )
+                }
+            }
+            throw error
+        }
+    }
+
+    func waitForCompatibilityPrefixToBecomeInactive(
+        _ prefix: URL
+    ) async throws -> Bool {
+        try await Self.waitForCompatibilityPrefixToBecomeInactive(
+            prefix,
+            using: compatibilityPrefixExitWaiter
+        )
+    }
+
+    private nonisolated static func waitForCompatibilityPrefixToBecomeInactive(
+        _ prefix: URL,
+        using prefixExitWaiter: CompatibilityPrefixExitWaiter
+    ) async throws -> Bool {
+        try await GameInputProtectionRestorationInactivityWaiter
+            .waitUntilInactive(prefix, using: prefixExitWaiter)
+    }
+
+    /// Renderer rollback mutates registry and System32 state. A prefix lease
+    /// only serializes ForgePlay callers; it is not evidence that detached
+    /// Wine processes have stopped. Never begin that rollback until the
+    /// managed-process journal proves the prefix is inactive.
+    private func requireManagedPrefixInactivityBeforeRendererRestoration(
+        _ prefix: URL
+    ) async throws {
+        guard try await compatibilityPrefixExitWaiter(
+            prefix,
+            30,
+            0.2
+        ) else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "renderer-restoration-managed-prefix-still-active"
+            )
+        }
+    }
+
+    /// An exceptional post-dispatch path may reach the outer recovery owner
+    /// without having completed its earlier shutdown. Observe an already-idle
+    /// prefix cheaply; otherwise issue a bounded shutdown and require both a
+    /// successful shutdown result and explicit inactivity before mutation.
+    private func shutdownAndRequireManagedPrefixInactivityForRendererRestoration(
+        runtimeExecutable: URL,
+        prefix: URL,
+        logDirectory: URL
+    ) async throws -> ProcessRunResult? {
+        if (try? await compatibilityPrefixExitWaiter(prefix, 0, 0.2)) == true {
+            return nil
+        }
+
+        let cleanup = await prefixProcessSupervisor.shutdownAfterFailure(
+            runtimeExecutable: runtimeExecutable,
+            prefix: prefix,
+            logDirectory: logDirectory
+        )
+        if let cleanupError = cleanup.error {
+            throw cleanupError
+        }
+        guard let cleanupResult = cleanup.result else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "renderer-restoration-shutdown-missing-result"
+            )
+        }
+        guard cleanupResult.succeeded else {
+            throw SteamLaunchError.prefixShutdownFailed(cleanupResult)
+        }
+        try await requireManagedPrefixInactivityBeforeRendererRestoration(
+            prefix
+        )
+        return cleanupResult
+    }
+
+    private func restoreNVIDIARendererSession(
+        _ session: ActiveNVIDIARendererSession
+    ) async throws {
+        do {
+            try await rendererPolicyManager
+                .restoreNVIDIAMetalFXRegistrySessionIfNeeded(
+                    prefix: session.prefix,
+                    runtimeExecutable: session.runtimeExecutable,
+                    runner: runner,
+                    logDirectory: session.logDirectory
+                )
+        } catch {
+            let lifecycleFailure = Self
+                .rendererLifecycleFailurePreservingStructuredError(
+                    error,
+                    fallbackPhase: .postLaunchRestoration,
+                    fallbackOperation: .sessionRestoration,
+                    fallbackTarget: session.prefix,
+                    fallbackDetail:
+                        "registry: \(forgePlayTechnicalErrorSummary(error))"
+                )
+            throw SteamLaunchError.rendererLifecycleFailed(
+                lifecycleFailure
+            )
+        }
+        do {
+            try rendererPolicyManager.restoreNVIDIAMetalFXSessionModules(
+                prefix: session.prefix,
+                runtimeExecutable: session.runtimeExecutable
+            )
+        } catch {
+            let lifecycleFailure = Self
+                .rendererLifecycleFailurePreservingStructuredError(
+                    error,
+                    fallbackPhase: .postLaunchRestoration,
+                    fallbackOperation: .sessionRestoration,
+                    fallbackTarget: session.prefix,
+                    fallbackDetail:
+                        "modules: \(forgePlayTechnicalErrorSummary(error))"
+                )
+            throw SteamLaunchError.rendererLifecycleFailed(
+                lifecycleFailure
+            )
+        }
+    }
+
+    func completeCompatibilitySessionIfInactive(
+        prefix: URL,
+        runtimeExecutable: URL,
+        selection: SteamRendererPolicySelection,
+        videoMemorySizeMB: Int,
+        persistentStateDigest: String? = nil
+    ) async throws -> String {
+        guard try await compatibilityPrefixExitWaiter(
+            prefix,
+            0,
+            0.05
+        ) else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "managed-prefix-still-active"
+            )
+        }
+        let key = prefix.standardizedFileURL.path
+        await quiesceCompatibilityRestorationMonitor(forPrefixKey: key)
+        try await restoreCompatibilitySessions(forPrefixKey: key)
+        compatibilitySessionRestorationFailures.removeValue(
+            forKey: key
+        )
+        return "forgeplay-transient-compatibility-session-reconciled-v1"
     }
 
     nonisolated static let steamCrashDumpExitCode: Int32 = 70
@@ -1318,6 +3923,7 @@ final class SteamManager {
     nonisolated static let steamLaunchBlockedExitCode: Int32 = 75
     nonisolated static let steamBootstrapUpdateInProgressExitCode: Int32 = 76
     nonisolated static let steamLaunchProcessVerificationUnavailableExitCode: Int32 = 77
+    nonisolated static let steamUIStartupFailureExitCode: Int32 = 78
 
     private func steamPrefixURL(for _: URL) throws -> URL {
         return try pathManager.url(for: .steamSharedPrefix)
@@ -1344,35 +3950,89 @@ final class SteamManager {
         }
     }
 
-    private func appendPriorLaunchAttempt(
-        _ result: ProcessRunResult,
-        reason: SteamLaunchAttemptEvidence.RelaunchReason,
-        preLaunchShutdownResult: ProcessRunResult?,
-        dumpsDirectory: URL,
-        crashDumpObservationContext: SteamCrashDumpObservationContext,
-        knownDumpFingerprints: inout Set<SteamCrashDumpFingerprint>,
-        attempts: inout [SteamLaunchAttemptEvidence]
-    ) {
-        let dumpScan = steamLaunchDiagnosticsReporter.recentSteamCrashDumpScan(
-            in: dumpsDirectory,
-            since: Date(timeIntervalSince1970: 0),
-            observationContext: crashDumpObservationContext
-        )
-        let newlyObservedDumps = Self.newSteamCrashDumps(
-            in: dumpScan,
-            excluding: knownDumpFingerprints
-        )
-        knownDumpFingerprints.formUnion(dumpScan.fingerprints)
-        attempts.append(SteamLaunchAttemptEvidence(
-            sequence: attempts.count + 1,
-            relaunchReason: reason,
-            result: result,
-            preLaunchShutdownResult: preLaunchShutdownResult,
-            crashDumpsObserved: newlyObservedDumps
-        ))
+    private nonisolated static func existingRendererLifecycleFailure(
+        from error: Error,
+        recursionDepth: Int = 0
+    ) -> SteamRendererLifecycleFailure? {
+        guard recursionDepth < 8 else { return nil }
+        if let steamLaunchError = error as? SteamLaunchError,
+           case .rendererLifecycleFailed(let failure) = steamLaunchError {
+            return failure
+        }
+        if let evidenceError = error as? ProcessExecutionEvidenceError {
+            return existingRendererLifecycleFailure(
+                from: evidenceError.underlyingError,
+                recursionDepth: recursionDepth + 1
+            )
+        }
+        let bridged = error as NSError
+        if let underlyingError = bridged.userInfo[NSUnderlyingErrorKey] as? Error,
+           forgePlayTechnicalErrorSummary(underlyingError) !=
+            forgePlayTechnicalErrorSummary(error) {
+            return existingRendererLifecycleFailure(
+                from: underlyingError,
+                recursionDepth: recursionDepth + 1
+            )
+        }
+        return nil
     }
 
-    private nonisolated static func attachLaunchChainEvidence(
+    private nonisolated static func processDiagnosticUnderlyingError(
+        from error: Error,
+        recursionDepth: Int = 0
+    ) -> Error {
+        guard recursionDepth < 8 else { return error }
+        if let evidenceError = error as? ProcessExecutionEvidenceError {
+            return processDiagnosticUnderlyingError(
+                from: evidenceError.underlyingError,
+                recursionDepth: recursionDepth + 1
+            )
+        }
+        if let containmentError =
+            error as? GameInputProtectionContainmentDiagnosticError {
+            return processDiagnosticUnderlyingError(
+                from: containmentError.underlyingError,
+                recursionDepth: recursionDepth + 1
+            )
+        }
+        return error
+    }
+
+    nonisolated static func rendererLifecycleFailurePreservingStructuredError(
+        _ error: Error,
+        fallbackPhase: SteamRendererLifecyclePhase,
+        fallbackOperation: SteamRendererLifecycleOperation,
+        fallbackTarget: URL,
+        fallbackDetail: String? = nil,
+        additionalDetail: String? = nil,
+        additionalProcessResults: [ProcessRunResult] = []
+    ) -> SteamRendererLifecycleFailure {
+        let existingFailure = existingRendererLifecycleFailure(from: error)
+        let detail = [
+            existingFailure?.detail ?? fallbackDetail ??
+                forgePlayTechnicalErrorSummary(error),
+            additionalDetail
+        ]
+        .compactMap { $0 }
+        .filter { !$0.isEmpty }
+        .joined(separator: "; ")
+        let processResults = (
+            (existingFailure?.processResults ?? []) +
+            diagnosticProcessRunResults(from: error) +
+            additionalProcessResults
+        ).reduce(into: [ProcessRunResult]()) {
+            if !$0.contains($1) { $0.append($1) }
+        }
+        return SteamRendererLifecycleFailure(
+            phase: existingFailure?.phase ?? fallbackPhase,
+            operation: existingFailure?.operation ?? fallbackOperation,
+            target: existingFailure?.target ?? fallbackTarget,
+            detail: detail,
+            processResults: processResults
+        )
+    }
+
+    fileprivate nonisolated static func attachLaunchChainEvidence(
         _ attempts: [SteamLaunchAttemptEvidence],
         auxiliaryResults: [ProcessRunResult],
         to result: inout ProcessRunResult
@@ -1399,15 +4059,747 @@ final class SteamManager {
     func inspectSteamRendererPolicy(
         prefix: URL,
         runtimeExecutable: URL,
+        runtimeCapability: WindowsRuntimeCapability? = nil,
         selection: SteamRendererPolicySelection,
         videoMemorySizeMB: Int? = nil
     ) -> SteamRendererPolicyInspection {
         rendererPolicyManager.inspect(
             prefix: prefix,
             runtimeExecutable: runtimeExecutable,
+            runtimeCapability: runtimeCapability,
             selection: selection,
             videoMemorySizeMB: videoMemorySizeMB
         )
+    }
+
+    /// Readiness keeps exact ForgePlay-owned transient NVIDIA session residue
+    /// distinct from arbitrary renderer contamination. The launch preflight
+    /// already admits this marker-backed transaction and restores it only
+    /// after the managed prefix is inactive. Projecting that typed state here
+    /// lets a restarted app return to Steam Launch without claiming that the
+    /// renderer policy is already clean or weakening fail-closed inspection
+    /// for any mismatched/unowned files.
+    func inspectSteamRendererPolicyForReadiness(
+        prefix: URL,
+        runtimeExecutable: URL,
+        runtimeCapability: WindowsRuntimeCapability? = nil,
+        selection: SteamRendererPolicySelection,
+        videoMemorySizeMB: Int? = nil
+    ) -> SteamRendererPolicyInspection {
+        let inspection = inspectSteamRendererPolicy(
+            prefix: prefix,
+            runtimeExecutable: runtimeExecutable,
+            runtimeCapability: runtimeCapability,
+            selection: selection,
+            videoMemorySizeMB: videoMemorySizeMB
+        )
+        guard rendererPolicyManager.isRecoverableNVIDIAMetalFXSessionResidue(
+            inspection,
+            prefix: prefix,
+            runtimeExecutable: runtimeExecutable
+        ) else {
+            return inspection
+        }
+        return SteamRendererPolicyInspection(
+            selection: inspection.selection,
+            resolvedPolicy: inspection.resolvedPolicy,
+            status: .warning,
+            userMessage: "이전 Steam 세션의 ForgePlay 관리 항목이 남아 있습니다. 다음 Steam 실행 준비 단계에서 프리픽스가 종료된 것을 확인한 뒤 자동 복구를 시도합니다.",
+            appliedModules: inspection.appliedModules,
+            missingModules: inspection.missingModules,
+            mixedModules: inspection.mixedModules,
+            appliedProfileOverrides: inspection.appliedProfileOverrides,
+            missingProfileOverrides: inspection.missingProfileOverrides,
+            staleProfileOverrides: inspection.staleProfileOverrides,
+            appliedSteamClientFiles: inspection.appliedSteamClientFiles,
+            missingSteamClientFiles: inspection.missingSteamClientFiles,
+            staleSteamClientFiles: inspection.staleSteamClientFiles,
+            recoveryKind: .automaticSessionRecovery
+        )
+    }
+
+    func captureCompatibilityPersistentPrefixSnapshot(
+        prefix: URL
+    ) throws -> SteamCompatibilityPersistentPrefixSnapshot {
+        try FileSystemItemPolicy.requireNonSymlinkDirectory(
+            prefix,
+            fileManager: fileManager
+        )
+        let prefixDescriptor = try Self.openPersistentPrefixDirectory(
+            prefix,
+            failureCode: "persistent-prefix-parent-containment"
+        )
+        defer { Darwin.close(prefixDescriptor) }
+        let metadata = try Self.boundedStableOptionalFileData(
+            relativePathComponents: ["prefix.json"],
+            prefixDescriptor: prefixDescriptor,
+            parentFailureCode: "persistent-prefix-parent-containment",
+            maximumByteCount: 1_048_576
+        )
+        let libraryFolders = try Self.boundedStableOptionalFileData(
+            relativePathComponents: [
+                "drive_c",
+                "Program Files (x86)",
+                "Steam",
+                "steamapps",
+                "libraryfolders.vdf"
+            ],
+            prefixDescriptor: prefixDescriptor,
+            parentFailureCode: "persistent-prefix-parent-containment",
+            maximumByteCount: 8 * 1_048_576
+        )
+        let dosDevices = prefix.appending(
+            path: "dosdevices",
+            directoryHint: .isDirectory
+        )
+        try FileSystemItemPolicy.requireNonSymlinkDirectory(
+            dosDevices,
+            fileManager: fileManager
+        )
+        let names = try fileManager.contentsOfDirectory(atPath: dosDevices.path)
+            .sorted()
+        var targets: [String: String] = [:]
+        for name in names {
+            guard !name.contains("/") && name != "." && name != ".." else {
+                throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                    "dosdevices-entry-name"
+                )
+            }
+            let url = dosDevices.appending(path: name)
+            var status = stat()
+            guard lstat(url.path, &status) == 0,
+                  (status.st_mode & S_IFMT) == S_IFLNK else {
+                throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                    "dosdevices-entry-type"
+                )
+            }
+            targets[name] = try fileManager.destinationOfSymbolicLink(
+                atPath: url.path
+            )
+        }
+        let digest = Self.persistentPrefixSnapshotDigest(
+            metadata: metadata,
+            libraryFolders: libraryFolders,
+            dosDeviceSymlinkTargets: targets
+        )
+        return SteamCompatibilityPersistentPrefixSnapshot(
+            prefixMetadata: metadata,
+            steamLibraryFolders: libraryFolders,
+            dosDeviceSymlinkTargets: targets,
+            digest: digest
+        )
+    }
+
+    func restoreCompatibilityPersistentPrefixSnapshot(
+        _ snapshot: SteamCompatibilityPersistentPrefixSnapshot,
+        prefix: URL
+    ) throws {
+        try FileSystemItemPolicy.requireNonSymlinkDirectory(
+            prefix,
+            fileManager: fileManager
+        )
+        let prefixDescriptor = try Self.openPersistentPrefixDirectory(
+            prefix,
+            failureCode: "persistent-prefix-restore-parent-containment"
+        )
+        defer { Darwin.close(prefixDescriptor) }
+        let metadataPathComponents = ["prefix.json"]
+        let libraryFoldersPathComponents = [
+            "drive_c",
+            "Program Files (x86)",
+            "Steam",
+            "steamapps",
+            "libraryfolders.vdf"
+        ]
+        try Self.validatePersistentFileRestoreDestination(
+            relativePathComponents: metadataPathComponents,
+            prefixDescriptor: prefixDescriptor,
+            parentFailureCode: "persistent-prefix-restore-parent-containment"
+        )
+        try Self.validatePersistentFileRestoreDestination(
+            relativePathComponents: libraryFoldersPathComponents,
+            prefixDescriptor: prefixDescriptor,
+            parentFailureCode: "persistent-prefix-restore-parent-containment"
+        )
+        try Self.restorePersistentFile(
+            relativePathComponents: metadataPathComponents,
+            prefixDescriptor: prefixDescriptor,
+            data: snapshot.prefixMetadata,
+            parentFailureCode: "persistent-prefix-restore-parent-containment"
+        )
+        try Self.restorePersistentFile(
+            relativePathComponents: libraryFoldersPathComponents,
+            prefixDescriptor: prefixDescriptor,
+            data: snapshot.steamLibraryFolders,
+            parentFailureCode: "persistent-prefix-restore-parent-containment"
+        )
+        let dosDevices = prefix.appending(
+            path: "dosdevices",
+            directoryHint: .isDirectory
+        )
+        try FileSystemItemPolicy.requireNonSymlinkDirectory(
+            dosDevices,
+            fileManager: fileManager
+        )
+        let currentNames = try fileManager.contentsOfDirectory(
+            atPath: dosDevices.path
+        )
+        for name in currentNames.sorted() {
+            let url = dosDevices.appending(path: name)
+            var status = stat()
+            guard lstat(url.path, &status) == 0,
+                  (status.st_mode & S_IFMT) == S_IFLNK else {
+                throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                    "dosdevices-restore-entry-type"
+                )
+            }
+            let currentTarget = try fileManager.destinationOfSymbolicLink(
+                atPath: url.path
+            )
+            if snapshot.dosDeviceSymlinkTargets[name] != currentTarget {
+                try fileManager.removeItem(at: url)
+            }
+        }
+        for (name, target) in snapshot.dosDeviceSymlinkTargets.sorted(
+            by: { $0.key < $1.key }
+        ) {
+            let url = dosDevices.appending(path: name)
+            if fileManager.fileExists(atPath: url.path) ||
+                (try? fileManager.destinationOfSymbolicLink(atPath: url.path)) != nil {
+                let current = try fileManager.destinationOfSymbolicLink(
+                    atPath: url.path
+                )
+                guard current == target else {
+                    throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                        "dosdevices-restore-collision"
+                    )
+                }
+            } else {
+                try fileManager.createSymbolicLink(
+                    atPath: url.path,
+                    withDestinationPath: target
+                )
+            }
+        }
+        guard try captureCompatibilityPersistentPrefixSnapshot(prefix: prefix) ==
+                snapshot else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "persistent-prefix-restore-readback"
+            )
+        }
+    }
+
+    private nonisolated static func persistentPrefixSnapshotDigest(
+        metadata: Data?,
+        libraryFolders: Data?,
+        dosDeviceSymlinkTargets: [String: String]
+    ) -> String {
+        var data = Data("forgeplay-persistent-prefix-state-v1\n".utf8)
+        for (label, value) in [
+            ("prefix.json", metadata),
+            ("libraryfolders.vdf", libraryFolders)
+        ] {
+            data.append(contentsOf: "\(label)=\(value?.count ?? -1):".utf8)
+            if let value { data.append(value) }
+            data.append(10)
+        }
+        for (name, target) in dosDeviceSymlinkTargets.sorted(
+            by: { $0.key < $1.key }
+        ) {
+            data.append(contentsOf: "link=\(name.utf8.count):\(name)=".utf8)
+            data.append(contentsOf: "\(target.utf8.count):\(target)\n".utf8)
+        }
+        return SHA256.hash(data: data).map {
+            String(format: "%02x", $0)
+        }.joined()
+    }
+
+    private nonisolated static func openPersistentPrefixDirectory(
+        _ prefix: URL,
+        failureCode: String
+    ) throws -> Int32 {
+        let descriptor = Darwin.open(
+            prefix.path,
+            O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_DIRECTORY
+        )
+        guard descriptor >= 0 else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                failureCode
+            )
+        }
+        var status = stat()
+        guard Darwin.fstat(descriptor, &status) == 0,
+              (status.st_mode & S_IFMT) == S_IFDIR else {
+            Darwin.close(descriptor)
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                failureCode
+            )
+        }
+        return descriptor
+    }
+
+    /// Opens a persistent-state file relative to the already verified prefix.
+    /// Every existing parent is opened with `O_NOFOLLOW`. A first missing
+    /// parent means the optional file is absent; components below that point
+    /// cannot exist without the missing ancestor and are deliberately not
+    /// treated as a containment failure.
+    private nonisolated static func boundedStableOptionalFileData(
+        relativePathComponents: [String],
+        prefixDescriptor: Int32,
+        parentFailureCode: String,
+        maximumByteCount: Int
+    ) throws -> Data? {
+        guard let parentDescriptor = try openPersistentPrefixParent(
+            relativePathComponents: relativePathComponents,
+            prefixDescriptor: prefixDescriptor,
+            createMissingDirectories: false,
+            failureCode: parentFailureCode
+        ) else {
+            return nil
+        }
+        defer { Darwin.close(parentDescriptor) }
+        guard let leaf = relativePathComponents.last else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                parentFailureCode
+            )
+        }
+        let descriptor = leaf.withCString {
+            Darwin.openat(
+                parentDescriptor,
+                $0,
+                O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK
+            )
+        }
+        let openError = errno
+        if descriptor < 0, openError == ENOENT { return nil }
+        guard descriptor >= 0 else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "persistent-prefix-file-open"
+            )
+        }
+        defer { Darwin.close(descriptor) }
+        var before = stat()
+        guard fstat(descriptor, &before) == 0,
+              (before.st_mode & S_IFMT) == S_IFREG,
+              before.st_nlink == 1,
+              before.st_size >= 0,
+              before.st_size <= maximumByteCount else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "persistent-prefix-file-bounds"
+            )
+        }
+        var bytes = [UInt8](repeating: 0, count: Int(before.st_size))
+        var offset = 0
+        while offset < bytes.count {
+            let remainingByteCount = bytes.count - offset
+            let count = bytes.withUnsafeMutableBytes { buffer in
+                Darwin.pread(
+                    descriptor,
+                    buffer.baseAddress!.advanced(by: offset),
+                    remainingByteCount,
+                    off_t(offset)
+                )
+            }
+            if count < 0, errno == EINTR { continue }
+            guard count > 0 else {
+                throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                    "persistent-prefix-file-read"
+                )
+            }
+            offset += count
+        }
+        var after = stat()
+        guard fstat(descriptor, &after) == 0,
+              before.st_dev == after.st_dev,
+              before.st_ino == after.st_ino,
+              before.st_size == after.st_size,
+              before.st_mtimespec.tv_sec == after.st_mtimespec.tv_sec,
+              before.st_mtimespec.tv_nsec == after.st_mtimespec.tv_nsec,
+              before.st_ctimespec.tv_sec == after.st_ctimespec.tv_sec,
+              before.st_ctimespec.tv_nsec == after.st_ctimespec.tv_nsec else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "persistent-prefix-file-raced"
+            )
+        }
+        return Data(bytes)
+    }
+
+    /// Returns a descriptor for the leaf's parent. Existing components are
+    /// always traversed descriptor-relative without following symlinks. When
+    /// creation is disabled, the first missing component returns `nil` so an
+    /// optional nested file can be represented by a nil snapshot.
+    private nonisolated static func openPersistentPrefixParent(
+        relativePathComponents: [String],
+        prefixDescriptor: Int32,
+        createMissingDirectories: Bool,
+        failureCode: String
+    ) throws -> Int32? {
+        guard !relativePathComponents.isEmpty,
+              relativePathComponents.allSatisfy({ component in
+                  !component.isEmpty &&
+                      component != "." &&
+                      component != ".." &&
+                      !component.contains("/")
+              }) else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                failureCode
+            )
+        }
+        var descriptor = Darwin.fcntl(
+            prefixDescriptor,
+            F_DUPFD_CLOEXEC,
+            0
+        )
+        guard descriptor >= 0 else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                failureCode
+            )
+        }
+        for component in relativePathComponents.dropLast() {
+            var nextDescriptor = component.withCString {
+                Darwin.openat(
+                    descriptor,
+                    $0,
+                    O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_DIRECTORY
+                )
+            }
+            var componentError = errno
+            if nextDescriptor < 0,
+               componentError == ENOENT,
+               createMissingDirectories {
+                let createResult = component.withCString {
+                    Darwin.mkdirat(descriptor, $0, 0o755)
+                }
+                componentError = errno
+                guard createResult == 0 || componentError == EEXIST else {
+                    Darwin.close(descriptor)
+                    throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                        failureCode
+                    )
+                }
+                nextDescriptor = component.withCString {
+                    Darwin.openat(
+                        descriptor,
+                        $0,
+                        O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_DIRECTORY
+                    )
+                }
+                componentError = errno
+            }
+            if nextDescriptor < 0,
+               componentError == ENOENT,
+               !createMissingDirectories {
+                Darwin.close(descriptor)
+                return nil
+            }
+            guard nextDescriptor >= 0 else {
+                Darwin.close(descriptor)
+                throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                    failureCode
+                )
+            }
+            Darwin.close(descriptor)
+            descriptor = nextDescriptor
+        }
+        return descriptor
+    }
+
+    private nonisolated static func persistentPrefixLeafStatus(
+        parentDescriptor: Int32,
+        leaf: String,
+        failureCode: String
+    ) throws -> stat? {
+        var status = stat()
+        let result = leaf.withCString {
+            Darwin.fstatat(
+                parentDescriptor,
+                $0,
+                &status,
+                AT_SYMLINK_NOFOLLOW
+            )
+        }
+        let statusError = errno
+        if result < 0, statusError == ENOENT { return nil }
+        guard result == 0,
+              (status.st_mode & S_IFMT) == S_IFREG,
+              status.st_nlink == 1 else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                failureCode
+            )
+        }
+        return status
+    }
+
+    /// Validates every currently existing restore destination before any
+    /// persistent file is changed. This keeps a pre-existing symlink,
+    /// hardlink, directory, or other foreign entry from causing a partial
+    /// multi-file rollback.
+    private nonisolated static func validatePersistentFileRestoreDestination(
+        relativePathComponents: [String],
+        prefixDescriptor: Int32,
+        parentFailureCode: String
+    ) throws {
+        guard let leaf = relativePathComponents.last else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                parentFailureCode
+            )
+        }
+        guard let parentDescriptor = try openPersistentPrefixParent(
+            relativePathComponents: relativePathComponents,
+            prefixDescriptor: prefixDescriptor,
+            createMissingDirectories: false,
+            failureCode: parentFailureCode
+        ) else {
+            return
+        }
+        defer { Darwin.close(parentDescriptor) }
+        _ = try persistentPrefixLeafStatus(
+            parentDescriptor: parentDescriptor,
+            leaf: leaf,
+            failureCode: "persistent-prefix-restore-entry-type"
+        )
+    }
+
+    private nonisolated static func restorePersistentFile(
+        relativePathComponents: [String],
+        prefixDescriptor: Int32,
+        data: Data?,
+        parentFailureCode: String
+    ) throws {
+        guard let leaf = relativePathComponents.last else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                parentFailureCode
+            )
+        }
+        guard let parentDescriptor = try openPersistentPrefixParent(
+            relativePathComponents: relativePathComponents,
+            prefixDescriptor: prefixDescriptor,
+            createMissingDirectories: data != nil,
+            failureCode: parentFailureCode
+        ) else {
+            return
+        }
+        defer { Darwin.close(parentDescriptor) }
+        let existingStatus = try persistentPrefixLeafStatus(
+            parentDescriptor: parentDescriptor,
+            leaf: leaf,
+            failureCode: "persistent-prefix-restore-entry-type"
+        )
+        guard let data else {
+            guard existingStatus != nil else { return }
+            let result = leaf.withCString {
+                Darwin.unlinkat(parentDescriptor, $0, 0)
+            }
+            guard result == 0 else {
+                throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                    "persistent-prefix-restore-remove"
+                )
+            }
+            return
+        }
+
+        let temporaryName = ".forgeplay-restore-\(UUID().uuidString.lowercased())"
+        let mode = existingStatus.map {
+            mode_t($0.st_mode & 0o777)
+        } ?? mode_t(0o600)
+        let temporaryDescriptor = temporaryName.withCString {
+            Darwin.openat(
+                parentDescriptor,
+                $0,
+                O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC | O_NOFOLLOW,
+                mode
+            )
+        }
+        guard temporaryDescriptor >= 0 else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "persistent-prefix-restore-temp-open"
+            )
+        }
+        var temporaryExists = true
+        defer {
+            Darwin.close(temporaryDescriptor)
+            if temporaryExists {
+                _ = temporaryName.withCString {
+                    Darwin.unlinkat(parentDescriptor, $0, 0)
+                }
+            }
+        }
+        var offset = 0
+        while offset < data.count {
+            let written = data.withUnsafeBytes { bytes in
+                Darwin.write(
+                    temporaryDescriptor,
+                    bytes.baseAddress!.advanced(by: offset),
+                    data.count - offset
+                )
+            }
+            if written < 0, errno == EINTR { continue }
+            guard written > 0 else {
+                throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                    "persistent-prefix-restore-write"
+                )
+            }
+            offset += written
+        }
+        guard Darwin.fsync(temporaryDescriptor) == 0 else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "persistent-prefix-restore-sync"
+            )
+        }
+
+        if let existingStatus {
+            let swapResult = temporaryName.withCString { temporaryPointer in
+                leaf.withCString { leafPointer in
+                    Darwin.renameatx_np(
+                        parentDescriptor,
+                        temporaryPointer,
+                        parentDescriptor,
+                        leafPointer,
+                        UInt32(RENAME_SWAP)
+                    )
+                }
+            }
+            guard swapResult == 0 else {
+                throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                    "persistent-prefix-restore-swap"
+                )
+            }
+            let replacedStatus: stat?
+            do {
+                replacedStatus = try persistentPrefixLeafStatus(
+                    parentDescriptor: parentDescriptor,
+                    leaf: temporaryName,
+                    failureCode: "persistent-prefix-restore-raced"
+                )
+            } catch {
+                let rollbackResult = temporaryName.withCString { temporaryPointer in
+                    leaf.withCString { leafPointer in
+                        Darwin.renameatx_np(
+                            parentDescriptor,
+                            temporaryPointer,
+                            parentDescriptor,
+                            leafPointer,
+                            UInt32(RENAME_SWAP)
+                        )
+                    }
+                }
+                guard rollbackResult == 0 else {
+                    temporaryExists = false
+                    throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                        "persistent-prefix-restore-race-rollback"
+                    )
+                }
+                throw error
+            }
+            guard replacedStatus?.st_dev == existingStatus.st_dev,
+                  replacedStatus?.st_ino == existingStatus.st_ino else {
+                let rollbackResult = temporaryName.withCString { temporaryPointer in
+                    leaf.withCString { leafPointer in
+                        Darwin.renameatx_np(
+                            parentDescriptor,
+                            temporaryPointer,
+                            parentDescriptor,
+                            leafPointer,
+                            UInt32(RENAME_SWAP)
+                        )
+                    }
+                }
+                guard rollbackResult == 0 else {
+                    temporaryExists = false
+                    throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                        "persistent-prefix-restore-race-rollback"
+                    )
+                }
+                throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                    "persistent-prefix-restore-raced"
+                )
+            }
+            let removeResult = temporaryName.withCString {
+                Darwin.unlinkat(parentDescriptor, $0, 0)
+            }
+            guard removeResult == 0 else {
+                temporaryExists = false
+                throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                    "persistent-prefix-restore-old-remove"
+                )
+            }
+            temporaryExists = false
+        } else {
+            let installResult = temporaryName.withCString { temporaryPointer in
+                leaf.withCString { leafPointer in
+                    Darwin.renameatx_np(
+                        parentDescriptor,
+                        temporaryPointer,
+                        parentDescriptor,
+                        leafPointer,
+                        UInt32(RENAME_EXCL)
+                    )
+                }
+            }
+            guard installResult == 0 else {
+                throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                    "persistent-prefix-restore-raced"
+                )
+            }
+            temporaryExists = false
+        }
+    }
+
+    func compatibilityLaunchBaselineDigest(
+        prefix: URL,
+        runtimeExecutable: URL,
+        runtimeCapability: WindowsRuntimeCapability? = nil,
+        selection: SteamRendererPolicySelection,
+        videoMemorySizeMB: Int,
+        persistentStateDigest suppliedPersistentStateDigest: String? = nil
+    ) throws -> String {
+        let renderer = inspectSteamRendererPolicy(
+            prefix: prefix,
+            runtimeExecutable: runtimeExecutable,
+            runtimeCapability: runtimeCapability,
+            selection: selection,
+            videoMemorySizeMB: videoMemorySizeMB
+        )
+        let fonts = WindowsFontCompatibilityProfileContract.inspect(
+            prefix: prefix,
+            fileManager: fileManager,
+            requiresProfileMarker: true
+        )
+        let prefixKey = prefix.standardizedFileURL.path
+        let persistentStateDigest: String
+        if let suppliedPersistentStateDigest {
+            persistentStateDigest = suppliedPersistentStateDigest
+        } else {
+            persistentStateDigest = try captureCompatibilityPersistentPrefixSnapshot(
+                prefix: prefix
+            ).digest
+        }
+        var values = [
+            "forgeplay-steam-launch-authoritative-baseline-v1",
+            "renderer-status=\(String(describing: renderer.status))",
+            "renderer-requires-apply=\(renderer.requiresApply ? 1 : 0)",
+            "persistent-state=\(persistentStateDigest)",
+            "input-session-active=\(activeInputCompatibilitySessions[prefixKey] == nil ? 0 : 1)",
+            "controller-session-active=\(activeControllerCompatibilitySessions[prefixKey] == nil ? 0 : 1)"
+        ]
+        values.append(contentsOf: renderer.appliedModules.sorted().map {
+            "renderer-applied=\($0)"
+        })
+        values.append(contentsOf: renderer.missingModules.sorted().map {
+            "renderer-missing=\($0)"
+        })
+        values.append(contentsOf: renderer.mixedModules.sorted().map {
+            "renderer-mixed=\($0)"
+        })
+        values.append(contentsOf: fonts.appliedItems.sorted().map {
+            "font-applied=\($0)"
+        })
+        values.append(contentsOf: fonts.missingItems.sorted().map {
+            "font-missing=\($0)"
+        })
+        return SHA256.hash(data: Data(values.joined(separator: "\n").utf8))
+            .map { String(format: "%02x", $0) }
+            .joined()
     }
 
     func prepareSteamLibraryDriveLinks(
@@ -1431,9 +4823,9 @@ final class SteamManager {
         logDirectory: URL? = nil
     ) throws -> SteamLibraryDrivePreparation {
         let discoveries = steamLibraryRootDiscoveries(for: libraryRoots)
-        let driveSources: [SteamLibraryDriveSource]
+        let accessPlan: SteamLibraryDriveAccessPlan
         do {
-            driveSources = try steamLibraryDriveSources(
+            accessPlan = try steamLibraryDriveAccessPlan(
                 discoveries: discoveries
             )
         } catch {
@@ -1448,11 +4840,10 @@ final class SteamManager {
                         logDirectory: logDirectory
                     )
                 } catch let auditError {
-                    throw SteamLibraryDriveBridgeError.libraryFoldersWriteFailed(
-                        logDirectory,
-                        forgePlayTechnicalErrorSummary(error) +
-                            "; discovery audit log failed: " +
-                            forgePlayTechnicalErrorSummary(auditError)
+                    NSLog(
+                        "ForgePlay Steam library discovery audit write failed after product failure: %@; audit failure: %@",
+                        forgePlayTechnicalErrorSummary(error),
+                        forgePlayTechnicalErrorSummary(auditError)
                     )
                 }
             }
@@ -1461,13 +4852,36 @@ final class SteamManager {
         let normalizedReservedRoots = steamLibraryReservationRoots(
             reservedLibraryRoots
         )
-        let mappings = try libraryDriveMapper.prepareDriveLinks(
-            prefix: prefix,
-            sources: driveSources,
-            reservedDriveRoots: normalizedReservedRoots
+        let storagePreparation: SteamStorageDrivePreparation
+        if accessPlan.mappedStorageRoots.isEmpty,
+           accessPlan.driveSources.isEmpty,
+           !accessPlan.directProcessAccessRoots.isEmpty {
+            // Direct steamapps authorization is already held for the launch
+            // lifetime. Do not create a drive rooted at `steamapps` and do not
+            // touch unrelated drive assignments merely to publish that grant.
+            storagePreparation = SteamStorageDrivePreparation(
+                externalStorageRoots: [],
+                libraryMappings: [],
+                pendingLibraryMappings: []
+            )
+        } else {
+            storagePreparation = try libraryDriveMapper
+                .prepareStorageDriveLinks(
+                    prefix: prefix,
+                    authorizedStorageRoots: accessPlan.mappedStorageRoots,
+                    sources: accessPlan.driveSources,
+                    reservedDriveRoots: normalizedReservedRoots,
+                    reconciliationScope: accessPlan.reconciliationScope
+                )
+        }
+        let processAccessRoots = steamLibraryReservationRoots(
+            storagePreparation.externalStorageRoots +
+                accessPlan.directProcessAccessRoots
         )
         return SteamLibraryDrivePreparation(
-            mappings: mappings,
+            mappings: storagePreparation.libraryMappings,
+            pendingMappings: storagePreparation.pendingLibraryMappings,
+            externalStorageRoots: processAccessRoots,
             discoveries: discoveries
         )
     }
@@ -1475,13 +4889,19 @@ final class SteamManager {
     func synchronizeSteamLibraryRegistrations(
         prefix: URL,
         mappings: [SteamLibraryDriveMapping],
+        pendingMappings: [SteamLibraryDriveMapping] = [],
         discoveries: [SteamLibraryRootDiscoveryResult] = [],
         logDirectory: URL? = nil
     ) throws {
         do {
             try libraryDriveMapper.synchronizeDriveMappingsWithSteam(
                 prefix: prefix,
-                mappings: mappings
+                mappings: mappings,
+                pendingMappings: pendingMappings,
+                reconciliationScope:
+                    steamLibraryDriveReconciliationScope(
+                        for: discoveries
+                    )
             )
         } catch {
             if let logDirectory {
@@ -1495,11 +4915,10 @@ final class SteamManager {
                         logDirectory: logDirectory
                     )
                 } catch let auditError {
-                    throw SteamLibraryDriveBridgeError.libraryFoldersWriteFailed(
-                        prefix,
-                        forgePlayTechnicalErrorSummary(error) +
-                            "; registration audit log failed: " +
-                            forgePlayTechnicalErrorSummary(auditError)
+                    NSLog(
+                        "ForgePlay Steam library registration audit write failed after product failure: %@; audit failure: %@",
+                        forgePlayTechnicalErrorSummary(error),
+                        forgePlayTechnicalErrorSummary(auditError)
                     )
                 }
             }
@@ -1507,21 +4926,32 @@ final class SteamManager {
         }
         if let logDirectory {
             do {
+                let status: String
+                if !mappings.isEmpty {
+                    status = "success"
+                } else if !pendingMappings.isEmpty {
+                    status = "storage_drive_ready_registration_pending"
+                } else if discoveries.isEmpty {
+                    status = "no_authorized_storage"
+                } else if steamLibraryDriveReconciliationScope(
+                    for: discoveries
+                ) == .preservingUnrepresentedState {
+                    status = "direct_steamapps_access_ready"
+                } else {
+                    status = "storage_drive_ready_no_existing_library"
+                }
                 try persistSteamLibraryRegistrationAudit(
                     prefix: prefix,
                     mappings: mappings,
                     discoveries: discoveries,
-                    status: mappings.isEmpty
-                        ? "no_authorized_storage"
-                        : "success",
+                    status: status,
                     errorDescription: nil,
                     logDirectory: logDirectory
                 )
-            } catch {
-                throw SteamLibraryDriveBridgeError.libraryFoldersWriteFailed(
-                    logDirectory,
-                    "registration succeeded but its audit log could not be persisted: " +
-                        forgePlayTechnicalErrorSummary(error)
+            } catch let auditError {
+                NSLog(
+                    "ForgePlay Steam library registration succeeded but its optional audit write failed: %@",
+                    forgePlayTechnicalErrorSummary(auditError)
                 )
             }
         }
@@ -1620,13 +5050,6 @@ final class SteamManager {
         videoMemorySizeMB: Int = SteamClientCompatibilityProfileContract.recommendedVideoMemorySizeMB
     ) async throws {
         let logDirectory = try pathManager.url(for: .launchLogs)
-        if let failedFontSetup = try await windowsFontCompatibilityProfile.apply(
-            runtimeExecutable: runtimeExecutable,
-            prefix: prefix,
-            logDirectory: logDirectory
-        ) {
-            throw SteamLaunchError.steamClientCompatibilitySetupFailed(failedFontSetup)
-        }
         if let failedCompatibilitySetup = try await steamClientCompatibilityProfile.apply(
             runtimeExecutable: runtimeExecutable,
             prefix: prefix,
@@ -1635,6 +5058,22 @@ final class SteamManager {
         ) {
             throw SteamLaunchError.steamClientCompatibilitySetupFailed(failedCompatibilitySetup)
         }
+    }
+
+    /// Wine registry operations can rebuild host-font projections. Keep the
+    /// font profile as the last registry convergence barrier before dispatch,
+    /// after service, client, renderer, library, and language preparation have
+    /// run.
+    func reconcileWindowsFontCompatibilityProfile(
+        runtimeExecutable: URL,
+        prefix: URL
+    ) async throws -> WindowsFontProvisioningApplicationReceipt {
+        let logDirectory = try pathManager.url(for: .launchLogs)
+        return try await windowsFontCompatibilityProfile.provisionForLaunch(
+            runtimeExecutable: runtimeExecutable,
+            prefix: prefix,
+            logDirectory: logDirectory
+        )
     }
 
     func shutdownSteamPrefixBeforePolicyMutation(
@@ -1649,10 +5088,79 @@ final class SteamManager {
         )
     }
 
+    /// Runs only after a successful prefix shutdown while the caller retains
+    /// the exclusive prefix mutation lease. Failures are diagnostic-only so an
+    /// unsafe log cannot be mistaken for authority to block or alter Steam.
+    func rotateOfflineSteamClientLogsIfNeeded(prefix: URL) async -> String? {
+        do {
+            guard pathManager.rootURL != nil else {
+                throw PathManagerError.rootNotConfigured
+            }
+            let managedLogsRoot = try pathManager.url(for: .logs)
+            let result = try await Task.detached(priority: .utility) {
+                try SteamClientLogRetentionService.rotateOfflineLogs(
+                    in: prefix,
+                    managedLogsRoot: managedLogsRoot
+                )
+            }.value
+            return result.diagnosticMessage
+        } catch {
+            return "Offline Steam client log rotation was skipped: \(forgePlayTechnicalErrorSummary(error))"
+        }
+    }
+
+    /// Stops only the managed Steam runtime. Provider rollback subsequently
+    /// restores session and persistent state through its retained transaction
+    /// lease; this method deliberately does not release that lease or mutate
+    /// the captured baseline.
+    func shutdownManagedSteamRuntimeOnly(
+        runtimeExecutable: URL
+    ) async throws -> ProcessRunResult {
+        let prefix = try steamPrefixURL(for: runtimeExecutable)
+        let logDirectory = try pathManager.url(for: .launchLogs)
+        let shutdownResult = try await prefixProcessSupervisor.shutdownBeforeLaunch(
+            runtimeExecutable: runtimeExecutable,
+            prefix: prefix,
+            logDirectory: logDirectory
+        )
+        guard try await compatibilityPrefixExitWaiter(
+            prefix,
+            30,
+            0.2
+        ) else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "managed-runtime-shutdown-not-observed"
+            )
+        }
+        await quiesceCompatibilityRestorationMonitor(
+            forPrefixKey: prefix.standardizedFileURL.path
+        )
+        return shutdownResult
+    }
+
     func restoreSteamRendererBridgeModules(
         prefix: URL,
-        runtimeExecutable: URL
-    ) throws {
+        runtimeExecutable: URL,
+        logDirectory: URL? = nil
+    ) async throws {
+        try await rendererPolicyManager
+            .restoreNVIDIAMetalFXRegistrySessionIfNeeded(
+                prefix: prefix,
+                runtimeExecutable: runtimeExecutable,
+                runner: runner,
+                logDirectory:
+                    logDirectory ??
+                    pathManager.url(for: .launchLogs),
+                phase: .priorSessionRestoration
+            )
+        // The transient NVIDIA module transaction owns its exact System32
+        // files and snapshots. Retire it before the broad renderer cleanup so
+        // app/runtime upgrades and partial prior sessions preserve their
+        // marker-backed restoration contract.
+        try rendererPolicyManager.restoreNVIDIAMetalFXSessionModules(
+            prefix: prefix,
+            runtimeExecutable: runtimeExecutable
+        )
         try rendererPolicyManager.restoreBridgeModules(
             prefix: prefix,
             runtimeExecutable: runtimeExecutable
@@ -1705,6 +5213,9 @@ final class SteamManager {
         )
         for discovery in discoveries {
             result.skippedInputPaths.formUnion(discovery.skippedInputPaths)
+            result.skippedInputPaths.subtract(
+                ignorableMissingSteamAppsPath(for: discovery)
+            )
         }
         return result
     }
@@ -1728,6 +5239,9 @@ final class SteamManager {
         }.value
         for discovery in discoveries {
             result.skippedInputPaths.formUnion(discovery.skippedInputPaths)
+            result.skippedInputPaths.subtract(
+                ignorableMissingSteamAppsPath(for: discovery)
+            )
         }
         return result
     }
@@ -1748,13 +5262,26 @@ final class SteamManager {
         }
     }
 
+    private func ignorableMissingSteamAppsPath(
+        for discovery: SteamLibraryRootDiscoveryResult
+    ) -> Set<String> {
+        guard case .noVerifiedSteamLibrary? = discovery.failure,
+              discovery.resolution == nil else {
+            return []
+        }
+        return [discovery.selectedRoot.standardizedFileURL.appending(
+            path: "steamapps",
+            directoryHint: .isDirectory
+        ).standardizedFileURL.path]
+    }
+
     private func verifiedSteamLibraryRoots(
         from discoveries: [SteamLibraryRootDiscoveryResult]
     ) throws -> [URL] {
         var seen = Set<String>()
         var verifiedRoots: [URL] = []
         for discovery in discoveries {
-            for libraryRoot in try discovery.requireVerifiedLibraryRoots() {
+            for libraryRoot in try discoveredLibraryRootsForUse(discovery) {
                 _ = try steamLibraryDriveRoot(
                     for: discovery,
                     libraryRoot: libraryRoot
@@ -1771,13 +5298,61 @@ final class SteamManager {
         }
     }
 
-    private func steamLibraryDriveSources(
+    private struct SteamLibraryDriveAccessPlan {
+        var driveSources: [SteamLibraryDriveSource]
+        var mappedStorageRoots: [URL]
+        var directProcessAccessRoots: [URL]
+        var reconciliationScope: SteamLibraryDriveReconciliationScope
+    }
+
+    /// Separates persistent storage ownership from a direct game-library
+    /// capability. Selecting `SteamLibrary` authorizes that directory for Wine
+    /// drive mapping and Steam registration. Selecting its `steamapps` child
+    /// authorizes only that exact subtree for this process lifetime; it never
+    /// implies permission to read, map, or register the parent directory.
+    private func steamLibraryDriveAccessPlan(
         discoveries: [SteamLibraryRootDiscoveryResult]
-    ) throws -> [SteamLibraryDriveSource] {
-        var seen = Set<String>()
+    ) throws -> SteamLibraryDriveAccessPlan {
+        var seenSources = Set<String>()
+        var seenMappedRoots = Set<String>()
+        var seenDirectRoots = Set<String>()
         var sources: [SteamLibraryDriveSource] = []
+        var mappedRoots: [URL] = []
+        var directRoots: [URL] = []
+        var reconciliationScope =
+            SteamLibraryDriveReconciliationScope
+                .authoritativeStorageInventory
         for discovery in discoveries {
-            for libraryRoot in try discovery.requireVerifiedLibraryRoots() {
+            let libraryRoots = try discoveredLibraryRootsForUse(discovery)
+            let selectedRoot = discovery.selectedRoot.standardizedFileURL
+            if discovery.resolution == .selectedSteamApps {
+                guard libraryRoots.count == 1,
+                      selectedRoot.lastPathComponent.caseInsensitiveCompare(
+                          "steamapps"
+                      ) == .orderedSame,
+                      selectedRoot.deletingLastPathComponent()
+                        .standardizedFileURL ==
+                        libraryRoots[0].standardizedFileURL,
+                      FileSystemItemPolicy.isNonSymlinkDirectory(
+                          selectedRoot,
+                          fileManager: fileManager
+                      ) else {
+                    throw SteamLibraryRootDiscoveryError
+                        .noVerifiedSteamLibrary(
+                            selectedRoot,
+                            skippedPaths: [selectedRoot.path]
+                        )
+                }
+                let identity = selectedRoot.resolvingSymlinksInPath()
+                    .standardizedFileURL.path
+                if seenDirectRoots.insert(identity).inserted {
+                    directRoots.append(selectedRoot)
+                }
+                reconciliationScope = .preservingUnrepresentedState
+                continue
+            }
+
+            for libraryRoot in libraryRoots {
                 let normalizedLibraryRoot = libraryRoot.standardizedFileURL
                 let normalizedAuthorizedRoot = try steamLibraryDriveRoot(
                     for: discovery,
@@ -1787,14 +5362,57 @@ final class SteamManager {
                     normalizedAuthorizedRoot.resolvingSymlinksInPath().path,
                     normalizedLibraryRoot.resolvingSymlinksInPath().path
                 ].joined(separator: "|")
-                guard seen.insert(identity).inserted else { continue }
+                guard seenSources.insert(identity).inserted else { continue }
                 sources.append(SteamLibraryDriveSource(
                     authorizedRootURL: normalizedAuthorizedRoot,
                     libraryURL: normalizedLibraryRoot
                 ))
             }
+            let mappedIdentity = selectedRoot.resolvingSymlinksInPath()
+                .standardizedFileURL.path
+            if seenMappedRoots.insert(mappedIdentity).inserted {
+                mappedRoots.append(selectedRoot)
+            }
         }
-        return sources
+        return SteamLibraryDriveAccessPlan(
+            driveSources: sources,
+            mappedStorageRoots: mappedRoots.sorted {
+                $0.path.localizedStandardCompare($1.path) == .orderedAscending
+            },
+            directProcessAccessRoots: directRoots.sorted {
+                $0.path.localizedStandardCompare($1.path) == .orderedAscending
+            },
+            reconciliationScope: reconciliationScope
+        )
+    }
+
+    /// A writable authorized storage root is valid even before it contains a
+    /// Steam library. Discovery failures caused by traversal or authorization
+    /// remain fatal; the absence of `steamapps` only means there is nothing to
+    /// scan or register yet.
+    private func discoveredLibraryRootsForUse(
+        _ discovery: SteamLibraryRootDiscoveryResult
+    ) throws -> [URL] {
+        guard let failure = discovery.failure else {
+            return discovery.libraryRoots
+        }
+        if case .noVerifiedSteamLibrary = failure {
+            // A blank drive/folder is valid storage. A malformed explicit
+            // Steam subtree is not a blank drive and must never be reinterpreted
+            // as one. Verified direct steamapps access is handled separately
+            // by `steamLibraryDriveAccessPlan` without parent promotion.
+            guard discovery.resolution == nil else { throw failure }
+            return []
+        }
+        throw failure
+    }
+
+    private func steamLibraryDriveReconciliationScope(
+        for discoveries: [SteamLibraryRootDiscoveryResult]
+    ) -> SteamLibraryDriveReconciliationScope {
+        discoveries.contains {
+            $0.failure == nil && $0.resolution == .selectedSteamApps
+        } ? .preservingUnrepresentedState : .authoritativeStorageInventory
     }
 
     private func steamLibraryDriveRoot(
@@ -2119,9 +5737,16 @@ final class SteamManager {
         fatalCrashDumps: [URL],
         hasBootstrapUpdateProgress: Bool
     ) -> Bool {
-        guard result.succeeded, !result.waitedForExit else { return false }
+        guard result.succeeded,
+              SteamLaunchDispatchDisposition.resolve(result)
+                .acceptsSessionLifetime else { return false }
         guard renderingIssue == nil, fatalCrashDumps.isEmpty else { return false }
-        guard processSnapshot.webHelperCommandLines(for: launchTarget).isEmpty else { return false }
+        guard processSnapshot.containsVerifiedCurrentRunSteamClientProcess(
+            for: launchTarget
+        ) else { return false }
+        guard processSnapshot.managedWineJournalWebHelperCommandLines(
+            for: launchTarget
+        ).isEmpty else { return false }
         return hasBootstrapUpdateProgress
     }
 
@@ -2146,205 +5771,331 @@ final class SteamManager {
 
     func steamBootstrapUpdateLogHasProgress(
         result: ProcessRunResult,
-        steamDirectory: URL
+        steamDirectory: URL,
+        since cursor: SteamBootstrapUpdateSourceCursor
     ) -> Bool {
         steamBootstrapUpdateLogAssessment(
             result: result,
-            steamDirectory: steamDirectory
+            steamDirectory: steamDirectory,
+            since: cursor
         ).hasProgress == true
     }
 
     func steamBootstrapUpdateLogAssessment(
         result: ProcessRunResult,
-        steamDirectory: URL
+        steamDirectory: URL,
+        since cursor: SteamBootstrapUpdateSourceCursor
     ) -> SteamBootstrapUpdateLogAssessment {
         let bootstrapLog = steamDirectory.appending(path: "logs/bootstrap_log.txt")
-        let cutoff = result.startedAt.addingTimeInterval(-2)
-        var sources = [
-            secureTrailingText(
+        let sources: [(SteamBootstrapUpdaterEvidenceSource, SteamBootstrapLogSourceAssessment)] = [
+            (.stdout, secureAppendedBootstrapEvidence(
                 from: result.stdoutLog,
+                since: cursor.stdout,
                 maxBytes: 128_000,
-                modifiedAfter: cutoff,
                 anchoredAt: result.stdoutLog.deletingLastPathComponent(),
                 required: true
-            ),
-            secureTrailingText(
+            )),
+            (.bootstrapLog, secureAppendedBootstrapEvidence(
                 from: bootstrapLog,
+                since: cursor.bootstrapLog,
                 maxBytes: 128_000,
-                modifiedAfter: cutoff,
                 anchoredAt: steamDirectory,
                 required: false
-            )
+            ))
         ]
-        if !sources[1].text.isEmpty {
-            sources[1].text = steamLogText(sources[1].text, since: cutoff)
+        // Resolve each source in its own append order. Steam legitimately emits
+        // "Verification complete" before beginning both its win32 and win64
+        // update stages, so unordered whole-batch substring arbitration can
+        // invert the real lifecycle. The last relevant event in each source is
+        // authoritative for that source; a current progress event wins a
+        // cross-source completion conflict conservatively.
+        let sourceEvents = sources.flatMap { sourceKind, source -> [SteamBootstrapOrderedEvent] in
+            guard !source.evidenceUnavailable,
+                  let generationCursor = source.nextCursor else { return [] }
+            return source.text
+                .split(whereSeparator: \.isNewline)
+                .enumerated()
+                .compactMap { index, line -> SteamBootstrapOrderedEvent? in
+                    let normalizedLine = String(line).lowercased()
+                    guard let kind = steamBootstrapOrderedEventKind(
+                        in: normalizedLine
+                    ) else { return nil }
+                    return SteamBootstrapOrderedEvent(
+                        source: sourceKind,
+                        kind: kind,
+                        normalizedLine: normalizedLine,
+                        sourceURL: source.url,
+                        lineIndex: index,
+                        generationCursor: generationCursor
+                    )
+                }
         }
-        let text = sources
-            .filter { !$0.evidenceUnavailable }
-            .map(\.text)
+        let lastRelevantEvents = SteamBootstrapUpdaterEvidenceSource.allCases
+            .compactMap { source in
+                sourceEvents.last { $0.source == source }
+            }
+        let observedProgress = lastRelevantEvents.contains {
+            $0.kind == .progress
+        }
+        let observedCompletion = !observedProgress && lastRelevantEvents.contains {
+            $0.kind == .completion
+        }
+        let evidenceUnavailable = sources.contains { $0.1.evidenceUnavailable }
+        let progressEvents = observedProgress
+            ? lastRelevantEvents.filter { $0.kind == .progress }
+            : []
+        let progressEvidence = progressEvents
+            .map(\.identity)
             .joined(separator: "\n")
-            .lowercased()
-
-        let updateSignals = [
-            "업데이트 다운로드 중",
-            "downloading update",
-            "download update",
-            "updating steam",
-            "extracting package",
-            "installing update",
-            "verifying installation"
-        ]
-        let completionSignals = [
-            "steam client startup complete",
-            "steamui startup complete",
-            "steamwebhelper.exe",
-            "ready for user input",
-            "verification complete",
-            "nothing to do",
-            "download skipped"
-        ]
-        let containsUpdateSignal = updateSignals.contains { text.contains($0) }
-        let containsCompletionSignal = completionSignals.contains { text.contains($0) }
+        let progressIdentity: String? = evidenceUnavailable || progressEvidence.isEmpty
+            ? nil
+            : SHA256.hash(data: Data(progressEvidence.utf8))
+                .map { String(format: "%02x", $0) }
+                .joined()
         let hasProgress: Bool?
-        if containsUpdateSignal, !containsCompletionSignal {
-            hasProgress = true
-        } else if containsCompletionSignal {
-            hasProgress = false
-        } else if sources.contains(where: \.evidenceUnavailable) {
+        if evidenceUnavailable {
             hasProgress = nil
         } else {
-            hasProgress = false
+            hasProgress = observedProgress
         }
 
         let state: SteamEvidenceReadState
-        if sources.contains(where: { $0.state == .unsafe }) {
+        if sources.contains(where: { $0.1.state == .unsafe }) {
             state = .unsafe
-        } else if sources.contains(where: { $0.state == .changedDuringRead }) {
+        } else if sources.contains(where: { $0.1.state == .changedDuringRead }) {
             state = .changedDuringRead
-        } else if sources.contains(where: { $0.state == .unreadable }) {
+        } else if sources.contains(where: { $0.1.state == .unreadable }) {
             state = .unreadable
-        } else if sources.contains(where: { $0.state == .missing && $0.required }) {
+        } else if sources.contains(where: { $0.1.state == .missing && $0.1.required }) {
             state = .missing
-        } else if sources.contains(where: { $0.state == .truncated }) {
+        } else if sources.contains(where: { $0.1.state == .truncated }) {
             state = .truncated
-        } else if sources.contains(where: { $0.state == .captured }) {
+        } else if sources.contains(where: { $0.1.state == .captured }) {
             state = .captured
         } else {
             state = .missing
         }
         let detail = sources.map {
-            "\($0.url.lastPathComponent)=\($0.state.rawValue) (\($0.detail))"
+            "\($0.1.url.lastPathComponent)=\($0.1.state.rawValue) (\($0.1.detail))"
         }.joined(separator: "; ")
         return SteamBootstrapUpdateLogAssessment(
             hasProgress: hasProgress,
             state: state,
             detail: detail,
-            sources: sources
+            sources: sources.map { $0.1 },
+            progressIdentity: progressIdentity,
+            observedProgress: observedProgress,
+            observedCompletion: observedCompletion,
+            nextCursor: SteamBootstrapUpdateSourceCursor(
+                stdout: sources[0].1.nextCursor ?? cursor.stdout,
+                bootstrapLog: sources[1].1.nextCursor ?? cursor.bootstrapLog
+            ),
+            sourceEvents: sourceEvents
         )
     }
 
-    private func steamLogText(_ text: String, since cutoff: Date) -> String {
-        let lines = text.split(omittingEmptySubsequences: false, whereSeparator: { $0.isNewline })
-        let currentTimestampedLines = lines.filter { line in
-            guard line.first == "[",
-                  let end = line.firstIndex(of: "]") else {
-                return false
-            }
-            let timestamp = String(line[line.index(after: line.startIndex)..<end])
-            guard let loggedAt = Self.steamLogTimestampFormatter.date(from: timestamp) else {
-                return false
-            }
-            return loggedAt >= cutoff
+    private func steamBootstrapOrderedEventKind(
+        in normalizedLine: String
+    ) -> SteamBootstrapOrderedEventKind? {
+        // "Verification complete" is deliberately absent. Real Steam logs
+        // emit it immediately before "업데이트 다운로드 중" for each staged
+        // client architecture, so it is a phase boundary rather than terminal
+        // updater completion. WebHelper executable text is likewise process
+        // diagnostics, not updater completion evidence.
+        let completionSignals = [
+            "업데이트 완료! steam 실행 중",
+            "update complete! launching steam",
+            "update complete, launching steam",
+            "nothing to do",
+            "download skipped"
+        ]
+        if completionSignals.contains(where: { normalizedLine.contains($0) }) {
+            return .completion
         }
-        guard !currentTimestampedLines.isEmpty else {
-            return text
+        let progressSignals = [
+            "업데이트 다운로드 중",
+            "사용 가능한 업데이트 확인 중",
+            "다운로드 완료",
+            "패키지 압축 푸는 중",
+            "업데이트 설치 중",
+            "설치 확인 중",
+            "downloading update",
+            "download update",
+            "downloading manifest",
+            "manifest download:",
+            "updating steam",
+            "extracting package",
+            "installing update",
+            "verifying installation"
+        ]
+        if progressSignals.contains(where: { normalizedLine.contains($0) }) {
+            return .progress
         }
-        return currentTimestampedLines.joined(separator: "\n")
+        return nil
     }
 
-    private func waitForSteamClientMutationAfterLaunch(
+    /// Captures the Darwin snapshot before awaiting journal validation, then
+    /// binds only rows whose PID and kernel start identity both match the exact
+    /// current-run journal readback. No append-only Windows creation record is
+    /// admitted to this current-liveness boundary.
+    private func verifiedCurrentLaunchProcessSnapshot(
         result: ProcessRunResult,
         prefix: URL,
-        steamDirectory: URL,
-        videoMemorySizeMB: Int
-    ) async -> Bool {
-        let timeout = min(bootstrapCompletionTimeout, 3)
-        guard timeout > 0 else { return false }
-        let deadline = Date().addingTimeInterval(timeout)
-        while !Task.isCancelled {
-            let bootstrapAssessment = steamBootstrapUpdateLogAssessment(
-                result: result,
-                steamDirectory: steamDirectory
+        target _: SteamLaunchTarget
+    ) async -> SteamLaunchProcessSnapshot {
+        let runIdentifier = ProcessRunEvidenceWriter.runIdentifier(
+            for: result.stderrLog
+        ).lowercased()
+        do {
+            let processIdentities =
+                try await managedWineLaunchProcessIdentityProvider(
+                    prefix,
+                    runIdentifier
+                )
+            let managedSnapshot = managedWineJournalProcessSnapshotProvider(
+                processIdentities
             )
-            if bootstrapAssessment.hasProgress == true {
-                return true
-            }
-            let profile = SteamClientCompatibilityProfileContract.inspect(
-                prefix: prefix,
-                fileManager: fileManager,
-                videoMemorySizeMB: videoMemorySizeMB
+            let diagnosticSnapshot = processSnapshotProvider()
+            // Generic enumeration remains useful diagnostics, but it cannot
+            // create current-run ownership. In particular, the deployed child
+            // executable is wine.bin, which is deliberately outside the
+            // generic basename filter and is captured through the exact
+            // provider identities above instead.
+            return managedSnapshot.merging(diagnosticSnapshot)
+        } catch {
+            let diagnosticSnapshot = processSnapshotProvider()
+            return diagnosticSnapshot.reportingManagedWineLaunchVerificationFailure(
+                "the exact current-run Managed Wine process identities could not be verified: " +
+                    forgePlayTechnicalErrorSummary(error)
             )
-            if !profile.isSatisfied {
-                return true
-            }
-            guard Date() < deadline else { return false }
-            do {
-                try await Task.sleep(for: .milliseconds(100))
-            } catch {
-                return false
-            }
         }
-        return false
     }
 
-    private func waitForSteamClientBootstrapCompletion(
+    /// Diagnostic/conformance evidence may combine current Darwin liveness
+    /// with this launch's append-only Windows creation journal. Lifecycle and
+    /// renderer promotion deliberately use `verifiedCurrent...` above instead.
+    private func currentSteamLaunchProcessSnapshot(
         result: ProcessRunResult,
         prefix: URL,
-        steamDirectory: URL,
+        target: SteamLaunchTarget
+    ) async -> SteamLaunchProcessSnapshot {
+        let currentSnapshot = await verifiedCurrentLaunchProcessSnapshot(
+            result: result,
+            prefix: prefix,
+            target: target
+        )
+        let sameRunEvidence = SteamLaunchProcessSnapshot.sameRunLaunchEvidence(
+                for: result,
+                target: target,
+                fileManager: fileManager
+            )
+            .reconcilingProcessCreationEvidence(with: currentSnapshot)
+        return currentSnapshot.merging(sameRunEvidence)
+    }
+
+    /// Binds log-level renderer evidence to the exact currently observed
+    /// Steam client/WebHelper process set. PID-bearing diagnostic lines are
+    /// part of the identity, so a process exit/restart cannot inherit the
+    /// previous process's completed renderer grace interval.
+    private nonisolated static func processBoundRendererObservation(
+        _ input: SteamWebHelperStartupObservation,
+        snapshot: SteamLaunchProcessSnapshot,
+        launchTarget: SteamLaunchTarget
+    ) -> SteamWebHelperStartupObservation? {
+        guard snapshot.containsVerifiedCurrentRunSteamClientProcess(
+            for: launchTarget
+        ) else { return nil }
+        let allWebHelperProcessLines = snapshot
+            .managedWineJournalWebHelperCommandLines(for: launchTarget)
+        let rootWebHelperProcessLines = allWebHelperProcessLines.filter {
+            !SteamWebHelperLaunchPolicy.isChromiumSubprocessCommandLine($0)
+        }.sorted()
+        guard !rootWebHelperProcessLines.isEmpty,
+              let logAttemptIdentity = input.rendererAttemptIdentity,
+              !logAttemptIdentity.isEmpty else { return nil }
+        let identityMaterial = ([logAttemptIdentity] + rootWebHelperProcessLines)
+            .joined(separator: "\u{0}")
+        var output = input
+        output.rendererAttemptIdentity = SHA256.hash(
+            data: Data(identityMaterial.utf8)
+        )
+            .map { String(format: "%02x", $0) }
+            .joined()
+        return output
+    }
+
+    /// Production UI startup wait with renderer grace bound to both the
+    /// newest log epoch and the exact current process identities. The reporter
+    /// retains an unscoped wait for focused log tests; product admission uses
+    /// this process-scoped path.
+    private func waitForSteamWebHelperStartupWithProcessLiveness(
+        result: ProcessRunResult,
+        prefix: URL,
+        in steamDirectory: URL,
+        since logCursor: SteamWebHelperStartupLogCursor,
         launchTarget: SteamLaunchTarget,
-        requiresUpdaterCompletion: Bool
-    ) async -> Bool {
-        guard bootstrapCompletionTimeout > 0 else { return false }
-
-        let deadline = Date().addingTimeInterval(bootstrapCompletionTimeout)
-        var previousPayloadSignature: String?
-        var stablePayloadObservationCount = 0
-        while !Task.isCancelled {
-            let payloadSignature = steamClientBootstrapPayloadSignature(in: prefix)
-            if let payloadSignature {
-                if payloadSignature == previousPayloadSignature {
-                    stablePayloadObservationCount += 1
+        timeout: TimeInterval,
+        pollInterval: TimeInterval
+    ) async -> SteamWebHelperStartupObservation {
+        let deadline = Date().addingTimeInterval(max(0, timeout))
+        let boundedPollInterval = max(0.1, pollInterval)
+        let rendererStabilizationInterval = min(
+            Self.steamUIProvisionalSurfaceStabilizationInterval,
+            max(0.25, max(0, timeout) / 2)
+        )
+        var rendererStabilization =
+            SteamWebHelperRendererStabilizationTracker()
+        while !Task.isCancelled && Date() < deadline {
+            var observation = steamLaunchDiagnosticsReporter
+                .detectSteamWebHelperStartup(
+                    in: steamDirectory,
+                    since: logCursor
+                )
+            if observation.state == .provisionalSurface {
+                let snapshot = await verifiedCurrentLaunchProcessSnapshot(
+                    result: result,
+                    prefix: prefix,
+                    target: launchTarget
+                )
+                if let processBoundObservation =
+                    Self.processBoundRendererObservation(
+                        observation,
+                        snapshot: snapshot,
+                        launchTarget: launchTarget
+                    ) {
+                    if rendererStabilization.observePositiveRenderer(
+                        in: processBoundObservation,
+                        at: Date(),
+                        requiredInterval: rendererStabilizationInterval
+                    ) {
+                        observation.state = .ready
+                        observation.usableUIReadiness =
+                            observation.provisionalSurfaceReadiness
+                        return observation
+                    }
                 } else {
-                    stablePayloadObservationCount = 1
+                    rendererStabilization.reset()
                 }
             } else {
-                stablePayloadObservationCount = 0
+                rendererStabilization.reset()
+                if observation.state != .pending { return observation }
             }
-            previousPayloadSignature = payloadSignature
-
-            if stablePayloadObservationCount >= 2 {
-                let snapshot = processSnapshotProvider()
-                let webHelperStarted = !snapshot.webHelperCommandLines(for: launchTarget).isEmpty
-                let updaterAssessment = steamBootstrapUpdateLogAssessment(
-                    result: result,
-                    steamDirectory: steamDirectory
-                )
-                let updaterCompletionConfirmed = updaterAssessment.hasProgress == false
-                if requiresUpdaterCompletion
-                    ? updaterCompletionConfirmed
-                    : (webHelperStarted || updaterCompletionConfirmed) {
-                    return true
-                }
-            }
-
-            guard Date() < deadline else { return false }
             do {
-                try await Task.sleep(for: .seconds(bootstrapCompletionPollInterval))
+                try await Task.sleep(for: .seconds(boundedPollInterval))
             } catch {
-                return false
+                break
             }
         }
-        return false
+        var observation = steamLaunchDiagnosticsReporter
+            .detectSteamWebHelperStartup(
+                in: steamDirectory,
+                since: logCursor
+            )
+        if observation.state == .pending ||
+            observation.state == .provisionalSurface {
+            observation.state = .timedOut
+        }
+        return observation
     }
 
     private func observeSteamUIStartup(
@@ -2355,7 +6106,8 @@ final class SteamManager {
         logCursor: SteamWebHelperStartupLogCursor
     ) async -> SteamWebHelperStartupObservation {
         guard result.succeeded,
-              !result.waitedForExit,
+              SteamLaunchDispatchDisposition.resolve(result)
+                .acceptsSessionLifetime,
               steamUIStartupObservationTimeout > 0 else {
             return SteamWebHelperStartupObservation(
                 state: .timedOut,
@@ -2366,74 +6118,116 @@ final class SteamManager {
             )
         }
 
-        if steamBootstrapUpdateLogAssessment(
-            result: result,
-            steamDirectory: steamDirectory
-        ).hasProgress == true {
-            _ = await waitForSteamClientBootstrapCompletion(
+        func validatingCurrentSurfaceProcessLiveness(
+            _ input: SteamWebHelperStartupObservation
+        ) async -> SteamWebHelperStartupObservation {
+            guard input.state == .ready else { return input }
+            let snapshot = await verifiedCurrentLaunchProcessSnapshot(
                 result: result,
                 prefix: prefix,
-                steamDirectory: steamDirectory,
-                launchTarget: launchTarget,
-                requiresUpdaterCompletion: false
+                target: launchTarget
             )
+            guard snapshot.containsVerifiedCurrentRunSteamClientProcess(
+                for: launchTarget
+            ), !snapshot.managedWineJournalWebHelperCommandLines(
+                for: launchTarget
+            ).isEmpty else {
+                var observation = input
+                observation.state = .retryableFailure
+                observation.reason =
+                    "Steam exposed provisional UI evidence, but the current expected Steam/WebHelper processes were not both live at promotion"
+                return observation
+            }
+            return input
         }
 
-        return await steamLaunchDiagnosticsReporter.waitForSteamWebHelperStartup(
-            in: steamDirectory,
-            since: logCursor,
-            timeout: steamUIStartupObservationTimeout,
-            pollInterval: steamUIStartupObservationPollInterval
+        return await validatingCurrentSurfaceProcessLiveness(
+            await waitForSteamWebHelperStartupWithProcessLiveness(
+                result: result,
+                prefix: prefix,
+                in: steamDirectory,
+                since: logCursor,
+                launchTarget: launchTarget,
+                timeout: steamUIStartupObservationTimeout,
+                pollInterval: steamUIStartupObservationPollInterval
+            )
         )
     }
 
-    private func steamClientBootstrapPayloadSignature(in prefix: URL) -> String? {
-        for cefDirectory in SteamClientCompatibilityProfileContract.steamWebHelperCandidateDirectories(in: prefix) {
-            let requiredFiles = [
-                SteamClientCompatibilityProfileContract.steamWebHelperFile(in: cefDirectory),
-                cefDirectory.appending(path: "libcef.dll")
-            ]
-            var components: [String] = []
-            for file in requiredFiles {
-                guard FileSystemItemPolicy.isRegularNonSymlinkFile(file, fileManager: fileManager),
-                      let attributes = try? fileManager.attributesOfItem(atPath: file.path),
-                      let size = attributes[.size] as? NSNumber,
-                      size.int64Value > 0,
-                      let modificationDate = attributes[.modificationDate] as? Date else {
-                    components.removeAll()
-                    break
-                }
-                components.append("\(file.lastPathComponent):\(size.int64Value):\(modificationDate.timeIntervalSince1970)")
-            }
-            if components.count == requiredFiles.count {
-                return "\(cefDirectory.path)|\(components.joined(separator: "|"))"
-            }
-        }
-        return nil
+    func bootstrapUpdateSourceCursor(
+        from launchCursor: SteamWebHelperStartupLogCursor
+    ) -> SteamBootstrapUpdateSourceCursor {
+        SteamBootstrapUpdateSourceCursor(
+            stdout: SteamLogFileCursor(
+                byteCount: 0,
+                fileNumber: nil,
+                deviceNumber: nil,
+                modificationDate: nil,
+                trailingSignature: Data(),
+                endsAtLineBoundary: true,
+                captureState: .missing,
+                captureDetail: "per-launch stdout did not exist before dispatch"
+            ),
+            bootstrapLog: launchCursor.bootstrapLog
+        )
     }
 
-    private func secureTrailingText(
+    /// Reads only the exact bytes appended after `cursor`. Monotonic appends
+    /// beyond the initially opened byte window are permitted; replacement,
+    /// truncation, device/inode changes, mutation inside that exact window, and
+    /// a delta larger than the bound return no text and cannot advance updater
+    /// progress.
+    private func secureAppendedBootstrapEvidence(
         from url: URL,
+        since cursor: SteamLogFileCursor,
         maxBytes: Int,
-        modifiedAfter cutoff: Date,
         anchoredAt root: URL,
         required: Bool
     ) -> SteamBootstrapLogSourceAssessment {
+        guard ![SteamEvidenceReadState.unsafe, .unreadable, .changedDuringRead]
+            .contains(cursor.captureState) else {
+            return SteamBootstrapLogSourceAssessment(
+                url: url,
+                required: required,
+                state: cursor.captureState,
+                detail: "launch cursor was not safely captured: \(cursor.captureDetail ?? "no detail")",
+                text: ""
+            )
+        }
         let boundedMaxBytes = max(maxBytes, 0)
         guard boundedMaxBytes > 0 else {
             return SteamBootstrapLogSourceAssessment(
                 url: url,
                 required: required,
-                state: .captured,
-                detail: "zero-byte read requested",
+                state: .unreadable,
+                detail: "zero-byte append bound cannot establish updater progress",
                 text: ""
             )
         }
-        let openResult = openBootstrapEvidenceFile(at: url, anchoredAt: root)
+
         let descriptor: Int32
-        let initialMetadata: BootstrapEvidenceFileMetadata
-        switch openResult {
+        let metadata: BootstrapEvidenceFileMetadata
+        switch openBootstrapEvidenceFile(at: url, anchoredAt: root) {
         case .failed(let state, let detail):
+            if state == .missing, cursor.captureState == .missing {
+                return SteamBootstrapLogSourceAssessment(
+                    url: url,
+                    required: required,
+                    state: .missing,
+                    detail: detail,
+                    text: "",
+                    nextCursor: cursor
+                )
+            }
+            if state == .missing {
+                return SteamBootstrapLogSourceAssessment(
+                    url: url,
+                    required: required,
+                    state: .changedDuringRead,
+                    detail: "captured updater evidence disappeared or rotated after the launch cursor: \(detail)",
+                    text: ""
+                )
+            }
             return SteamBootstrapLogSourceAssessment(
                 url: url,
                 required: required,
@@ -2441,104 +6235,215 @@ final class SteamManager {
                 detail: detail,
                 text: ""
             )
-        case .opened(let openedDescriptor, let metadata):
+        case .opened(let openedDescriptor, let openedMetadata):
             descriptor = openedDescriptor
-            initialMetadata = metadata
+            metadata = openedMetadata
         }
         defer { Darwin.close(descriptor) }
 
-        guard initialMetadata.modificationDate >= cutoff else {
-            guard bootstrapEvidenceMetadata(descriptor: descriptor) == initialMetadata else {
+        let appendOffset: UInt64
+        if cursor.captureState == .missing {
+            appendOffset = 0
+        } else {
+            guard cursor.captureState == .captured,
+                  cursor.deviceNumber == metadata.deviceNumber,
+                  cursor.fileNumber == metadata.fileNumber,
+                  metadata.byteCount >= cursor.byteCount else {
                 return SteamBootstrapLogSourceAssessment(
                     url: url,
                     required: required,
                     state: .changedDuringRead,
-                    detail: "file changed while its modification time was compared with the launch cutoff",
+                    detail: "updater evidence generation was replaced or truncated after the launch cursor",
                     text: ""
                 )
             }
+            guard bootstrapEvidenceContainsTrailingSignature(
+                descriptor: descriptor,
+                cursor: cursor
+            ) else {
+                return SteamBootstrapLogSourceAssessment(
+                    url: url,
+                    required: required,
+                    state: .changedDuringRead,
+                    detail: "updater evidence bytes preceding the append offset changed",
+                    text: ""
+                )
+            }
+            appendOffset = cursor.byteCount
+        }
+
+        let appendedByteCount = metadata.byteCount - appendOffset
+        guard appendedByteCount <= UInt64(boundedMaxBytes) else {
             return SteamBootstrapLogSourceAssessment(
                 url: url,
                 required: required,
-                state: .captured,
-                detail: "file predates the launch cutoff",
+                state: .truncated,
+                detail: "appended updater evidence exceeded the \(boundedMaxBytes)-byte monotonic-read bound",
                 text: ""
             )
         }
-
-        let readByteCount = min(initialMetadata.byteCount, UInt64(boundedMaxBytes))
-        let readOffset = initialMetadata.byteCount - readByteCount
         let data: Data
         do {
             data = try readBootstrapEvidenceBytes(
                 descriptor: descriptor,
-                offset: readOffset,
-                count: Int(readByteCount)
+                offset: appendOffset,
+                count: Int(appendedByteCount)
             )
         } catch {
             return SteamBootstrapLogSourceAssessment(
                 url: url,
                 required: required,
                 state: .unreadable,
-                detail: "bounded secure read failed: \(forgePlayTechnicalErrorSummary(error))",
+                detail: "bounded append read failed: \(forgePlayTechnicalErrorSummary(error))",
                 text: ""
             )
         }
-        var text = String(decoding: data, as: UTF8.self)
-        if readOffset > 0,
-           let firstNewline = text.firstIndex(where: { $0.isNewline }) {
-            text = String(text[text.index(after: firstNewline)...])
+        let postReadMetadata = bootstrapEvidenceMetadata(
+            descriptor: descriptor
+        )
+        let rereadData: Data
+        do {
+            rereadData = try readBootstrapEvidenceBytes(
+                descriptor: descriptor,
+                offset: appendOffset,
+                count: Int(appendedByteCount)
+            )
+        } catch {
+            return SteamBootstrapLogSourceAssessment(
+                url: url,
+                required: required,
+                state: .unreadable,
+                detail: "bounded append verification read failed: \(forgePlayTechnicalErrorSummary(error))",
+                text: ""
+            )
         }
-        guard data.count == Int(readByteCount),
-              bootstrapEvidenceMetadata(descriptor: descriptor) == initialMetadata else {
+        let postRereadMetadata = bootstrapEvidenceMetadata(
+            descriptor: descriptor
+        )
+        guard data.count == Int(appendedByteCount),
+              rereadData.count == Int(appendedByteCount),
+              Self.bootstrapEvidenceReadWindowIsStable(
+                initialMetadata: metadata,
+                postReadMetadata: postReadMetadata,
+                postRereadMetadata: postRereadMetadata,
+                capturedData: data,
+                rereadData: rereadData
+              ),
+              bootstrapEvidenceContainsTrailingSignature(
+                descriptor: descriptor,
+                cursor: cursor
+              ) else {
             return SteamBootstrapLogSourceAssessment(
                 url: url,
                 required: required,
                 state: .changedDuringRead,
-                detail: "file size, identity, or modification time changed during the bounded read",
-                text: text
+                detail: "updater evidence was replaced, truncated, or mutated inside the stable bounded read window",
+                text: ""
             )
         }
-
-        let verificationOpen = openBootstrapEvidenceFile(at: url, anchoredAt: root)
-        switch verificationOpen {
-        case .failed(let state, let detail):
-            return SteamBootstrapLogSourceAssessment(
-                url: url,
-                required: required,
-                state: state == .unsafe ? .unsafe : .changedDuringRead,
-                detail: "source path changed after the bounded read: \(detail)",
-                text: text
-            )
-        case .opened(let verificationDescriptor, let finalPathMetadata):
-            Darwin.close(verificationDescriptor)
-            guard finalPathMetadata == initialMetadata else {
-                return SteamBootstrapLogSourceAssessment(
-                    url: url,
-                    required: required,
-                    state: .changedDuringRead,
-                    detail: "source path identity changed during the bounded read",
-                    text: text
+        let consumedByteCount: UInt64
+        let consumedData: Data
+        if cursor.endsAtLineBoundary {
+            if let finalNewline = data.lastIndex(of: 0x0A) {
+                let count = data.distance(
+                    from: data.startIndex,
+                    to: data.index(after: finalNewline)
                 )
+                consumedByteCount = UInt64(count)
+                consumedData = Data(data.prefix(count))
+            } else {
+                consumedByteCount = 0
+                consumedData = Data()
             }
+        } else if let baselineContinuationNewline = data.firstIndex(of: 0x0A) {
+            // The row began before dispatch. Consume its post-launch suffix so
+            // it is discarded exactly once, then attribute only complete rows
+            // that begin after that newline to this launch.
+            let firstLaunchRow = data.index(after: baselineContinuationNewline)
+            let launchData = data[firstLaunchRow...]
+            if let finalNewline = launchData.lastIndex(of: 0x0A) {
+                let count = data.distance(
+                    from: data.startIndex,
+                    to: data.index(after: finalNewline)
+                )
+                consumedByteCount = UInt64(count)
+                consumedData = Data(data[firstLaunchRow...finalNewline])
+            } else {
+                let count = data.distance(
+                    from: data.startIndex,
+                    to: firstLaunchRow
+                )
+                consumedByteCount = UInt64(count)
+                consumedData = Data()
+            }
+        } else {
+            consumedByteCount = 0
+            consumedData = Data()
         }
-
-        if initialMetadata.byteCount > UInt64(boundedMaxBytes) {
+        let nextByteCount = appendOffset + consumedByteCount
+        let signature: Data
+        do {
+            signature = try bootstrapEvidenceTrailingSignature(
+                descriptor: descriptor,
+                byteCount: nextByteCount
+            )
+        } catch {
             return SteamBootstrapLogSourceAssessment(
                 url: url,
                 required: required,
-                state: .truncated,
-                detail: "tail was bounded to the last \(boundedMaxBytes) bytes",
-                text: text
+                state: .unreadable,
+                detail: "could not capture the next updater evidence generation",
+                text: ""
             )
         }
+        let nextCursor = SteamLogFileCursor(
+            byteCount: nextByteCount,
+            fileNumber: metadata.fileNumber,
+            deviceNumber: metadata.deviceNumber,
+            modificationDate: metadata.modificationDate,
+            trailingSignature: signature,
+            endsAtLineBoundary:
+                consumedByteCount > 0 ? true : cursor.endsAtLineBoundary,
+            captureState: .captured,
+            captureDetail: "exact updater append generation captured"
+        )
         return SteamBootstrapLogSourceAssessment(
             url: url,
             required: required,
             state: .captured,
-            detail: "secure bounded tail captured",
-            text: text
+            detail: "captured \(consumedByteCount) complete-line byte(s) appended after the exact source cursor",
+            text: String(decoding: consumedData, as: UTF8.self),
+            nextCursor: nextCursor
         )
+    }
+
+    private func bootstrapEvidenceTrailingSignature(
+        descriptor: Int32,
+        byteCount: UInt64
+    ) throws -> Data {
+        guard byteCount > 0 else { return Data() }
+        let length = min(byteCount, 64)
+        return try readBootstrapEvidenceBytes(
+            descriptor: descriptor,
+            offset: byteCount - length,
+            count: Int(length)
+        )
+    }
+
+    private func bootstrapEvidenceContainsTrailingSignature(
+        descriptor: Int32,
+        cursor: SteamLogFileCursor
+    ) -> Bool {
+        guard !cursor.trailingSignature.isEmpty else {
+            return cursor.byteCount == 0
+        }
+        guard cursor.byteCount >= UInt64(cursor.trailingSignature.count),
+              let data = try? readBootstrapEvidenceBytes(
+                descriptor: descriptor,
+                offset: cursor.byteCount - UInt64(cursor.trailingSignature.count),
+                count: cursor.trailingSignature.count
+              ) else { return false }
+        return data == cursor.trailingSignature
     }
 
     private func openBootstrapEvidenceFile(
@@ -2675,7 +6580,9 @@ final class SteamManager {
         var snapshot = initialSnapshot
         let deadline = Date().addingTimeInterval(processEvidenceTimeout)
         while !Task.isCancelled && Date() < deadline {
-            let containsExpectedPrefixSteam = snapshot.containsExpectedPrefixSteamProcess(for: target)
+            let containsExpectedPrefixSteam = verificationMode == .operational
+                ? snapshot.containsVerifiedCurrentRunSteamProcess(for: target)
+                : snapshot.containsExpectedPrefixSteamProcess(for: target)
             let hasRequiredEvidence = verificationMode == .operational
                 ? containsExpectedPrefixSteam
                 : snapshot.containsExpectedRunnerProcess(for: target) &&
@@ -2689,23 +6596,21 @@ final class SteamManager {
             } catch {
                 break
             }
-            snapshot = currentSteamLaunchProcessSnapshot(for: result, target: target)
+            if verificationMode == .conformance {
+                snapshot = await currentSteamLaunchProcessSnapshot(
+                    result: result,
+                    prefix: target.expectedPrefixPath,
+                    target: target
+                )
+            } else {
+                snapshot = await verifiedCurrentLaunchProcessSnapshot(
+                    result: result,
+                    prefix: target.expectedPrefixPath,
+                    target: target
+                )
+            }
         }
         return snapshot
-    }
-
-    private func currentSteamLaunchProcessSnapshot(
-        for result: ProcessRunResult,
-        target: SteamLaunchTarget
-    ) -> SteamLaunchProcessSnapshot {
-        let currentSnapshot = processSnapshotProvider()
-        let sameRunEvidence = SteamLaunchProcessSnapshot.sameRunLaunchEvidence(
-                for: result,
-                target: target,
-                fileManager: fileManager
-            )
-            .reconcilingProcessCreationEvidence(with: currentSnapshot)
-        return currentSnapshot.merging(sameRunEvidence)
     }
 
     private func steamLaunchHardGateAssessment(
@@ -2768,7 +6673,7 @@ final class SteamManager {
         if let steamUIStartupFailure {
             append(
                 .failedSteamUIStartup,
-                "Steam UI startup failed again after one automatic prefix restart: \(steamUIStartupFailure)"
+                "Steam UI startup did not reach a usable surface during the bounded observation: \(steamUIStartupFailure)"
             )
         }
         if !runnerVersionEvidence.hasCapturedWineVersionEvidence {
@@ -2805,7 +6710,7 @@ final class SteamManager {
             } else if !after.webHelperCommandLinesContainRequiredLaunchPolicy(for: target) {
                 append(
                     .failedWebHelperLaunchPolicyMissing,
-                    "Steam WebHelper same-run command line is missing: \(SteamWebHelperLaunchPolicy.requiredArguments.joined(separator: ", "))"
+                    "Steam WebHelper same-run command line must contain \(SteamWebHelperLaunchPolicy.requiredArguments.joined(separator: ", "))"
                 )
             }
             if !screenEvidence.verifiesWindowsSteamUI {
@@ -2815,16 +6720,21 @@ final class SteamManager {
             if !after.containsExpectedRunnerProcess(for: target) {
                 details.append("operational same-run launch evidence did not observe the runner")
             }
-            if !after.containsExpectedPrefixSteamProcess(for: target) {
+            if !after.containsVerifiedCurrentRunSteamProcess(for: target) {
                 append(
                     .operationalProcessEvidenceUnavailable,
                     "operational launch did not observe steam.exe or steamwebhelper.exe in the expected WINEPREFIX before the bounded process-evidence deadline"
                 )
             }
-            if after.webHelperCommandLines(for: target).isEmpty {
+            if after.managedWineJournalWebHelperCommandLines(
+                for: target
+            ).isEmpty {
                 details.append("operational same-run launch evidence did not capture Steam WebHelper; UI verification remains pending")
-            } else if !after.webHelperCommandLinesContainRequiredLaunchPolicy(for: target) {
-                details.append("operational Steam WebHelper evidence is missing the required ForgePlay launch policy arguments; UI verification remains pending")
+            } else if !after
+                .managedWineJournalWebHelperCommandLinesContainRequiredLaunchPolicy(
+                    for: target
+                ) {
+                details.append("operational Steam WebHelper evidence is missing the executable-scoped CEF compatibility arguments; UI verification remains pending")
             }
         }
         if reasonCodes.isEmpty, !hasFailureDetail {
@@ -3165,10 +7075,11 @@ enum SteamLaunchProcessEvidenceSource: Sendable, Hashable {
     case systemSnapshot
     case processCreationObservation
     case runnerLaunch
+    case managedWineJournal
 
     var processIdentifierNamespace: SteamLaunchProcessIdentifierNamespace {
         switch self {
-        case .systemSnapshot, .runnerLaunch:
+        case .systemSnapshot, .runnerLaunch, .managedWineJournal:
             .darwin
         case .processCreationObservation:
             .windows
@@ -3190,15 +7101,19 @@ struct SteamLaunchObservedProcess: Sendable, Hashable {
     var processID: Int32
     var command: String
     var evidenceSource: SteamLaunchProcessEvidenceSource
+    var processStartedAtUnixMicroseconds: UInt64?
 
     init(
         processID: Int32,
         command: String,
-        evidenceSource: SteamLaunchProcessEvidenceSource = .systemSnapshot
+        evidenceSource: SteamLaunchProcessEvidenceSource = .systemSnapshot,
+        processStartedAtUnixMicroseconds: UInt64? = nil
     ) {
         self.processID = processID
         self.command = command
         self.evidenceSource = evidenceSource
+        self.processStartedAtUnixMicroseconds =
+            processStartedAtUnixMicroseconds
     }
 
     var identifier: SteamLaunchProcessIdentifier {
@@ -3253,7 +7168,10 @@ enum DarwinProcessSnapshotReader {
         var processes: [SteamLaunchObservedProcess] = []
         var pathFailureCount = 0
         var argumentFailureCount = 0
+        var identityFailureCount = 0
         for processID in processIDs {
+            let startIdentityBeforeRead = ManagedWineProcessJournal
+                .processStartTimeUnixMicroseconds(for: processID)
             let executablePath: String
             switch executablePathResult(for: processID) {
             case .success(let path):
@@ -3265,12 +7183,20 @@ enum DarwinProcessSnapshotReader {
             guard isRelevantExecutablePath(executablePath) else { continue }
             let processArguments = arguments(for: processID)
             if processArguments == nil { argumentFailureCount += 1 }
+            let startIdentityAfterRead = ManagedWineProcessJournal
+                .processStartTimeUnixMicroseconds(for: processID)
+            guard let startIdentityBeforeRead,
+                  startIdentityBeforeRead == startIdentityAfterRead else {
+                identityFailureCount += 1
+                continue
+            }
             processes.append(SteamLaunchObservedProcess(
                 processID: processID,
                 command: diagnosticCommandLine(
                     executablePath: executablePath,
                     processArguments: processArguments
-                )
+                ),
+                processStartedAtUnixMicroseconds: startIdentityBeforeRead
             ))
         }
         var issues: [SteamProcessObservationReadIssue] = []
@@ -3288,9 +7214,155 @@ enum DarwinProcessSnapshotReader {
                 detail: "arguments/environment were unavailable for relevant processes; WINEPREFIX attribution may be incomplete"
             ))
         }
+        if identityFailureCount > 0 {
+            issues.append(.init(
+                code: .systemProcessIdentityReadFailed,
+                affectedRecordCount: identityFailureCount,
+                detail: "one or more relevant process rows changed identity while being inspected and were discarded"
+            ))
+        }
         return DarwinProcessSnapshotReadResult(
             processes: processes,
             state: issues.isEmpty ? .complete : .recovered,
+            issues: issues
+        )
+    }
+
+    /// Captures only the exact process identities already admitted by the
+    /// managed Wine journal. Unlike the generic diagnostic snapshot, this path
+    /// does not filter by executable basename: the provider's validated
+    /// executable object is the allowlist boundary. PID, kernel start identity,
+    /// executable path, arguments, and the same kernel start identity after the
+    /// read must all agree before a current-lifecycle row is synthesized.
+    static func currentManagedWineJournalProcesses(
+        _ identities: Set<ManagedWineLaunchProcessIdentity>
+    ) -> DarwinProcessSnapshotReadResult {
+        currentManagedWineJournalProcesses(
+            identities,
+            processStartTimeProvider: {
+                ManagedWineProcessJournal.processStartTimeUnixMicroseconds(
+                    for: $0
+                )
+            },
+            executablePathProvider: { executablePath(for: $0) },
+            processArgumentsProvider: { arguments(for: $0) }
+        )
+    }
+
+    static func currentManagedWineJournalProcesses(
+        _ identities: Set<ManagedWineLaunchProcessIdentity>,
+        processStartTimeProvider: (pid_t) -> UInt64?,
+        executablePathProvider: (pid_t) -> String?,
+        processArgumentsProvider: (pid_t) -> DarwinProcessArguments?
+    ) -> DarwinProcessSnapshotReadResult {
+        var processes: [SteamLaunchObservedProcess] = []
+        var issues: [SteamProcessObservationReadIssue] = []
+        for identity in identities.sorted(by: {
+            if $0.processID != $1.processID {
+                return $0.processID < $1.processID
+            }
+            if $0.processStartedAtUnixMicroseconds !=
+                $1.processStartedAtUnixMicroseconds {
+                return $0.processStartedAtUnixMicroseconds <
+                    $1.processStartedAtUnixMicroseconds
+            }
+            return $0.executableURL.path < $1.executableURL.path
+        }) {
+            let processID = pid_t(identity.processID)
+            guard processStartTimeProvider(processID) ==
+                    identity.processStartedAtUnixMicroseconds else {
+                issues.append(.init(
+                    code: .managedWineLaunchProcessVerificationFailed,
+                    affectedRecordCount: 1,
+                    detail: "managed Wine PID \(identity.processID) no longer has its verified kernel start identity"
+                ))
+                continue
+            }
+            guard let executablePath = executablePathProvider(processID) else {
+                issues.append(.init(
+                    code: .managedWineLaunchProcessVerificationFailed,
+                    affectedRecordCount: 1,
+                    detail: "managed Wine PID \(identity.processID) executable path could not be read"
+                ))
+                continue
+            }
+            let observedExecutableURL = URL(fileURLWithPath: executablePath)
+                .standardizedFileURL
+                .resolvingSymlinksInPath()
+            let expectedExecutableURL = identity.executableURL
+                .standardizedFileURL
+                .resolvingSymlinksInPath()
+            guard observedExecutableURL == expectedExecutableURL else {
+                issues.append(.init(
+                    code: .managedWineLaunchProcessVerificationFailed,
+                    affectedRecordCount: 1,
+                    detail: "managed Wine PID \(identity.processID) executable changed after journal verification"
+                ))
+                continue
+            }
+            guard let processArguments = processArgumentsProvider(processID)
+            else {
+                issues.append(.init(
+                    code: .managedWineLaunchProcessVerificationFailed,
+                    affectedRecordCount: 1,
+                    detail: "managed Wine PID \(identity.processID) arguments could not be read"
+                ))
+                continue
+            }
+            guard let executablePathAfterArguments =
+                    executablePathProvider(processID) else {
+                issues.append(.init(
+                    code: .managedWineLaunchProcessVerificationFailed,
+                    affectedRecordCount: 1,
+                    detail: "managed Wine PID \(identity.processID) executable path could not be re-read after its arguments"
+                ))
+                continue
+            }
+            let observedExecutableURLAfterArguments = URL(
+                fileURLWithPath: executablePathAfterArguments
+            )
+                .standardizedFileURL
+                .resolvingSymlinksInPath()
+            guard observedExecutableURLAfterArguments == expectedExecutableURL
+            else {
+                issues.append(.init(
+                    code: .managedWineLaunchProcessVerificationFailed,
+                    affectedRecordCount: 1,
+                    detail: "managed Wine PID \(identity.processID) executable changed while its arguments were captured"
+                ))
+                continue
+            }
+            guard processStartTimeProvider(processID) ==
+                    identity.processStartedAtUnixMicroseconds else {
+                issues.append(.init(
+                    code: .managedWineLaunchProcessVerificationFailed,
+                    affectedRecordCount: 1,
+                    detail: "managed Wine PID \(identity.processID) changed identity while its command was captured"
+                ))
+                continue
+            }
+            processes.append(SteamLaunchObservedProcess(
+                processID: identity.processID,
+                command: diagnosticCommandLine(
+                    executablePath: executablePath,
+                    processArguments: processArguments
+                ),
+                evidenceSource: .managedWineJournal,
+                processStartedAtUnixMicroseconds:
+                    identity.processStartedAtUnixMicroseconds
+            ))
+        }
+        let state: SteamProcessObservationReadState
+        if issues.isEmpty {
+            state = .complete
+        } else if processes.isEmpty {
+            state = .unavailable
+        } else {
+            state = .recovered
+        }
+        return DarwinProcessSnapshotReadResult(
+            processes: processes,
+            state: state,
             issues: issues
         )
     }
@@ -3386,6 +7458,12 @@ enum DarwinProcessSnapshotReader {
             return String(cString: baseAddress)
         }) else { return .failure(EIO) }
         return .success(path)
+    }
+
+    private static func executablePath(for processID: pid_t) -> String? {
+        guard case .success(let path) = executablePathResult(for: processID)
+        else { return nil }
+        return path
     }
 
     static func arguments(for processID: pid_t) -> DarwinProcessArguments? {
@@ -3650,6 +7728,42 @@ struct SteamGameRendererFallbackObservation: Sendable, Hashable {
     }
 }
 
+struct SteamGameRendererBaseHelperObservation: Sendable, Hashable {
+    var recordSequence: Int
+    var processID: Int32
+    var route: String
+    var reason: String
+    var executable: String
+}
+
+enum SteamD3DMetalNVAPIBootstrapState: String, Sendable, Hashable {
+    case initialized
+    case failed
+}
+
+struct SteamD3DMetalNVAPIBootstrapObservation: Sendable, Hashable {
+    var recordSequence: Int
+    var processID: Int32
+    var state: SteamD3DMetalNVAPIBootstrapState
+    var module: String
+    var loadStatus: UInt32
+    var procedureStatus: UInt32
+    var exceptionStatus: UInt32
+    var initializeResult: Int32
+
+    var diagnosticDescription: String {
+        "state=\(state.rawValue); module=\(module); " +
+            "load-status=\(Self.statusHex(loadStatus)); " +
+            "procedure-status=\(Self.statusHex(procedureStatus)); " +
+            "exception-status=\(Self.statusHex(exceptionStatus)); " +
+            "initialize-result=\(initializeResult)"
+    }
+
+    private static func statusHex(_ status: UInt32) -> String {
+        String(format: "0x%08X", status)
+    }
+}
+
 enum SteamProcessObservationReadState: String, Sendable, Hashable {
     case complete
     case recovered
@@ -3673,6 +7787,8 @@ enum SteamProcessObservationReadIssueCode: String, Sendable, Hashable {
     case systemSnapshotEnumerationFailed
     case systemProcessPathReadFailed
     case systemProcessArgumentsReadFailed
+    case systemProcessIdentityReadFailed
+    case managedWineLaunchProcessVerificationFailed
 }
 
 struct SteamProcessObservationReadIssue: Sendable, Hashable {
@@ -3692,6 +7808,8 @@ struct SteamProcessObservationReadResult: Sendable, Hashable {
     var gameRendererEnvironmentFailures: [SteamGameRendererEnvironmentFailureObservation] = []
     var gameRendererFallbacks: [SteamGameRendererFallbackObservation] = []
     var gameRendererModuleLoads: [SteamGameRendererModuleLoadObservation] = []
+    var gameRendererBaseHelpers: [SteamGameRendererBaseHelperObservation] = []
+    var d3dMetalNVAPIBootstraps: [SteamD3DMetalNVAPIBootstrapObservation] = []
     var state: SteamProcessObservationReadState
     var issues: [SteamProcessObservationReadIssue]
 
@@ -3713,6 +7831,10 @@ enum SteamProcessCreationObservationLog {
     private static let gameRendererModuleLoadRecordPrefix = "FORGEPLAY_GAME_RENDERER_LOAD_V3"
     private static let legacyGameRendererModuleLoadRecordPrefix =
         "FORGEPLAY_GAME_RENDERER_LOAD_V2"
+    private static let gameRendererBaseHelperRecordPrefix =
+        "FORGEPLAY_GAME_RENDERER_BASE_HELPER_V1"
+    private static let d3dMetalNVAPIBootstrapRecordPrefix =
+        "FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP_V1"
     private static let maximumFileSize = 1024 * 1024
     private static let maximumRecordCount = 4_096
     private static let maximumCommandSize = 256 * 1024
@@ -3727,6 +7849,7 @@ enum SteamProcessCreationObservationLog {
         "d3d12core.dll",
         "dxgi.dll",
         "winemetal.dll",
+        "nvapi.dll",
         "nvapi64.dll",
         "nvngx.dll",
         "nvngx-on-metalfx.dll"
@@ -3779,6 +7902,20 @@ enum SteamProcessCreationObservationLog {
         read(at: url, fileManager: fileManager).gameRendererModuleLoads
     }
 
+    static func gameRendererBaseHelpers(
+        at url: URL?,
+        fileManager: FileManager = .default
+    ) -> [SteamGameRendererBaseHelperObservation] {
+        read(at: url, fileManager: fileManager).gameRendererBaseHelpers
+    }
+
+    static func d3dMetalNVAPIBootstraps(
+        at url: URL?,
+        fileManager: FileManager = .default
+    ) -> [SteamD3DMetalNVAPIBootstrapObservation] {
+        read(at: url, fileManager: fileManager).d3dMetalNVAPIBootstraps
+    }
+
     static func parse(_ data: Data) -> [SteamLaunchObservedProcess] {
         parseResult(data).processes
     }
@@ -3807,6 +7944,18 @@ enum SteamProcessCreationObservationLog {
         _ data: Data
     ) -> [SteamGameRendererModuleLoadObservation] {
         parseResult(data).gameRendererModuleLoads
+    }
+
+    static func parseGameRendererBaseHelpers(
+        _ data: Data
+    ) -> [SteamGameRendererBaseHelperObservation] {
+        parseResult(data).gameRendererBaseHelpers
+    }
+
+    static func parseD3DMetalNVAPIBootstraps(
+        _ data: Data
+    ) -> [SteamD3DMetalNVAPIBootstrapObservation] {
+        parseResult(data).d3dMetalNVAPIBootstraps
     }
 
     static func read(
@@ -3993,6 +8142,8 @@ enum SteamProcessCreationObservationLog {
         var rendererEnvironmentFailures: [SteamGameRendererEnvironmentFailureObservation] = []
         var rendererFallbacks: [SteamGameRendererFallbackObservation] = []
         var rendererModuleLoads: [SteamGameRendererModuleLoadObservation] = []
+        var rendererBaseHelpers: [SteamGameRendererBaseHelperObservation] = []
+        var nvapiBootstraps: [SteamD3DMetalNVAPIBootstrapObservation] = []
         var invalidUTF8Count = 0
         var malformedCount = 0
         for (recordSequence, recordData) in lineData.enumerated() {
@@ -4250,6 +8401,104 @@ enum SteamProcessCreationObservationLog {
                     result: result,
                     path: path
                 ))
+            } else if fields[0] == gameRendererBaseHelperRecordPrefix {
+                let payload = String(fields[2])
+                let components = payload.components(separatedBy: " | ")
+                guard components.count >= 3,
+                      payload.utf8.count <= maximumCommandSize,
+                      !payload.unicodeScalars.contains(where: {
+                          $0.value < 0x20
+                      }),
+                      let route = value(
+                        in: components[0],
+                        after: "route="
+                      ),
+                      route == "base-runtime",
+                      let reason = value(
+                        in: components[1],
+                        after: "reason="
+                      ),
+                      reason == "host-owned-exact-suffix-rule" else {
+                    malformedCount += 1
+                    continue
+                }
+                let executable = components.dropFirst(2)
+                    .joined(separator: " | ")
+                guard !executable.isEmpty else {
+                    malformedCount += 1
+                    continue
+                }
+                rendererBaseHelpers.append(
+                    SteamGameRendererBaseHelperObservation(
+                        recordSequence: recordSequence,
+                        processID: processID,
+                        route: route,
+                        reason: reason,
+                        executable: executable
+                    )
+                )
+            } else if fields[0] == d3dMetalNVAPIBootstrapRecordPrefix {
+                let payload = String(fields[2])
+                let components = payload.components(separatedBy: " | ")
+                guard components.count == 6,
+                      payload.utf8.count <= maximumCommandSize,
+                      !payload.unicodeScalars.contains(where: {
+                          $0.value < 0x20
+                      }),
+                      let stateText = value(
+                        in: components[0],
+                        after: "state="
+                      ),
+                      let state = SteamD3DMetalNVAPIBootstrapState(
+                        rawValue: stateText
+                      ),
+                      let module = value(
+                        in: components[1],
+                        after: "module="
+                      )?.lowercased(),
+                      module == "nvapi64.dll",
+                      let loadStatus = hexadecimalStatus(
+                        in: components[2],
+                        after: "load-status=0x"
+                      ),
+                      let procedureStatus = hexadecimalStatus(
+                        in: components[3],
+                        after: "procedure-status=0x"
+                      ),
+                      let exceptionStatus = hexadecimalStatus(
+                        in: components[4],
+                        after: "exception-status=0x"
+                      ),
+                      let initializeResultText = value(
+                        in: components[5],
+                        after: "initialize-result="
+                      ),
+                      let initializeResult = Int32(
+                        initializeResultText
+                      ) else {
+                    malformedCount += 1
+                    continue
+                }
+                let initialized = loadStatus == 0 &&
+                    procedureStatus == 0 &&
+                    exceptionStatus == 0 &&
+                    initializeResult == 0
+                guard (state == .initialized) == initialized else {
+                    malformedCount += 1
+                    continue
+                }
+                nvapiBootstraps.append(
+                    SteamD3DMetalNVAPIBootstrapObservation(
+                        recordSequence: recordSequence,
+                        processID: processID,
+                        state: state,
+                        module: module,
+                        loadStatus: loadStatus,
+                        procedureStatus: procedureStatus,
+                        exceptionStatus: exceptionStatus,
+                        initializeResult: initializeResult
+                    )
+                )
             } else if fields[0] == gameRendererModuleLoadRecordPrefix ||
                         fields[0] == legacyGameRendererModuleLoadRecordPrefix {
                 let payload = String(fields[2])
@@ -4365,6 +8614,8 @@ enum SteamProcessCreationObservationLog {
             gameRendererEnvironmentFailures: rendererEnvironmentFailures,
             gameRendererFallbacks: rendererFallbacks,
             gameRendererModuleLoads: rendererModuleLoads,
+            gameRendererBaseHelpers: rendererBaseHelpers,
+            d3dMetalNVAPIBootstraps: nvapiBootstraps,
             state: issues.isEmpty ? .complete : .recovered,
             issues: issues
         )
@@ -4379,6 +8630,18 @@ enum SteamProcessCreationObservationLog {
             return nil
         }
         return Int32(unsignedProcessID)
+    }
+
+    private static func hexadecimalStatus(
+        in component: String,
+        after prefix: String
+    ) -> UInt32? {
+        guard let text = value(in: component, after: prefix),
+              text.count == 8,
+              text.allSatisfy(\.isHexDigit) else {
+            return nil
+        }
+        return UInt32(text, radix: 16)
     }
 
     private static func unavailableResult(
@@ -4761,6 +9024,16 @@ enum SteamGameLaunchDiagnosticAnalyzer {
         let rendererModuleLoads = rendererObservation.map {
             correlatedRendererModuleLoads(for: $0, in: processObservation)
         } ?? []
+        let nvapiBootstraps = rendererObservation.map {
+            correlatedD3DMetalNVAPIBootstraps(
+                for: $0,
+                in: processObservation
+            )
+        } ?? []
+        let baseHelperEvidence = correlatedBaseHelperEvidence(
+            in: processObservation,
+            trackedCommandsByProcessID: trackedCommandsByProcessID
+        )
         let successfulRendererModuleLoads = rendererModuleLoads.filter {
             $0.state == .loaded && $0.pathOwnership == .verified
         }
@@ -4870,6 +9143,11 @@ enum SteamGameLaunchDiagnosticAnalyzer {
                 "planned-owner=\(load.plannedOwner); status=\(load.statusHex); " +
                 "correlation=\(load.correlationIdentifier)"
         })
+        evidence.append(contentsOf: nvapiBootstraps.suffix(8).map {
+            "FORGEPLAY D3DMetal NVAPI bootstrap: pid=\($0.processID); " +
+                $0.diagnosticDescription
+        })
+        evidence.append(contentsOf: baseHelperEvidence.suffix(16))
         if let rendererError {
             evidence.append(
                 "FORGEPLAY renderer error: pid=\(rendererError.processID); " +
@@ -4934,13 +9212,17 @@ enum SteamGameLaunchDiagnosticAnalyzer {
                 ? nil
                 : successfulRendererModuleLoads.compactMap(\.actualPath),
             rendererModuleLoadFailures: failedRendererModuleLoads.isEmpty &&
-                unverifiedRendererModuleLoads.isEmpty
+                unverifiedRendererModuleLoads.isEmpty &&
+                nvapiBootstraps.allSatisfy { $0.state == .initialized }
                 ? nil
                 : failedRendererModuleLoads.map {
                     "\($0.module)=\($0.statusHex)"
                 } + unverifiedRendererModuleLoads.map {
                     "\($0.module)=load-path-\($0.pathOwnership.rawValue):" +
                         "\($0.actualPath ?? "unavailable")"
+                } + nvapiBootstraps.compactMap {
+                    guard $0.state == .failed else { return nil }
+                    return "nvapi-bootstrap=\($0.diagnosticDescription)"
                 },
             rendererRoutingReason: rendererObservation?.routingReason,
             rendererRoutingEvidence: rendererObservation?.routingEvidence,
@@ -5488,6 +9770,58 @@ enum SteamGameLaunchDiagnosticAnalyzer {
         .sorted { $0.recordSequence < $1.recordSequence }
     }
 
+    /// NVAPI initializes before the game entry point and therefore before the
+    /// parent commits the matching route record. Bind it to the uniquely
+    /// nearest route for the same Wine PID so PID reuse cannot move bootstrap
+    /// evidence between launch attempts.
+    private static func correlatedD3DMetalNVAPIBootstraps(
+        for route: SteamGameRendererObservation,
+        in observation: SteamProcessObservationReadResult
+    ) -> [SteamD3DMetalNVAPIBootstrapObservation] {
+        let sameProcessRoutes = observation.gameRendererObservations.filter {
+            $0.processID == route.processID
+        }
+        return observation.d3dMetalNVAPIBootstraps.filter { bootstrap in
+            guard bootstrap.processID == route.processID else {
+                return false
+            }
+            let distances = sameProcessRoutes.map {
+                abs($0.recordSequence - bootstrap.recordSequence)
+            }
+            guard let nearestDistance = distances.min() else {
+                return false
+            }
+            let nearestRoutes = sameProcessRoutes.filter {
+                abs($0.recordSequence - bootstrap.recordSequence) ==
+                    nearestDistance
+            }
+            return nearestRoutes.count == 1 &&
+                nearestRoutes[0].recordSequence == route.recordSequence
+        }
+        .sorted { $0.recordSequence < $1.recordSequence }
+    }
+
+    private static func correlatedBaseHelperEvidence(
+        in observation: SteamProcessObservationReadResult,
+        trackedCommandsByProcessID: [Int32: String]
+    ) -> [String] {
+        observation.gameRendererBaseHelpers
+            .filter { helper in
+                trackedCommandsByProcessID.values.contains {
+                    self.trackedCommand(
+                        $0,
+                        matchesExecutable: helper.executable
+                    )
+                }
+            }
+            .sorted { $0.recordSequence < $1.recordSequence }
+            .map {
+                "FORGEPLAY base-runtime helper: pid=\($0.processID); " +
+                    "route=\($0.route); reason=\($0.reason); " +
+                    "executable=\($0.executable)"
+            }
+    }
+
     /// Select one canonical renderer event for the attempt. A tracked PID is
     /// necessary but not sufficient: its own full executable image path must
     /// also match so a reused Wine PID cannot import a renderer event from
@@ -5881,6 +10215,18 @@ struct SteamLaunchProcessSnapshot: Sendable, Hashable {
         )
     }
 
+    static func currentManagedWineJournalProcesses(
+        _ identities: Set<ManagedWineLaunchProcessIdentity>
+    ) -> SteamLaunchProcessSnapshot {
+        let snapshot = DarwinProcessSnapshotReader
+            .currentManagedWineJournalProcesses(identities)
+        return SteamLaunchProcessSnapshot(
+            processes: snapshot.processes,
+            processObservationReadState: snapshot.state,
+            processObservationReadIssues: snapshot.issues
+        )
+    }
+
     static func sameRunLaunchEvidence(
         for result: ProcessRunResult,
         target: SteamLaunchTarget,
@@ -5936,6 +10282,55 @@ struct SteamLaunchProcessSnapshot: Sendable, Hashable {
                 other.processObservationReadState
             ),
             processObservationReadIssues: mergedIssues
+        )
+    }
+
+    /// Correlates a previously captured Darwin process snapshot with exact,
+    /// current-run Managed Wine journal identities. Both PID and kernel start
+    /// identity must intersect; no process is synthesized and no command-name
+    /// match can create ownership by itself.
+    func bindingManagedWineJournalProcessIdentities(
+        _ verifiedProcessIdentities: Set<ManagedWineLaunchProcessIdentity>
+    ) -> SteamLaunchProcessSnapshot {
+        guard !verifiedProcessIdentities.isEmpty else { return self }
+        return SteamLaunchProcessSnapshot(
+            processes: processes.map { process in
+                guard process.evidenceSource == .systemSnapshot,
+                      let processStartedAtUnixMicroseconds =
+                        process.processStartedAtUnixMicroseconds,
+                      verifiedProcessIdentities.contains(where: {
+                        $0.processID == process.processID &&
+                            $0.processStartedAtUnixMicroseconds ==
+                                processStartedAtUnixMicroseconds
+                      }) else {
+                    return process
+                }
+                return SteamLaunchObservedProcess(
+                    processID: process.processID,
+                    command: process.command,
+                    evidenceSource: .managedWineJournal,
+                    processStartedAtUnixMicroseconds:
+                        processStartedAtUnixMicroseconds
+                )
+            },
+            processObservationReadState: processObservationReadState,
+            processObservationReadIssues: processObservationReadIssues
+        )
+    }
+
+    func reportingManagedWineLaunchVerificationFailure(
+        _ detail: String
+    ) -> SteamLaunchProcessSnapshot {
+        var issues = processObservationReadIssues
+        issues.append(SteamProcessObservationReadIssue(
+            code: .managedWineLaunchProcessVerificationFailed,
+            affectedRecordCount: 1,
+            detail: detail
+        ))
+        return SteamLaunchProcessSnapshot(
+            processes: processes,
+            processObservationReadState: .unavailable,
+            processObservationReadIssues: issues
         )
     }
 
@@ -6049,6 +10444,54 @@ struct SteamLaunchProcessSnapshot: Sendable, Hashable {
         }
     }
 
+    /// Process-lifecycle proof for the Steam client/updater itself. WebHelper
+    /// children intentionally do not satisfy this predicate: an old bootstrap
+    /// progress line plus a hung WebHelper must not keep updater observation or
+    /// a deferred launch alive after `steam.exe` has exited.
+    func containsExpectedPrefixSteamClientProcess(
+        for target: SteamLaunchTarget
+    ) -> Bool {
+        let clientOnlySnapshot = SteamLaunchProcessSnapshot(
+            processes: processes.filter { process in
+                let command = Self.normalizedCommand(process.command)
+                return command.contains("steam.exe") &&
+                    !command.contains("steamwebhelper.exe")
+            },
+            processObservationReadState: processObservationReadState,
+            processObservationReadIssues: processObservationReadIssues
+        )
+        return clientOnlySnapshot.containsExpectedPrefixSteamProcess(
+            for: target
+        )
+    }
+
+    /// Lifecycle proof for the exact current launch. A same-prefix process
+    /// from an older or external session may remain visible in the system
+    /// snapshot, but it cannot extend updater waits or authorize recovery.
+    func containsVerifiedCurrentRunSteamClientProcess(
+        for target: SteamLaunchTarget
+    ) -> Bool {
+        SteamLaunchProcessSnapshot(
+            processes: processes.filter {
+                $0.evidenceSource == .managedWineJournal
+            },
+            processObservationReadState: processObservationReadState,
+            processObservationReadIssues: processObservationReadIssues
+        ).containsExpectedPrefixSteamClientProcess(for: target)
+    }
+
+    func containsVerifiedCurrentRunSteamProcess(
+        for target: SteamLaunchTarget
+    ) -> Bool {
+        SteamLaunchProcessSnapshot(
+            processes: processes.filter {
+                $0.evidenceSource == .managedWineJournal
+            },
+            processObservationReadState: processObservationReadState,
+            processObservationReadIssues: processObservationReadIssues
+        ).containsExpectedPrefixSteamProcess(for: target)
+    }
+
     func webHelperCommandLines(for target: SteamLaunchTarget) -> [String] {
         let prefixPath = target.normalizedPrefixPath
         return processes.compactMap { process in
@@ -6072,11 +10515,84 @@ struct SteamLaunchProcessSnapshot: Sendable, Hashable {
         }
     }
 
-    func webHelperCommandLinesContainRequiredLaunchPolicy(for target: SteamLaunchTarget) -> Bool {
-        let commandLines = webHelperCommandLines(for: target)
-        return !commandLines.isEmpty && commandLines.allSatisfy {
-            SteamWebHelperLaunchPolicy.commandLineContainsRequiredArguments($0)
+    /// Current WebHelper liveness admitted by the exact current-run Managed
+    /// Wine journal. Append-only Windows creation records and unbound system
+    /// rows are intentionally excluded from renderer/UI promotion.
+    func managedWineJournalWebHelperCommandLines(
+        for target: SteamLaunchTarget
+    ) -> [String] {
+        SteamLaunchProcessSnapshot(
+            processes: processes.filter {
+                $0.evidenceSource == .managedWineJournal
+            },
+            processObservationReadState: processObservationReadState,
+            processObservationReadIssues: processObservationReadIssues
+        ).webHelperCommandLines(for: target)
+    }
+
+    func managedWineJournalWebHelperCommandLinesContainRequiredLaunchPolicy(
+        for target: SteamLaunchTarget
+    ) -> Bool {
+        let rootCommandLines = managedWineJournalWebHelperCommandLines(
+            for: target
+        ).filter {
+            !SteamWebHelperLaunchPolicy.isChromiumSubprocessCommandLine($0)
         }
+        return !rootCommandLines.isEmpty && rootCommandLines.allSatisfy {
+            SteamWebHelperLaunchPolicy.rootCommandLineContainsRequiredArguments($0)
+        }
+    }
+
+    func webHelperCommandLinesContainRequiredLaunchPolicy(for target: SteamLaunchTarget) -> Bool {
+        let rootCommandLines = webHelperCommandLines(for: target).filter {
+            !SteamWebHelperLaunchPolicy.isChromiumSubprocessCommandLine($0)
+        }
+        return !rootCommandLines.isEmpty && rootCommandLines.allSatisfy {
+            SteamWebHelperLaunchPolicy.rootCommandLineContainsRequiredArguments($0)
+        }
+    }
+
+    /// Assesses only WebHelper commands attributable to this snapshot's target.
+    /// Callers that require same-launch proof must construct the snapshot from
+    /// the current launch's process-creation journal (directly or through
+    /// `sameRunLaunchEvidence`); a broad system snapshot is not a session token.
+    func webHelperLanguageReadback(
+        for target: SteamLaunchTarget,
+        expected language: SteamClientLanguage
+    ) -> SteamWebHelperLanguageReadback {
+        let commandLines = webHelperCommandLines(for: target)
+        var observedLocaleIdentifiers: [String] = []
+        var seen = Set<String>()
+        for locale in commandLines.flatMap({
+            SteamWebHelperLaunchPolicy.observedLanguageLocaleIdentifiers(in: $0)
+        }) {
+            let identity = locale.lowercased()
+            if seen.insert(identity).inserted {
+                observedLocaleIdentifiers.append(locale)
+            }
+        }
+
+        guard !observedLocaleIdentifiers.isEmpty else {
+            return SteamWebHelperLanguageReadback(
+                state: processObservationReadState == .complete
+                    ? .pending
+                    : .evidenceUnavailable,
+                observedLocaleIdentifiers: []
+            )
+        }
+        let expectedLocale = SteamWebHelperLaunchPolicy
+            .normalizedLanguageLocaleIdentifier(
+                language.webHelperLocaleIdentifier
+            )
+        let allMatch = expectedLocale != nil &&
+            observedLocaleIdentifiers.allSatisfy {
+                SteamWebHelperLaunchPolicy
+                    .normalizedLanguageLocaleIdentifier($0) == expectedLocale
+            }
+        return SteamWebHelperLanguageReadback(
+            state: allMatch ? .matched : .mismatched,
+            observedLocaleIdentifiers: observedLocaleIdentifiers
+        )
     }
 
     func steamOrWineProcessesOutsideTarget(for target: SteamLaunchTarget) -> [SteamLaunchObservedProcess] {
@@ -6195,7 +10711,8 @@ struct SteamLaunchProcessSnapshot: Sendable, Hashable {
                 value: target.normalizedPrefixPath
             )
         }
-        guard evidenceSource == .processCreationObservation else {
+        guard evidenceSource == .processCreationObservation ||
+                evidenceSource == .managedWineJournal else {
             return false
         }
         return normalizedCommand.contains("c:\\program files (x86)\\steam\\")

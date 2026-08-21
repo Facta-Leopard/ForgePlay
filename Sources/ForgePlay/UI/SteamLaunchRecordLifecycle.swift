@@ -10,11 +10,12 @@ struct SteamLaunchRecordLifecycle {
     func saveLaunchResult(_ result: ProcessRunResult, launchRecord: LaunchRecord) -> String? {
         do {
             try modelContext.saveSteamLaunchResult(result, for: launchRecord)
-            return nil
         } catch {
             modelContext.rollback()
             return appState.localizedFormat("실행 기록을 저장하지 못했습니다: %@", forgePlayTechnicalErrorSummary(error))
         }
+        scheduleCompletedHistoryMaintenance()
+        return nil
     }
 
     func handleLaunchFailure(
@@ -24,7 +25,7 @@ struct SteamLaunchRecordLifecycle {
     ) {
         let evidenceResolution: FailureDiagnosticEvidenceResolution?
         let evidenceCaptureWarning: String?
-        let selectedSteamReference = appState.selectedSteamReference?.game
+        let selectedSteamReference = appState.selectedSteamReference
         let additionalSensitivePaths = DiagnosticPathRedactionPolicy.sensitivePaths(
             rootURL: appState.selectedRootURL ?? services.pathManager.rootURL,
             selectedSteamReference: selectedSteamReference,
@@ -97,7 +98,6 @@ struct SteamLaunchRecordLifecycle {
                     diagnosticLogPath: diagnosticLogURL?.path
                 )
             }
-            return nil
         } catch {
             modelContext.rollback()
             return appState.localizedFormat(
@@ -105,6 +105,8 @@ struct SteamLaunchRecordLifecycle {
                 forgePlayTechnicalErrorSummary(error)
             )
         }
+        scheduleCompletedHistoryMaintenance()
+        return nil
     }
 
     private func presentLaunchFailure(
@@ -143,6 +145,7 @@ struct SteamLaunchRecordLifecycle {
         }
         do {
             try modelContext.markSteamUISurface(surface, for: launchRecord)
+            scheduleCompletedHistoryMaintenance()
             let messageKey = switch surface {
             case .signIn:
                 "Steam 로그인 화면 확인을 기록했습니다. 로그인을 완료한 뒤 라이브러리 화면도 확인하세요."
@@ -174,6 +177,7 @@ struct SteamLaunchRecordLifecycle {
         }
         do {
             try modelContext.markSteamUIBlackScreenSuspected(launchRecord)
+            scheduleCompletedHistoryMaintenance()
             return appState.setNotice(appState.localized("Steam 검은 화면 상태를 기록했습니다."), kind: .warning)
         } catch {
             modelContext.rollback()
@@ -186,21 +190,54 @@ struct SteamLaunchRecordLifecycle {
     }
 
     func canConfirmSteamUI(for launchRecord: LaunchRecord) -> Bool {
+        let environmentIdentity = services.steamPrefixReadinessResolver
+            .currentSteamEnvironmentIdentity()
         guard launchRecord.commandKind == "launchSteam",
               launchRecord.prefixId == PrefixIdentifier.steamShared,
               launchRecord.hostAppSessionID == services.appSessionID,
               isEligibleForManualUIVerification(launchRecord),
-              let currentGenerationID = try? services.currentSteamEnvironmentGenerationID(),
-              launchRecord.environmentGenerationID == currentGenerationID,
-              let records = try? modelContext.fetch(FetchDescriptor<LaunchRecord>()),
-              let latest = SteamLaunchRecordLookup.latestSteamLaunchRecord(
-                from: records,
-                environmentGenerationID: currentGenerationID,
-                currentAppSessionID: services.appSessionID
-              ) else {
+              environmentIdentity.isEstablished,
+              launchRecordBelongsToEnvironment(
+                launchRecord,
+                environmentIdentity: environmentIdentity
+              ),
+              let latest = try? services.steamLaunchReadinessRepository
+                .latestDisplayRecord(
+                    in: modelContext,
+                    environmentIdentity: environmentIdentity,
+                    currentAppSessionID: services.appSessionID
+                ) else {
             return false
         }
         return latest.id == launchRecord.id
+    }
+
+    private func launchRecordBelongsToEnvironment(
+        _ launchRecord: LaunchRecord,
+        environmentIdentity: SteamEnvironmentIdentity
+    ) -> Bool {
+        if let generationID = environmentIdentity.generationID {
+            return launchRecord.environmentGenerationID == generationID
+        }
+        guard let createdAt = environmentIdentity.createdAt else { return false }
+        return launchRecord.startedAt >= createdAt
+    }
+
+    private func scheduleCompletedHistoryMaintenance() {
+        _ = services.steamLaunchHistoryMaintenanceScheduler.schedule(
+            modelContainer: modelContext.container,
+            environmentIdentity: services.steamPrefixReadinessResolver
+                .currentSteamEnvironmentIdentity(),
+            currentAppSessionID: services.appSessionID
+        ) { [weak appState] error in
+            appState?.setNotice(
+                appState?.localizedFormat(
+                    "실행 결과는 저장했지만 오래된 실행 기록을 정리하지 못했습니다: %@",
+                    forgePlayTechnicalErrorSummary(error)
+                ) ?? forgePlayTechnicalErrorSummary(error),
+                kind: .warning
+            )
+        }
     }
 
     private func isEligibleForManualUIVerification(_ launchRecord: LaunchRecord) -> Bool {

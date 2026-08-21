@@ -20,6 +20,10 @@ Die unveränderten Lizenztexte sind als `LICENSES/GPL-3.0-only.txt` und `LICENSE
 
 Wine, Schriften, Renderer, Apple-Technologien und andere Komponenten Dritter unterliegen ihren eigenen Lizenzen und Bedingungen. ForgePlay beansprucht daran kein Eigentum. Eine direkt vertriebene DMG kann D3DMetal als gesondert ausgewiesene Apple-Komponente enthalten; Apple-Lizenz, Danksagungen und Originalsignaturen bleiben bei diesem Payload.
 
+## Noto-Schriftfallback
+
+ForgePlay bündelt unveränderte Dateien von Noto Sans und Noto Sans CJK als Fallback für die native App-Oberfläche unter der SIL Open Font License 1.1. Die vollständigen Lizenztexte sind als `NotoSans-OFL.txt` und `NotoSansCJK-OFL.txt` enthalten. Die Rechte verbleiben bei den jeweiligen Urheberrechtsinhabern; ForgePlay beansprucht kein Eigentum und verwendet die UI-Sprache nicht stillschweigend als Schriftregel für Windows-Präfixe.
+
 ## Datenschutz und Support
 
 ForgePlay fragt Steam-Passwörter oder Steam-Guard-Codes weder ab noch speichert es sie. Support-Bundles werden nur auf Wunsch lokal erstellt und sollten vor dem Teilen geprüft werden. Detaillierte Datenschutz-, Support- und Drittanbieterhinweise sind im selben Rechtsbereich verfügbar.

@@ -20,6 +20,10 @@ Les textes de licence non modifiés sont inclus dans `LICENSES/GPL-3.0-only.txt`
 
 Wine, les polices, les moteurs de rendu, les technologies Apple et les autres composants tiers restent soumis à leurs propres licences et conditions. ForgePlay n’en revendique pas la propriété. Un DMG distribué directement peut inclure D3DMetal comme composant Apple identifié séparément ; sa licence Apple, ses remerciements et ses signatures d’origine restent associés à ce contenu.
 
+## Police de secours Noto
+
+ForgePlay fournit des fichiers non modifiés Noto Sans et Noto Sans CJK comme polices de secours de l’interface native, conformément à la SIL Open Font License 1.1. Les textes complets sont inclus sous les noms `NotoSans-OFL.txt` et `NotoSansCJK-OFL.txt`. Les polices restent la propriété de leurs titulaires respectifs ; ForgePlay n’en revendique pas la propriété et n’utilise pas la langue de l’interface comme règle implicite pour les préfixes Windows.
+
 ## Confidentialité et assistance
 
 ForgePlay ne demande ni ne conserve les mots de passe Steam ou les codes Steam Guard. Les bundles d’assistance sont créés localement uniquement à la demande de l’utilisateur et doivent être vérifiés avant tout partage. Les avis détaillés sur la confidentialité, l’assistance et les composants tiers sont accessibles dans la même section juridique.

@@ -42,7 +42,7 @@ def safe_relative_path(value: object, label: str) -> PurePosixPath:
 
 def require_regular_file(path: Path, label: str) -> Path:
     try:
-        metadata = path.stat(follow_symlinks=False)
+        metadata = path.lstat()
     except OSError as error:
         fail(f"{label} could not be inspected: {path}: {error}")
     if not stat.S_ISREG(metadata.st_mode) or stat.S_ISLNK(metadata.st_mode):
@@ -54,7 +54,7 @@ def require_regular_file(path: Path, label: str) -> Path:
 
 def require_directory(path: Path, label: str) -> Path:
     try:
-        metadata = path.stat(follow_symlinks=False)
+        metadata = path.lstat()
     except OSError as error:
         fail(f"{label} could not be inspected: {path}: {error}")
     if not stat.S_ISDIR(metadata.st_mode) or stat.S_ISLNK(metadata.st_mode):

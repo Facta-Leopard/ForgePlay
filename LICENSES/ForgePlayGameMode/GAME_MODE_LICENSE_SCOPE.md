@@ -57,7 +57,7 @@ manifest bind it to the exact conveyed source tree.
 
 - the source, headers, property lists, entitlements, scripts, documentation,
   and provenance material in `Native/GameModeProcessHost/`
-- the three `Config/ForgePlayGameModeProcessHost*.xcconfig` files
+- the four `Config/ForgePlayGameModeProcessHost*.xcconfig` files
 - `Scripts/prepare-game-mode-host-build-identity.sh`
 - `Scripts/verify-game-mode-source-licenses.py`
 - `Scripts/tests/test-wine-game-mode-process-host-routing.sh`

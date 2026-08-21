@@ -18,52 +18,63 @@ final class SetupWorkflowCoordinator {
     private struct SystemCheckOutcome {
         var generation: Int
         var checks: [SystemCheckResult]
+        var authenticatedRuntimeManifest: RuntimeManifest?
+        var runtimeCapability: WindowsRuntimeCapability?
+    }
+
+    private struct CompletedRuntimeSnapshot {
+        var key: SystemCheckRequestKey
+        var authenticatedRuntimeManifest: RuntimeManifest?
+        var runtimeCapability: WindowsRuntimeCapability?
     }
 
     private(set) var isSystemCheckInProgress = false
     @ObservationIgnored private var activeSystemCheck: (
         key: SystemCheckRequestKey,
         generation: Int,
-        task: Task<[SystemCheckResult], Never>
+        task: Task<SystemCheckRunOutcome, Never>
     )?
     @ObservationIgnored private var systemCheckGeneration = 0
+    @ObservationIgnored private var completedRuntimeSnapshot:
+        CompletedRuntimeSnapshot?
 
     private let systemCheckService: SystemCheckService
     private let readinessResolver: SteamPrefixReadinessResolver
-    private let appSessionID: String
 
     init(
         systemCheckService: SystemCheckService,
-        readinessResolver: SteamPrefixReadinessResolver,
-        appSessionID: String
+        readinessResolver: SteamPrefixReadinessResolver
     ) {
         self.systemCheckService = systemCheckService
         self.readinessResolver = readinessResolver
-        self.appSessionID = appSessionID
     }
 
-    func refresh(
+    func computeRefresh(
         storageActivation: ManagedStorageActivationResult,
-        appState: AppState,
+        runtimeExecutable: URL?,
+        rendererPolicySelection: SteamRendererPolicySelection,
+        videoMemorySelection: SteamVideoMemorySelection,
         hasSteamReferences: Bool,
-        launchRecords: [LaunchRecord]
-    ) async -> SetupWorkflowRefreshResult {
+        launchReadinessProjection: SteamLaunchReadinessProjection
+    ) async throws -> SetupWorkflowRefreshResult {
         let outcome = await runSystemChecks(
             rootURL: storageActivation.rootURL,
-            runtimeExecutable: appState.runtimeExecutableURL
+            runtimeExecutable: runtimeExecutable
         )
-        guard outcome.generation == systemCheckGeneration, !Task.isCancelled else {
-            return SetupWorkflowRefreshResult(
-                storageActivation: storageActivation,
-                checks: appState.latestChecks,
-                readiness: appState.setupReadiness
-            )
+        try Task.checkCancellation()
+        guard outcome.generation == systemCheckGeneration else {
+            throw CancellationError()
         }
-        appState.latestChecks = outcome.checks
-        let readiness = synchronizeReadiness(
-            appState: appState,
+        let readiness = computeReadiness(
             hasSteamReferences: hasSteamReferences,
-            launchRecords: launchRecords
+            launchReadinessProjection: launchReadinessProjection,
+            runtimeExecutable: runtimeExecutable,
+            managedRootURL: storageActivation.rootURL,
+            authenticatedRuntimeManifest:
+                outcome.authenticatedRuntimeManifest,
+            runtimeCapability: outcome.runtimeCapability,
+            rendererPolicySelection: rendererPolicySelection,
+            videoMemorySelection: videoMemorySelection
         )
         return SetupWorkflowRefreshResult(
             storageActivation: storageActivation,
@@ -72,21 +83,36 @@ final class SetupWorkflowCoordinator {
         )
     }
 
-    @discardableResult
-    func synchronizeReadiness(
-        appState: AppState,
+    func computeReadiness(
         hasSteamReferences: Bool,
-        launchRecords: [LaunchRecord]
+        launchReadinessProjection: SteamLaunchReadinessProjection,
+        runtimeExecutable: URL?,
+        managedRootURL: URL? = nil,
+        authenticatedRuntimeManifest: RuntimeManifest? = nil,
+        runtimeCapability: WindowsRuntimeCapability? = nil,
+        rendererPolicySelection: SteamRendererPolicySelection,
+        videoMemorySelection: SteamVideoMemorySelection
     ) -> SetupReadiness {
-        let readiness = readinessResolver.resolve(
-            hasSteamReferences: hasSteamReferences,
-            runtimeExecutable: appState.runtimeExecutableURL,
-            rendererPolicySelection: appState.steamRendererPolicySelection,
-            videoMemorySelection: appState.steamVideoMemorySelection
+        let snapshotKey = SystemCheckRequestKey(
+            rootPath: managedRootURL?.standardizedFileURL.path,
+            runnerPath: runtimeExecutable?.standardizedFileURL.path
         )
-        .withSteamLaunchRecords(launchRecords, currentAppSessionID: appSessionID)
-        appState.updateSetupStage(readiness: readiness)
-        return readiness
+        let matchingCompletedSnapshot = completedRuntimeSnapshot.flatMap {
+            $0.key == snapshotKey ? $0 : nil
+        }
+        let resolvedManifest = authenticatedRuntimeManifest ??
+            matchingCompletedSnapshot?.authenticatedRuntimeManifest
+        let resolvedCapability = runtimeCapability ??
+            matchingCompletedSnapshot?.runtimeCapability
+        return readinessResolver.resolve(
+            hasSteamReferences: hasSteamReferences,
+            runtimeExecutable: runtimeExecutable,
+            runtimeManifest: resolvedManifest,
+            runtimeCapability: resolvedCapability,
+            rendererPolicySelection: rendererPolicySelection,
+            videoMemorySelection: videoMemorySelection
+        )
+        .withSteamLaunchReadinessProjection(launchReadinessProjection)
     }
 
     func invalidateSystemCheck() {
@@ -94,6 +120,12 @@ final class SetupWorkflowCoordinator {
         activeSystemCheck?.task.cancel()
         activeSystemCheck = nil
         isSystemCheckInProgress = false
+    }
+
+    func invalidateRuntimeCapabilitySnapshot() async {
+        invalidateSystemCheck()
+        completedRuntimeSnapshot = nil
+        await systemCheckService.invalidateRuntimeCapabilitySnapshots()
     }
 
     private func runSystemChecks(
@@ -106,9 +138,13 @@ final class SetupWorkflowCoordinator {
         )
         if let activeSystemCheck {
             if activeSystemCheck.key == key {
+                let result = await activeSystemCheck.task.value
                 return SystemCheckOutcome(
                     generation: activeSystemCheck.generation,
-                    checks: await activeSystemCheck.task.value
+                    checks: result.checks,
+                    authenticatedRuntimeManifest:
+                        result.authenticatedRuntimeManifest,
+                    runtimeCapability: result.runtimeCapability
                 )
             }
             activeSystemCheck.task.cancel()
@@ -119,18 +155,30 @@ final class SetupWorkflowCoordinator {
         let generation = systemCheckGeneration
         isSystemCheckInProgress = true
         let task = Task { @MainActor [systemCheckService] in
-            await systemCheckService.runChecks(
+            await systemCheckService.runChecksWithRuntimeContext(
                 rootURL: rootURL,
                 runtimeExecutable: runtimeExecutable
             )
         }
         activeSystemCheck = (key, generation, task)
-        let checks = await task.value
+        let result = await task.value
         if activeSystemCheck?.generation == generation,
            systemCheckGeneration == generation {
             activeSystemCheck = nil
             isSystemCheckInProgress = false
+            completedRuntimeSnapshot = CompletedRuntimeSnapshot(
+                key: key,
+                authenticatedRuntimeManifest:
+                    result.authenticatedRuntimeManifest,
+                runtimeCapability: result.runtimeCapability
+            )
         }
-        return SystemCheckOutcome(generation: generation, checks: checks)
+        return SystemCheckOutcome(
+            generation: generation,
+            checks: result.checks,
+            authenticatedRuntimeManifest:
+                result.authenticatedRuntimeManifest,
+            runtimeCapability: result.runtimeCapability
+        )
     }
 }

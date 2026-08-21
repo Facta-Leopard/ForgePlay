@@ -7,6 +7,7 @@ enum ForgePlayManagedStorageLayout {
 
     static let copiedTopLevelDirectoryNames: Set<String> = [
         "Apps",
+        ForgePlayPathRole.renderers.rawValue,
         "Prefixes",
         "RuntimeCache",
         "CompatibilityDB",
@@ -151,7 +152,7 @@ final class ManagedStorageService {
             if persistedVersion < ForgePlayManagedStorageLayout.currentVersion,
                let source,
                let logicalSource {
-                guard try storageMigrationService.hasManagedData(at: source) else {
+                guard try await storageMigrationService.hasManagedData(at: source) else {
                     throw ManagedStorageActivationError.legacyRootDoesNotContainManagedData(source)
                 }
                 migrationResult = try await storageMigrationService.copyManagedDataOnlyAssumingExclusiveTransfer(
@@ -182,7 +183,7 @@ final class ManagedStorageService {
             }
 
             try pathManager.configureRoot(destination)
-            try storageMigrationService.ensureManagedStorageMarker(
+            try await storageMigrationService.ensureManagedStorageMarker(
                 at: destination,
                 migratedFrom: migrationResult?.sourceRoot
             )
@@ -255,7 +256,7 @@ final class ManagedStorageService {
         defer { transferLeases.reversed().forEach { $0.release() } }
 
         do {
-            guard try storageMigrationService.hasManagedData(at: source) else {
+            guard try await storageMigrationService.hasManagedData(at: source) else {
                 throw ManagedStorageActivationError.managedRootDoesNotContainManagedData(source)
             }
             let migrationResult = try await storageMigrationService.copyManagedDataOnlyAssumingExclusiveTransfer(
@@ -278,7 +279,7 @@ final class ManagedStorageService {
             )
 
             try pathManager.configureRoot(destination)
-            try storageMigrationService.ensureManagedStorageMarker(
+            try await storageMigrationService.ensureManagedStorageMarker(
                 at: destination,
                 migratedFrom: source
             )
@@ -295,7 +296,7 @@ final class ManagedStorageService {
 
             var sourceCleanupWarning: String?
             do {
-                _ = try storageMigrationService.cleanupRelocatedManagedData(
+                _ = try await storageMigrationService.cleanupRelocatedManagedData(
                     at: source,
                     preserving: migrationResult.externalizedLibraryPaths
                 )
@@ -345,7 +346,7 @@ final class ManagedStorageService {
         defer { transferLeases.reversed().forEach { $0.release() } }
 
         do {
-            guard try storageMigrationService.hasManagedData(at: source) else {
+            guard try await storageMigrationService.hasManagedData(at: source) else {
                 throw ManagedStorageActivationError.legacyRootDoesNotContainManagedData(source)
             }
             let migrationResult = try await storageMigrationService.copyManagedDataOnlyAssumingExclusiveTransfer(
@@ -368,7 +369,7 @@ final class ManagedStorageService {
             )
 
             try pathManager.configureRoot(destination)
-            try storageMigrationService.ensureManagedStorageMarker(
+            try await storageMigrationService.ensureManagedStorageMarker(
                 at: destination,
                 migratedFrom: source
             )

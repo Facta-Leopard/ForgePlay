@@ -20,6 +20,10 @@ Original source: https://github.com/Facta-Leopard/ForgePlay
 
 Wine、フォント、レンダラー、Apple の技術、その他のサードパーティ製コンポーネントには、それぞれのライセンスと条件が適用されます。ForgePlay はそれらの所有権を主張しません。直接配布 DMG には、個別に識別された Apple コンポーネントとして D3DMetal が含まれる場合があり、Apple のライセンス、謝辞、元の署名はそのペイロードに保持されます。
 
+## Noto フォントフォールバック
+
+ForgePlay は、ネイティブ UI のフォールバックとして未改変の Noto Sans と Noto Sans CJK を SIL Open Font License 1.1 に基づき同梱します。ライセンス全文は `NotoSans-OFL.txt` と `NotoSansCJK-OFL.txt` に収録されています。各フォントの権利はそれぞれの著作権者に帰属し、ForgePlay は所有権を主張しません。また、UI 言語を Windows プレフィックスの暗黙のフォントポリシーとして使用しません。
+
 ## プライバシーとサポート
 
 ForgePlay は Steam のパスワードや Steam Guard コードを要求・保存しません。サポートバンドルはユーザーの依頼時にのみローカルで作成され、共有前に確認する必要があります。詳細なプライバシー通知、サポート案内、外部コンポーネント通知は同じ法務セクションから開けます。

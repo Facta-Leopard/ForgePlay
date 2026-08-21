@@ -1,0 +1,12 @@
+{
+  "currentFinalPatchedSourceTree": {
+    "hashAlgorithm": "forgeplay-source-tree-sha256-v1",
+    "sha256": "2d0c24a9f9ebdb84b7703204d1a72071b06ac48800e2314a9635f851200a1f66"
+  },
+  "schemaVersion": 2,
+  "upstreamSource": {
+    "archiveSHA256": "d3bc091192d985846c9f20065cc81f21331f01e22b736b131e3449e1306671bc",
+    "project": "Wine",
+    "version": "11.12"
+  }
+}

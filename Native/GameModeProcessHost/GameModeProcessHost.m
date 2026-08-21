@@ -59,6 +59,11 @@ static const struct wine_preload_info fp_preload_info[] = {
 const __attribute__((visibility("default"), used)) struct wine_preload_info
     *wine_main_preload_info = fp_preload_info;
 
+static BOOL FPBuildIdentityAllowsExecution(void)
+{
+    return FORGEPLAY_GAME_MODE_HOST_RUNNABLE == 1;
+}
+
 static BOOL FPInitializeWineReservedAreas(void)
 {
     /*
@@ -125,6 +130,10 @@ static BOOL FPValidateInheritedArguments(int argc,
 
 int main(int argc, char *argv[])
 {
+    if (!FPBuildIdentityAllowsExecution()) {
+        fprintf(stderr, "ForgePlay Game Mode process host: compile_only_identity\n");
+        return 78;
+    }
     BOOL wineReservedAreasReady = FPInitializeWineReservedAreas();
     BOOL mainThreadReady = pthread_main_np();
 

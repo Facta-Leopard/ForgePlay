@@ -4,11 +4,74 @@ import SwiftUI
 
 private enum RootChromeMetrics {
     static let detailHorizontalPadding: CGFloat = 28
-    static let detailToolbarTopPadding: CGFloat = 10
-    static let detailToolbarBottomPadding: CGFloat = 10
+    static let detailNoticeVerticalPadding: CGFloat = 10
     static let detailContentTopPadding: CGFloat = 20
     static let detailContentBottomPadding: CGFloat = 30
     static let sidebarContentTopPadding: CGFloat = 18
+}
+
+enum ForgePlayRootStartupEvent: Equatable {
+    case succeeded
+    case failed
+    case requiresUserIntervention
+}
+
+enum ForgePlayRootStartupPresentation: Equatable {
+    case loading
+    case ready
+    case recovery
+
+    var showsBrandedLoading: Bool {
+        self == .loading
+    }
+
+    func transitioned(for event: ForgePlayRootStartupEvent) -> Self {
+        switch event {
+        case .succeeded:
+            .ready
+        case .failed, .requiresUserIntervention:
+            .recovery
+        }
+    }
+}
+
+enum ForgePlayRootSidebarNavigation {
+    static let primarySections: [AppSection] = [
+        .steamLaunch,
+        .steamCompatibilityLaunch,
+        .dashboard,
+        .compatibilityCatalog,
+        .windowsUtility,
+        .diagnostics
+    ]
+}
+
+enum ForgePlaySidebarCommunityAction: String, CaseIterable, Identifiable {
+    case star
+    case sponsor
+
+    var id: String { rawValue }
+
+    var titleKey: String {
+        switch self {
+        case .star: "⭐ 좋아요"
+        case .sponsor: "💗 후원하기"
+        }
+    }
+
+    var helpKey: String {
+        switch self {
+        case .star: "GitHub 저장소에서 ForgePlay에 Star를 남깁니다."
+        case .sponsor: "GitHub Sponsors에서 ForgePlay를 후원합니다."
+        }
+    }
+
+    var url: URL? {
+        switch self {
+        case .star: ExternalLinkPolicy.forgePlayRepositoryStarURL
+        case .sponsor: ExternalLinkPolicy.forgePlaySponsorsURL
+        }
+    }
 }
 
 struct RootView: View {
@@ -17,32 +80,39 @@ struct RootView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.scenePhase) private var scenePhase
-    @Query(sort: \SteamGameRecord.name) private var games: [SteamGameRecord]
-    @Query(sort: \LaunchRecord.startedAt, order: .reverse) private var launchRecords: [LaunchRecord]
+    @Query private var games: [SteamGameRecord]
+    @Query private var launchRecords: [LaunchRecord]
     @State private var didLoad = false
+    @State private var didAttemptStartupWorkflow = false
     @State private var isStartupInProgress = false
     @State private var automaticLogCleanupTask: Task<Void, Never>?
+    @State private var startupResumeTask: Task<Void, Never>?
+    @State private var startupPresentation: ForgePlayRootStartupPresentation = .loading
+    @State private var ownsAutomaticSetupDestination = false
+
+    init() {
+        // Startup readiness only needs existence, not the complete Steam
+        // reference catalog. Avoid materializing a large library before the
+        // first Steam-launch screen can appear.
+        var gameDescriptor = FetchDescriptor<SteamGameRecord>()
+        gameDescriptor.fetchLimit = 1
+        _games = Query(gameDescriptor)
+        var launchDescriptor = FetchDescriptor<LaunchRecord>(
+            predicate: #Predicate {
+                $0.commandKind == "launchSteam" &&
+                    $0.prefixId == "prefix-steam-shared"
+            },
+            sortBy: [SortDescriptor(\LaunchRecord.startedAt, order: .reverse)]
+        )
+        launchDescriptor.fetchLimit = 1
+        _launchRecords = Query(launchDescriptor)
+    }
 
     var body: some View {
         @Bindable var appState = appState
         let palette = ForgePlayTheme.palette(mode: appState.themeMode, colorScheme: colorScheme)
 
-        GeometryReader { geometry in
-            NavigationSplitView {
-                SidebarView(selection: $appState.selectedSection)
-                    .navigationSplitViewColumnWidth(min: 216, ideal: 242, max: 268)
-            } detail: {
-                RootDetailColumn(
-                    notice: appState.currentNotice,
-                    openLogsFolder: openLogsFolder,
-                    openSettings: { appState.selectedSection = .settings }
-                ) {
-                    content
-                }
-            }
-            .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
-            .background(palette.background.ignoresSafeArea())
-        }
+        startupContent(palette: palette)
         .preferredColorScheme(appState.themeMode.preferredColorScheme)
         .tint(palette.primary)
         .background(palette.background.ignoresSafeArea())
@@ -58,24 +128,65 @@ struct RootView: View {
         }
         .onChange(of: isRootSheetPresented) { previous, current in
             guard previous, !current, !didLoad else { return }
-            Task { await resumeStartupAfterRootSheet() }
+            startupResumeTask?.cancel()
+            startupResumeTask = Task { await resumeStartupAfterRootSheet() }
         }
-        .onChange(of: games.count) { _, _ in
+        .onChange(of: setupReadinessObservationKey) { _, _ in
             refreshSetupStage()
         }
-        .onChange(of: SteamLaunchRecordLookup.stateFingerprint(from: launchRecords)) { _, _ in
-            refreshSetupStage()
+        .onChange(of: appState.setupReadiness) { previousReadiness, readiness in
+            applyLaunchabilityTransition(
+                previousReadiness: previousReadiness,
+                readiness: readiness
+            )
         }
-        .onChange(of: services.steamEnvironmentRevision) { _, _ in
-            refreshSetupStage()
+        .onChange(of: appState.selectedSection) { _, section in
+            if section != .setup {
+                ownsAutomaticSetupDestination = false
+            }
+        }
+        .onChange(of: appState.gameInputProtectionSettingsFingerprint) { _, _ in
+            services.synchronizeGameInputProtectionPolicy(from: appState)
         }
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }
+            services.refreshGameInputProtectionAuthorizationStatus()
             services.notifySteamEnvironmentChanged()
             refreshSetupStage()
         }
         .onDisappear {
             automaticLogCleanupTask?.cancel()
+            startupResumeTask?.cancel()
+        }
+    }
+
+    @ViewBuilder
+    private func startupContent(palette: ForgePlayPalette) -> some View {
+        if startupPresentation.showsBrandedLoading {
+            ForgePlayLaunchSplashView()
+        } else {
+            GeometryReader { geometry in
+                NavigationSplitView {
+                    SidebarView(
+                        selection: Binding(
+                            get: { appState.selectedSection },
+                            set: { section in
+                                ownsAutomaticSetupDestination = false
+                                appState.selectedSection = section
+                            }
+                        )
+                    )
+                        .navigationSplitViewColumnWidth(min: 216, ideal: 242, max: 268)
+                } detail: {
+                    RootDetailColumn(
+                        notice: appState.currentNotice
+                    ) {
+                        content
+                    }
+                }
+                .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
+                .background(palette.background.ignoresSafeArea())
+            }
         }
     }
 
@@ -85,27 +196,55 @@ struct RootView: View {
         case .dashboard:
             DashboardView()
         case .setup:
-            SetupView()
+            SetupView(performsInitialWorkflowRefresh: false)
         case .steamLaunch:
             SteamLaunchView()
+        case .steamCompatibilityLaunch:
+            SteamCompatibilityLaunchView { context in
+                SteamManagerCompatibilityLaunchRuntimeProviderV1(
+                    steamPrefixService: services.steamPrefixService,
+                    steamManager: services.steamManager,
+                    windowsRuntimeService: services.windowsRuntimeService,
+                    context: context
+                )
+            }
+        case .compatibilityCatalog:
+            CompatibilityCatalogView()
+        case .windowsUtility:
+            WindowsUtilityLaunchView()
         case .diagnostics:
             DiagnosticsView()
+        case .learnAboutForgePlay:
+            ForgePlayOverviewView()
         case .hallOfSupporters:
             HallOfSupportersView()
         case .developerApps:
             DeveloperAppsView()
         case .settings:
-            SettingsView()
+            SettingsView(performsInitialWorkflowRefresh: false)
         case .advanced:
             AdvancedView()
         }
     }
 
     private func refreshSetupStage() {
-        services.synchronizeSetupWorkflow(
+        do {
+            try services.synchronizeSetupWorkflow(
+                appState: appState,
+                in: modelContext,
+                hasSteamReferences: !games.isEmpty
+            )
+        } catch {
+            appState.setError(error)
+        }
+    }
+
+    private var setupReadinessObservationKey: SetupReadinessObservationKey? {
+        _ = launchRecords.first?.id
+        return try? services.setupReadinessObservationKey(
             appState: appState,
-            hasSteamReferences: !games.isEmpty,
-            launchRecords: launchRecords
+            in: modelContext,
+            hasSteamReferences: !games.isEmpty
         )
     }
 
@@ -117,21 +256,35 @@ struct RootView: View {
     }
 
     private func runStartupWorkflow() async {
-        guard !didLoad, !isStartupInProgress else { return }
+        guard !didLoad, !didAttemptStartupWorkflow, !isStartupInProgress else { return }
+        didAttemptStartupWorkflow = true
         isStartupInProgress = true
         defer { isStartupInProgress = false }
 
-        do {
-            let workflow = try await services.refreshSetupWorkflow(
-                appState: appState,
-                in: modelContext,
-                hasSteamReferences: !games.isEmpty,
-                launchRecords: launchRecords
-            )
-            try await finalizeStartup(workflow: workflow)
-        } catch {
-            handleStartupFailure(error)
-            return
+        while true {
+            do {
+                try Task.checkCancellation()
+                let workflow = try await services.refreshSetupWorkflow(
+                    appState: appState,
+                    in: modelContext,
+                    hasSteamReferences: !games.isEmpty
+                )
+                try Task.checkCancellation()
+                try await finalizeStartup(workflow: workflow)
+                return
+            } catch SetupWorkflowRefreshControlError.superseded {
+                guard SetupWorkflowRefreshRetryPolicy.shouldRetryAfterSupersession(
+                    outerTaskIsCancelled: Task.isCancelled
+                ) else {
+                    return
+                }
+                await Task.yield()
+            } catch is CancellationError {
+                return
+            } catch {
+                handleStartupFailure(error)
+                return
+            }
         }
     }
 
@@ -146,14 +299,20 @@ struct RootView: View {
         isStartupInProgress = true
         defer { isStartupInProgress = false }
         do {
+            try Task.checkCancellation()
             try await finalizeStartup(workflow: nil)
+        } catch is CancellationError {
+            return
         } catch {
             handleStartupFailure(error)
         }
     }
 
     private func finalizeStartup(workflow: SetupWorkflowRefreshResult?) async throws {
+        try Task.checkCancellation()
         try appState.loadIfNeeded(from: modelContext)
+        services.synchronizeGameInputProtectionPolicy(from: appState)
+        try Task.checkCancellation()
         if appState.isLogAutoCleanupEnabled {
             scheduleAutomaticLogCleanup(
                 retentionDays: appState.logRetentionDays,
@@ -191,7 +350,16 @@ struct RootView: View {
                 )
             }
         }
+        let currentDestination = appState.selectedSection
+        let startupDestination = AppStartupDestinationResolver.resolve(
+            current: currentDestination,
+            readiness: appState.setupReadiness
+        )
+        ownsAutomaticSetupDestination = currentDestination == .dashboard &&
+            startupDestination == .setup
+        appState.selectedSection = startupDestination
         didLoad = true
+        startupPresentation = startupPresentation.transitioned(for: .succeeded)
 
         #if DEBUG
         appState.applyDebugLaunchOptionsIfNeeded()
@@ -217,20 +385,47 @@ struct RootView: View {
         } else {
             requiresManagedStorageIntervention = false
         }
-        appState.setupStage = .chooseRoot
-        appState.selectedSection = .setup
+        if requiresManagedStorageIntervention {
+            appState.setupStage = .chooseRoot
+            ownsAutomaticSetupDestination = true
+            appState.selectedSection = .setup
+        } else {
+            let readiness = (try? services.synchronizeSetupWorkflow(
+                appState: appState,
+                in: modelContext,
+                hasSteamReferences: !games.isEmpty
+            )) ?? appState.setupReadiness
+            let currentDestination = appState.selectedSection
+            let recoveryDestination = AppStartupDestinationResolver.resolve(
+                current: currentDestination,
+                readiness: readiness
+            )
+            ownsAutomaticSetupDestination = currentDestination == .dashboard &&
+                recoveryDestination == .setup
+            appState.selectedSection = recoveryDestination
+            didLoad = true
+        }
+        startupPresentation = startupPresentation.transitioned(
+            for: requiresManagedStorageIntervention ? .requiresUserIntervention : .failed
+        )
         if requiresManagedStorageIntervention {
             appState.presentedSheet = .chooseRoot
         }
     }
 
-    private func openLogsFolder() {
-        do {
-            let logs = try services.pathManager.url(for: .logs)
-            appState.openFileURL(logs)
-        } catch {
-            appState.setError(error)
-        }
+    private func applyLaunchabilityTransition(
+        previousReadiness: SetupReadiness,
+        readiness: SetupReadiness
+    ) {
+        let destination = AppStartupDestinationResolver.resolveLaunchabilityTransition(
+            current: appState.selectedSection,
+            previousReadiness: previousReadiness,
+            readiness: readiness,
+            ownsAutomaticSetupDestination: ownsAutomaticSetupDestination
+        )
+        guard destination != appState.selectedSection else { return }
+        ownsAutomaticSetupDestination = false
+        appState.selectedSection = destination
     }
 
     private func scheduleAutomaticLogCleanup(retentionDays: Int, launchLogLimit: Int) {
@@ -241,17 +436,30 @@ struct RootView: View {
             )
             automaticLogCleanupTask?.cancel()
             automaticLogCleanupTask = Task {
-                do {
-                    _ = try await cleanupTask.value
-                } catch is CancellationError {
-                    return
-                } catch {
-                    appState.setNotice(
-                        appState.localizedFormat("자동 로그 정리에 실패했습니다: %@", appState.localizedError(error)),
-                        kind: .warning
-                    )
+                await withTaskCancellationHandler {
+                    do {
+                        _ = try await cleanupTask.value
+                    } catch is CancellationError {
+                        return
+                    } catch {
+                        guard !Task.isCancelled else { return }
+                        appState.setNotice(
+                            appState.localizedFormat(
+                                "자동 로그 정리에 실패했습니다: %@",
+                                appState.localizedError(error)
+                            ),
+                            kind: .warning
+                        )
+                    }
+                } onCancel: {
+                    cleanupTask.cancel()
                 }
             }
+        } catch LogRetentionServiceError.cleanupInProgress {
+            // A manual cleanup or an earlier startup pass already owns this
+            // filesystem mutation. Do not surface an expected single-flight
+            // collision as a startup warning.
+            return
         } catch {
             appState.setNotice(
                 appState.localizedFormat("자동 로그 정리를 시작하지 못했습니다: %@", appState.localizedError(error)),
@@ -295,8 +503,6 @@ struct RootView: View {
 
 private struct RootDetailColumn<Content: View>: View {
     var notice: AppNotice?
-    var openLogsFolder: () -> Void
-    var openSettings: () -> Void
     @ViewBuilder var content: () -> Content
     @Environment(AppState.self) private var appState
     @Environment(\.colorScheme) private var colorScheme
@@ -305,14 +511,10 @@ private struct RootDetailColumn<Content: View>: View {
         let palette = ForgePlayTheme.palette(mode: appState.themeMode, colorScheme: colorScheme)
 
         VStack(alignment: .leading, spacing: 0) {
-            RootTopBar(
-                openLogsFolder: openLogsFolder,
-                openSettings: openSettings
-            )
             if let notice {
                 TaskBanner(notice: notice)
                     .padding(.horizontal, RootChromeMetrics.detailHorizontalPadding)
-                    .padding(.bottom, RootChromeMetrics.detailToolbarBottomPadding)
+                    .padding(.vertical, RootChromeMetrics.detailNoticeVerticalPadding)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             GeometryReader { geometry in
@@ -338,78 +540,14 @@ private struct RootDetailColumn<Content: View>: View {
     }
 }
 
-private struct RootTopBar: View {
-    var openLogsFolder: () -> Void
-    var openSettings: () -> Void
-    @Environment(AppState.self) private var appState
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        let palette = ForgePlayTheme.palette(mode: appState.themeMode, colorScheme: colorScheme)
-
-        HStack(spacing: 12) {
-            Spacer(minLength: 20)
-
-            HStack(spacing: 6) {
-                RootChromeButton(
-                    title: "문제 분석 기록(Log) 폴더",
-                    systemImage: "folder",
-                    action: openLogsFolder
-                )
-                RootChromeButton(
-                    title: "설정",
-                    systemImage: "gearshape",
-                    action: openSettings
-                )
-            }
-        }
-        .padding(.horizontal, RootChromeMetrics.detailHorizontalPadding)
-        .padding(.top, RootChromeMetrics.detailToolbarTopPadding)
-        .padding(.bottom, RootChromeMetrics.detailToolbarBottomPadding)
-        .frame(maxWidth: .infinity)
-        .background(palette.background)
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(palette.separator)
-                .frame(height: 1)
-        }
-    }
-}
-
-private struct RootChromeButton: View {
-    var title: String
-    var systemImage: String
-    var action: () -> Void
-    @Environment(AppState.self) private var appState
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        let palette = ForgePlayTheme.palette(mode: appState.themeMode, colorScheme: colorScheme)
-
-        Button(action: action) {
-            Image(systemName: systemImage)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(palette.secondaryText)
-                .frame(width: 36, height: 34)
-                .background(palette.control)
-                .clipShape(
-                    RoundedRectangle(
-                        cornerRadius: ForgePlayLayout.controlCornerRadius,
-                        style: .continuous
-                    )
-                )
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(ForgeActionButtonStyle(liftsOnHover: false))
-        .help(appState.localized(title))
-        .accessibilityLabel(appState.localized(title))
-    }
-}
-
 private struct SidebarView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.colorScheme) private var colorScheme
     @Binding var selection: AppSection
+    @State private var updateCheckTask: Task<Void, Never>?
+    @State private var updateCheckPresentation: ManualUpdateCheckPresentation = .idle
+    @State private var availableUpdateReleaseURL: URL?
+    @State private var hoveredCommunityAction: ForgePlaySidebarCommunityAction?
 
     var body: some View {
         let palette = ForgePlayTheme.palette(mode: appState.themeMode, colorScheme: colorScheme)
@@ -439,7 +577,7 @@ private struct SidebarView: View {
 
             List(selection: $selection) {
                 Section {
-                    ForEach([AppSection.dashboard, .setup, .steamLaunch, .diagnostics]) { section in
+                    ForEach(ForgePlayRootSidebarNavigation.primarySections) { section in
                         sidebarRow(section)
                     }
                 }
@@ -452,6 +590,7 @@ private struct SidebarView: View {
                 }
 
                 Section {
+                    sidebarRow(.learnAboutForgePlay)
                     sidebarRow(.hallOfSupporters)
                     sidebarRow(.developerApps)
                 }
@@ -460,36 +599,111 @@ private struct SidebarView: View {
             .scrollContentBackground(.hidden)
 
             Spacer()
-            Button {
-                selection = .setup
-            } label: {
-                HStack(alignment: .top, spacing: 9) {
-                    Image(systemName: sidebarStatusSymbol)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(appState.systemCheckSummary.displayStatus.color(in: palette))
-                        .frame(width: 18, height: 18)
-                    VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 8) {
+                Button {
+                    selection = .setup
+                } label: {
+                    HStack(alignment: .top, spacing: 9) {
+                        Image(systemName: sidebarStatusSymbol)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(
+                                appState.systemCheckSummary.displayStatus.color(in: palette)
+                            )
+                            .frame(width: 18, height: 18)
                         Text(appState.localized(systemStatusLabel))
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(palette.text)
                             .fixedSize(horizontal: false, vertical: true)
-                        Text(AppBuildInfo.displayVersion)
-                            .font(.caption2)
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right")
+                            .font(.caption2.weight(.semibold))
                             .foregroundStyle(palette.secondaryText)
+                            .padding(.top, 3)
                     }
-                    Spacer(minLength: 0)
-                    Image(systemName: "chevron.right")
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(palette.secondaryText)
-                        .padding(.top, 3)
+                    .padding(10)
+                    .contentShape(Rectangle())
                 }
-                .padding(10)
-                .contentShape(Rectangle())
+                .buttonStyle(ForgeActionButtonStyle(liftsOnHover: false))
+                .background(palette.control.opacity(0.62))
+                .clipShape(
+                    RoundedRectangle(
+                        cornerRadius: ForgePlayLayout.controlCornerRadius,
+                        style: .continuous
+                    )
+                )
+                .help(appState.localized("설정 열기"))
+
+                HStack(spacing: 8) {
+                    ForEach(ForgePlaySidebarCommunityAction.allCases) { action in
+                        sidebarCommunityButton(action, palette: palette)
+                    }
+                }
+
+                Group {
+                    if let hoveredCommunityAction {
+                        Label(
+                            appState.localized(hoveredCommunityAction.helpKey),
+                            systemImage: "info.circle.fill"
+                        )
+                        .transition(.opacity)
+                    } else {
+                        Text(" ")
+                            .accessibilityHidden(true)
+                    }
+                }
+                .font(.caption2)
+                .foregroundStyle(palette.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, minHeight: 28, alignment: .topLeading)
+                .padding(.horizontal, 4)
+                .animation(.easeOut(duration: 0.12), value: hoveredCommunityAction)
+
+                HStack(spacing: 8) {
+                    Text(AppBuildInfo.displayVersion)
+                        .font(.caption2.monospacedDigit())
+                        .foregroundStyle(palette.secondaryText)
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 4)
+                .accessibilityElement(children: .combine)
+
+                Button {
+                    if let availableUpdateReleaseURL {
+                        appState.openExternalURL(availableUpdateReleaseURL)
+                    } else {
+                        checkForUpdate()
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(
+                            systemName: updateCheckPresentation == .checking
+                                ? "arrow.triangle.2.circlepath"
+                                : "checkmark.arrow.trianglehead.counterclockwise"
+                        )
+                            .frame(width: 18)
+                        Text(appState.localized(updateCheckPresentation.labelKey))
+                            .font(.caption.weight(.semibold))
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(ForgeActionButtonStyle(liftsOnHover: false))
+                .background(palette.control.opacity(0.62))
+                .clipShape(
+                    RoundedRectangle(
+                        cornerRadius: ForgePlayLayout.controlCornerRadius,
+                        style: .continuous
+                    )
+                )
+                .disabled(updateCheckPresentation == .checking)
+                .help(
+                    appState.localized(
+                        "ForgePlay 홈페이지의 공개 릴리스 정보를 확인합니다."
+                    )
+                )
             }
-            .buttonStyle(ForgeActionButtonStyle(liftsOnHover: false))
-            .background(palette.control.opacity(0.62))
-            .clipShape(RoundedRectangle(cornerRadius: ForgePlayLayout.controlCornerRadius, style: .continuous))
-            .help(appState.localized("처음 설정 열기"))
             .padding(.horizontal, 10)
             .padding(.bottom, 14)
         }
@@ -499,6 +713,90 @@ private struct SidebarView: View {
         .onChange(of: appState.isAdvancedModeEnabled) { _, isEnabled in
             if !isEnabled, selection == .advanced {
                 selection = .settings
+            }
+        }
+        .onDisappear {
+            updateCheckTask?.cancel()
+            updateCheckTask = nil
+            if updateCheckPresentation == .checking {
+                updateCheckPresentation = .idle
+            }
+        }
+    }
+
+    private func sidebarCommunityButton(
+        _ action: ForgePlaySidebarCommunityAction,
+        palette: ForgePlayPalette
+    ) -> some View {
+        Button {
+            appState.openExternalURL(action.url)
+        } label: {
+            Text(appState.localized(action.titleKey))
+                .font(.caption.weight(.semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
+                .frame(maxWidth: .infinity, minHeight: 30)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(ForgeActionButtonStyle(liftsOnHover: true))
+        .background(
+            hoveredCommunityAction == action
+                ? palette.primary.opacity(0.15)
+                : palette.control.opacity(0.62)
+        )
+        .clipShape(
+            RoundedRectangle(
+                cornerRadius: ForgePlayLayout.controlCornerRadius,
+                style: .continuous
+            )
+        )
+        .overlay {
+            RoundedRectangle(
+                cornerRadius: ForgePlayLayout.controlCornerRadius,
+                style: .continuous
+            )
+            .stroke(
+                hoveredCommunityAction == action
+                    ? palette.primary.opacity(0.72)
+                    : Color.clear,
+                lineWidth: 1
+            )
+        }
+        .onHover { isHovering in
+            if isHovering {
+                hoveredCommunityAction = action
+            } else if hoveredCommunityAction == action {
+                hoveredCommunityAction = nil
+            }
+        }
+        .disabled(action.url == nil)
+        .help(appState.localized(action.helpKey))
+        .accessibilityHint(appState.localized(action.helpKey))
+    }
+
+    private func checkForUpdate() {
+        guard updateCheckPresentation != .checking else { return }
+        updateCheckTask?.cancel()
+        availableUpdateReleaseURL = nil
+        updateCheckPresentation = .checking
+        updateCheckTask = Task { @MainActor in
+            let result = await AppUpdateService().checkForUpdate()
+            guard !Task.isCancelled else { return }
+            switch result {
+            case .updateRequired(let manifest):
+                availableUpdateReleaseURL = manifest.releaseURL
+                updateCheckPresentation = .updateRequired
+            case .noUpdate:
+                availableUpdateReleaseURL = nil
+                updateCheckPresentation = .noUpdate
+            case .failure(let error):
+                availableUpdateReleaseURL = nil
+                updateCheckPresentation = .failure
+                appState.setNotice(
+                    appState.localizedError(error),
+                    kind: .warning,
+                    captureFailureEvidence: false
+                )
             }
         }
     }
@@ -536,10 +834,32 @@ private struct SidebarView: View {
     }
 }
 
-private enum AppBuildInfo {
+private enum ManualUpdateCheckPresentation: Equatable {
+    case idle
+    case checking
+    case noUpdate
+    case updateRequired
+    case failure
+
+    var labelKey: String {
+        switch self {
+        case .idle: "업데이트 확인 (베타)"
+        case .checking: "업데이트 확인 중"
+        case .noUpdate: "업데이트 없음"
+        case .updateRequired: "업데이트 필요"
+        case .failure: "업데이트 확인 실패"
+        }
+    }
+}
+
+enum AppBuildInfo {
     static var displayVersion: String {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String
+        return displayVersion(version: version, build: build)
+    }
+
+    static func displayVersion(version: String?, build: String?) -> String {
         let cleanVersion = version?.trimmingCharacters(in: .whitespacesAndNewlines)
         let cleanBuild = build?.trimmingCharacters(in: .whitespacesAndNewlines)
 

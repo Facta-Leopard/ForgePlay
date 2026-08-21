@@ -55,8 +55,9 @@ final class AutoFixService {
         let action = LLMRecommendedActionPolicy.normalizedAction(action)
         switch action.type {
         case .installRuntime, .setWindowsVersion, .setDLLOverride:
-            return try await steamPrefixService.performMaintenance {
-                try await applyExclusive(
+            return try await steamPrefixService
+                .performCancellableProcessMaintenance {
+                try await self.applyExclusive(
                     action: action,
                     prefixURL: prefixURL,
                     runtimeExecutable: runtimeExecutable,

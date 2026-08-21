@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -11,6 +12,8 @@ import sys
 import tempfile
 from pathlib import Path, PurePosixPath
 from urllib.parse import urlsplit
+
+sys.dont_write_bytecode = True
 
 
 class SBOMError(RuntimeError):
@@ -57,10 +60,55 @@ D3DMETAL_RUNTIME_ALIAS_DIRECTORIES = {
     D3DMETAL_RUNTIME_COMPONENT / relative
     for relative in D3DMETAL_COMPONENT_ALIAS_DIRECTORIES
 }
+D3DMETAL_COMPONENT_NVAPI_WINDOWS_SOURCE = PurePosixPath(
+    "wine/x86_64-windows/nvapi64.dll"
+)
+D3DMETAL_COMPONENT_NVAPI_WINDOWS_ALIAS = PurePosixPath(
+    "wine/x86_64-windows/nvapi.dll"
+)
+D3DMETAL_COMPONENT_NVAPI_UNIX_ALIAS = PurePosixPath(
+    "wine/x86_64-unix/nvapi.so"
+)
+D3DMETAL_COMPONENT_SHARED_LIBRARY = PurePosixPath(
+    "external/libd3dshared.dylib"
+)
+D3DMETAL_SHARED_UNIX_MODULE_LINK_TARGET = "../../external/libd3dshared.dylib"
+D3DMETAL_COMPONENT_DERIVED_ALIAS_PATHS = {
+    D3DMETAL_COMPONENT_NVAPI_WINDOWS_ALIAS,
+    D3DMETAL_COMPONENT_NVAPI_UNIX_ALIAS,
+}
+D3DMETAL_RUNTIME_DERIVED_ALIAS_PATHS = {
+    (D3DMETAL_RUNTIME_COMPONENT / relative).as_posix()
+    for relative in D3DMETAL_COMPONENT_DERIVED_ALIAS_PATHS
+}
 
 
 def fail(message: str) -> None:
     raise SBOMError(message)
+
+
+def load_core_identity_module():
+    module_path = Path(__file__).with_name("runtime-core-payload-identity.py")
+    specification = importlib.util.spec_from_file_location(
+        "forgeplay_runtime_core_payload_identity",
+        module_path,
+    )
+    if specification is None or specification.loader is None:
+        fail(f"runtime core identity module could not be loaded: {module_path}")
+    module = importlib.util.module_from_spec(specification)
+    specification.loader.exec_module(module)
+    return module
+
+
+CORE_IDENTITY = load_core_identity_module()
+CONSUMPTION_HASH_ALGORITHM = CORE_IDENTITY.HASH_ALGORITHM
+
+
+def consumption_digest(path: Path) -> str:
+    try:
+        return CORE_IDENTITY.signature_independent_digest(path)
+    except CORE_IDENTITY.CoreIdentityError as error:
+        fail(f"runtime consumption identity could not be generated for {path}: {error}")
 
 
 def digest_bytes(value: bytes) -> str:
@@ -690,6 +738,33 @@ def verify_d3dmetal_framework_aliases(component_root: Path) -> None:
         )
 
 
+def verify_d3dmetal_nvapi_derived_aliases(component_root: Path) -> None:
+    if component_root.name != "d3dmetal":
+        return
+
+    windows_source = require_regular_file(
+        component_root / D3DMETAL_COMPONENT_NVAPI_WINDOWS_SOURCE,
+        "D3DMetal nvapi64.dll source",
+    )
+    windows_alias = require_regular_file(
+        component_root / D3DMETAL_COMPONENT_NVAPI_WINDOWS_ALIAS,
+        "D3DMetal derived nvapi.dll alias",
+    )
+    if digest_file(windows_alias) != digest_file(windows_source):
+        fail("D3DMetal derived nvapi.dll alias does not exactly match nvapi64.dll")
+
+    shared_library = require_regular_file(
+        component_root / D3DMETAL_COMPONENT_SHARED_LIBRARY,
+        "D3DMetal shared library",
+    )
+    require_exact_relative_symlink(
+        component_root / D3DMETAL_COMPONENT_NVAPI_UNIX_ALIAS,
+        D3DMETAL_SHARED_UNIX_MODULE_LINK_TARGET,
+        shared_library,
+        "D3DMetal derived nvapi.so alias",
+    )
+
+
 def renderer_tree_entries(root: Path) -> list[tuple[str, str, str, str, str]]:
     root = require_directory(root, "renderer component").resolve(strict=True)
     verify_d3dmetal_framework_aliases(root)
@@ -820,6 +895,14 @@ def verify_renderer_payload(
     for name, contract in contracts.items():
         component_root = renderer_root / name
         entries = renderer_tree_entries(component_root)
+        if name == "d3dmetal":
+            verify_d3dmetal_nvapi_derived_aliases(component_root)
+            entries = [
+                entry
+                for entry in entries
+                if PurePosixPath(entry[0])
+                not in D3DMETAL_COMPONENT_DERIVED_ALIAS_PATHS
+            ]
         if len(entries) != contract["fileCount"]:
             fail(
                 f"renderer component file count mismatch for {name}: "
@@ -926,6 +1009,24 @@ def provenance_for_path(
             "licenseExpression": "LicenseRef-ForgePlay-Project",
             "licensePaths": [],
         }
+    if relative in D3DMETAL_RUNTIME_DERIVED_ALIAS_PATHS:
+        contract = renderer_map.get("d3dmetal")
+        if contract is None:
+            fail(
+                "D3DMetal NVAPI compatibility alias has no locked source component: "
+                f"{relative}"
+            )
+        return {
+            "component": "D3DMetal NVAPI filename compatibility aliases",
+            "version": contract["version"],
+            "sourceKind": (
+                "forgeplay-derived-alias-of-apple-official-redistributable"
+            ),
+            "sourceReference": contract["sourceReference"],
+            "sourceTreeSHA256": contract["treeSHA256"],
+            "licenseExpression": contract["licenseExpression"],
+            "licensePaths": contract["licensePaths"],
+        }
     prefix = "Frameworks/renderer/"
     if relative.startswith(prefix):
         renderer_name = relative.removeprefix(prefix).split("/", 1)[0]
@@ -999,6 +1100,9 @@ def create_sbom(
                 "path": relative,
                 "type": "file",
             }
+            if relative in gstreamer_map and relative.endswith(".dylib"):
+                entry["consumptionHashAlgorithm"] = CONSUMPTION_HASH_ALGORITHM
+                entry["consumptionSHA256"] = consumption_digest(path)
         verify_license_paths(runtime_root, entry)
         entries.append(entry)
 
@@ -1014,6 +1118,8 @@ def create_sbom(
                     str(entry["type"]),
                     str(entry["contentHashAlgorithm"]),
                     str(entry["contentSHA256"]),
+                    str(entry.get("consumptionHashAlgorithm", "")),
+                    str(entry.get("consumptionSHA256", "")),
                     str(entry["component"]),
                     str(entry["version"]),
                     str(entry["sourceKind"]),
@@ -1047,11 +1153,13 @@ def create_sbom(
         "policy": {
             "applicationBundleExtractionAllowed": False,
             "checkedInRuntimeOutputAsPackagingInputAllowed": False,
-            "rendererProvenance": "official-or-upstream-artifact-only-v1",
+            "rendererProvenance": (
+                "official-or-upstream-artifact-with-verified-local-aliases-v1"
+            ),
             "undeclaredHostLibrariesAllowed": False,
         },
         "runtimeIdentifier": manifest["runtimeIdentifier"],
-        "schemaVersion": 1,
+        "schemaVersion": 2,
     }
 
 

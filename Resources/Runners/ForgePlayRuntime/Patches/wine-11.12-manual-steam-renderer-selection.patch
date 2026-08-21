@@ -13,7 +13,7 @@ diff --git a/dlls/kernelbase/process.c b/dlls/kernelbase/process.c
      BOOL supported;
  };
  
-@@ -644,428 +642,87 @@
+@@ -644,428 +642,92 @@
      if (mapping) CloseHandle( mapping );
      if (file != INVALID_HANDLE_VALUE) CloseHandle( file );
      HeapFree( GetProcessHeap(), 0, relative_path );
@@ -224,6 +224,7 @@ diff --git a/dlls/kernelbase/process.c b/dlls/kernelbase/process.c
  {
 -    static const WCHAR automatic[] = L"automatic";
      static const WCHAR d3dmetal[] = L"d3dMetal";
++    static const WCHAR d3dmetal_nvidia[] = L"d3dMetalNVIDIA";
      static const WCHAR dxmt[] = L"dxmt";
      static const WCHAR dxvk[] = L"dxvk";
      static const WCHAR d9vk[] = L"d9vk";
@@ -293,7 +294,12 @@ diff --git a/dlls/kernelbase/process.c b/dlls/kernelbase/process.c
 -    if (policy_size && policy_size < ARRAY_SIZE(policy) && !wcscmp( policy, L"d3dMetal" ))
 +    else if (!wcscmp( policy, L"d3dMetal" ))
      {
-         route->requested = d3dmetal;
+-        route->requested = d3dmetal;
++        policy_size = GetEnvironmentVariableW(
++            L"FORGEPLAY_GAME_RENDERER_REQUESTED", policy, ARRAY_SIZE(policy) );
++        route->requested =
++            policy_size == ARRAY_SIZE(d3dmetal_nvidia) - 1 &&
++            !wcscmp( policy, d3dmetal_nvidia ) ? d3dmetal_nvidia : d3dmetal;
 -        forgeplay_set_unsupported_renderer_route( route, L"explicit-metal-generation-unknown" );
 -        if (!scan.valid_pe)
 -        {
@@ -697,7 +703,7 @@ diff --git a/dlls/kernelbase/process.c b/dlls/kernelbase/process.c
 -    NTSTATUS status, renderer_status, fallback_status;
 +    NTSTATUS status, renderer_status;
      BOOL game_renderer_route_observed = FALSE;
-     BOOL process_argument_policy_applied = FALSE;
+     BOOL observe_process_arguments = FALSE;
  
 @@ -2142,61 +1694,31 @@
                is_forgeplay_steam_game_path( cur_dir ) ||

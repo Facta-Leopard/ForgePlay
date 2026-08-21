@@ -1,6 +1,12 @@
 # ForgePlay Runtime Source Availability
 
-This package contains Wine 11.12 under the GNU Lesser General Public License 2.1 or later.
+This package contains a modified Wine 11.12 copy. Unmodified Wine material and
+ForgePlay changes not expressly converted by the packaged Game Mode scope retain
+their applicable GNU Lesser General Public License 2.1 or later permissions. The
+two exact Game Mode Wine patch copies identified in
+`Legal/ForgePlayGameMode/GAME_MODE_LICENSE_SCOPE.md` are designated for
+conversion to GPL-3.0-only under LGPL 2.1 section 3, and the resulting combined
+Wine copy must be conveyed consistently with that scope.
 The corresponding source is available without relying on a developer machine path:
 
 - Upstream Wine 11.12 source archive: https://dl.winehq.org/wine/source/11.x/wine-11.12.tar.xz
@@ -9,14 +15,18 @@ The corresponding source is available without relying on a developer machine pat
 - Wine release-key fingerprint: `DA23579A74D4AD9AF9D3F945CEFAC8EAAF17519D`
 - ForgePlay modifications: the complete patch set shipped in this package under `Patches/`
 - Independent renderer behavior contract: `Patches/wine-11.12-forgeplay-d3dmetal-bridge-contract.md`
-- Validated corresponding source tree SHA-256: `01f174c44664cbc3a4f931b536080facef0a70d6bfa2c5603182abdba18ddc73`
-- Packaged ForgePlay patch-set SHA-256: `1c5d85142f26f7d588133852f4710594c34ea7360bbe616cefccb1d33ff1d1c3`
+- Validated corresponding source tree SHA-256: `2d0c24a9f9ebdb84b7703204d1a72071b06ac48800e2314a9635f851200a1f66`
+- Packaged ForgePlay patch-set SHA-256: `11af77aa6a1ce172505faa641c9ef5783ad10878ed552e0b55ab234a6dac1a07`
+- Packaging source authority: internal-reviewed-source-provenance-v1
 
 The upstream archive and the complete packaged patch set are the machine-readable materials used to
 reconstruct the modified Wine source for this runtime. The local `FORGEPLAY_WINE_SOURCE` build input
 is validated during packaging, but its filesystem path is never written into the app bundle.
 Wine's `LICENSE`, `COPYING.LIB`, and `AUTHORS` files are validated from that source tree and
-copied into `Legal/Wine`.
+copied into `Legal/Wine`. `Legal/Wine/FORGEPLAY-MODIFICATIONS.md` records the
+exact modification snapshot and license boundary. The unmodified GPLv3 and LGPL
+2.1 texts plus the path-exact Game Mode conversion notices are copied into
+`Legal/ForgePlayGameMode`.
 
 To reconstruct the modified source from the public upstream archive and the patch files in this
 package, download and verify the archive, extract it, and apply these patches in order:
@@ -38,7 +48,7 @@ for patch_file in \
   Patches/wine-11.12-app-sandbox-server-lock.patch \
   Patches/wine-11.12-app-sandbox-executable-mappings.patch \
   Patches/wine-11.12-macos-bundled-runtime-loading.patch \
-  Patches/wine-11.12-executable-scoped-process-arguments.patch \
+  Patches/wine-11.12-executable-scoped-process-observation.patch \
   Patches/wine-11.12-steam-game-renderer-process-policy.patch \
   Patches/wine-11.12-d3dmetal-native-thread-context.patch \
   Patches/wine-11.12-d3dmetal-native-thread-state-sync.patch \
@@ -49,7 +59,11 @@ for patch_file in \
   Patches/wine-11.12-steam-renderer-control-plane-persistence.patch \
   Patches/wine-11.12-managed-darwin-process-journal.patch \
   Patches/wine-11.12-forced-font-family-replacements.patch \
-  Patches/wine-11.12-steam-game-cef-browser-process-policy.patch; do
+  Patches/wine-11.12-steam-game-cef-browser-process-policy.patch \
+  Patches/wine-11.12-steam-session-compatibility-controls.patch \
+  Patches/wine-11.12-helldivers2-process-policy.patch \
+  Patches/wine-11.12-heap-zero-memory.patch \
+  Patches/wine-11.12-media-foundation-video-output-negotiation.patch; do
   patch -d wine-11.12 -p1 < "$patch_file"
 done
 ```
@@ -66,12 +80,16 @@ ForgePlay's project-owned Windows Steam launcher source is copied into
 Win32 `CreateProcessW` through the complete ForgePlay-owned
 `--detach -- <Windows command...>` contract implemented in that source file.
 
-ForgePlay's executable-scoped process argument patch keeps Valve's
-`steamwebhelper.exe` in place and applies the Steam CEF compatibility arguments from Wine's
-32-bit or 64-bit process-creation path. Steam updates can therefore replace their own executable
-without deleting ForgePlay's launch policy. After successful target creation, Wine records only the
-Windows PID and final target command line in the host-created per-launch observation file; it does
-not serialize the process environment.
+ForgePlay's executable-scoped compatibility patch leaves updater-owned executable files unchanged.
+When the host supplies both a bounded argument target and bounded append string, Wine compares only
+the resolved executable basename and appends that string to the matching child command line. Missing,
+oversized, or mismatched controls leave the command line unchanged. When the optional
+`FORGEPLAY_PROCESS_ARGUMENT_ROOT_ONLY=1` control is present, a standalone Chromium `--type=`
+argument suppresses the append for that subprocess. The observation target is selected independently
+and still covers each matching role; after successful creation Wine records only its Windows PID and
+final command line after applicable argument processing in the host-created per-launch observation
+file. The patch hardcodes no Steam argument set, does not serialize the process environment, and does
+not claim that any particular host-selected combination fixes a current Steam build.
 
 ForgePlay's Steam game CEF browser policy is activated by the host with
 `FORGEPLAY_STEAM_GAME_CEF_BROWSER_POLICY_ENABLED=1` for a Steam session, then applies only to a
@@ -82,8 +100,14 @@ non-CEF executables, Steam infrastructure roles, and command lines that already 
 remain unchanged. The executable itself is never replaced or modified.
 
 ForgePlay's Steam game renderer process patch leaves Steam and Steam WebHelper on the base Wine
-renderer environment. Before every Steam launch the user must select exactly one of D3DMetal, DXMT,
-D9VK, or DXVK. That single renderer is applied to Steam game children for the whole session.
+renderer environment. Before every Steam launch the user must select exactly one of D3DMetal
+Standard, D3DMetal NVIDIA/DLSS Compatibility, DXMT, D9VK, or DXVK. Both D3DMetal choices route the
+same exact D3DMetal modules. The experimental NVIDIA choice additionally passes
+`D3DM_VENDOR_ID=0x10de` only through the routed game environment, provides the exact verified
+`nvapi.dll` and Unix-module aliases required by the bundled Apple NVAPI implementation, and invokes
+`NvAPI_Initialize` before the game entry point. It does not change the reported device ID, force
+DirectX 11 or DirectX 12, or claim that a game's DLSS path will work. That single renderer is applied
+to Steam game children for the whole session.
 Automatic Direct3D import classification, loader-stage profiles, and mixed renderer compositions
 are not used. A missing or invalid manual selection is rejected instead of falling back to another
 renderer. The Unix loader places only the selected renderer root ahead of Wine's compiled DLL
@@ -97,6 +121,18 @@ records use `manual-session-d3dmetal`, `manual-session-dxmt`, `manual-session-d9
   path controls remain available when Steam reexecutes itself, so the relaunched client can construct
   the same selected renderer for later game children. Separator-delimited `_CommonRedist` descendants
   are infrastructure and never enter the game-renderer route.
+
+ForgePlay's Steam session compatibility patch requires an explicit network-presentation selection
+and audio-input selection for each launch. Standard network presentation preserves Wine's upstream
+adapter metadata. Wi-Fi Identity and Ethernet Identity change only the reported NDIS type and media
+fields for active, connected, non-loopback adapters in routed game descendants; socket stream and
+datagram semantics, addresses, DNS, gateways, and macOS transport remain unchanged. Independently
+of the selected presentation, Darwin `IP_RECVTOS` ancillary data is translated into the Windows
+`IP_TOS` control-message contract returned by `WSARecvMsg`; payload and transport behavior remain
+unchanged. Audio input
+disabled returns a successful empty capture-endpoint set before CoreAudio input enumeration while
+leaving render endpoints and output untouched. Audio input enabled follows Wine's upstream
+CoreAudio capture path. These values are session-scoped and are not persisted as per-game rules.
 
 ForgePlay's Game Mode process-host routing is an explicit beta selection and remains off for a
 standard Steam launch. It keeps Steam's game lineage separate from the selected Direct3D renderer.
@@ -116,9 +152,9 @@ per-game display name or PE icon.
 ForgePlay's external-storage grant activation patch runs explicitly at the start of both the Unix
 `ntdll` loader and `wineserver`. If all four grant environment values are absent, Wine continues
 normally. If any value is present, all four must be non-empty and the project-owned bridge must load
-and accept the manifest for external storage to become accessible. A rejected or incomplete grant
-emits a bounded, path-free failure reason and continues through Wine's normal sandbox-limited path;
-this preserves launch for games that do not need the unavailable external root. Successful
+and accept the manifest for external storage to become accessible. A rejected or incomplete required
+grant emits a bounded, path-free failure reason and stops the Wine loader or wineserver before
+Windows Steam can start. A launch without an external-storage request remains unchanged. Successful
 activation emits only the bounded `FORGEPLAY_EXTERNAL_STORAGE_GRANT_V1` status record; it does not
 log a storage path or bookmark payload.
 
@@ -131,7 +167,10 @@ Wine child, including children that replace their Windows environment. At shutdo
 validates the exact bundled executable path and
 the unchanged start identity before signaling that PID, then reads the journal again after
 `SIGTERM`, `SIGKILL`, and the wineserver barrier. An absent or invalid journal cannot be
-misreported as a clean launch session.
+misreported as a clean launch session. Wineserver also binds the launching ForgePlay process PID
+and kernel start time before accepting the prefix. A detached kqueue monitor terminates wineserver
+when that exact application owner exits, including force-quit and crash paths where AppKit cannot
+run the normal termination delegate.
 
 ForgePlay's D3DMetal bridge is implemented in the project-owned
 `dlls/ntdll/unix/forgeplay_d3dmetal.c` source from the documented public behavior contract. The
@@ -157,7 +196,8 @@ license material. Packaging fails when the payload is missing SDL2.dll, SDL3.dll
 
 ForgePlay's Windows font compatibility payload includes the exact Nanum Gothic Regular and Bold
 font files under `wine/share/wine/fonts`. Their SIL Open Font License text is included under
-`Legal/NanumGothic/OFL.txt`; packaging fails if any of these three files is missing or differs from
+`Legal/NanumGothic/OFL.txt`, and the pinned Google Fonts commit plus exact file identities are in
+`Legal/NanumGothic/SOURCE-IDENTITY.json`; packaging fails if any of these four files is missing or differs from
 the reviewed SHA-256 digest. The opt-in `HKCU\\Software\\Wine\\Fonts\\ForcedReplacements`
 contract is implemented in both Wine GDI and DirectWrite so an installed or game-private Tahoma
 family cannot bypass the managed Korean family selected by ForgePlay.
@@ -166,7 +206,10 @@ ForgePlay's runtime policy plist and legal resources are copied separately from 
 The packager never copies the checked-in runtime's `Frameworks` directory and rejects a renderer
 source rooted in that output tree. The complete renderer payload is an explicit build-time input,
 verified against `Config/ForgePlayRendererPayload.lock.json`, and becomes part of the self-contained
-app runtime rather than an external runtime dependency.
+app runtime rather than an external runtime dependency. After that locked-tree verification,
+packaging derives only a byte-identical `nvapi.dll` filename copy from `nvapi64.dll` and an exact
+`nvapi.so` internal link to the same canonical D3DMetal shared library. Both aliases are independently
+validated and recorded as ForgePlay-derived Apple-payload aliases in `RuntimeSBOM.json`.
 
 The package materializes the 15 exact x86_64 Wine host dependency artifacts declared in
 `Config/ForgePlayRuntimeDependencies.lock.json` into `wine/lib` and `wine/etc/vulkan/icd.d`, and

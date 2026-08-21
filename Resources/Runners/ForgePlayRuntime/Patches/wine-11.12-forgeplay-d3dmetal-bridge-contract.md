@@ -86,6 +86,37 @@ runtime's `libd3dshared.dylib`. If omitted, the bridge uses the already loaded
 image (if any) and then the dynamic loader's `libd3dshared.dylib` search. It never
 loads the library before the main-image selector matches.
 
+## MetalFX / NGX module contract
+
+The managed D3DMetal payload includes the Apple-signed Windows front end
+`nvngx-on-metalfx.dll`, whose internal module contract is `nvngx.dll`. D3DMetal
+activates that bridge only when both of these process variables are present:
+
+- `D3DM_ENABLE_METALFX=1`
+- `D3DM_NVNGX_PATH=<absolute-directory-containing-nvngx.dll>`
+
+ForgePlay does not rename or modify the signed, manifest-locked renderer tree.
+Before a D3DMetal session, the host derives a prefix-owned bridge under
+`.forgeplay/renderer-bridges/d3dmetal/<content-identity>/`. It copies the exact
+verified `nvngx-on-metalfx.dll` bytes to
+`wine/x86_64-windows/nvngx.dll`, copies the exact verified
+`libd3dshared.dylib` bytes to `external/libd3dshared.dylib`, and creates only
+the relative Unix-module link
+`wine/x86_64-unix/nvngx.so -> ../../external/libd3dshared.dylib`.
+The content identity covers both source files. Owner-only directories, regular
+file checks, exact byte comparisons, the fixed relative link target, and
+atomic replacement prevent an inherited or stale derived module from becoming
+an unverified renderer input.
+
+The host advertises the derived Wine layout as a second allowed component root
+for the selected D3DMetal route and points `D3DM_NVNGX_PATH` at its
+`x86_64-windows` directory. The two MetalFX variables travel through the same
+host-owned renderer environment mapping as the other selected D3DMetal
+variables. Wine removes or restores them for Steam infrastructure and installs
+them only in routed D3DMetal game environments. Exact D9VK, DXMT, and DXVK
+routes publish the unset sentinel for both variables and cannot inherit them
+from a previous launch.
+
 ## Non-native image registration contract
 
 After activation, the bridge resolves both capability symbols dynamically. It
@@ -191,6 +222,9 @@ and four-pointer window prefix from accidental layout drift.
 - A malformed selector or non-absolute explicit library path disables the bridge
   for that process.
 - Unselected processes execute no extra dynamic-library or registration work.
+- A missing, malformed, or unverifiable NGX source/derived closure fails the
+  D3DMetal route before Steam is launched; ForgePlay does not silently fall back
+  to another renderer or modify the signed renderer payload.
 
 ## Verification requirements
 
@@ -210,6 +244,15 @@ and four-pointer window prefix from accidental layout drift.
    dynamic TLS owned by the actual TEB, uses reentrant Apple time conversions,
    restores every saved Darwin slot before pthread exit, and introduces no
    text-patching or new host-private-API reference.
-7. Create a real Win32 window through the selected D3DMetal route, then verify
+7. Verify the prefix-derived NGX bridge is byte-identical to the locked Apple
+   payload, repairs a replaced derived file, uses only the fixed relative Unix
+   link, is present in the x86_64 component/DLL allowlists, and never exposes
+   either MetalFX variable to Steam or to a non-D3DMetal route.
+8. Create a real Win32 window through the selected D3DMetal route, then verify
    D3D11 device creation, DXGI swapchain creation, and `Present` complete
    without an access violation and with the selected renderer modules recorded.
+9. Through a D3D12 device, load `nvngx.dll`, resolve the public NGX entry
+   points, and verify initialization, capability-parameter acquisition,
+   parameter destruction, and shutdown complete successfully while Wine's load
+   evidence attributes both the PE module and its Unix companion to the exact
+   allowed derived bridge root.

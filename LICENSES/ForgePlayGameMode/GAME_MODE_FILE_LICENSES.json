@@ -19,6 +19,7 @@
     "Native/GameModeProcessHost/GameModeProcessHost-AppStore.entitlements",
     "Native/GameModeProcessHost/GameModeProcessHost-Development.entitlements",
     "Native/GameModeProcessHost/GameModeProcessHost-Distribution.entitlements",
+    "Native/GameModeProcessHost/GameModeProcessHost-Release.entitlements",
     "Native/GameModeProcessHost/GameModeProcessHost.entitlements.in",
     "Native/GameModeProcessHost/GameModeProcessHost.m",
     "Native/GameModeProcessHost/GameModeRuntimeIdentity.h",
@@ -33,6 +34,7 @@
     "Config/ForgePlayGameModeProcessHost.xcconfig",
     "Config/ForgePlayGameModeProcessHostAppStore.xcconfig",
     "Config/ForgePlayGameModeProcessHostDistribution.xcconfig",
+    "Config/ForgePlayGameModeProcessHostRelease.xcconfig",
     "Scripts/prepare-game-mode-host-build-identity.sh",
     "Scripts/verify-game-mode-source-licenses.py",
     "Scripts/tests/test-wine-game-mode-process-host-routing.sh"

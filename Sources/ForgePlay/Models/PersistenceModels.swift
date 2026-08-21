@@ -16,6 +16,12 @@ enum AppLanguageModeOverrideSource: String {
     case userSettings
 }
 
+enum GameInputProtectionPreferenceSchema {
+    /// The only destructive migration: old beta defaults become explicit opt-in.
+    static let optInMigrationVersion = 1
+    static let currentVersion = 1
+}
+
 @Model
 final class AppSettingsRecord {
     @Attribute(.unique) var id: String
@@ -52,6 +58,16 @@ final class AppSettingsRecord {
     var steamGraphicsBackendSelection: String?
     var wineSynchronizationSelection: String?
     var steamVideoMemorySelection: String?
+    var isGameInputModifierMappingEnabled: Bool?
+    var gameInputCommandBinding: String?
+    var gameInputOptionBinding: String?
+    var gameInputControlBinding: String?
+    var blocksGameAppWindowManagementShortcuts: Bool?
+    var blocksGameAppSwitchingShortcuts: Bool?
+    var blocksGameMissionControlSpaceShortcuts: Bool?
+    var blocksGameScreenshotShortcuts: Bool?
+    var hidesPointerWhileManagedGameFrontmost: Bool?
+    var gameInputProtectionPreferenceVersion: Int?
     var createdAt: Date
     var updatedAt: Date
 
@@ -87,6 +103,17 @@ final class AppSettingsRecord {
         steamGraphicsBackendSelection: String? = nil,
         wineSynchronizationSelection: String? = nil,
         steamVideoMemorySelection: String? = nil,
+        isGameInputModifierMappingEnabled: Bool? = false,
+        gameInputCommandBinding: String? = GameInputModifierBinding.control.rawValue,
+        gameInputOptionBinding: String? = GameInputModifierBinding.alt.rawValue,
+        gameInputControlBinding: String? = GameInputModifierBinding.control.rawValue,
+        blocksGameAppWindowManagementShortcuts: Bool? = false,
+        blocksGameAppSwitchingShortcuts: Bool? = false,
+        blocksGameMissionControlSpaceShortcuts: Bool? = false,
+        blocksGameScreenshotShortcuts: Bool? = false,
+        hidesPointerWhileManagedGameFrontmost: Bool? = true,
+        gameInputProtectionPreferenceVersion: Int? =
+            GameInputProtectionPreferenceSchema.currentVersion,
         createdAt: Date = Date(),
         updatedAt: Date = Date()
     ) {
@@ -121,6 +148,19 @@ final class AppSettingsRecord {
         self.steamGraphicsBackendSelection = steamGraphicsBackendSelection
         self.wineSynchronizationSelection = wineSynchronizationSelection
         self.steamVideoMemorySelection = steamVideoMemorySelection
+        self.isGameInputModifierMappingEnabled = isGameInputModifierMappingEnabled
+        self.gameInputCommandBinding = gameInputCommandBinding
+        self.gameInputOptionBinding = gameInputOptionBinding
+        self.gameInputControlBinding = gameInputControlBinding
+        self.blocksGameAppWindowManagementShortcuts =
+            blocksGameAppWindowManagementShortcuts
+        self.blocksGameAppSwitchingShortcuts = blocksGameAppSwitchingShortcuts
+        self.blocksGameMissionControlSpaceShortcuts = blocksGameMissionControlSpaceShortcuts
+        self.blocksGameScreenshotShortcuts = blocksGameScreenshotShortcuts
+        self.hidesPointerWhileManagedGameFrontmost =
+            hidesPointerWhileManagedGameFrontmost
+        self.gameInputProtectionPreferenceVersion =
+            gameInputProtectionPreferenceVersion
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
@@ -152,6 +192,622 @@ extension AppSettingsRecord {
             updatedAt = now
         }
         return changed
+    }
+}
+
+enum SteamLaunchConfigurationPersistenceError: LocalizedError, Equatable {
+    case contextHasPendingChanges
+    case unexpectedMode(expected: SteamLaunchMode, actual: SteamLaunchMode)
+    case recordIdentityMismatch(String)
+    case schemaVersionMismatch(stored: Int, decoded: Int)
+    case digestMismatch
+    case duplicateRecord(type: String, id: String)
+    case invalidPersistenceRevision(UUID)
+    case writeConflict(type: String, id: String)
+    case incompleteLaunchRecordProjection
+    case requestedTransactionCannotBeRecorded
+    case transactionConfigurationMismatch
+
+    var errorDescription: String? {
+        switch self {
+        case .contextHasPendingChanges:
+            "Steam 실행 구성 저장에는 보류 중인 변경이 없는 전용 ModelContext가 필요합니다."
+        case .unexpectedMode(let expected, let actual):
+            "Steam 실행 구성 모드가 일치하지 않습니다: expected=\(expected.rawValue), actual=\(actual.rawValue)"
+        case .recordIdentityMismatch(let reason):
+            "Steam 실행 구성 저장 식별자가 일치하지 않습니다: \(reason)"
+        case .schemaVersionMismatch(let stored, let decoded):
+            "Steam 실행 구성 저장 버전이 일치하지 않습니다: stored=\(stored), decoded=\(decoded)"
+        case .digestMismatch:
+            "Steam 실행 구성 저장 다이제스트가 일치하지 않습니다."
+        case .duplicateRecord(let type, let id):
+            "중복된 Steam 실행 구성 저장 레코드가 있습니다: \(type)=\(id)"
+        case .invalidPersistenceRevision(let revision):
+            "Steam 실행 구성 저장 리비전이 올바르지 않습니다: \(revision.uuidString.lowercased())"
+        case .writeConflict(let type, let id):
+            "다른 창에서 Steam 실행 구성이 변경되었습니다: \(type)=\(id)"
+        case .incompleteLaunchRecordProjection:
+            "실행 기록에 구성 스냅샷과 트랜잭션 저널을 함께 제공해야 합니다."
+        case .requestedTransactionCannotBeRecorded:
+            "해결되지 않은 요청 상태의 Steam 실행 구성은 실행 기록에 저장할 수 없습니다."
+        case .transactionConfigurationMismatch:
+            "Steam 실행 구성과 트랜잭션 저널의 해결 결과가 일치하지 않습니다."
+        }
+    }
+}
+
+private let zeroSteamLaunchConfigurationPersistenceRevision =
+    "00000000-0000-0000-0000-000000000000"
+
+private func isValidSteamLaunchConfigurationPersistenceRevision(_ revision: UUID) -> Bool {
+    revision.uuidString.lowercased() != zeroSteamLaunchConfigurationPersistenceRevision
+}
+
+private func makeSteamLaunchConfigurationPersistenceRevision(
+    excluding existing: UUID? = nil
+) -> UUID {
+    while true {
+        let candidate = UUID()
+        if isValidSteamLaunchConfigurationPersistenceRevision(candidate), candidate != existing {
+            return candidate
+        }
+    }
+}
+
+@Model
+final class StandardSteamLaunchConfigurationRecord {
+    static let recordID = "standard-default"
+
+    @Attribute(.unique) var id: String
+    var schemaVersion: Int
+    var canonicalConfigurationPayload: Data
+    var configurationDigest: String
+    var persistenceRevision: UUID
+    var createdAt: Date
+    var updatedAt: Date
+
+    init(snapshot: SteamLaunchConfigurationSnapshot, now: Date = Date()) throws {
+        let projection = try Self.makeProjection(snapshot: snapshot)
+        self.id = Self.recordID
+        self.schemaVersion = projection.schemaVersion
+        self.canonicalConfigurationPayload = projection.payload
+        self.configurationDigest = projection.digest
+        self.persistenceRevision = makeSteamLaunchConfigurationPersistenceRevision()
+        self.createdAt = now
+        self.updatedAt = now
+    }
+
+    func decodedSnapshot() throws -> SteamLaunchConfigurationSnapshot {
+        guard id == Self.recordID else {
+            throw SteamLaunchConfigurationPersistenceError.recordIdentityMismatch("standard-id")
+        }
+        guard isValidSteamLaunchConfigurationPersistenceRevision(persistenceRevision) else {
+            throw SteamLaunchConfigurationPersistenceError.invalidPersistenceRevision(
+                persistenceRevision
+            )
+        }
+        let snapshot = try SteamLaunchConfigurationSnapshot(
+            canonicalPayload: canonicalConfigurationPayload
+        )
+        guard snapshot.identity.mode == .standard else {
+            throw SteamLaunchConfigurationPersistenceError.unexpectedMode(
+                expected: .standard,
+                actual: snapshot.identity.mode
+            )
+        }
+        guard snapshot.identity.configurationIdentity == Self.recordID else {
+            throw SteamLaunchConfigurationPersistenceError.recordIdentityMismatch(
+                "standard-configuration-identity"
+            )
+        }
+        guard schemaVersion == snapshot.schemaVersion else {
+            throw SteamLaunchConfigurationPersistenceError.schemaVersionMismatch(
+                stored: schemaVersion,
+                decoded: snapshot.schemaVersion
+            )
+        }
+        guard configurationDigest == (try snapshot.canonicalDigest) else {
+            throw SteamLaunchConfigurationPersistenceError.digestMismatch
+        }
+        return snapshot
+    }
+
+    func replace(with snapshot: SteamLaunchConfigurationSnapshot, now: Date) throws {
+        guard id == Self.recordID else {
+            throw SteamLaunchConfigurationPersistenceError.recordIdentityMismatch("standard-id")
+        }
+        let projection = try Self.makeProjection(snapshot: snapshot)
+        guard isValidSteamLaunchConfigurationPersistenceRevision(persistenceRevision) else {
+            throw SteamLaunchConfigurationPersistenceError.invalidPersistenceRevision(
+                persistenceRevision
+            )
+        }
+        let nextRevision = makeSteamLaunchConfigurationPersistenceRevision(
+            excluding: persistenceRevision
+        )
+        schemaVersion = projection.schemaVersion
+        canonicalConfigurationPayload = projection.payload
+        configurationDigest = projection.digest
+        persistenceRevision = nextRevision
+        updatedAt = now
+    }
+
+    private static func makeProjection(
+        snapshot: SteamLaunchConfigurationSnapshot
+    ) throws -> (schemaVersion: Int, payload: Data, digest: String) {
+        try snapshot.validate()
+        guard snapshot.identity.mode == .standard else {
+            throw SteamLaunchConfigurationPersistenceError.unexpectedMode(
+                expected: .standard,
+                actual: snapshot.identity.mode
+            )
+        }
+        guard snapshot.identity.configurationIdentity == Self.recordID else {
+            throw SteamLaunchConfigurationPersistenceError.recordIdentityMismatch(
+                "standard-configuration-identity"
+            )
+        }
+        let payload = try snapshot.canonicalPayload()
+        let decoded = try SteamLaunchConfigurationSnapshot(canonicalPayload: payload)
+        guard decoded == snapshot else {
+            throw SteamLaunchConfigurationPersistenceError.recordIdentityMismatch(
+                "standard-canonical-round-trip"
+            )
+        }
+        return (snapshot.schemaVersion, payload, try snapshot.canonicalDigest)
+    }
+}
+
+@Model
+final class CompatibilitySteamLaunchPreferenceRecord {
+    @Attribute(.unique) var id: String
+    var steamAppID: String
+    var profileID: String
+    var recipeRevision: String
+    var schemaVersion: Int
+    var canonicalPreferencePayload: Data
+    var preferenceDigest: String
+    // Version-1 compatibility preferences use payload digest + generation as their CAS source.
+    // Zero is reserved for the undeployed snapshot-v1 source representation.
+    var generation: Int64 = 0
+    var persistenceRevision: UUID
+    var createdAt: Date
+    var updatedAt: Date
+
+    init(snapshot: SteamLaunchConfigurationSnapshot, now: Date = Date()) throws {
+        let projection = try Self.makeProjection(snapshot: snapshot)
+        self.id = projection.identity.deterministicRecordID
+        self.steamAppID = projection.identity.steamAppID
+        self.profileID = projection.identity.profileID
+        self.recipeRevision = projection.identity.recipeRevision
+        self.schemaVersion = projection.schemaVersion
+        self.canonicalPreferencePayload = projection.payload
+        self.preferenceDigest = projection.digest
+        self.persistenceRevision = makeSteamLaunchConfigurationPersistenceRevision()
+        self.createdAt = now
+        self.updatedAt = now
+    }
+
+    func decodedSnapshot() throws -> SteamLaunchConfigurationSnapshot {
+        guard generation == 0 else {
+            throw SteamCompatibilityLaunchProfileErrorV1.migrationRejected(
+                "legacy-generation"
+            )
+        }
+        guard isValidSteamLaunchConfigurationPersistenceRevision(persistenceRevision) else {
+            throw SteamLaunchConfigurationPersistenceError.invalidPersistenceRevision(
+                persistenceRevision
+            )
+        }
+        let snapshot = try SteamLaunchConfigurationSnapshot(
+            canonicalPayload: canonicalPreferencePayload
+        )
+        guard case .compatibility(let identity) = snapshot.identity else {
+            throw SteamLaunchConfigurationPersistenceError.unexpectedMode(
+                expected: .compatibility,
+                actual: snapshot.identity.mode
+            )
+        }
+        guard id == identity.deterministicRecordID else {
+            throw SteamLaunchConfigurationPersistenceError.recordIdentityMismatch(
+                "compatibility-record-id"
+            )
+        }
+        guard steamAppID == identity.steamAppID,
+              profileID == identity.profileID,
+              recipeRevision == identity.recipeRevision else {
+            throw SteamLaunchConfigurationPersistenceError.recordIdentityMismatch(
+                "compatibility-identity-columns"
+            )
+        }
+        guard schemaVersion == snapshot.schemaVersion else {
+            throw SteamLaunchConfigurationPersistenceError.schemaVersionMismatch(
+                stored: schemaVersion,
+                decoded: snapshot.schemaVersion
+            )
+        }
+        guard preferenceDigest == (try snapshot.canonicalDigest) else {
+            throw SteamLaunchConfigurationPersistenceError.digestMismatch
+        }
+        return snapshot
+    }
+
+    func replace(with snapshot: SteamLaunchConfigurationSnapshot, now: Date) throws {
+        guard generation == 0 else {
+            throw SteamCompatibilityLaunchProfileErrorV1.migrationRejected(
+                "legacy-generation"
+            )
+        }
+        let projection = try Self.makeProjection(snapshot: snapshot)
+        guard id == projection.identity.deterministicRecordID,
+              steamAppID == projection.identity.steamAppID,
+              profileID == projection.identity.profileID,
+              recipeRevision == projection.identity.recipeRevision else {
+            throw SteamLaunchConfigurationPersistenceError.recordIdentityMismatch(
+                "compatibility-replacement-target"
+            )
+        }
+        guard isValidSteamLaunchConfigurationPersistenceRevision(persistenceRevision) else {
+            throw SteamLaunchConfigurationPersistenceError.invalidPersistenceRevision(
+                persistenceRevision
+            )
+        }
+        let nextRevision = makeSteamLaunchConfigurationPersistenceRevision(
+            excluding: persistenceRevision
+        )
+        schemaVersion = projection.schemaVersion
+        canonicalPreferencePayload = projection.payload
+        preferenceDigest = projection.digest
+        persistenceRevision = nextRevision
+        updatedAt = now
+    }
+
+    private static func makeProjection(
+        snapshot: SteamLaunchConfigurationSnapshot
+    ) throws -> (
+        identity: SteamCompatibilityProfileIdentity,
+        schemaVersion: Int,
+        payload: Data,
+        digest: String
+    ) {
+        try snapshot.validate()
+        guard case .compatibility(let identity) = snapshot.identity else {
+            throw SteamLaunchConfigurationPersistenceError.unexpectedMode(
+                expected: .compatibility,
+                actual: snapshot.identity.mode
+            )
+        }
+        let payload = try snapshot.canonicalPayload()
+        let decoded = try SteamLaunchConfigurationSnapshot(canonicalPayload: payload)
+        guard decoded == snapshot else {
+            throw SteamLaunchConfigurationPersistenceError.recordIdentityMismatch(
+                "compatibility-canonical-round-trip"
+            )
+        }
+        return (identity, snapshot.schemaVersion, payload, try snapshot.canonicalDigest)
+    }
+}
+
+extension ModelContext {
+    fileprivate func fetchCanonicalStandardSteamLaunchConfigurationSingleton()
+        throws -> StandardSteamLaunchConfigurationRecord?
+    {
+        var descriptor = FetchDescriptor<StandardSteamLaunchConfigurationRecord>()
+        descriptor.fetchLimit = 2
+        let matches = try fetch(descriptor)
+        let recordID = StandardSteamLaunchConfigurationRecord.recordID
+        guard matches.count <= 1 else {
+            throw SteamLaunchConfigurationPersistenceError.duplicateRecord(
+                type: "standard",
+                id: recordID
+            )
+        }
+        guard let record = matches.first else { return nil }
+        guard record.id == recordID else {
+            throw SteamLaunchConfigurationPersistenceError.recordIdentityMismatch(
+                "standard-table-singleton-id"
+            )
+        }
+        return record
+    }
+
+    @discardableResult
+    func upsertStandardSteamLaunchConfiguration(
+        _ snapshot: SteamLaunchConfigurationSnapshot,
+        now: Date = Date()
+    ) throws -> StandardSteamLaunchConfigurationRecord {
+        guard !hasChanges else {
+            throw SteamLaunchConfigurationPersistenceError.contextHasPendingChanges
+        }
+        do {
+            guard snapshot.identity.mode == .standard else {
+                throw SteamLaunchConfigurationPersistenceError.unexpectedMode(
+                    expected: .standard,
+                    actual: snapshot.identity.mode
+                )
+            }
+            let record: StandardSteamLaunchConfigurationRecord
+            if let existing = try fetchCanonicalStandardSteamLaunchConfigurationSingleton() {
+                _ = try existing.decodedSnapshot()
+                try existing.replace(with: snapshot, now: now)
+                record = existing
+            } else {
+                record = try StandardSteamLaunchConfigurationRecord(snapshot: snapshot, now: now)
+                insert(record)
+            }
+            try saveOrRollback()
+            return record
+        } catch {
+            if hasChanges {
+                rollback()
+            }
+            throw error
+        }
+    }
+
+    @discardableResult
+    func upsertCompatibilitySteamLaunchPreference(
+        _ snapshot: SteamLaunchConfigurationSnapshot,
+        now: Date = Date()
+    ) throws -> CompatibilitySteamLaunchPreferenceRecord {
+        guard !hasChanges else {
+            throw SteamLaunchConfigurationPersistenceError.contextHasPendingChanges
+        }
+        do {
+            guard case .compatibility(let identity) = snapshot.identity else {
+                throw SteamLaunchConfigurationPersistenceError.unexpectedMode(
+                    expected: .compatibility,
+                    actual: snapshot.identity.mode
+                )
+            }
+            let recordID = identity.deterministicRecordID
+            let descriptor = FetchDescriptor<CompatibilitySteamLaunchPreferenceRecord>(
+                predicate: #Predicate { $0.id == recordID }
+            )
+            let matches = try fetch(descriptor)
+            guard matches.count <= 1 else {
+                throw SteamLaunchConfigurationPersistenceError.duplicateRecord(
+                    type: "compatibility",
+                    id: recordID
+                )
+            }
+            let record: CompatibilitySteamLaunchPreferenceRecord
+            if let existing = matches.first {
+                _ = try existing.decodedSnapshot()
+                try existing.replace(with: snapshot, now: now)
+                record = existing
+            } else {
+                record = try CompatibilitySteamLaunchPreferenceRecord(snapshot: snapshot, now: now)
+                insert(record)
+            }
+            try saveOrRollback()
+            return record
+        } catch {
+            if hasChanges {
+                rollback()
+            }
+            throw error
+        }
+    }
+}
+
+struct SteamLaunchConfigurationRecordVersion: Hashable, Sendable {
+    let digest: String
+    let revision: UUID
+}
+
+struct SteamLaunchConfigurationStoredSnapshot: Hashable, Sendable {
+    let snapshot: SteamLaunchConfigurationSnapshot
+    let version: SteamLaunchConfigurationRecordVersion
+}
+
+@MainActor
+struct SteamLaunchConfigurationRepository {
+    private let container: ModelContainer
+
+    init(container: ModelContainer) {
+        self.container = container
+    }
+
+    func loadStandard() throws -> SteamLaunchConfigurationStoredSnapshot? {
+        let context = makeContext()
+        return try fetchStandard(in: context).map {
+            try standardStoredSnapshot(from: $0)
+        }
+    }
+
+    /// Returns the exact persisted CAS token without decoding or validating the payload.
+    /// This is intentionally limited to explicit recovery of a record the caller inspected.
+    func standardRecordVersionForRecovery() throws -> SteamLaunchConfigurationRecordVersion? {
+        let context = makeContext()
+        return try fetchStandard(in: context).map {
+            standardRawRecordVersion(from: $0)
+        }
+    }
+
+    @discardableResult
+    func saveStandard(
+        _ snapshot: SteamLaunchConfigurationSnapshot,
+        expectedVersion: SteamLaunchConfigurationRecordVersion?,
+        now: Date = Date()
+    ) throws -> SteamLaunchConfigurationStoredSnapshot {
+        try snapshot.validate()
+        guard snapshot.identity.mode == .standard else {
+            throw SteamLaunchConfigurationPersistenceError.unexpectedMode(
+                expected: .standard,
+                actual: snapshot.identity.mode
+            )
+        }
+
+        let context = makeContext()
+        let existing = try fetchStandard(in: context)
+        let current = try existing.map {
+            try standardStoredSnapshot(from: $0)
+        }
+        try require(
+            expectedVersion,
+            matches: current?.version,
+            type: "standard",
+            id: StandardSteamLaunchConfigurationRecord.recordID
+        )
+        let record = try context.upsertStandardSteamLaunchConfiguration(snapshot, now: now)
+        return try standardStoredSnapshot(from: record)
+    }
+
+    func resetStandard(
+        expectedVersion: SteamLaunchConfigurationRecordVersion?
+    ) throws {
+        let context = makeContext()
+        let existing = try fetchStandard(in: context)
+        let current = existing.map {
+            standardRawRecordVersion(from: $0)
+        }
+        try require(
+            expectedVersion,
+            matches: current,
+            type: "standard",
+            id: StandardSteamLaunchConfigurationRecord.recordID
+        )
+        guard let existing else { return }
+        context.delete(existing)
+        try context.saveOrRollback()
+    }
+
+    func loadCompatibility(
+        identity: SteamCompatibilityProfileIdentity
+    ) throws -> SteamLaunchConfigurationStoredSnapshot? {
+        let context = makeContext()
+        return try fetchCompatibility(identity: identity, in: context)
+            .map {
+                try compatibilityStoredSnapshot(from: $0, expectedIdentity: identity)
+            }
+    }
+
+    @discardableResult
+    func saveCompatibility(
+        _ snapshot: SteamLaunchConfigurationSnapshot,
+        expectedVersion: SteamLaunchConfigurationRecordVersion?,
+        now: Date = Date()
+    ) throws -> SteamLaunchConfigurationStoredSnapshot {
+        try snapshot.validate()
+        guard case .compatibility(let identity) = snapshot.identity else {
+            throw SteamLaunchConfigurationPersistenceError.unexpectedMode(
+                expected: .compatibility,
+                actual: snapshot.identity.mode
+            )
+        }
+
+        let context = makeContext()
+        let existing = try fetchCompatibility(identity: identity, in: context)
+        let current = try existing.map {
+            try compatibilityStoredSnapshot(from: $0, expectedIdentity: identity)
+        }
+        try require(
+            expectedVersion,
+            matches: current?.version,
+            type: "compatibility",
+            id: identity.deterministicRecordID
+        )
+        let record = try context.upsertCompatibilitySteamLaunchPreference(snapshot, now: now)
+        return try compatibilityStoredSnapshot(from: record, expectedIdentity: identity)
+    }
+
+    func resetCompatibility(
+        identity: SteamCompatibilityProfileIdentity,
+        expectedVersion: SteamLaunchConfigurationRecordVersion?
+    ) throws {
+        let context = makeContext()
+        let existing = try fetchCompatibility(identity: identity, in: context)
+        let current = try existing.map {
+            try compatibilityStoredSnapshot(from: $0, expectedIdentity: identity)
+        }
+        try require(
+            expectedVersion,
+            matches: current?.version,
+            type: "compatibility",
+            id: identity.deterministicRecordID
+        )
+        guard let existing else { return }
+        context.delete(existing)
+        try context.saveOrRollback()
+    }
+
+    private func makeContext() -> ModelContext {
+        let context = ModelContext(container)
+        context.autosaveEnabled = false
+        return context
+    }
+
+    private func fetchStandard(
+        in context: ModelContext
+    ) throws -> StandardSteamLaunchConfigurationRecord? {
+        try context.fetchCanonicalStandardSteamLaunchConfigurationSingleton()
+    }
+
+    private func fetchCompatibility(
+        identity: SteamCompatibilityProfileIdentity,
+        in context: ModelContext
+    ) throws -> CompatibilitySteamLaunchPreferenceRecord? {
+        let recordID = identity.deterministicRecordID
+        let descriptor = FetchDescriptor<CompatibilitySteamLaunchPreferenceRecord>(
+            predicate: #Predicate { $0.id == recordID }
+        )
+        let matches = try context.fetch(descriptor)
+        guard matches.count <= 1 else {
+            throw SteamLaunchConfigurationPersistenceError.duplicateRecord(
+                type: "compatibility",
+                id: recordID
+            )
+        }
+        return matches.first
+    }
+
+    private func standardStoredSnapshot(
+        from record: StandardSteamLaunchConfigurationRecord
+    ) throws -> SteamLaunchConfigurationStoredSnapshot {
+        SteamLaunchConfigurationStoredSnapshot(
+            snapshot: try record.decodedSnapshot(),
+            version: standardRawRecordVersion(from: record)
+        )
+    }
+
+    private func standardRawRecordVersion(
+        from record: StandardSteamLaunchConfigurationRecord
+    ) -> SteamLaunchConfigurationRecordVersion {
+        SteamLaunchConfigurationRecordVersion(
+            digest: record.configurationDigest,
+            revision: record.persistenceRevision
+        )
+    }
+
+    private func compatibilityStoredSnapshot(
+        from record: CompatibilitySteamLaunchPreferenceRecord,
+        expectedIdentity: SteamCompatibilityProfileIdentity
+    ) throws -> SteamLaunchConfigurationStoredSnapshot {
+        let snapshot = try record.decodedSnapshot()
+        guard snapshot.identity.compatibilityProfile == expectedIdentity else {
+            throw SteamLaunchConfigurationPersistenceError.recordIdentityMismatch(
+                "compatibility-repository-identity"
+            )
+        }
+        return SteamLaunchConfigurationStoredSnapshot(
+            snapshot: snapshot,
+            version: SteamLaunchConfigurationRecordVersion(
+                digest: record.preferenceDigest,
+                revision: record.persistenceRevision
+            )
+        )
+    }
+
+    private func require(
+        _ expected: SteamLaunchConfigurationRecordVersion?,
+        matches actual: SteamLaunchConfigurationRecordVersion?,
+        type: String,
+        id: String
+    ) throws {
+        guard expected == actual else {
+            throw SteamLaunchConfigurationPersistenceError.writeConflict(type: type, id: id)
+        }
     }
 }
 
@@ -547,6 +1203,14 @@ final class LaunchRecord {
     var gameManifestAvailable: Bool?
     var gameManifestCaptureIssue: String?
     var gameAssociationSource: String?
+    var launchModeRawValue: String? = nil
+    var launchConfigurationIdentity: String? = nil
+    var launchConfigurationSchemaVersion: Int? = nil
+    var launchConfigurationPayload: Data? = nil
+    var launchConfigurationDigest: String? = nil
+    var launchConfigurationTransactionID: String? = nil
+    var launchConfigurationTransactionState: String? = nil
+    var launchConfigurationRestorationState: String? = nil
 
     init(
         id: String = "launch-\(UUID().uuidString)",
@@ -588,7 +1252,15 @@ final class LaunchRecord {
         gameLastUpdatedAt: Date? = nil,
         gameManifestAvailable: Bool? = nil,
         gameManifestCaptureIssue: String? = nil,
-        gameAssociationSource: String? = nil
+        gameAssociationSource: String? = nil,
+        launchModeRawValue: String? = nil,
+        launchConfigurationIdentity: String? = nil,
+        launchConfigurationSchemaVersion: Int? = nil,
+        launchConfigurationPayload: Data? = nil,
+        launchConfigurationDigest: String? = nil,
+        launchConfigurationTransactionID: String? = nil,
+        launchConfigurationTransactionState: String? = nil,
+        launchConfigurationRestorationState: String? = nil
     ) {
         self.id = id
         self.gameId = gameId
@@ -630,10 +1302,61 @@ final class LaunchRecord {
         self.gameManifestAvailable = gameManifestAvailable
         self.gameManifestCaptureIssue = gameManifestCaptureIssue
         self.gameAssociationSource = gameAssociationSource
+        self.launchModeRawValue = launchModeRawValue
+        self.launchConfigurationIdentity = launchConfigurationIdentity
+        self.launchConfigurationSchemaVersion = launchConfigurationSchemaVersion
+        self.launchConfigurationPayload = launchConfigurationPayload
+        self.launchConfigurationDigest = launchConfigurationDigest
+        self.launchConfigurationTransactionID = launchConfigurationTransactionID
+        self.launchConfigurationTransactionState = launchConfigurationTransactionState
+        self.launchConfigurationRestorationState = launchConfigurationRestorationState
     }
 }
 
 extension LaunchRecord {
+    func bindResolvedLaunchConfiguration(
+        snapshot: SteamLaunchConfigurationSnapshot?,
+        journal: SteamLaunchConfigurationTransactionJournal?
+    ) throws {
+        switch (snapshot, journal) {
+        case (nil, nil):
+            launchModeRawValue = nil
+            launchConfigurationIdentity = nil
+            launchConfigurationSchemaVersion = nil
+            launchConfigurationPayload = nil
+            launchConfigurationDigest = nil
+            launchConfigurationTransactionID = nil
+            launchConfigurationTransactionState = nil
+            launchConfigurationRestorationState = nil
+        case (.some(let snapshot), .some(let journal)):
+            try snapshot.validate()
+            try journal.validate()
+            guard journal.state != .requested else {
+                throw SteamLaunchConfigurationPersistenceError.requestedTransactionCannotBeRecorded
+            }
+            let digest = try snapshot.canonicalDigest
+            guard journal.resolvedDigest == digest else {
+                throw SteamLaunchConfigurationPersistenceError.transactionConfigurationMismatch
+            }
+            let payload = try snapshot.canonicalPayload()
+            let decoded = try SteamLaunchConfigurationSnapshot(canonicalPayload: payload)
+            guard decoded == snapshot else {
+                throw SteamLaunchConfigurationPersistenceError.transactionConfigurationMismatch
+            }
+
+            launchModeRawValue = snapshot.identity.mode.rawValue
+            launchConfigurationIdentity = snapshot.identity.configurationIdentity
+            launchConfigurationSchemaVersion = snapshot.schemaVersion
+            launchConfigurationPayload = payload
+            launchConfigurationDigest = digest
+            launchConfigurationTransactionID = journal.transactionID.uuidString.lowercased()
+            launchConfigurationTransactionState = journal.state.rawValue
+            launchConfigurationRestorationState = journal.restorationState.rawValue
+        case (.some, nil), (nil, .some):
+            throw SteamLaunchConfigurationPersistenceError.incompleteLaunchRecordProjection
+        }
+    }
+
     var steamUIVerificationState: SteamUIVerificationState {
         steamUIVerificationStatus
             .flatMap(SteamUIVerificationState.init(rawValue:)) ?? .notRun
@@ -785,7 +1508,9 @@ extension ModelContext {
         environmentGenerationID: String? = nil,
         gameId: String? = nil,
         selectedGameContext: SteamLaunchSelectedGameContext? = nil,
-        startedAt: Date = Date()
+        startedAt: Date = Date(),
+        resolvedSnapshot: SteamLaunchConfigurationSnapshot? = nil,
+        resolvedJournal: SteamLaunchConfigurationTransactionJournal? = nil
     ) throws -> LaunchRecord {
         let record = LaunchRecord(
             gameId: selectedGameContext?.steamAppID ?? gameId,
@@ -804,6 +1529,10 @@ extension ModelContext {
             gameAssociationSource: selectedGameContext == nil
                 ? (gameId == nil ? nil : SteamLaunchSelectedGameContext.associationSource)
                 : SteamLaunchSelectedGameContext.associationSource
+        )
+        try record.bindResolvedLaunchConfiguration(
+            snapshot: resolvedSnapshot,
+            journal: resolvedJournal
         )
         insert(record)
         try saveOrRollback()
@@ -873,12 +1602,34 @@ extension ModelContext {
         currentAppSessionID: String,
         now: Date = Date()
     ) throws -> Int {
-        let records = try fetch(FetchDescriptor<LaunchRecord>())
-        let abandoned = records.filter {
-            $0.commandKind == "launchSteam" &&
-                $0.prefixId == PrefixIdentifier.steamShared &&
+        let steamCommand = "launchSteam"
+        let steamPrefixIdentifier = PrefixIdentifier.steamShared
+        let runningStatus = "running"
+        let notRunVerificationStatus = SteamUIVerificationState.notRun.rawValue
+
+        // Keep both branches constrained in the persistent store. Expressing
+        // the full conjunction with its trailing disjunction in one macro makes
+        // Swift's predicate type checker exceed its complexity limit.
+        let runningPredicate = #Predicate<LaunchRecord> {
+            $0.commandKind == steamCommand &&
+                $0.prefixId == steamPrefixIdentifier &&
                 $0.hostAppSessionID != currentAppSessionID &&
-                ($0.status == "running" || $0.steamUIVerificationState == .notRun)
+                $0.status == runningStatus
+        }
+        let notRunPredicate = #Predicate<LaunchRecord> {
+            $0.commandKind == steamCommand &&
+                $0.prefixId == steamPrefixIdentifier &&
+                $0.hostAppSessionID != currentAppSessionID &&
+                $0.steamUIVerificationStatus == notRunVerificationStatus
+        }
+        let runningDescriptor = FetchDescriptor<LaunchRecord>(predicate: runningPredicate)
+        let notRunDescriptor = FetchDescriptor<LaunchRecord>(predicate: notRunPredicate)
+
+        var abandoned = try fetch(runningDescriptor)
+        var abandonedRecordIDs: Set<String> = Set(abandoned.map(\.id))
+        for record in try fetch(notRunDescriptor) {
+            guard abandonedRecordIDs.insert(record.id).inserted else { continue }
+            abandoned.append(record)
         }
         guard !abandoned.isEmpty else { return 0 }
         for record in abandoned {
@@ -901,6 +1652,11 @@ final class DiagnosticRecord {
     var launchRecordId: String?
     var source: String
     var resultJSON: String
+    var evidenceEnvelopeJSON: String?
+    var evidenceEnvelopeSHA256: String?
+    var executionReceiptJSON: String?
+    var normalizedResultSHA256: String?
+    var proposalDisposition: String?
     var createdAt: Date
 
     init(
@@ -909,6 +1665,11 @@ final class DiagnosticRecord {
         launchRecordId: String? = nil,
         source: String,
         resultJSON: String,
+        evidenceEnvelopeJSON: String? = nil,
+        evidenceEnvelopeSHA256: String? = nil,
+        executionReceiptJSON: String? = nil,
+        normalizedResultSHA256: String? = nil,
+        proposalDisposition: String? = nil,
         createdAt: Date = Date()
     ) {
         self.id = id
@@ -916,14 +1677,20 @@ final class DiagnosticRecord {
         self.launchRecordId = launchRecordId
         self.source = source
         self.resultJSON = resultJSON
+        self.evidenceEnvelopeJSON = evidenceEnvelopeJSON
+        self.evidenceEnvelopeSHA256 = evidenceEnvelopeSHA256
+        self.executionReceiptJSON = executionReceiptJSON
+        self.normalizedResultSHA256 = normalizedResultSHA256
+        self.proposalDisposition = proposalDisposition
         self.createdAt = createdAt
     }
 }
 
-enum DiagnosticRecordDecodeError: LocalizedError {
+enum DiagnosticRecordDecodeError: LocalizedError, Equatable, Sendable {
     case invalidUTF8(String)
     case oversized(String, Int, Int)
     case decodeFailed(String)
+    case invalidAIEvidenceMetadata(String)
 
     var errorDescription: String? {
         switch self {
@@ -933,24 +1700,239 @@ enum DiagnosticRecordDecodeError: LocalizedError {
             "저장된 진단 기록이 너무 큽니다: \(id) \(byteCount) bytes / limit \(limit) bytes"
         case .decodeFailed(let id):
             "저장된 진단 기록을 읽지 못했습니다: \(id)"
+        case .invalidAIEvidenceMetadata(let id):
+            "저장된 AI 진단 증거 또는 실행 영수증이 결과와 일치하지 않습니다: \(id)"
+        }
+    }
+}
+
+struct DiagnosticRecordDecodeSnapshot: Sendable {
+    let id: String
+    let gameID: String?
+    let launchRecordID: String?
+    let source: String
+    let resultJSON: String
+    let evidenceEnvelopeJSON: String?
+    let evidenceEnvelopeSHA256: String?
+    let executionReceiptJSON: String?
+    let normalizedResultSHA256: String?
+    let proposalDisposition: String?
+    let createdAt: Date
+
+    init(
+        id: String,
+        gameID: String? = nil,
+        launchRecordID: String? = nil,
+        source: String,
+        resultJSON: String,
+        evidenceEnvelopeJSON: String? = nil,
+        evidenceEnvelopeSHA256: String? = nil,
+        executionReceiptJSON: String? = nil,
+        normalizedResultSHA256: String? = nil,
+        proposalDisposition: String? = nil,
+        createdAt: Date = Date()
+    ) {
+        self.id = id
+        self.gameID = gameID
+        self.launchRecordID = launchRecordID
+        self.source = source
+        self.resultJSON = resultJSON
+        self.evidenceEnvelopeJSON = evidenceEnvelopeJSON
+        self.evidenceEnvelopeSHA256 = evidenceEnvelopeSHA256
+        self.executionReceiptJSON = executionReceiptJSON
+        self.normalizedResultSHA256 = normalizedResultSHA256
+        self.proposalDisposition = proposalDisposition
+        self.createdAt = createdAt
+    }
+
+    init(record: DiagnosticRecord) {
+        id = record.id
+        gameID = record.gameId
+        launchRecordID = record.launchRecordId
+        source = record.source
+        resultJSON = record.resultJSON
+        evidenceEnvelopeJSON = record.evidenceEnvelopeJSON
+        evidenceEnvelopeSHA256 = record.evidenceEnvelopeSHA256
+        executionReceiptJSON = record.executionReceiptJSON
+        normalizedResultSHA256 = record.normalizedResultSHA256
+        proposalDisposition = record.proposalDisposition
+        createdAt = record.createdAt
+    }
+
+    func requiredDecodedResult() throws -> DiagnosticResult {
+        let data = try DiagnosticRecordPayloadDecoder.boundedUTF8Data(
+            resultJSON,
+            recordIdentifier: id,
+            limit: DiagnosticRecord.maxResultJSONBytes
+        )
+        do {
+            let result = try JSONDecoder().decode(DiagnosticResult.self, from: data)
+            let normalized = LLMDiagnosticResultPolicy.normalizedResult(result, language: .system)
+            try validateAIEvidenceMetadata(result: normalized)
+            return normalized
+        } catch {
+            if let decodeError = error as? DiagnosticRecordDecodeError {
+                throw decodeError
+            }
+            throw DiagnosticRecordDecodeError.decodeFailed(id)
+        }
+    }
+
+    private func validateAIEvidenceMetadata(result: DiagnosticResult) throws {
+        let metadataFields: [String?] = [
+            evidenceEnvelopeJSON,
+            evidenceEnvelopeSHA256,
+            executionReceiptJSON,
+            normalizedResultSHA256,
+            proposalDisposition
+        ]
+        guard metadataFields.contains(where: { $0 != nil }) else { return }
+        guard let evidenceEnvelopeJSON,
+              let evidenceEnvelopeSHA256,
+              let executionReceiptJSON,
+              let normalizedResultSHA256,
+              let proposalDisposition,
+              evidenceEnvelopeJSON.utf8.count <= 64 * 1024,
+              executionReceiptJSON.utf8.count <= 32 * 1024,
+              ["shown-unapplied", "explicitly-approved", "rejected", "stale"]
+                .contains(proposalDisposition) else {
+            throw DiagnosticRecordDecodeError.invalidAIEvidenceMetadata(id)
+        }
+        let envelopeData = Data(evidenceEnvelopeJSON.utf8)
+        guard AIDiagnosticCanonicalJSONV1.sha256Hex(envelopeData) == evidenceEnvelopeSHA256,
+              let receiptData = executionReceiptJSON.data(using: .utf8),
+              let envelope = try? JSONDecoder().decode(
+                AIDiagnosticEvidenceEnvelopeV1.self,
+                from: envelopeData
+              ),
+              let receipt = try? JSONDecoder().decode(
+                AIDiagnosticExecutionReceiptV1.self,
+                from: receiptData
+              ),
+              envelope.schemaID == "com.forgeplay.ai-diagnostic-evidence-envelope.v1",
+              receipt.schemaID == "com.forgeplay.ai-diagnostic-execution-receipt.v1",
+              envelope.evidence.type == "untrusted-log-evidence",
+              receipt.evidenceEnvelopeSHA256 == evidenceEnvelopeSHA256,
+              receipt.normalizedResultSHA256 == normalizedResultSHA256,
+              receipt.proposalDisposition == "shown-unapplied" else {
+            throw DiagnosticRecordDecodeError.invalidAIEvidenceMetadata(id)
+        }
+        let resultProjection = try AIDiagnosticCanonicalJSONV1.encode(result)
+        guard resultProjection.sha256 == normalizedResultSHA256 else {
+            throw DiagnosticRecordDecodeError.invalidAIEvidenceMetadata(id)
+        }
+    }
+}
+
+enum DiagnosticRecordPayloadDecoder {
+    static func withBoundedUTF8Bytes<Value>(
+        _ value: String,
+        recordIdentifier: String,
+        limit: Int,
+        consume: (String.UTF8View) throws -> Value
+    ) throws -> Value {
+        let utf8 = value.utf8
+        let byteCount = utf8.count
+        guard byteCount <= limit else {
+            throw DiagnosticRecordDecodeError.oversized(recordIdentifier, byteCount, limit)
+        }
+        return try consume(utf8)
+    }
+
+    static func boundedUTF8Data(
+        _ value: String,
+        recordIdentifier: String,
+        limit: Int
+    ) throws -> Data {
+        try withBoundedUTF8Bytes(
+            value,
+            recordIdentifier: recordIdentifier,
+            limit: limit,
+            consume: { Data($0) }
+        )
+    }
+}
+
+enum DiagnosticRecordDecodeOutcome: Sendable {
+    case success(snapshot: DiagnosticRecordDecodeSnapshot, result: DiagnosticResult)
+    case failure(snapshot: DiagnosticRecordDecodeSnapshot, error: DiagnosticRecordDecodeError)
+
+    var snapshot: DiagnosticRecordDecodeSnapshot {
+        switch self {
+        case .success(let snapshot, _), .failure(let snapshot, _):
+            snapshot
+        }
+    }
+}
+
+enum DiagnosticPresentationDecodePipeline {
+    private struct IndexedOutcome: Sendable {
+        let index: Int
+        let outcome: DiagnosticRecordDecodeOutcome
+    }
+
+    static func decode(
+        _ snapshots: [DiagnosticRecordDecodeSnapshot],
+        maxConcurrent: Int = DiagnosticPresentationLimits.concurrentDecodes,
+        operation: @escaping @Sendable (DiagnosticRecordDecodeSnapshot) async throws -> DiagnosticRecordDecodeOutcome = {
+            snapshot in
+            do {
+                return .success(snapshot: snapshot, result: try snapshot.requiredDecodedResult())
+            } catch let error as DiagnosticRecordDecodeError {
+                return .failure(snapshot: snapshot, error: error)
+            } catch {
+                return .failure(snapshot: snapshot, error: .decodeFailed(snapshot.id))
+            }
+        }
+    ) async throws -> [DiagnosticRecordDecodeOutcome] {
+        try Task.checkCancellation()
+        guard !snapshots.isEmpty else { return [] }
+
+        let workerCount = min(max(1, maxConcurrent), snapshots.count)
+        return try await withThrowingTaskGroup(of: IndexedOutcome.self) { group in
+            var nextIndex = 0
+            var ordered = Array<DiagnosticRecordDecodeOutcome?>(
+                repeating: nil,
+                count: snapshots.count
+            )
+
+            func submit(_ index: Int) {
+                let snapshot = snapshots[index]
+                group.addTask {
+                    try Task.checkCancellation()
+                    let outcome = try await operation(snapshot)
+                    try Task.checkCancellation()
+                    return IndexedOutcome(index: index, outcome: outcome)
+                }
+            }
+
+            for _ in 0..<workerCount {
+                submit(nextIndex)
+                nextIndex += 1
+            }
+
+            while let indexed = try await group.next() {
+                try Task.checkCancellation()
+                ordered[indexed.index] = indexed.outcome
+                if nextIndex < snapshots.count {
+                    submit(nextIndex)
+                    nextIndex += 1
+                }
+            }
+
+            try Task.checkCancellation()
+            return ordered.compactMap { $0 }
         }
     }
 }
 
 extension DiagnosticRecord {
+    func decodeSnapshot() -> DiagnosticRecordDecodeSnapshot {
+        DiagnosticRecordDecodeSnapshot(record: self)
+    }
+
     func requiredDecodedResult() throws -> DiagnosticResult {
-        guard let data = resultJSON.data(using: .utf8) else {
-            throw DiagnosticRecordDecodeError.invalidUTF8(id)
-        }
-        guard data.count <= Self.maxResultJSONBytes else {
-            throw DiagnosticRecordDecodeError.oversized(id, data.count, Self.maxResultJSONBytes)
-        }
-        do {
-            let result = try JSONDecoder().decode(DiagnosticResult.self, from: data)
-            return LLMDiagnosticResultPolicy.normalizedResult(result, language: .system)
-        } catch {
-            throw DiagnosticRecordDecodeError.decodeFailed(id)
-        }
+        try decodeSnapshot().requiredDecodedResult()
     }
 
     var decodedResult: DiagnosticResult? {

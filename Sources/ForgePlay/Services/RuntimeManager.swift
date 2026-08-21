@@ -1,4 +1,13 @@
+import CryptoKit
+import Darwin
 import Foundation
+
+/// Runtime installer archives can be hundreds of megabytes. Move their cache
+/// and extraction-tree I/O off the main actor while preserving the injected
+/// filesystem boundary used by tests.
+private struct RuntimeManagerFileManagerReference: @unchecked Sendable {
+    let value: FileManager
+}
 
 struct RuntimeExtractionResult: Hashable {
     var sourceArchive: URL
@@ -17,6 +26,7 @@ enum RuntimeManagerError: LocalizedError {
     case extractedInstallerScanFailed(URL, Error)
     case extractedInstallerMissing(URL)
     case extractionCleanupFailed(directory: URL, originalError: Error, cleanupError: Error)
+    case extractionCleanupAfterUseFailed(directory: URL, cleanupError: Error)
     case cacheCleanupFailed(target: URL, originalError: Error, cleanupError: Error)
 
     var processResult: ProcessRunResult? {
@@ -32,6 +42,7 @@ enum RuntimeManagerError: LocalizedError {
              .metadataReadFailed,
              .extractedInstallerScanFailed,
              .extractedInstallerMissing,
+             .extractionCleanupAfterUseFailed,
              .cacheCleanupFailed:
             nil
         }
@@ -57,6 +68,8 @@ enum RuntimeManagerError: LocalizedError {
             "압축을 풀었지만 실행할 설치 파일을 찾지 못했습니다: \(directory.path)"
         case .extractionCleanupFailed(let directory, let originalError, let cleanupError):
             "Runtime 설치 준비에 실패했고 임시 추출 폴더를 정리하지 못했습니다: \(directory.path). 원인: \(forgePlayTechnicalErrorSummary(originalError)). 정리 오류: \(forgePlayTechnicalErrorSummary(cleanupError))"
+        case .extractionCleanupAfterUseFailed(let directory, let cleanupError):
+            "Runtime 설치 후 임시 추출 폴더를 정리하지 못했습니다: \(directory.path). 정리 오류: \(forgePlayTechnicalErrorSummary(cleanupError))"
         case .cacheCleanupFailed(let target, let originalError, let cleanupError):
             "Runtime cache 설치 준비에 실패했고 부분 파일을 정리하지 못했습니다: \(target.path). 원인: \(forgePlayTechnicalErrorSummary(originalError)). 정리 오류: \(forgePlayTechnicalErrorSummary(cleanupError))"
         }
@@ -65,6 +78,17 @@ enum RuntimeManagerError: LocalizedError {
 
 @MainActor
 final class RuntimeManager {
+    private struct AuthenticatedInstallerFile: Sendable {
+        let device: UInt64
+        let inode: UInt64
+        let byteCount: Int64
+        let modificationSeconds: Int64
+        let modificationNanoseconds: Int64
+        let changeSeconds: Int64
+        let changeNanoseconds: Int64
+        let contentSHA256: String
+    }
+
     private let pathManager: PathManager
     private let runner: SafeProcessRunner
     private let fileManager: FileManager
@@ -73,6 +97,32 @@ final class RuntimeManager {
         self.pathManager = pathManager
         self.runner = runner
         self.fileManager = fileManager
+    }
+
+    private nonisolated static func runCancellableFilesystemTask<T: Sendable>(
+        priority: TaskPriority = .userInitiated,
+        operation: @escaping @Sendable () throws -> T
+    ) async throws -> T {
+        try Task.checkCancellation()
+        let worker = Task.detached(priority: priority) {
+            try operation()
+        }
+        return try await withTaskCancellationHandler {
+            let value = try await worker.value
+            try Task.checkCancellation()
+            return value
+        } onCancel: {
+            worker.cancel()
+        }
+    }
+
+    private nonisolated static func runMandatoryFilesystemTask<T: Sendable>(
+        priority: TaskPriority = .utility,
+        operation: @escaping @Sendable () throws -> T
+    ) async throws -> T {
+        try await Task.detached(priority: priority) {
+            try operation()
+        }.value
     }
 
     var definitions: [RuntimeDefinition] {
@@ -198,9 +248,9 @@ final class RuntimeManager {
         return isRegularInstallCandidate(url) && allowedExtension && matchingName
     }
 
-    static let allowedInstallerExtensions = ["exe", "msi"]
+    nonisolated static let allowedInstallerExtensions = ["exe", "msi"]
 
-    func extractInstaller(
+    private func extractInstaller(
         runtime: RuntimeId,
         archive: URL,
         runtimeExecutable: URL,
@@ -211,7 +261,7 @@ final class RuntimeManager {
             throw RuntimeManagerError.unsupportedExtractionArchive(archive, runtime)
         }
 
-        let cachedArchive = try cacheInstallerIfNeeded(archive)
+        let cachedArchive = try await cacheInstallerIfNeeded(archive)
         let extractionDirectory = try createExtractionDirectory(runtime: runtime, archive: archive)
         let logDirectory = try pathManager.url(for: .runtimeLogs)
         do {
@@ -226,7 +276,7 @@ final class RuntimeManager {
             guard result.succeeded else {
                 throw RuntimeManagerError.archiveExtractionFailed(result)
             }
-            guard let installer = try findInstaller(in: extractionDirectory, runtime: runtime) else {
+            guard let installer = try await findInstaller(in: extractionDirectory, runtime: runtime) else {
                 throw RuntimeManagerError.extractedInstallerMissing(extractionDirectory)
             }
 
@@ -236,16 +286,66 @@ final class RuntimeManager {
                 installer: installer,
                 processResult: result
             )
-        } catch {
+        } catch let originalError {
             do {
-                try cleanupExtractionDirectory(extractionDirectory)
+                try await cleanupExtractionDirectory(extractionDirectory)
             } catch let cleanupError {
                 throw RuntimeManagerError.extractionCleanupFailed(
                     directory: extractionDirectory,
-                    originalError: error,
+                    originalError: originalError,
                     cleanupError: cleanupError
                 )
             }
+            throw originalError
+        }
+    }
+
+    /// Keeps the extracted installer tree alive only while `body` uses it.
+    /// Cleanup is mandatory after success, failure, or cancellation so repeated
+    /// DirectX redist installs cannot accumulate unbounded extracted payloads.
+    func withExtractedInstaller<T>(
+        runtime: RuntimeId,
+        archive: URL,
+        runtimeExecutable: URL,
+        prefixURL: URL,
+        perform body: (RuntimeExtractionResult) async throws -> T
+    ) async throws -> T {
+        let extraction = try await extractInstaller(
+            runtime: runtime,
+            archive: archive,
+            runtimeExecutable: runtimeExecutable,
+            prefixURL: prefixURL
+        )
+        let outcome: Result<T, any Error>
+        do {
+            outcome = .success(try await body(extraction))
+        } catch {
+            outcome = .failure(error)
+        }
+
+        do {
+            try await cleanupExtractionDirectory(extraction.extractionDirectory)
+        } catch let cleanupError {
+            switch outcome {
+            case .success:
+                throw RuntimeManagerError.extractionCleanupAfterUseFailed(
+                    directory: extraction.extractionDirectory,
+                    cleanupError: cleanupError
+                )
+            case .failure(let originalError):
+                throw RuntimeManagerError.extractionCleanupFailed(
+                    directory: extraction.extractionDirectory,
+                    originalError: originalError,
+                    cleanupError: cleanupError
+                )
+            }
+        }
+
+        switch outcome {
+        case .success(let value):
+            try Task.checkCancellation()
+            return value
+        case .failure(let error):
             throw error
         }
     }
@@ -256,7 +356,7 @@ final class RuntimeManager {
             throw RuntimeManagerError.unsupportedInstaller(installer, runtime)
         }
         let logDirectory = try pathManager.url(for: .runtimeLogs)
-        let cachedInstaller = try cacheInstallerIfNeeded(installer)
+        let cachedInstaller = try await cacheInstallerIfNeeded(installer)
         return try await runner.run(.installRuntime(
             runtimeExecutable: runtimeExecutable,
             prefix: prefixURL,
@@ -332,49 +432,96 @@ final class RuntimeManager {
 
     /// Copies a user-selected installer into ForgePlay-managed storage and
     /// returns the managed URL that sandboxed Wine children may safely open.
-    private func cacheInstallerIfNeeded(_ installer: URL) throws -> URL {
+    private func cacheInstallerIfNeeded(_ installer: URL) async throws -> URL {
         let cache = try pathManager.url(for: .runtimeInstallers)
         try pathManager.createDirectoryIfNeeded(cache)
-        let target = cache.appending(path: Self.sanitizedCacheFileName(for: installer))
-        if cachedInstallerTargetExists(target) {
-            try validateCachedInstallerTarget(target)
+        let filesystem = RuntimeManagerFileManagerReference(value: fileManager)
+        return try await Self.runCancellableFilesystemTask {
+            try Self.cacheInstallerIfNeeded(
+                installer,
+                cache: cache,
+                fileManager: filesystem.value
+            )
+        }
+    }
+
+    private nonisolated static func cacheInstallerIfNeeded(
+        _ installer: URL,
+        cache: URL,
+        fileManager: FileManager
+    ) throws -> URL {
+        try Task.checkCancellation()
+        let sourceIdentity = try authenticatedInstallerFile(at: installer)
+        let target = cache.appending(
+            path: contentAddressedCacheFileName(
+                for: installer,
+                contentSHA256: sourceIdentity.contentSHA256
+            )
+        )
+        if cachedInstallerTargetExists(target, fileManager: fileManager) {
+            _ = try authenticatedInstallerFile(
+                at: target,
+                expectedContentSHA256: sourceIdentity.contentSHA256
+            )
             return target
         }
         let temporaryTarget = cache.appending(path: ".\(target.lastPathComponent).\(UUID().uuidString).tmp")
-        var didMoveTemporaryToTarget = false
         do {
             try fileManager.copyItem(at: installer, to: temporaryTarget)
-            try validateCachedInstallerTarget(temporaryTarget)
-            try fileManager.moveItem(at: temporaryTarget, to: target)
-            didMoveTemporaryToTarget = true
-            try validateCachedInstallerTarget(target)
-        } catch {
+            try Task.checkCancellation()
+            _ = try authenticatedInstallerFile(
+                at: temporaryTarget,
+                expectedContentSHA256: sourceIdentity.contentSHA256
+            )
+        } catch let originalError {
             do {
-                try removeCacheArtifactIfPresent(temporaryTarget)
+                try removeCacheArtifactIfPresent(temporaryTarget, fileManager: fileManager)
             } catch let cleanupError {
                 throw RuntimeManagerError.cacheCleanupFailed(
                     target: temporaryTarget,
-                    originalError: error,
+                    originalError: originalError,
                     cleanupError: cleanupError
                 )
             }
-            if didMoveTemporaryToTarget {
-                do {
-                    try removeCacheArtifactIfPresent(target)
-                } catch let cleanupError {
-                    throw RuntimeManagerError.cacheCleanupFailed(
-                        target: target,
-                        originalError: error,
-                        cleanupError: cleanupError
-                    )
-                }
-            }
-            throw error
+            throw originalError
         }
+
+        do {
+            try fileManager.moveItem(at: temporaryTarget, to: target)
+        } catch let moveError {
+            do {
+                try removeCacheArtifactIfPresent(temporaryTarget, fileManager: fileManager)
+            } catch let cleanupError {
+                throw RuntimeManagerError.cacheCleanupFailed(
+                    target: temporaryTarget,
+                    originalError: moveError,
+                    cleanupError: cleanupError
+                )
+            }
+            // Another cache request for the same bytes may have published the
+            // immutable content-address concurrently. Reuse it only after an
+            // independent descriptor-bound fingerprint readback.
+            if cachedInstallerTargetExists(target, fileManager: fileManager) {
+                _ = try authenticatedInstallerFile(
+                    at: target,
+                    expectedContentSHA256: sourceIdentity.contentSHA256
+                )
+                return target
+            }
+            throw moveError
+        }
+
+        _ = try authenticatedInstallerFile(
+            at: target,
+            expectedContentSHA256: sourceIdentity.contentSHA256
+        )
         return target
     }
 
-    private func removeCacheArtifactIfPresent(_ url: URL) throws {
+    private nonisolated static func removeCacheArtifactIfPresent(
+        _ url: URL,
+        fileManager: FileManager
+    ) throws {
         guard fileManager.fileExists(atPath: url.path) ||
             (try? fileManager.destinationOfSymbolicLink(atPath: url.path)) != nil else {
             return
@@ -382,33 +529,119 @@ final class RuntimeManager {
         try fileManager.removeItem(at: url)
     }
 
-    private func cachedInstallerTargetExists(_ url: URL) -> Bool {
+    private nonisolated static func cachedInstallerTargetExists(
+        _ url: URL,
+        fileManager: FileManager
+    ) -> Bool {
         fileManager.fileExists(atPath: url.path) ||
             (try? fileManager.destinationOfSymbolicLink(atPath: url.path)) != nil
     }
 
-    private func validateCachedInstallerTarget(_ url: URL) throws {
-        do {
-            try FileSystemItemPolicy.requireRegularNonSymlinkFile(url, fileManager: fileManager)
-            let attributes: [FileAttributeKey: Any]
-            do {
-                attributes = try fileManager.attributesOfItem(atPath: url.path)
-            } catch {
-                throw RuntimeManagerError.metadataReadFailed(url, forgePlayTechnicalErrorSummary(error))
-            }
-            let referenceCount = (attributes[.referenceCount] as? NSNumber)?.intValue ?? 1
-            guard referenceCount == 1 else {
+    /// Opens and fingerprints one exact file object. The before/after `fstat`
+    /// identity checks reject replacements and in-place mutation while the
+    /// digest is being read; callers never trust a path-only metadata check.
+    private nonisolated static func authenticatedInstallerFile(
+        at url: URL,
+        expectedContentSHA256: String? = nil
+    ) throws -> AuthenticatedInstallerFile {
+        let descriptor = Darwin.open(
+            url.path,
+            O_RDONLY | O_CLOEXEC | O_NOFOLLOW
+        )
+        guard descriptor >= 0 else {
+            let openError = errno
+            var pathStatus = stat()
+            if Darwin.lstat(url.path, &pathStatus) == 0,
+               (pathStatus.st_mode & S_IFMT) == S_IFLNK {
                 throw RuntimeManagerError.unsafeCachedInstaller(url)
             }
-        } catch FileSystemItemPolicyError.notRegularNonSymlinkFile {
-            throw RuntimeManagerError.unsafeCachedInstaller(url)
-        } catch FileSystemItemPolicyError.metadataReadFailed(_, let message) {
-            throw RuntimeManagerError.metadataReadFailed(url, message)
-        } catch let error as RuntimeManagerError {
-            throw error
-        } catch {
-            throw RuntimeManagerError.metadataReadFailed(url, forgePlayTechnicalErrorSummary(error))
+            throw RuntimeManagerError.metadataReadFailed(
+                url,
+                String(cString: strerror(openError))
+            )
         }
+        defer { Darwin.close(descriptor) }
+
+        var initialStatus = stat()
+        guard Darwin.fstat(descriptor, &initialStatus) == 0 else {
+            throw RuntimeManagerError.metadataReadFailed(
+                url,
+                String(cString: strerror(errno))
+            )
+        }
+        guard (initialStatus.st_mode & S_IFMT) == S_IFREG,
+              initialStatus.st_nlink == 1,
+              initialStatus.st_size >= 0 else {
+            throw RuntimeManagerError.unsafeCachedInstaller(url)
+        }
+
+        var hasher = SHA256()
+        var offset: Int64 = 0
+        var buffer = [UInt8](repeating: 0, count: 64 * 1024)
+        while offset < initialStatus.st_size {
+            try Task.checkCancellation()
+            let requested = min(
+                buffer.count,
+                Int(initialStatus.st_size - offset)
+            )
+            let count = buffer.withUnsafeMutableBytes { bytes in
+                Darwin.pread(
+                    descriptor,
+                    bytes.baseAddress,
+                    requested,
+                    off_t(offset)
+                )
+            }
+            if count < 0, errno == EINTR { continue }
+            guard count > 0 else {
+                throw RuntimeManagerError.metadataReadFailed(
+                    url,
+                    count < 0
+                        ? String(cString: strerror(errno))
+                        : "파일을 fingerprint하는 동안 내용이 변경되었습니다."
+                )
+            }
+            hasher.update(data: Data(buffer.prefix(count)))
+            offset += Int64(count)
+        }
+        let contentSHA256 = hasher.finalize()
+            .map { String(format: "%02x", $0) }
+            .joined()
+
+        var finalStatus = stat()
+        guard Darwin.fstat(descriptor, &finalStatus) == 0 else {
+            throw RuntimeManagerError.metadataReadFailed(
+                url,
+                String(cString: strerror(errno))
+            )
+        }
+        let identity = AuthenticatedInstallerFile(
+            device: UInt64(finalStatus.st_dev),
+            inode: UInt64(finalStatus.st_ino),
+            byteCount: Int64(finalStatus.st_size),
+            modificationSeconds: Int64(finalStatus.st_mtimespec.tv_sec),
+            modificationNanoseconds: Int64(finalStatus.st_mtimespec.tv_nsec),
+            changeSeconds: Int64(finalStatus.st_ctimespec.tv_sec),
+            changeNanoseconds: Int64(finalStatus.st_ctimespec.tv_nsec),
+            contentSHA256: contentSHA256
+        )
+        guard identity.device == UInt64(initialStatus.st_dev),
+              identity.inode == UInt64(initialStatus.st_ino),
+              identity.byteCount == Int64(initialStatus.st_size),
+              identity.modificationSeconds == Int64(initialStatus.st_mtimespec.tv_sec),
+              identity.modificationNanoseconds == Int64(initialStatus.st_mtimespec.tv_nsec),
+              identity.changeSeconds == Int64(initialStatus.st_ctimespec.tv_sec),
+              identity.changeNanoseconds == Int64(initialStatus.st_ctimespec.tv_nsec) else {
+            throw RuntimeManagerError.metadataReadFailed(
+                url,
+                "파일을 fingerprint하는 동안 파일 객체가 변경되었습니다."
+            )
+        }
+        if let expectedContentSHA256,
+           identity.contentSHA256 != expectedContentSHA256 {
+            throw RuntimeManagerError.unsafeCachedInstaller(url)
+        }
+        return identity
     }
 
     private func isRegularInstallCandidate(_ url: URL) -> Bool {
@@ -435,10 +668,24 @@ final class RuntimeManager {
         }
     }
 
-    private nonisolated static func sanitizedCacheFileName(for url: URL) -> String {
-        let baseName = PathManager.sanitizedFileName(url.deletingPathExtension().lastPathComponent)
+    nonisolated static func contentAddressedCacheFileName(
+        for url: URL,
+        contentSHA256: String
+    ) -> String {
+        let sanitizedBaseName = PathManager.sanitizedFileName(
+            url.deletingPathExtension().lastPathComponent
+        )
+        var baseName = ""
+        var baseNameByteCount = 0
+        for character in sanitizedBaseName {
+            let characterByteCount = String(character).utf8.count
+            guard baseNameByteCount + characterByteCount <= 120 else { break }
+            baseName.append(character)
+            baseNameByteCount += characterByteCount
+        }
+        if baseName.isEmpty { baseName = "ForgePlay" }
         let fileExtension = PathManager.sanitizedFileExtension(url.pathExtension)
-        return "\(baseName).\(fileExtension)"
+        return "\(baseName)-\(contentSHA256.lowercased()).\(fileExtension)"
     }
 
     private func createExtractionDirectory(runtime: RuntimeId, archive: URL) throws -> URL {
@@ -452,20 +699,36 @@ final class RuntimeManager {
         return directory
     }
 
-    private func cleanupExtractionDirectory(_ directory: URL) throws {
-        guard try isExistingNonSymlinkDirectory(directory) else {
+    private func cleanupExtractionDirectory(_ directory: URL) async throws {
+        let filesystem = RuntimeManagerFileManagerReference(value: fileManager)
+        try await Self.runMandatoryFilesystemTask {
+            try Self.cleanupExtractionDirectory(
+                directory,
+                fileManager: filesystem.value
+            )
+        }
+    }
+
+    private nonisolated static func cleanupExtractionDirectory(
+        _ directory: URL,
+        fileManager: FileManager
+    ) throws {
+        guard try isExistingNonSymlinkDirectory(directory, fileManager: fileManager) else {
             return
         }
         do {
             try fileManager.removeItem(at: directory)
         } catch {
-            try restoreWritablePermissions(in: directory)
+            try restoreWritablePermissions(in: directory, fileManager: fileManager)
             try fileManager.removeItem(at: directory)
         }
     }
 
-    private func restoreWritablePermissions(in directory: URL) throws {
-        guard try isExistingNonSymlinkDirectory(directory) else {
+    private nonisolated static func restoreWritablePermissions(
+        in directory: URL,
+        fileManager: FileManager
+    ) throws {
+        guard try isExistingNonSymlinkDirectory(directory, fileManager: fileManager) else {
             return
         }
         try fileManager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: directory.path)
@@ -491,7 +754,10 @@ final class RuntimeManager {
         }
     }
 
-    private func isExistingNonSymlinkDirectory(_ url: URL) throws -> Bool {
+    private nonisolated static func isExistingNonSymlinkDirectory(
+        _ url: URL,
+        fileManager: FileManager
+    ) throws -> Bool {
         var isDirectory: ObjCBool = false
         guard fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory), isDirectory.boolValue else {
             return false
@@ -508,7 +774,23 @@ final class RuntimeManager {
         }
     }
 
-    private func findInstaller(in directory: URL, runtime: RuntimeId) throws -> URL? {
+    private func findInstaller(in directory: URL, runtime: RuntimeId) async throws -> URL? {
+        let installerHints = definition(for: runtime).installerHints
+        let filesystem = RuntimeManagerFileManagerReference(value: fileManager)
+        return try await Self.runCancellableFilesystemTask(priority: .utility) {
+            try Self.findInstaller(
+                in: directory,
+                installerHints: installerHints,
+                fileManager: filesystem.value
+            )
+        }
+    }
+
+    private nonisolated static func findInstaller(
+        in directory: URL,
+        installerHints: [String],
+        fileManager: FileManager
+    ) throws -> URL? {
         let contents: [URL]
         do {
             contents = try fileManager.contentsOfDirectory(
@@ -519,7 +801,10 @@ final class RuntimeManager {
         } catch {
             throw RuntimeManagerError.extractedInstallerScanFailed(directory, error)
         }
-        if let direct = contents.first(where: { isInstaller($0, plausibleFor: runtime) }) {
+        try Task.checkCancellation()
+        if let direct = contents.first(where: {
+            isInstaller($0, matching: installerHints, fileManager: fileManager)
+        }) {
             return direct
         }
 
@@ -539,6 +824,7 @@ final class RuntimeManager {
             )
         }
         for case let url as URL in enumerator {
+            try Task.checkCancellation()
             let values: URLResourceValues
             do {
                 values = try url.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
@@ -551,7 +837,7 @@ final class RuntimeManager {
                 }
                 continue
             }
-            if isInstaller(url, plausibleFor: runtime) {
+            if isInstaller(url, matching: installerHints, fileManager: fileManager) {
                 return url
             }
         }
@@ -559,5 +845,18 @@ final class RuntimeManager {
             throw RuntimeManagerError.extractedInstallerScanFailed(directory, enumerationError)
         }
         return nil
+    }
+
+    private nonisolated static func isInstaller(
+        _ url: URL,
+        matching installerHints: [String],
+        fileManager: FileManager
+    ) -> Bool {
+        let lowerName = url.lastPathComponent.lowercased()
+        let allowedExtension = allowedInstallerExtensions.contains(url.pathExtension.lowercased())
+        let matchingName = installerHints.contains { lowerName.contains($0.lowercased()) }
+        return FileSystemItemPolicy.isRegularNonSymlinkFile(url, fileManager: fileManager) &&
+            allowedExtension &&
+            matchingName
     }
 }

@@ -11,63 +11,80 @@ struct SheetHostView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
-    @Query(sort: \SteamGameRecord.name) private var games: [SteamGameRecord]
-    @Query(sort: \LaunchRecord.startedAt, order: .reverse) private var launchRecords: [LaunchRecord]
+    @Query private var games: [SteamGameRecord]
+
+    init(
+        destination: SheetDestination,
+        sheetPresenter: ((SheetDestination) -> Void)? = nil,
+        opensMainWindowForNavigation: Bool = false
+    ) {
+        self.destination = destination
+        self.sheetPresenter = sheetPresenter
+        self.opensMainWindowForNavigation = opensMainWindowForNavigation
+        var gameDescriptor = FetchDescriptor<SteamGameRecord>()
+        gameDescriptor.fetchLimit = 1
+        _games = Query(gameDescriptor)
+    }
 
     var body: some View {
         let palette = ForgePlayTheme.palette(mode: appState.themeMode, colorScheme: colorScheme)
 
-        Group {
-            switch destination {
-            case .chooseRoot:
-                ManagedStorageLocationView()
-            case .importAppleSupplementalRenderer:
-                AppleSupplementalRendererImportView(
-                    bundledRuntimePath: appState.runtimeExecutableURL?.path,
-                    importSupplementalRenderer: importAppleSupplementalRenderer
-                )
-            case .chooseSteamInstaller:
-                GuidedSelectionView(
-                    title: "Windows용 Steam 설치",
-                    subtitle: "Steam 공식 페이지에서 SteamSetup.exe를 받은 뒤 선택하면 ForgePlay가 Steam 프리픽스 안에 자동으로 설치하고 결과를 확인합니다.",
-                    primaryTitle: "Steam 공식 페이지 열기",
-                    primaryIcon: "safari",
-                    secondaryTitle: "SteamSetup.exe 선택 후 설치",
-                    secondaryIcon: "square.and.arrow.down",
-                    message: appState.steamInstallerURL?.path ?? "Steam 로그인은 Steam 창 안에서 직접 진행합니다. ForgePlay는 비밀번호를 묻거나 저장하지 않습니다.",
-                    secondaryDisabled: !ForgePlayRuntimeCapabilityPolicy.canRunBundledWindowsRuntime,
-                    secondaryDisabledReason: ForgePlayRuntimeCapabilityPolicy.canRunBundledWindowsRuntime
-                        ? nil
-                        : ForgePlayRuntimeCapabilityPolicy.unavailableReasonKey,
-                    primaryAction: { appState.openExternalURL(SteamManager.officialDownloadURL) },
-                    secondaryAction: chooseSteamInstallerAndInstall
-                )
-            case .chooseRuntimeInstallerCatalog:
-                RuntimeInstallerCatalogSheet(sheetPresenter: presentSheet)
-            case .chooseRuntimeInstaller(let runtime):
-                RuntimeInstallerSheet(runtime: runtime, sheetPresenter: presentSheet)
-            case .diagnosticGuide(let payload):
-                DiagnosticGuidanceSheet(
-                    payload: payload,
-                    sheetPresenter: presentSheet,
-                    opensMainWindowForNavigation: opensMainWindowForNavigation
-                )
-            case .supportBundle(let url):
-                GuidedSelectionView(
-                    title: "지원 번들 생성됨",
-                    subtitle: "일부 진단 자료가 수집되지 않았을 수 있습니다. 번들 안 README.md와 metadata/bundle-manifest.json의 collectionStatus를 확인하고, 전송 전 가려진 경로와 토큰을 직접 검토하세요.",
-                    primaryTitle: "Finder에서 보기",
-                    primaryIcon: "folder",
-                    secondaryTitle: nil,
-                    secondaryIcon: nil,
-                    message: url.path,
-                    primaryAction: { appState.revealInFinder(url) },
-                    secondaryAction: nil
-                )
-            case .usageGuide:
-                UsageGuideView()
-            case .sectionHelp(let section):
-                ContextualHelpView(section: section, sheetPresenter: presentSheet)
+        ForgeSheetChrome(onClose: { dismiss() }) {
+            Group {
+                switch destination {
+                case .chooseRoot:
+                    ManagedStorageLocationView()
+                case .importAppleSupplementalRenderer:
+                    AppleSupplementalRendererImportView(
+                        bundledRuntimePath: appState.runtimeExecutableURL?.path,
+                        importSupplementalRenderer: importAppleSupplementalRenderer
+                    )
+                case .chooseSteamInstaller:
+                    GuidedSelectionView(
+                        title: "Windows용 Steam 설치",
+                        subtitle: "Steam 공식 페이지에서 SteamSetup.exe를 받은 뒤 선택하면 ForgePlay가 Steam 프리픽스 안에 자동으로 설치하고 결과를 확인합니다.",
+                        primaryTitle: "Steam 공식 페이지 열기",
+                        primaryIcon: "safari",
+                        secondaryTitle: "SteamSetup.exe 선택 후 설치",
+                        secondaryIcon: "square.and.arrow.down",
+                        message: appState.steamInstallerURL?.path ?? "Steam 로그인은 Steam 창 안에서 직접 진행합니다. ForgePlay는 비밀번호를 묻거나 저장하지 않습니다.",
+                        secondaryDisabled: !ForgePlayRuntimeCapabilityPolicy.canRunBundledWindowsRuntime,
+                        secondaryDisabledReason: ForgePlayRuntimeCapabilityPolicy.canRunBundledWindowsRuntime
+                            ? nil
+                            : ForgePlayRuntimeCapabilityPolicy.unavailableReasonKey,
+                        primaryAction: { appState.openExternalURL(SteamManager.officialDownloadURL) },
+                        secondaryAction: chooseSteamInstallerAndInstall
+                    )
+                case .chooseRuntimeInstallerCatalog:
+                    RuntimeInstallerCatalogSheet(sheetPresenter: presentSheet)
+                case .chooseRuntimeInstaller(let runtime):
+                    RuntimeInstallerSheet(runtime: runtime, sheetPresenter: presentSheet)
+                case .diagnosticGuide(let payload):
+                    DiagnosticGuidanceSheet(
+                        payload: payload,
+                        sheetPresenter: presentSheet,
+                        opensMainWindowForNavigation: opensMainWindowForNavigation
+                    )
+                case .supportBundle(let url):
+                    GuidedSelectionView(
+                        title: "지원 번들 생성됨",
+                        subtitle: "일부 진단 자료가 수집되지 않았을 수 있습니다. 번들 안 README.md와 metadata/bundle-manifest.json의 collectionStatus를 확인하고, 전송 전 가려진 경로와 토큰을 직접 검토하세요.",
+                        primaryTitle: "Finder에서 보기",
+                        primaryIcon: "folder",
+                        secondaryTitle: nil,
+                        secondaryIcon: nil,
+                        message: url.path,
+                        primaryAction: { appState.revealInFinder(url) },
+                        secondaryAction: nil
+                    )
+                case .usageGuide:
+                    UsageGuideView()
+                case .sectionHelp(let section):
+                    ContextualHelpView(
+                        section: section,
+                        sheetPresenter: presentSheet
+                    )
+                }
             }
         }
         .preferredColorScheme(appState.themeMode.preferredColorScheme)
@@ -93,13 +110,9 @@ struct SheetHostView: View {
         let progressNotice = appState.setTask(appState.localized("선택한 Apple D3DMetal 보조 렌더러를 확인하는 중입니다. DMG는 읽기 전용으로 자동 마운트합니다."))
         Task {
             do {
-                let result = try await services.windowsRuntimeService.importAppleSupplementalRenderer(at: url)
-                _ = try await services.refreshSetupWorkflow(
-                    appState: appState,
-                    in: modelContext,
-                    hasSteamReferences: !games.isEmpty,
-                    launchRecords: launchRecords
-                )
+                let result = try await services
+                    .importAppleSupplementalRenderer(at: url)
+                try await refreshSetupWorkflowUntilCommitted()
                 if let progressNotice {
                     appState.clearNotice(id: progressNotice.id)
                 }
@@ -132,11 +145,17 @@ struct SheetHostView: View {
             appState.setNotice(appState.localized("ForgePlay Runtime을 먼저 확인하세요."), kind: .warning)
             return
         }
-        let readiness = services.synchronizeSetupWorkflow(
-            appState: appState,
-            hasSteamReferences: !games.isEmpty,
-            launchRecords: launchRecords
-        )
+        let readiness: SetupReadiness
+        do {
+            readiness = try services.synchronizeSetupWorkflow(
+                appState: appState,
+                in: modelContext,
+                hasSteamReferences: !games.isEmpty
+            )
+        } catch {
+            appState.setError(error)
+            return
+        }
         if let issue = readiness.rootIssue {
             appState.setNotice(appState.localizedError(issue), kind: .failure)
             return
@@ -147,6 +166,7 @@ struct SheetHostView: View {
         }
         appState.setPersistedFileSelection(installer, for: .steamInstaller)
         let installerPersistenceWarning = appState.saveWarning(to: modelContext)
+        let steamLanguage = appState.effectiveSteamClientLanguage
         appState.setTask(appState.localized("Steam 설치 프로그램을 실행하는 중입니다."))
         Task {
             do {
@@ -162,18 +182,15 @@ struct SheetHostView: View {
                 let installResult = try await services.installSteamInSteamPrefix(
                     runtimeExecutable: runtimeExecutable,
                     installer: installer,
+                    language: steamLanguage,
                     videoMemorySelection: appState.steamVideoMemorySelection,
                     synchronizationSelection: appState.wineSynchronizationSelection
                 )
                 let result = installResult.processResult
-                _ = try await services.refreshSetupWorkflow(
-                    appState: appState,
-                    in: modelContext,
-                    hasSteamReferences: !games.isEmpty,
-                    launchRecords: launchRecords
-                )
+                try await refreshSetupWorkflowUntilCommitted()
                 if result.succeeded {
-                    if installResult.installationVerified {
+                    switch installResult.verificationState {
+                    case .verified, .steamClientServiceNotReady:
                         let message = DiagnosticWarningText.combined(
                             appState.localized("Steam 설치가 끝났습니다."),
                             installerPersistenceWarning,
@@ -184,12 +201,27 @@ struct SheetHostView: View {
                         ) ?? appState.localized("Steam 설치가 끝났습니다.")
                         let notice = appState.setNotice(
                             message,
-                            kind: installerPersistenceWarning == nil &&
+                            kind: installResult.verificationState == .verified &&
+                                installerPersistenceWarning == nil &&
                                 prefixPreparationWarning == nil &&
                                 installResult.compatibilityPreparationWarning == nil ? .success : .warning
                         )
                         clearTaskLater(notice.id)
-                    } else {
+                    case .steamLanguageNotReady:
+                        appState.setNotice(
+                            DiagnosticWarningText.combined(
+                                appState.localized("Steam 자체 언어 설정을 첫 화면 전에 검증하지 못해 설치 완료로 처리하지 않았습니다."),
+                                installerPersistenceWarning,
+                                prefixPreparationWarning,
+                                installResult.compatibilityPreparationWarning.map {
+                                    appState.localizedFormat("Steam 실행 경로 자동 준비는 완료하지 못했습니다. 첫 Steam 실행에서 다시 시도합니다: %@", $0)
+                                }
+                            ) ?? appState.localized("Steam 자체 언어 설정을 첫 화면 전에 검증하지 못해 설치 완료로 처리하지 않았습니다."),
+                            kind: .failure,
+                            logURL: result.stderrLog,
+                            diagnosticProcessResult: result
+                        )
+                    case .steamExecutableNotCreatedOrChanged:
                         appState.setNotice(
                             DiagnosticWarningText.combined(
                                 appState.localized("Steam 설치 프로세스는 종료됐지만 이번 실행에서 안전한 steam.exe 생성 또는 변경을 확인하지 못했습니다. 설치 로그를 확인하세요."),
@@ -197,6 +229,19 @@ struct SheetHostView: View {
                                 prefixPreparationWarning
                             ) ?? appState.localized("Steam 설치 프로세스는 종료됐지만 이번 실행에서 안전한 steam.exe 생성 또는 변경을 확인하지 못했습니다. 설치 로그를 확인하세요."),
                             kind: .warning
+                        )
+                    case .installerFailed:
+                        // `result.succeeded` and the model state are derived
+                        // from the same process result. Keep an explicit
+                        // fallback if that contract is ever changed.
+                        presentGuidance(
+                            title: appState.localized("Steam 설치"),
+                            result: result,
+                            fallbackReason: appState.localized("Steam 설치 프로그램 실행이 실패했습니다. SteamSetup.exe가 공식 설치 파일인지 확인하고, ForgePlay Runtime과 Steam 프리픽스 상태를 다시 점검하세요."),
+                            prefixPersistenceWarning: DiagnosticWarningText.combined(
+                                installerPersistenceWarning,
+                                prefixPreparationWarning
+                            )
                         )
                     }
                 } else if result.didTimeOut {
@@ -291,6 +336,22 @@ struct SheetHostView: View {
 
     private func processRunResult(from error: Error) -> ProcessRunResult? {
         diagnosticProcessRunResult(from: error)
+    }
+
+    private func refreshSetupWorkflowUntilCommitted() async throws {
+        while true {
+            do {
+                _ = try await services.refreshSetupWorkflow(
+                    appState: appState,
+                    in: modelContext,
+                    hasSteamReferences: !games.isEmpty
+                )
+                return
+            } catch SetupWorkflowRefreshControlError.superseded {
+                try Task.checkCancellation()
+                await Task.yield()
+            }
+        }
     }
 
     private func saveDiagnosticRecords(_ diagnostics: [DiagnosticResult]) -> String? {
@@ -603,7 +664,7 @@ private struct DiagnosticGuidanceSheet: View {
             EmptyView()
         case .setWindowsVersion, .setDLLOverride, .addLaunchOption, .markUnsupported:
             ThemedActionButton(
-                title: "문제 진단 열기",
+                title: "문제 진단 (베타) 열기",
                 systemImage: "stethoscope",
                 prominence: .secondary,
                 controlSize: .small,
@@ -646,7 +707,7 @@ private struct DiagnosticGuidanceSheet: View {
                 }
             }
             ThemedActionButton(
-                title: "문제 진단 열기",
+                title: "문제 진단 (베타) 열기",
                 systemImage: "stethoscope",
                 prominence: .primary,
                 controlSize: .small,
@@ -901,7 +962,7 @@ private struct AppleSupplementalRendererImportView: View {
                             badge: "격리",
                             systemImage: "square.stack.3d.up.fill",
                             title: "Steam UI와 게임 렌더러 분리",
-                            detail: "Steam UI는 기본 Wine 모듈을 유지합니다. Steam 실행 화면에서 매번 D3DMetal, DXMT, D9VK, DXVK 중 하나를 직접 선택하며, 게임에는 그 백엔드 하나만 적용합니다. Game Mode 호스트는 검증되지 않은 베타 선택 기능이며 기본 실행에는 적용하지 않습니다."
+                            detail: "Windows용 Steam UI는 렌더러 주입 없이 기본 Wine 경로로 엽니다. 다음 실행 초안에는 그래픽 백엔드, 네트워크 표시, 오디오 입력, 동기화, 비디오 메모리, Game Mode 값이 함께 표시됩니다. 구성을 저장하거나 Steam을 실행하면 다음에도 다시 사용하며, 새 구성의 Game Mode 호스트 기본값은 켬입니다. 게임에는 선택한 백엔드 하나만 적용되고 D3DMetal NVIDIA는 GPU 공급자와 Apple MetalFX용 NGX 브리지를 함께 준비하는 실험 기능입니다."
                         )
                     }
 
@@ -1471,7 +1532,7 @@ private struct RuntimeInstallerSheet: View {
                         color: palette.secondaryText
                     )
                 } else {
-                    Text(appState.localized("아직 기록된 Steam 프리픽스가 없습니다. 아래 버튼으로 먼저 만들거나 처음 설정에서 Steam 프리픽스를 만드세요."))
+                    Text(appState.localized("아직 기록된 Steam 프리픽스가 없습니다. 아래 버튼으로 먼저 만들거나 설정에서 Steam 프리픽스를 만드세요."))
                         .font(.callout)
                         .foregroundStyle(palette.warning)
                         .fixedSize(horizontal: false, vertical: true)
@@ -1607,7 +1668,8 @@ private struct RuntimeInstallerSheet: View {
                 let preparedPrefix = try await preparePrefix(selectedPrefix, runtimeExecutable: runtimeExecutable)
                 prefixPersistenceWarning = preparedPrefix.persistenceWarning
                 let prefix = URL(fileURLWithPath: preparedPrefix.record.path)
-                let result = try await services.steamPrefixService.performMaintenance {
+                let result = try await services.steamPrefixService
+                    .performCancellableProcessMaintenance {
                     try await services.runtimeManager.withQuiescentPrefixMutation(
                         runtimeExecutable: runtimeExecutable,
                         prefixURL: prefix,
@@ -1617,28 +1679,32 @@ private struct RuntimeInstallerSheet: View {
                             prefixURL: prefix,
                             reason: "before-\(runtime.rawValue)"
                         )
-                        var installerToRun = installer
+                        let result: ProcessRunResult
                         if isExtractableArchive {
                             appState.setTask(appState.localizedFormat("%@ 설치 파일 압축을 푸는 중입니다.", runtime.localizedName(appState: appState)))
-                            let extraction = try await services.runtimeManager.extractInstaller(
+                            result = try await services.runtimeManager.withExtractedInstaller(
                                 runtime: runtime,
                                 archive: installer,
                                 runtimeExecutable: runtimeExecutable,
                                 prefixURL: prefix
+                            ) { extraction in
+                                try await runRuntimeInstaller(
+                                    runtime,
+                                    installer: extraction.installer,
+                                    runtimeExecutable: runtimeExecutable,
+                                    prefix: prefix,
+                                    prefixDisplayName: preparedPrefix.localizedDisplayName(appState: appState)
+                                )
+                            }
+                        } else {
+                            result = try await runRuntimeInstaller(
+                                runtime,
+                                installer: installer,
+                                runtimeExecutable: runtimeExecutable,
+                                prefix: prefix,
+                                prefixDisplayName: preparedPrefix.localizedDisplayName(appState: appState)
                             )
-                            installerToRun = extraction.installer
                         }
-                        appState.setTask(appState.localizedFormat(
-                            "%@을 %@에 설치하는 중입니다.",
-                            runtime.localizedName(appState: appState),
-                            preparedPrefix.localizedDisplayName(appState: appState)
-                        ))
-                        let result = try await services.runtimeManager.install(
-                            runtime: runtime,
-                            installer: installerToRun,
-                            runtimeExecutable: runtimeExecutable,
-                            prefixURL: prefix
-                        )
                         if result.succeeded {
                             try services.prefixManager.markRuntimeInstalled(runtime, prefixURL: prefix)
                         }
@@ -1789,6 +1855,27 @@ private struct RuntimeInstallerSheet: View {
                 appState.setError(error)
             }
         }
+    }
+
+    private func runRuntimeInstaller(
+        _ runtime: RuntimeId,
+        installer: URL,
+        runtimeExecutable: URL,
+        prefix: URL,
+        prefixDisplayName: String
+    ) async throws -> ProcessRunResult {
+        appState.setTask(appState.localizedFormat(
+            "%@을 %@에 설치하는 중입니다.",
+            runtime.localizedName(appState: appState),
+            prefixDisplayName
+        ))
+        let result = try await services.runtimeManager.install(
+            runtime: runtime,
+            installer: installer,
+            runtimeExecutable: runtimeExecutable,
+            prefixURL: prefix
+        )
+        return result
     }
 
     private func preparePrefix(_ prefixRecord: PrefixRecord, runtimeExecutable: URL) async throws -> PreparedRuntimePrefix {

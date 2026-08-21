@@ -272,6 +272,30 @@ enum PrefixUsabilityError: LocalizedError, Equatable, Hashable {
 
 @MainActor
 final class PrefixManager {
+    private final class ReplacementStagingLifecycleState {
+        enum Phase {
+            case notLaunched
+            case mayHaveProcesses
+            case verifiedQuiescent
+        }
+
+        private(set) var phase: Phase = .notLaunched
+
+        func markMayHaveProcesses() {
+            phase = .mayHaveProcesses
+        }
+
+        func markVerifiedQuiescent() {
+            phase = .verifiedQuiescent
+        }
+    }
+
+    private struct ReplacementArtifactCleanupCandidate: Sendable {
+        let url: URL
+        let device: UInt64
+        let inode: UInt64
+    }
+
     nonisolated static let maxMetadataBytes = 256 * 1024
     private static let maxMetadataListItems = 128
     private static let maxMetadataStringLength = 512
@@ -285,6 +309,8 @@ final class PrefixManager {
     private let directorySwapper: PrefixDirectorySwapping
     private let lifecycleCoordinator: SteamPrefixLifecycleCoordinator
     private let runtimeManifestProvider: any RuntimeManifestProviding
+    private let prefixReplacementQuiescenceVerifier:
+        @MainActor (URL) async throws -> Void
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
     private var activeReplacementArtifactPaths: Set<String> = []
@@ -295,7 +321,9 @@ final class PrefixManager {
         fileManager: FileManager = .default,
         directorySwapper: PrefixDirectorySwapping = AtomicPrefixDirectorySwapper(),
         lifecycleCoordinator: SteamPrefixLifecycleCoordinator? = nil,
-        runtimeManifestProvider: any RuntimeManifestProviding = RuntimeManifestResolver()
+        runtimeManifestProvider: any RuntimeManifestProviding = RuntimeManifestResolver(),
+        prefixReplacementQuiescenceVerifier:
+            (@MainActor (URL) async throws -> Void)? = nil
     ) {
         self.pathManager = pathManager
         self.runner = runner
@@ -303,6 +331,10 @@ final class PrefixManager {
         self.directorySwapper = directorySwapper
         self.lifecycleCoordinator = lifecycleCoordinator ?? SteamPrefixLifecycleCoordinator()
         self.runtimeManifestProvider = runtimeManifestProvider
+        self.prefixReplacementQuiescenceVerifier =
+            prefixReplacementQuiescenceVerifier ?? { prefix in
+                try await runner.requirePrefixReplacementQuiescence(prefix)
+            }
         self.encoder = JSONEncoder()
         self.encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         self.encoder.dateEncodingStrategy = .iso8601
@@ -437,6 +469,20 @@ final class PrefixManager {
         }
     }
 
+    func inspectSteamSharedPrefixRuntimeCompatibility(
+        manifest: RuntimeManifest
+    ) -> PrefixRuntimeCompatibilityInspection {
+        do {
+            let prefixURL = try pathManager.url(for: .steamSharedPrefix)
+            return inspectRuntimeCompatibility(
+                at: prefixURL,
+                manifest: manifest
+            )
+        } catch {
+            return .runtimeUnavailable(forgePlayTechnicalErrorSummary(error))
+        }
+    }
+
     func requireSteamSharedPrefixRuntimeCompatibility(runtimeExecutable: URL) throws {
         switch inspectSteamSharedPrefixRuntimeCompatibility(runtimeExecutable: runtimeExecutable) {
         case .compatible:
@@ -445,6 +491,168 @@ final class PrefixManager {
             throw PrefixRuntimeCompatibilityError.migrationRequired(reason)
         case .runtimeUnavailable(let reason):
             throw PrefixRuntimeCompatibilityError.runtimeUnavailable(reason)
+        }
+    }
+
+    /// Owns the lifecycle of a replacement staging directory. Most failures
+    /// can safely discard the staging tree, but an unconfirmed Wine cleanup
+    /// means a descendant may still hold or mutate that tree. Preserve it in
+    /// that case so later verified cleanup can retire it without racing a live
+    /// process or deleting files underneath Wine.
+    private func withReplacementStaging<Value>(
+        at staging: URL,
+        runtimeExecutable: URL,
+        logDirectory: URL,
+        operation: (ReplacementStagingLifecycleState) async throws -> (
+            value: Value,
+            preserveStagingOnExit: Bool
+        )
+    ) async throws -> Value {
+        var preserveStagingOnExit = false
+        let lifecycleState = ReplacementStagingLifecycleState()
+        defer {
+            if !preserveStagingOnExit {
+                try? fileManager.removeItem(at: staging)
+            }
+        }
+
+        do {
+            let completion = try await operation(lifecycleState)
+            preserveStagingOnExit = completion.preserveStagingOnExit
+            return completion.value
+        } catch {
+            let operationError = error
+            if lifecycleState.phase == .mayHaveProcesses {
+                do {
+                    try await shutdownExistingPrefixBeforeReplacementIfNeeded(
+                        runtimeExecutable: runtimeExecutable,
+                        prefixURL: staging,
+                        logDirectory: logDirectory
+                    )
+                    try markReplacementStagingVerifiedQuiescent(
+                        staging,
+                        lifecycleState: lifecycleState
+                    )
+                } catch let cleanupError {
+                    preserveStagingOnExit = true
+                    do {
+                        try markReplacementStagingForRecovery(staging)
+                    } catch let markerError {
+                        throw SteamPrefixLifecycleCleanupError(
+                            originalDescription: forgePlayTechnicalErrorSummary(operationError),
+                            cleanupDescription: "Replacement staging cleanup remained unconfirmed (\(forgePlayTechnicalErrorSummary(cleanupError))), and its cross-restart preservation marker could not be verified: \(forgePlayTechnicalErrorSummary(markerError))",
+                            originalError: operationError,
+                            cleanupError: cleanupError,
+                            originalProcessResult: diagnosticProcessRunResult(from: operationError),
+                            cleanupProcessResults: diagnosticProcessRunResults(from: cleanupError)
+                        )
+                    }
+                    throw replacementStagingCleanupFailure(
+                        after: operationError,
+                        cleanupError: cleanupError
+                    )
+                }
+            }
+            preserveStagingOnExit = operationError is PrefixResetError
+            throw operationError
+        }
+    }
+
+    private func markReplacementStagingForRecovery(_ staging: URL) throws {
+        guard fileManager.fileExists(atPath: staging.path) else { return }
+        try requirePrefixDirectory(staging)
+        let marker = staging.appending(path: Self.recoveryPreservationMarkerName)
+        if fileManager.fileExists(atPath: marker.path),
+           !FileSystemItemPolicy.isRegularNonSymlinkFile(marker, fileManager: fileManager) {
+            throw PrefixMetadataError.unsafeMetadataFile(marker)
+        }
+        try Data("preserve\n".utf8).write(to: marker, options: [.atomic])
+        try fileManager.setAttributes(
+            [.posixPermissions: 0o600],
+            ofItemAtPath: marker.path
+        )
+        guard FileSystemItemPolicy.isRegularNonSymlinkFile(marker, fileManager: fileManager) else {
+            throw PrefixMetadataError.unsafeMetadataFile(marker)
+        }
+    }
+
+    private func markReplacementStagingMayHaveProcesses(
+        _ staging: URL,
+        lifecycleState: ReplacementStagingLifecycleState
+    ) throws {
+        try markReplacementStagingForRecovery(staging)
+        lifecycleState.markMayHaveProcesses()
+    }
+
+    private func markReplacementStagingVerifiedQuiescent(
+        _ staging: URL,
+        lifecycleState: ReplacementStagingLifecycleState
+    ) throws {
+        let marker = staging.appending(path: Self.recoveryPreservationMarkerName)
+        if fileManager.fileExists(atPath: marker.path) {
+            guard FileSystemItemPolicy.isRegularNonSymlinkFile(marker, fileManager: fileManager) else {
+                throw PrefixMetadataError.unsafeMetadataFile(marker)
+            }
+            try fileManager.removeItem(at: marker)
+        }
+        lifecycleState.markVerifiedQuiescent()
+    }
+
+    private func replacementStagingCleanupFailure(
+        after operationError: Error,
+        cleanupError: Error
+    ) -> Error {
+        let cleanupDescription = forgePlayTechnicalErrorSummary(cleanupError)
+        if let prefixError = operationError as? PrefixManagerError {
+            switch prefixError {
+            case .initializationFailed(let initialization),
+                 .initializationCleanupFailed(let initialization, _):
+                return PrefixManagerError.initializationCleanupFailed(
+                    initialization: initialization,
+                    cleanupDescription: cleanupDescription
+                )
+            case .runtimeReconciliationFailed(let reconciliation),
+                 .runtimeReconciliationCleanupFailed(let reconciliation, _):
+                return PrefixManagerError.runtimeReconciliationCleanupFailed(
+                    reconciliation: reconciliation,
+                    cleanupDescription: cleanupDescription
+                )
+            }
+        }
+        return SteamPrefixLifecycleCleanupError(
+            originalDescription: forgePlayTechnicalErrorSummary(operationError),
+            cleanupDescription: cleanupDescription,
+            originalError: operationError,
+            cleanupError: cleanupError,
+            originalProcessResult: diagnosticProcessRunResult(from: operationError),
+            cleanupProcessResults: diagnosticProcessRunResults(from: cleanupError)
+        )
+    }
+
+    private func prefixShutdownPostconditionIsVerified(_ result: ProcessRunResult) -> Bool {
+        result.succeeded && result.postconditionSatisfied == true
+    }
+
+    private func prefixShutdownFailureDescription(_ result: ProcessRunResult) -> String {
+        "process exit \(result.diagnosticExitCodeDescription), " +
+            "ForgePlay status \(result.diagnosticForgePlayStatusDescription), " +
+            "postcondition \(result.postconditionSatisfied.map(String.init) ?? "unavailable"), " +
+            "log: \(result.stderrLog.path)"
+    }
+
+    private func requireVerifiedPrefixReplacementQuiescence(
+        at prefix: URL,
+        cleanupProcessResults: [ProcessRunResult] = []
+    ) async throws {
+        do {
+            try await prefixReplacementQuiescenceVerifier(prefix)
+        } catch {
+            throw SteamPrefixLifecycleCleanupError(
+                originalDescription: "Steam prefix replacement requires a quiescent prefix",
+                cleanupDescription: forgePlayTechnicalErrorSummary(error),
+                cleanupError: error,
+                cleanupProcessResults: cleanupProcessResults
+            )
         }
     }
 
@@ -484,12 +692,11 @@ final class PrefixManager {
             path: ".\(prefixURL.lastPathComponent).runtime-migration-staging-\(UUID().uuidString)",
             directoryHint: .isDirectory
         )
-        var preserveStagingOnExit = false
-        defer {
-            if !preserveStagingOnExit {
-                try? fileManager.removeItem(at: staging)
-            }
-        }
+        let migrationResult = try await withReplacementStaging(
+            at: staging,
+            runtimeExecutable: runtimeExecutable,
+            logDirectory: logDirectory
+        ) { stagingLifecycle in
 
         let canonicalMetadata = try loadMetadata(at: prefixURL)
         if fileManager === FileManager.default {
@@ -504,6 +711,10 @@ final class PrefixManager {
         try save(stagingMetadata, at: staging)
         try registerActiveReplacementPrefix(staging)
         defer { unregisterActiveReplacementPrefix(staging) }
+        try markReplacementStagingMayHaveProcesses(
+            staging,
+            lifecycleState: stagingLifecycle
+        )
 
         let migration: ProcessRunResult
         do {
@@ -560,12 +771,20 @@ final class PrefixManager {
                 prefix: staging,
                 logDirectory: logDirectory
             ))
-            guard cleanup.succeeded else {
+            guard prefixShutdownPostconditionIsVerified(cleanup) else {
                 throw PrefixManagerError.runtimeReconciliationCleanupFailed(
                     reconciliation: migration,
-                    cleanupDescription: "process exit \(cleanup.diagnosticExitCodeDescription), ForgePlay status \(cleanup.diagnosticForgePlayStatusDescription), log: \(cleanup.stderrLog.path)"
+                    cleanupDescription: prefixShutdownFailureDescription(cleanup)
                 )
             }
+            try await requireVerifiedPrefixReplacementQuiescence(
+                at: staging,
+                cleanupProcessResults: [cleanup]
+            )
+            try markReplacementStagingVerifiedQuiescent(
+                staging,
+                lifecycleState: stagingLifecycle
+            )
         } catch let error as PrefixManagerError {
             throw error
         } catch {
@@ -584,16 +803,21 @@ final class PrefixManager {
         try disableAutomaticWinePrefixUpdates(at: staging)
         try lifecycleCoordinator.checkpoint()
 
-        do {
-            let residualPreviousEnvironmentURL = try replacePrefixAtomically(
-                at: prefixURL,
-                with: staging,
-                metadata: metadata
-            )
-            preserveStagingOnExit = residualPreviousEnvironmentURL != nil
-        } catch let error as PrefixResetError {
-            preserveStagingOnExit = true
-            throw error
+        let residualPreviousEnvironmentURL = try await replacePrefixAtomically(
+            at: prefixURL,
+            with: staging,
+            metadata: metadata,
+            stagingLifecycleState: stagingLifecycle
+        )
+
+        return (
+            value: PrefixRuntimeMigrationResult(
+                metadata: metadata,
+                processResult: migration,
+                didMigrate: true
+            ),
+            preserveStagingOnExit: residualPreviousEnvironmentURL != nil
+        )
         }
 
         guard inspectRuntimeCompatibility(at: prefixURL, manifest: manifest).isCompatible else {
@@ -601,11 +825,7 @@ final class PrefixManager {
                 "runtime migration completed, but its binding could not be committed"
             )
         }
-        return PrefixRuntimeMigrationResult(
-            metadata: metadata,
-            processResult: migration,
-            didMigrate: true
-        )
+        return migrationResult
     }
 
     func rebuildSteamSharedPrefix(
@@ -680,12 +900,11 @@ final class PrefixManager {
             path: ".\(prefixURL.lastPathComponent).rebuild-staging-\(UUID().uuidString)",
             directoryHint: .isDirectory
         )
-        var preserveStagingOnExit = false
-        defer {
-            if !preserveStagingOnExit {
-                try? fileManager.removeItem(at: staging)
-            }
-        }
+        return try await withReplacementStaging(
+            at: staging,
+            runtimeExecutable: runtimeExecutable,
+            logDirectory: logDirectory
+        ) { stagingLifecycle in
 
         let rebuildStartedAt = Date()
         let stagingMetadata = freshSteamSharedMetadata(
@@ -696,6 +915,10 @@ final class PrefixManager {
         try save(stagingMetadata, at: staging)
         try registerActiveReplacementPrefix(staging)
         defer { unregisterActiveReplacementPrefix(staging) }
+        try markReplacementStagingMayHaveProcesses(
+            staging,
+            lifecycleState: stagingLifecycle
+        )
 
         let result = try await initializePrefixAndWaitForRegistryFlush(
             runtimeExecutable: runtimeExecutable,
@@ -713,6 +936,10 @@ final class PrefixManager {
             prefixURL: staging,
             logDirectory: logDirectory
         )
+        try markReplacementStagingVerifiedQuiescent(
+            staging,
+            lifecycleState: stagingLifecycle
+        )
         let boundStagingMetadata = try bindRuntime(
             manifest,
             to: stagingMetadata,
@@ -728,23 +955,21 @@ final class PrefixManager {
         var finalMetadata = boundStagingMetadata
         finalMetadata.path = prefixURL.path
         finalMetadata.updatedAt = Date()
-        let residualPreviousEnvironmentURL: URL?
-        do {
-            residualPreviousEnvironmentURL = try replacePrefixAtomically(
-                at: prefixURL,
-                with: staging,
-                metadata: finalMetadata
-            )
-            preserveStagingOnExit = residualPreviousEnvironmentURL != nil
-        } catch let error as PrefixResetError {
-            preserveStagingOnExit = true
-            throw error
-        }
-        return PrefixRebuildResult(
+        let residualPreviousEnvironmentURL = try await replacePrefixAtomically(
+            at: prefixURL,
+            with: staging,
             metadata: finalMetadata,
-            processResult: result,
-            residualPreviousEnvironmentURL: residualPreviousEnvironmentURL
+            stagingLifecycleState: stagingLifecycle
         )
+        return (
+            value: PrefixRebuildResult(
+                metadata: finalMetadata,
+                processResult: result,
+                residualPreviousEnvironmentURL: residualPreviousEnvironmentURL
+            ),
+            preserveStagingOnExit: residualPreviousEnvironmentURL != nil
+        )
+        }
     }
 
     private func initializeMissingPrefixAtomically(
@@ -766,12 +991,11 @@ final class PrefixManager {
             path: ".\(prefixURL.lastPathComponent).initialize-staging-\(UUID().uuidString)",
             directoryHint: .isDirectory
         )
-        var preserveStagingOnExit = false
-        defer {
-            if !preserveStagingOnExit {
-                try? fileManager.removeItem(at: staging)
-            }
-        }
+        return try await withReplacementStaging(
+            at: staging,
+            runtimeExecutable: runtimeExecutable,
+            logDirectory: logDirectory
+        ) { stagingLifecycle in
 
         let stagingMetadata = freshSteamSharedMetadata(
             at: staging,
@@ -783,6 +1007,10 @@ final class PrefixManager {
         try save(stagingMetadata, at: staging)
         try registerActiveReplacementPrefix(staging)
         defer { unregisterActiveReplacementPrefix(staging) }
+        try markReplacementStagingMayHaveProcesses(
+            staging,
+            lifecycleState: stagingLifecycle
+        )
 
         let result = try await initializePrefixAndWaitForRegistryFlush(
             runtimeExecutable: runtimeExecutable,
@@ -800,6 +1028,10 @@ final class PrefixManager {
             prefixURL: staging,
             logDirectory: logDirectory
         )
+        try markReplacementStagingVerifiedQuiescent(
+            staging,
+            lifecycleState: stagingLifecycle
+        )
         let boundStagingMetadata = try bindRuntime(
             manifest,
             to: stagingMetadata,
@@ -815,23 +1047,21 @@ final class PrefixManager {
         var finalMetadata = boundStagingMetadata
         finalMetadata.path = prefixURL.path
         finalMetadata.updatedAt = Date()
-        let residualPreviousEnvironmentURL: URL?
-        do {
-            residualPreviousEnvironmentURL = try replacePrefixAtomically(
-                at: prefixURL,
-                with: staging,
-                metadata: finalMetadata
-            )
-            preserveStagingOnExit = residualPreviousEnvironmentURL != nil
-        } catch let error as PrefixResetError {
-            preserveStagingOnExit = true
-            throw error
-        }
-        return PrefixArchitectureResetResult(
+        let residualPreviousEnvironmentURL = try await replacePrefixAtomically(
+            at: prefixURL,
+            with: staging,
             metadata: finalMetadata,
-            processResult: result,
-            residualPreviousEnvironmentURL: residualPreviousEnvironmentURL
+            stagingLifecycleState: stagingLifecycle
         )
+        return (
+            value: PrefixArchitectureResetResult(
+                metadata: finalMetadata,
+                processResult: result,
+                residualPreviousEnvironmentURL: residualPreviousEnvironmentURL
+            ),
+            preserveStagingOnExit: residualPreviousEnvironmentURL != nil
+        )
+        }
     }
 
     private func initializePrefixAndWaitForRegistryFlush(
@@ -901,10 +1131,10 @@ final class PrefixManager {
                 prefix: prefix,
                 logDirectory: logDirectory
             ))
-            guard cleanup.succeeded else {
+            guard prefixShutdownPostconditionIsVerified(cleanup) else {
                 throw PrefixManagerError.initializationCleanupFailed(
                     initialization: initialization,
-                    cleanupDescription: "process exit \(cleanup.diagnosticExitCodeDescription), ForgePlay status \(cleanup.diagnosticForgePlayStatusDescription), log: \(cleanup.stderrLog.path)"
+                    cleanupDescription: prefixShutdownFailureDescription(cleanup)
                 )
             }
         } catch let error as PrefixManagerError {
@@ -930,10 +1160,10 @@ final class PrefixManager {
                 prefix: prefix,
                 logDirectory: logDirectory
             ))
-            guard cleanup.succeeded else {
+            guard prefixShutdownPostconditionIsVerified(cleanup) else {
                 throw PrefixManagerError.runtimeReconciliationCleanupFailed(
                     reconciliation: reconciliation,
-                    cleanupDescription: "process exit \(cleanup.diagnosticExitCodeDescription), ForgePlay status \(cleanup.diagnosticForgePlayStatusDescription), log: \(cleanup.stderrLog.path)"
+                    cleanupDescription: prefixShutdownFailureDescription(cleanup)
                 )
             }
         } catch let error as PrefixManagerError {
@@ -959,10 +1189,10 @@ final class PrefixManager {
                 prefix: prefix,
                 logDirectory: logDirectory
             ))
-            guard cleanup.succeeded else {
+            guard prefixShutdownPostconditionIsVerified(cleanup) else {
                 throw SteamPrefixLifecycleCleanupError(
                     originalDescription: forgePlayTechnicalErrorSummary(initializationError),
-                    cleanupDescription: "process exit \(cleanup.diagnosticExitCodeDescription), ForgePlay status \(cleanup.diagnosticForgePlayStatusDescription), log: \(cleanup.stderrLog.path)",
+                    cleanupDescription: prefixShutdownFailureDescription(cleanup),
                     originalError: initializationError,
                     originalProcessResult: diagnosticProcessRunResult(from: initializationError),
                     cleanupProcessResults: [cleanup]
@@ -989,6 +1219,7 @@ final class PrefixManager {
         logDirectory: URL
     ) async throws {
         guard fileManager.fileExists(atPath: prefixURL.path) else {
+            try await requireVerifiedPrefixReplacementQuiescence(at: prefixURL)
             return
         }
         try validatePrefixDirectory(prefixURL)
@@ -997,21 +1228,41 @@ final class PrefixManager {
             prefix: prefixURL,
             logDirectory: logDirectory
         ))
-        guard result.succeeded else {
-            throw PrefixManagerError.initializationFailed(result)
+        guard prefixShutdownPostconditionIsVerified(result) else {
+            throw SteamPrefixLifecycleCleanupError(
+                originalDescription: "Steam prefix replacement requires a verified inactive prefix",
+                cleanupDescription: prefixShutdownFailureDescription(result),
+                originalProcessResult: result,
+                cleanupProcessResults: [result]
+            )
         }
+        try await requireVerifiedPrefixReplacementQuiescence(
+            at: prefixURL,
+            cleanupProcessResults: [result]
+        )
     }
 
     private func replacePrefixAtomically(
         at destination: URL,
         with staging: URL,
-        metadata: PrefixMetadata
-    ) throws -> URL? {
+        metadata: PrefixMetadata,
+        stagingLifecycleState: ReplacementStagingLifecycleState
+    ) async throws -> URL? {
         let destinationParent = destination.deletingLastPathComponent()
         try requirePrefixDirectory(destinationParent)
         try validatePrefixDirectory(staging)
         try validatePrefixDirectory(destination)
         try writeMetadata(metadata, physicallyAt: staging, validatingFor: destination)
+        try markReplacementStagingMayHaveProcesses(
+            staging,
+            lifecycleState: stagingLifecycleState
+        )
+        try await requireVerifiedPrefixReplacementQuiescence(at: staging)
+        try markReplacementStagingVerifiedQuiescent(
+            staging,
+            lifecycleState: stagingLifecycleState
+        )
+        try await requireVerifiedPrefixReplacementQuiescence(at: destination)
 
         var didSwap = false
         do {
@@ -1062,7 +1313,44 @@ final class PrefixManager {
     }
 
     func cleanupInterruptedReplacementArtifactsAssumingExclusiveAccess(at prefixURL: URL) throws {
-        guard fileManager.fileExists(atPath: prefixURL.path) else { return }
+        let candidates = try replacementArtifactCleanupCandidates(
+            at: prefixURL
+        )
+        for candidate in candidates {
+            try Self.removeReplacementArtifact(
+                candidate,
+                fileManager: fileManager
+            )
+        }
+    }
+
+    func cleanupInterruptedReplacementArtifactsAssumingExclusiveAccess(
+        at prefixURL: URL
+    ) async throws {
+        let candidates = try replacementArtifactCleanupCandidates(
+            at: prefixURL
+        )
+        guard !candidates.isEmpty else { return }
+        if fileManager === FileManager.default {
+            try await Task.detached(priority: .utility) {
+                for candidate in candidates {
+                    try Self.removeReplacementArtifact(candidate)
+                }
+            }.value
+        } else {
+            for candidate in candidates {
+                try Self.removeReplacementArtifact(
+                    candidate,
+                    fileManager: self.fileManager
+                )
+            }
+        }
+    }
+
+    private func replacementArtifactCleanupCandidates(
+        at prefixURL: URL
+    ) throws -> [ReplacementArtifactCleanupCandidate] {
+        guard fileManager.fileExists(atPath: prefixURL.path) else { return [] }
         if try !isUninitializedPrefixPlaceholder(at: prefixURL) {
             _ = try loadMetadata(at: prefixURL)
         }
@@ -1084,13 +1372,36 @@ final class PrefixManager {
                 !activeReplacementArtifactPaths.contains(candidate.path)
         }
 
-        for candidate in candidates {
+        return try candidates.compactMap { candidate in
             try requirePrefixDirectory(candidate)
             if replacementArtifactMustBePreserved(candidate, canonicalPrefix: prefixURL) {
-                continue
+                return nil
             }
-            try fileManager.removeItem(at: candidate)
+            var status = stat()
+            guard Darwin.lstat(candidate.path, &status) == 0,
+                  (status.st_mode & S_IFMT) == S_IFDIR else {
+                throw PrefixMetadataError.unsafePrefixDirectory(candidate)
+            }
+            return ReplacementArtifactCleanupCandidate(
+                url: candidate,
+                device: UInt64(status.st_dev),
+                inode: UInt64(status.st_ino)
+            )
         }
+    }
+
+    private nonisolated static func removeReplacementArtifact(
+        _ candidate: ReplacementArtifactCleanupCandidate,
+        fileManager: FileManager = .default
+    ) throws {
+        var status = stat()
+        guard Darwin.lstat(candidate.url.path, &status) == 0,
+              (status.st_mode & S_IFMT) == S_IFDIR,
+              UInt64(status.st_dev) == candidate.device,
+              UInt64(status.st_ino) == candidate.inode else {
+            throw PrefixMetadataError.unsafePrefixDirectory(candidate.url)
+        }
+        try fileManager.removeItem(at: candidate.url)
     }
 
     func isUninitializedPrefixPlaceholder(at prefixURL: URL) throws -> Bool {
@@ -1326,7 +1637,57 @@ final class PrefixManager {
     func prefixArchitecture(at prefixURL: URL) throws -> String? {
         let systemRegistry = prefixURL.appending(path: "system.reg")
         try requireRegularNonSymlinkFile(systemRegistry)
-        let content = try String(contentsOf: systemRegistry, encoding: .utf8)
+        let descriptor = Darwin.open(
+            systemRegistry.path,
+            O_RDONLY | O_CLOEXEC | O_NOFOLLOW
+        )
+        guard descriptor >= 0 else {
+            throw POSIXError(
+                POSIXErrorCode(rawValue: errno) ?? .EIO
+            )
+        }
+        defer { Darwin.close(descriptor) }
+        var initialStatus = stat()
+        guard Darwin.fstat(descriptor, &initialStatus) == 0,
+              (initialStatus.st_mode & S_IFMT) == S_IFREG,
+              initialStatus.st_nlink == 1 else {
+            throw PrefixUsabilityError.unsafeRequiredItem(systemRegistry)
+        }
+        let maximumHeaderBytes = 64 * 1024
+        var data = Data(count: maximumHeaderBytes)
+        let byteCount = data.withUnsafeMutableBytes { bytes in
+            Darwin.pread(
+                descriptor,
+                bytes.baseAddress,
+                bytes.count,
+                0
+            )
+        }
+        guard byteCount >= 0 else {
+            throw POSIXError(
+                POSIXErrorCode(rawValue: errno) ?? .EIO
+            )
+        }
+        data.removeSubrange(Int(byteCount)..<data.count)
+        var finalStatus = stat()
+        guard Darwin.fstat(descriptor, &finalStatus) == 0,
+              initialStatus.st_dev == finalStatus.st_dev,
+              initialStatus.st_ino == finalStatus.st_ino,
+              initialStatus.st_size == finalStatus.st_size,
+              initialStatus.st_mtimespec.tv_sec ==
+                finalStatus.st_mtimespec.tv_sec,
+              initialStatus.st_mtimespec.tv_nsec ==
+                finalStatus.st_mtimespec.tv_nsec,
+              initialStatus.st_ctimespec.tv_sec ==
+                finalStatus.st_ctimespec.tv_sec,
+              initialStatus.st_ctimespec.tv_nsec ==
+                finalStatus.st_ctimespec.tv_nsec else {
+            throw PrefixUsabilityError.unreadableRequiredItem(
+                systemRegistry,
+                "system.reg header changed while it was being read"
+            )
+        }
+        let content = String(decoding: data, as: UTF8.self)
 
         for line in content.split(whereSeparator: \.isNewline).prefix(50) {
             let trimmed = String(line)
@@ -1701,12 +2062,11 @@ final class PrefixManager {
             path: ".\(prefixURL.lastPathComponent).reset-staging-\(UUID().uuidString)",
             directoryHint: .isDirectory
         )
-        var preserveStagingOnExit = false
-        defer {
-            if !preserveStagingOnExit {
-                try? fileManager.removeItem(at: staging)
-            }
-        }
+        return try await withReplacementStaging(
+            at: staging,
+            runtimeExecutable: runtimeExecutable,
+            logDirectory: logDirectory
+        ) { stagingLifecycle in
 
         let stagingMetadata = freshSteamSharedMetadata(
             at: staging,
@@ -1717,6 +2077,10 @@ final class PrefixManager {
         try save(stagingMetadata, at: staging)
         try registerActiveReplacementPrefix(staging)
         defer { unregisterActiveReplacementPrefix(staging) }
+        try markReplacementStagingMayHaveProcesses(
+            staging,
+            lifecycleState: stagingLifecycle
+        )
 
         let result = try await initializePrefixAndWaitForRegistryFlush(
             runtimeExecutable: runtimeExecutable,
@@ -1734,6 +2098,10 @@ final class PrefixManager {
             prefixURL: staging,
             logDirectory: logDirectory
         )
+        try markReplacementStagingVerifiedQuiescent(
+            staging,
+            lifecycleState: stagingLifecycle
+        )
         let boundStagingMetadata = try bindRuntime(
             manifest,
             to: stagingMetadata,
@@ -1749,23 +2117,21 @@ final class PrefixManager {
         var finalMetadata = boundStagingMetadata
         finalMetadata.path = prefixURL.path
         finalMetadata.updatedAt = Date()
-        let residualPreviousEnvironmentURL: URL?
-        do {
-            residualPreviousEnvironmentURL = try replacePrefixAtomically(
-                at: prefixURL,
-                with: staging,
-                metadata: finalMetadata
-            )
-            preserveStagingOnExit = residualPreviousEnvironmentURL != nil
-        } catch let error as PrefixResetError {
-            preserveStagingOnExit = true
-            throw error
-        }
-        return PrefixArchitectureResetResult(
+        let residualPreviousEnvironmentURL = try await replacePrefixAtomically(
+            at: prefixURL,
+            with: staging,
             metadata: finalMetadata,
-            processResult: result,
-            residualPreviousEnvironmentURL: residualPreviousEnvironmentURL
+            stagingLifecycleState: stagingLifecycle
         )
+        return (
+            value: PrefixArchitectureResetResult(
+                metadata: finalMetadata,
+                processResult: result,
+                residualPreviousEnvironmentURL: residualPreviousEnvironmentURL
+            ),
+            preserveStagingOnExit: residualPreviousEnvironmentURL != nil
+        )
+        }
     }
 
     private func createPrefixDirectory(at prefixURL: URL) throws {

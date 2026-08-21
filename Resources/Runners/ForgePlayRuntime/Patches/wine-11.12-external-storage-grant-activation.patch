@@ -54,8 +54,8 @@ diff --git a/dlls/ntdll/unix/loader.c b/dlls/ntdll/unix/loader.c
 +    if (activate( reason, sizeof(reason) ))
 +    {
 +        reason[sizeof(reason) - 1] = 0;
-+        fprintf( stderr, "FORGEPLAY_EXTERNAL_STORAGE_GRANT_V1 program=%s status=failed reason=manifest-rejected\n",
-+                 program );
++        fprintf( stderr, "FORGEPLAY_EXTERNAL_STORAGE_GRANT_V1 program=%s status=failed reason=manifest-rejected bridge_reason=%s\n",
++                 program, reason[0] ? reason : "unspecified" );
 +        dlclose( handle );
 +        return 0;
 +    }
@@ -67,11 +67,12 @@ diff --git a/dlls/ntdll/unix/loader.c b/dlls/ntdll/unix/loader.c
  
  static const char *bin_dir;
  static const char *dll_dir;
-@@ -2261,6 +2320,8 @@
+@@ -2261,6 +2320,9 @@
   */
  DECLSPEC_EXPORT void __wine_main( int argc, char *argv[] )
  {
-+    forgeplay_activate_external_storage_grants( "wine" );
++    if (!forgeplay_activate_external_storage_grants( "wine" ))
++        fatal_error( "ForgePlay external-storage access activation failed\n" );
 +
      main_argc = argc;
      main_argv = argv;
@@ -87,7 +88,7 @@ diff --git a/server/main.c b/server/main.c
  #include <fcntl.h>
  #include <signal.h>
  #include <stdio.h>
-@@ -46,6 +47,65 @@
+@@ -46,6 +47,66 @@
  int foreground = 0;
  timeout_t master_socket_timeout = 3 * -TICKS_PER_SEC;  /* master socket timeout, default is 3 seconds */
  const char *server_argv0;
@@ -141,7 +142,8 @@ diff --git a/server/main.c b/server/main.c
 +    {
 +        reason[sizeof(reason) - 1] = 0;
 +        fprintf( stderr,
-+                 "FORGEPLAY_EXTERNAL_STORAGE_GRANT_V1 program=wineserver status=failed reason=manifest-rejected\n" );
++                 "FORGEPLAY_EXTERNAL_STORAGE_GRANT_V1 program=wineserver status=failed reason=manifest-rejected bridge_reason=%s\n",
++                 reason[0] ? reason : "unspecified" );
 +        dlclose( handle );
 +        return 0;
 +    }
@@ -153,11 +155,11 @@ diff --git a/server/main.c b/server/main.c
  
  /* parse-line args */
  
-@@ -244,6 +304,8 @@
+@@ -244,6 +305,8 @@
  int main( int argc, char *argv[] )
  {
      setvbuf( stderr, NULL, _IOLBF, 0 );
-+    forgeplay_activate_external_storage_grants();
++    if (!forgeplay_activate_external_storage_grants()) return 1;
 +
      server_argv0 = argv[0];
      parse_options( argc, argv, "d::fhk::p::vw", long_options, option_callback );

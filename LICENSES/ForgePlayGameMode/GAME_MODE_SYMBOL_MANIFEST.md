@@ -30,7 +30,7 @@ The covered declarations and integration statements are:
 - Game Mode launch-record cleanup in `clearManagedProcessLaunchRecords`;
 - inclusion of the fixed host in `allowedManagedWineExecutables`;
 - `registerGameModeHostLaunch`;
-- `registeredGameModeHostProcessIDs`;
+- `registeredGameModeHostProcessInspection`;
 - `gameModeHostEvidenceProcessIDs`;
 - `gameModeHostEvidenceProcessIdentities`;
 - the Game Mode Host process-ID union in
@@ -56,9 +56,16 @@ The covered declarations and integration statements are:
 
 ## `Sources/ForgePlay/Services/SteamManager.swift`
 
-The covered code is the `gameModePolicy` parameter and its pass-through to
-`RunnerAction.launchSteam` in `launchSteam` and `launchSteamUnfinalized`,
-including bootstrap and recovery relaunch attempts.
+The covered code is:
+
+- the `gameModePolicy` parameter and its pass-through to
+  `RunnerAction.launchSteam` in `launchSteam` and `launchSteamUnfinalized`,
+  including the single operational dispatch and non-destructive startup
+  observation;
+- `GameModeHostLaunchAdmission`, the `gameModeHostLaunchAdmission` stored
+  property and initializer wiring, and `requireGameModeHostLaunchAdmission`;
+- the required-host admission calls at both `launchSteam` boundaries that run
+  before prefix lease acquisition or compatibility and renderer mutation.
 
 ## `Sources/ForgePlay/Services/SteamPrefixService.swift`
 

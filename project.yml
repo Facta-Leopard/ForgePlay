@@ -5,6 +5,7 @@
 
 name: ForgePlay
 options:
+  xcodeVersion: "26.0"
   bundleIdPrefix: com.forgeplay
   developmentLanguage: ko
   deploymentTarget:
@@ -14,11 +15,17 @@ options:
 configs:
   Debug: debug
   Release: release
+  Distribution: release
+  AppStore: release
 settings:
   configFiles:
     Debug: Config/ForgePlayDefaults.xcconfig
     Release: Config/ForgePlayDefaults.xcconfig
+    Distribution: Config/ForgePlayDefaults.xcconfig
+    AppStore: Config/ForgePlayDefaults.xcconfig
   base:
+    # Supported macOS app/test host. Bundled x86_64 Wine and Windows payloads
+    # are internal compatibility-runtime components; host support stays arm64-only.
     ARCHS: arm64
     SWIFT_VERSION: 6.0
     MACOSX_DEPLOYMENT_TARGET: 26.0
@@ -30,7 +37,12 @@ targets:
     deploymentTarget: "26.0"
     configFiles:
       Debug: Config/ForgePlayApp.xcconfig
-      Release: Config/ForgePlayApp.xcconfig
+      Release: Config/ForgePlayDirectRelease.xcconfig
+      Distribution: Config/ForgePlayDistribution.xcconfig
+      AppStore: Config/ForgePlayAppStore.xcconfig
+    settings:
+      base:
+        SWIFT_OBJC_BRIDGING_HEADER: Sources/ForgePlay/ForgePlay-Bridging-Header.h
     sources:
       - path: Sources/ForgePlay
       - path: Resources
@@ -39,12 +51,31 @@ targets:
         excludes:
           - Runners/**
           - Documents/**
+          - Fonts/**
+      - path: Resources/Documents
+        buildPhase: resources
+        type: folder
+      - path: Resources/Fonts
+        buildPhase: resources
+        type: folder
       - path: LICENSE.md
         buildPhase: resources
       - path: LICENSES
         buildPhase: resources
         type: folder
+      - path: Resources/Runners
+        buildPhase: resources
+        type: folder
+      - path: site-data/compatibility-games.json
+        buildPhase: resources
+      - path: site-data/why-story
+        buildPhase: resources
+        type: folder
     dependencies:
+      - sdk: CoreText.framework
+      - sdk: GameController.framework
+      - sdk: Security.framework
+      - sdk: ServiceManagement.framework
       - target: ExternalStorageAccessBridge
         embed: true
         link: false
@@ -58,6 +89,105 @@ targets:
         copy:
           destination: wrapper
           subpath: Contents/Helpers
+      - target: ForgePlayNetworkControlHelper
+        embed: true
+        link: false
+        codeSign: true
+        copy:
+          destination: wrapper
+          subpath: Contents/Library/HelperTools
+    preBuildScripts:
+      - name: Validate ForgePlay Product Identity
+        basedOnDependencyAnalysis: false
+        script: |
+          "$SRCROOT/Scripts/validate-product-identity.sh"
+    postBuildScripts:
+      - name: Install ForgePlay Network Control Daemon Manifest
+        basedOnDependencyAnalysis: false
+        script: |
+          set -eu
+          helper="$TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/Library/HelperTools/ForgePlayNetworkControlHelper"
+          daemon_dir="$TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/Library/LaunchDaemons"
+          daemon_plist="$daemon_dir/ForgePlayNetworkControl.plist"
+
+          if [ "$CONFIGURATION" = "AppStore" ]; then
+            /bin/rm -f "$helper" "$daemon_plist"
+            exit 0
+          fi
+
+          team_identifier="${DEVELOPMENT_TEAM:-}"
+          if [ -z "$team_identifier" ]; then
+            if [ "$CONFIGURATION" = "Distribution" ]; then
+              echo "error: Developer ID Distribution requires DEVELOPMENT_TEAM for AWDL helper identity" >&2
+              exit 1
+            fi
+            /bin/rm -f "$helper" "$daemon_plist"
+            exit 0
+          fi
+
+          case "$team_identifier" in
+            *[!A-Z0-9]*) echo "error: invalid DEVELOPMENT_TEAM for network control" >&2; exit 1 ;;
+          esac
+          case "$PRODUCT_BUNDLE_IDENTIFIER" in
+            *[!A-Za-z0-9.-]*) echo "error: invalid app bundle identifier for network control" >&2; exit 1 ;;
+          esac
+
+          test -f "$helper" && test ! -L "$helper" || {
+            echo "error: signed ForgePlay network-control helper is missing" >&2
+            exit 1
+          }
+          daemon_label="$PRODUCT_BUNDLE_IDENTIFIER.network-control"
+          mach_service="$team_identifier.$PRODUCT_BUNDLE_IDENTIFIER.network-control"
+          /usr/bin/install -d -m 0755 "$daemon_dir"
+          temporary_plist="$daemon_plist.tmp.$$"
+          trap '/bin/rm -f "$temporary_plist"' EXIT HUP INT TERM
+          /usr/bin/sed \
+            -e "s/__FORGEPLAY_DAEMON_LABEL__/$daemon_label/g" \
+            -e "s/__FORGEPLAY_MACH_SERVICE__/$mach_service/g" \
+            "$SRCROOT/Native/NetworkControlHelper/ForgePlayNetworkControl.plist" \
+            > "$temporary_plist"
+          /usr/bin/plutil -lint "$temporary_plist" >/dev/null
+          /usr/bin/install -m 0644 "$temporary_plist" "$daemon_plist"
+          /bin/rm -f "$temporary_plist"
+          trap - EXIT HUP INT TERM
+      - name: Prepare App Store Runtime Payload
+        basedOnDependencyAnalysis: false
+        runOnlyWhenInstalling: true
+        script: |
+          if [ "$CONFIGURATION" = "AppStore" ]; then
+            "$SRCROOT/Scripts/prepare-app-store-runtime-payload.sh" \
+              "$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH"
+          fi
+      - name: Sign Bundled Runtime Code
+        basedOnDependencyAnalysis: false
+        runOnlyWhenInstalling: true
+        script: |
+          if [ "$CONFIGURATION" = "Release" ]; then
+            "$SRCROOT/Scripts/sign-app-store-runtime-code.sh" \
+              --developer-id-direct \
+              "$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH" \
+              "$SRCROOT/Sources/ForgePlay/ForgePlay-Runtime-Direct.entitlements"
+          elif [ "$CONFIGURATION" = "Distribution" ]; then
+            "$SRCROOT/Scripts/sign-app-store-runtime-code.sh" \
+              --developer-id \
+              "$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH" \
+              "$SRCROOT/Sources/ForgePlay/ForgePlay-Runtime-Inherit.entitlements"
+          elif [ "$CONFIGURATION" = "AppStore" ]; then
+            "$SRCROOT/Scripts/sign-app-store-runtime-code.sh" \
+              --app-store \
+              "$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH" \
+              "$SRCROOT/Sources/ForgePlay/ForgePlay-Runtime-Inherit.entitlements"
+          fi
+      - name: Install Public Distribution Build Authority
+        basedOnDependencyAnalysis: false
+        runOnlyWhenInstalling: true
+        script: |
+          if [ "$CONFIGURATION" = "Distribution" ] && [ "${FORGEPLAY_ALLOW_UNNOTARIZED_DMG:-0}" != "1" ]; then
+            claim_source="$SRCROOT/Resources/PublicDistributionBuildClaim.json"
+            claim_destination="$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/PublicDistributionBuildClaim.json"
+            test -f "$claim_source" && test ! -L "$claim_source" || exit 1
+            /usr/bin/install -m 0444 "$claim_source" "$claim_destination"
+          fi
   ExternalStorageAccessBridge:
     type: library.dynamic
     productName: ForgePlayExternalStorageAccess
@@ -66,6 +196,8 @@ targets:
     configFiles:
       Debug: Config/ForgePlayExternalStorageAccessBridge.xcconfig
       Release: Config/ForgePlayExternalStorageAccessBridge.xcconfig
+      Distribution: Config/ForgePlayExternalStorageAccessBridge.xcconfig
+      AppStore: Config/ForgePlayExternalStorageAccessBridge.xcconfig
     sources:
       - path: Native/ExternalStorageAccessBridge/ExternalStorageAccessBridge.m
       - path: Native/ExternalStorageAccessBridge/ExternalStorageAccessBridge.h
@@ -78,7 +210,9 @@ targets:
     deploymentTarget: "26.0"
     configFiles:
       Debug: Config/ForgePlayGameModeProcessHost.xcconfig
-      Release: Config/ForgePlayGameModeProcessHost.xcconfig
+      Release: Config/ForgePlayGameModeProcessHostRelease.xcconfig
+      Distribution: Config/ForgePlayGameModeProcessHostDistribution.xcconfig
+      AppStore: Config/ForgePlayGameModeProcessHostAppStore.xcconfig
     sources:
       - path: Native/GameModeProcessHost/GameModeProcessHost.m
       - path: Native/GameModeProcessHost/GameModeRuntimeIdentity.m
@@ -91,7 +225,7 @@ targets:
       - sdk: Foundation.framework
       - sdk: Security.framework
     preBuildScripts:
-      - name: Bind Source Runtime Identity
+      - name: Bind Exact Game Mode Host Runtime Identity
         basedOnDependencyAnalysis: true
         inputFiles:
           - $(SRCROOT)/Native/GameModeProcessHost/Info.plist
@@ -102,10 +236,33 @@ targets:
           - $(DERIVED_FILE_DIR)/GameModeHostEmbeddedInfo.plist
         script: |
           "$SRCROOT/Scripts/prepare-game-mode-host-build-identity.sh"
+  ForgePlayNetworkControlHelper:
+    type: tool
+    platform: macOS
+    deploymentTarget: "26.0"
+    configFiles:
+      Debug: Config/ForgePlayNetworkControlHelper.xcconfig
+      Release: Config/ForgePlayNetworkControlHelper.xcconfig
+      Distribution: Config/ForgePlayNetworkControlHelperDistribution.xcconfig
+      AppStore: Config/ForgePlayNetworkControlHelperAppStore.xcconfig
+    sources:
+      - path: Native/NetworkControlHelper/main.swift
+      - path: Sources/ForgePlay/NetworkControl/AWDLControlContract.swift
+      - path: Sources/ForgePlay/NetworkControl/AWDLPrivilegedOperationController.swift
+      - path: Sources/ForgePlay/Services/BoundedProcessExecutor.swift
+      - path: Sources/ForgePlay/Services/TechnicalErrorSummary.swift
+    dependencies:
+      - sdk: Foundation.framework
+      - sdk: Security.framework
   ForgePlayTests:
     type: bundle.unit-test
     platform: macOS
     deploymentTarget: "26.0"
+    configFiles:
+      Debug: Config/ForgePlayTests.xcconfig
+      Release: Config/ForgePlayTests.xcconfig
+      Distribution: Config/ForgePlayTests.xcconfig
+      AppStore: Config/ForgePlayTests.xcconfig
     sources:
       - path: Tests/ForgePlayTests
     dependencies:
@@ -122,5 +279,19 @@ schemes:
       config: Debug
       targets:
         - ForgePlayTests
+  ForgePlayAppStore:
+    build:
+      targets:
+        ForgePlay: all
+    run:
+      config: AppStore
     archive:
-      config: Release
+      config: AppStore
+  ForgePlayDMG:
+    build:
+      targets:
+        ForgePlay: all
+    run:
+      config: Distribution
+    archive:
+      config: Distribution

@@ -4,11 +4,37 @@ enum ForgePlaySceneID {
     static let main = "forgeplay-main"
 }
 
+enum AppStartupDestinationResolver {
+    static func resolve(current: AppSection, readiness: SetupReadiness) -> AppSection {
+        guard current == .dashboard else { return current }
+        return readiness.canAttemptWindowsSteamLaunch ? .steamLaunch : .setup
+    }
+
+    static func resolveLaunchabilityTransition(
+        current: AppSection,
+        previousReadiness: SetupReadiness,
+        readiness: SetupReadiness,
+        ownsAutomaticSetupDestination: Bool
+    ) -> AppSection {
+        guard ownsAutomaticSetupDestination,
+              current == .setup,
+              !previousReadiness.canAttemptWindowsSteamLaunch,
+              readiness.canAttemptWindowsSteamLaunch else {
+            return current
+        }
+        return .steamLaunch
+    }
+}
+
 enum AppSection: String, CaseIterable, Identifiable {
     case dashboard
     case setup
     case steamLaunch
+    case steamCompatibilityLaunch
+    case compatibilityCatalog
+    case windowsUtility
     case diagnostics
+    case learnAboutForgePlay
     case hallOfSupporters
     case developerApps
     case settings
@@ -19,12 +45,16 @@ enum AppSection: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .dashboard: "대시보드"
-        case .setup: "처음 설정"
+        case .setup: "설정"
         case .steamLaunch: "Steam 실행"
-        case .diagnostics: "문제 진단"
+        case .steamCompatibilityLaunch: "Steam 호환성 실행 (베타)"
+        case .compatibilityCatalog: "게임 호환성 DB"
+        case .windowsUtility: "EXE 실행 (베타)"
+        case .diagnostics: "문제 진단 (베타)"
+        case .learnAboutForgePlay: "만든 이유"
         case .hallOfSupporters: "후원자 명예의 전당"
         case .developerApps: "제작자의 다른 앱"
-        case .settings: "설정"
+        case .settings: "환경 설정"
         case .advanced: "고급 정보"
         }
     }
@@ -34,7 +64,11 @@ enum AppSection: String, CaseIterable, Identifiable {
         case .dashboard: "square.grid.2x2"
         case .setup: "checklist"
         case .steamLaunch: "play.circle.fill"
+        case .steamCompatibilityLaunch: "gamecontroller.fill"
+        case .compatibilityCatalog: "list.bullet.rectangle"
+        case .windowsUtility: "terminal.fill"
         case .diagnostics: "waveform.path.ecg.rectangle"
+        case .learnAboutForgePlay: "book.closed.fill"
         case .hallOfSupporters: "building.columns.fill"
         case .developerApps: "square.grid.3x3.square"
         case .settings: "gearshape"

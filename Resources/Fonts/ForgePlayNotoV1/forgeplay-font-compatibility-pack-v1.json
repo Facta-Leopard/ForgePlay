@@ -1,0 +1,261 @@
+{
+  "schema": "ForgePlayFontCompatibilityManifestV1",
+  "schemaVersion": 1,
+  "packID": "forgeplay-font-compatibility-pack-v1",
+  "license": "SIL Open Font License 1.1",
+  "sourceBytesModified": false,
+  "fontCountExact": 10,
+  "licenseTextCountExact": 2,
+  "packByteLengthExact": 135069481,
+  "fonts": [
+    {
+      "fileName": "NotoSans-Regular.ttf",
+      "role": "latin-regular",
+      "byteLength": 621572,
+      "sha256": "478c558ea716033cd60c03438f628dfa75694dcf6b5f6d505a2f05fd2b4f3823",
+      "tableProfile": "latinTrueTypeProfile",
+      "family": "Noto Sans",
+      "subfamily": "Regular",
+      "fullName": "Noto Sans Regular",
+      "postScriptName": "NotoSans-Regular",
+      "uniqueID": "2.015;GOOG;NotoSans-Regular",
+      "version": "Version 2.015; ttfautohint (v1.8.4.7-5d5b)",
+      "os2WeightClass": 400,
+      "os2WidthClass": 5,
+      "os2Selection": 192,
+      "headMacStyle": 0,
+      "italicAngle": 0,
+      "mappedLocalizations": ["en", "ko", "de", "es", "fr", "ja", "zh-Hans", "zh-Hant"]
+    },
+    {
+      "fileName": "NotoSans-Bold.ttf",
+      "role": "latin-bold",
+      "byteLength": 631484,
+      "sha256": "1df075a380fc7cb898acf64c1f7b3b4dd780de3caa860178bf929de35817a913",
+      "tableProfile": "latinTrueTypeProfile",
+      "family": "Noto Sans",
+      "subfamily": "Bold",
+      "fullName": "Noto Sans Bold",
+      "postScriptName": "NotoSans-Bold",
+      "uniqueID": "2.015;GOOG;NotoSans-Bold",
+      "version": "Version 2.015; ttfautohint (v1.8.4.7-5d5b)",
+      "os2WeightClass": 700,
+      "os2WidthClass": 5,
+      "os2Selection": 160,
+      "headMacStyle": 1,
+      "italicAngle": 0,
+      "mappedLocalizations": ["en", "ko", "de", "es", "fr", "ja", "zh-Hans", "zh-Hant"]
+    },
+    {
+      "fileName": "NotoSansCJKkr-Regular.otf",
+      "role": "korean-regular",
+      "byteLength": 16433112,
+      "sha256": "6bcb2a0703aa137e874fc2dffa85f6c21ba9a67fa329e81b8c801663af7e992a",
+      "tableProfile": "cjkOpenTypeCFFProfile",
+      "family": "Noto Sans CJK KR",
+      "subfamily": "Regular",
+      "fullName": "Noto Sans CJK KR",
+      "postScriptName": "NotoSansCJKkr-Regular",
+      "uniqueID": "2.004;GOOG;NotoSansCJKkr-Regular;ADOBE",
+      "version": "Version 2.004;hotconv 1.0.118;makeotfexe 2.5.65603",
+      "os2WeightClass": 400,
+      "os2WidthClass": 5,
+      "os2Selection": 64,
+      "headMacStyle": 0,
+      "italicAngle": 0,
+      "mappedLocalizations": ["ko"]
+    },
+    {
+      "fileName": "NotoSansCJKkr-Bold.otf",
+      "role": "korean-bold",
+      "byteLength": 16997996,
+      "sha256": "26d0c6748500a0444844280b308f5b62c7ae92ac6c6ac88148e502dd211eb52a",
+      "tableProfile": "cjkOpenTypeCFFProfile",
+      "family": "Noto Sans CJK KR",
+      "subfamily": "Bold",
+      "fullName": "Noto Sans CJK KR Bold",
+      "postScriptName": "NotoSansCJKkr-Bold",
+      "uniqueID": "2.004;GOOG;NotoSansCJKkr-Bold;ADOBE",
+      "version": "Version 2.004;hotconv 1.0.118;makeotfexe 2.5.65603",
+      "os2WeightClass": 700,
+      "os2WidthClass": 5,
+      "os2Selection": 32,
+      "headMacStyle": 1,
+      "italicAngle": 0,
+      "mappedLocalizations": ["ko"]
+    },
+    {
+      "fileName": "NotoSansCJKjp-Regular.otf",
+      "role": "japanese-regular",
+      "byteLength": 16467736,
+      "sha256": "68a3fc98800b2a27b371f2fb79991daf3633bd89309d4ffaa6946fd587f375b5",
+      "tableProfile": "cjkOpenTypeCFFProfile",
+      "family": "Noto Sans CJK JP",
+      "subfamily": "Regular",
+      "fullName": "Noto Sans CJK JP",
+      "postScriptName": "NotoSansCJKjp-Regular",
+      "uniqueID": "2.004;GOOG;NotoSansCJKjp-Regular;ADOBE",
+      "version": "Version 2.004;hotconv 1.0.118;makeotfexe 2.5.65603",
+      "os2WeightClass": 400,
+      "os2WidthClass": 5,
+      "os2Selection": 64,
+      "headMacStyle": 0,
+      "italicAngle": 0,
+      "mappedLocalizations": ["ja"]
+    },
+    {
+      "fileName": "NotoSansCJKjp-Bold.otf",
+      "role": "japanese-bold",
+      "byteLength": 17032620,
+      "sha256": "e53dcb0dcb2922e45d01aae1ebd2f382bb81d4229b18b6b883bd170678af1f76",
+      "tableProfile": "cjkOpenTypeCFFProfile",
+      "family": "Noto Sans CJK JP",
+      "subfamily": "Bold",
+      "fullName": "Noto Sans CJK JP Bold",
+      "postScriptName": "NotoSansCJKjp-Bold",
+      "uniqueID": "2.004;GOOG;NotoSansCJKjp-Bold;ADOBE",
+      "version": "Version 2.004;hotconv 1.0.118;makeotfexe 2.5.65603",
+      "os2WeightClass": 700,
+      "os2WidthClass": 5,
+      "os2Selection": 32,
+      "headMacStyle": 1,
+      "italicAngle": 0,
+      "mappedLocalizations": ["ja"]
+    },
+    {
+      "fileName": "NotoSansCJKsc-Regular.otf",
+      "role": "simplified-chinese-regular",
+      "byteLength": 16437364,
+      "sha256": "2c76254f6fc379fddfce0a7e84fb5385bb135d3e399294f6eeb6680d0365b74b",
+      "tableProfile": "cjkOpenTypeCFFProfile",
+      "family": "Noto Sans CJK SC",
+      "subfamily": "Regular",
+      "fullName": "Noto Sans CJK SC",
+      "postScriptName": "NotoSansCJKsc-Regular",
+      "uniqueID": "2.004;GOOG;NotoSansCJKsc-Regular;ADOBE",
+      "version": "Version 2.004;hotconv 1.0.118;makeotfexe 2.5.65603",
+      "os2WeightClass": 400,
+      "os2WidthClass": 5,
+      "os2Selection": 64,
+      "headMacStyle": 0,
+      "italicAngle": 0,
+      "mappedLocalizations": ["zh-Hans"]
+    },
+    {
+      "fileName": "NotoSansCJKsc-Bold.otf",
+      "role": "simplified-chinese-bold",
+      "byteLength": 17002248,
+      "sha256": "b5f0d1a190a7f9b43c310a8850630af12553df32c4c050543f9059732d9b4c0a",
+      "tableProfile": "cjkOpenTypeCFFProfile",
+      "family": "Noto Sans CJK SC",
+      "subfamily": "Bold",
+      "fullName": "Noto Sans CJK SC Bold",
+      "postScriptName": "NotoSansCJKsc-Bold",
+      "uniqueID": "2.004;GOOG;NotoSansCJKsc-Bold;ADOBE",
+      "version": "Version 2.004;hotconv 1.0.118;makeotfexe 2.5.65603",
+      "os2WeightClass": 700,
+      "os2WidthClass": 5,
+      "os2Selection": 32,
+      "headMacStyle": 1,
+      "italicAngle": 0,
+      "mappedLocalizations": ["zh-Hans"]
+    },
+    {
+      "fileName": "NotoSansCJKtc-Regular.otf",
+      "role": "traditional-chinese-taiwan-regular",
+      "byteLength": 16435884,
+      "sha256": "dce08bd4fd91aa8aa76ed8fea4b694c2dfb8550f67871e326843212ddbeb88b4",
+      "tableProfile": "cjkOpenTypeCFFProfile",
+      "family": "Noto Sans CJK TC",
+      "subfamily": "Regular",
+      "fullName": "Noto Sans CJK TC",
+      "postScriptName": "NotoSansCJKtc-Regular",
+      "uniqueID": "2.004;GOOG;NotoSansCJKtc-Regular;ADOBE",
+      "version": "Version 2.004;hotconv 1.0.118;makeotfexe 2.5.65603",
+      "os2WeightClass": 400,
+      "os2WidthClass": 5,
+      "os2Selection": 64,
+      "headMacStyle": 0,
+      "italicAngle": 0,
+      "mappedLocalizations": ["zh-Hant"]
+    },
+    {
+      "fileName": "NotoSansCJKtc-Bold.otf",
+      "role": "traditional-chinese-taiwan-bold",
+      "byteLength": 17000768,
+      "sha256": "3ee160e5015106e3ec1a394301df54fa9bbbf8a251519984aec5c0abc50840c0",
+      "tableProfile": "cjkOpenTypeCFFProfile",
+      "family": "Noto Sans CJK TC",
+      "subfamily": "Bold",
+      "fullName": "Noto Sans CJK TC Bold",
+      "postScriptName": "NotoSansCJKtc-Bold",
+      "uniqueID": "2.004;GOOG;NotoSansCJKtc-Bold;ADOBE",
+      "version": "Version 2.004;hotconv 1.0.118;makeotfexe 2.5.65603",
+      "os2WeightClass": 700,
+      "os2WidthClass": 5,
+      "os2Selection": 32,
+      "headMacStyle": 1,
+      "italicAngle": 0,
+      "mappedLocalizations": ["zh-Hant"]
+    }
+  ],
+  "licenseTexts": [
+    {
+      "fileName": "NotoSans-OFL.txt",
+      "role": "latin-license-text",
+      "byteLength": 4396,
+      "sha256": "cee9892f9f0cc8fe882c9e9537ee6a89621d86ee7ceaf70b02e2b2b1c25c061a",
+      "appliesToRoles": ["latin-regular", "latin-bold"]
+    },
+    {
+      "fileName": "NotoSansCJK-OFL.txt",
+      "role": "cjk-license-text",
+      "byteLength": 4301,
+      "sha256": "6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2",
+      "appliesToRoles": [
+        "korean-regular", "korean-bold",
+        "japanese-regular", "japanese-bold",
+        "simplified-chinese-regular", "simplified-chinese-bold",
+        "traditional-chinese-taiwan-regular", "traditional-chinese-taiwan-bold"
+      ]
+    }
+  ],
+  "copyrightAttributions": [
+    {
+      "scope": "latin",
+      "notice": "Copyright 2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic)"
+    },
+    {
+      "scope": "cjk",
+      "notice": "© 2014-2021 Adobe (http://www.adobe.com/)."
+    }
+  ],
+  "localePolicy": [
+    {
+      "localizations": ["en", "de", "es", "fr"],
+      "regularRoleCascade": ["latin-regular"],
+      "boldRoleCascade": ["latin-bold"]
+    },
+    {
+      "localizations": ["ko"],
+      "regularRoleCascade": ["latin-regular", "korean-regular"],
+      "boldRoleCascade": ["latin-bold", "korean-bold"]
+    },
+    {
+      "localizations": ["ja"],
+      "regularRoleCascade": ["latin-regular", "japanese-regular"],
+      "boldRoleCascade": ["latin-bold", "japanese-bold"]
+    },
+    {
+      "localizations": ["zh-Hans"],
+      "regularRoleCascade": ["latin-regular", "simplified-chinese-regular"],
+      "boldRoleCascade": ["latin-bold", "simplified-chinese-bold"]
+    },
+    {
+      "localizations": ["zh-Hant"],
+      "regularRoleCascade": ["latin-regular", "traditional-chinese-taiwan-regular"],
+      "boldRoleCascade": ["latin-bold", "traditional-chinese-taiwan-bold"]
+    }
+  ],
+  "humanReadableNoticeResource": "ForgePlayThirdPartyNotices.md"
+}

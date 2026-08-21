@@ -15,11 +15,13 @@
 
 #import <sys/file.h>
 #import <sys/stat.h>
+#import <libproc.h>
 #import <pwd.h>
 #import <dispatch/dispatch.h>
 #import <errno.h>
 #import <fcntl.h>
 #import <stdlib.h>
+#import <stdint.h>
 #import <string.h>
 #import <unistd.h>
 
@@ -28,6 +30,19 @@ static NSError *FPApplicationGroupError(NSString *reasonCode)
     return [NSError errorWithDomain:FPGameModeHostErrorDomain
                                code:FPGameModeHostErrorInvalidApplicationGroup
                            userInfo:@{NSLocalizedFailureReasonErrorKey: reasonCode}];
+}
+
+static NSNumber *FPCurrentProcessStartedAtUnixMicroseconds(void)
+{
+    struct proc_bsdinfo info = {0};
+    const int expectedSize = (int)sizeof(info);
+    int copied = proc_pidinfo(getpid(), PROC_PIDTBSDINFO, 0,
+                              &info, expectedSize);
+    if (copied != expectedSize || info.pbi_start_tvusec >= 1000000) return nil;
+    uint64_t seconds = (uint64_t)info.pbi_start_tvsec;
+    uint64_t microseconds = (uint64_t)info.pbi_start_tvusec;
+    if (seconds > (UINT64_MAX - microseconds) / 1000000ULL) return nil;
+    return @(seconds * 1000000ULL + microseconds);
 }
 
 static NSString *FPCanonicalGroupPath(NSString *path)
@@ -184,12 +199,12 @@ static BOOL FPValidateScopeIdentifier(NSString *scopeIdentifier)
 {
     NSString *expectedIdentifier = @FORGEPLAY_GAME_MODE_APPLICATION_GROUP;
     /*
-     * This executable inherits ForgePlay's App Sandbox. Its own signature must
-     * not redeclare App Group, file, or network sandbox keys: mixing those
-     * models makes secinit abort the child before main. The fixed compiled
-     * group identifier and a successful container lookup prove that the
-     * inherited parent sandbox grants the intended shared container; the
-     * descriptor checks below then validate its on-disk identity.
+     * Sandboxed hosts inherit ForgePlay's App Group while the non-sandboxed
+     * direct Release host carries that one group in its own signature. The
+     * fixed compiled identifier and a successful lookup prove access to the
+     * intended narrow coordination container; descriptor checks below then
+     * validate its on-disk identity. Product data remains outside this scope
+     * for the direct Release profile.
      */
     NSURL *containerURL =
         FPInheritedApplicationGroupContainerURL(expectedIdentifier);
@@ -328,6 +343,12 @@ static BOOL FPValidateScopeIdentifier(NSString *scopeIdentifier)
         return NO;
     }
 
+    NSNumber *processStartedAt = FPCurrentProcessStartedAtUnixMicroseconds();
+    if (!processStartedAt) {
+        (void)flock(descriptor, LOCK_UN);
+        close(descriptor);
+        return NO;
+    }
     NSMutableDictionary *record = [@{
         @"schema_version": @1,
         @"producer": @"game-mode-process-host",
@@ -335,6 +356,7 @@ static BOOL FPValidateScopeIdentifier(NSString *scopeIdentifier)
         @"recorded_at_unix_milliseconds":
             @((long long)([NSDate date].timeIntervalSince1970 * 1000.0)),
         @"darwin_pid": @(getpid()),
+        @"process_started_at_unix_microseconds": processStartedAt,
         @"bound_runtime_identifier": @FORGEPLAY_GAME_MODE_RUNTIME_IDENTIFIER,
         @"bound_runtime_build_fingerprint":
             @FORGEPLAY_GAME_MODE_RUNTIME_BUILD_FINGERPRINT,

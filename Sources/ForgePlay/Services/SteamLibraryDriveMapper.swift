@@ -1,5 +1,15 @@
 import Foundation
 
+/// Defines whether the caller's authorized selections are a complete storage
+/// inventory or only a direct subtree capability used by one launch. A direct
+/// subtree must never be promoted to its unselected parent, and its absence
+/// from the drive/library inventory is not evidence that older ForgePlay-owned
+/// mappings are stale.
+enum SteamLibraryDriveReconciliationScope: Hashable, Sendable {
+    case authoritativeStorageInventory
+    case preservingUnrepresentedState
+}
+
 final class SteamLibraryDriveMapper {
     private static let bridgeDirectoryName = ".forgeplay-library-drives"
     private static let bridgeLibraryDirectoryName = "SteamLibrary"
@@ -13,13 +23,18 @@ final class SteamLibraryDriveMapper {
     }
 
     private struct DriveAssignment: Codable, Hashable {
-        static let currentVersion = 2
+        static let currentVersion = 3
         static let supportedVersions = 1...currentVersion
 
         var version: Int
         var storageIdentity: String
         var lastKnownPath: String
         var driveLinkOwnership: DriveLinkOwnership?
+        /// `true` means the bookmark-backed storage is temporarily unavailable
+        /// but the user has not disconnected it. This reservation keeps the
+        /// stable drive identity and ForgePlay-owned Steam registration intact
+        /// until access is restored or the mount is explicitly removed.
+        var isReservedOnly: Bool?
     }
 
     private struct OwnedRegistration: Codable, Hashable {
@@ -31,7 +46,7 @@ final class SteamLibraryDriveMapper {
     }
 
     private struct RegistrationManifest: Codable, Hashable {
-        static let currentVersion = 2
+        static let currentVersion = 3
 
         var version: Int
         var ownedRegistrations: [OwnedRegistration]
@@ -72,7 +87,10 @@ final class SteamLibraryDriveMapper {
         libraryRoots: [URL],
         reservedLibraryRoots: [URL] = []
     ) throws -> [SteamLibraryDriveMapping] {
-        try prepareDriveLinks(
+        // This legacy entry point is the strict existing-library contract.
+        // Callers that authorize blank storage must use
+        // `prepareStorageDriveLinks` instead.
+        return try prepareDriveLinks(
             prefix: prefix,
             sources: libraryRoots.map {
                 SteamLibraryDriveSource(
@@ -89,6 +107,38 @@ final class SteamLibraryDriveMapper {
         sources: [SteamLibraryDriveSource],
         reservedDriveRoots: [URL] = []
     ) throws -> [SteamLibraryDriveMapping] {
+        // Preserve the strict behavior of the existing-library API.
+        let normalizedSources = normalizedDriveSources(sources)
+        try validateAuthorizedDriveRootsBeforeMutation(
+            normalizedSelectedDriveRoots(
+                normalizedSources.map(\.authorizedRootURL)
+            )
+        )
+        try validateDriveSourcesBeforeMutation(normalizedSources)
+        for source in normalizedSources {
+            _ = try steamLibraryContentID(
+                at: source.libraryURL.standardizedFileURL
+            )
+        }
+        return try prepareStorageDriveLinks(
+            prefix: prefix,
+            authorizedStorageRoots: sources.map(\.authorizedRootURL),
+            sources: sources,
+            reservedDriveRoots: reservedDriveRoots
+        ).libraryMappings
+    }
+
+    /// Exposes every authorized root as a direct Wine drive. Existing Steam
+    /// libraries below those roots are an optional, independently validated
+    /// input used only for `libraryfolders.vdf` registration.
+    func prepareStorageDriveLinks(
+        prefix: URL,
+        authorizedStorageRoots: [URL],
+        sources: [SteamLibraryDriveSource],
+        reservedDriveRoots: [URL] = [],
+        reconciliationScope: SteamLibraryDriveReconciliationScope =
+            .authoritativeStorageInventory
+    ) throws -> SteamStorageDrivePreparation {
         let dosdevices = prefix.appending(path: "dosdevices", directoryHint: .isDirectory)
         guard FileSystemItemPolicy.isNonSymlinkDirectory(dosdevices, fileManager: fileManager) else {
             throw SteamLibraryDriveBridgeError.dosdevicesUnavailable(dosdevices)
@@ -98,7 +148,14 @@ final class SteamLibraryDriveMapper {
             directoryHint: .isDirectory
         )
         let activeSources = normalizedDriveSources(sources)
+        let activeDriveRoots = normalizedSelectedDriveRoots(
+            authorizedStorageRoots + activeSources.map(\.authorizedRootURL)
+        )
+        try validateAuthorizedDriveRootsBeforeMutation(activeDriveRoots)
         try validateDriveSourcesBeforeMutation(activeSources)
+        let registrationSources = Set(activeSources.filter {
+            isSteamLibraryRegistrationReady(at: $0.libraryURL)
+        })
 
         // This directory owns stable drive-letter assignment metadata only.
         // The actual Wine drive always points directly at the user-authorized
@@ -111,20 +168,21 @@ final class SteamLibraryDriveMapper {
             throw SteamLibraryDriveBridgeError.bridgeDirectoryUnavailable(bridgeDirectory)
         }
 
-        let activeDriveRoots = normalizedSelectedDriveRoots(
-            activeSources.map(\.authorizedRootURL)
-        )
         let activeIdentities = Set(activeDriveRoots.map(storageIdentity(for:)))
         let inactiveReservedRoots = normalizedSelectedDriveRoots(reservedDriveRoots).filter {
             !activeIdentities.contains(storageIdentity(for: $0))
         }
-        try removeOrphanedBridgeReservations(
-            dosdevices: dosdevices,
-            bridgeDirectory: bridgeDirectory,
-            requestedRoots: inactiveReservedRoots + activeDriveRoots
-        )
+        if reconciliationScope == .authoritativeStorageInventory {
+            try removeOrphanedBridgeReservations(
+                dosdevices: dosdevices,
+                bridgeDirectory: bridgeDirectory,
+                requestedRoots: inactiveReservedRoots + activeDriveRoots
+            )
+        }
 
         var mappings: [SteamLibraryDriveMapping] = []
+        var pendingMappings: [SteamLibraryDriveMapping] = []
+        var activeDriveLetters = Set<String>()
         var usedLetters = Set<String>()
         for libraryRoot in inactiveReservedRoots {
             guard let letter = try driveLetter(
@@ -145,7 +203,8 @@ final class SteamLibraryDriveMapper {
                 for: libraryRoot,
                 driveLetter: letter,
                 bridgeDirectory: bridgeDirectory,
-                driveLinkOwnership: existingOwnership
+                driveLinkOwnership: existingOwnership,
+                isReservedOnly: true
             )
         }
         for authorizedRoot in activeDriveRoots {
@@ -174,7 +233,8 @@ final class SteamLibraryDriveMapper {
                 for: authorizedRoot,
                 driveLetter: letter,
                 bridgeDirectory: bridgeDirectory,
-                driveLinkOwnership: existingOwnership
+                driveLinkOwnership: existingOwnership,
+                isReservedOnly: false
             )
             let installedOwnership = try installDriveLink(
                 dosdevices.appending(path: "\(letter):"),
@@ -187,25 +247,29 @@ final class SteamLibraryDriveMapper {
             try writeAssignment(
                 for: authorizedRoot,
                 at: bridgeRoot,
-                driveLinkOwnership: installedOwnership
+                driveLinkOwnership: installedOwnership,
+                isReservedOnly: false
             )
-            let libraries = activeSources
+            activeDriveLetters.insert(letter)
+            let sourcesForDrive = activeSources
                 .filter {
                     storageIdentity(for: $0.authorizedRootURL) ==
                         storageIdentity(for: authorizedRoot)
                 }
-                .map(\.libraryURL)
                 .sorted {
-                    $0.path.localizedStandardCompare($1.path) == .orderedAscending
+                    $0.libraryURL.path.localizedStandardCompare(
+                        $1.libraryURL.path
+                    ) == .orderedAscending
                 }
-            for libraryRoot in libraries {
+            for source in sourcesForDrive {
+                let libraryRoot = source.libraryURL
                 guard FileSystemItemPolicy.isNonSymlinkDirectory(
                     libraryRoot,
                     fileManager: fileManager
                 ) else {
                     throw SteamLibraryDriveBridgeError.libraryRootUnavailable(libraryRoot)
                 }
-                mappings.append(SteamLibraryDriveMapping(
+                let mapping = SteamLibraryDriveMapping(
                     driveLetter: letter,
                     macLibraryURL: libraryRoot,
                     windowsLibraryPath: try windowsLibraryPath(
@@ -214,16 +278,27 @@ final class SteamLibraryDriveMapper {
                         libraryRoot: libraryRoot
                     ),
                     macDriveRootURL: authorizedRoot
-                ))
+                )
+                if registrationSources.contains(source) {
+                    mappings.append(mapping)
+                } else {
+                    pendingMappings.append(mapping)
+                }
             }
         }
-        try removeInactiveManagedBridges(
-            dosdevices: dosdevices,
-            bridgeDirectory: bridgeDirectory,
-            activeDriveLetters: Set(mappings.map(\.driveLetter)),
-            reservedDriveLetters: usedLetters
+        if reconciliationScope == .authoritativeStorageInventory {
+            try removeInactiveManagedBridges(
+                dosdevices: dosdevices,
+                bridgeDirectory: bridgeDirectory,
+                activeDriveLetters: activeDriveLetters,
+                reservedDriveLetters: usedLetters
+            )
+        }
+        return SteamStorageDrivePreparation(
+            externalStorageRoots: activeDriveRoots,
+            libraryMappings: mappings,
+            pendingLibraryMappings: pendingMappings
         )
-        return mappings
     }
 
     nonisolated static func libraryRootCandidate(from game: SteamGame) -> URL {
@@ -362,8 +437,20 @@ final class SteamLibraryDriveMapper {
     /// already existed before ForgePlay saw it is never claimed as ours.
     func synchronizeDriveMappingsWithSteam(
         prefix: URL,
-        mappings: [SteamLibraryDriveMapping]
+        mappings: [SteamLibraryDriveMapping],
+        pendingMappings: [SteamLibraryDriveMapping] = [],
+        reconciliationScope: SteamLibraryDriveReconciliationScope =
+            .authoritativeStorageInventory
     ) throws {
+        // A direct `steamapps` capability authorizes process access only. With
+        // no independently authorized storage mapping there is intentionally
+        // nothing to reconcile, so even reading and rewriting unrelated Steam
+        // registration state would exceed this request's ownership boundary.
+        if reconciliationScope == .preservingUnrepresentedState,
+           mappings.isEmpty,
+           pendingMappings.isEmpty {
+            return
+        }
         let bridgeDirectory = prefix.appending(
             path: Self.bridgeDirectoryName,
             directoryHint: .isDirectory
@@ -379,7 +466,12 @@ final class SteamLibraryDriveMapper {
             },
             uniquingKeysWith: { existing, _ in existing }
         )
-        guard !mappings.isEmpty || !previousOwnedByPath.isEmpty else { return }
+        let reservedStorageIdentities = try reservedOnlyStorageIdentities(
+            in: bridgeDirectory
+        )
+        guard !mappings.isEmpty ||
+                !pendingMappings.isEmpty ||
+                !previousOwnedByPath.isEmpty else { return }
 
         let steamDirectory = prefix.appending(
             path: "drive_c/Program Files (x86)/Steam",
@@ -424,15 +516,70 @@ final class SteamLibraryDriveMapper {
                 "missing libraryfolders object"
             )
         }
+        let originalLibraryFolders = libraryFolders
 
         let activeByPath = Dictionary(
             mappings.map { (normalizedWindowsPath($0.windowsLibraryPath), $0) },
             uniquingKeysWith: { existing, _ in existing }
         )
         let activePaths = Set(activeByPath.keys)
+        let pendingByPath = Dictionary(
+            pendingMappings.compactMap { mapping -> (String, SteamLibraryDriveMapping)? in
+                let path = normalizedWindowsPath(mapping.windowsLibraryPath)
+                guard activeByPath[path] == nil else { return nil }
+                return (path, mapping)
+            },
+            uniquingKeysWith: { existing, _ in existing }
+        )
+        let retainedPendingOwnedByPath = try Dictionary(
+            uniqueKeysWithValues: previousOwnedByPath.compactMap {
+                path,
+                ownership -> (String, OwnedRegistration)? in
+                guard let mapping = pendingByPath[path],
+                      registrationTarget(
+                          ownership,
+                          matches: ownedRegistration(
+                              for: mapping,
+                              contentID: ownership.contentID
+                          )
+                      ),
+                      try registrationOwnershipMatchesEveryExistingCopy(
+                          ownership,
+                          at: targetURLs
+                      ) else {
+                    return nil
+                }
+                return (path, ownership)
+            }
+        )
+        let retainedReservedOwnedByPath = try Dictionary(
+            uniqueKeysWithValues: previousOwnedByPath.compactMap {
+                path,
+                ownership -> (String, OwnedRegistration)? in
+                guard reservedStorageIdentities.contains(
+                    ownership.driveRootStorageIdentity
+                ),
+                try registrationOwnershipMatchesEveryExistingCopy(
+                    ownership,
+                    at: targetURLs
+                ) else {
+                    return nil
+                }
+                return (path, ownership)
+            }
+        )
+        var retainedAuthoritativeOwnedByPath = retainedPendingOwnedByPath
+        for (path, ownership) in retainedReservedOwnedByPath {
+            retainedAuthoritativeOwnedByPath[path] = ownership
+        }
+        let retainedOwnedByPath =
+            reconciliationScope == .preservingUnrepresentedState
+                ? previousOwnedByPath
+                : retainedAuthoritativeOwnedByPath
+        let protectedPaths = activePaths.union(retainedOwnedByPath.keys)
         let removableOwnedPaths: Set<String> = try Set(
             previousOwnedByPath.values.compactMap { ownership in
-                guard !activePaths.contains(ownership.normalizedWindowsPath),
+                guard !protectedPaths.contains(ownership.normalizedWindowsPath),
                       try registrationOwnershipMatchesEveryExistingCopy(
                           ownership,
                           at: targetURLs
@@ -480,19 +627,48 @@ final class SteamLibraryDriveMapper {
             }
         )
         var registeredPaths = Set(registeredEntriesByPath.keys)
-        var nextOwnedByPath: [String: OwnedRegistration] = [:]
+        var nextOwnedByPath = retainedOwnedByPath
         for path in activePaths.sorted() {
             guard let mapping = activeByPath[path] else {
                 continue
             }
-            let desiredOwnership = ownedRegistration(for: mapping)
             if let existingEntry = registeredEntriesByPath[path] {
                 if let previousOwnership = previousOwnedByPath[path],
-                   previousOwnership == desiredOwnership,
                    registrationEntry(
                        existingEntry,
                        matches: previousOwnership
+                   ),
+                   try registrationOwnershipMatchesEveryExistingCopy(
+                       previousOwnership,
+                       at: targetURLs
                    ) {
+                    let currentTarget = ownedRegistration(
+                        for: mapping,
+                        contentID: previousOwnership.contentID
+                    )
+                    guard registrationTarget(
+                        previousOwnership,
+                        matches: currentTarget
+                    ) else {
+                        continue
+                    }
+                    let contentID = try steamLibraryContentID(
+                        for: mapping
+                    )
+                    let desiredOwnership = ownedRegistration(
+                        for: mapping,
+                        contentID: contentID
+                    )
+                    for (key, value) in libraryFolders {
+                        guard let existingPath = value.objectValue?["path"]?
+                                .stringValue,
+                              normalizedWindowsPath(existingPath) == path
+                        else { continue }
+                        libraryFolders[key] = libraryFolderEntry(
+                            updating: value,
+                            ownership: desiredOwnership
+                        )
+                    }
                     nextOwnedByPath[path] = desiredOwnership
                 }
                 continue
@@ -504,8 +680,16 @@ final class SteamLibraryDriveMapper {
                 continue
             }
             guard registeredPaths.insert(path).inserted else { continue }
+            let contentID = try steamLibraryContentID(for: mapping)
+            let desiredOwnership = ownedRegistration(
+                for: mapping,
+                contentID: contentID
+            )
             libraryFolders[nextLibraryIndex(in: libraryFolders)] =
-                libraryFolderEntry(for: mapping)
+                libraryFolderEntry(
+                    for: mapping,
+                    ownership: desiredOwnership
+                )
             nextOwnedByPath[path] = desiredOwnership
             registeredCanonicalLibraryPaths.insert(canonicalLibraryPath)
         }
@@ -515,31 +699,75 @@ final class SteamLibraryDriveMapper {
         let removedPaths = removalCandidates.subtracting(retainedPaths)
         document["libraryfolders"] = .object(libraryFolders)
 
-        let serializedData = Data(VDFSerializer().serialize(document).utf8)
-        let originals = try targetURLs.map { url in
-            (url, try existingSafeLibraryFoldersData(at: url))
+        let shouldWriteLibraryFolders = libraryFolders != originalLibraryFolders
+        let nextOwnedRegistrations = nextOwnedByPath.values.sorted {
+            $0.normalizedWindowsPath < $1.normalizedWindowsPath
         }
-        let originalManifestData = try existingSafeManifestData(at: manifestURL)
-        do {
-            for url in targetURLs {
-                try writeLibraryFoldersData(serializedData, to: url)
+        let nextManifest = RegistrationManifest(
+            version: RegistrationManifest.currentVersion,
+            ownedRegistrations: nextOwnedRegistrations
+        )
+        // Schema migration is coupled to an actual ownership transition. An
+        // unchanged v2 manifest is still valid readback and must remain
+        // byte-stable while its identity marker is transiently pending.
+        let shouldWriteManifest =
+            previousManifest.ownedRegistrations != nextOwnedRegistrations
+        guard shouldWriteLibraryFolders || shouldWriteManifest else {
+            // Exact Steam-owned readback and transient pending identities are
+            // semantic no-ops. Preserve Steam's formatting/comments and the
+            // ownership manifest byte-for-byte instead of rewriting either.
+            return
+        }
+
+        let serializedData = shouldWriteLibraryFolders
+            ? Data(VDFSerializer().serialize(document).utf8)
+            : nil
+        let originals = shouldWriteLibraryFolders
+            ? try targetURLs.map { url in
+                (url, try existingSafeLibraryFoldersData(at: url))
             }
-            try verifyLibraryFolders(
-                at: targetURLs,
-                satisfies: Array(activeByPath.values),
-                excludes: removedPaths,
-                prefix: prefix
-            )
-            let nextManifest = RegistrationManifest(
-                version: RegistrationManifest.currentVersion,
-                ownedRegistrations: nextOwnedByPath.values.sorted {
-                    $0.normalizedWindowsPath < $1.normalizedWindowsPath
+            : []
+        let originalManifestData = shouldWriteManifest
+            ? try existingSafeManifestData(at: manifestURL)
+            : nil
+        do {
+            if let serializedData {
+                for url in targetURLs {
+                    try writeLibraryFoldersData(serializedData, to: url)
                 }
-            )
-            try writeRegistrationManifest(nextManifest, to: manifestURL)
+                let ownedRegistrationsForReadback: [OwnedRegistration]
+                if reconciliationScope == .authoritativeStorageInventory {
+                    ownedRegistrationsForReadback = Array(
+                        nextOwnedByPath.values
+                    )
+                } else {
+                    // Unrepresented entries remain byte-for-byte owned state,
+                    // but this partial authorization cannot inspect or repair
+                    // them. Verify only registrations covered by this request.
+                    ownedRegistrationsForReadback = nextOwnedByPath.compactMap {
+                        path, ownership in
+                        activePaths.contains(path) ? ownership : nil
+                    }
+                }
+                try verifyLibraryFolders(
+                    at: targetURLs,
+                    satisfies: Array(activeByPath.values),
+                    ownedRegistrations: ownedRegistrationsForReadback,
+                    excludes: removedPaths,
+                    prefix: prefix
+                )
+            }
+            if shouldWriteManifest {
+                try writeRegistrationManifest(nextManifest, to: manifestURL)
+            }
         } catch {
             let rollbackFailures = restoreFiles(originals) +
-                restoreFile(at: manifestURL, originalData: originalManifestData)
+                (shouldWriteManifest
+                    ? restoreFile(
+                        at: manifestURL,
+                        originalData: originalManifestData
+                    )
+                    : [])
             if rollbackFailures.isEmpty,
                let bridgeError = error as? SteamLibraryDriveBridgeError {
                 throw bridgeError
@@ -761,9 +989,9 @@ final class SteamLibraryDriveMapper {
     }
 
     private func libraryFolderEntry(
-        for mapping: SteamLibraryDriveMapping
+        for mapping: SteamLibraryDriveMapping,
+        ownership: OwnedRegistration
     ) -> VDFValue {
-        let ownership = ownedRegistration(for: mapping)
         return .object([
             "path": .string(mapping.windowsLibraryPath),
             "label": .string(""),
@@ -775,8 +1003,24 @@ final class SteamLibraryDriveMapper {
         ])
     }
 
+    /// Updates only the identity field ForgePlay owns. Steam may have
+    /// canonicalized the path or populated size, verification, and app
+    /// metadata after the original registration; those values must survive a
+    /// legacy ownership migration.
+    private func libraryFolderEntry(
+        updating existingEntry: VDFValue,
+        ownership: OwnedRegistration
+    ) -> VDFValue {
+        guard var object = existingEntry.objectValue else {
+            return existingEntry
+        }
+        object["contentid"] = .string(ownership.contentID)
+        return .object(object)
+    }
+
     private func ownedRegistration(
-        for mapping: SteamLibraryDriveMapping
+        for mapping: SteamLibraryDriveMapping,
+        contentID: String
     ) -> OwnedRegistration {
         let canonicalDriveRoot = mapping.macDriveRootURL
             .resolvingSymlinksInPath()
@@ -795,8 +1039,69 @@ final class SteamLibraryDriveMapper {
             ),
             canonicalDriveRootPath: canonicalDriveRoot,
             canonicalLibraryPath: canonicalLibrary,
-            contentID: stableContentID(for: canonicalLibrary)
+            contentID: contentID
         )
+    }
+
+    /// Steam binds a configured library entry to the `contentid` stored in
+    /// that library root's own `libraryfolder.vdf`. Supplying a different ID
+    /// leaves the path visible as a drive but makes Steam reject it as not
+    /// mounted, so ForgePlay must read and preserve Steam's identity rather
+    /// than derive one from the macOS path.
+    private func steamLibraryContentID(
+        for mapping: SteamLibraryDriveMapping
+    ) throws -> String {
+        try steamLibraryContentID(at: mapping.macLibraryURL)
+    }
+
+    private func steamLibraryContentID(at libraryURL: URL) throws -> String {
+        let identityURL = libraryURL.appending(
+            path: "libraryfolder.vdf",
+            directoryHint: .notDirectory
+        )
+        do {
+            guard let text = try SteamVDFFileReader.readText(
+                identityURL,
+                maxBytes: 16 * 1_024
+            ) else {
+                throw SteamLibraryDriveBridgeError.libraryFoldersInvalid(
+                    identityURL,
+                    "the existing Steam library identity marker is missing, unsafe, or too large"
+                )
+            }
+            let document = try VDFParser().parse(text)
+            guard let identity = document["libraryfolder"]?.objectValue,
+                  let rawContentID = identity["contentid"]?.stringValue?
+                    .trimmingCharacters(in: .whitespacesAndNewlines),
+                  let numericContentID = UInt64(rawContentID),
+                  numericContentID > 0 else {
+                throw SteamLibraryDriveBridgeError.libraryFoldersInvalid(
+                    identityURL,
+                    "the existing Steam library identity marker has no valid nonzero contentid"
+                )
+            }
+            return String(numericContentID)
+        } catch let error as SteamLibraryDriveBridgeError {
+            throw error
+        } catch {
+            throw SteamLibraryDriveBridgeError.libraryFoldersInvalid(
+                identityURL,
+                forgePlayTechnicalErrorSummary(error)
+            )
+        }
+    }
+
+    private func registrationTarget(
+        _ lhs: OwnedRegistration,
+        matches rhs: OwnedRegistration
+    ) -> Bool {
+        // A removable volume can be remounted at a different host path while
+        // retaining the same volume UUID and Windows drive assignment. The
+        // stable storage identity plus normalized Windows path identifies the
+        // same registration target; canonical host paths are readback
+        // metadata that must be refreshed after a remount, not ownership.
+        lhs.normalizedWindowsPath == rhs.normalizedWindowsPath &&
+            lhs.driveRootStorageIdentity == rhs.driveRootStorageIdentity
     }
 
     private func canonicalLibraryPath(
@@ -964,6 +1269,7 @@ final class SteamLibraryDriveMapper {
     private func verifyLibraryFolders(
         at urls: [URL],
         satisfies mappings: [SteamLibraryDriveMapping],
+        ownedRegistrations: [OwnedRegistration],
         excludes removedPaths: Set<String>,
         prefix: URL
     ) throws {
@@ -1001,10 +1307,29 @@ final class SteamLibraryDriveMapper {
                 return desiredPath
             }
             let stale = removedPaths.intersection(writtenPaths)
-            guard unsatisfied.isEmpty, stale.isEmpty else {
+            let entriesByPath = Dictionary(
+                folders.values.compactMap { value -> (String, VDFValue)? in
+                    guard let path = value.objectValue?["path"]?.stringValue
+                    else { return nil }
+                    return (normalizedWindowsPath(path), value)
+                },
+                uniquingKeysWith: { existing, _ in existing }
+            )
+            let identityMismatches = ownedRegistrations.compactMap {
+                ownership -> String? in
+                guard let entry = entriesByPath[
+                    ownership.normalizedWindowsPath
+                ], registrationEntry(entry, matches: ownership) else {
+                    return ownership.normalizedWindowsPath
+                }
+                return nil
+            }
+            guard unsatisfied.isEmpty,
+                  stale.isEmpty,
+                  identityMismatches.isEmpty else {
                 throw SteamLibraryDriveBridgeError.libraryFoldersInvalid(
                     url,
-                    "readback mismatch; unsatisfied=\(unsatisfied.sorted()), stale=\(stale.sorted())"
+                    "readback mismatch; unsatisfied=\(unsatisfied.sorted()), stale=\(stale.sorted()), identity_mismatches=\(identityMismatches.sorted())"
                 )
             }
         }
@@ -1054,10 +1379,14 @@ final class SteamLibraryDriveMapper {
             let uniquePaths = Set(
                 manifest.ownedRegistrations.map(\.normalizedWindowsPath)
             )
-            guard manifest.version == RegistrationManifest.currentVersion,
+            guard manifest.version == 2 ||
+                    manifest.version == RegistrationManifest.currentVersion,
                   uniquePaths.count == manifest.ownedRegistrations.count,
                   manifest.ownedRegistrations.allSatisfy({
-                      isValidOwnedRegistration($0)
+                      isValidOwnedRegistration(
+                          $0,
+                          manifestVersion: manifest.version
+                      )
                   }) else {
                 throw SteamLibraryDriveBridgeError.libraryFoldersInvalid(
                     url,
@@ -1081,7 +1410,8 @@ final class SteamLibraryDriveMapper {
     }
 
     private func isValidOwnedRegistration(
-        _ registration: OwnedRegistration
+        _ registration: OwnedRegistration,
+        manifestVersion: Int
     ) -> Bool {
         guard !registration.normalizedWindowsPath.isEmpty,
               registration.normalizedWindowsPath ==
@@ -1099,8 +1429,11 @@ final class SteamLibraryDriveMapper {
                   fileURLWithPath: registration.canonicalLibraryPath,
                   isDirectory: true
               ).standardizedFileURL.path == registration.canonicalLibraryPath,
-              registration.contentID ==
-                stableContentID(for: registration.canonicalLibraryPath) else {
+              isValidSteamLibraryContentID(registration.contentID),
+              manifestVersion != 2 ||
+                registration.contentID == stableContentID(
+                    for: registration.canonicalLibraryPath
+                ) else {
             return false
         }
         let driveRootPrefix = registration.canonicalDriveRootPath == "/"
@@ -1109,6 +1442,11 @@ final class SteamLibraryDriveMapper {
         return registration.canonicalLibraryPath ==
             registration.canonicalDriveRootPath ||
             registration.canonicalLibraryPath.hasPrefix(driveRootPrefix)
+    }
+
+    private func isValidSteamLibraryContentID(_ contentID: String) -> Bool {
+        guard let value = UInt64(contentID), value > 0 else { return false }
+        return contentID == String(value)
     }
 
     private func existingSafeManifestData(at url: URL) throws -> Data? {
@@ -1234,6 +1572,19 @@ final class SteamLibraryDriveMapper {
         }
     }
 
+    private func validateAuthorizedDriveRootsBeforeMutation(
+        _ roots: [URL]
+    ) throws {
+        for root in roots {
+            guard FileSystemItemPolicy.isNonSymlinkDirectory(
+                root,
+                fileManager: fileManager
+            ) else {
+                throw SteamLibraryDriveBridgeError.libraryRootUnavailable(root)
+            }
+        }
+    }
+
     private func validateDriveSourcesBeforeMutation(
         _ sources: [NormalizedDriveSource]
     ) throws {
@@ -1259,6 +1610,20 @@ final class SteamLibraryDriveMapper {
                 )
             }
         }
+    }
+
+    /// Registration is optional while Steam is creating a library. Missing,
+    /// partial, zero-content-ID, oversized, or symlinked identity files are
+    /// left entirely to Steam and do not block the already-authorized drive
+    /// or its process grant. The strict existing-library entry points still
+    /// surface these states as errors before any mutation.
+    private func isSteamLibraryRegistrationReady(at libraryURL: URL) -> Bool {
+        let identityURL = libraryURL.appending(
+            path: "libraryfolder.vdf",
+            directoryHint: .notDirectory
+        )
+        guard fileSystemItemExists(at: identityURL) else { return false }
+        return (try? steamLibraryContentID(at: libraryURL)) != nil
     }
 
     private func windowsLibraryPath(
@@ -1434,6 +1799,36 @@ final class SteamLibraryDriveMapper {
         return URL(fileURLWithPath: resolvedTarget, isDirectory: true)
     }
 
+    private func reservedOnlyStorageIdentities(
+        in bridgeDirectory: URL
+    ) throws -> Set<String> {
+        guard fileManager.fileExists(atPath: bridgeDirectory.path) else {
+            return []
+        }
+        guard FileSystemItemPolicy.isNonSymlinkDirectory(
+            bridgeDirectory,
+            fileManager: fileManager
+        ) else {
+            throw SteamLibraryDriveBridgeError.bridgeDirectoryUnavailable(
+                bridgeDirectory
+            )
+        }
+        var identities = Set<String>()
+        for letter in Self.libraryDriveLetters {
+            let bridgeRoot = bridgeDirectory.appending(
+                path: letter,
+                directoryHint: .isDirectory
+            )
+            guard fileManager.fileExists(atPath: bridgeRoot.path),
+                  let assignment = try readAssignment(at: bridgeRoot),
+                  assignment.isReservedOnly == true else {
+                continue
+            }
+            identities.insert(assignment.storageIdentity)
+        }
+        return identities
+    }
+
     private func readAssignment(at bridgeRoot: URL) throws -> DriveAssignment? {
         let url = assignmentURL(in: bridgeRoot)
         guard fileManager.fileExists(atPath: url.path) else { return nil }
@@ -1447,17 +1842,29 @@ final class SteamLibraryDriveMapper {
             guard DriveAssignment.supportedVersions.contains(assignment.version),
                   !assignment.storageIdentity.isEmpty,
                   !assignment.lastKnownPath.isEmpty,
-                  assignment.version < DriveAssignment.currentVersion ||
-                    assignment.driveLinkOwnership != nil else {
+                  assignment.version == 1 ||
+                    (
+                        assignment.version == 2 &&
+                            assignment.driveLinkOwnership != nil
+                    ) ||
+                    (
+                        assignment.version == DriveAssignment.currentVersion &&
+                            assignment.driveLinkOwnership != nil &&
+                            assignment.isReservedOnly != nil
+                    ) else {
                 throw SteamLibraryDriveBridgeError.bridgeDirectoryUnavailable(bridgeRoot)
             }
             return DriveAssignment(
                 version: assignment.version,
                 storageIdentity: assignment.storageIdentity,
                 lastKnownPath: assignment.lastKnownPath,
-                driveLinkOwnership: assignment.version == DriveAssignment.currentVersion
+                driveLinkOwnership: assignment.version >= 2
                     ? assignment.driveLinkOwnership
-                    : nil
+                    : nil,
+                isReservedOnly:
+                    assignment.version == DriveAssignment.currentVersion
+                        ? assignment.isReservedOnly
+                        : false
             )
         } catch let error as SteamLibraryDriveBridgeError {
             throw error
@@ -1469,13 +1876,15 @@ final class SteamLibraryDriveMapper {
     private func writeAssignment(
         for libraryRoot: URL,
         at bridgeRoot: URL,
-        driveLinkOwnership: DriveLinkOwnership
+        driveLinkOwnership: DriveLinkOwnership,
+        isReservedOnly: Bool
     ) throws {
         let assignment = DriveAssignment(
             version: DriveAssignment.currentVersion,
             storageIdentity: storageIdentity(for: libraryRoot),
             lastKnownPath: libraryRoot.standardizedFileURL.path,
-            driveLinkOwnership: driveLinkOwnership
+            driveLinkOwnership: driveLinkOwnership,
+            isReservedOnly: isReservedOnly
         )
         try writeAssignment(assignment, at: bridgeRoot)
     }
@@ -1615,7 +2024,8 @@ final class SteamLibraryDriveMapper {
         for libraryRoot: URL,
         driveLetter: String,
         bridgeDirectory: URL,
-        driveLinkOwnership: DriveLinkOwnership
+        driveLinkOwnership: DriveLinkOwnership,
+        isReservedOnly: Bool
     ) throws -> URL {
         let bridgeRoot = bridgeDirectory.appending(path: driveLetter, directoryHint: .isDirectory)
         do {
@@ -1637,7 +2047,8 @@ final class SteamLibraryDriveMapper {
                 try writeAssignment(
                     for: libraryRoot,
                     at: bridgeRoot,
-                    driveLinkOwnership: driveLinkOwnership
+                    driveLinkOwnership: driveLinkOwnership,
+                    isReservedOnly: isReservedOnly
                 )
                 return bridgeRoot
             }
@@ -1653,7 +2064,8 @@ final class SteamLibraryDriveMapper {
         try writeAssignment(
             for: libraryRoot,
             at: bridgeRoot,
-            driveLinkOwnership: driveLinkOwnership
+            driveLinkOwnership: driveLinkOwnership,
+            isReservedOnly: isReservedOnly
         )
         return bridgeRoot
     }

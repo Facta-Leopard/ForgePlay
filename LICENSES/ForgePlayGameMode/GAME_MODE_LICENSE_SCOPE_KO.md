@@ -111,6 +111,7 @@ GPL 대상으로 지정하는 것은 파일의 모든 일반 코드가 아니라
 - `Config/ForgePlayGameModeProcessHost.xcconfig`
 - `Config/ForgePlayGameModeProcessHostAppStore.xcconfig`
 - `Config/ForgePlayGameModeProcessHostDistribution.xcconfig`
+- `Config/ForgePlayGameModeProcessHostRelease.xcconfig`
 - `Scripts/prepare-game-mode-host-build-identity.sh`
 - `Scripts/verify-game-mode-source-licenses.py`
 - `Scripts/tests/test-wine-game-mode-process-host-routing.sh`

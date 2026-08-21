@@ -38,6 +38,7 @@ EXPECTED_WHOLE_FILE_PATHS = {
     "Native/GameModeProcessHost/GameModeProcessHost-AppStore.entitlements",
     "Native/GameModeProcessHost/GameModeProcessHost-Development.entitlements",
     "Native/GameModeProcessHost/GameModeProcessHost-Distribution.entitlements",
+    "Native/GameModeProcessHost/GameModeProcessHost-Release.entitlements",
     "Native/GameModeProcessHost/GameModeProcessHost.entitlements.in",
     "Native/GameModeProcessHost/GameModeProcessHost.m",
     "Native/GameModeProcessHost/GameModeRuntimeIdentity.h",
@@ -52,6 +53,7 @@ EXPECTED_WHOLE_FILE_PATHS = {
     "Config/ForgePlayGameModeProcessHost.xcconfig",
     "Config/ForgePlayGameModeProcessHostAppStore.xcconfig",
     "Config/ForgePlayGameModeProcessHostDistribution.xcconfig",
+    "Config/ForgePlayGameModeProcessHostRelease.xcconfig",
     "Scripts/prepare-game-mode-host-build-identity.sh",
     "Scripts/verify-game-mode-source-licenses.py",
     "Scripts/tests/test-wine-game-mode-process-host-routing.sh",
@@ -74,6 +76,12 @@ EXPECTED_PATCH_PATHS = {
     "Resources/Runners/ForgePlayRuntime/Patches/"
     "wine-11.12-game-mode-direct-target-scope.patch",
 }
+EXPECTED_LGPL_PATCH_SIDECAR_PATHS = {
+    "Resources/Runners/ForgePlayRuntime/Patches/"
+    "wine-11.12-helldivers2-process-policy.patch.license",
+    "Resources/Runners/ForgePlayRuntime/Patches/"
+    "wine-11.12-heap-zero-memory.patch.license",
+}
 PATCH_SIDECAR_COMMENT = (
     "SPDX-FileComment: Derived from Wine 11.12; upstream copyrights are "
     "retained. See LICENSES/ForgePlayGameMode/GAME_MODE_LICENSE_SCOPE.md."
@@ -86,7 +94,7 @@ REQUIRED_SYMBOL_TOKENS = {
         "GameModeHostEvidenceRecord",
         "GameModeHostEvidenceProcessIdentity",
         "registerGameModeHostLaunch",
-        "registeredGameModeHostProcessIDs",
+        "registeredGameModeHostProcessInspection",
         "gameModeHostEvidenceProcessIDs",
         "gameModeHostEvidenceProcessIdentities",
         "gameModePolicy",
@@ -423,10 +431,13 @@ def verify_export_patch_sidecars(root: Path) -> None:
         return
     require_regular_file(export_marker, "open-source export marker")
 
-    expected_sidecars = {
+    expected_game_mode_sidecars = {
         f"{relative}.license"
         for relative in EXPECTED_PATCH_PATHS
     }
+    expected_sidecars = (
+        expected_game_mode_sidecars | EXPECTED_LGPL_PATCH_SIDECAR_PATHS
+    )
     patch_root = root / "Resources/Runners/ForgePlayRuntime/Patches"
     actual_sidecars = {
         path.relative_to(root).as_posix()
@@ -448,12 +459,49 @@ def verify_export_patch_sidecars(root: Path) -> None:
             "",
         ]
     )
-    for relative in sorted(expected_sidecars):
+    for relative in sorted(expected_game_mode_sidecars):
         text = read_text(root, relative, "Game Mode patch SPDX sidecar")
         if text != expected_text:
             raise VerificationError(
                 f"Game Mode patch SPDX sidecar is not canonical: {relative}"
             )
+
+    provenance_lock = read_json(
+        root,
+        "Config/ForgePlayRuntimePatchProvenance.lock.json",
+        "Runtime patch provenance lock",
+    )
+    provenance_sidecars = provenance_lock.get("patchLicenseSidecars")
+    if not isinstance(provenance_sidecars, list):
+        raise VerificationError("Runtime LGPL patch sidecar inventory is unavailable")
+    observed_lgpl_paths: set[str] = set()
+    for entry in provenance_sidecars:
+        if not isinstance(entry, dict) or set(entry) != {
+            "classification",
+            "license",
+            "patchPath",
+            "path",
+            "sha256",
+        }:
+            raise VerificationError("Runtime LGPL patch sidecar record is malformed")
+        if entry["license"] != "LGPL-2.1-or-later":
+            raise VerificationError("Runtime derivative sidecar license changed")
+        relative = (
+            "Resources/Runners/ForgePlayRuntime/Patches/" + entry["path"]
+        )
+        if relative not in EXPECTED_LGPL_PATCH_SIDECAR_PATHS:
+            raise VerificationError(
+                f"Runtime LGPL patch sidecar is outside the exact export inventory: {relative}"
+            )
+        sidecar = root / relative
+        require_regular_file(sidecar, "Runtime LGPL patch sidecar")
+        if sha256(sidecar) != entry["sha256"]:
+            raise VerificationError(
+                f"Runtime LGPL patch sidecar differs from provenance lock: {relative}"
+            )
+        observed_lgpl_paths.add(relative)
+    if observed_lgpl_paths != EXPECTED_LGPL_PATCH_SIDECAR_PATHS:
+        raise VerificationError("Runtime LGPL patch sidecar inventory is incomplete")
 
 
 def main() -> int:

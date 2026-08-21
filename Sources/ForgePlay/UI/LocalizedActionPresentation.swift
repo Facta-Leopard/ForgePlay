@@ -15,7 +15,7 @@ extension SetupReadiness {
         case .steamMissing:
             appState.localized("Windows용 Steam을 먼저 설치하세요.")
         case .runtimeMigrationRequired:
-            appState.localized("ForgePlay Runtime 변경 사항을 Steam 프리픽스에 적용해야 합니다. 처음 설정에서 Steam 프리픽스 준비를 다시 실행하세요.")
+            appState.localized("ForgePlay Runtime 변경 사항을 Steam 프리픽스에 적용해야 합니다. 설정에서 Steam 프리픽스 준비를 다시 실행하세요.")
         case .rendererUnverified:
             appState.localized("Steam 실행 경로를 먼저 적용/검증하세요.")
         case .rendererNeedsApply, .rendererNeedsRepair:
@@ -294,7 +294,7 @@ extension RecommendedAction {
         case .noAction:
             if reason == "Steam 실행 화면에서 현재 게임의 DirectX 세대에 맞는 단일 백엔드를 직접 선택한 뒤 Steam을 다시 실행합니다." {
                 return [
-                    appState.localized("Steam 실행 화면에서 D3DMetal, DXMT, D9VK 또는 DXVK 중 하나를 직접 선택한 뒤 Steam을 다시 실행합니다."),
+                    appState.localized("Steam을 실행하기 전에 D3DMetal 표준, D3DMetal NVIDIA, DXMT, D9VK 또는 DXVK 중 하나를 직접 선택해야 합니다."),
                     appState.localized("DirectX 11/12는 D3DMetal, DirectX 9는 D9VK를 먼저 시도하고, DXMT 또는 DXVK는 같은 세대의 대체 경로로 비교합니다."),
                     appState.localized("백엔드를 바꿔도 같은 page fault로 종료되면 최신 실행 로그를 문제 진단에서 다시 분석합니다.")
                 ]

@@ -5,6 +5,9 @@ enum LegalDocument: String, CaseIterable, Identifiable {
     case privacy
     case support
     case thirdPartyNotices
+    case notoSansOFL
+    case notoSansCJKOFL
+    case nanumGothicOFL
 
     var id: String { rawValue }
 
@@ -18,6 +21,25 @@ enum LegalDocument: String, CaseIterable, Identifiable {
             "ForgePlaySupport.md"
         case .thirdPartyNotices:
             "ForgePlayThirdPartyNotices.md"
+        case .notoSansOFL:
+            "NotoSans-OFL.txt"
+        case .notoSansCJKOFL:
+            "NotoSansCJK-OFL.txt"
+        case .nanumGothicOFL:
+            "OFL.txt"
+        }
+    }
+
+    var sourceRelativePath: String? {
+        switch self {
+        case .licenseNotice:
+            nil
+        case .privacy, .support, .thirdPartyNotices:
+            "Resources/Legal/\(fileName)"
+        case .notoSansOFL, .notoSansCJKOFL:
+            "Resources/Fonts/ForgePlayNotoV1/\(fileName)"
+        case .nanumGothicOFL:
+            "Resources/Runners/ForgePlayRuntime/Legal/NanumGothic/\(fileName)"
         }
     }
 
@@ -35,6 +57,12 @@ enum LegalDocument: String, CaseIterable, Identifiable {
             "지원 안내 열기"
         case .thirdPartyNotices:
             "외부 구성요소 고지 열기"
+        case .notoSansOFL:
+            "Noto Sans OFL 1.1"
+        case .notoSansCJKOFL:
+            "Noto Sans CJK OFL 1.1"
+        case .nanumGothicOFL:
+            "Nanum Gothic OFL 1.1"
         }
     }
 
@@ -48,6 +76,8 @@ enum LegalDocument: String, CaseIterable, Identifiable {
             "questionmark.circle"
         case .thirdPartyNotices:
             "doc.text.magnifyingglass"
+        case .notoSansOFL, .notoSansCJKOFL, .nanumGothicOFL:
+            "text.document"
         }
     }
 
@@ -67,6 +97,23 @@ enum LegalDocument: String, CaseIterable, Identifiable {
                withExtension: "md"
            ) {
             return localizedURL
+        }
+
+        switch self {
+        case .notoSansOFL, .notoSansCJKOFL:
+            return bundle.url(
+                forResource: resourceName,
+                withExtension: "txt",
+                subdirectory: "Fonts/ForgePlayNotoV1"
+            )
+        case .nanumGothicOFL:
+            return bundle.url(
+                forResource: resourceName,
+                withExtension: "txt",
+                subdirectory: "Runners/ForgePlayRuntime/Legal/NanumGothic"
+            )
+        default:
+            break
         }
 
         return bundle.url(forResource: resourceName, withExtension: "md", subdirectory: "Legal") ??

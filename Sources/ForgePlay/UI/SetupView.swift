@@ -27,16 +27,30 @@ private enum SetupStepVisualState: Equatable {
 }
 
 struct SetupView: View {
+    let performsInitialWorkflowRefresh: Bool
     @Environment(AppState.self) private var appState
     @Environment(AppServices.self) private var services
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
     @Query(sort: \SteamGameRecord.name) private var games: [SteamGameRecord]
-    @Query(sort: \LaunchRecord.startedAt, order: .reverse) private var launchRecords: [LaunchRecord]
+    @Query private var launchRecords: [LaunchRecord]
     @State private var isShowingSteamPrefixConfirmation = false
     @State private var isCreatingSteamPrefix = false
     @State private var isApplyingRendererPolicy = false
     @State private var expandedStage: SetupStage?
+
+    init(performsInitialWorkflowRefresh: Bool = true) {
+        self.performsInitialWorkflowRefresh = performsInitialWorkflowRefresh
+        var launchDescriptor = FetchDescriptor<LaunchRecord>(
+            predicate: #Predicate {
+                $0.commandKind == "launchSteam" &&
+                    $0.prefixId == "prefix-steam-shared"
+            },
+            sortBy: [SortDescriptor(\LaunchRecord.startedAt, order: .reverse)]
+        )
+        launchDescriptor.fetchLimit = 1
+        _launchRecords = Query(launchDescriptor)
+    }
 
     private var palette: ForgePlayPalette {
         ForgePlayTheme.palette(mode: appState.themeMode, colorScheme: colorScheme)
@@ -44,6 +58,19 @@ struct SetupView: View {
 
     private var readiness: SetupReadiness {
         appState.setupReadiness
+    }
+
+    private var setupReadinessObservationKey: SetupReadinessObservationKey? {
+        _ = launchRecords.first?.id
+        return try? services.setupReadinessObservationKey(
+            appState: appState,
+            in: modelContext,
+            hasSteamReferences: !games.isEmpty
+        )
+    }
+
+    private var runtimeSystemCheck: SystemCheckResult? {
+        appState.latestChecks.first { $0.category == .windowsRuntime }
     }
 
     private var canRunBundledWindowsRuntime: Bool {
@@ -64,7 +91,7 @@ struct SetupView: View {
         let palette = ForgePlayTheme.palette(mode: appState.themeMode, colorScheme: colorScheme)
 
         ForgePageScaffold(
-            "처음 설정",
+            "설정",
             subtitle: "필수 단계를 순서대로 완료하면 Windows용 Steam을 실행할 수 있습니다.",
             systemImage: "checklist"
         ) {
@@ -75,15 +102,12 @@ struct SetupView: View {
             stepList
         }
         .task {
-            await refreshChecksAndProgress()
+            if performsInitialWorkflowRefresh {
+                await refreshChecksAndProgress()
+            }
         }
-        .onChange(of: games.count) { _, _ in
-            refreshProgress()
-        }
-        .onChange(of: SteamLaunchRecordLookup.stateFingerprint(from: launchRecords)) { _, _ in
-            refreshProgress()
-        }
-        .onChange(of: services.steamEnvironmentRevision) { _, _ in
+        .onChange(of: setupReadinessObservationKey) { _, _ in
+            guard performsInitialWorkflowRefresh else { return }
             refreshProgress()
         }
         .onChange(of: appState.setupStage) { _, _ in
@@ -360,12 +384,12 @@ struct SetupView: View {
                 ? .ok
                 : appState.systemCheckSummary.displayStatus
         case .prepareEngine:
-            guard let runtimeExecutable = appState.runtimeExecutableURL else { return .warning }
-            do {
-                let capability = try services.windowsRuntimeService.inspectRuntimeCapability(executable: runtimeExecutable)
-                return SteamClientCompatibilityVerifier.verify(capability: capability).canLaunchWindowsSteam ? .ok : .error
-            } catch {
-                return .error
+            guard appState.runtimeExecutableURL != nil else { return .warning }
+            guard let runtimeSystemCheck else { return .unknown }
+            switch runtimeSystemCheck.status {
+            case .error: return .error
+            case .unknown: return .unknown
+            case .ok, .warning: return .ok
             }
         case .prepareSteamEnvironment:
             if readiness.steamPrefixIssue != nil { return .error }
@@ -416,35 +440,13 @@ struct SetupView: View {
                 ? appState.localized("기본 실행 조건을 만족하며 확인할 권장 사항이 있습니다.")
                 : appState.localized("이 Mac은 현재 ForgePlay 기본 조건을 만족합니다.")
         case .prepareEngine:
-            guard let runtimeExecutable = appState.runtimeExecutableURL else {
+            guard appState.runtimeExecutableURL != nil else {
                 return appState.localized("앱에 포함된 ForgePlay Runtime을 찾지 못했습니다. Runtime 포함 빌드인지 확인하세요.")
             }
-            do {
-                let verification = try services.steamPrefixService.inspectSteamClientCompatibility(runtimeExecutable)
-                if !verification.canLaunchWindowsSteam {
-                    return appState.localized(verification.userMessage)
-                }
-                if !verification.canLaunchManagedSteamGames {
-                    let productRuntimeName = appState.localized(
-                        WindowsRuntimeDisplayName.productRuntimeName(for: verification.capability)
-                    )
-                    return appState.localizedFormat(
-                        "%@ · %@. Steam 클라이언트 실행은 가능하지만 게임 렌더러 payload는 실행 전에 별도로 확인하세요.",
-                        productRuntimeName,
-                        appState.localized(WindowsRuntimeDisplayName.statusSummary(for: verification.capability))
-                    )
-                }
-                let productRuntimeName = appState.localized(
-                    WindowsRuntimeDisplayName.productRuntimeName(for: verification.capability)
-                )
-                return appState.localizedFormat(
-                    "%@ · %@",
-                    productRuntimeName,
-                    appState.localized(WindowsRuntimeDisplayName.statusSummary(for: verification.capability))
-                )
-            } catch {
-                return appState.localizedError(error)
+            guard let runtimeSystemCheck else {
+                return appState.localized("ForgePlay Runtime을 확인하는 중입니다.")
             }
+            return appState.localized(runtimeSystemCheck.detail)
         case .prepareSteamEnvironment:
             if let issue = readiness.steamPrefixIssue { return appState.localizedError(issue) }
             if readiness.hasSteamPrefix { return appState.localized("Steam을 설치할 Steam 프리픽스가 준비되어 있습니다.") }
@@ -614,14 +616,6 @@ struct SetupView: View {
             appState.setNotice(appState.localized("Steam 프리픽스를 만들려면 ForgePlay Runtime을 먼저 확인하세요."), kind: .warning)
             return
         }
-        if let runtimeExecutable = appState.runtimeExecutableURL {
-            do {
-                _ = try services.windowsRuntimeService.validateWindowsSteamClientLaunchSupport(executable: runtimeExecutable)
-            } catch {
-                appState.setError(error)
-                return
-            }
-        }
         isShowingSteamPrefixConfirmation = true
     }
 
@@ -635,13 +629,6 @@ struct SetupView: View {
             appState.setNotice(appState.localized("Steam 프리픽스를 만들려면 ForgePlay Runtime을 먼저 확인하세요."), kind: .warning)
             return
         }
-        do {
-            _ = try services.windowsRuntimeService.validateWindowsSteamClientLaunchSupport(executable: runtimeExecutable)
-        } catch {
-            appState.setError(error)
-            return
-        }
-
         isCreatingSteamPrefix = true
         let targetPath = steamPrefixTargetPath
         appState.setTask(appState.localizedFormat("ForgePlay Runtime을 확인한 뒤 Steam 프리픽스를 초기화합니다: %@", targetPath))
@@ -733,10 +720,10 @@ struct SetupView: View {
                     existingCount: storageAccess.sourceGameRecordCount,
                     whenStorageAccessIsComplete: storageAccess.allowsRemovingStaleReferences
                 )
-                services.synchronizeSetupWorkflow(
+                try services.synchronizeSetupWorkflow(
                     appState: appState,
-                    hasSteamReferences: hasSteamReferences,
-                    launchRecords: launchRecords
+                    in: modelContext,
+                    hasSteamReferences: hasSteamReferences
                 )
                 let hasAccessWarning = storageAccess.unavailableCount > 0 ||
                     storageAccess.bookmarkPersistenceFailed ||
@@ -789,23 +776,40 @@ struct SetupView: View {
     }
 
     private func refreshProgress(hasSteamReferencesOverride: Bool? = nil) {
-        services.synchronizeSetupWorkflow(
-            appState: appState,
-            hasSteamReferences: hasSteamReferencesOverride ?? !games.isEmpty,
-            launchRecords: launchRecords
-        )
-    }
-
-    private func refreshChecksAndProgress() async {
         do {
-            _ = try await services.refreshSetupWorkflow(
+            try services.synchronizeSetupWorkflow(
                 appState: appState,
                 in: modelContext,
-                hasSteamReferences: !games.isEmpty,
-                launchRecords: launchRecords
+                hasSteamReferences: hasSteamReferencesOverride ?? !games.isEmpty
             )
         } catch {
             appState.setError(error)
+        }
+    }
+
+    private func refreshChecksAndProgress() async {
+        while true {
+            do {
+                try Task.checkCancellation()
+                _ = try await services.refreshSetupWorkflow(
+                    appState: appState,
+                    in: modelContext,
+                    hasSteamReferences: !games.isEmpty
+                )
+                return
+            } catch SetupWorkflowRefreshControlError.superseded {
+                guard SetupWorkflowRefreshRetryPolicy.shouldRetryAfterSupersession(
+                    outerTaskIsCancelled: Task.isCancelled
+                ) else {
+                    return
+                }
+                await Task.yield()
+            } catch is CancellationError {
+                return
+            } catch {
+                appState.setError(error)
+                return
+            }
         }
     }
 
@@ -826,17 +830,22 @@ struct SetupView: View {
         case .prepareEngine:
             if let issue = readiness.rootIssue { return appState.localizedError(issue) }
             if let bundledRuntimeUnavailableReasonKey { return bundledRuntimeUnavailableReasonKey }
-            if let runtimeExecutable = appState.runtimeExecutableURL {
-                do {
-                    let verification = try services.steamPrefixService.inspectSteamClientCompatibility(runtimeExecutable)
-                    if !verification.canLaunchWindowsSteam {
-                        return verification.userMessage
-                    }
-                } catch {
-                    return appState.localizedError(error)
-                }
+            guard appState.selectedRootURL != nil else {
+                return appState.localized("앱 데이터 위치를 준비하지 못했습니다.")
             }
-            return appState.selectedRootURL == nil ? appState.localized("앱 데이터 위치를 준비하지 못했습니다.") : nil
+            guard appState.runtimeExecutableURL != nil else {
+                return appState.localized("ForgePlay Runtime을 먼저 확인하세요.")
+            }
+            guard let runtimeSystemCheck else {
+                return appState.localized("ForgePlay Runtime을 확인하는 중입니다.")
+            }
+            if runtimeSystemCheck.status == .error {
+                return appState.localized(runtimeSystemCheck.detail)
+            }
+            if runtimeSystemCheck.status == .unknown {
+                return appState.localized("ForgePlay Runtime을 확인하는 중입니다.")
+            }
+            return nil
         case .prepareSteamEnvironment:
             if let issue = readiness.rootIssue { return appState.localizedError(issue) }
             if let bundledRuntimeUnavailableReasonKey { return bundledRuntimeUnavailableReasonKey }

@@ -39,7 +39,7 @@ struct AdvancedView: View {
                 ) {
                     ForgeCard("Steam 프리픽스 기록", systemImage: "externaldrive") {
                         if prefixes.isEmpty {
-                            Text(appState.localized("SwiftData에 기록된 Steam 프리픽스가 없습니다. 처음 설정에서 Steam 프리픽스를 만들면 기록됩니다."))
+                            Text(appState.localized("SwiftData에 기록된 Steam 프리픽스가 없습니다. 설정에서 Steam 프리픽스를 만들면 기록됩니다."))
                                 .foregroundStyle(palette.secondaryText)
                         } else {
                             ForEach(prefixes) { prefix in

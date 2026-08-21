@@ -311,6 +311,11 @@ compile_arguments=(
     -Wno-deprecated-declarations
     -I "$script_directory"
     "-DFORGEPLAY_GAME_MODE_HOST_BUNDLE_IDENTIFIER=\"$bundle_identifier\""
+    '-DFORGEPLAY_GAME_MODE_COORDINATION_PROFILE="sandbox-app-group"'
+    -DFORGEPLAY_GAME_MODE_PRODUCTION_IDENTITY=1
+    -DFORGEPLAY_GAME_MODE_HOST_RUNNABLE=1
+    -DFORGEPLAY_GAME_MODE_COORDINATION_SANDBOX_APP_GROUP=1
+    -DFORGEPLAY_GAME_MODE_COORDINATION_DIRECT_USER_DOMAIN=0
     "-DFORGEPLAY_GAME_MODE_APPLICATION_GROUP=\"$application_group\""
     "-DFORGEPLAY_GAME_MODE_RUNTIME_IDENTIFIER=\"$runtime_identifier\""
     "-DFORGEPLAY_GAME_MODE_RUNTIME_MANIFEST_SHA256=\"$manifest_sha256\""
@@ -345,6 +350,13 @@ compile_arguments=(
 
 [[ "$(/usr/bin/lipo -archs "$host_binary")" == "x86_64" ]] || \
     fail "host output is not a thin x86_64 Mach-O"
+/usr/bin/otool -hv "$host_binary" > "$work_directory/mach-header.txt"
+[[ "$(awk 'END { print $5 }' "$work_directory/mach-header.txt")" == "EXECUTE" ]] || \
+    fail "host output is not an executable Mach-O"
+if awk 'END { for (field_index = 8; field_index <= NF; field_index++) if ($field_index == "PIE") exit 0; exit 1 }' \
+    "$work_directory/mach-header.txt"; then
+    fail "host output must not carry the MH_PIE flag"
+fi
 /usr/bin/nm -gU "$host_binary" > "$work_directory/host-symbols.txt"
 /usr/bin/grep -Eq '[[:space:]]_wine_main_preload_info$' \
     "$work_directory/host-symbols.txt" || \

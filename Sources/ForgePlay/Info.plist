@@ -39,6 +39,17 @@
 	<string>public.app-category.utilities</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2026 ForgePlay. All rights reserved.</string>
+	<key>GCSupportsControllerUserInteraction</key>
+	<true/>
+	<key>GCSupportedGameControllers</key>
+	<array>
+		<dict>
+			<key>ProfileName</key>
+			<string>ExtendedGamepad</string>
+		</dict>
+	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>ForgePlay는 사용자가 오디오 입력을 켠 Steam 세션에서 Windows 게임과 음성 채팅에 마이크를 제공하기 위해 접근 권한을 사용합니다.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>ForgePlay는 Windows 게임 컨트롤러를 연결하기 위해 Bluetooth 접근 권한을 사용합니다.</string>
 	<key>NSPrincipalClass</key>

@@ -1,7 +1,7 @@
 {
   "$schema": "./compatibility.schema.json",
-  "schemaVersion": 2,
-  "updatedAt": "2026-08-13",
+  "schemaVersion": 1,
+  "updatedAt": "2026-08-01",
   "testProfiles": [
     {
       "id": "apple-silicon-m4-pro-24gb",
@@ -37,48 +37,6 @@
       "chip": "M4",
       "unifiedMemoryGB": 16,
       "macOSVersion": null
-    },
-    {
-      "id": "apple-silicon-m5-pro-24gb-tahoe-26-5-2",
-      "platform": "Apple Silicon Mac",
-      "chip": "M5 Pro",
-      "unifiedMemoryGB": 24,
-      "macOSVersion": "Tahoe 26.5.2"
-    },
-    {
-      "id": "apple-silicon-m5-max-128gb-tahoe-26-5-2",
-      "platform": "Apple Silicon Mac",
-      "chip": "M5 Max",
-      "unifiedMemoryGB": 128,
-      "macOSVersion": "Tahoe 26.5.2"
-    },
-    {
-      "id": "apple-silicon-m4-pro-24gb-macos-27-beta-3",
-      "platform": "Apple Silicon Mac",
-      "chip": "M4 Pro",
-      "unifiedMemoryGB": 24,
-      "macOSVersion": "27 beta 3"
-    },
-    {
-      "id": "apple-silicon-m5-max-64gb-macos-26-4",
-      "platform": "Apple Silicon Mac",
-      "chip": "M5 Max",
-      "unifiedMemoryGB": 64,
-      "macOSVersion": "26.4"
-    },
-    {
-      "id": "macbook-air-m5-16gb",
-      "platform": "MacBook Air",
-      "chip": "M5",
-      "unifiedMemoryGB": 16,
-      "macOSVersion": null
-    },
-    {
-      "id": "apple-silicon-m4-pro-24gb-macos-26-6-1",
-      "platform": "Apple Silicon Mac",
-      "chip": "M4 Pro",
-      "unifiedMemoryGB": 24,
-      "macOSVersion": "Tahoe 26.6.1"
     }
   ],
   "games": [
@@ -277,55 +235,6 @@
         "en": "Spelunky 2",
         "ko": "스펠렁키 2"
       }
-    },
-    {
-      "id": "fallout-4",
-      "titles": {
-        "en": "Fallout 4",
-        "ko": "폴아웃 4"
-      }
-    },
-    {
-      "id": "kingdom-come-deliverance-ii",
-      "titles": {
-        "en": "Kingdom Come: Deliverance II",
-        "ko": "킹덤 컴: 딜리버런스 II"
-      }
-    },
-    {
-      "id": "warframe",
-      "titles": {
-        "en": "Warframe",
-        "ko": "워프레임"
-      }
-    },
-    {
-      "id": "satisfactory",
-      "titles": {
-        "en": "Satisfactory",
-        "ko": "새티스팩토리"
-      }
-    },
-    {
-      "id": "ebaseball-pro-spirit-2026",
-      "titles": {
-        "en": "eBaseball™: PRO SPIRIT 2026",
-        "ko": "프로야구스피리츠 2026"
-      }
-    },
-    {
-      "id": "marvels-spider-man-2",
-      "titles": {
-        "en": "Marvel's Spider-Man 2",
-        "ko": "마블 스파이더맨 2"
-      }
-    },
-    {
-      "id": "sekiro-shadows-die-twice-goty",
-      "titles": {
-        "en": "Sekiro™: Shadows Die Twice - GOTY Edition",
-        "ko": "세키로: 섀도우 다이 트와이스 - GOTY 에디션"
-      }
     }
   ],
   "reports": [
@@ -333,7 +242,6 @@
       "id": "stellar-blade-m4-pro-24gb-initial",
       "gameId": "stellar-blade",
       "testProfileId": "apple-silicon-m4-pro-24gb",
-      "forgePlayVersion": "1.0",
       "status": "playable",
       "source": "project-test",
       "testedAt": null,
@@ -344,7 +252,6 @@
       "id": "atomic-heart-m4-pro-24gb-initial",
       "gameId": "atomic-heart",
       "testProfileId": "apple-silicon-m4-pro-24gb",
-      "forgePlayVersion": "1.0",
       "status": "playable",
       "source": "project-test",
       "testedAt": null,
@@ -355,7 +262,6 @@
       "id": "overwatch-m4-pro-24gb-initial",
       "gameId": "overwatch",
       "testProfileId": "apple-silicon-m4-pro-24gb",
-      "forgePlayVersion": "1.0",
       "status": "playable",
       "source": "project-test",
       "testedAt": null,
@@ -366,7 +272,6 @@
       "id": "counter-strike-2-m4-pro-24gb-initial",
       "gameId": "counter-strike-2",
       "testProfileId": "apple-silicon-m4-pro-24gb",
-      "forgePlayVersion": "1.0",
       "status": "playable",
       "source": "project-test",
       "testedAt": null,
@@ -377,7 +282,6 @@
       "id": "half-life-2-m4-pro-24gb-initial",
       "gameId": "half-life-2",
       "testProfileId": "apple-silicon-m4-pro-24gb",
-      "forgePlayVersion": "1.0",
       "status": "playable",
       "source": "project-test",
       "testedAt": null,
@@ -388,7 +292,6 @@
       "id": "heroes-might-magic-olden-era-m4-pro-24gb-initial",
       "gameId": "heroes-might-magic-olden-era",
       "testProfileId": "apple-silicon-m4-pro-24gb",
-      "forgePlayVersion": "1.0",
       "status": "playable",
       "source": "project-test",
       "testedAt": null,
@@ -399,7 +302,6 @@
       "id": "kingdom-come-deliverance-m4-pro-24gb-initial",
       "gameId": "kingdom-come-deliverance",
       "testProfileId": "apple-silicon-m4-pro-24gb",
-      "forgePlayVersion": "1.0",
       "status": "playable",
       "source": "project-test",
       "testedAt": null,
@@ -410,7 +312,6 @@
       "id": "left-4-dead-m4-pro-24gb-initial",
       "gameId": "left-4-dead",
       "testProfileId": "apple-silicon-m4-pro-24gb",
-      "forgePlayVersion": "1.0",
       "status": "playable",
       "source": "project-test",
       "testedAt": null,
@@ -421,7 +322,6 @@
       "id": "once-human-m4-pro-24gb-initial",
       "gameId": "once-human",
       "testProfileId": "apple-silicon-m4-pro-24gb",
-      "forgePlayVersion": "1.0",
       "status": "playable",
       "source": "project-test",
       "testedAt": null,
@@ -432,7 +332,6 @@
       "id": "pragmata-m4-pro-24gb-initial",
       "gameId": "pragmata",
       "testProfileId": "apple-silicon-m4-pro-24gb",
-      "forgePlayVersion": "1.0",
       "status": "playable",
       "source": "project-test",
       "testedAt": null,
@@ -443,7 +342,6 @@
       "id": "the-walking-dead-m4-pro-24gb-initial",
       "gameId": "the-walking-dead",
       "testProfileId": "apple-silicon-m4-pro-24gb",
-      "forgePlayVersion": "1.0",
       "status": "playable",
       "source": "project-test",
       "testedAt": null,
@@ -454,7 +352,6 @@
       "id": "yu-gi-oh-master-duel-m4-pro-24gb-initial",
       "gameId": "yu-gi-oh-master-duel",
       "testProfileId": "apple-silicon-m4-pro-24gb",
-      "forgePlayVersion": "1.0",
       "status": "playable",
       "source": "project-test",
       "testedAt": null,
@@ -465,7 +362,6 @@
       "id": "tekken-8-m3-max-36gb-community-guswnswkd15",
       "gameId": "tekken-8",
       "testProfileId": "apple-silicon-m3-max-36gb-tahoe-26-5-1",
-      "forgePlayVersion": "1.0",
       "status": "playable",
       "source": "github-issue",
       "reporter": "guswnswkd15",
@@ -486,20 +382,19 @@
       "id": "umamusume-pretty-derby-community-lotus-20260729",
       "gameId": "umamusume-pretty-derby",
       "testProfileId": null,
-      "forgePlayVersion": "1.0",
       "status": "blocked",
       "source": "community-report",
       "reporter": "로투스홍차튀김",
       "testedAt": null,
       "notes": {
-        "en": "A community report says the game does not run at all. The tested Mac model and macOS version were not provided.",
-        "ko": "커뮤니티 제보에 따르면 게임을 전혀 실행할 수 없습니다. 테스트한 Mac 모델과 macOS 버전은 제보되지 않았습니다.",
-        "ja": "コミュニティから、ゲームをまったく起動できないとの報告がありました。テストしたMacのモデルとmacOSのバージョンは未報告です。",
-        "zh-Hans": "社区反馈称该游戏完全无法运行。未提供测试所用的 Mac 型号和 macOS 版本。",
-        "zh-Hant": "社群回報指出該遊戲完全無法執行。未提供測試所用的 Mac 型號與 macOS 版本。",
-        "de": "Laut einer Community-Meldung lässt sich das Spiel überhaupt nicht starten. Das getestete Mac-Modell und die macOS-Version wurden nicht angegeben.",
-        "es": "Según un informe de la comunidad, el juego no se ejecuta en absoluto. No se indicaron el modelo de Mac probado ni la versión de macOS.",
-        "fr": "Selon un signalement de la communauté, le jeu ne se lance pas du tout. Le modèle de Mac testé et la version de macOS n’ont pas été indiqués."
+        "en": "A community report says the game does not run at all. The tested Mac and software versions were not provided.",
+        "ko": "커뮤니티 제보에 따르면 게임을 전혀 실행할 수 없습니다. 테스트한 Mac과 소프트웨어 버전은 제보되지 않았습니다.",
+        "ja": "コミュニティから、ゲームをまったく起動できないとの報告がありました。テストしたMacとソフトウェアのバージョンは未報告です。",
+        "zh-Hans": "社区反馈称该游戏完全无法运行。未提供测试所用的 Mac 和软件版本。",
+        "zh-Hant": "社群回報指出該遊戲完全無法執行。未提供測試所用的 Mac 與軟體版本。",
+        "de": "Laut einer Community-Meldung lässt sich das Spiel überhaupt nicht starten. Der getestete Mac und die Softwareversionen wurden nicht angegeben.",
+        "es": "Según un informe de la comunidad, el juego no se ejecuta en absoluto. No se indicaron el Mac probado ni las versiones del software.",
+        "fr": "Selon un signalement de la communauté, le jeu ne se lance pas du tout. Le Mac testé et les versions logicielles n’ont pas été indiqués."
       },
       "blocker": "unknown"
     },
@@ -507,20 +402,19 @@
       "id": "grand-theft-auto-iv-community-anonymous-20260729",
       "gameId": "grand-theft-auto-iv",
       "testProfileId": null,
-      "forgePlayVersion": "1.0",
       "status": "blocked",
       "source": "community-report",
       "reporter": "ㅇㅇ",
       "testedAt": null,
       "notes": {
-        "en": "The process exits at the launcher, so the game cannot be started. The tested Mac model and macOS version were not provided.",
-        "ko": "런처 단계에서 종료되어 게임에 진입할 수 없습니다. 테스트한 Mac 모델과 macOS 버전은 제보되지 않았습니다.",
-        "ja": "ランチャーの段階で終了し、ゲームを開始できません。テストしたMacのモデルとmacOSのバージョンは未報告です。",
-        "zh-Hans": "程序在启动器阶段退出，因此无法进入游戏。未提供测试所用的 Mac 型号和 macOS 版本。",
-        "zh-Hant": "程式在啟動器階段結束，因此無法進入遊戲。未提供測試所用的 Mac 型號與 macOS 版本。",
-        "de": "Der Vorgang endet bereits im Launcher, sodass das Spiel nicht gestartet werden kann. Das getestete Mac-Modell und die macOS-Version wurden nicht angegeben.",
-        "es": "El proceso se cierra en el lanzador, por lo que no es posible iniciar el juego. No se indicaron el modelo de Mac probado ni la versión de macOS.",
-        "fr": "Le processus se ferme au niveau du lanceur, ce qui empêche de démarrer le jeu. Le modèle de Mac testé et la version de macOS n’ont pas été indiqués."
+        "en": "The process exits at the launcher, so the game cannot be started. The tested Mac and software versions were not provided.",
+        "ko": "런처 단계에서 종료되어 게임에 진입할 수 없습니다. 테스트한 Mac과 소프트웨어 버전은 제보되지 않았습니다.",
+        "ja": "ランチャーの段階で終了し、ゲームを開始できません。テストしたMacとソフトウェアのバージョンは未報告です。",
+        "zh-Hans": "程序在启动器阶段退出，因此无法进入游戏。未提供测试所用的 Mac 和软件版本。",
+        "zh-Hant": "程式在啟動器階段結束，因此無法進入遊戲。未提供測試所用的 Mac 與軟體版本。",
+        "de": "Der Vorgang endet bereits im Launcher, sodass das Spiel nicht gestartet werden kann. Der getestete Mac und die Softwareversionen wurden nicht angegeben.",
+        "es": "El proceso se cierra en el lanzador, por lo que no es posible iniciar el juego. No se indicaron el Mac probado ni las versiones del software.",
+        "fr": "Le processus se ferme au niveau du lanceur, ce qui empêche de démarrer le jeu. Le Mac testé et les versions logicielles n’ont pas été indiqués."
       },
       "blocker": "launcher"
     },
@@ -528,20 +422,19 @@
       "id": "blue-archive-m4-pro-24gb-community-macgallery-20260729",
       "gameId": "blue-archive",
       "testProfileId": "apple-silicon-m4-pro-24gb",
-      "forgePlayVersion": "1.0",
       "status": "blocked",
       "source": "community-report",
       "reporter": "맥갤러",
       "testedAt": null,
       "notes": {
-        "en": "On an M4 Pro Mac with 24GB of unified memory, rendering is normal, but after selecting a server a security-module message appears and progress is blocked. The macOS version was not provided.",
-        "ko": "M4 Pro 24GB에서 화면은 정상적으로 렌더링되지만, 서버 선택 후 보안 모듈 관련 메시지가 나타나 더 진행할 수 없습니다. macOS 버전은 제보되지 않았습니다.",
-        "ja": "M4 Pro・24GBのMacでは描画は正常ですが、サーバー選択後にセキュリティモジュールに関するメッセージが表示され、それ以上進めません。macOSのバージョンは未報告です。",
-        "zh-Hans": "在配备 M4 Pro 和 24GB 统一内存的 Mac 上画面渲染正常，但选择服务器后会出现与安全模块有关的提示，无法继续。未提供 macOS 版本。",
-        "zh-Hant": "在配備 M4 Pro 與 24GB 統一記憶體的 Mac 上畫面渲染正常，但選擇伺服器後會出現與安全模組有關的提示，無法繼續。未提供 macOS 版本。",
-        "de": "Auf einem Mac mit M4 Pro und 24GB gemeinsamem Arbeitsspeicher wird die Grafik korrekt dargestellt. Nach der Serverauswahl erscheint jedoch eine Meldung zu einem Sicherheitsmodul, und der Vorgang kann nicht fortgesetzt werden. Die macOS-Version wurde nicht angegeben.",
-        "es": "En un Mac con M4 Pro y 24GB de memoria unificada, el renderizado es normal, pero tras seleccionar un servidor aparece un mensaje relacionado con un módulo de seguridad y no se puede continuar. No se indicó la versión de macOS.",
-        "fr": "Sur un Mac équipé d’un M4 Pro et de 24GB de mémoire unifiée, le rendu est normal, mais après la sélection d’un serveur, un message relatif à un module de sécurité apparaît et empêche de continuer. La version de macOS n’a pas été indiquée."
+        "en": "On an M4 Pro Mac with 24GB of unified memory, rendering is normal, but after selecting a server a security-module message appears and progress is blocked. The macOS and ForgePlay versions were not provided.",
+        "ko": "M4 Pro 24GB에서 화면은 정상적으로 렌더링되지만, 서버 선택 후 보안 모듈 관련 메시지가 나타나 더 진행할 수 없습니다. macOS 및 ForgePlay 버전은 제보되지 않았습니다.",
+        "ja": "M4 Pro・24GBのMacでは描画は正常ですが、サーバー選択後にセキュリティモジュールに関するメッセージが表示され、それ以上進めません。macOSとForgePlayのバージョンは未報告です。",
+        "zh-Hans": "在配备 M4 Pro 和 24GB 统一内存的 Mac 上画面渲染正常，但选择服务器后会出现与安全模块有关的提示，无法继续。未提供 macOS 和 ForgePlay 版本。",
+        "zh-Hant": "在配備 M4 Pro 與 24GB 統一記憶體的 Mac 上畫面渲染正常，但選擇伺服器後會出現與安全模組有關的提示，無法繼續。未提供 macOS 與 ForgePlay 版本。",
+        "de": "Auf einem Mac mit M4 Pro und 24GB gemeinsamem Arbeitsspeicher wird die Grafik korrekt dargestellt. Nach der Serverauswahl erscheint jedoch eine Meldung zu einem Sicherheitsmodul, und der Vorgang kann nicht fortgesetzt werden. Die macOS- und ForgePlay-Versionen wurden nicht angegeben.",
+        "es": "En un Mac con M4 Pro y 24GB de memoria unificada, el renderizado es normal, pero tras seleccionar un servidor aparece un mensaje relacionado con un módulo de seguridad y no se puede continuar. No se indicaron las versiones de macOS ni de ForgePlay.",
+        "fr": "Sur un Mac équipé d’un M4 Pro et de 24GB de mémoire unifiée, le rendu est normal, mais après la sélection d’un serveur, un message relatif à un module de sécurité apparaît et empêche de continuer. Les versions de macOS et de ForgePlay n’ont pas été indiquées."
       },
       "blocker": "security-module"
     },
@@ -549,7 +442,6 @@
       "id": "eternal-return-m4-pro-24gb-project-20260729",
       "gameId": "eternal-return",
       "testProfileId": "apple-silicon-m4-pro-24gb",
-      "forgePlayVersion": "1.0",
       "status": "playable",
       "source": "project-test",
       "testedAt": "2026-07-29",
@@ -560,7 +452,6 @@
       "id": "shape-of-dreams-m5-max-community-ieungieungi-20260729",
       "gameId": "shape-of-dreams",
       "testProfileId": "apple-silicon-m5-max",
-      "forgePlayVersion": "1.0",
       "status": "playable",
       "source": "community-report",
       "reporter": "ㅇ이응이ㅇ",
@@ -572,7 +463,6 @@
       "id": "meccha-chameleon-m5-max-community-ieungieungi-20260729",
       "gameId": "meccha-chameleon",
       "testProfileId": "apple-silicon-m5-max",
-      "forgePlayVersion": "1.0",
       "status": "playable",
       "source": "community-report",
       "reporter": "ㅇ이응이ㅇ",
@@ -584,7 +474,6 @@
       "id": "palworld-m5-max-community-ieungieungi-20260729",
       "gameId": "palworld",
       "testProfileId": "apple-silicon-m5-max",
-      "forgePlayVersion": "1.0",
       "status": "playable",
       "source": "community-report",
       "reporter": "ㅇ이응이ㅇ",
@@ -596,7 +485,6 @@
       "id": "legend-of-mortal-m5-max-community-ieungieungi-20260729",
       "gameId": "legend-of-mortal",
       "testProfileId": "apple-silicon-m5-max",
-      "forgePlayVersion": "1.0",
       "status": "blocked",
       "source": "community-report",
       "reporter": "ㅇ이응이ㅇ",
@@ -608,7 +496,6 @@
       "id": "warno-community-anonymous-20260730",
       "gameId": "warno",
       "testProfileId": null,
-      "forgePlayVersion": "1.0",
       "status": "playable",
       "source": "community-report",
       "reporter": "ㅇㅇ",
@@ -620,7 +507,6 @@
       "id": "djmax-respect-v-community-anonymous-20260730",
       "gameId": "djmax-respect-v",
       "testProfileId": null,
-      "forgePlayVersion": "1.0",
       "status": "playable",
       "source": "community-report",
       "reporter": "ㅇㅇ",
@@ -632,7 +518,6 @@
       "id": "helldivers-2-community-anonymous-20260730",
       "gameId": "helldivers-2",
       "testProfileId": null,
-      "forgePlayVersion": "1.0",
       "status": "blocked",
       "source": "community-report",
       "reporter": "ㅇㅇ",
@@ -653,7 +538,6 @@
       "id": "ready-or-not-m5-max-64gb-community-anonymous-20260801",
       "gameId": "ready-or-not",
       "testProfileId": "apple-silicon-m5-max-64gb-tahoe-26-5-2",
-      "forgePlayVersion": "1.0",
       "status": "playable",
       "source": "community-report",
       "reporter": "ㅇㅇ",
@@ -665,7 +549,6 @@
       "id": "inzoi-m5-max-64gb-community-anonymous-20260801",
       "gameId": "inzoi",
       "testProfileId": "apple-silicon-m5-max-64gb-tahoe-26-5-2",
-      "forgePlayVersion": "1.0",
       "status": "blocked",
       "source": "community-report",
       "reporter": "ㅇㅇ",
@@ -686,7 +569,6 @@
       "id": "platina-lab-m5-max-64gb-community-anonymous-20260801",
       "gameId": "platina-lab",
       "testProfileId": "apple-silicon-m5-max-64gb-tahoe-26-5-2",
-      "forgePlayVersion": "1.0",
       "status": "playable",
       "source": "community-report",
       "reporter": "ㅇㅇ",
@@ -698,7 +580,6 @@
       "id": "spelunky-2-m4-air-16gb-community-anonymous-20260801",
       "gameId": "spelunky-2",
       "testProfileId": "apple-silicon-m4-air-16gb",
-      "forgePlayVersion": "1.0",
       "status": "playable",
       "source": "community-report",
       "reporter": "ㅇㅇ",
@@ -712,207 +593,6 @@
         "de": "Beim Ändern der Tastenbelegung in den Spieleinstellungen wird „Error“ angezeigt; im Spiel funktionieren die neu belegten Tasten jedoch korrekt.",
         "es": "Al cambiar la asignación de teclas en los ajustes del juego aparece «Error», pero durante la partida las teclas configuradas funcionan correctamente.",
         "fr": "La modification des touches dans les paramètres du jeu affiche « Error », mais les touches configurées fonctionnent correctement en jeu."
-      },
-      "blocker": null
-    },
-    {
-      "id": "fallout-4-m5-pro-24gb-community-macgallery21-20260802",
-      "gameId": "fallout-4",
-      "testProfileId": "apple-silicon-m5-pro-24gb-tahoe-26-5-2",
-      "forgePlayVersion": "1.0",
-      "status": "playable",
-      "source": "community-report",
-      "reporter": "맥갤러21",
-      "testedAt": null,
-      "notes": {
-        "en": "Runs smoothly using D3DMetal.",
-        "ko": "D3DMetal로 원활하게 플레이됩니다.",
-        "ja": "D3DMetalでスムーズにプレイできます。",
-        "zh-Hans": "使用 D3DMetal 可流畅游玩。",
-        "zh-Hant": "使用 D3DMetal 可流暢遊玩。",
-        "de": "Läuft mit D3DMetal flüssig.",
-        "es": "Funciona con fluidez usando D3DMetal.",
-        "fr": "Fonctionne de manière fluide avec D3DMetal."
-      },
-      "blocker": null
-    },
-    {
-      "id": "kingdom-come-deliverance-ii-m5-pro-24gb-community-macgallery21-20260802",
-      "gameId": "kingdom-come-deliverance-ii",
-      "testProfileId": "apple-silicon-m5-pro-24gb-tahoe-26-5-2",
-      "forgePlayVersion": "1.0",
-      "status": "blocked",
-      "source": "community-report",
-      "reporter": "맥갤러21",
-      "testedAt": null,
-      "notes": {
-        "en": "After launch, the screen remains black with only the cursor visible, preventing gameplay.",
-        "ko": "실행 후 검은 화면에 커서만 표시되어 게임을 진행할 수 없습니다.",
-        "ja": "起動後は黒い画面にカーソルだけが表示され、ゲームを進められません。",
-        "zh-Hans": "启动后只显示黑屏和光标，无法继续游戏。",
-        "zh-Hant": "啟動後只顯示黑畫面與游標，無法繼續遊戲。",
-        "de": "Nach dem Start bleibt der Bildschirm schwarz und nur der Mauszeiger ist sichtbar; das Spiel kann nicht fortgesetzt werden.",
-        "es": "Tras iniciarse, la pantalla queda negra y solo se ve el cursor, por lo que no es posible continuar.",
-        "fr": "Après le lancement, l’écran reste noir et seul le curseur est visible, ce qui empêche de poursuivre."
-      },
-      "blocker": "graphics"
-    },
-    {
-      "id": "warframe-project-verification-20260727",
-      "gameId": "warframe",
-      "testProfileId": null,
-      "forgePlayVersion": "1.0",
-      "status": "playable",
-      "source": "project-test",
-      "testedAt": "2026-07-27",
-      "notes": {
-        "en": "The launcher and game client both start normally, and actual gameplay was verified.",
-        "ko": "런처와 게임 본체가 정상적으로 실행되며 실제 게임플레이까지 확인했습니다.",
-        "ja": "ランチャーとゲーム本体がどちらも正常に起動し、実際のゲームプレイまで確認しました。",
-        "zh-Hans": "启动器和游戏客户端均可正常运行，并已确认能够实际游玩。",
-        "zh-Hant": "啟動器與遊戲用戶端均可正常執行，並已確認能夠實際遊玩。",
-        "de": "Launcher und Spielclient starten ordnungsgemäß; auch das tatsächliche Gameplay wurde bestätigt.",
-        "es": "Tanto el lanzador como el cliente del juego se inician correctamente y se ha verificado el juego real.",
-        "fr": "Le lanceur et le client du jeu démarrent correctement, et une session de jeu réelle a été vérifiée."
-      },
-      "blocker": null
-    },
-    {
-      "id": "warframe-m5-max-128gb-community-q60max-20260802",
-      "gameId": "warframe",
-      "testProfileId": "apple-silicon-m5-max-128gb-tahoe-26-5-2",
-      "forgePlayVersion": "1.0",
-      "status": "playable",
-      "source": "community-report",
-      "reporter": "*Q60MAX*",
-      "testedAt": null,
-      "notes": {
-        "en": "Gameplay runs smoothly. In the Korean client, interaction prompts use Hangul characters instead of the Latin X and F labels; the reporter found the Korean UI visually cleaner.",
-        "ko": "게임플레이가 원활합니다. 한국어 클라이언트에서는 상호작용 버튼이 영문 X·F 대신 한글 자모로 표시되어, 한국어 UI가 시각적으로 더 깔끔하게 느껴졌다고 제보했습니다.",
-        "ja": "ゲームプレイは快適です。韓国語クライアントでは、操作ボタンが英字のX・Fではなくハングル字母で表示され、韓国語UIのほうが見た目も整っていると感じたとのことです。",
-        "zh-Hans": "游戏运行流畅。在韩语客户端中，交互按键会以韩文字母显示，而不是英文字母 X 和 F；报告者认为韩语界面在视觉上更加整洁。",
-        "zh-Hant": "遊戲執行流暢。在韓語用戶端中，互動按鍵會以韓文字母顯示，而不是英文字母 X 與 F；回報者認為韓語介面在視覺上更加整潔。",
-        "de": "Das Spiel läuft flüssig. Im koreanischen Client werden Interaktionshinweise mit Hangul-Zeichen statt der lateinischen Tastenbezeichnungen X und F dargestellt; die koreanische Oberfläche wirkte für den Melder optisch aufgeräumter.",
-        "es": "El juego funciona con fluidez. En el cliente coreano, los indicadores de interacción muestran caracteres hangul en lugar de las letras X y F; al informante le pareció que la interfaz en coreano se veía más limpia.",
-        "fr": "Le jeu fonctionne de manière fluide. Dans le client coréen, les indications d’interaction utilisent des caractères hangeul au lieu des lettres X et F ; la personne ayant fait le signalement a trouvé l’interface coréenne visuellement plus soignée."
-      },
-      "blocker": null
-    },
-    {
-      "id": "satisfactory-m4-pro-24gb-community-macgallery22-20260802",
-      "gameId": "satisfactory",
-      "testProfileId": "apple-silicon-m4-pro-24gb-macos-27-beta-3",
-      "forgePlayVersion": "1.0",
-      "status": "playable",
-      "source": "community-report",
-      "reporter": "맥갤러22",
-      "testedAt": null,
-      "notes": {
-        "en": "Runs smoothly using D3DMetal.",
-        "ko": "D3DMetal로 원활하게 플레이됩니다.",
-        "ja": "D3DMetalでスムーズにプレイできます。",
-        "zh-Hans": "使用 D3DMetal 可流畅游玩。",
-        "zh-Hant": "使用 D3DMetal 可流暢遊玩。",
-        "de": "Läuft mit D3DMetal flüssig.",
-        "es": "Funciona con fluidez usando D3DMetal.",
-        "fr": "Fonctionne de manière fluide avec D3DMetal."
-      },
-      "blocker": null
-    },
-    {
-      "id": "helldivers-2-development-github-ddol2ya-20260802",
-      "gameId": "helldivers-2",
-      "testProfileId": null,
-      "forgePlayVersion": "development",
-      "status": "playable",
-      "source": "github-issue",
-      "reporter": "ddol2ya",
-      "testedAt": null,
-      "notes": {
-        "en": "Gameplay was confirmed with a source-modified development build. The related changes are planned for a future ForgePlay release and are not included in the currently published 1.0 release.",
-        "ko": "소스 수정이 적용된 개발 빌드에서 게임 모드로 플레이할 수 있음을 확인했습니다. 관련 변경은 향후 ForgePlay 릴리스에 포함할 예정이며, 현재 공개된 1.0에는 아직 적용되지 않았습니다.",
-        "ja": "ソース修正を適用した開発ビルドで、ゲームモードによるプレイが可能であることを確認しました。関連する変更は今後のForgePlayリリースに含める予定で、現在公開中の1.0にはまだ反映されていません。",
-        "zh-Hans": "已确认在应用源代码修改的开发版本中可通过游戏模式游玩。相关更改计划在未来的 ForgePlay 版本中发布，目前公开的 1.0 尚未包含这些更改。",
-        "zh-Hant": "已確認在套用原始碼修改的開發版本中可透過遊戲模式遊玩。相關變更預計在未來的 ForgePlay 版本中發布，目前公開的 1.0 尚未包含這些變更。",
-        "de": "Mit einem quellcodeangepassten Entwicklungs-Build wurde bestätigt, dass das Spiel im Spielmodus spielbar ist. Die zugehörigen Änderungen sind für eine künftige ForgePlay-Version vorgesehen und noch nicht in der derzeit veröffentlichten Version 1.0 enthalten.",
-        "es": "Se ha confirmado que se puede jugar en el modo Juego con una compilación de desarrollo modificada a nivel de código fuente. Los cambios correspondientes están previstos para una futura versión de ForgePlay y aún no están incluidos en la versión 1.0 publicada actualmente.",
-        "fr": "Il a été confirmé que le jeu fonctionne en mode Jeu avec une version de développement modifiée au niveau du code source. Les changements correspondants sont prévus pour une prochaine version de ForgePlay et ne figurent pas encore dans la version 1.0 actuellement publiée."
-      },
-      "blocker": null
-    },
-    {
-      "id": "ebaseball-pro-spirit-2026-m5-max-64gb-community-macgallery-20260803",
-      "gameId": "ebaseball-pro-spirit-2026",
-      "testProfileId": "apple-silicon-m5-max-64gb-macos-26-4",
-      "forgePlayVersion": "1.0",
-      "status": "playable",
-      "source": "community-report",
-      "reporter": "맥갤러",
-      "testedAt": null,
-      "notes": null,
-      "blocker": null
-    },
-    {
-      "id": "marvels-spider-man-2-community-macgallery-20260803",
-      "gameId": "marvels-spider-man-2",
-      "testProfileId": null,
-      "forgePlayVersion": "1.0",
-      "status": "blocked",
-      "source": "community-report",
-      "reporter": "맥갤러",
-      "testedAt": null,
-      "notes": {
-        "en": "Gameplay is currently blocked by what appears to be a Rosetta AVX issue. A ForgePlay release containing the fix is planned.",
-        "ko": "Rosetta AVX 관련 문제로 인해 게임을 플레이할 수 없는 것으로 보입니다. 수정 사항을 반영한 ForgePlay 릴리스를 준비하고 있습니다.",
-        "ja": "RosettaのAVX関連の問題により、現在はプレイできないとみられます。修正を含むForgePlayリリースを準備しています。",
-        "zh-Hans": "目前疑似受 Rosetta AVX 相关问题影响，无法游玩。正在准备包含修复的 ForgePlay 版本。",
-        "zh-Hant": "目前疑似受 Rosetta AVX 相關問題影響，無法遊玩。正在準備包含修正的 ForgePlay 版本。",
-        "de": "Das Spiel ist derzeit offenbar wegen eines Rosetta-AVX-Problems nicht spielbar. Eine ForgePlay-Version mit der Fehlerbehebung ist geplant.",
-        "es": "Actualmente no se puede jugar, al parecer debido a un problema de Rosetta relacionado con AVX. Está prevista una versión de ForgePlay con la corrección.",
-        "fr": "Le jeu n’est actuellement pas jouable, apparemment en raison d’un problème AVX lié à Rosetta. Une version de ForgePlay intégrant le correctif est prévue."
-      },
-      "blocker": "runtime"
-    },
-    {
-      "id": "eternal-return-m5-air-16gb-community-kamael-20260803",
-      "gameId": "eternal-return",
-      "testProfileId": "macbook-air-m5-16gb",
-      "forgePlayVersion": "1.0",
-      "status": "playable",
-      "source": "community-report",
-      "reporter": "카마엘",
-      "testedAt": null,
-      "notes": {
-        "en": "Runs normally at medium graphics settings. It uses slightly more memory than CrossOver, but not enough to cause a significant issue.",
-        "ko": "중간 그래픽 설정에서 정상적으로 플레이됩니다. CrossOver보다 메모리를 조금 더 사용하지만 플레이에 큰 문제는 없습니다.",
-        "ja": "グラフィック設定「中」で正常にプレイできます。CrossOverよりメモリ使用量はやや多いものの、大きな問題はありません。",
-        "zh-Hans": "在中等画质设置下可正常游玩。内存占用比 CrossOver 略高，但不会造成明显问题。",
-        "zh-Hant": "在中等畫質設定下可正常遊玩。記憶體占用比 CrossOver 略高，但不會造成明顯問題。",
-        "de": "Läuft mit mittleren Grafikeinstellungen einwandfrei. Der Speicherverbrauch ist etwas höher als bei CrossOver, stellt aber kein größeres Problem dar.",
-        "es": "Funciona correctamente con los ajustes gráficos en nivel medio. Usa algo más de memoria que CrossOver, pero no supone un problema importante.",
-        "fr": "Fonctionne correctement avec des réglages graphiques moyens. L’utilisation de la mémoire est légèrement supérieure à celle de CrossOver, sans que cela pose de problème important."
-      },
-      "blocker": null
-    },
-    {
-      "id": "sekiro-shadows-die-twice-goty-m4-pro-24gb-github-lionkingissimba-20260811",
-      "gameId": "sekiro-shadows-die-twice-goty",
-      "testProfileId": "apple-silicon-m4-pro-24gb-macos-26-6-1",
-      "forgePlayVersion": "1.0",
-      "gameVersion": null,
-      "status": "playable",
-      "source": "github-issue",
-      "reporter": "lionkingissimba",
-      "testedAt": null,
-      "notes": {
-        "en": "Runs very well at 2K resolution with the quality preset set to High. No issues were observed during the brief test session.",
-        "ko": "2K 해상도와 고품질 설정에서 매우 원활하게 플레이됩니다. 짧은 테스트 동안 별다른 문제는 확인되지 않았습니다.",
-        "ja": "2K解像度・高品質設定で非常に快適にプレイできます。短時間のテストでは特に問題は確認されませんでした。",
-        "zh-Hans": "在 2K 分辨率和高画质设置下运行非常流畅。短时间测试期间未发现明显问题。",
-        "zh-Hant": "在 2K 解析度與高畫質設定下執行非常流暢。短時間測試期間未發現明顯問題。",
-        "de": "Läuft bei 2K-Auflösung und hoher Qualitätsstufe sehr flüssig. Während des kurzen Tests wurden keine Probleme festgestellt.",
-        "es": "Funciona muy bien a resolución 2K con el ajuste de calidad en alto. No se observaron problemas durante la breve sesión de prueba.",
-        "fr": "Fonctionne très bien en résolution 2K avec le préréglage de qualité élevé. Aucun problème n’a été constaté pendant la courte session de test."
       },
       "blocker": null
     }

@@ -1,0 +1,382 @@
+{
+  "schemaVersion": 1,
+  "deliveryContract": {
+    "defaultSiblingSourceRoot": "ThirdPartyCorrespondingSource",
+    "distributionMode": "simultaneous-source-package",
+    "linkageEvidence": "declared-dynamic-library-paths-from-locks-and-runtime-sbom",
+    "releaseStatus": "fail-closed-until-all-required-materials-are-pinned-and-present"
+  },
+  "consumers": [
+    {
+      "key": "gstreamer:FFmpeg@libavcodec-61.19.100",
+      "requiredRequirementIds": ["gst-ffmpeg-source", "gst-cerbero-build-recipe", "forgeplay-dynamic-relinking-guide"]
+    },
+    {
+      "key": "gstreamer:GLib@2.82.4",
+      "requiredRequirementIds": ["gst-glib-source", "gst-cerbero-build-recipe", "forgeplay-dynamic-relinking-guide"]
+    },
+    {
+      "key": "gstreamer:GStreamer@1.28.5",
+      "requiredRequirementIds": ["gstreamer-source", "gst-cerbero-build-recipe", "forgeplay-dynamic-relinking-guide"]
+    },
+    {
+      "key": "gstreamer:GStreamer Bad Plug-ins@1.28.5",
+      "requiredRequirementIds": ["gst-plugins-bad-source", "gst-cerbero-build-recipe", "forgeplay-dynamic-relinking-guide"]
+    },
+    {
+      "key": "gstreamer:GStreamer Base Plug-ins@1.28.5",
+      "requiredRequirementIds": ["gst-plugins-base-source", "gst-cerbero-build-recipe", "forgeplay-dynamic-relinking-guide"]
+    },
+    {
+      "key": "gstreamer:GStreamer Good Plug-ins@1.28.5",
+      "requiredRequirementIds": ["gst-plugins-good-source", "gst-cerbero-build-recipe", "forgeplay-dynamic-relinking-guide"]
+    },
+    {
+      "key": "gstreamer:GStreamer Ugly Plug-ins@1.28.5",
+      "requiredRequirementIds": ["gst-plugins-ugly-source", "gst-cerbero-build-recipe", "forgeplay-dynamic-relinking-guide"]
+    },
+    {
+      "key": "gstreamer:GStreamer libav@1.28.5",
+      "requiredRequirementIds": ["gst-libav-source", "gst-ffmpeg-source", "gst-cerbero-build-recipe", "forgeplay-dynamic-relinking-guide"]
+    },
+    {
+      "key": "gstreamer:proxy-libintl@0.5",
+      "requiredRequirementIds": ["gst-proxy-libintl-source", "gst-cerbero-build-recipe", "forgeplay-dynamic-relinking-guide"]
+    },
+    {
+      "key": "homebrew:gettext@1.0",
+      "requiredRequirementIds": ["homebrew-gettext-source", "homebrew-gettext-recipe", "forgeplay-dynamic-relinking-guide"]
+    },
+    {
+      "key": "homebrew:gmp@6.3.0",
+      "requiredRequirementIds": ["homebrew-gmp-source", "homebrew-gmp-recipe", "forgeplay-dynamic-relinking-guide"]
+    },
+    {
+      "key": "homebrew:gnutls@3.8.13_2",
+      "requiredRequirementIds": ["homebrew-gnutls-source", "homebrew-gnutls-recipe", "forgeplay-dynamic-relinking-guide"]
+    },
+    {
+      "key": "homebrew:libidn2@2.3.8",
+      "requiredRequirementIds": ["homebrew-libidn2-source", "homebrew-libidn2-recipe", "forgeplay-dynamic-relinking-guide"]
+    },
+    {
+      "key": "homebrew:libtasn1@4.21.0",
+      "requiredRequirementIds": ["homebrew-libtasn1-source", "homebrew-libtasn1-recipe", "forgeplay-dynamic-relinking-guide"]
+    },
+    {
+      "key": "homebrew:libunistring@1.4.2",
+      "requiredRequirementIds": ["homebrew-libunistring-source", "homebrew-libunistring-recipe", "forgeplay-dynamic-relinking-guide"]
+    },
+    {
+      "key": "homebrew:nettle@4.0",
+      "requiredRequirementIds": ["homebrew-nettle-source", "homebrew-nettle-recipe", "forgeplay-dynamic-relinking-guide"]
+    }
+  ],
+  "requirements": [
+    {
+      "id": "gstreamer-source",
+      "materialClass": "corresponding-source",
+      "sourceKind": "upstream-release-archive",
+      "version": "1.28.5",
+      "deliveryPath": "archives/gstreamer-1.28.5.tar.xz",
+      "sourceURL": "https://gstreamer.freedesktop.org/src/gstreamer/gstreamer-1.28.5.tar.xz",
+      "sha256": "a5a9f783809b17a8eb774f4a7695b2cb8cba6b15520129906f87eaf30e7f8469",
+      "consumerBindings": [{"authority": "gstreamer", "component": "GStreamer", "version": "1.28.5"}],
+      "status": "pinned"
+    },
+    {
+      "id": "gst-plugins-base-source",
+      "materialClass": "corresponding-source",
+      "sourceKind": "upstream-release-archive",
+      "version": "1.28.5",
+      "deliveryPath": "archives/gst-plugins-base-1.28.5.tar.xz",
+      "sourceURL": "https://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-1.28.5.tar.xz",
+      "sha256": "776f19228f91fd25bbf54d9850597e158507f594872a52b9b6814e2429b43eaa",
+      "consumerBindings": [{"authority": "gstreamer", "component": "GStreamer Base Plug-ins", "version": "1.28.5"}],
+      "status": "pinned"
+    },
+    {
+      "id": "gst-plugins-good-source",
+      "materialClass": "corresponding-source",
+      "sourceKind": "upstream-release-archive",
+      "version": "1.28.5",
+      "deliveryPath": "archives/gst-plugins-good-1.28.5.tar.xz",
+      "sourceURL": "https://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-1.28.5.tar.xz",
+      "sha256": "58b45d24a1d77b39d7bb7d9ccc6e2d76bbf28618998c335c163f18e6f94a9324",
+      "consumerBindings": [{"authority": "gstreamer", "component": "GStreamer Good Plug-ins", "version": "1.28.5"}],
+      "status": "pinned"
+    },
+    {
+      "id": "gst-plugins-bad-source",
+      "materialClass": "corresponding-source",
+      "sourceKind": "upstream-release-archive",
+      "version": "1.28.5",
+      "deliveryPath": "archives/gst-plugins-bad-1.28.5.tar.xz",
+      "sourceURL": "https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-1.28.5.tar.xz",
+      "sha256": "d8af55faef2958c1a8663751475ee46f5164877cf4d8c5913ea906ef180aeb71",
+      "consumerBindings": [{"authority": "gstreamer", "component": "GStreamer Bad Plug-ins", "version": "1.28.5"}],
+      "status": "pinned"
+    },
+    {
+      "id": "gst-plugins-ugly-source",
+      "materialClass": "corresponding-source",
+      "sourceKind": "upstream-release-archive",
+      "version": "1.28.5",
+      "deliveryPath": "archives/gst-plugins-ugly-1.28.5.tar.xz",
+      "sourceURL": "https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.28.5.tar.xz",
+      "sha256": "0ef4cf9c3c9a5e776a6ca8d190a31863391b681980252143b822b29aa831e120",
+      "consumerBindings": [{"authority": "gstreamer", "component": "GStreamer Ugly Plug-ins", "version": "1.28.5"}],
+      "status": "pinned"
+    },
+    {
+      "id": "gst-libav-source",
+      "materialClass": "corresponding-source",
+      "sourceKind": "upstream-release-archive",
+      "version": "1.28.5",
+      "deliveryPath": "archives/gst-libav-1.28.5.tar.xz",
+      "sourceURL": "https://gstreamer.freedesktop.org/src/gst-libav/gst-libav-1.28.5.tar.xz",
+      "sha256": "452854656056f0b16511a1d9ad4f2679ff5e5a87c89f90cf7ee5dec005ddb1e4",
+      "consumerBindings": [{"authority": "gstreamer", "component": "GStreamer libav", "version": "1.28.5"}],
+      "status": "pinned"
+    },
+    {
+      "id": "gst-ffmpeg-source",
+      "materialClass": "corresponding-source",
+      "sourceKind": "upstream-release-archive",
+      "version": "7.1",
+      "deliveryPath": "archives/ffmpeg-7.1.tar.xz",
+      "sourceURL": "https://ffmpeg.org/releases/ffmpeg-7.1.tar.xz",
+      "sha256": "40973d44970dbc83ef302b0609f2e74982be2d85916dd2ee7472d30678a7abe6",
+      "consumerBindings": [
+        {"authority": "gstreamer", "component": "FFmpeg", "version": "libavcodec-61.19.100"},
+        {"authority": "gstreamer", "component": "GStreamer libav", "version": "1.28.5"}
+      ],
+      "status": "pinned"
+    },
+    {
+      "id": "gst-glib-source",
+      "materialClass": "corresponding-source",
+      "sourceKind": "upstream-release-archive",
+      "version": "2.82.4",
+      "deliveryPath": "archives/glib-2.82.4.tar.xz",
+      "sourceURL": "https://download.gnome.org/sources/glib/2.82/glib-2.82.4.tar.xz",
+      "sha256": "37dd0877fe964cd15e9a2710b044a1830fb1bd93652a6d0cb6b8b2dff187c709",
+      "consumerBindings": [{"authority": "gstreamer", "component": "GLib", "version": "2.82.4"}],
+      "status": "pinned"
+    },
+    {
+      "id": "gst-proxy-libintl-source",
+      "materialClass": "corresponding-source",
+      "sourceKind": "upstream-release-archive",
+      "version": "0.5",
+      "deliveryPath": "archives/proxy-libintl-0.5.tar.gz",
+      "sourceURL": "https://github.com/frida/proxy-libintl/archive/refs/tags/0.5.tar.gz",
+      "sha256": "f7a1cbd7579baaf575c66f9d99fb6295e9b0684a28b095967cfda17857595303",
+      "consumerBindings": [{"authority": "gstreamer", "component": "proxy-libintl", "version": "0.5"}],
+      "status": "pinned"
+    },
+    {
+      "id": "gst-cerbero-build-recipe",
+      "materialClass": "build-recipe",
+      "sourceKind": "sdk-build-system-git-archive",
+      "version": "931c54b6eb1e5ba9287f38d5a7726f4ea87fe657",
+      "deliveryPath": "build-recipes/gstreamer-cerbero-931c54b6eb1e5ba9287f38d5a7726f4ea87fe657.tar",
+      "sourceURL": "https://gitlab.freedesktop.org/gstreamer/cerbero",
+      "sha256": "700e6c91506c2f13f927c8ac50363fb1e060e050472c923dca793e798540b544",
+      "consumerBindings": [
+        {"authority": "gstreamer", "component": "FFmpeg", "version": "libavcodec-61.19.100"},
+        {"authority": "gstreamer", "component": "GLib", "version": "2.82.4"},
+        {"authority": "gstreamer", "component": "GStreamer", "version": "1.28.5"},
+        {"authority": "gstreamer", "component": "GStreamer Bad Plug-ins", "version": "1.28.5"},
+        {"authority": "gstreamer", "component": "GStreamer Base Plug-ins", "version": "1.28.5"},
+        {"authority": "gstreamer", "component": "GStreamer Good Plug-ins", "version": "1.28.5"},
+        {"authority": "gstreamer", "component": "GStreamer Ugly Plug-ins", "version": "1.28.5"},
+        {"authority": "gstreamer", "component": "GStreamer libav", "version": "1.28.5"},
+        {"authority": "gstreamer", "component": "proxy-libintl", "version": "0.5"}
+      ],
+      "status": "pinned"
+    },
+    {
+      "id": "homebrew-gnutls-source",
+      "materialClass": "corresponding-source",
+      "sourceKind": "upstream-release-archive",
+      "version": "3.8.13",
+      "deliveryPath": "archives/gnutls-3.8.13.tar.xz",
+      "sourceURL": "https://www.gnupg.org/ftp/gcrypt/gnutls/v3.8/gnutls-3.8.13.tar.xz",
+      "sha256": "ffed8ec1bf09c2426d4f14aae377de4753b53e537d685e604e99a8b16ca9c97e",
+      "consumerBindings": [{"authority": "homebrew", "component": "gnutls", "version": "3.8.13_2"}],
+      "status": "pinned"
+    },
+    {
+      "id": "homebrew-gettext-source",
+      "materialClass": "corresponding-source",
+      "sourceKind": "upstream-release-archive",
+      "version": "1.0",
+      "deliveryPath": "archives/gettext-1.0.tar.gz",
+      "sourceURL": "https://ftpmirror.gnu.org/gnu/gettext/gettext-1.0.tar.gz",
+      "sha256": "85d99b79c981a404874c02e0342176cf75c7698e2b51fe41031cf6526d974f1a",
+      "consumerBindings": [{"authority": "homebrew", "component": "gettext", "version": "1.0"}],
+      "status": "pinned"
+    },
+    {
+      "id": "homebrew-gmp-source",
+      "materialClass": "corresponding-source",
+      "sourceKind": "upstream-release-archive",
+      "version": "6.3.0",
+      "deliveryPath": "archives/gmp-6.3.0.tar.xz",
+      "sourceURL": "https://ftpmirror.gnu.org/gnu/gmp/gmp-6.3.0.tar.xz",
+      "sha256": "a3c2b80201b89e68616f4ad30bc66aee4927c3ce50e33929ca819d5c43538898",
+      "consumerBindings": [{"authority": "homebrew", "component": "gmp", "version": "6.3.0"}],
+      "status": "pinned"
+    },
+    {
+      "id": "homebrew-libidn2-source",
+      "materialClass": "corresponding-source",
+      "sourceKind": "upstream-release-archive",
+      "version": "2.3.8",
+      "deliveryPath": "archives/libidn2-2.3.8.tar.gz",
+      "sourceURL": "https://ftpmirror.gnu.org/gnu/libidn/libidn2-2.3.8.tar.gz",
+      "sha256": "f557911bf6171621e1f72ff35f5b1825bb35b52ed45325dcdee931e5d3c0787a",
+      "consumerBindings": [{"authority": "homebrew", "component": "libidn2", "version": "2.3.8"}],
+      "status": "pinned"
+    },
+    {
+      "id": "homebrew-libtasn1-source",
+      "materialClass": "corresponding-source",
+      "sourceKind": "upstream-release-archive",
+      "version": "4.21.0",
+      "deliveryPath": "archives/libtasn1-4.21.0.tar.gz",
+      "sourceURL": "https://ftpmirror.gnu.org/gnu/libtasn1/libtasn1-4.21.0.tar.gz",
+      "sha256": "1d8a444a223cc5464240777346e125de51d8e6abf0b8bac742ac84609167dc87",
+      "consumerBindings": [{"authority": "homebrew", "component": "libtasn1", "version": "4.21.0"}],
+      "status": "pinned"
+    },
+    {
+      "id": "homebrew-libunistring-source",
+      "materialClass": "corresponding-source",
+      "sourceKind": "upstream-release-archive",
+      "version": "1.4.2",
+      "deliveryPath": "archives/libunistring-1.4.2.tar.gz",
+      "sourceURL": "https://ftpmirror.gnu.org/gnu/libunistring/libunistring-1.4.2.tar.gz",
+      "sha256": "e82664b170064e62331962126b259d452d53b227bb4a93ab20040d846fec01d8",
+      "consumerBindings": [{"authority": "homebrew", "component": "libunistring", "version": "1.4.2"}],
+      "status": "pinned"
+    },
+    {
+      "id": "homebrew-nettle-source",
+      "materialClass": "corresponding-source",
+      "sourceKind": "upstream-release-archive",
+      "version": "4.0",
+      "deliveryPath": "archives/nettle-4.0.tar.gz",
+      "sourceURL": "https://ftpmirror.gnu.org/gnu/nettle/nettle-4.0.tar.gz",
+      "sha256": "3addbc00da01846b232fb3bc453538ea5468da43033f21bb345cb1e9073f5094",
+      "consumerBindings": [{"authority": "homebrew", "component": "nettle", "version": "4.0"}],
+      "status": "pinned"
+    },
+    {
+      "id": "homebrew-gnutls-recipe",
+      "materialClass": "build-recipe",
+      "sourceKind": "homebrew-core-formula",
+      "version": "c1a80cf8279a0b24147a51680279837e21c0cbf1",
+      "deliveryPath": "build-recipes/homebrew/gnutls.rb",
+      "sourceURL": "https://raw.githubusercontent.com/Homebrew/homebrew-core/c1a80cf8279a0b24147a51680279837e21c0cbf1/Formula/g/gnutls.rb",
+      "sha256": "e498e8a75686acb7f03e334af46b75f11d69617cc11fac79822de58edba48d9f",
+      "consumerBindings": [{"authority": "homebrew", "component": "gnutls", "version": "3.8.13_2"}],
+      "status": "pinned"
+    },
+    {
+      "id": "homebrew-gettext-recipe",
+      "materialClass": "build-recipe",
+      "sourceKind": "homebrew-core-formula",
+      "version": "c1a80cf8279a0b24147a51680279837e21c0cbf1",
+      "deliveryPath": "build-recipes/homebrew/gettext.rb",
+      "sourceURL": "https://raw.githubusercontent.com/Homebrew/homebrew-core/c1a80cf8279a0b24147a51680279837e21c0cbf1/Formula/g/gettext.rb",
+      "sha256": "bd0322f7114c68dd627c974ec16ceaa6295bf68eac55995ee2dfb59ce6fefd51",
+      "consumerBindings": [{"authority": "homebrew", "component": "gettext", "version": "1.0"}],
+      "status": "pinned"
+    },
+    {
+      "id": "homebrew-gmp-recipe",
+      "materialClass": "build-recipe",
+      "sourceKind": "homebrew-core-formula",
+      "version": "c1a80cf8279a0b24147a51680279837e21c0cbf1",
+      "deliveryPath": "build-recipes/homebrew/gmp.rb",
+      "sourceURL": "https://raw.githubusercontent.com/Homebrew/homebrew-core/c1a80cf8279a0b24147a51680279837e21c0cbf1/Formula/g/gmp.rb",
+      "sha256": "5044db5d9400acacb58dd5874fb252b5d65be047c63b35e6b5a8f690af52d061",
+      "consumerBindings": [{"authority": "homebrew", "component": "gmp", "version": "6.3.0"}],
+      "status": "pinned"
+    },
+    {
+      "id": "homebrew-libidn2-recipe",
+      "materialClass": "build-recipe",
+      "sourceKind": "homebrew-core-formula",
+      "version": "c1a80cf8279a0b24147a51680279837e21c0cbf1",
+      "deliveryPath": "build-recipes/homebrew/libidn2.rb",
+      "sourceURL": "https://raw.githubusercontent.com/Homebrew/homebrew-core/c1a80cf8279a0b24147a51680279837e21c0cbf1/Formula/lib/libidn2.rb",
+      "sha256": "63e4e2c0138c3a5c25ede16f2859de5bc4e0d76c5d466e42184027d412d5e775",
+      "consumerBindings": [{"authority": "homebrew", "component": "libidn2", "version": "2.3.8"}],
+      "status": "pinned"
+    },
+    {
+      "id": "homebrew-libtasn1-recipe",
+      "materialClass": "build-recipe",
+      "sourceKind": "homebrew-core-formula",
+      "version": "c1a80cf8279a0b24147a51680279837e21c0cbf1",
+      "deliveryPath": "build-recipes/homebrew/libtasn1.rb",
+      "sourceURL": "https://raw.githubusercontent.com/Homebrew/homebrew-core/c1a80cf8279a0b24147a51680279837e21c0cbf1/Formula/lib/libtasn1.rb",
+      "sha256": "ebe7f8e2821e42172fc8dd00dff1d65a562730d46baff435523562d60d6ca644",
+      "consumerBindings": [{"authority": "homebrew", "component": "libtasn1", "version": "4.21.0"}],
+      "status": "pinned"
+    },
+    {
+      "id": "homebrew-libunistring-recipe",
+      "materialClass": "build-recipe",
+      "sourceKind": "homebrew-core-formula",
+      "version": "c1a80cf8279a0b24147a51680279837e21c0cbf1",
+      "deliveryPath": "build-recipes/homebrew/libunistring.rb",
+      "sourceURL": "https://raw.githubusercontent.com/Homebrew/homebrew-core/c1a80cf8279a0b24147a51680279837e21c0cbf1/Formula/lib/libunistring.rb",
+      "sha256": "1b55a601632c423775155c55d86043aeea6456acc080a152e650a3c24b9f8e7e",
+      "consumerBindings": [{"authority": "homebrew", "component": "libunistring", "version": "1.4.2"}],
+      "status": "pinned"
+    },
+    {
+      "id": "homebrew-nettle-recipe",
+      "materialClass": "build-recipe",
+      "sourceKind": "homebrew-core-formula",
+      "version": "c1a80cf8279a0b24147a51680279837e21c0cbf1",
+      "deliveryPath": "build-recipes/homebrew/nettle.rb",
+      "sourceURL": "https://raw.githubusercontent.com/Homebrew/homebrew-core/c1a80cf8279a0b24147a51680279837e21c0cbf1/Formula/n/nettle.rb",
+      "sha256": "1b9ed4a0fc0e732ab288996a64f50c974110e9d4af5d3a4d7719ffd0ed0a6f33",
+      "consumerBindings": [{"authority": "homebrew", "component": "nettle", "version": "4.0"}],
+      "status": "pinned"
+    },
+    {
+      "id": "forgeplay-dynamic-relinking-guide",
+      "materialClass": "relinking-materials",
+      "sourceKind": "project-release-instructions",
+      "version": "1",
+      "deliveryPath": "relinking/ForgePlay-dynamic-library-relinking.md",
+      "sourceURL": "https://github.com/Facta-Leopard/ForgePlay",
+      "sha256": "5caec544918f5b747e29a32035f2b8103fc15adbb1d9393b94237088dfbd7373",
+      "consumerBindings": [
+        {"authority": "gstreamer", "component": "FFmpeg", "version": "libavcodec-61.19.100"},
+        {"authority": "gstreamer", "component": "GLib", "version": "2.82.4"},
+        {"authority": "gstreamer", "component": "GStreamer", "version": "1.28.5"},
+        {"authority": "gstreamer", "component": "GStreamer Bad Plug-ins", "version": "1.28.5"},
+        {"authority": "gstreamer", "component": "GStreamer Base Plug-ins", "version": "1.28.5"},
+        {"authority": "gstreamer", "component": "GStreamer Good Plug-ins", "version": "1.28.5"},
+        {"authority": "gstreamer", "component": "GStreamer Ugly Plug-ins", "version": "1.28.5"},
+        {"authority": "gstreamer", "component": "GStreamer libav", "version": "1.28.5"},
+        {"authority": "gstreamer", "component": "proxy-libintl", "version": "0.5"},
+        {"authority": "homebrew", "component": "gettext", "version": "1.0"},
+        {"authority": "homebrew", "component": "gmp", "version": "6.3.0"},
+        {"authority": "homebrew", "component": "gnutls", "version": "3.8.13_2"},
+        {"authority": "homebrew", "component": "libidn2", "version": "2.3.8"},
+        {"authority": "homebrew", "component": "libtasn1", "version": "4.21.0"},
+        {"authority": "homebrew", "component": "libunistring", "version": "1.4.2"},
+        {"authority": "homebrew", "component": "nettle", "version": "4.0"}
+      ],
+      "status": "pinned"
+    }
+  ]
+}

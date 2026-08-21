@@ -13,11 +13,16 @@ struct SteamWebHelperRenderingIssue: Sendable, Hashable {
     var steamLoginTail: [String]
     var consoleTail: [String] = []
     var webHelperTail: [String] = []
+    var cefLogTail: [String] = []
     var webHelperGPUEvidence: SteamEvidenceSourceSnapshot
     var steamUIHTMLEvidence: SteamEvidenceSourceSnapshot
     var steamLoginEvidence: SteamEvidenceSourceSnapshot
     var consoleEvidence: SteamEvidenceSourceSnapshot
     var webHelperEvidence: SteamEvidenceSourceSnapshot
+    var cefLogEvidence: SteamEvidenceSourceSnapshot = SteamEvidenceSourceSnapshot(
+        state: .missing,
+        detail: "cef_log.txt was not captured"
+    )
 }
 
 enum SteamEvidenceReadState: String, Sendable, Hashable {
@@ -116,8 +121,13 @@ struct SteamLaunchDiagnosticEvidenceAssessment: Sendable, Hashable {
 struct SteamLogFileCursor: Sendable, Hashable {
     var byteCount: UInt64
     var fileNumber: UInt64?
+    var deviceNumber: UInt64?
     var modificationDate: Date?
     var trailingSignature: Data
+    /// Whether `byteCount` is immediately after a newline (or at byte zero).
+    /// A launch baseline captured in the middle of an existing row must not
+    /// attribute that row's post-launch suffix to the new launch.
+    var endsAtLineBoundary: Bool
     var captureState: SteamEvidenceReadState
     var captureDetail: String?
 }
@@ -128,12 +138,37 @@ struct SteamWebHelperStartupLogCursor: Sendable, Hashable {
     var steamLogin: SteamLogFileCursor
     var console: SteamLogFileCursor
     var webHelper: SteamLogFileCursor
+    var cefLog: SteamLogFileCursor
     var shaderLog: SteamLogFileCursor
+    /// Exact pre-dispatch generation of Steam's updater log. The bootstrap
+    /// lifecycle consumes only bytes appended after this cursor; mtime changes
+    /// and bounded-tail movement are not launch evidence.
+    var bootstrapLog: SteamLogFileCursor
+}
+
+/// Product-level UI phase consumed by the Steam bootstrap lifecycle. A shared
+/// JavaScript context (`BrowserReady`) is deliberately carried only as pending
+/// evidence: it does not prove that CEF produced a usable login/library
+/// surface. A safely captured fatal signature remains terminal even when the
+/// same accumulated log tail also contains earlier readiness evidence.
+enum SteamWebHelperStartupLifecycleState: Sendable, Hashable {
+    case awaitingUsableUI(
+        sharedContextReadiness: SteamWebHelperSharedContextReadiness
+    )
+    /// Steam created and unhid a non-zero window, but renderer health has not
+    /// remained valid for the bounded stabilization interval yet. Geometry is
+    /// not pixel evidence and cannot by itself complete startup.
+    case provisionalSurface(SteamClientUsableUIReadiness)
+    case usableUI(SteamClientUsableUIReadiness)
+    case fatal(reason: String?)
+    case evidenceUnavailable(reason: String?)
+    case timedOut(reason: String?)
 }
 
 struct SteamWebHelperStartupObservation: Sendable, Hashable {
     enum State: Sendable, Hashable {
         case pending
+        case provisionalSurface
         case ready
         case retryableFailure
         case evidenceUnavailable
@@ -145,9 +180,89 @@ struct SteamWebHelperStartupObservation: Sendable, Hashable {
     var steamUIHTMLTail: [String]
     var consoleTail: [String]
     var webHelperTail: [String]
+    var cefLogTail: [String] = []
+    var webHelperGPUTail: [String] = []
+    var sharedContextReadiness: SteamWebHelperSharedContextReadiness = .pending
+    var provisionalSurfaceReadiness: SteamClientUsableUIReadiness = .pending
+    var usableUIReadiness: SteamClientUsableUIReadiness = .pending
+    var hasPositiveRendererEvidence: Bool = false
+    /// Stable identity of the newest WebHelper GPU child/root attempt covered
+    /// by `hasPositiveRendererEvidence`. A visible window can outlive several
+    /// failed GPU children, so stabilization must follow this identity instead
+    /// of the age of the window geometry.
+    var rendererAttemptIdentity: String? = nil
 
     var shouldRetry: Bool {
-        state == .retryableFailure || state == .evidenceUnavailable
+        state == .retryableFailure ||
+            state == .evidenceUnavailable ||
+            state == .timedOut
+    }
+
+    var lifecycleState: SteamWebHelperStartupLifecycleState {
+        switch state {
+        case .pending:
+            .awaitingUsableUI(
+                sharedContextReadiness: sharedContextReadiness
+            )
+        case .provisionalSurface:
+            .provisionalSurface(provisionalSurfaceReadiness)
+        case .ready:
+            usableUIReadiness.isReady
+                ? .usableUI(usableUIReadiness)
+                : .awaitingUsableUI(
+                    sharedContextReadiness: sharedContextReadiness
+                )
+        case .retryableFailure:
+            .fatal(reason: reason)
+        case .evidenceUnavailable:
+            .evidenceUnavailable(reason: reason)
+        case .timedOut:
+            .timedOut(reason: reason)
+        }
+    }
+}
+
+/// Owns the bounded renderer-health grace independently of window geometry.
+/// A missing positive report, a different GPU attempt, or a different surface
+/// resets the grace. This prevents a long-lived black 700x440 window from
+/// donating its age to the first enabled line emitted by a later fallback.
+struct SteamWebHelperRendererStabilizationTracker: Sendable, Hashable {
+    private var readiness: SteamClientUsableUIReadiness = .pending
+    private var rendererAttemptIdentity: String?
+    private var positiveRendererFirstObservedAt: Date?
+
+    init() {}
+
+    mutating func reset() {
+        readiness = .pending
+        rendererAttemptIdentity = nil
+        positiveRendererFirstObservedAt = nil
+    }
+
+    mutating func observePositiveRenderer(
+        in observation: SteamWebHelperStartupObservation,
+        at now: Date,
+        requiredInterval: TimeInterval
+    ) -> Bool {
+        guard observation.state == .provisionalSurface,
+              observation.provisionalSurfaceReadiness.isReady,
+              observation.hasPositiveRendererEvidence,
+              let nextAttemptIdentity = observation.rendererAttemptIdentity,
+              !nextAttemptIdentity.isEmpty else {
+            reset()
+            return false
+        }
+
+        if readiness != observation.provisionalSurfaceReadiness ||
+            rendererAttemptIdentity != nextAttemptIdentity ||
+            positiveRendererFirstObservedAt == nil {
+            readiness = observation.provisionalSurfaceReadiness
+            rendererAttemptIdentity = nextAttemptIdentity
+            positiveRendererFirstObservedAt = now
+        }
+        guard let positiveRendererFirstObservedAt else { return false }
+        return now.timeIntervalSince(positiveRendererFirstObservedAt) >=
+            max(0, requiredInterval)
     }
 }
 
@@ -181,6 +296,14 @@ struct SteamLaunchScreenEvidence: Sendable, Hashable {
 }
 
 final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
+    /// Current Steam can expose a non-zero window before its asynchronous GPU
+    /// report records a terminal renderer failure. Keep the surface
+    /// provisional long enough for that report to arrive; the production
+    /// manager separately revalidates current process liveness before it
+    /// accepts the promoted observation.
+    private static let maximumProvisionalSurfaceStabilizationInterval: TimeInterval = 3
+    private static let minimumProvisionalSurfaceStabilizationInterval: TimeInterval = 0.25
+
     private struct EvidenceFileMetadata: Sendable, Equatable {
         var byteCount: UInt64
         var fileNumber: UInt64
@@ -194,6 +317,15 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
                     TimeInterval(modificationNanoseconds) / 1_000_000_000
             )
         }
+    }
+
+    private struct SteamWebHelperAttemptLogTails {
+        var webHelperGPU: [String]
+        var steamUIHTML: [String]
+        var console: [String]
+        var webHelper: [String]
+        var cefLog: [String]
+        var rendererAttemptIdentitySeed: String
     }
 
     private enum SecureEvidenceFileOpenResult {
@@ -1437,8 +1569,16 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
                 for: logs.appending(path: "webhelper.txt"),
                 allowedRoot: steamDirectory
             ),
+            cefLog: logFileCursor(
+                for: logs.appending(path: "cef_log.txt"),
+                allowedRoot: steamDirectory
+            ),
             shaderLog: logFileCursor(
                 for: logs.appending(path: "shader_log.txt"),
+                allowedRoot: steamDirectory
+            ),
+            bootstrapLog: logFileCursor(
+                for: logs.appending(path: "bootstrap_log.txt"),
                 allowedRoot: steamDirectory
             )
         )
@@ -1452,10 +1592,31 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
     ) async -> SteamWebHelperStartupObservation {
         let deadline = Date().addingTimeInterval(max(0, timeout))
         let sleepNanoseconds = UInt64(max(0.1, pollInterval) * 1_000_000_000)
+        let stabilizationInterval = min(
+            Self.maximumProvisionalSurfaceStabilizationInterval,
+            max(
+                Self.minimumProvisionalSurfaceStabilizationInterval,
+                max(0, timeout) / 2
+            )
+        )
+        var rendererStabilization =
+            SteamWebHelperRendererStabilizationTracker()
         while !Task.isCancelled && Date() < deadline {
-            let observation = detectSteamWebHelperStartup(in: steamDirectory, since: cursor)
-            if observation.state != .pending {
-                return observation
+            var observation = detectSteamWebHelperStartup(in: steamDirectory, since: cursor)
+            if observation.state == .provisionalSurface {
+                let now = Date()
+                if rendererStabilization.observePositiveRenderer(
+                    in: observation,
+                    at: now,
+                    requiredInterval: stabilizationInterval
+                ) {
+                    observation.state = .ready
+                    observation.usableUIReadiness = observation.provisionalSurfaceReadiness
+                    return observation
+                }
+            } else {
+                rendererStabilization.reset()
+                if observation.state != .pending { return observation }
             }
             do {
                 try await Task.sleep(nanoseconds: sleepNanoseconds)
@@ -1464,7 +1625,7 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
             }
         }
         var observation = detectSteamWebHelperStartup(in: steamDirectory, since: cursor)
-        if observation.state == .pending {
+        if observation.state == .pending || observation.state == .provisionalSurface {
             observation.state = .timedOut
         }
         return observation
@@ -1475,6 +1636,12 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
         since cursor: SteamWebHelperStartupLogCursor
     ) -> SteamWebHelperStartupObservation {
         let logs = steamDirectory.appending(path: "logs", directoryHint: .isDirectory)
+        let webHelperGPURead = appendedTailReadResult(
+            from: logs.appending(path: "webhelper_gpu.txt"),
+            since: cursor.webHelperGPU,
+            limit: 160,
+            allowedRoot: steamDirectory
+        )
         let steamUIHTMLRead = appendedTailReadResult(
             from: logs.appending(path: "steamui_html.txt"),
             since: cursor.steamUIHTML,
@@ -1493,32 +1660,60 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
             limit: 160,
             allowedRoot: steamDirectory
         )
-        let steamUIHTMLTail = steamUIHTMLRead.diagnosticLines(limit: 160)
-        let consoleTail = consoleRead.diagnosticLines(limit: 160)
-        let webHelperTail = webHelperRead.diagnosticLines(limit: 160)
+        let cefLogRead = appendedTailReadResult(
+            from: logs.appending(path: "cef_log.txt"),
+            since: cursor.cefLog,
+            limit: 160,
+            allowedRoot: steamDirectory
+        )
+        let attemptTails = currentSteamWebHelperAttemptLogTails(
+            webHelperGPU: webHelperGPURead.diagnosticLines(limit: 160),
+            steamUIHTML: steamUIHTMLRead.diagnosticLines(limit: 160),
+            console: consoleRead.diagnosticLines(limit: 160),
+            webHelper: webHelperRead.diagnosticLines(limit: 160),
+            cefLog: cefLogRead.diagnosticLines(limit: 160)
+        )
+        let webHelperGPUTail = attemptTails.webHelperGPU
+        let steamUIHTMLTail = attemptTails.steamUIHTML
+        let consoleTail = attemptTails.console
+        let webHelperTail = attemptTails.webHelper
+        let cefLogTail = attemptTails.cefLog
         let unavailableReads = [
+            ("webhelper_gpu.txt", webHelperGPURead),
             ("steamui_html.txt", steamUIHTMLRead),
             ("console_log.txt", consoleRead),
-            ("webhelper.txt", webHelperRead)
+            ("webhelper.txt", webHelperRead),
+            ("cef_log.txt", cefLogRead)
         ].filter { $0.1.invalidatesHardGateSuccess }
-        if !unavailableReads.isEmpty {
-            let detail = unavailableReads.map {
-                "\($0.0)=\($0.1.state.rawValue) (\($0.1.detail))"
-            }.joined(separator: "; ")
-            return SteamWebHelperStartupObservation(
-                state: .evidenceUnavailable,
-                reason: "Steam WebHelper startup evidence is incomplete: \(detail)",
-                steamUIHTMLTail: steamUIHTMLTail,
-                consoleTail: consoleTail,
-                webHelperTail: webHelperTail
-            )
-        }
+        let webHelperGPU = webHelperGPUTail.joined(separator: "\n").lowercased()
         let steamUIHTML = steamUIHTMLTail.joined(separator: "\n").lowercased()
         let console = consoleTail.joined(separator: "\n").lowercased()
         let webHelper = webHelperTail.joined(separator: "\n").lowercased()
+        let cefLog = cefLogTail.joined(separator: "\n").lowercased()
+        let sharedContextReadiness: SteamWebHelperSharedContextReadiness = (
+            steamUIHTML.contains("browserready: handle:") ||
+                webHelper.contains("setname: sp shared js context")
+        ) ? .ready : .pending
+        let usableUIReadiness = steamClientUsableUIReadiness(
+            in: webHelperTail
+        )
+        let rendererHealth = steamWebHelperGPURendererHealthAssessment(
+            webHelperGPU,
+            attemptIdentitySeed: attemptTails.rendererAttemptIdentitySeed
+        )
+        let hasPositiveRendererEvidence = rendererHealth.provesUsableRendering
 
         let failureReason: String?
-        if console.contains("failed creating offscreen shared js context") {
+        if let gpuFailureReason = steamWebHelperStartupGPUFailureReason(
+            webHelperGPU: webHelperGPU,
+            webHelper: webHelper
+        ) {
+            failureReason = gpuFailureReason
+        } else if steamCEFFailedToCreateUsableGraphicsContext(cefLog) {
+            failureReason = "Steam CEF failed to create the shared graphics context required by its UI renderer"
+        } else if webHelper.contains("killing unresponsive browser") {
+            failureReason = "Steam WebHelper killed an unresponsive browser before a usable Steam UI appeared"
+        } else if console.contains("failed creating offscreen shared js context") {
             failureReason = "Steam failed creating its offscreen shared JavaScript context"
         } else if steamUIHTML.contains("timed out waiting for webhelper init") {
             failureReason = "Steam timed out waiting for WebHelper initialization"
@@ -1531,18 +1726,51 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
                 reason: failureReason,
                 steamUIHTMLTail: steamUIHTMLTail,
                 consoleTail: consoleTail,
-                webHelperTail: webHelperTail
+                webHelperTail: webHelperTail,
+                cefLogTail: cefLogTail,
+                webHelperGPUTail: webHelperGPUTail,
+                sharedContextReadiness: sharedContextReadiness,
+                provisionalSurfaceReadiness: usableUIReadiness,
+                hasPositiveRendererEvidence: hasPositiveRendererEvidence,
+                rendererAttemptIdentity: rendererHealth.attemptIdentity
             )
         }
 
-        if steamUIHTML.contains("browserready: handle:") ||
-            webHelper.contains("starting message loop") {
+        // A safely captured terminal signature is sufficient to stop log
+        // growth and enter typed recovery even when an unrelated startup log
+        // is unavailable. Unsafe/unreadable sources contribute no historical
+        // lines, so they cannot manufacture a terminal match here.
+        if !unavailableReads.isEmpty {
+            let detail = unavailableReads.map {
+                "\($0.0)=\($0.1.state.rawValue) (\($0.1.detail))"
+            }.joined(separator: "; ")
             return SteamWebHelperStartupObservation(
-                state: .ready,
+                state: .evidenceUnavailable,
+                reason: "Steam WebHelper startup evidence is incomplete: \(detail)",
+                steamUIHTMLTail: steamUIHTMLTail,
+                consoleTail: consoleTail,
+                webHelperTail: webHelperTail,
+                cefLogTail: cefLogTail,
+                webHelperGPUTail: webHelperGPUTail,
+                provisionalSurfaceReadiness: usableUIReadiness,
+                hasPositiveRendererEvidence: hasPositiveRendererEvidence,
+                rendererAttemptIdentity: rendererHealth.attemptIdentity
+            )
+        }
+
+        if usableUIReadiness.isReady {
+            return SteamWebHelperStartupObservation(
+                state: .provisionalSurface,
                 reason: nil,
                 steamUIHTMLTail: steamUIHTMLTail,
                 consoleTail: consoleTail,
-                webHelperTail: webHelperTail
+                webHelperTail: webHelperTail,
+                cefLogTail: cefLogTail,
+                webHelperGPUTail: webHelperGPUTail,
+                sharedContextReadiness: sharedContextReadiness,
+                provisionalSurfaceReadiness: usableUIReadiness,
+                hasPositiveRendererEvidence: hasPositiveRendererEvidence,
+                rendererAttemptIdentity: rendererHealth.attemptIdentity
             )
         }
 
@@ -1551,8 +1779,490 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
             reason: nil,
             steamUIHTMLTail: steamUIHTMLTail,
             consoleTail: consoleTail,
-            webHelperTail: webHelperTail
+            webHelperTail: webHelperTail,
+            cefLogTail: cefLogTail,
+            webHelperGPUTail: webHelperGPUTail,
+            sharedContextReadiness: sharedContextReadiness,
+            provisionalSurfaceReadiness: usableUIReadiness,
+            hasPositiveRendererEvidence: hasPositiveRendererEvidence,
+            rendererAttemptIdentity: rendererHealth.attemptIdentity
         )
+    }
+
+    /// Steam may restart WebHelper and several GPU children without returning
+    /// to the ForgePlay launcher. Evaluate only the newest root WebHelper epoch
+    /// instead of allowing a failed child from an earlier epoch to poison a
+    /// later renderer that reached an enabled compositor.
+    private func currentSteamWebHelperAttemptLogTails(
+        webHelperGPU: [String],
+        steamUIHTML: [String],
+        console: [String],
+        webHelper: [String],
+        cefLog: [String]
+    ) -> SteamWebHelperAttemptLogTails {
+        func isWebHelperLaunchMarker(_ line: String) -> Bool {
+            line.lowercased().contains("startup - webhelper launched pid:")
+        }
+        func isClientVersionMarker(_ line: String) -> Bool {
+            line.lowercased().contains("client version:")
+        }
+        func isGPUStartZeroMarker(_ line: String) -> Bool {
+            line.lowercased().contains("gpu process started: start count: 0")
+        }
+        func isGPUChildMarker(_ line: String) -> Bool {
+            line.lowercased().contains("gpu process started: start count:")
+        }
+        func isWebHelperRootMarker(_ line: String) -> Bool {
+            isWebHelperLaunchMarker(line) || isClientVersionMarker(line)
+        }
+        func isGPURootMarker(_ line: String) -> Bool {
+            isClientVersionMarker(line) || isGPUStartZeroMarker(line)
+        }
+        func indices(
+            in lines: [String],
+            where predicate: (String) -> Bool
+        ) -> [Int] {
+            lines.indices.filter { predicate(lines[$0]) }
+        }
+        func selectedRootIndices(
+            preferred: [Int],
+            fallback: [Int]
+        ) -> [Int] {
+            preferred.isEmpty ? fallback : preferred
+        }
+        func suffixFromLastMarker(
+            _ lines: [String],
+            where isMarker: (String) -> Bool
+        ) -> [String] {
+            guard let markerIndex = lines.lastIndex(where: isMarker) else {
+                return lines
+            }
+            return Array(lines[markerIndex...])
+        }
+
+        let webHelperLaunchIndices = indices(
+            in: webHelper,
+            where: isWebHelperLaunchMarker
+        )
+        let webHelperClientVersionIndices = indices(
+            in: webHelper,
+            where: isClientVersionMarker
+        )
+        let selectedWebHelperRootIndices = selectedRootIndices(
+            preferred: webHelperLaunchIndices,
+            fallback: webHelperClientVersionIndices
+        )
+        let gpuStartZeroIndices = indices(
+            in: webHelperGPU,
+            where: isGPUStartZeroMarker
+        )
+        let gpuClientVersionIndices = indices(
+            in: webHelperGPU,
+            where: isClientVersionMarker
+        )
+        let selectedGPURootIndices = selectedRootIndices(
+            preferred: gpuStartZeroIndices,
+            fallback: gpuClientVersionIndices
+        )
+        let latestRootMarkerLines = [
+            selectedWebHelperRootIndices.last.map { webHelper[$0] },
+            selectedGPURootIndices.last.map { webHelperGPU[$0] }
+        ].compactMap { $0 }
+        let attemptStartedAt = latestRootMarkerLines
+            .compactMap { steamLogTimestamp(in: $0) }
+            .max()
+
+        let hasMultipleKnownRootEpochs =
+            selectedWebHelperRootIndices.count > 1 ||
+            selectedGPURootIndices.count > 1
+        let hasSameTimestampPredecessor: Bool = {
+            guard let attemptStartedAt else { return false }
+            func sourceHasSameTimestampPredecessor(
+                lines: [String],
+                rootIndices: [Int]
+            ) -> Bool {
+                guard rootIndices.count > 1,
+                      let latestIndex = rootIndices.last,
+                      steamLogTimestamp(in: lines[latestIndex]) ==
+                        attemptStartedAt else { return false }
+                return rootIndices.dropLast().contains {
+                    steamLogTimestamp(in: lines[$0]) == attemptStartedAt
+                }
+            }
+            return sourceHasSameTimestampPredecessor(
+                lines: webHelper,
+                rootIndices: selectedWebHelperRootIndices
+            ) || sourceHasSameTimestampPredecessor(
+                lines: webHelperGPU,
+                rootIndices: selectedGPURootIndices
+            )
+        }()
+
+        func rootOwnedLinesInAttempt(
+            _ lines: [String],
+            where isMarker: (String) -> Bool
+        ) -> [String] {
+            let currentRoot = suffixFromLastMarker(lines, where: isMarker)
+            guard let attemptStartedAt else { return currentRoot }
+            return currentRoot.filter { line in
+                guard let timestamp = steamLogTimestamp(in: line) else {
+                    return true
+                }
+                return timestamp >= attemptStartedAt
+            }
+        }
+        let filteredWebHelper = rootOwnedLinesInAttempt(
+            webHelper,
+            where: isWebHelperRootMarker
+        )
+        let filteredGPU = rootOwnedLinesInAttempt(
+            webHelperGPU,
+            where: isGPURootMarker
+        )
+        let currentWebHelperProcessIdentifier = filteredWebHelper
+            .last(where: isWebHelperLaunchMarker)
+            .flatMap { steamWebHelperLaunchProcessIdentifier(in: $0) }
+        let knownWebHelperProcessIdentifiers = webHelper
+            .filter(isWebHelperLaunchMarker)
+            .compactMap { steamWebHelperLaunchProcessIdentifier(in: $0) }
+        let priorWebHelperProcessIdentifiers = Set(
+            knownWebHelperProcessIdentifiers.dropLast()
+        )
+
+        func auxiliaryLinesInAttempt(
+            _ lines: [String],
+            cefStyle: Bool = false
+        ) -> [String] {
+            if cefStyle,
+               let currentWebHelperProcessIdentifier,
+               let currentRootBoundary = lines.firstIndex(where: {
+                   steamCEFLogProcessIdentifier(in: $0) ==
+                    currentWebHelperProcessIdentifier
+               }) {
+                // CEF's first row from the newest browser PID is an exact
+                // within-file epoch boundary. Keep later GPU/renderer child
+                // PIDs too, while excluding explicitly known older browser
+                // PIDs that finish logging during the handoff.
+                return lines[currentRootBoundary...].filter { line in
+                    guard let processIdentifier =
+                            steamCEFLogProcessIdentifier(in: line) else {
+                        return true
+                    }
+                    return !priorWebHelperProcessIdentifiers.contains(
+                        processIdentifier
+                    )
+                }
+            }
+            guard let attemptStartedAt else {
+                guard hasMultipleKnownRootEpochs else { return lines }
+                return lines.filter { line in
+                    cefStyle && currentWebHelperProcessIdentifier != nil &&
+                        steamCEFLogProcessIdentifier(in: line) ==
+                            currentWebHelperProcessIdentifier
+                }
+            }
+            return lines.filter { line in
+                let timestamp = cefStyle
+                    ? steamCEFLogTimestamp(in: line, relativeTo: attemptStartedAt)
+                    : steamLogTimestamp(in: line)
+                guard let timestamp else {
+                    // Once the same launch has restarted WebHelper, an
+                    // uncorrelated timestamp-free row in another file cannot
+                    // safely be assigned to the newest root. CEF rows with an
+                    // exact current browser PID remain attributable.
+                    guard hasMultipleKnownRootEpochs else { return true }
+                    return cefStyle &&
+                        currentWebHelperProcessIdentifier != nil &&
+                        steamCEFLogProcessIdentifier(in: line) ==
+                            currentWebHelperProcessIdentifier
+                }
+                if timestamp > attemptStartedAt { return true }
+                if timestamp < attemptStartedAt { return false }
+                guard hasSameTimestampPredecessor else { return true }
+                return cefStyle &&
+                    currentWebHelperProcessIdentifier != nil &&
+                    steamCEFLogProcessIdentifier(in: line) ==
+                        currentWebHelperProcessIdentifier
+            }
+        }
+
+        let gpuChildIndices = indices(
+            in: webHelperGPU,
+            where: isGPUChildMarker
+        )
+        let rendererAttemptIdentitySeed = [
+            "web-root-count=\(selectedWebHelperRootIndices.count)",
+            "web-root=\(filteredWebHelper.first(where: isWebHelperRootMarker) ?? "unmarked")",
+            "gpu-root-count=\(selectedGPURootIndices.count)",
+            "gpu-root=\(filteredGPU.first(where: isGPURootMarker) ?? "unmarked")",
+            "gpu-child-count=\(gpuChildIndices.count)",
+            "gpu-child=\(filteredGPU.last(where: isGPUChildMarker) ?? "unmarked")"
+        ].joined(separator: "\u{0}")
+        return SteamWebHelperAttemptLogTails(
+            webHelperGPU: filteredGPU,
+            steamUIHTML: auxiliaryLinesInAttempt(steamUIHTML),
+            console: auxiliaryLinesInAttempt(console),
+            webHelper: filteredWebHelper,
+            cefLog: auxiliaryLinesInAttempt(cefLog, cefStyle: true),
+            rendererAttemptIdentitySeed: rendererAttemptIdentitySeed
+        )
+    }
+
+    private func steamWebHelperLaunchProcessIdentifier(
+        in line: String
+    ) -> Int? {
+        let normalized = line.lowercased()
+        guard let markerRange = normalized.range(
+            of: "startup - webhelper launched pid:"
+        ) else { return nil }
+        let suffix = normalized[markerRange.upperBound...]
+            .drop(while: { $0.isWhitespace })
+        let digits = suffix.prefix(while: { $0.isNumber })
+        return Int(digits)
+    }
+
+    private func steamCEFLogProcessIdentifier(in line: String) -> Int? {
+        guard line.first == "[",
+              let colon = line.firstIndex(of: ":") else { return nil }
+        let digits = line[line.index(after: line.startIndex)..<colon]
+        return Int(digits)
+    }
+
+    private func steamCEFLogTimestamp(
+        in line: String,
+        relativeTo referenceDate: Date
+    ) -> Date? {
+        guard line.first == "[",
+              let closingBracket = line.firstIndex(of: "]") else {
+            return nil
+        }
+        let header = line[line.index(after: line.startIndex)..<closingBracket]
+        let fields = header.split(separator: ":", maxSplits: 3)
+        guard fields.count >= 3 else { return nil }
+        let timestampFields = fields[2].split(separator: "/", maxSplits: 1)
+        guard timestampFields.count == 2,
+              timestampFields[0].count == 4 else { return nil }
+        let monthDay = timestampFields[0]
+        let time = timestampFields[1].prefix(6)
+        guard time.count == 6,
+              let month = Int(monthDay.prefix(2)),
+              let day = Int(monthDay.suffix(2)),
+              let hour = Int(time.prefix(2)),
+              let minute = Int(time.dropFirst(2).prefix(2)),
+              let second = Int(time.suffix(2)) else { return nil }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.locale = Locale(identifier: "en_US_POSIX")
+        calendar.timeZone = .current
+        let year = calendar.component(.year, from: referenceDate)
+        return calendar.date(from: DateComponents(
+            calendar: calendar,
+            timeZone: calendar.timeZone,
+            year: year,
+            month: month,
+            day: day,
+            hour: hour,
+            minute: minute,
+            second: second
+        ))
+    }
+
+    private func steamCEFFailedToCreateUsableGraphicsContext(
+        _ normalizedCEFLog: String
+    ) -> Bool {
+        normalizedCEFLog.contains(
+            "contextresult::kfatalfailure: failed to create shared context"
+        ) || normalizedCEFLog.contains(
+            "gpuchannel: failed to create sharedimagestub"
+        ) || normalizedCEFLog.contains(
+            "sharedimagestub: unable to create context"
+        ) || (
+            normalizedCEFLog.contains("failed to create gles3 context") &&
+                normalizedCEFLog.contains("failed to create gles2 context")
+        )
+    }
+
+    /// Root-terminal GPU evidence used before a provisional Steam window can
+    /// be promoted. Individual D3D/ANGLE child failures remain provisional;
+    /// only exhaustion or WebHelper shutdown ends the current root epoch.
+    private func steamWebHelperStartupGPUFailureReason(
+        webHelperGPU: String,
+        webHelper: String
+    ) -> String? {
+        let normalizedWebHelper = webHelper.lowercased()
+        let normalizedGPU = webHelperGPU.lowercased()
+        if normalizedWebHelper.contains(
+            "triggering shutdown due to gpu process restarts"
+        ) || normalizedGPU.contains(
+                "disabling gpu acceleration: disabled/crashcount"
+            ) || normalizedGPU.contains("gpu process was unable to boot") ||
+            normalizedGPU.contains("gpu process crashed too many times") ||
+            normalizedGPU.contains("triggering shutdown due to gpu process restarts") {
+            return "Steam WebHelper GPU processes repeatedly failed before producing a usable UI"
+        }
+        return nil
+    }
+
+    private struct SteamWebHelperGPURendererHealthAssessment {
+        var provesUsableRendering: Bool
+        var attemptIdentity: String?
+    }
+
+    /// A non-zero window is only a surface candidate. Promotion also requires
+    /// Chromium's newest GPU-child report to show that compositing or a GL
+    /// renderer is enabled, rather than merely absent failure text. The
+    /// returned identity binds the grace interval to that exact child/root.
+    private func steamWebHelperGPURendererHealthAssessment(
+        _ normalizedWebHelperGPU: String,
+        attemptIdentitySeed: String
+    ) -> SteamWebHelperGPURendererHealthAssessment {
+        let currentRootAttempt = latestSteamWebHelperGPURootAttempt(
+            in: normalizedWebHelperGPU
+        )
+        let statusLines = latestSteamWebHelperGPUChildAttempt(
+            in: currentRootAttempt
+        )
+            .split(whereSeparator: \.isNewline)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        func isEnabledStatus(_ line: String, feature: String) -> Bool {
+            line.hasSuffix("\(feature): enabled") ||
+                line.hasSuffix("\(feature): enabled_on")
+        }
+        func isRendererFailure(_ line: String) -> Bool {
+            line.contains("no available renderers") ||
+                line.contains("egl_not_initialized") ||
+                line.contains("initialization of all egl display types failed") ||
+                line.contains("invalid reuse after initialization failure") ||
+                line.contains("exiting gpu process") ||
+                line.contains("gpu_compositing ]: disabled") ||
+                line.contains("gpu compositing: disabled") ||
+                line.contains("gl=disabled") && line.contains("angle=none") ||
+                line.contains("swiftshader") && line.contains("crashed")
+        }
+        let lastPositiveRendererIndex = statusLines.lastIndex { line in
+            isEnabledStatus(line, feature: "[ gpu_compositing ]") ||
+                isEnabledStatus(line, feature: "gpu compositing") ||
+                isEnabledStatus(line, feature: "[ opengl ]") ||
+                isEnabledStatus(line, feature: "[ webgl ]") ||
+                isEnabledStatus(line, feature: "[ webgl2 ]")
+        }
+        guard let lastPositiveRendererIndex else {
+            return SteamWebHelperGPURendererHealthAssessment(
+                provesUsableRendering: false,
+                attemptIdentity: nil
+            )
+        }
+        let identityMaterial = [
+            attemptIdentitySeed,
+            "positive-index=\(lastPositiveRendererIndex)",
+            "positive-line=\(statusLines[lastPositiveRendererIndex])"
+        ].joined(separator: "\u{0}")
+        let attemptIdentity = SHA256.hash(data: Data(identityMaterial.utf8))
+            .map { String(format: "%02x", $0) }
+            .joined()
+        if let lastRendererFailureIndex = statusLines.lastIndex(where: {
+            isRendererFailure($0)
+        }), lastRendererFailureIndex > lastPositiveRendererIndex {
+            return SteamWebHelperGPURendererHealthAssessment(
+                provesUsableRendering: false,
+                attemptIdentity: attemptIdentity
+            )
+        }
+        let provesUsableRendering = steamWebHelperStartupGPUFailureReason(
+            webHelperGPU: currentRootAttempt,
+            webHelper: ""
+        ) == nil
+        return SteamWebHelperGPURendererHealthAssessment(
+            provesUsableRendering: provesUsableRendering,
+            attemptIdentity: attemptIdentity
+        )
+    }
+
+    private func steamWebHelperGPUEvidenceProvesUsableRendering(
+        _ normalizedWebHelperGPU: String
+    ) -> Bool {
+        steamWebHelperGPURendererHealthAssessment(
+            normalizedWebHelperGPU,
+            attemptIdentitySeed: "diagnostic-only"
+        ).provesUsableRendering
+    }
+
+    private func latestSteamWebHelperGPURootAttempt(
+        in normalizedWebHelperGPU: String
+    ) -> String {
+        let lines = normalizedWebHelperGPU
+            .split(whereSeparator: \.isNewline)
+            .map(String.init)
+        guard let markerIndex = lines.lastIndex(where: { line in
+            line.contains("client version:") ||
+                line.contains("gpu process started: start count: 0")
+        }) else {
+            return normalizedWebHelperGPU
+        }
+        return lines[markerIndex...].joined(separator: "\n")
+    }
+
+    private func latestSteamWebHelperGPUChildAttempt(
+        in normalizedWebHelperGPU: String
+    ) -> String {
+        let lines = normalizedWebHelperGPU
+            .split(whereSeparator: \.isNewline)
+            .map(String.init)
+        guard let markerIndex = lines.lastIndex(where: { line in
+            line.contains("gpu process started: start count:")
+        }) else {
+            return normalizedWebHelperGPU
+        }
+        return lines[markerIndex...].joined(separator: "\n")
+    }
+
+    private func steamClientUsableUIReadiness(
+        in webHelperTail: [String]
+    ) -> SteamClientUsableUIReadiness {
+        let lines = webHelperTail
+            .filter { !$0.hasPrefix("[ForgePlay: evidence state=") }
+            .map { $0.lowercased() }
+        if lines.contains(where: {
+            steamWebHelperLineProvesVisibleSurface(
+                $0,
+                named: "sp desktop_uid"
+            )
+        }) {
+            return .desktopWindow
+        }
+        if lines.contains(where: {
+            steamWebHelperLineProvesVisibleSurface(
+                $0,
+                named: "sp desktoploginwindow_uid"
+            )
+        }) {
+            return .loginWindow
+        }
+        return .pending
+    }
+
+    private func steamWebHelperLineProvesVisibleSurface(
+        _ line: String,
+        named surfaceName: String
+    ) -> Bool {
+        guard line.contains(surfaceName),
+              line.contains("washidden 0:") else {
+            return false
+        }
+        return line.split(whereSeparator: \.isWhitespace).contains { token in
+            let candidate = token.trimmingCharacters(
+                in: .punctuationCharacters
+            ).lowercased()
+            let dimensions = candidate.split(
+                separator: "x",
+                omittingEmptySubsequences: false
+            )
+            guard dimensions.count == 2,
+                  let width = Double(dimensions[0]),
+                  let height = Double(dimensions[1]) else {
+                return false
+            }
+            return width > 0 && height > 0
+        }
     }
 
     func writeDiagnostics(
@@ -1701,6 +2411,25 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
             modifiedAfter: cutoff,
             allowedRoot: steamDirectory
         )
+        let cefLogRead = renderingIssue.map {
+            SteamLogReadResult(
+                state: $0.cefLogEvidence.state,
+                lines: $0.cefLogTail,
+                detail: $0.cefLogEvidence.detail
+            )
+        } ?? logCursor.map {
+            appendedTailReadResult(
+                from: logs.appending(path: "cef_log.txt"),
+                since: $0.cefLog,
+                limit: 80,
+                allowedRoot: steamDirectory
+            ).filteringLines { filterSteamLogLines($0, modifiedAfter: cutoff) }
+        } ?? tailReadResult(
+            from: logs.appending(path: "cef_log.txt"),
+            limit: 80,
+            modifiedAfter: cutoff,
+            allowedRoot: steamDirectory
+        )
         let shaderLogRead = logCursor.map {
             appendedTailReadResult(
                 from: logs.appending(path: "shader_log.txt"),
@@ -1726,6 +2455,7 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
         let steamLoginTail = steamLoginRead.diagnosticLines(limit: 80)
         let consoleTail = consoleRead.diagnosticLines(limit: 80)
         let webHelperTail = webHelperRead.diagnosticLines(limit: 80)
+        let cefLogTail = cefLogRead.diagnosticLines(limit: 80)
         let shaderLogTail = shaderLogRead.diagnosticLines(limit: 80)
         let currentAttemptSourceReads: [(label: String, url: URL, result: SteamLogReadResult, required: Bool)] = [
             ("process stdout", result.stdoutLog, stdoutRead, true),
@@ -1736,6 +2466,7 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
             ("steamui_login.txt", logs.appending(path: "steamui_login.txt"), steamLoginRead, false),
             ("console_log.txt", logs.appending(path: "console_log.txt"), consoleRead, false),
             ("webhelper.txt", logs.appending(path: "webhelper.txt"), webHelperRead, false),
+            ("cef_log.txt", logs.appending(path: "cef_log.txt"), cefLogRead, false),
             ("shader_log.txt", logs.appending(path: "shader_log.txt"), shaderLogRead, false)
         ]
         let priorAttemptSourceReads: [(label: String, url: URL, result: SteamLogReadResult, required: Bool)] =
@@ -1807,6 +2538,7 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
             steamLoginTail: steamLoginTail,
             consoleTail: consoleTail,
             webHelperTail: webHelperTail,
+            cefLogTail: cefLogTail,
             shaderLogTail: shaderLogTail,
             hostSteamProcesses: hostSteamProcesses + hostSteamProcessesBefore + hostSteamProcessesAfter,
             externalApplicationRunnerProcesses: externalApplicationRunnerProcesses + externalApplicationRunnerProcessesBefore + externalApplicationRunnerProcessesAfter,
@@ -2037,6 +2769,11 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
             lines.append("Steam WebHelper log tail:")
             lines.append(contentsOf: webHelperTail)
         }
+        if !cefLogTail.isEmpty {
+            lines.append("")
+            lines.append("Steam CEF log tail:")
+            lines.append(contentsOf: cefLogTail)
+        }
         if !shaderLogTail.isEmpty {
             lines.append("")
             lines.append("Steam shader log tail:")
@@ -2068,6 +2805,7 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
             webHelperGPUTail: webHelperGPUTail,
             steamUIHTMLTail: steamUIHTMLTail,
             steamLoginTail: steamLoginTail,
+            cefLogTail: cefLogTail,
             dumpsBefore: dumpsBefore,
             dumpsAfter: dumpsAfter
         )
@@ -2292,22 +3030,39 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
     private func captureSteamWindowImage(to destination: URL) -> String? {
         let semaphore = DispatchSemaphore(value: 0)
         final class CaptureBox: @unchecked Sendable {
-            var result: String?
+            private let lock = NSLock()
+            private var result: String?
+
+            func store(_ result: String?) {
+                lock.lock()
+                self.result = result
+                lock.unlock()
+            }
+
+            func load() -> String? {
+                lock.lock()
+                defer { lock.unlock() }
+                return result
+            }
         }
         let box = CaptureBox()
-        Task {
-            box.result = await captureSteamWindowImageWithScreenCaptureKit(to: destination)
+        let captureTask = Task {
+            box.store(await captureSteamWindowImageWithScreenCaptureKit(to: destination))
             semaphore.signal()
         }
         guard semaphore.wait(timeout: .now() + 12) == .success else {
+            captureTask.cancel()
             return "ScreenCaptureKit window capture timed out"
         }
-        return box.result
+        return box.load()
     }
 
     private func captureSteamWindowImageWithScreenCaptureKit(to destination: URL) async -> String? {
         do {
             let content = try await SCShareableContent.current
+            guard !Task.isCancelled else {
+                return "ScreenCaptureKit window capture was cancelled"
+            }
             let candidates = content.windows.compactMap { window -> (window: SCWindow, score: Int, description: String)? in
                 let owner = window.owningApplication?.applicationName ?? ""
                 let title = window.title ?? ""
@@ -2341,6 +3096,9 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
             configuration.scalesToFit = false
 
             let image = try await captureImage(contentFilter: filter, configuration: configuration)
+            guard !Task.isCancelled else {
+                return "ScreenCaptureKit window capture was cancelled"
+            }
             try? fileManager.removeItem(at: destination)
             guard let destinationRef = CGImageDestinationCreateWithURL(
                 destination as CFURL,
@@ -2543,6 +3301,7 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
         webHelperGPUTail: [String],
         steamUIHTMLTail: [String],
         steamLoginTail: [String],
+        cefLogTail: [String],
         dumpsBefore: [URL],
         dumpsAfter: [URL]
     ) throws {
@@ -2781,6 +3540,9 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
             "== steamui_login.txt ==",
             steamLoginTail.joined(separator: "\n"),
             "",
+            "== cef_log.txt ==",
+            cefLogTail.joined(separator: "\n"),
+            "",
             "== stderr tail ==",
             stderrTail.joined(separator: "\n")
         ].joined(separator: "\n")).write(
@@ -2796,7 +3558,10 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
             steamUIHTMLTail.joined(separator: "\n"),
             "",
             "== steamui_login.txt ==",
-            steamLoginTail.joined(separator: "\n")
+            steamLoginTail.joined(separator: "\n"),
+            "",
+            "== cef_log.txt ==",
+            cefLogTail.joined(separator: "\n")
         ].joined(separator: "\n")).write(
             to: evidenceDirectory.appending(path: "steam-webhelper-tail.txt"),
             atomically: true,
@@ -3089,8 +3854,7 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
                 ],
                 graphicsBackend: nil,
                 exposesVulkanICD: true,
-                injectGraphicsDLLOverrides: false,
-                restoresSteamWebHelperVulkanICD: true
+                injectGraphicsDLLOverrides: false
             )
             let keys = [
                 "WINEPREFIX",
@@ -3293,24 +4057,51 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
             modifiedAfter: cutoff,
             allowedRoot: steamDirectory
         )
-        let webHelperGPU = webHelperGPURead.lines.joined(separator: "\n").lowercased()
-        let steamUIHTML = steamUIHTMLRead.lines.joined(separator: "\n").lowercased()
-        let steamLogin = steamLoginRead.lines.joined(separator: "\n").lowercased()
-        let console = consoleRead.lines.joined(separator: "\n").lowercased()
+        let cefLogRead = logCursor.map {
+            appendedTailReadResult(
+                from: logs.appending(path: "cef_log.txt"),
+                since: $0.cefLog,
+                limit: 120,
+                allowedRoot: steamDirectory
+            ).filteringLines { filterSteamLogLines($0, modifiedAfter: cutoff) }
+        } ?? tailReadResult(
+            from: logs.appending(path: "cef_log.txt"),
+            limit: 120,
+            modifiedAfter: cutoff,
+            allowedRoot: steamDirectory
+        )
+        let attemptTails = currentSteamWebHelperAttemptLogTails(
+            webHelperGPU: webHelperGPURead.lines,
+            steamUIHTML: steamUIHTMLRead.lines,
+            console: consoleRead.lines,
+            webHelper: webHelperRead.lines,
+            cefLog: cefLogRead.lines
+        )
+        let webHelperGPU = attemptTails.webHelperGPU
+            .joined(separator: "\n")
+            .lowercased()
+        let steamUIHTML = attemptTails.steamUIHTML
+            .joined(separator: "\n")
+            .lowercased()
+        let console = attemptTails.console.joined(separator: "\n").lowercased()
+        let webHelper = attemptTails.webHelper.joined(separator: "\n").lowercased()
+        let cefLog = attemptTails.cefLog.joined(separator: "\n").lowercased()
         guard hasSteamWebHelperRenderingFailure(
             webHelperGPU: webHelperGPU,
             steamUIHTML: steamUIHTML,
-            steamLogin: steamLogin,
-            console: console
+            console: console,
+            webHelper: webHelper,
+            cefLog: cefLog
         ) else {
             return nil
         }
         return SteamWebHelperRenderingIssue(
-            webHelperGPUTail: Array(webHelperGPURead.lines.suffix(120)),
-            steamUIHTMLTail: Array(steamUIHTMLRead.lines.suffix(120)),
+            webHelperGPUTail: Array(attemptTails.webHelperGPU.suffix(120)),
+            steamUIHTMLTail: Array(attemptTails.steamUIHTML.suffix(120)),
             steamLoginTail: Array(steamLoginRead.lines.suffix(120)),
-            consoleTail: Array(consoleRead.lines.suffix(120)),
-            webHelperTail: Array(webHelperRead.lines.suffix(120)),
+            consoleTail: Array(attemptTails.console.suffix(120)),
+            webHelperTail: Array(attemptTails.webHelper.suffix(120)),
+            cefLogTail: Array(attemptTails.cefLog.suffix(120)),
             webHelperGPUEvidence: SteamEvidenceSourceSnapshot(
                 state: webHelperGPURead.state,
                 detail: webHelperGPURead.detail
@@ -3330,6 +4121,10 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
             webHelperEvidence: SteamEvidenceSourceSnapshot(
                 state: webHelperRead.state,
                 detail: webHelperRead.detail
+            ),
+            cefLogEvidence: SteamEvidenceSourceSnapshot(
+                state: cefLogRead.state,
+                detail: cefLogRead.detail
             )
         )
     }
@@ -3553,6 +4348,7 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
         steamLoginTail: [String],
         consoleTail: [String],
         webHelperTail: [String],
+        cefLogTail: [String],
         shaderLogTail: [String],
         hostSteamProcesses: [MacOSSteamProcess],
         externalApplicationRunnerProcesses: [SteamLaunchObservedProcess],
@@ -3562,11 +4358,23 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
         evidenceFailureDescriptions: [String]
     ) -> [String] {
         let stderr = stderrTail.joined(separator: "\n").lowercased()
-        let webHelperGPU = webHelperGPUTail.joined(separator: "\n").lowercased()
-        let steamUIHTML = steamUIHTMLTail.joined(separator: "\n").lowercased()
+        let attemptTails = currentSteamWebHelperAttemptLogTails(
+            webHelperGPU: webHelperGPUTail,
+            steamUIHTML: steamUIHTMLTail,
+            console: consoleTail,
+            webHelper: webHelperTail,
+            cefLog: cefLogTail
+        )
+        let webHelperGPU = attemptTails.webHelperGPU
+            .joined(separator: "\n")
+            .lowercased()
+        let steamUIHTML = attemptTails.steamUIHTML
+            .joined(separator: "\n")
+            .lowercased()
         let steamLogin = steamLoginTail.joined(separator: "\n").lowercased()
-        let console = consoleTail.joined(separator: "\n").lowercased()
-        let webHelper = webHelperTail.joined(separator: "\n").lowercased()
+        let console = attemptTails.console.joined(separator: "\n").lowercased()
+        let webHelper = attemptTails.webHelper.joined(separator: "\n").lowercased()
+        let cefLog = attemptTails.cefLog.joined(separator: "\n").lowercased()
         let shaderLog = shaderLogTail.joined(separator: "\n").lowercased()
         var findings: [String] = []
         let combinedLaunchText = [
@@ -3576,13 +4384,15 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
             steamLogin,
             console,
             webHelper,
+            cefLog,
             shaderLog
         ].joined(separator: "\n")
         let steamUIRenderingFailed = hasSteamWebHelperRenderingFailure(
             webHelperGPU: webHelperGPU,
             steamUIHTML: steamUIHTML,
-            steamLogin: steamLogin,
-            console: console
+            console: console,
+            webHelper: webHelper,
+            cefLog: cefLog
         )
 
         if !evidenceFailureDescriptions.isEmpty {
@@ -3644,7 +4454,7 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
             webHelperGPU.contains("egl_not_initialized") ||
             webHelperGPU.contains("no available renderers") ||
             webHelperGPU.contains("vulkanfromangle") {
-            findings.append("Steam WebHelper CEF/ANGLE attempted the Vulkan or SwiftShader path during Steam UI startup. This is Windows Steam CEF/WebHelper rendering failure evidence, not proof that an unverified CEF launch flag should be added; treat the launch as unusable until the Steam launch path and bundled ForgePlay Runtime are repaired and validated.")
+            findings.append("Steam WebHelper CEF/ANGLE attempted the Vulkan or SwiftShader path during Steam UI startup. This is Windows Steam CEF/WebHelper rendering failure evidence; verify that the executable-scoped WebHelper compatibility policy reached the same attempt and treat the launch as unusable until the bundled ForgePlay Runtime passes visible UI validation.")
         }
         if hasDecisiveWebHelperGPUFailure(webHelperGPU) {
             findings.append("Steam WebHelper GPU initialization failed before the login/library UI could be trusted. D3D11/D3D9 EGL reported no available renderers, so ForgePlay must treat this as a Steam UI renderer failure even when steamui_login.txt or steamui_html.txt did not produce a fresh matching tail.")
@@ -3657,7 +4467,7 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
             findings.append("Steam WebHelper selected Chromium ANGLE SwiftShader/WebGL instead of the ForgePlay Runtime Direct3D/Metal renderer path. This is a Steam CEF/WebHelper runtime compatibility failure, not a missing game dependency or proof that a CEF flag workaround is validated.")
         }
         if hasSteamWebHelperProcessPolicyApplied(in: combinedLaunchText) {
-            findings.append("The executable-scoped Steam WebHelper process policy reached the Valve-managed WebHelper. This proves only that the bundled Wine CreateProcess policy was applied; visible login, Steam Guard, or Library rendering still depends on the ForgePlay Runtime cross-process window-surface path and must be verified separately.")
+            findings.append("The executable-scoped Steam WebHelper CEF compatibility policy reached Valve's WebHelper process. This is process-policy evidence only; visible login, Steam Guard, or Library rendering still requires a same-session non-zero Steam surface.")
         }
         if steamUIRenderingFailed &&
             combinedLaunchText.contains("angle_default_platform") &&
@@ -3701,7 +4511,11 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
             findings.append("Steam WebHelper GPU acceleration fell back or failed. Software fallback is not Windows Steam UI success evidence; a black window points to WebHelper rendering initialization.")
         }
         if steamUIRenderingFailed {
-            if console.contains("failed creating offscreen shared js context") ||
+            if steamCEFFailedToCreateUsableGraphicsContext(cefLog) {
+                findings.append("Steam CEF reported a fatal shared graphics-context failure. BrowserReady or a shared JavaScript context from the same attempt cannot override this failure, and the attempt is not a usable Steam UI launch.")
+            } else if webHelper.contains("killing unresponsive browser") {
+                findings.append("Steam WebHelper killed an unresponsive browser before a usable login or desktop surface appeared. The attempt is a startup failure even if BrowserReady was logged earlier.")
+            } else if console.contains("failed creating offscreen shared js context") ||
                 steamUIHTML.contains("timed out waiting for webhelper init") {
                 findings.append("Steam failed before creating its shared CEF JavaScript context. ForgePlay treats this as a retryable WebHelper startup failure, not as visible Steam UI success.")
             } else {
@@ -3716,63 +4530,71 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
     }
 
     private func hasSteamWebHelperProcessPolicyApplied(in text: String) -> Bool {
-        text.contains("-cef-disable-gpu") ||
-            text.contains("--disable-gpu") ||
-            text.contains("--in-process-gpu") ||
-            text.contains("-cef-disable-gpu-compositing") ||
-            text.contains("--disable-gpu-compositing") ||
-            text.contains("disabling gpu acceleration: disabled/commandline") ||
-            text.contains("disabling gpu acceleration due to --disable-gpu-compositing")
+        SteamWebHelperLaunchPolicy
+            .textContainsRequiredRootProcessCommandLine(text)
     }
 
     private func hasSteamWebHelperRenderingFailure(
         webHelperGPU: String,
         steamUIHTML: String,
-        steamLogin: String,
-        console: String
+        console: String,
+        webHelper: String,
+        cefLog: String
     ) -> Bool {
+        let cefGraphicsContextFailed =
+            steamCEFFailedToCreateUsableGraphicsContext(cefLog)
+        let unresponsiveBrowser = webHelper.contains("killing unresponsive browser")
         let sharedContextStartupFailed =
             console.contains("failed creating offscreen shared js context") ||
             steamUIHTML.contains("timed out waiting for webhelper init")
-        let gpuRenderingFailed =
-            hasDecisiveWebHelperGPUFailure(webHelperGPU) ||
-            webHelperGPU.contains("eglinitialize d3d11 failed") ||
-            webHelperGPU.contains("eglinitialize d3d9 failed") ||
-            webHelperGPU.contains("egl_not_initialized") ||
-            webHelperGPU.contains("no available renderers") ||
-            webHelperGPU.contains("internal vulkan error (-9)") ||
-            webHelperGPU.contains("internal vulkan error (-3)") ||
-            webHelperGPU.contains("initialization of all egl display types failed") ||
-            webHelperGPU.contains("invalid reuse after initialization failure") ||
-            webHelperGPU.contains("gpu process was unable to boot") ||
-            webHelperGPU.contains("exiting gpu process") ||
-            webHelperGPU.contains("gl=disabled") && webHelperGPU.contains("angle=none") ||
-            webHelperGPU.contains("swiftshader") && webHelperGPU.contains("crashed")
-        let loginIsWaitingForInvisibleUI =
-            steamLogin.contains("waitingforcredentials") ||
-            steamLogin.contains("ui request: connect")
-        let createdInvisibleCEFWindow =
-            steamUIHTML.contains("createbrowser") &&
-            (
-                steamUIHTML.contains("0x0") ||
-                steamUIHTML.contains("-2147483648")
-            )
-        return sharedContextStartupFailed ||
-            hasDecisiveWebHelperGPUFailure(webHelperGPU) ||
-            gpuRenderingFailed && loginIsWaitingForInvisibleUI && createdInvisibleCEFWindow
+        let gpuRenderingFailed = hasDecisiveWebHelperGPUFailure(webHelperGPU)
+        return cefGraphicsContextFailed ||
+            unresponsiveBrowser ||
+            sharedContextStartupFailed ||
+            gpuRenderingFailed
     }
 
     private func hasDecisiveWebHelperGPUFailure(_ webHelperGPU: String) -> Bool {
+        let currentRootAttempt = latestSteamWebHelperGPURootAttempt(
+            in: webHelperGPU
+        )
+        if steamWebHelperStartupGPUFailureReason(
+            webHelperGPU: currentRootAttempt,
+            webHelper: ""
+        ) != nil {
+            return true
+        }
+        if steamWebHelperGPUEvidenceProvesUsableRendering(
+            currentRootAttempt
+        ) {
+            return false
+        }
+        // A numbered GPU child may still be followed by Chromium's next
+        // renderer fallback. Only the root exhaustion/restart signatures above
+        // are terminal while that current WebHelper epoch is active.
+        if currentRootAttempt.contains("gpu process started: start count:") {
+            return false
+        }
+        // Older/current variants without numbered child markers still expose
+        // an ordered terminal renderer report. Keep supporting those logs,
+        // while requiring an actual failed outcome rather than a single D3D
+        // fallback line.
+        let latestAttempt = latestSteamWebHelperGPUChildAttempt(
+            in: currentRootAttempt
+        )
         let hasEGLRendererFailure =
-            webHelperGPU.contains("no available renderers") ||
-            webHelperGPU.contains("initialization of all egl display types failed") ||
-            webHelperGPU.contains("eglinitialize d3d11 failed") && webHelperGPU.contains("eglinitialize d3d9 failed")
+            latestAttempt.contains("no available renderers") ||
+            latestAttempt.contains("initialization of all egl display types failed") ||
+            latestAttempt.contains("eglinitialize d3d11 failed") &&
+                latestAttempt.contains("eglinitialize d3d9 failed") ||
+            latestAttempt.contains("invalid reuse after initialization failure")
         let hasFailedOutcome =
-            webHelperGPU.contains("egl_not_initialized") ||
-            webHelperGPU.contains("exiting gpu process") ||
-            webHelperGPU.contains("gpu_compositing ]: disabled_software") ||
-            webHelperGPU.contains("display type ]: angle_swiftshader") ||
-            webHelperGPU.contains("gl implementation parts ]: (gl=egl-angle,angle=swiftshader)")
+            latestAttempt.contains("egl_not_initialized") ||
+            latestAttempt.contains("exiting gpu process") ||
+            latestAttempt.contains("gpu_compositing ]: disabled") ||
+            latestAttempt.contains("display type ]: angle_swiftshader") ||
+            latestAttempt.contains("gl implementation parts ]: (gl=egl-angle,angle=swiftshader)") ||
+            latestAttempt.contains("invalid reuse after initialization failure")
         return hasEGLRendererFailure && hasFailedOutcome
     }
 
@@ -3821,8 +4643,10 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
             return SteamLogFileCursor(
                 byteCount: 0,
                 fileNumber: nil,
+                deviceNumber: nil,
                 modificationDate: nil,
                 trailingSignature: Data(),
+                endsAtLineBoundary: true,
                 captureState: state,
                 captureDetail: detail
             )
@@ -3838,8 +4662,10 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
                     return SteamLogFileCursor(
                         byteCount: metadata.byteCount,
                         fileNumber: metadata.fileNumber,
+                        deviceNumber: metadata.deviceNumber,
                         modificationDate: metadata.modificationDate,
                         trailingSignature: Data(),
+                        endsAtLineBoundary: false,
                         captureState: .changedDuringRead,
                         captureDetail: "file size or modification time changed while the baseline cursor was captured"
                     )
@@ -3847,8 +4673,11 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
                 return SteamLogFileCursor(
                     byteCount: metadata.byteCount,
                     fileNumber: metadata.fileNumber,
+                    deviceNumber: metadata.deviceNumber,
                     modificationDate: metadata.modificationDate,
                     trailingSignature: signature,
+                    endsAtLineBoundary:
+                        metadata.byteCount == 0 || signature.last == 0x0A,
                     captureState: .captured,
                     captureDetail: "secure baseline cursor captured"
                 )
@@ -3856,8 +4685,10 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
                 return SteamLogFileCursor(
                     byteCount: metadata.byteCount,
                     fileNumber: metadata.fileNumber,
+                    deviceNumber: metadata.deviceNumber,
                     modificationDate: metadata.modificationDate,
                     trailingSignature: Data(),
+                    endsAtLineBoundary: false,
                     captureState: .unreadable,
                     captureDetail: "could not read baseline trailing signature: \(forgePlayTechnicalErrorSummary(error))"
                 )
@@ -3909,9 +4740,17 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
             var appendOffset: UInt64 = 0
             var baseState: SteamEvidenceReadState = .captured
             var baseDetail = "secure append range captured"
+            var appendStartsAtCapturedCursor = false
             if cursor.captureState == .captured,
                let cursorFileNumber = cursor.fileNumber {
                 if cursorFileNumber == metadata.fileNumber {
+                    guard cursor.deviceNumber == metadata.deviceNumber else {
+                        return SteamLogReadResult(
+                            state: .changedDuringRead,
+                            lines: [],
+                            detail: "baseline device identity changed; replacement-file content was not attributed to this launch"
+                        )
+                    }
                     if metadata.byteCount >= cursor.byteCount {
                         do {
                             let signatureMatches = try fileStillContainsTrailingSignature(
@@ -3926,6 +4765,7 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
                                 )
                             }
                             appendOffset = cursor.byteCount
+                            appendStartsAtCapturedCursor = true
                         } catch {
                             return SteamLogReadResult(
                                 state: .unreadable,
@@ -3980,9 +4820,19 @@ final class SteamLaunchDiagnosticsReporter: @unchecked Sendable {
             let finalMetadata = evidenceFileMetadata(descriptor: descriptor)
             let changedDuringRead = finalMetadata != metadata || data.count != requestedByteCount
             var text = String(decoding: data, as: UTF8.self)
-            if readOffset > appendOffset,
-               let firstNewline = text.firstIndex(where: { $0.isNewline }) {
-                text = String(text[text.index(after: firstNewline)...])
+            let beginsInsideExistingRow = readOffset > appendOffset ||
+                (readOffset == appendOffset &&
+                    appendStartsAtCapturedCursor &&
+                    !cursor.endsAtLineBoundary)
+            if beginsInsideExistingRow {
+                if let firstNewline = text.firstIndex(where: { $0.isNewline }) {
+                    text = String(text[text.index(after: firstNewline)...])
+                } else {
+                    // The only appended bytes still belong to a row that
+                    // began before the launch cursor (or before the bounded
+                    // tail window). Do not attribute its suffix to this run.
+                    text = ""
+                }
             }
             let lines = Array(text.split(
                 omittingEmptySubsequences: false,

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>__FORGEPLAY_DAEMON_LABEL__</string>
+	<key>BundleProgram</key>
+	<string>Contents/Library/HelperTools/ForgePlayNetworkControlHelper</string>
+	<key>MachServices</key>
+	<dict>
+		<key>__FORGEPLAY_MACH_SERVICE__</key>
+		<true/>
+	</dict>
+	<key>RunAtLoad</key>
+	<false/>
+	<key>ProcessType</key>
+	<string>Interactive</string>
+</dict>
+</plist>

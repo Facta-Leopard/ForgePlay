@@ -221,7 +221,12 @@ final class SteamLibraryScanner: @unchecked Sendable {
                     skippedInputPaths: [explicitSelection.root
                         .appending(path: "steamapps", directoryHint: .isDirectory)
                         .standardizedFileURL.path],
-                    resolution: nil,
+                    // Preserve how the user selected the path even when the
+                    // expected ancestor is not yet a verified library. The
+                    // launch orchestrator uses this distinction to accept a
+                    // genuinely blank storage root without reinterpreting a
+                    // selected `steamapps`/`common` subtree as a new drive.
+                    resolution: explicitSelection.resolution,
                     failure: .noVerifiedSteamLibrary(
                         url,
                         skippedPaths: [explicitSelection.root
@@ -279,12 +284,18 @@ final class SteamLibraryScanner: @unchecked Sendable {
                 skippedInputPaths.insert(child.standardizedFileURL.path)
                 continue
             }
-            guard values.isDirectory == true,
-                  values.isSymbolicLink != true,
+            guard values.isDirectory == true else {
+                continue
+            }
+            guard values.isSymbolicLink != true,
                   FileSystemItemPolicy.isNonSymlinkDirectory(
                       child,
                       fileManager: fileManager
                   ) else {
+                // A directory-shaped child that cannot be safely traversed
+                // may be a disconnected/replaced prior library. Preserve the
+                // incomplete-scan signal so stale game references survive.
+                skippedInputPaths.insert(child.standardizedFileURL.path)
                 continue
             }
             guard isVerifiedLibraryRoot(child) else { continue }

@@ -156,6 +156,19 @@ struct DiagnosticEnvironmentSnapshot: Codable, Hashable, Sendable {
     var collectionIssues: [DiagnosticCollectionIssue]
 }
 
+private struct DiagnosticEnvironmentPresentationSnapshot: Sendable {
+    var capturedAt: Date
+    var application: DiagnosticEnvironmentSnapshot.Application
+    var host: DiagnosticEnvironmentSnapshot.Host
+    var graphicsDevices: [DiagnosticEnvironmentSnapshot.GraphicsDevice]
+    var displays: [DiagnosticEnvironmentSnapshot.Display]
+    var collectionIssues: [DiagnosticCollectionIssue]
+}
+
+private struct DiagnosticEnvironmentFileManagerReference: @unchecked Sendable {
+    let value: FileManager
+}
+
 @MainActor
 enum DiagnosticEnvironmentSnapshotCollector {
     static func captureLaunchSelectedGameContext(
@@ -188,6 +201,61 @@ enum DiagnosticEnvironmentSnapshotCollector {
         runtimeIdentity: DiagnosticEnvironmentSnapshot.RuntimeIdentity? = nil,
         fileManager: FileManager = .default
     ) -> DiagnosticEnvironmentSnapshot {
+        assembleSnapshot(
+            presentation: capturePresentationSnapshot(),
+            managedRoot: managedRoot,
+            selectedSteamReference: selectedSteamReference,
+            runtimeExecutable: runtimeExecutable,
+            steamStoragePaths: steamStoragePaths,
+            synchronizationSelection: synchronizationSelection,
+            rendererSelection: rendererSelection,
+            videoMemorySelection: videoMemorySelection,
+            resolvedVideoMemoryMB: resolvedVideoMemoryMB,
+            runtimeIdentity: runtimeIdentity,
+            fileManager: fileManager
+        )
+    }
+
+    static func captureInBackground(
+        managedRoot: URL,
+        selectedSteamReference: SteamGame?,
+        runtimeExecutable: URL?,
+        steamStoragePaths: [String] = [],
+        synchronizationSelection: String? = nil,
+        rendererSelection: String? = nil,
+        videoMemorySelection: String? = nil,
+        resolvedVideoMemoryMB: Int? = nil,
+        runtimeIdentity: DiagnosticEnvironmentSnapshot.RuntimeIdentity? = nil,
+        fileManager: FileManager = .default
+    ) async throws -> DiagnosticEnvironmentSnapshot {
+        let presentation = capturePresentationSnapshot()
+        let filesystem = DiagnosticEnvironmentFileManagerReference(value: fileManager)
+        let worker = Task.detached(priority: .utility) {
+            try Task.checkCancellation()
+            let snapshot = Self.assembleSnapshot(
+                presentation: presentation,
+                managedRoot: managedRoot,
+                selectedSteamReference: selectedSteamReference,
+                runtimeExecutable: runtimeExecutable,
+                steamStoragePaths: steamStoragePaths,
+                synchronizationSelection: synchronizationSelection,
+                rendererSelection: rendererSelection,
+                videoMemorySelection: videoMemorySelection,
+                resolvedVideoMemoryMB: resolvedVideoMemoryMB,
+                runtimeIdentity: runtimeIdentity,
+                fileManager: filesystem.value
+            )
+            try Task.checkCancellation()
+            return snapshot
+        }
+        return try await withTaskCancellationHandler {
+            try await worker.value
+        } onCancel: {
+            worker.cancel()
+        }
+    }
+
+    private static func capturePresentationSnapshot() -> DiagnosticEnvironmentPresentationSnapshot {
         var issues: [DiagnosticCollectionIssue] = []
         let processInfo = ProcessInfo.processInfo
         let processHostContext = ProcessRunHostContext.capture()
@@ -267,6 +335,31 @@ enum DiagnosticEnvironmentSnapshotCollector {
             issues.append(.init(component: "displays", message: "no active display was reported"))
         }
 
+        return DiagnosticEnvironmentPresentationSnapshot(
+            capturedAt: Date(),
+            application: app,
+            host: host,
+            graphicsDevices: graphicsDevices,
+            displays: displays,
+            collectionIssues: issues
+        )
+    }
+
+    private nonisolated static func assembleSnapshot(
+        presentation: DiagnosticEnvironmentPresentationSnapshot,
+        managedRoot: URL,
+        selectedSteamReference: SteamGame?,
+        runtimeExecutable: URL?,
+        steamStoragePaths: [String],
+        synchronizationSelection: String?,
+        rendererSelection: String?,
+        videoMemorySelection: String?,
+        resolvedVideoMemoryMB: Int?,
+        runtimeIdentity: DiagnosticEnvironmentSnapshot.RuntimeIdentity?,
+        fileManager: FileManager
+    ) -> DiagnosticEnvironmentSnapshot {
+        var issues = presentation.collectionIssues
+
         var volumeInputs: [(role: String, url: URL)] = [("managedRoot", managedRoot)]
         if let selectedSteamReference {
             volumeInputs.append((
@@ -310,11 +403,11 @@ enum DiagnosticEnvironmentSnapshotCollector {
         )
 
         return DiagnosticEnvironmentSnapshot(
-            capturedAt: Date(),
-            application: app,
-            host: host,
-            graphicsDevices: graphicsDevices,
-            displays: displays,
+            capturedAt: presentation.capturedAt,
+            application: presentation.application,
+            host: presentation.host,
+            graphicsDevices: presentation.graphicsDevices,
+            displays: presentation.displays,
             volumes: volumes,
             runtime: runtime,
             selectedGame: game,
@@ -333,7 +426,7 @@ enum DiagnosticEnvironmentSnapshotCollector {
         var synchronizationBackend: String?
     }
 
-    private static func captureAppliedSynchronizationPolicy(
+    private nonisolated static func captureAppliedSynchronizationPolicy(
         managedRoot: URL,
         fileManager: FileManager,
         issues: inout [DiagnosticCollectionIssue]
@@ -366,7 +459,7 @@ enum DiagnosticEnvironmentSnapshotCollector {
         return .automaticServer
     }
 
-    private static func captureVolume(
+    private nonisolated static func captureVolume(
         role: String,
         url: URL,
         fileManager: FileManager,
@@ -422,7 +515,7 @@ enum DiagnosticEnvironmentSnapshotCollector {
         }
     }
 
-    private static func captureRuntime(
+    private nonisolated static func captureRuntime(
         _ executableURL: URL?,
         resolvedIdentity: DiagnosticEnvironmentSnapshot.RuntimeIdentity?,
         fileManager: FileManager,
@@ -596,7 +689,9 @@ enum DiagnosticEnvironmentSnapshotCollector {
         }
     }
 
-    private static func graphicsBackendName(_ backend: WindowsRuntimeCapability.GraphicsBackend) -> String {
+    private nonisolated static func graphicsBackendName(
+        _ backend: WindowsRuntimeCapability.GraphicsBackend
+    ) -> String {
         switch backend {
         case .d3dMetal: "d3dMetal"
         case .moltenVKOrVulkan: "moltenVKOrVulkan"
@@ -605,7 +700,7 @@ enum DiagnosticEnvironmentSnapshotCollector {
         }
     }
 
-    private static func captureGameManifest(
+    private nonisolated static func captureGameManifest(
         _ game: SteamGame,
         issues: inout [DiagnosticCollectionIssue]
     ) -> DiagnosticEnvironmentSnapshot.GameManifest {
@@ -670,7 +765,10 @@ enum DiagnosticEnvironmentSnapshotCollector {
         )
     }
 
-    private static func nearestExistingAncestor(of url: URL, fileManager: FileManager) -> URL? {
+    private nonisolated static func nearestExistingAncestor(
+        of url: URL,
+        fileManager: FileManager
+    ) -> URL? {
         var candidate = url.standardizedFileURL
         while candidate.path != "/" {
             if fileManager.fileExists(atPath: candidate.path) {

@@ -93,6 +93,7 @@ enum CompatibilityDBUpdateError: LocalizedError {
     case recipeIdMismatch(expected: String, actual: String)
     case invalidRecipe(String)
     case duplicateStoredRecipeRecord(String)
+    case duplicateSteamAppID(String)
     case updateInProgress
 
     var errorDescription: String? {
@@ -135,6 +136,8 @@ enum CompatibilityDBUpdateError: LocalizedError {
             "호환성 정보 파일을 해석할 수 없습니다: \(id)"
         case .duplicateStoredRecipeRecord(let id):
             "저장된 호환성 정보 ID가 중복되었습니다: \(id)"
+        case .duplicateSteamAppID(let steamAppID):
+            "한 Steam App ID에 여러 호환성 정보를 적용할 수 없습니다: \(steamAppID)"
         case .updateInProgress:
             "호환성 DB 업데이트가 이미 진행 중입니다. 완료된 뒤 다시 시도하세요."
         }
@@ -185,7 +188,7 @@ final class CompatibilityDBUpdateService {
         charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-"
     )
     private static let hexScalars = CharacterSet(charactersIn: "0123456789abcdefABCDEF")
-    private static let sensitiveQueryItemNames: Set<String> = [
+    private nonisolated static let sensitiveQueryItemNames: Set<String> = [
         "apikey",
         "accesstoken",
         "refreshtoken",
@@ -297,6 +300,13 @@ final class CompatibilityDBUpdateService {
             )
             let recipe = try validateRecipe(data: recipeData, descriptor: descriptor)
             validatedRecipes.append(recipe)
+        }
+        var seenSteamAppIDs = Set<String>()
+        for recipe in validatedRecipes {
+            guard let steamAppID = recipe.steamAppId else { continue }
+            guard seenSteamAppIDs.insert(steamAppID).inserted else {
+                throw CompatibilityDBUpdateError.duplicateSteamAppID(steamAppID)
+            }
         }
 
         let snapshotMetadata = CompatibilityDBStoredSnapshotMetadata(
@@ -430,17 +440,57 @@ final class CompatibilityDBUpdateService {
     }
 
     private func fetchData(from url: URL, context: String, maxBytes: Int) async throws -> Data {
-        let (data, response) = try await session.data(from: url)
-        if let resolvedURL = response.url, !Self.isPublicHTTPSURL(resolvedURL) {
+        try await Self.fetchDataInBackground(
+            session: session,
+            from: url,
+            context: context,
+            maxBytes: maxBytes
+        )
+    }
+
+    private nonisolated static func fetchDataInBackground(
+        session: URLSession,
+        from url: URL,
+        context: String,
+        maxBytes: Int
+    ) async throws -> Data {
+        try Task.checkCancellation()
+        let (bytes, response) = try await session.bytes(from: url)
+        defer { bytes.task.cancel() }
+        if let resolvedURL = response.url, !isPublicHTTPSURL(resolvedURL) {
             throw CompatibilityDBUpdateError.insecureResolvedURL(context)
         }
         if let httpResponse = response as? HTTPURLResponse,
            !(200...299).contains(httpResponse.statusCode) {
             throw CompatibilityDBUpdateError.invalidHTTPStatus(context, httpResponse.statusCode)
         }
-        guard data.count <= maxBytes else {
-            throw CompatibilityDBUpdateError.responseTooLarge(context, data.count, maxBytes)
+        if response.expectedContentLength > Int64(maxBytes) {
+            throw CompatibilityDBUpdateError.responseTooLarge(
+                context,
+                Int(clamping: response.expectedContentLength),
+                maxBytes
+            )
         }
+
+        var data = Data()
+        let expectedCapacity = response.expectedContentLength > 0
+            ? min(maxBytes, Int(clamping: response.expectedContentLength))
+            : min(maxBytes, 16 * 1024)
+        data.reserveCapacity(expectedCapacity)
+        for try await byte in bytes {
+            if data.count >= maxBytes {
+                throw CompatibilityDBUpdateError.responseTooLarge(
+                    context,
+                    maxBytes + 1,
+                    maxBytes
+                )
+            }
+            data.append(byte)
+            if data.count.isMultiple(of: 16 * 1024) {
+                try Task.checkCancellation()
+            }
+        }
+        try Task.checkCancellation()
         return data
     }
 
@@ -600,7 +650,7 @@ final class CompatibilityDBUpdateService {
         hexScalars.contains(scalar)
     }
 
-    private static func isPublicHTTPSURL(_ url: URL) -> Bool {
+    private nonisolated static func isPublicHTTPSURL(_ url: URL) -> Bool {
         guard url.scheme?.lowercased() == "https",
               let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
               components.host?.isEmpty == false,
@@ -613,7 +663,7 @@ final class CompatibilityDBUpdateService {
         return true
     }
 
-    private static func hasSensitiveQueryItem(_ components: URLComponents) -> Bool {
+    private nonisolated static func hasSensitiveQueryItem(_ components: URLComponents) -> Bool {
         guard let queryItems = components.queryItems else {
             return false
         }

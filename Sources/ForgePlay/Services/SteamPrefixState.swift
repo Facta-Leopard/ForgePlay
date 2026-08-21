@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 
 enum SteamPrefixState: String, Hashable {
     case rootNotConfigured
@@ -188,36 +189,29 @@ struct SetupReadiness: Hashable {
         )
     }
 
-    func withSteamLaunchRecords(
-        _ records: [LaunchRecord],
-        currentAppSessionID: String? = nil
+    func withSteamLaunchReadinessProjection(
+        _ projection: SteamLaunchReadinessProjection
     ) -> SetupReadiness {
-        let currentRecords = SteamLaunchRecordLookup.currentEnvironmentRecords(
-            from: records,
-            environmentGenerationID: steamEnvironmentGenerationID,
-            environmentCreatedAt: steamEnvironmentCreatedAt
+        let identity = SteamEnvironmentIdentity(
+            generationID: steamEnvironmentGenerationID,
+            createdAt: steamEnvironmentCreatedAt
         )
-        let currentSessionRecords = currentAppSessionID.map { appSessionID in
-            currentRecords.filter { $0.hostAppSessionID == appSessionID }
-        } ?? currentRecords
-        let latest = currentSessionRecords.first
-        let libraryAppSessionIDs = Set(currentRecords.compactMap { record -> String? in
-            guard record.steamUIVerificationState == .rendered,
-                  record.steamUISurface == .library,
-                  let appSessionID = record.hostAppSessionID,
-                  !appSessionID.isEmpty else {
-                return nil
-            }
-            return appSessionID
-        })
-        let hasLibraryVerification = currentRecords.contains {
-            $0.steamUIVerificationState == .rendered && $0.steamUISurface == .library
+        guard projection.environmentIdentity == identity else {
+            var updated = withSteamUIVerification(.notRun)
+            updated.steamUISurface = nil
+            updated.steamSessionContinuityState = .notVerified
+            return updated
         }
-        var updated = withSteamUIVerification(latest?.steamUIVerificationState ?? .notRun)
-        updated.steamUISurface = latest?.steamUISurface
-        if libraryAppSessionIDs.count >= 2 {
+
+        let latest = projection.latestCurrentSessionRecord
+        let latestState = latest?.verificationStatus
+            .flatMap(SteamUIVerificationState.init(rawValue:)) ?? .notRun
+        var updated = withSteamUIVerification(latestState)
+        updated.steamUISurface = latest?.surface
+            .flatMap(SteamUISurface.init(rawValue:))
+        if projection.libraryVerificationRecords.count >= 2 {
             updated.steamSessionContinuityState = .libraryVerifiedAfterRelaunch
-        } else if hasLibraryVerification {
+        } else if !projection.libraryVerificationRecords.isEmpty {
             updated.steamSessionContinuityState = .libraryVerifiedOnce
         } else {
             updated.steamSessionContinuityState = .notVerified
@@ -235,23 +229,184 @@ struct SetupReadiness: Hashable {
     }
 }
 
+struct SteamEnvironmentIdentity: Equatable, Sendable {
+    let generationID: String?
+    let createdAt: Date?
+
+    var isEstablished: Bool {
+        generationID != nil || createdAt != nil
+    }
+}
+
+struct SteamLaunchReadinessProjection: Equatable, Sendable {
+    let environmentIdentity: SteamEnvironmentIdentity
+    let latestCurrentSessionRecord:
+        SteamLaunchRecordLookup.ReadinessFingerprint.Record?
+    let libraryVerificationRecords:
+        [SteamLaunchRecordLookup.ReadinessFingerprint.Record]
+
+    var fingerprint: SteamLaunchRecordLookup.ReadinessFingerprint {
+        var records: [SteamLaunchRecordLookup.ReadinessFingerprint.Record] = []
+        var seenRecordIDs = Set<String>()
+        if let latestCurrentSessionRecord,
+           seenRecordIDs.insert(latestCurrentSessionRecord.id).inserted {
+            records.append(latestCurrentSessionRecord)
+        }
+        for record in libraryVerificationRecords
+        where seenRecordIDs.insert(record.id).inserted {
+            records.append(record)
+        }
+        return SteamLaunchRecordLookup.ReadinessFingerprint(
+            environmentGenerationID: environmentIdentity.generationID,
+            environmentCreatedAt: environmentIdentity.createdAt,
+            records: records
+        )
+    }
+
+    static func empty(
+        environmentIdentity: SteamEnvironmentIdentity = .init(
+            generationID: nil,
+            createdAt: nil
+        )
+    ) -> Self {
+        Self(
+            environmentIdentity: environmentIdentity,
+            latestCurrentSessionRecord: nil,
+            libraryVerificationRecords: []
+        )
+    }
+}
+
 enum SteamLaunchRecordLookup {
+    struct ReadinessFingerprint: Equatable, Sendable {
+        struct Record: Equatable, Sendable {
+            let id: String
+            let startedAt: Date
+            let verificationStatus: String?
+            let surface: String?
+            let hostAppSessionID: String?
+            let environmentGenerationID: String?
+            let exitCode: Int32?
+        }
+
+        let environmentGenerationID: String?
+        let environmentCreatedAt: Date?
+        let records: [Record]
+
+        init(
+            environmentGenerationID: String? = nil,
+            environmentCreatedAt: Date? = nil,
+            records: [Record]
+        ) {
+            self.environmentGenerationID = environmentGenerationID
+            self.environmentCreatedAt = environmentCreatedAt
+            self.records = records
+        }
+    }
+
     static func stateFingerprint(from records: [LaunchRecord]) -> String {
-        records
+        fingerprint(
+            records
             .filter { $0.commandKind == "launchSteam" && $0.prefixId == PrefixIdentifier.steamShared }
             .sorted { $0.startedAt > $1.startedAt }
             .prefix(32)
-            .map {
-                [
-                    $0.id,
-                    $0.steamUIVerificationStatus ?? "",
-                    $0.steamUISurfaceRawValue ?? "",
-                    $0.hostAppSessionID ?? "",
-                    $0.environmentGenerationID ?? "",
-                    $0.exitCode.map(String.init) ?? ""
-                ].joined(separator: "|")
+        )
+    }
+
+    /// Computes the same bounded fingerprint without sorting when the caller
+    /// already owns a newest-first query result.
+    static func newestFirstStateFingerprint(from records: [LaunchRecord]) -> String {
+        fingerprint(
+            records.lazy
+                .filter {
+                    $0.commandKind == "launchSteam" &&
+                        $0.prefixId == PrefixIdentifier.steamShared
+                }
+                .prefix(32)
+        )
+    }
+
+    /// Semantic readiness projection for a caller-owned newest-first query.
+    /// It retains only the latest record for the active app session and the
+    /// first two distinct library-verification sessions required by the
+    /// continuity contract.
+    static func newestFirstReadinessFingerprint(
+        from records: [LaunchRecord],
+        environmentIdentity: SteamEnvironmentIdentity,
+        currentAppSessionID: String? = nil
+    ) -> ReadinessFingerprint {
+        newestFirstReadinessProjection(
+            from: records,
+            environmentIdentity: environmentIdentity,
+            currentAppSessionID: currentAppSessionID
+        ).fingerprint
+    }
+
+    static func newestFirstReadinessProjection(
+        from records: [LaunchRecord],
+        environmentIdentity: SteamEnvironmentIdentity,
+        currentAppSessionID: String?
+    ) -> SteamLaunchReadinessProjection {
+        var latestCurrentSessionRecord: ReadinessFingerprint.Record?
+        var libraryVerificationRecords: [ReadinessFingerprint.Record] = []
+        var libraryVerificationSessionIDs = Set<String>()
+
+        for record in records {
+            guard isRecord(record, in: environmentIdentity) else { continue }
+            let projected = readinessRecord(record)
+            if latestCurrentSessionRecord == nil,
+               (currentAppSessionID == nil ||
+                record.hostAppSessionID == currentAppSessionID) {
+                latestCurrentSessionRecord = projected
             }
-            .joined(separator: "\n")
+            if libraryVerificationRecords.count < 2,
+               record.steamUIVerificationState == .rendered,
+               record.steamUISurface == .library,
+               let appSessionID = record.hostAppSessionID,
+               !appSessionID.isEmpty,
+               libraryVerificationSessionIDs.insert(appSessionID).inserted {
+                libraryVerificationRecords.append(projected)
+            }
+            if latestCurrentSessionRecord != nil,
+               libraryVerificationRecords.count == 2 {
+                break
+            }
+        }
+        return SteamLaunchReadinessProjection(
+            environmentIdentity: environmentIdentity,
+            latestCurrentSessionRecord: latestCurrentSessionRecord,
+            libraryVerificationRecords: libraryVerificationRecords
+        )
+    }
+
+    private static func isRecord(
+        _ record: LaunchRecord,
+        in environmentIdentity: SteamEnvironmentIdentity
+    ) -> Bool {
+        guard record.commandKind == "launchSteam",
+              record.prefixId == PrefixIdentifier.steamShared,
+              environmentIdentity.isEstablished else {
+            return false
+        }
+        if let generationID = environmentIdentity.generationID {
+            return record.environmentGenerationID == generationID
+        }
+        guard let createdAt = environmentIdentity.createdAt else { return false }
+        return record.startedAt >= createdAt
+    }
+
+    fileprivate static func readinessRecord(
+        _ record: LaunchRecord
+    ) -> ReadinessFingerprint.Record {
+        ReadinessFingerprint.Record(
+            id: record.id,
+            startedAt: record.startedAt,
+            verificationStatus: record.steamUIVerificationStatus,
+            surface: record.steamUISurfaceRawValue,
+            hostAppSessionID: record.hostAppSessionID,
+            environmentGenerationID: record.environmentGenerationID,
+            exitCode: record.exitCode
+        )
     }
 
     static func currentEnvironmentRecords(
@@ -286,8 +441,502 @@ enum SteamLaunchRecordLookup {
         } ?? records.first
     }
 
+    /// Finds the same record as `latestSteamLaunchRecord` without allocating
+    /// and sorting when `records` is already ordered newest first.
+    static func latestSteamLaunchRecordFromNewestFirst(
+        _ records: [LaunchRecord],
+        environmentGenerationID: String? = nil,
+        environmentCreatedAt: Date? = nil,
+        currentAppSessionID: String? = nil
+    ) -> LaunchRecord? {
+        var newestEligibleRecord: LaunchRecord?
+        for record in records {
+            guard record.commandKind == "launchSteam",
+                  record.prefixId == PrefixIdentifier.steamShared else {
+                continue
+            }
+            if let environmentGenerationID {
+                guard record.environmentGenerationID == environmentGenerationID else {
+                    continue
+                }
+            } else if let environmentCreatedAt, record.startedAt < environmentCreatedAt {
+                continue
+            }
+            if newestEligibleRecord == nil {
+                newestEligibleRecord = record
+            }
+            guard let currentAppSessionID else { return record }
+            if record.hostAppSessionID == currentAppSessionID {
+                return record
+            }
+        }
+        return newestEligibleRecord
+    }
+
     static func latestSteamUIVerificationState(from records: [LaunchRecord]) -> SteamUIVerificationState {
         latestSteamLaunchRecord(from: records)?.steamUIVerificationState ?? .notRun
+    }
+
+    private static func fingerprint<S: Sequence>(_ records: S) -> String
+    where S.Element == LaunchRecord {
+        records.map {
+            [
+                $0.id,
+                $0.steamUIVerificationStatus ?? "",
+                $0.steamUISurfaceRawValue ?? "",
+                $0.hostAppSessionID ?? "",
+                $0.environmentGenerationID ?? "",
+                $0.exitCode.map(String.init) ?? ""
+            ].joined(separator: "|")
+        }
+        .joined(separator: "\n")
+    }
+}
+
+struct SteamLaunchReadinessRepository {
+    static let requiredContinuitySessionCount = 2
+    static let retainedRecentOperationalRecordCount = 500
+    static let retentionScanBatchSize = 128
+    static let diagnosticLinkScanBatchSize = 256
+
+    func readinessProjection(
+        in context: ModelContext,
+        environmentIdentity: SteamEnvironmentIdentity,
+        currentAppSessionID: String
+    ) throws -> SteamLaunchReadinessProjection {
+        guard environmentIdentity.isEstablished else {
+            return .empty(environmentIdentity: environmentIdentity)
+        }
+        return SteamLaunchReadinessProjection(
+            environmentIdentity: environmentIdentity,
+            latestCurrentSessionRecord: try latestRecord(
+                in: context,
+                environmentIdentity: environmentIdentity,
+                appSessionID: currentAppSessionID
+            ).map(SteamLaunchRecordLookup.readinessRecord),
+            libraryVerificationRecords: try libraryVerificationRecords(
+                in: context,
+                environmentIdentity: environmentIdentity
+            ).map(SteamLaunchRecordLookup.readinessRecord)
+        )
+    }
+
+    /// Returns the one launch row presented by summary UI. Current-session
+    /// evidence wins; otherwise the newest row in the active Steam environment
+    /// is returned. Both branches are exact database queries with a one-row
+    /// result bound.
+    func latestDisplayRecord(
+        in context: ModelContext,
+        environmentIdentity: SteamEnvironmentIdentity,
+        currentAppSessionID: String
+    ) throws -> LaunchRecord? {
+        guard environmentIdentity.isEstablished else { return nil }
+        if let current = try latestRecord(
+            in: context,
+            environmentIdentity: environmentIdentity,
+            appSessionID: currentAppSessionID
+        ) {
+            return current
+        }
+        return try latestRecord(
+            in: context,
+            environmentIdentity: environmentIdentity,
+            appSessionID: nil
+        )
+    }
+
+    /// Removes only completed Steam launch history that is outside the bounded
+    /// operational window and is not required by readiness or diagnostics.
+    /// Active/unfinished rows are excluded by the candidate predicate.
+    @discardableResult
+    func pruneCompletedHistory(
+        in context: ModelContext,
+        environmentIdentity: SteamEnvironmentIdentity,
+        currentAppSessionID: String
+    ) throws -> Int {
+        let steamPrefixID = PrefixIdentifier.steamShared
+        let steamCommand = "launchSteam"
+        var recentDescriptor = FetchDescriptor<LaunchRecord>(
+            predicate: #Predicate {
+                $0.commandKind == steamCommand &&
+                    $0.prefixId == steamPrefixID
+            },
+            sortBy: [
+                SortDescriptor(\LaunchRecord.startedAt, order: .reverse),
+                SortDescriptor(\LaunchRecord.id, order: .reverse)
+            ]
+        )
+        recentDescriptor.fetchLimit = Self.retainedRecentOperationalRecordCount + 1
+        let recentRecords = try context.fetch(recentDescriptor)
+        guard recentRecords.count > Self.retainedRecentOperationalRecordCount else {
+            return 0
+        }
+        var protectedRecordIDs = Set(
+            recentRecords.prefix(Self.retainedRecentOperationalRecordCount).map(\.id)
+        )
+
+        let readiness = try readinessProjection(
+            in: context,
+            environmentIdentity: environmentIdentity,
+            currentAppSessionID: currentAppSessionID
+        )
+        protectedRecordIDs.formUnion(readiness.fingerprint.records.map(\.id))
+        protectedRecordIDs.formUnion(try diagnosticLinkedLaunchRecordIDs(in: context))
+
+        let notRunStatus = SteamUIVerificationState.notRun.rawValue
+        var retainedCandidateOffset = 0
+        var deletedCount = 0
+        while true {
+            try Task.checkCancellation()
+            var descriptor = FetchDescriptor<LaunchRecord>(
+                predicate: #Predicate {
+                    $0.commandKind == steamCommand &&
+                        $0.prefixId == steamPrefixID &&
+                        ($0.hostAppSessionID == nil ||
+                            $0.hostAppSessionID != currentAppSessionID) &&
+                        $0.endedAt != nil &&
+                        $0.status != "running" &&
+                        $0.steamUIVerificationStatus != notRunStatus
+                },
+                sortBy: [
+                    SortDescriptor(\LaunchRecord.startedAt),
+                    SortDescriptor(\LaunchRecord.id)
+                ]
+            )
+            descriptor.fetchLimit = Self.retentionScanBatchSize
+            descriptor.fetchOffset = retainedCandidateOffset
+            let batch = try context.fetch(descriptor)
+            guard !batch.isEmpty else { break }
+
+            var protectedCount = 0
+            var batchDeletionCount = 0
+            for record in batch {
+                if protectedRecordIDs.contains(record.id) {
+                    protectedCount += 1
+                } else {
+                    context.delete(record)
+                    batchDeletionCount += 1
+                }
+            }
+            if batchDeletionCount > 0 {
+                try context.saveOrRollback()
+                deletedCount += batchDeletionCount
+                // Deleted rows no longer occupy an offset. Only rows retained
+                // from this page must be skipped on the next fetch.
+                retainedCandidateOffset += protectedCount
+            } else {
+                retainedCandidateOffset += batch.count
+            }
+            if batch.count < Self.retentionScanBatchSize { break }
+        }
+        return deletedCount
+    }
+
+    private func latestRecord(
+        in context: ModelContext,
+        environmentIdentity: SteamEnvironmentIdentity,
+        appSessionID: String?
+    ) throws -> LaunchRecord? {
+        let steamPrefixID = PrefixIdentifier.steamShared
+        let steamCommand = "launchSteam"
+        var descriptor: FetchDescriptor<LaunchRecord>
+        if let generationID = environmentIdentity.generationID {
+            if let appSessionID {
+                descriptor = FetchDescriptor(
+                    predicate: #Predicate {
+                        $0.commandKind == steamCommand &&
+                            $0.prefixId == steamPrefixID &&
+                            $0.environmentGenerationID == generationID &&
+                            $0.hostAppSessionID == appSessionID
+                    },
+                    sortBy: [
+                        SortDescriptor(\LaunchRecord.startedAt, order: .reverse),
+                        SortDescriptor(\LaunchRecord.id, order: .reverse)
+                    ]
+                )
+            } else {
+                descriptor = FetchDescriptor(
+                    predicate: #Predicate {
+                        $0.commandKind == steamCommand &&
+                            $0.prefixId == steamPrefixID &&
+                            $0.environmentGenerationID == generationID
+                    },
+                    sortBy: [
+                        SortDescriptor(\LaunchRecord.startedAt, order: .reverse),
+                        SortDescriptor(\LaunchRecord.id, order: .reverse)
+                    ]
+                )
+            }
+        } else if let createdAt = environmentIdentity.createdAt {
+            if let appSessionID {
+                descriptor = FetchDescriptor(
+                    predicate: #Predicate {
+                        $0.commandKind == steamCommand &&
+                            $0.prefixId == steamPrefixID &&
+                            $0.startedAt >= createdAt &&
+                            $0.hostAppSessionID == appSessionID
+                    },
+                    sortBy: [
+                        SortDescriptor(\LaunchRecord.startedAt, order: .reverse),
+                        SortDescriptor(\LaunchRecord.id, order: .reverse)
+                    ]
+                )
+            } else {
+                descriptor = FetchDescriptor(
+                    predicate: #Predicate {
+                        $0.commandKind == steamCommand &&
+                            $0.prefixId == steamPrefixID &&
+                            $0.startedAt >= createdAt
+                    },
+                    sortBy: [
+                        SortDescriptor(\LaunchRecord.startedAt, order: .reverse),
+                        SortDescriptor(\LaunchRecord.id, order: .reverse)
+                    ]
+                )
+            }
+        } else {
+            return nil
+        }
+        descriptor.fetchLimit = 1
+        return try context.fetch(descriptor).first
+    }
+
+    private func libraryVerificationRecords(
+        in context: ModelContext,
+        environmentIdentity: SteamEnvironmentIdentity
+    ) throws -> [LaunchRecord] {
+        guard let first = try latestLibraryVerificationRecord(
+            in: context,
+            environmentIdentity: environmentIdentity,
+            excludingAppSessionID: nil
+        ),
+        let firstSessionID = first.hostAppSessionID,
+        !firstSessionID.isEmpty else {
+            return []
+        }
+        guard let second = try latestLibraryVerificationRecord(
+            in: context,
+            environmentIdentity: environmentIdentity,
+            excludingAppSessionID: firstSessionID
+        ) else {
+            return [first]
+        }
+        return [first, second]
+    }
+
+    private func latestLibraryVerificationRecord(
+        in context: ModelContext,
+        environmentIdentity: SteamEnvironmentIdentity,
+        excludingAppSessionID: String?
+    ) throws -> LaunchRecord? {
+        let steamPrefixID = PrefixIdentifier.steamShared
+        let steamCommand = "launchSteam"
+        let renderedStatus = SteamUIVerificationState.rendered.rawValue
+        let librarySurface = SteamUISurface.library.rawValue
+        let emptySessionID = ""
+        var descriptor: FetchDescriptor<LaunchRecord>
+        if let generationID = environmentIdentity.generationID {
+            if let excludingAppSessionID {
+                descriptor = FetchDescriptor(
+                    predicate: #Predicate {
+                        $0.commandKind == steamCommand &&
+                            $0.prefixId == steamPrefixID &&
+                            $0.environmentGenerationID == generationID &&
+                            $0.steamUIVerificationStatus == renderedStatus &&
+                            $0.steamUISurfaceRawValue == librarySurface &&
+                            $0.hostAppSessionID != nil &&
+                            $0.hostAppSessionID != emptySessionID &&
+                            $0.hostAppSessionID != excludingAppSessionID
+                    },
+                    sortBy: [
+                        SortDescriptor(\LaunchRecord.startedAt, order: .reverse),
+                        SortDescriptor(\LaunchRecord.id, order: .reverse)
+                    ]
+                )
+            } else {
+                descriptor = FetchDescriptor(
+                    predicate: #Predicate {
+                        $0.commandKind == steamCommand &&
+                            $0.prefixId == steamPrefixID &&
+                            $0.environmentGenerationID == generationID &&
+                            $0.steamUIVerificationStatus == renderedStatus &&
+                            $0.steamUISurfaceRawValue == librarySurface &&
+                            $0.hostAppSessionID != nil &&
+                            $0.hostAppSessionID != emptySessionID
+                    },
+                    sortBy: [
+                        SortDescriptor(\LaunchRecord.startedAt, order: .reverse),
+                        SortDescriptor(\LaunchRecord.id, order: .reverse)
+                    ]
+                )
+            }
+        } else if let createdAt = environmentIdentity.createdAt {
+            if let excludingAppSessionID {
+                descriptor = FetchDescriptor(
+                    predicate: #Predicate {
+                        $0.commandKind == steamCommand &&
+                            $0.prefixId == steamPrefixID &&
+                            $0.startedAt >= createdAt &&
+                            $0.steamUIVerificationStatus == renderedStatus &&
+                            $0.steamUISurfaceRawValue == librarySurface &&
+                            $0.hostAppSessionID != nil &&
+                            $0.hostAppSessionID != emptySessionID &&
+                            $0.hostAppSessionID != excludingAppSessionID
+                    },
+                    sortBy: [
+                        SortDescriptor(\LaunchRecord.startedAt, order: .reverse),
+                        SortDescriptor(\LaunchRecord.id, order: .reverse)
+                    ]
+                )
+            } else {
+                descriptor = FetchDescriptor(
+                    predicate: #Predicate {
+                        $0.commandKind == steamCommand &&
+                            $0.prefixId == steamPrefixID &&
+                            $0.startedAt >= createdAt &&
+                            $0.steamUIVerificationStatus == renderedStatus &&
+                            $0.steamUISurfaceRawValue == librarySurface &&
+                            $0.hostAppSessionID != nil &&
+                            $0.hostAppSessionID != emptySessionID
+                    },
+                    sortBy: [
+                        SortDescriptor(\LaunchRecord.startedAt, order: .reverse),
+                        SortDescriptor(\LaunchRecord.id, order: .reverse)
+                    ]
+                )
+            }
+        } else {
+            return nil
+        }
+        descriptor.fetchLimit = 1
+        return try context.fetch(descriptor).first
+    }
+
+    private func diagnosticLinkedLaunchRecordIDs(
+        in context: ModelContext
+    ) throws -> Set<String> {
+        var offset = 0
+        var recordIDs = Set<String>()
+        while true {
+            try Task.checkCancellation()
+            var descriptor = FetchDescriptor<DiagnosticRecord>(
+                predicate: #Predicate { $0.launchRecordId != nil },
+                sortBy: [
+                    SortDescriptor(\DiagnosticRecord.createdAt),
+                    SortDescriptor(\DiagnosticRecord.id)
+                ]
+            )
+            descriptor.fetchLimit = Self.diagnosticLinkScanBatchSize
+            descriptor.fetchOffset = offset
+            let batch = try context.fetch(descriptor)
+            guard !batch.isEmpty else { break }
+            recordIDs.formUnion(batch.compactMap(\.launchRecordId))
+            if batch.count < Self.diagnosticLinkScanBatchSize { break }
+            offset += batch.count
+        }
+        return recordIDs
+    }
+}
+
+@ModelActor
+actor SteamLaunchHistoryMaintenanceWorker {
+    func pruneCompletedHistory(
+        environmentIdentity: SteamEnvironmentIdentity,
+        currentAppSessionID: String
+    ) throws -> Int {
+        try SteamLaunchReadinessRepository().pruneCompletedHistory(
+            in: modelContext,
+            environmentIdentity: environmentIdentity,
+            currentAppSessionID: currentAppSessionID
+        )
+    }
+}
+
+@MainActor
+final class SteamLaunchHistoryMaintenanceScheduler {
+    private struct Request: Sendable {
+        let modelContainer: ModelContainer
+        let environmentIdentity: SteamEnvironmentIdentity
+        let currentAppSessionID: String
+        let onFailure: @MainActor @Sendable (Error) -> Void
+    }
+
+    private var activeRequestID: UUID?
+    private var activeTask: Task<Void, Never>?
+    private var pendingRequest: Request?
+
+    @discardableResult
+    func schedule(
+        modelContainer: ModelContainer,
+        environmentIdentity: SteamEnvironmentIdentity,
+        currentAppSessionID: String,
+        onFailure: @escaping @MainActor @Sendable (Error) -> Void
+    ) -> Bool {
+        let request = Request(
+            modelContainer: modelContainer,
+            environmentIdentity: environmentIdentity,
+            currentAppSessionID: currentAppSessionID,
+            onFailure: onFailure
+        )
+        guard activeTask == nil else {
+            pendingRequest = request
+            return false
+        }
+        start(request)
+        return true
+    }
+
+    private func start(_ request: Request) {
+        let requestID = UUID()
+        activeRequestID = requestID
+        activeTask = Task.detached(priority: .utility) { [weak self] in
+            let failure: Error?
+            do {
+                // SwiftData binds a newly created ModelContext to the executor
+                // that creates it. Construct the @ModelActor only after leaving
+                // MainActor so a large first retention pass cannot run on UI.
+                let worker = SteamLaunchHistoryMaintenanceWorker(
+                    modelContainer: request.modelContainer
+                )
+                _ = try await worker.pruneCompletedHistory(
+                    environmentIdentity: request.environmentIdentity,
+                    currentAppSessionID: request.currentAppSessionID
+                )
+                failure = nil
+            } catch is CancellationError {
+                failure = nil
+            } catch {
+                failure = Task.isCancelled ? nil : error
+            }
+            await self?.finish(
+                requestID,
+                failure: failure,
+                onFailure: request.onFailure
+            )
+        }
+    }
+
+    private func finish(
+        _ requestID: UUID,
+        failure: Error?,
+        onFailure: @MainActor @Sendable (Error) -> Void
+    ) {
+        guard activeRequestID == requestID else { return }
+        if let failure {
+            onFailure(failure)
+        }
+        activeRequestID = nil
+        activeTask = nil
+        guard let pendingRequest else { return }
+        self.pendingRequest = nil
+        start(pendingRequest)
+    }
+
+    func cancel() {
+        activeTask?.cancel()
+        activeTask = nil
+        activeRequestID = nil
+        pendingRequest = nil
     }
 }
 
@@ -296,7 +945,6 @@ final class SteamPrefixReadinessResolver {
     private let pathManager: PathManager
     private let prefixManager: PrefixManager
     private let steamManager: SteamManager
-    private let steamPrefixService: SteamPrefixService
     private let steamSessionStateInspector: SteamSessionStateInspector
     private let fileManager: FileManager
 
@@ -304,14 +952,12 @@ final class SteamPrefixReadinessResolver {
         pathManager: PathManager,
         prefixManager: PrefixManager,
         steamManager: SteamManager,
-        steamPrefixService: SteamPrefixService,
         steamSessionStateInspector: SteamSessionStateInspector = SteamSessionStateInspector(),
         fileManager: FileManager = .default
     ) {
         self.pathManager = pathManager
         self.prefixManager = prefixManager
         self.steamManager = steamManager
-        self.steamPrefixService = steamPrefixService
         self.steamSessionStateInspector = steamSessionStateInspector
         self.fileManager = fileManager
     }
@@ -319,6 +965,8 @@ final class SteamPrefixReadinessResolver {
     func resolve(
         hasSteamReferences: Bool,
         runtimeExecutable: URL? = nil,
+        runtimeManifest: RuntimeManifest? = nil,
+        runtimeCapability: WindowsRuntimeCapability? = nil,
         rendererPolicySelection: SteamRendererPolicySelection = .d3dMetal,
         videoMemorySelection: SteamVideoMemorySelection = .automatic
     ) -> SetupReadiness {
@@ -359,21 +1007,10 @@ final class SteamPrefixReadinessResolver {
 
         let prefix = root.appending(path: ForgePlayPathRole.steamSharedPrefix.rawValue, directoryHint: .isDirectory)
         let steamExecutable = prefix.appending(path: "drive_c/Program Files (x86)/Steam/steam.exe")
-        let prefixStatus: (isUsable: Bool, issue: PrefixUsabilityError?)
-        do {
-            try steamPrefixService.cleanupInterruptedReplacementArtifacts(at: prefix)
-            prefixStatus = resolvedSteamPrefixStatus(prefix)
-        } catch is SteamPrefixLifecycleError {
-            prefixStatus = resolvedSteamPrefixStatus(prefix)
-        } catch {
-            prefixStatus = (
-                false,
-                PrefixUsabilityError.invalidMetadata(
-                    prefix.appending(path: "prefix.json"),
-                    "Interrupted Steam environment cleanup failed: \(forgePlayTechnicalErrorSummary(error))"
-                )
-            )
-        }
+        // Readiness is a projection only. Recovery and recursive cleanup belong
+        // to the explicitly coordinated managed-storage maintenance phase; a
+        // SwiftUI refresh must never acquire mutation leases or delete files.
+        let prefixStatus = resolvedSteamPrefixStatus(prefix)
         let hasSteamExecutable = prefixStatus.isUsable
             ? FileSystemItemPolicy.isRegularNonSymlinkFile(steamExecutable, fileManager: fileManager)
             : false
@@ -381,18 +1018,24 @@ final class SteamPrefixReadinessResolver {
         let steamSessionInspection = prefixStatus.isUsable
             ? steamSessionStateInspector.inspect(prefix: prefix)
             : .unavailable
-        let rendererInspection = runtimeExecutable.map {
-            steamManager.inspectSteamRendererPolicy(
+        let rendererInspection: SteamRendererPolicyInspection?
+        if let runtimeExecutable, let runtimeCapability {
+            rendererInspection = steamManager.inspectSteamRendererPolicyForReadiness(
                 prefix: prefix,
-                runtimeExecutable: $0,
+                runtimeExecutable: runtimeExecutable,
+                runtimeCapability: runtimeCapability,
                 selection: rendererPolicySelection,
                 videoMemorySizeMB: videoMemorySelection.resolvedSizeMB()
             )
+        } else {
+            rendererInspection = nil
         }
         let runtimeCompatibilityInspection: PrefixRuntimeCompatibilityInspection?
-        if let runtimeExecutable, prefixStatus.isUsable {
+        if let runtimeManifest, prefixStatus.isUsable {
             runtimeCompatibilityInspection = prefixManager
-                .inspectSteamSharedPrefixRuntimeCompatibility(runtimeExecutable: runtimeExecutable)
+                .inspectSteamSharedPrefixRuntimeCompatibility(
+                    manifest: runtimeManifest
+                )
         } else {
             runtimeCompatibilityInspection = nil
         }
@@ -409,6 +1052,24 @@ final class SteamPrefixReadinessResolver {
             steamSessionInspection: steamSessionInspection,
             steamEnvironmentCreatedAt: prefixMetadata?.createdAt,
             steamEnvironmentGenerationID: prefixMetadata?.environmentGenerationID
+        )
+    }
+
+    func currentSteamEnvironmentIdentity() -> SteamEnvironmentIdentity {
+        guard let root = try? currentRootForReadiness() else {
+            return SteamEnvironmentIdentity(generationID: nil, createdAt: nil)
+        }
+        let prefix = root.appending(
+            path: ForgePlayPathRole.steamSharedPrefix.rawValue,
+            directoryHint: .isDirectory
+        )
+        guard resolvedSteamPrefixStatus(prefix).isUsable,
+              let metadata = try? prefixManager.loadMetadata(at: prefix) else {
+            return SteamEnvironmentIdentity(generationID: nil, createdAt: nil)
+        }
+        return SteamEnvironmentIdentity(
+            generationID: metadata.environmentGenerationID,
+            createdAt: metadata.createdAt
         )
     }
 

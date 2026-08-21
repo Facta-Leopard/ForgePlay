@@ -32,8 +32,123 @@ private enum SteamWorkspace: String, CaseIterable, Identifiable {
 
 private struct ActiveSteamSessionConfiguration {
     let rendererSelection: SteamRendererPolicySelection
+    let networkSelection: SteamNetworkCompatibilitySelection
+    let audioInputSelection: SteamAudioInputSelection
+    let synchronizationSelection: WineSynchronizationSelection
+    let videoMemorySelection: SteamVideoMemorySelection
     let gameModePolicy: SteamGameModeLaunchPolicy
+    let fpsCursorPolicy: FPSCursorCapturePolicy
+    let controllerPolicy: ControllerCompatibilityPolicy
+    let keyboardMapping: KeyboardMappingPreference
 }
+
+private struct SavedStandardSteamLaunchConfiguration {
+    let snapshot: SteamLaunchConfigurationSnapshot
+    let selection: SteamLaunchConfigurationProductSelection
+}
+
+enum StandardSteamLaunchReservationFailurePolicy {
+    static let windowsExecutableReservedLocalizationKey =
+        "다른 EXE 실행이 끝날 때까지 기다리세요."
+
+    static func preflightBlockerLocalizationKey(
+        isWindowsExecutableLaunchReserved: Bool
+    ) -> String? {
+        guard isWindowsExecutableLaunchReserved else { return nil }
+        return windowsExecutableReservedLocalizationKey
+    }
+
+    static func localizationKey(
+        for error: NavigationStableSessionOwnershipError
+    ) -> String {
+        switch error {
+        case .transitionInProgress:
+            "호환성 Steam 세션 작업이 이미 진행 중입니다."
+        case .sessionAlreadyActive:
+            "기존 호환성 Steam 세션을 먼저 종료하고 기준 상태 복원을 확인하세요."
+        case .noActiveSession:
+            "종료할 활성 호환성 Steam 세션이 없습니다."
+        case .preparationNotInProgress:
+            "호환성 Steam 세션 준비 상태가 올바르지 않습니다."
+        case .standardSteamLaunchReserved:
+            "일반 Steam 실행 전환이 진행 중입니다."
+        case .standardSteamLaunchReservationMismatch:
+            "일반 Steam 실행 전환 중 호환성 세션 상태가 변경되었습니다."
+        case .standardSteamLaunchNotReady:
+            "호환성 세션 복원 또는 다른 프리픽스 작업이 끝나지 않았습니다."
+        case .windowsExecutableLaunchReserved:
+            windowsExecutableReservedLocalizationKey
+        case .windowsExecutableLaunchBlockedByCompatibilitySession:
+            "활성 호환성 Steam 세션을 먼저 종료하세요."
+        case .windowsExecutableLaunchBlockedByCompatibilityTransition:
+            "호환성 Steam 세션 전환이 끝날 때까지 기다리세요."
+        case .windowsExecutableLaunchNotReady:
+            "Steam 실행 또는 다른 프리픽스 작업이 끝날 때까지 기다리세요."
+        }
+    }
+}
+
+private enum StandardLaunchConfigurationRestoreState: Equatable {
+    case pending
+    case restoring
+    case completed
+}
+
+private struct SteamLaunchReadinessSnapshot: Equatable {
+    static let pending = Self(
+        taskID: "",
+        steamLaunchBlocker: nil,
+        selectedRendererLaunchBlocker: nil,
+        rendererAvailabilityBySelection: [:]
+    )
+
+    let taskID: String
+    let steamLaunchBlocker: String?
+    let selectedRendererLaunchBlocker: String?
+    let rendererAvailabilityBySelection:
+        [SteamRendererPolicySelection: SteamRendererPolicyAvailability]
+}
+
+private struct SteamLaunchRuntimeInspection: Sendable {
+    let canLaunchWindowsSteam: Bool
+    let steamLaunchMessageKey: String
+    let rendererAvailabilityBySelection:
+        [SteamRendererPolicySelection: SteamRendererPolicyAvailability]
+}
+
+private actor SteamLaunchReadinessInspectionCoordinator {
+    func inspect(
+        capability: WindowsRuntimeCapability,
+        selectionRawValue: String?
+    ) -> SteamLaunchRuntimeInspection? {
+        guard !Task.isCancelled else { return nil }
+
+        let steamVerification = SteamClientCompatibilityVerifier.verify(
+            capability: capability
+        )
+        _ = selectionRawValue
+        let rendererAvailabilityBySelection = Dictionary(
+            uniqueKeysWithValues: SteamRendererPolicySelection.allCases.map {
+                selection in
+                (
+                    selection,
+                    selection.forcedPreference?.availability(in: capability) ??
+                        .unavailable()
+                )
+            }
+        )
+        guard !Task.isCancelled else { return nil }
+
+        return SteamLaunchRuntimeInspection(
+            canLaunchWindowsSteam: steamVerification.canLaunchWindowsSteam,
+            steamLaunchMessageKey: steamVerification.userMessage,
+            rendererAvailabilityBySelection: rendererAvailabilityBySelection
+        )
+    }
+}
+
+private let steamLaunchReadinessInspectionCoordinator =
+    SteamLaunchReadinessInspectionCoordinator()
 
 struct SteamLaunchView: View {
     @Environment(AppState.self) private var appState
@@ -43,7 +158,7 @@ struct SteamLaunchView: View {
     @Query(sort: \SteamGameRecord.name) private var games: [SteamGameRecord]
     @Query(sort: \SteamStorageMountRecord.path) private var steamStorageMounts: [SteamStorageMountRecord]
     @Query(sort: \PrefixRecord.displayName) private var prefixes: [PrefixRecord]
-    @Query(sort: \LaunchRecord.startedAt, order: .reverse) private var launchRecords: [LaunchRecord]
+    @Query private var launchRecords: [LaunchRecord]
     @State private var steamReferencePendingRemoval: SteamGameRecord?
     @State private var steamStoragePendingRemoval: SteamStorageMountRecord?
     @State private var isShowingSteamPrefixRebuildConfirmation = false
@@ -51,12 +166,27 @@ struct SteamLaunchView: View {
     @State private var steamInstallerPersistenceWarningForRebuild: String?
     @State private var selectedWorkspace: SteamWorkspace = .launch
     @State private var selectedRendererForNextSteamLaunch: SteamRendererPolicySelection?
-    @State private var activeSteamSessionConfiguration: ActiveSteamSessionConfiguration?
-    @State private var isExperimentalGameModeEnabledForNextLaunch = false
+    @State private var selectedNetworkForNextSteamLaunch: SteamNetworkCompatibilitySelection?
+    @State private var selectedAudioInputForNextSteamLaunch: SteamAudioInputSelection?
+    @State private var keyboardMappingForNextSteamLaunch =
+        KeyboardMappingPreference.systemDefault
+    @State private var steamSessionConfigurationBeingLaunched: ActiveSteamSessionConfiguration?
+    @State private var isExperimentalGameModeEnabledForNextLaunch = true
+    @State private var standardLaunchDraftBase = SteamLaunchConfigurationSnapshot.standardDefault
+    @State private var savedStandardLaunchConfigurationDigest: String?
+    @State private var savedStandardLaunchConfigurationVersion: SteamLaunchConfigurationRecordVersion?
+    @State private var standardLaunchConfigurationSaveFailed = false
+    @State private var standardLaunchConfigurationErrorMessage: String?
+    @State private var standardLaunchConfigurationRestoreState:
+        StandardLaunchConfigurationRestoreState = .pending
+    @State private var standardLaunchConfigurationRestoreIsBlocked = false
+    @State private var standardLaunchConfigurationReloadIsAvailable = false
+    @State private var isShowingStandardLaunchConfigurationResetConfirmation = false
     @State private var steamStorageHealthReports: [String: SteamStorageHealthReport] = [:]
     @State private var steamStorageHealthErrorMessage: String?
     @State private var steamStorageHealthRefreshGeneration = 0
     @State private var isCheckingSteamStorageHealth = false
+    @State private var steamLaunchReadinessSnapshot = SteamLaunchReadinessSnapshot.pending
     let helpSection: AppSection
 
     private var readiness: SetupReadiness {
@@ -65,6 +195,15 @@ struct SteamLaunchView: View {
 
     init(helpSection: AppSection = .steamLaunch) {
         self.helpSection = helpSection
+        var launchDescriptor = FetchDescriptor<LaunchRecord>(
+            predicate: #Predicate {
+                $0.commandKind == "launchSteam" &&
+                    $0.prefixId == "prefix-steam-shared"
+            },
+            sortBy: [SortDescriptor(\LaunchRecord.startedAt, order: .reverse)]
+        )
+        launchDescriptor.fetchLimit = 1
+        _launchRecords = Query(launchDescriptor)
     }
 
     private var displayedSteamReferences: [SteamGameRecord] {
@@ -106,6 +245,43 @@ struct SteamLaunchView: View {
         ].joined(separator: "#")
     }
 
+    private var steamLaunchReadinessTaskID: String {
+        [
+            String(services.steamEnvironmentRevision),
+            String(readiness.hashValue),
+            appState.runtimeExecutableURL?.path ?? "runtime-unavailable",
+            selectedRendererForNextSteamLaunch?.rawValue ?? "renderer-unselected",
+            appState.effectiveLanguageMode.rawValue
+        ].joined(separator: "#")
+    }
+
+    private var steamLaunchReadinessSnapshotIsCurrent: Bool {
+        steamLaunchReadinessSnapshot.taskID == steamLaunchReadinessTaskID
+    }
+
+    private var cachedSteamLaunchBlocker: String? {
+        guard steamLaunchReadinessSnapshotIsCurrent else { return nil }
+        return steamLaunchReadinessSnapshot.steamLaunchBlocker
+    }
+
+    private var cachedSelectedRendererLaunchBlocker: String? {
+        guard steamLaunchReadinessSnapshotIsCurrent else { return nil }
+        return steamLaunchReadinessSnapshot.selectedRendererLaunchBlocker
+    }
+
+    private func cachedRendererAvailability(
+        for selection: SteamRendererPolicySelection
+    ) -> SteamRendererPolicyAvailability? {
+        guard steamLaunchReadinessSnapshotIsCurrent else { return nil }
+        return steamLaunchReadinessSnapshot
+            .rendererAvailabilityBySelection[selection]
+    }
+
+    private var selectedRendererRuntimeIsUnavailableOrPending: Bool {
+        guard selectedRendererForNextSteamLaunch == .vulkan else { return false }
+        return cachedRendererAvailability(for: .vulkan)?.isAvailable != true
+    }
+
     var body: some View {
         let palette = ForgePlayTheme.palette(mode: appState.themeMode, colorScheme: colorScheme)
 
@@ -120,10 +296,12 @@ struct SteamLaunchView: View {
             steamWorkspaceContent(palette: palette)
         }
         .task {
-            refreshSetupReadiness()
+            await Task.yield()
             if appState.setupStage == .connectLibrary {
                 selectedWorkspace = .storage
             }
+            restoreStandardLaunchConfigurationOnce()
+            refreshGameInputProtectionAuthorizationIfNeeded()
         }
         .task(id: steamStorageHealthTaskID) {
             guard selectedWorkspace == .storage else {
@@ -132,14 +310,8 @@ struct SteamLaunchView: View {
             }
             await refreshSteamStorageHealth(taskID: steamStorageHealthTaskID)
         }
-        .onChange(of: games.count) { _, _ in
-            refreshSetupReadiness()
-        }
-        .onChange(of: SteamLaunchRecordLookup.stateFingerprint(from: launchRecords)) { _, _ in
-            refreshSetupReadiness()
-        }
-        .onChange(of: services.steamEnvironmentRevision) { _, _ in
-            refreshSetupReadiness()
+        .task(id: steamLaunchReadinessTaskID) {
+            await refreshSteamLaunchReadiness(taskID: steamLaunchReadinessTaskID)
         }
         .confirmationDialog(
             appState.localizedFormat("%@을 목록에서 제거할까요?", steamReferencePendingRemoval?.name ?? ""),
@@ -184,6 +356,18 @@ struct SteamLaunchView: View {
             }
         } message: {
             Text(appState.localized("ForgePlay의 macOS 접근 권한과 Wine 드라이브 연결, ForgePlay가 자동 추가한 Steam 등록만 제거합니다. 외장 저장공간의 실제 파일은 삭제하지 않습니다. 실행 중인 Steam에는 다음 실행부터 반영됩니다."))
+        }
+        .confirmationDialog(
+            appState.localized("저장된 표준 Steam 실행 구성을 초기화할까요?"),
+            isPresented: $isShowingStandardLaunchConfigurationResetConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(appState.localized("저장된 구성 초기화"), role: .destructive) {
+                resetBlockedStandardLaunchConfiguration()
+            }
+            Button(appState.localized("취소"), role: .cancel) {}
+        } message: {
+            Text(appState.localized("읽을 수 없는 표준 Steam 실행 구성 기록만 삭제하고 안전한 기본값을 편집 가능한 초안으로 불러옵니다. Steam 프리픽스, 게임 파일, 실행 기록은 변경하지 않으며 기본값은 저장 버튼이나 Steam 실행을 누르기 전까지 저장하지 않습니다."))
         }
         .confirmationDialog(
             appState.localized("Steam 프리픽스를 삭제하고 다시 만들까요?"),
@@ -235,37 +419,88 @@ struct SteamLaunchView: View {
     private func steamLaunchPanel(palette: ForgePlayPalette) -> some View {
         ForgeCard("백엔드 선택 후 실행", systemImage: "play.circle.fill", emphasis: .accent) {
             VStack(alignment: .leading, spacing: 10) {
-                manualRendererSelectionGrid(palette: palette)
-                experimentalGameModeControl(palette: palette)
+                steamLaunchPrimaryActions
 
-                ResponsiveActionRow {
-                    ThemedActionButton(
-                        title: "선택한 백엔드로 Steam 실행",
-                        systemImage: "play.fill",
-                        prominence: .primary,
-                        isDisabled: selectedRendererForNextSteamLaunch == nil ||
-                            appState.isSteamLaunchInProgress ||
-                            appState.steamStorageOperationMountID != nil ||
-                            services.steamPrefixLifecycleCoordinator.isBusy ||
-                            steamLaunchBlocker != nil ||
-                            selectedRendererLaunchBlocker != nil
-                    ) {
-                        launchSteam(
-                            rendererPolicySelection: selectedRendererForNextSteamLaunch,
-                            gameModePolicy: isExperimentalGameModeEnabledForNextLaunch
-                                ? .experimentalRequiredHost
-                                : .standard
-                        )
-                    }
-                    ThemedActionButton(
-                        title: "저장공간 관리",
-                        systemImage: "externaldrive",
-                        prominence: .secondary
-                    ) {
-                        selectedWorkspace = .storage
+                Text(appState.localized(
+                    "이 화면은 모든 게임에 공통으로 사용하는 일반 Steam 실행 경로입니다. 게임별 호환성 프로필은 별도의 Steam 호환성 실행 화면에서 관리하며 이 설정을 덮어쓰지 않습니다."
+                ))
+                .font(.callout)
+                .foregroundStyle(palette.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+
+                steamLaunchConfigurationStateSummaries(palette: palette)
+
+                Divider()
+
+                Text(appState.localized("다음 Steam 실행 설정"))
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(palette.text)
+
+                manualRendererSelectionGrid(palette: palette)
+                Text(
+                    appState.localized(
+                        selectedRendererForNextSteamLaunch?.detailKey ??
+                            "이번 Steam 세션에 적용할 그래픽 백엔드 하나를 직접 선택하세요."
+                    )
+                )
+                .font(.caption)
+                .foregroundStyle(palette.secondaryText)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+                if let dxvkAvailability = cachedRendererAvailability(for: .vulkan),
+                   !dxvkAvailability.isAvailable,
+                   let messageKey = dxvkAvailability.userMessageLocalizationKey {
+                    Label(
+                        appState.localized(messageKey),
+                        systemImage: "exclamationmark.triangle.fill"
+                    )
+                    .font(.caption)
+                    .foregroundStyle(palette.warning)
+                    .fixedSize(horizontal: false, vertical: true)
+                }
+                experimentalGameModeControl(palette: palette)
+                steamCompatibilitySelectionControls(palette: palette)
+                standardKeyboardMappingStatus(palette: palette)
+                ControllerCompatibilityPreflightPanel()
+
+                if let standardLaunchConfigurationErrorMessage {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(standardLaunchConfigurationErrorMessage)
+                            .font(.caption)
+                            .foregroundStyle(palette.warning)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        if standardLaunchConfigurationRestoreIsBlocked ||
+                            standardLaunchConfigurationReloadIsAvailable {
+                            ThemedActionButton(
+                                title: "최신 구성 다시 불러오기",
+                                systemImage: "arrow.clockwise",
+                                prominence: .secondary,
+                                isDisabled: appState.isSteamLaunchInProgress ||
+                                    services.steamPrefixLifecycleCoordinator.isBusy,
+                                controlSize: .small
+                            ) {
+                                reloadLatestStandardLaunchConfiguration()
+                            }
+                            .frame(minWidth: 170, idealWidth: 220, maxWidth: 280)
+                        }
+
+                        if standardLaunchConfigurationRestoreIsBlocked,
+                           savedStandardLaunchConfigurationVersion != nil {
+                            ThemedActionButton(
+                                title: "저장된 구성 초기화",
+                                systemImage: "arrow.counterclockwise",
+                                prominence: .secondary,
+                                isDisabled: appState.isSteamLaunchInProgress ||
+                                    services.steamPrefixLifecycleCoordinator.isBusy,
+                                controlSize: .small
+                            ) {
+                                isShowingStandardLaunchConfigurationResetConfirmation = true
+                            }
+                            .frame(minWidth: 150, idealWidth: 190, maxWidth: 240)
+                        }
                     }
                 }
-                .frame(maxWidth: .infinity)
 
                 ViewThatFits(in: .horizontal) {
                     HStack(alignment: .top, spacing: 10) {
@@ -284,42 +519,7 @@ struct SteamLaunchView: View {
                     }
                 }
 
-                if let selectedRendererForNextSteamLaunch {
-                    Text(appState.localizedFormat(
-                        "이번 실행: %@ 단일 백엔드 · Game Mode %@",
-                        appState.localized(selectedRendererForNextSteamLaunch.labelKey),
-                        gameModeStateLabel(
-                            isEnabled: isExperimentalGameModeEnabledForNextLaunch
-                        )
-                    ))
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(
-                        selectedRendererLaunchBlocker == nil
-                            ? palette.success
-                            : palette.warning
-                    )
-                } else if let activeSteamSessionConfiguration {
-                    Text(appState.localizedFormat(
-                        "현재 Steam 세션: %@ 단일 백엔드 · Game Mode %@ · 다음 Steam 실행에서는 다시 선택해야 합니다.",
-                        appState.localized(
-                            activeSteamSessionConfiguration.rendererSelection.labelKey
-                        ),
-                        gameModeStateLabel(
-                            isEnabled: activeSteamSessionConfiguration.gameModePolicy ==
-                                .experimentalRequiredHost
-                        )
-                    ))
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(palette.success)
-                    .fixedSize(horizontal: false, vertical: true)
-                } else {
-                    Text(appState.localized("백엔드를 선택하기 전에는 Steam을 실행할 수 없습니다. 선택은 자동 저장하거나 자동 변경하지 않습니다."))
-                        .font(.caption)
-                        .foregroundStyle(palette.warning)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                if let blocker = selectedRendererLaunchBlocker {
+                if let blocker = cachedSelectedRendererLaunchBlocker {
                     Text(blocker)
                         .font(.caption)
                         .foregroundStyle(palette.warning)
@@ -352,20 +552,379 @@ struct SteamLaunchView: View {
         }
     }
 
+    private var steamLaunchPrimaryActions: some View {
+        let availability = standardLaunchAvailability
+        return VStack(alignment: .leading, spacing: 8) {
+            ResponsiveActionRow {
+                ThemedActionButton(
+                    title: "Steam 실행",
+                    systemImage: "play.fill",
+                    prominence: .primary,
+                    isDisabled: !availability.isAvailable
+                ) {
+                    launchSteam()
+                }
+                .help(availability.message)
+                .accessibilityHint(availability.message)
+                ThemedActionButton(
+                    title: "설정 저장",
+                    systemImage: "square.and.arrow.down",
+                    prominence: .secondary,
+                    isDisabled: standardLaunchConfigurationSaveIsDisabled
+                ) {
+                    saveStandardLaunchConfigurationFromAction()
+                }
+                ThemedActionButton(
+                    title: "저장공간 관리",
+                    systemImage: "externaldrive",
+                    prominence: .secondary
+                ) {
+                    selectedWorkspace = .storage
+                }
+            }
+
+            if let disabledReason = availability.disabledReason {
+                Label(disabledReason, systemImage: "exclamationmark.circle.fill")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityLabel(disabledReason)
+            }
+
+            if gameInputProtectionAuthorizationBlockerKey != nil {
+                GameInputProtectionAuthorizationPanel(
+                    disablePermissionRequiredProtection:
+                        disablePermissionRequiredGameInputProtection
+                )
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    @ViewBuilder
+    private func steamLaunchConfigurationStateSummaries(
+        palette: ForgePlayPalette
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let steamSessionConfigurationBeingLaunched {
+                steamLaunchConfigurationSummary(
+                    title: appState.localized("Steam 시작 확인 중"),
+                    detail: appState.localized("시작이 끝나기 전에는 이 값을 현재 Steam 세션에 적용된 것으로 표시하지 않습니다."),
+                    systemImage: "clock.arrow.circlepath",
+                    configuration: steamSessionConfigurationBeingLaunched,
+                    accent: palette.primary,
+                    palette: palette
+                )
+            }
+
+            if let nextSteamLaunchDraftConfiguration {
+                steamLaunchConfigurationSummary(
+                    title: appState.localized(
+                        standardLaunchDraftIsSaved
+                            ? "다음 실행 초안 · 저장됨"
+                            : "다음 실행 초안 · 저장되지 않은 변경"
+                    ),
+                    detail: appState.localized(
+                        standardLaunchDraftIsSaved
+                            ? "저장된 표준 구성이며 다음 Steam 실행에 다시 사용됩니다."
+                            : "변경한 구성은 저장한 뒤에만 Steam 실행에 사용할 수 있습니다."
+                    ),
+                    systemImage: standardLaunchDraftIsSaved
+                        ? "tray.and.arrow.down.fill"
+                        : "pencil.circle",
+                    configuration: nextSteamLaunchDraftConfiguration,
+                    accent: cachedSelectedRendererLaunchBlocker == nil
+                        ? palette.primary
+                        : palette.warning,
+                    palette: palette
+                )
+            } else {
+                Text(appState.localized("저장된 Steam 실행 구성을 읽은 뒤 그래픽 백엔드, 네트워크, 오디오 입력을 모두 확인해야 Steam을 실행할 수 있습니다."))
+                    .font(.caption)
+                    .foregroundStyle(palette.warning)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    private func steamLaunchConfigurationSummary(
+        title: String,
+        detail: String,
+        systemImage: String,
+        configuration: ActiveSteamSessionConfiguration,
+        accent: Color,
+        palette: ForgePlayPalette
+    ) -> some View {
+        HStack(alignment: .top, spacing: 9) {
+            Image(systemName: systemImage)
+                .font(.callout.weight(.semibold))
+                .foregroundStyle(accent)
+                .frame(width: 20, alignment: .center)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(palette.text)
+                Text(configurationSummaryText(configuration))
+                    .font(.caption)
+                    .foregroundStyle(palette.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(detail)
+                    .font(.caption2)
+                    .foregroundStyle(palette.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(palette.control)
+        .clipShape(RoundedRectangle(cornerRadius: ForgePlayLayout.controlCornerRadius))
+        .accessibilityElement(children: .combine)
+    }
+
+    private var nextSteamLaunchDraftConfiguration: ActiveSteamSessionConfiguration? {
+        guard let selectedRendererForNextSteamLaunch,
+              let selectedNetworkForNextSteamLaunch,
+              let selectedAudioInputForNextSteamLaunch else {
+            return nil
+        }
+        return ActiveSteamSessionConfiguration(
+            rendererSelection: selectedRendererForNextSteamLaunch,
+            networkSelection: selectedNetworkForNextSteamLaunch,
+            audioInputSelection: selectedAudioInputForNextSteamLaunch,
+            synchronizationSelection: appState.wineSynchronizationSelection,
+            videoMemorySelection: appState.steamVideoMemorySelection,
+            gameModePolicy: isExperimentalGameModeEnabledForNextLaunch
+                ? .experimentalRequiredHost
+                : .standard,
+            fpsCursorPolicy: standardLaunchDraftBase.fpsCursorPolicy,
+            controllerPolicy: standardLaunchDraftBase.controllerPolicy,
+            keyboardMapping: keyboardMappingForNextSteamLaunch
+        )
+    }
+
+    private var standardLaunchAvailability: LaunchAvailability {
+        if standardLaunchConfigurationRestoreState != .completed {
+            return .unavailable(
+                reason: appState.localized("저장된 Steam 실행 구성을 불러오는 중입니다.")
+            )
+        }
+        if standardLaunchConfigurationRestoreIsBlocked {
+            return .unavailable(
+                reason: standardLaunchConfigurationErrorMessage ?? appState.localized(
+                    "저장된 Steam 실행 구성을 안전하게 다시 불러온 뒤 Steam을 실행하세요."
+                )
+            )
+        }
+        if standardLaunchConfigurationReloadIsAvailable {
+            return .unavailable(
+                reason: appState.localized(
+                    "저장된 Steam 실행 구성을 안전하게 다시 불러온 뒤 Steam을 실행하세요."
+                )
+            )
+        }
+        if let blockerKey = gameInputProtectionAuthorizationBlockerKey {
+            return .unavailable(reason: appState.localized(blockerKey))
+        }
+        guard selectedRendererForNextSteamLaunch != nil else {
+            return .unavailable(
+                reason: appState.localized(
+                    "이번 Steam 실행에 사용할 그래픽 백엔드를 직접 선택하세요."
+                )
+            )
+        }
+        guard selectedNetworkForNextSteamLaunch != nil else {
+            return .unavailable(
+                reason: appState.localized(
+                    "이번 Steam 실행에 사용할 네트워크 호환성 방식을 직접 선택하세요."
+                )
+            )
+        }
+        guard selectedAudioInputForNextSteamLaunch != nil else {
+            return .unavailable(
+                reason: appState.localized(
+                    "이번 Steam 실행에서 오디오 입력을 끌지 켤지 직접 선택하세요."
+                )
+            )
+        }
+        guard standardKeyboardMappingIsSupported else {
+            return .unavailable(
+                reason: appState.localized(
+                    "지원되지 않는 이전 키보드 저장 값이 있습니다. System Default로 복원한 뒤 설정을 저장하세요."
+                )
+            )
+        }
+        guard standardLaunchDraftIsSaved else {
+            return .unavailable(
+                reason: appState.localized(
+                    "변경한 Steam 실행 구성은 저장에 성공한 뒤에만 실행할 수 있습니다."
+                )
+            )
+        }
+        if appState.isSteamLaunchInProgress {
+            return .unavailable(reason: appState.localized("Steam 실행이 이미 진행 중입니다."))
+        }
+        if appState.steamStorageOperationMountID != nil {
+            return .unavailable(
+                reason: appState.localized(
+                    "Steam 저장공간 연결 작업이 진행 중입니다. 완료된 뒤 다시 시도하세요."
+                )
+            )
+        }
+        if let blockerKey = StandardSteamLaunchReservationFailurePolicy
+            .preflightBlockerLocalizationKey(
+                isWindowsExecutableLaunchReserved: services
+                    .steamCompatibilitySessionCoordinator
+                    .isWindowsExecutableLaunchReserved
+            ) {
+            return .unavailable(reason: appState.localized(blockerKey))
+        }
+        switch standardSteamCompatibilitySessionHandoff {
+        case .blockedByCompatibilityTransition:
+            return .unavailable(
+                reason: appState.localized(
+                    "호환성 Steam 세션 작업이 이미 진행 중입니다."
+                )
+            )
+        case .blockedByAnotherPrefixOperation:
+            return .unavailable(
+                reason: appState.localized(
+                    "다른 Steam 프리픽스 작업이 이미 진행 중입니다. 완료된 뒤 다시 시도하세요."
+                )
+            )
+        case .ready, .reconcileActiveSession:
+            break
+        }
+        guard steamLaunchReadinessSnapshotIsCurrent else {
+            return .unavailable(
+                reason: appState.localized("Steam 실행 준비 상태를 확인하는 중입니다.")
+            )
+        }
+        if let cachedSteamLaunchBlocker {
+            return .unavailable(reason: cachedSteamLaunchBlocker)
+        }
+        if let cachedSelectedRendererLaunchBlocker {
+            return .unavailable(reason: cachedSelectedRendererLaunchBlocker)
+        }
+        let message = standardSteamCompatibilitySessionHandoff == .reconcileActiveSession
+            ? "관리 Wine 프로세스 종료와 기준 상태 복원을 확인한 뒤 일반 Steam을 실행합니다."
+            : "저장된 설정과 필수 실행 준비가 확인되어 Steam을 실행할 수 있습니다."
+        return .available(message: appState.localized(message))
+    }
+
+    private var gameInputProtectionAuthorizationBlockerKey: String? {
+        SteamLaunchGameInputProtectionAdmissionPolicy.blockerLocalizationKey(
+            policy: services.gameInputProtectionPolicyStore.snapshot(),
+            authorizationStatus: services.gameInputProtectionAuthorizationStatus
+        )
+    }
+
+    private func refreshGameInputProtectionAuthorizationIfNeeded() {
+        guard services.gameInputProtectionPolicyStore.snapshot().requiresEventTap else {
+            return
+        }
+        services.refreshGameInputProtectionAuthorizationStatus()
+    }
+
+    private func disablePermissionRequiredGameInputProtection() {
+        let warning = appState.saveUserPreferencesAfterMutation(
+            to: modelContext
+        ) {
+            appState.disableGameInputEventTapProtection()
+        }
+        guard warning == nil else { return }
+        services.synchronizeGameInputProtectionPolicy(from: appState)
+        appState.setNotice(
+            appState.localized(
+                "권한이 필요한 입력 보호를 껐습니다. Steam은 권한이 필요한 보호 없이 실행할 수 있습니다."
+            ),
+            kind: .success
+        )
+    }
+
+    private var standardSteamCompatibilitySessionHandoff:
+        StandardSteamCompatibilitySessionHandoff
+    {
+        let coordinator = services.steamCompatibilitySessionCoordinator
+        return StandardSteamCompatibilitySessionHandoff.resolve(
+            hasActiveCompatibilitySession: coordinator.hasActiveSession,
+            compatibilityTransitionInProgress: coordinator.isTransitionInProgress,
+            prefixLifecycleIsBusy: services.steamPrefixLifecycleCoordinator.isBusy
+        )
+    }
+
+    private var standardLaunchDraftIsSaved: Bool {
+        guard !standardLaunchConfigurationSaveFailed,
+              !standardLaunchConfigurationReloadIsAvailable,
+              let savedStandardLaunchConfigurationDigest,
+              let savedStandardLaunchConfigurationVersion,
+              savedStandardLaunchConfigurationDigest == savedStandardLaunchConfigurationVersion.digest else {
+            return false
+        }
+        guard let currentSnapshot = try? currentStandardLaunchConfigurationSnapshot() else {
+            return false
+        }
+        return currentSnapshot == standardLaunchDraftBase
+    }
+
+    private func configurationSummaryText(
+        _ configuration: ActiveSteamSessionConfiguration
+    ) -> String {
+        appState.localizedFormat(
+            "그래픽 %@ · 네트워크 %@ · 오디오 입력 %@ · 동기화 %@ · 게임 비디오 메모리 %@ · Game Mode %@ · FPS 커서 %@ · 컨트롤러 %@ · 키보드 %@",
+            appState.localized(configuration.rendererSelection.labelKey),
+            appState.localized(configuration.networkSelection.labelKey),
+            appState.localized(configuration.audioInputSelection.labelKey),
+            appState.localized(configuration.synchronizationSelection.labelKey),
+            localizedVideoMemoryPolicy(configuration.videoMemorySelection),
+            gameModeStateLabel(
+                isEnabled: configuration.gameModePolicy == .experimentalRequiredHost
+            ),
+            configuration.fpsCursorPolicy.rawValue,
+            configuration.controllerPolicy.rawValue,
+            keyboardMappingDisplayValue(configuration.keyboardMapping)
+        )
+    }
+
+    private func keyboardMappingDisplayValue(
+        _ mapping: KeyboardMappingPreference
+    ) -> String {
+        appState.localized(
+            mapping == .systemDefault
+                ? "System Default"
+                : "지원되지 않는 이전 저장 값"
+        )
+    }
+
+    private func localizedVideoMemoryPolicy(
+        _ selection: SteamVideoMemorySelection
+    ) -> String {
+        selection.rawValue == "automatic"
+            ? appState.localized("자동")
+            : appState.localized(selection.rawValue)
+    }
+
     private func manualRendererSelectionGrid(
         palette: ForgePlayPalette
     ) -> some View {
         LazyVGrid(
             columns: [
-                GridItem(.adaptive(minimum: 145, maximum: 240), spacing: 8)
+                GridItem(.adaptive(minimum: 118, maximum: 180), spacing: 6)
             ],
             alignment: .leading,
-            spacing: 8
+            spacing: 6
         ) {
             ForEach(SteamRendererPolicySelection.allCases) { selection in
                 let isSelected = selectedRendererForNextSteamLaunch == selection
-                let compactLabelKey =
-                    selection.forcedPreference?.labelKey ?? selection.labelKey
+                let compactLabelKey = selection.labelKey
+                let runtimeAvailability = cachedRendererAvailability(
+                    for: selection
+                )
+                let runtimeIsUnavailableOrPending = selection == .vulkan &&
+                    runtimeAvailability?.isAvailable != true
+                let helpKey = runtimeAvailability?
+                    .userMessageLocalizationKey ?? selection.detailKey
                 Button {
                     selectedRendererForNextSteamLaunch = selection
                 } label: {
@@ -380,9 +939,9 @@ struct SteamLaunchView: View {
                             .minimumScaleFactor(0.82)
                         Spacer(minLength: 0)
                     }
-                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 8)
+                    .frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
                     .background(isSelected ? palette.primary.opacity(0.10) : palette.control)
                     .overlay {
                         RoundedRectangle(cornerRadius: ForgePlayLayout.controlCornerRadius)
@@ -397,19 +956,243 @@ struct SteamLaunchView: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(
-                    appState.isSteamLaunchInProgress ||
-                        services.steamPrefixLifecycleCoordinator.isBusy
+                    standardLaunchDraftControlsAreDisabled ||
+                        runtimeIsUnavailableOrPending
                 )
-                .help(appState.localized(selection.detailKey))
-                .accessibilityLabel(
-                    appState.localizedFormat(
-                        "%@ 선택",
-                        appState.localized(compactLabelKey)
+                .help(appState.localized(helpKey))
+                .accessibilityLabel(appState.localized(compactLabelKey))
+                .accessibilityValue(
+                    appState.localized(
+                        runtimeIsUnavailableOrPending
+                            ? "사용할 수 없음"
+                            : (isSelected ? "선택됨" : "선택되지 않음")
                     )
                 )
-                .accessibilityHint(appState.localized(selection.detailKey))
+                .accessibilityAddTraits(isSelected ? .isSelected : [])
+                .accessibilityHint(appState.localized(helpKey))
             }
         }
+    }
+
+    private func steamCompatibilitySelectionControls(
+        palette: ForgePlayPalette
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 12) {
+                    networkCompatibilityPicker(palette: palette)
+                    Divider()
+                        .frame(height: 24)
+                    audioInputPicker(palette: palette)
+                    Divider()
+                        .frame(height: 24)
+                    videoMemoryPicker(palette: palette)
+                }
+                VStack(alignment: .leading, spacing: 6) {
+                    networkCompatibilityPicker(palette: palette)
+                    audioInputPicker(palette: palette)
+                    videoMemoryPicker(palette: palette)
+                }
+            }
+
+            Text(compatibilitySelectionDetailText)
+                .font(.caption)
+                .foregroundStyle(palette.secondaryText)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(palette.control)
+        .clipShape(RoundedRectangle(cornerRadius: ForgePlayLayout.controlCornerRadius))
+    }
+
+    private func networkCompatibilityPicker(
+        palette: ForgePlayPalette
+    ) -> some View {
+        HStack(spacing: 8) {
+            Label(appState.localized("네트워크 (베타)"), systemImage: "network")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(palette.text)
+            Spacer(minLength: 4)
+            Picker(
+                appState.localized("네트워크 (베타)"),
+                selection: $selectedNetworkForNextSteamLaunch
+            ) {
+                Text(appState.localized("선택 필요"))
+                    .tag(Optional<SteamNetworkCompatibilitySelection>.none)
+                ForEach(SteamNetworkCompatibilitySelection.allCases) { selection in
+                    Text(appState.localized(selection.labelKey))
+                        .tag(Optional(selection))
+                }
+            }
+            .labelsHidden()
+            .pickerStyle(.menu)
+            .fixedSize()
+            .disabled(standardLaunchDraftControlsAreDisabled)
+            .accessibilityHint(
+                appState.localized(
+                    selectedNetworkForNextSteamLaunch?.detailKey ??
+                        "이번 Steam 실행의 네트워크 호환성 방식을 직접 선택하세요."
+                )
+            )
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func audioInputPicker(
+        palette: ForgePlayPalette
+    ) -> some View {
+        HStack(spacing: 8) {
+            Label(appState.localized("오디오 입력 (베타)"), systemImage: "mic")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(palette.text)
+            Spacer(minLength: 4)
+            Picker(
+                appState.localized("오디오 입력 (베타)"),
+                selection: $selectedAudioInputForNextSteamLaunch
+            ) {
+                Text(appState.localized("선택 필요"))
+                    .tag(Optional<SteamAudioInputSelection>.none)
+                ForEach(SteamAudioInputSelection.allCases) { selection in
+                    Text(appState.localized(selection.labelKey))
+                        .tag(Optional(selection))
+                }
+            }
+            .labelsHidden()
+            .pickerStyle(.menu)
+            .fixedSize()
+            .disabled(standardLaunchDraftControlsAreDisabled)
+            .accessibilityHint(
+                appState.localized(
+                    selectedAudioInputForNextSteamLaunch?.detailKey ??
+                        "이번 Steam 실행에서 Wine의 오디오 입력 노출 여부를 직접 선택하세요."
+                )
+            )
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func videoMemoryPicker(
+        palette: ForgePlayPalette
+    ) -> some View {
+        HStack(spacing: 8) {
+            Label(appState.localized("게임 비디오 메모리 (베타)"), systemImage: "memorychip")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(palette.text)
+            Spacer(minLength: 4)
+            Picker(
+                appState.localized("게임 비디오 메모리 (베타)"),
+                selection: Binding(
+                    get: { appState.steamVideoMemorySelection },
+                    set: { appState.steamVideoMemorySelection = $0 }
+                )
+            ) {
+                ForEach(SteamVideoMemorySelection.allCases) { selection in
+                    Text(appState.localized(selection.labelKey))
+                        .tag(selection)
+                }
+            }
+            .labelsHidden()
+            .pickerStyle(.menu)
+            .fixedSize()
+            .disabled(standardLaunchDraftControlsAreDisabled)
+            .accessibilityValue(
+                appState.localized(appState.steamVideoMemorySelection.labelKey)
+            )
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var compatibilitySelectionDetailText: String {
+        switch (
+            selectedNetworkForNextSteamLaunch,
+            selectedAudioInputForNextSteamLaunch
+        ) {
+        case let (network?, audio?):
+            return [
+                appState.localized(network.detailKey),
+                appState.localized(audio.detailKey)
+            ].joined(separator: " ")
+        case (nil, nil):
+            return appState.localized(
+                "표준 네트워크도 자동 선택하지 않습니다. 네트워크 방식과 오디오 입력을 각각 직접 선택하세요."
+            )
+        case (nil, _):
+            return appState.localized(
+                "이번 Steam 실행의 네트워크 호환성 방식을 직접 선택하세요."
+            )
+        case (_, nil):
+            return appState.localized(
+                "이번 Steam 실행에서 Wine의 오디오 입력 노출 여부를 직접 선택하세요."
+            )
+        }
+    }
+
+    private var standardKeyboardMappingIsSupported: Bool {
+        keyboardMappingForNextSteamLaunch == .systemDefault
+    }
+
+    private func standardKeyboardMappingStatus(
+        palette: ForgePlayPalette
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 7) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Label(appState.localized("키보드 입력"), systemImage: "keyboard")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(palette.text)
+                Spacer(minLength: 8)
+                Text(keyboardMappingDisplayValue(keyboardMappingForNextSteamLaunch))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(
+                        standardKeyboardMappingIsSupported
+                            ? palette.secondaryText
+                            : palette.warning
+                    )
+            }
+
+            Text(
+                appState.localized(
+                    "Steam 프리픽스 내부 키보드 입력은 System Default로 유지됩니다. 호스트 보조키 매핑과 macOS 단축키 보호는 설정 > 입력 및 게임 보호에서 관리합니다."
+                )
+            )
+            .font(.caption)
+            .foregroundStyle(palette.secondaryText)
+            .fixedSize(horizontal: false, vertical: true)
+
+            if !standardKeyboardMappingIsSupported {
+                Text(
+                    appState.localized(
+                        "지원되지 않는 이전 키보드 저장 값이 있습니다. System Default로 복원한 뒤 설정을 저장하세요."
+                    )
+                )
+                .font(.caption)
+                .foregroundStyle(palette.warning)
+                .fixedSize(horizontal: false, vertical: true)
+
+                ThemedActionButton(
+                    title: "System Default로 복원",
+                    systemImage: "arrow.counterclockwise",
+                    prominence: .secondary,
+                    isDisabled: standardLaunchDraftControlsAreDisabled,
+                    controlSize: .small
+                ) {
+                    keyboardMappingForNextSteamLaunch = .systemDefault
+                }
+                .frame(minWidth: 170, idealWidth: 210, maxWidth: 260)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(palette.control)
+        .clipShape(RoundedRectangle(cornerRadius: ForgePlayLayout.controlCornerRadius))
+        .accessibilityHint(
+            appState.localized(
+                "프리픽스 키보드 입력은 읽기 전용이며 System Default로 유지됩니다. 호스트 입력 보호는 설정에서 관리합니다."
+            )
+        )
     }
 
     private func experimentalGameModeControl(
@@ -417,11 +1200,11 @@ struct SteamLaunchView: View {
     ) -> some View {
         Toggle(isOn: $isExperimentalGameModeEnabledForNextLaunch) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(appState.localized("Game Mode (베타)"))
+                Text(appState.localized("Game Mode"))
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(palette.text)
                 Text(appState.localized(
-                    "게임 프로세스를 Game Mode 호스트로 실행합니다. 기본값은 끔이며, 실패하면 게임 실행도 중단됩니다."
+                    "게임 프로세스를 Game Mode 호스트로 실행합니다. 새 구성의 기본값은 켬이며, 저장한 값은 다음 실행에도 다시 사용합니다. 실패하면 게임 실행도 중단됩니다."
                 ))
                 .font(.caption)
                 .foregroundStyle(palette.secondaryText)
@@ -430,21 +1213,360 @@ struct SteamLaunchView: View {
         }
         .toggleStyle(.switch)
         .tint(palette.primary)
+        .disabled(standardLaunchDraftControlsAreDisabled)
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(palette.control)
         .clipShape(RoundedRectangle(cornerRadius: ForgePlayLayout.controlCornerRadius))
         .help(appState.localized(
-            "기본값은 끔입니다. 켜면 이번 Steam 세션에서 Steam이 시작한 게임 프로세스를 동일 프로세스 Game Mode 호스트로 실행합니다. Steam 실행 후 토글은 다음 세션용으로 초기화되며, 현재 세션 상태는 아래에 계속 표시됩니다. 호스트 적용에 실패하면 해당 게임 실행도 중단됩니다."
+            "새 구성의 기본값은 켬입니다. 저장한 값은 다음 Steam 실행에도 다시 사용합니다. 켜면 Steam이 시작한 게임 프로세스를 동일 프로세스 Game Mode 호스트로 실행하며, 호스트 적용에 실패하면 해당 게임 실행도 중단됩니다."
         ))
         .accessibilityHint(appState.localized(
-            "기본값은 끔입니다. 켜면 이번 Steam 세션에서 Steam이 시작한 게임 프로세스를 동일 프로세스 Game Mode 호스트로 실행합니다. Steam 실행 후 토글은 다음 세션용으로 초기화되며, 현재 세션 상태는 아래에 계속 표시됩니다. 호스트 적용에 실패하면 해당 게임 실행도 중단됩니다."
+            "새 구성의 기본값은 켬입니다. 저장한 값은 다음 Steam 실행에도 다시 사용합니다. 켜면 Steam이 시작한 게임 프로세스를 동일 프로세스 Game Mode 호스트로 실행하며, 호스트 적용에 실패하면 해당 게임 실행도 중단됩니다."
         ))
     }
 
     private func gameModeStateLabel(isEnabled: Bool) -> String {
         appState.localized(isEnabled ? "켬" : "끔")
+    }
+
+    private var standardLaunchDraftControlsAreDisabled: Bool {
+        standardLaunchConfigurationRestoreState != .completed ||
+            standardLaunchConfigurationRestoreIsBlocked ||
+            standardLaunchConfigurationReloadIsAvailable ||
+            appState.isSteamLaunchInProgress ||
+            services.steamPrefixLifecycleCoordinator.isBusy
+    }
+
+    private var standardLaunchConfigurationSaveIsDisabled: Bool {
+        selectedRendererForNextSteamLaunch == nil ||
+            selectedRendererRuntimeIsUnavailableOrPending ||
+            selectedNetworkForNextSteamLaunch == nil ||
+            selectedAudioInputForNextSteamLaunch == nil ||
+            !standardKeyboardMappingIsSupported ||
+            standardLaunchConfigurationRestoreState != .completed ||
+            standardLaunchConfigurationRestoreIsBlocked ||
+            standardLaunchConfigurationReloadIsAvailable ||
+            appState.isSteamLaunchInProgress ||
+            appState.steamStorageOperationMountID != nil ||
+            services.steamPrefixLifecycleCoordinator.isBusy
+    }
+
+    private func restoreStandardLaunchConfigurationOnce() {
+        guard standardLaunchConfigurationRestoreState == .pending else { return }
+        standardLaunchConfigurationRestoreState = .restoring
+
+        let repository = SteamLaunchConfigurationRepository(container: modelContext.container)
+        let recoveryVersion: SteamLaunchConfigurationRecordVersion?
+        do {
+            recoveryVersion = try repository.standardRecordVersionForRecovery()
+        } catch {
+            blockStandardLaunchConfigurationRestore(
+                appState.localizedFormat(
+                    "저장된 표준 Steam 실행 구성을 안전하게 복원하지 못했습니다: %@",
+                    appState.localizedError(error)
+                ),
+                recoveryVersion: nil
+            )
+            return
+        }
+
+        do {
+            if let stored = try repository.loadStandard() {
+                let selection = try SteamLaunchConfigurationProductAdapter.productSelection(
+                    from: stored.snapshot
+                )
+                applyRestoredStandardLaunchConfiguration(
+                    snapshot: stored.snapshot,
+                    selection: selection,
+                    savedVersion: stored.version
+                )
+            } else {
+                let snapshot = SteamLaunchConfigurationSnapshot.standardDefault
+                let selection = try SteamLaunchConfigurationProductAdapter.productSelection(
+                    from: snapshot
+                )
+                applyRestoredStandardLaunchConfiguration(
+                    snapshot: snapshot,
+                    selection: selection,
+                    savedVersion: nil
+                )
+            }
+        } catch {
+            blockStandardLaunchConfigurationRestore(
+                appState.localizedFormat(
+                    "저장된 표준 Steam 실행 구성을 안전하게 복원하지 못했습니다: %@",
+                    appState.localizedError(error)
+                ),
+                recoveryVersion: recoveryVersion
+            )
+        }
+    }
+
+    private func applyRestoredStandardLaunchConfiguration(
+        snapshot: SteamLaunchConfigurationSnapshot,
+        selection: SteamLaunchConfigurationProductSelection,
+        savedVersion: SteamLaunchConfigurationRecordVersion?
+    ) {
+        selectedRendererForNextSteamLaunch = selection.rendererPolicySelection
+        selectedNetworkForNextSteamLaunch = selection.networkSelection
+        selectedAudioInputForNextSteamLaunch = selection.audioInputSelection
+        keyboardMappingForNextSteamLaunch = selection.keyboardMapping
+        appState.wineSynchronizationSelection = selection.synchronizationSelection
+        appState.steamVideoMemorySelection = selection.videoMemorySelection
+        isExperimentalGameModeEnabledForNextLaunch =
+            selection.gameModePolicy == .experimentalRequiredHost
+        standardLaunchDraftBase = snapshot
+        savedStandardLaunchConfigurationDigest = savedVersion?.digest
+        savedStandardLaunchConfigurationVersion = savedVersion
+        standardLaunchConfigurationSaveFailed = false
+        standardLaunchConfigurationRestoreIsBlocked = false
+        standardLaunchConfigurationReloadIsAvailable = false
+        standardLaunchConfigurationErrorMessage = nil
+        standardLaunchConfigurationRestoreState = .completed
+    }
+
+    private func blockStandardLaunchConfigurationRestore(
+        _ message: String,
+        recoveryVersion: SteamLaunchConfigurationRecordVersion?
+    ) {
+        selectedRendererForNextSteamLaunch = nil
+        selectedNetworkForNextSteamLaunch = nil
+        selectedAudioInputForNextSteamLaunch = nil
+        keyboardMappingForNextSteamLaunch = .systemDefault
+        savedStandardLaunchConfigurationDigest = nil
+        savedStandardLaunchConfigurationVersion = recoveryVersion
+        standardLaunchConfigurationSaveFailed = false
+        standardLaunchConfigurationRestoreIsBlocked = true
+        standardLaunchConfigurationReloadIsAvailable = false
+        standardLaunchConfigurationErrorMessage = message
+        standardLaunchConfigurationRestoreState = .completed
+    }
+
+    private func resetBlockedStandardLaunchConfiguration() {
+        guard standardLaunchConfigurationRestoreIsBlocked else { return }
+        guard let expectedVersion = savedStandardLaunchConfigurationVersion else { return }
+        guard !appState.isSteamLaunchInProgress,
+              !services.steamPrefixLifecycleCoordinator.isBusy else {
+            standardLaunchConfigurationErrorMessage = appState.localized(
+                "다른 Steam 작업이 끝난 뒤 저장된 구성을 초기화하세요."
+            )
+            return
+        }
+
+        do {
+            let repository = SteamLaunchConfigurationRepository(container: modelContext.container)
+            try repository.resetStandard(expectedVersion: expectedVersion)
+            reloadLatestStandardLaunchConfiguration()
+        } catch {
+            standardLaunchConfigurationRestoreIsBlocked = true
+            presentStandardLaunchConfigurationPersistenceError(
+                error,
+                fallbackFormatKey: "저장된 표준 Steam 실행 구성을 초기화하지 못했습니다: %@"
+            )
+        }
+    }
+
+    private func reloadLatestStandardLaunchConfiguration() {
+        guard !appState.isSteamLaunchInProgress,
+              !services.steamPrefixLifecycleCoordinator.isBusy else {
+            return
+        }
+
+        let repository = SteamLaunchConfigurationRepository(container: modelContext.container)
+        let recoveryVersion: SteamLaunchConfigurationRecordVersion?
+        do {
+            recoveryVersion = try repository.standardRecordVersionForRecovery()
+        } catch {
+            blockStandardLaunchConfigurationRestore(
+                appState.localizedFormat(
+                    "최신 Steam 실행 구성을 다시 불러오지 못했습니다: %@",
+                    appState.localizedError(error)
+                ),
+                recoveryVersion: nil
+            )
+            return
+        }
+
+        do {
+            if let stored = try repository.loadStandard() {
+                let selection = try SteamLaunchConfigurationProductAdapter.productSelection(
+                    from: stored.snapshot
+                )
+                applyRestoredStandardLaunchConfiguration(
+                    snapshot: stored.snapshot,
+                    selection: selection,
+                    savedVersion: stored.version
+                )
+                let notice = appState.setNotice(
+                    appState.localized("최신 Steam 실행 구성을 다시 불러왔습니다."),
+                    kind: .success
+                )
+                clearTaskLater(notice.id)
+            } else {
+                let snapshot = SteamLaunchConfigurationSnapshot.standardDefault
+                let selection = try SteamLaunchConfigurationProductAdapter.productSelection(
+                    from: snapshot
+                )
+                applyRestoredStandardLaunchConfiguration(
+                    snapshot: snapshot,
+                    selection: selection,
+                    savedVersion: nil
+                )
+                let notice = appState.setNotice(
+                    appState.localized(
+                        "저장된 Steam 실행 구성이 없어 안전한 기본값을 저장되지 않은 초안으로 불러왔습니다."
+                    ),
+                    kind: .success
+                )
+                clearTaskLater(notice.id)
+            }
+        } catch {
+            blockStandardLaunchConfigurationRestore(
+                appState.localizedFormat(
+                    "최신 Steam 실행 구성을 다시 불러오지 못했습니다: %@",
+                    appState.localizedError(error)
+                ),
+                recoveryVersion: recoveryVersion
+            )
+        }
+    }
+
+    private func currentStandardLaunchProductSelection() throws
+        -> SteamLaunchConfigurationProductSelection
+    {
+        guard let rendererPolicySelection = selectedRendererForNextSteamLaunch else {
+            throw SteamLaunchConfigurationProductAdapterError.unsupportedOption(
+                category: "draft",
+                value: "renderer-not-selected"
+            )
+        }
+        guard let networkSelection = selectedNetworkForNextSteamLaunch else {
+            throw SteamLaunchConfigurationProductAdapterError.unsupportedOption(
+                category: "draft",
+                value: "network-not-selected"
+            )
+        }
+        guard let audioInputSelection = selectedAudioInputForNextSteamLaunch else {
+            throw SteamLaunchConfigurationProductAdapterError.unsupportedOption(
+                category: "draft",
+                value: "audio-input-not-selected"
+            )
+        }
+        guard standardKeyboardMappingIsSupported else {
+            throw SteamLaunchConfigurationProductAdapterError.unsupportedOption(
+                category: "keyboard-mapping",
+                value: "system-default-required"
+            )
+        }
+        return SteamLaunchConfigurationProductSelection(
+            rendererPolicySelection: rendererPolicySelection,
+            networkSelection: networkSelection,
+            audioInputSelection: audioInputSelection,
+            synchronizationSelection: appState.wineSynchronizationSelection,
+            videoMemorySelection: appState.steamVideoMemorySelection,
+            gameModePolicy: isExperimentalGameModeEnabledForNextLaunch
+                ? .experimentalRequiredHost
+                : .standard,
+            fpsCursorPolicy: standardLaunchDraftBase.fpsCursorPolicy,
+            controllerPolicy: standardLaunchDraftBase.controllerPolicy,
+            keyboardMapping: keyboardMappingForNextSteamLaunch
+        )
+    }
+
+    private func currentStandardLaunchConfigurationSnapshot() throws
+        -> SteamLaunchConfigurationSnapshot
+    {
+        try SteamLaunchConfigurationProductAdapter.standardSnapshot(
+            selection: currentStandardLaunchProductSelection(),
+            preserving: standardLaunchDraftBase
+        )
+    }
+
+    private func persistCurrentStandardLaunchConfiguration() throws
+        -> SavedStandardSteamLaunchConfiguration
+    {
+        let snapshot = try currentStandardLaunchConfigurationSnapshot()
+        let selection = try SteamLaunchConfigurationProductAdapter.productSelection(
+            from: snapshot
+        )
+        let repository = SteamLaunchConfigurationRepository(container: modelContext.container)
+        let stored = try repository.saveStandard(
+            snapshot,
+            expectedVersion: savedStandardLaunchConfigurationVersion
+        )
+        standardLaunchDraftBase = stored.snapshot
+        savedStandardLaunchConfigurationDigest = stored.version.digest
+        savedStandardLaunchConfigurationVersion = stored.version
+        standardLaunchConfigurationSaveFailed = false
+        standardLaunchConfigurationReloadIsAvailable = false
+        standardLaunchConfigurationErrorMessage = nil
+        return SavedStandardSteamLaunchConfiguration(
+            snapshot: stored.snapshot,
+            selection: selection
+        )
+    }
+
+    private func saveStandardLaunchConfigurationFromAction() {
+        guard standardLaunchConfigurationRestoreState == .completed else {
+            appState.setNotice(
+                appState.localized(
+                    "저장된 Steam 실행 구성을 읽은 뒤 그래픽 백엔드, 네트워크, 오디오 입력을 모두 확인해야 Steam을 실행할 수 있습니다."
+                ),
+                kind: .warning
+            )
+            return
+        }
+        guard standardKeyboardMappingIsSupported else {
+            appState.setNotice(
+                appState.localized(
+                    "지원되지 않는 이전 키보드 저장 값이 있습니다. System Default로 복원한 뒤 설정을 저장하세요."
+                ),
+                kind: .warning
+            )
+            return
+        }
+        if selectedRendererRuntimeIsUnavailableOrPending {
+            let messageKey = cachedRendererAvailability(for: .vulkan)?
+                .userMessageLocalizationKey ??
+                SteamRendererPolicyPreference.dxvkRuntimeUnavailableLocalizationKey
+            appState.setNotice(appState.localized(messageKey), kind: .warning)
+            return
+        }
+        do {
+            _ = try persistCurrentStandardLaunchConfiguration()
+            let notice = appState.setNotice(
+                appState.localized("Steam 실행 구성을 저장했습니다."),
+                kind: .success
+            )
+            clearTaskLater(notice.id)
+        } catch {
+            presentStandardLaunchConfigurationPersistenceError(
+                error,
+                fallbackFormatKey: "Steam 실행 구성을 저장하지 못했습니다: %@"
+            )
+        }
+    }
+
+    private func presentStandardLaunchConfigurationPersistenceError(
+        _ error: Error,
+        fallbackFormatKey: String
+    ) {
+        standardLaunchConfigurationSaveFailed = true
+        if let persistenceError = error as? SteamLaunchConfigurationPersistenceError,
+           case .writeConflict = persistenceError {
+            standardLaunchConfigurationReloadIsAvailable = true
+            standardLaunchConfigurationErrorMessage = appState.localized(
+                "다른 창에서 Steam 실행 구성이 변경되었습니다. 현재 초안과 화면 상태는 유지했습니다. 최신 구성을 다시 불러온 뒤 다시 시도하세요."
+            )
+            return
+        }
+
+        standardLaunchConfigurationErrorMessage = appState.localizedFormat(
+            fallbackFormatKey,
+            appState.localizedError(error)
+        )
     }
 
     private func steamEnvironmentMaintenanceRow(palette: ForgePlayPalette) -> some View {
@@ -514,7 +1636,7 @@ struct SteamLaunchView: View {
     private func libraryManagementPanel(palette: ForgePlayPalette) -> some View {
         ForgeCard("Steam 저장공간 연결", systemImage: "externaldrive") {
             VStack(alignment: .leading, spacing: 12) {
-                Text(appState.localized("macOS 폴더를 연결해 ForgePlay에 접근 권한을 부여하세요. 다음 Steam 실행 때 ForgePlay가 실제 steamapps 폴더를 찾아 아래 Windows 경로로 자동 연결합니다."))
+                Text(appState.localized("macOS 저장공간을 연결해 ForgePlay에 접근 권한을 부여하세요. 빈 위치는 Steam이 새 라이브러리를 만들 수 있는 Windows 드라이브로 연결하고, 기존 SteamLibrary는 자동 인식합니다."))
                     .font(.callout)
                     .foregroundStyle(palette.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
@@ -537,7 +1659,7 @@ struct SteamLaunchView: View {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 260), spacing: 12)], spacing: 12) {
                     LibraryActionButton(
                         title: "외장 드라이브/폴더 연결",
-                        detail: "외장 드라이브의 루트 또는 SteamLibrary 폴더를 선택합니다. 실제 steamapps 라이브러리를 전용 Windows 경로로 자동 연결하며 파일은 복사하지 않습니다.",
+                        detail: "빈 외장 드라이브/폴더는 Steam이 새 라이브러리를 만들 수 있는 Windows 드라이브로 연결하고, 기존 SteamLibrary는 자동 인식합니다. 파일은 복사하지 않습니다.",
                         systemImage: "externaldrive.badge.plus",
                         isDisabled: services.isSteamReferenceRefreshInProgress ||
                             services.steamPrefixLifecycleCoordinator.isBusy ||
@@ -668,11 +1790,18 @@ struct SteamLaunchView: View {
         guard let prefix = readiness.steamPrefixURL else {
             return appState.localized("다음 Steam 실행 시 Windows 경로가 배정됩니다")
         }
-        let mappedPaths = services.steamManager
+        let storageDrivePath = SteamManager.mappedWindowsLibraryPath(
+            for: mount.url,
+            prefix: prefix
+        )
+        let libraryPaths = services.steamManager
             .normalizedLibraryRoots(for: mount.url)
             .compactMap {
                 SteamManager.mappedWindowsLibraryPath(for: $0, prefix: prefix)
             }
+        var seen = Set<String>()
+        let mappedPaths = ([storageDrivePath].compactMap { $0 } + libraryPaths)
+            .filter { seen.insert($0.lowercased()).inserted }
         return mappedPaths.isEmpty
             ? appState.localized("다음 Steam 실행 시 Windows 경로가 배정됩니다")
             : mappedPaths.joined(separator: ", ")
@@ -685,6 +1814,10 @@ struct SteamLaunchView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text(appState.localized("이 목록은 Steam 라이브러리 연결과 진단 참고용입니다. ForgePlay는 여기서 게임을 직접 실행하지 않고 Windows용 Steam만 실행합니다."))
                     .font(.callout)
+                    .foregroundStyle(palette.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(appState.localized("게임별 호환성 안내를 사용하려면 진단 대상을 선택하세요. 선택은 게임을 직접 실행하거나 Steam 실행 설정을 자동으로 바꾸지 않습니다."))
+                    .font(.caption)
                     .foregroundStyle(palette.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -714,7 +1847,7 @@ struct SteamLaunchView: View {
                 steamReferenceRecordDetails(game, palette: palette)
                     .layoutPriority(1)
                 Spacer(minLength: 8)
-                steamReferenceRemoveButton(game)
+                steamReferenceRecordActions(game)
             }
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .top, spacing: 12) {
@@ -722,8 +1855,8 @@ struct SteamLaunchView: View {
                     steamReferenceRecordDetails(game, palette: palette)
                         .layoutPriority(1)
                 }
-                steamReferenceRemoveButton(game)
-                    .frame(maxWidth: 260, alignment: .leading)
+                steamReferenceRecordActions(game)
+                    .frame(maxWidth: 360, alignment: .leading)
             }
         }
         .padding(12)
@@ -731,7 +1864,12 @@ struct SteamLaunchView: View {
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(palette.border, lineWidth: 1)
+                .stroke(
+                    isSelectedSteamReference(game)
+                        ? palette.primary.opacity(0.72)
+                        : palette.border,
+                    lineWidth: 1
+                )
         )
     }
 
@@ -765,8 +1903,62 @@ struct SteamLaunchView: View {
                 color: palette.secondaryText,
                 isTextSelectionEnabled: false
             )
+            if isSelectedSteamReference(game) {
+                Label(
+                    appState.localized("진단 대상으로 선택됨"),
+                    systemImage: "checkmark.circle.fill"
+                )
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(palette.primary)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func steamReferenceRecordActions(
+        _ game: SteamGameRecord
+    ) -> some View {
+        ResponsiveActionRow(spacing: 8) {
+            ThemedActionButton(
+                title: isSelectedSteamReference(game)
+                    ? "진단 대상 해제"
+                    : "진단 대상으로 선택",
+                systemImage: isSelectedSteamReference(game)
+                    ? "checkmark.circle.fill"
+                    : "scope",
+                prominence: isSelectedSteamReference(game)
+                    ? .primary
+                    : .secondary,
+                controlSize: .small
+            ) {
+                toggleSteamReferenceSelection(game)
+            }
+            .frame(minWidth: 130, idealWidth: 150, maxWidth: 180)
+            steamReferenceRemoveButton(game)
+        }
+    }
+
+    private func isSelectedSteamReference(_ game: SteamGameRecord) -> Bool {
+        appState.selectedSteamReference?.steamAppId == game.steamAppId
+    }
+
+    private func toggleSteamReferenceSelection(_ game: SteamGameRecord) {
+        if isSelectedSteamReference(game) {
+            appState.selectedSteamReference = nil
+            appState.setNotice(
+                appState.localized("게임별 진단 대상 선택을 해제했습니다."),
+                kind: .success
+            )
+        } else {
+            appState.selectedSteamReference = game.game
+            appState.setNotice(
+                appState.localizedFormat(
+                    "%@을 게임별 진단 대상으로 선택했습니다. Steam은 기존처럼 별도로 실행됩니다.",
+                    game.name
+                ),
+                kind: .success
+            )
+        }
     }
 
     private func steamReferenceRemoveButton(_ game: SteamGameRecord) -> some View {
@@ -782,7 +1974,10 @@ struct SteamLaunchView: View {
     }
 
     private var steamLaunchStatusLabel: String {
-        if steamLaunchBlocker != nil { return appState.localized("Steam 실행 차단") }
+        guard steamLaunchReadinessSnapshotIsCurrent else {
+            return appState.localized("Steam 상태 확인 필요")
+        }
+        if cachedSteamLaunchBlocker != nil { return appState.localized("Steam 실행 차단") }
         if let latestSteamLaunchRecord {
             switch latestSteamLaunchRecord.steamUIVerificationState {
             case .blackScreenSuspected:
@@ -810,7 +2005,8 @@ struct SteamLaunchView: View {
     }
 
     private var steamLaunchStatus: CheckStatus {
-        if steamLaunchBlocker != nil { return .warning }
+        guard steamLaunchReadinessSnapshotIsCurrent else { return .warning }
+        if cachedSteamLaunchBlocker != nil { return .warning }
         if let latestSteamLaunchRecord {
             switch latestSteamLaunchRecord.steamUIVerificationState {
             case .rendered:
@@ -830,7 +2026,10 @@ struct SteamLaunchView: View {
     }
 
     private var steamLaunchDetailText: String {
-        if let blocker = steamLaunchBlocker {
+        guard steamLaunchReadinessSnapshotIsCurrent else {
+            return appState.localized("Steam 상태 확인 필요")
+        }
+        if let blocker = cachedSteamLaunchBlocker {
             return blocker
         }
         if let rendererInspection = readiness.rendererInspection,
@@ -853,10 +2052,13 @@ struct SteamLaunchView: View {
     }
 
     private var latestSteamLaunchRecord: LaunchRecord? {
-        SteamLaunchRecordLookup.latestSteamLaunchRecord(
-            from: launchRecords,
-            environmentGenerationID: readiness.steamEnvironmentGenerationID,
-            environmentCreatedAt: readiness.steamEnvironmentCreatedAt,
+        _ = launchRecords.first?.id
+        return try? services.steamLaunchReadinessRepository.latestDisplayRecord(
+            in: modelContext,
+            environmentIdentity: SteamEnvironmentIdentity(
+                generationID: readiness.steamEnvironmentGenerationID,
+                createdAt: readiness.steamEnvironmentCreatedAt
+            ),
             currentAppSessionID: services.appSessionID
         )
     }
@@ -954,7 +2156,86 @@ struct SteamLaunchView: View {
             : appState.localized(ForgePlayRuntimeCapabilityPolicy.unavailableReasonKey)
     }
 
-    private var steamLaunchBlocker: String? {
+    @MainActor
+    private func refreshSteamLaunchReadiness(taskID: String) async {
+        let readiness = readiness
+        let runtimeExecutable = appState.runtimeExecutableURL
+        let selection = selectedRendererForNextSteamLaunch
+
+        if let blocker = cachedSteamLaunchBlockerBeforeRuntimeInspection(
+            readiness: readiness,
+            runtimeExecutable: runtimeExecutable
+        ) {
+            guard !Task.isCancelled, taskID == steamLaunchReadinessTaskID else { return }
+            steamLaunchReadinessSnapshot = SteamLaunchReadinessSnapshot(
+                taskID: taskID,
+                steamLaunchBlocker: blocker,
+                selectedRendererLaunchBlocker: nil,
+                rendererAvailabilityBySelection: [:]
+            )
+            return
+        }
+
+        guard let runtimeExecutable else { return }
+        let selectionRawValue = selection?.rawValue
+        let runtimeSnapshot: WindowsRuntimeCapabilitySnapshot
+        do {
+            runtimeSnapshot = try await services.windowsRuntimeService
+                .runtimeCapabilitySnapshot(executable: runtimeExecutable)
+        } catch {
+            guard !Task.isCancelled,
+                  taskID == steamLaunchReadinessTaskID else {
+                return
+            }
+            steamLaunchReadinessSnapshot = SteamLaunchReadinessSnapshot(
+                taskID: taskID,
+                steamLaunchBlocker: forgePlayTechnicalErrorSummary(error),
+                selectedRendererLaunchBlocker: nil,
+                rendererAvailabilityBySelection: [:]
+            )
+            return
+        }
+        guard let inspection = await steamLaunchReadinessInspectionCoordinator.inspect(
+            capability: runtimeSnapshot.capability,
+            selectionRawValue: selectionRawValue
+        ) else {
+            return
+        }
+
+        guard !Task.isCancelled, taskID == steamLaunchReadinessTaskID else { return }
+        let steamBlocker = cachedSteamLaunchBlocker(
+            readiness: readiness,
+            inspection: inspection
+        )
+        let rendererBlocker: String?
+        if let selection,
+           let availability = inspection
+            .rendererAvailabilityBySelection[selection],
+           !availability.isAvailable {
+            if let messageKey = availability.userMessageLocalizationKey {
+                rendererBlocker = appState.localized(messageKey)
+            } else {
+                rendererBlocker = appState.localizedFormat(
+                    "%@ 단일 백엔드 파일이 완전하지 않아 이번 Steam 실행을 시작할 수 없습니다. 다른 백엔드를 선택하거나 ForgePlay Runtime을 다시 설치하세요.",
+                    appState.localized(selection.labelKey)
+                )
+            }
+        } else {
+            rendererBlocker = nil
+        }
+        steamLaunchReadinessSnapshot = SteamLaunchReadinessSnapshot(
+            taskID: taskID,
+            steamLaunchBlocker: steamBlocker,
+            selectedRendererLaunchBlocker: rendererBlocker,
+            rendererAvailabilityBySelection:
+                inspection.rendererAvailabilityBySelection
+        )
+    }
+
+    private func cachedSteamLaunchBlockerBeforeRuntimeInspection(
+        readiness: SetupReadiness,
+        runtimeExecutable: URL?
+    ) -> String? {
         #if DEBUG
         if appState.debugAppStoreScreenshotFixture {
             return nil
@@ -966,16 +2247,18 @@ struct SteamLaunchView: View {
         if let issue = readiness.rootIssue {
             return appState.localizedError(issue)
         }
-        guard let runtimeExecutable = appState.runtimeExecutableURL else {
+        guard runtimeExecutable != nil else {
             return appState.localized("ForgePlay Runtime을 먼저 확인하세요.")
         }
-        do {
-            let verification = try services.steamPrefixService.inspectSteamClientCompatibility(runtimeExecutable)
-            guard verification.canLaunchWindowsSteam else {
-                return appState.localized(verification.userMessage)
-            }
-        } catch {
-            return appState.localizedError(error)
+        return nil
+    }
+
+    private func cachedSteamLaunchBlocker(
+        readiness: SetupReadiness,
+        inspection: SteamLaunchRuntimeInspection
+    ) -> String? {
+        guard inspection.canLaunchWindowsSteam else {
+            return appState.localized(inspection.steamLaunchMessageKey)
         }
         if let issue = readiness.steamPrefixIssue {
             return appState.localizedError(issue)
@@ -990,28 +2273,6 @@ struct SteamLaunchView: View {
             return readiness.localizedSteamPrefixStateBlocker(appState: appState)
         }
         return nil
-    }
-
-    private var selectedRendererLaunchBlocker: String? {
-        guard let selection = selectedRendererForNextSteamLaunch,
-              let renderer = selection.forcedPreference,
-              let runtimeExecutable = appState.runtimeExecutableURL else {
-            return nil
-        }
-        do {
-            let capability = try services.windowsRuntimeService.inspectRuntimeCapability(
-                executable: runtimeExecutable
-            )
-            guard renderer.isSatisfied(by: capability) else {
-                return appState.localizedFormat(
-                    "%@ 단일 백엔드 파일이 완전하지 않아 이번 Steam 실행을 시작할 수 없습니다. 다른 백엔드를 선택하거나 ForgePlay Runtime을 다시 설치하세요.",
-                    appState.localized(selection.labelKey)
-                )
-            }
-            return nil
-        } catch {
-            return appState.localizedError(error)
-        }
     }
 
     private var steamPrefixRebuildBlocker: String? {
@@ -1039,7 +2300,7 @@ struct SteamLaunchView: View {
         }
         guard let url = OpenPanelPresenter.chooseDirectory(
             title: appState.localized("외장 드라이브 또는 폴더 선택"),
-            message: appState.localized("외장 드라이브의 최상위 폴더나 SteamLibrary 폴더를 선택하세요. ForgePlay가 실제 steamapps 폴더를 찾아 다음 Steam 실행 때 자동 연결합니다."),
+            message: appState.localized("외장 드라이브의 최상위 폴더, 빈 폴더 또는 기존 SteamLibrary 폴더를 선택하세요. 다음 Steam 실행 때 Windows 드라이브로 연결됩니다."),
             prompt: appState.localized("드라이브 연결"),
             initialDirectory: URL(fileURLWithPath: "/Volumes", isDirectory: true)
         ) else { return }
@@ -1054,7 +2315,7 @@ struct SteamLaunchView: View {
                 )
                 if didRetainAccess {
                     appState.setNotice(
-                        appState.localized("외장 드라이브를 연결했습니다. 다음 Steam 실행 때 기존 Steam 라이브러리를 자동으로 인식하도록 등록합니다."),
+                        appState.localized("Steam 저장공간을 연결했습니다. 다음 Steam 실행에서 새 라이브러리를 만들거나 기존 라이브러리를 자동으로 인식할 수 있습니다."),
                         kind: .success
                     )
                 } else {
@@ -1219,14 +2480,6 @@ struct SteamLaunchView: View {
                     removesStaleRecords: removesStaleRecords
                 )
                 try modelContext.saveOrRollback()
-                services.synchronizeSetupWorkflow(
-                    appState: appState,
-                    hasSteamReferences: scanResult.hasReferencesAfterScan(
-                        existingCount: storageAccess.sourceGameRecordCount,
-                        whenStorageAccessIsComplete: storageAccess.allowsRemovingStaleReferences
-                    ),
-                    launchRecords: launchRecords
-                )
                 let hasAccessWarning = storageAccess.unavailableCount > 0 ||
                     storageAccess.bookmarkPersistenceFailed ||
                     !scanResult.isComplete
@@ -1328,6 +2581,7 @@ struct SteamLaunchView: View {
             return
         }
 
+        let steamLanguage = appState.effectiveSteamClientLanguage
         isRebuildingSteamPrefix = true
         appState.setTask(appState.localized("Steam 프리픽스를 삭제하고 다시 설치하는 중입니다."))
         Task {
@@ -1339,23 +2593,18 @@ struct SteamLaunchView: View {
                 )
                 let prefixPersistenceWarning = savePrefixRecordWarning(metadata: rebuild.metadata)
                 let rollbackCleanupWarning = rebuild.localizedPreviousEnvironmentCleanupWarning(appState: appState)
-                refreshSetupReadiness()
-
                 let installResult = try await services.installSteamInSteamPrefix(
                     runtimeExecutable: runtimeExecutable,
                     installer: installer,
+                    language: steamLanguage,
                     videoMemorySelection: appState.steamVideoMemorySelection,
                     synchronizationSelection: appState.wineSynchronizationSelection
                 )
                 let result = installResult.processResult
-                _ = try await services.refreshSetupWorkflow(
-                    appState: appState,
-                    in: modelContext,
-                    hasSteamReferences: !games.isEmpty,
-                    launchRecords: launchRecords
-                )
+                try await refreshSetupWorkflowUntilCommitted()
 
-                if installResult.installationVerified {
+                switch installResult.verificationState {
+                case .verified, .steamClientServiceNotReady:
                     let message = DiagnosticWarningText.combined(
                         appState.localized("Steam 프리픽스를 새로 만들고 Windows용 Steam을 다시 설치했습니다."),
                         steamInstallerPersistenceWarningForRebuild,
@@ -1367,14 +2616,30 @@ struct SteamLaunchView: View {
                     ) ?? appState.localized("Steam 프리픽스를 새로 만들고 Windows용 Steam을 다시 설치했습니다.")
                     let notice = appState.setNotice(
                         message,
-                        kind: steamInstallerPersistenceWarningForRebuild == nil &&
+                        kind: installResult.verificationState == .verified &&
+                            steamInstallerPersistenceWarningForRebuild == nil &&
                             prefixPersistenceWarning == nil &&
                             rollbackCleanupWarning == nil &&
                             installResult.compatibilityPreparationWarning == nil ? .success : .warning,
                         logURL: result.stdoutLog
                     )
                     clearTaskLater(notice.id)
-                } else {
+                case .steamLanguageNotReady:
+                    appState.setNotice(
+                        DiagnosticWarningText.combined(
+                            appState.localized("Steam 자체 언어 설정을 첫 화면 전에 검증하지 못해 설치 완료로 처리하지 않았습니다."),
+                            steamInstallerPersistenceWarningForRebuild,
+                            prefixPersistenceWarning,
+                            rollbackCleanupWarning,
+                            installResult.compatibilityPreparationWarning.map {
+                                appState.localizedFormat("Steam 실행 경로 자동 준비는 완료하지 못했습니다. 첫 Steam 실행에서 다시 시도합니다: %@", $0)
+                            }
+                        ) ?? appState.localized("Steam 자체 언어 설정을 첫 화면 전에 검증하지 못해 설치 완료로 처리하지 않았습니다."),
+                        kind: .failure,
+                        logURL: result.stderrLog,
+                        diagnosticProcessResult: result
+                    )
+                case .installerFailed, .steamExecutableNotCreatedOrChanged:
                     presentSteamGuidance(
                         for: result,
                         prefixPersistenceWarning: prefixPersistenceWarning
@@ -1395,13 +2660,72 @@ struct SteamLaunchView: View {
         }
     }
 
-    private func launchSteam(
-        rendererPolicySelection: SteamRendererPolicySelection?,
-        gameModePolicy: SteamGameModeLaunchPolicy
-    ) {
-        guard let rendererPolicySelection else {
+    private func refreshSetupWorkflowUntilCommitted() async throws {
+        while true {
+            do {
+                _ = try await services.refreshSetupWorkflow(
+                    appState: appState,
+                    in: modelContext,
+                    hasSteamReferences: !games.isEmpty
+                )
+                return
+            } catch SetupWorkflowRefreshControlError.superseded {
+                try Task.checkCancellation()
+                await Task.yield()
+            }
+        }
+    }
+
+    private func launchSteam() {
+        guard standardLaunchConfigurationRestoreState == .completed else {
+            appState.setNotice(
+                appState.localized(
+                    "저장된 Steam 실행 구성을 읽은 뒤 그래픽 백엔드, 네트워크, 오디오 입력을 모두 확인해야 Steam을 실행할 수 있습니다."
+                ),
+                kind: .warning
+            )
+            return
+        }
+        guard !standardLaunchConfigurationReloadIsAvailable else { return }
+        if let blockerKey = gameInputProtectionAuthorizationBlockerKey {
+            appState.setNotice(appState.localized(blockerKey), kind: .warning)
+            return
+        }
+        guard standardLaunchDraftIsSaved else {
+            appState.setNotice(
+                appState.localized(
+                    "변경한 Steam 실행 구성은 저장에 성공한 뒤에만 실행할 수 있습니다."
+                ),
+                kind: .warning
+            )
+            return
+        }
+        guard selectedRendererForNextSteamLaunch != nil else {
             appState.setNotice(
                 appState.localized("이번 Steam 실행에 사용할 그래픽 백엔드를 직접 선택하세요."),
+                kind: .warning
+            )
+            return
+        }
+        guard selectedNetworkForNextSteamLaunch != nil else {
+            appState.setNotice(
+                appState.localized("이번 Steam 실행에 사용할 네트워크 호환성 방식을 직접 선택하세요."),
+                kind: .warning
+            )
+            return
+        }
+        guard selectedAudioInputForNextSteamLaunch != nil else {
+            appState.setNotice(
+                appState.localized("이번 Steam 실행에서 오디오 입력을 끌지 켤지 직접 선택하세요."),
+                kind: .warning
+            )
+            return
+        }
+        guard standardKeyboardMappingIsSupported else {
+            appState.setNotice(
+                appState.localized(
+                    "지원되지 않는 이전 키보드 저장 값이 있습니다. System Default로 복원한 뒤 설정을 저장하세요."
+                ),
                 kind: .warning
             )
             return
@@ -1417,18 +2741,45 @@ struct SteamLaunchView: View {
             )
             return
         }
-        guard !services.steamPrefixLifecycleCoordinator.isBusy else {
+        if let blockerKey = StandardSteamLaunchReservationFailurePolicy
+            .preflightBlockerLocalizationKey(
+                isWindowsExecutableLaunchReserved: services
+                    .steamCompatibilitySessionCoordinator
+                    .isWindowsExecutableLaunchReserved
+            ) {
+            appState.setNotice(appState.localized(blockerKey), kind: .warning)
+            return
+        }
+        switch standardSteamCompatibilitySessionHandoff {
+        case .blockedByCompatibilityTransition:
+            appState.setNotice(
+                appState.localized("호환성 Steam 세션 작업이 이미 진행 중입니다."),
+                kind: .warning
+            )
+            return
+        case .blockedByAnotherPrefixOperation:
             appState.setNotice(
                 appState.localized("다른 Steam 프리픽스 작업이 이미 진행 중입니다. 완료된 뒤 다시 시도하세요."),
                 kind: .warning
             )
             return
+        case .ready, .reconcileActiveSession:
+            break
         }
-        if let blocker = steamLaunchBlocker {
+        guard steamLaunchReadinessSnapshotIsCurrent else {
+            appState.setNotice(
+                appState.localized(
+                    "ForgePlay Runtime과 Steam 실행 준비 상태를 확인하는 중입니다. 잠시 후 다시 시도하세요."
+                ),
+                kind: .warning
+            )
+            return
+        }
+        if let blocker = cachedSteamLaunchBlocker {
             appState.setNotice(blocker, kind: .warning)
             return
         }
-        if let blocker = selectedRendererLaunchBlocker {
+        if let blocker = cachedSelectedRendererLaunchBlocker {
             appState.setNotice(blocker, kind: .warning)
             return
         }
@@ -1436,27 +2787,116 @@ struct SteamLaunchView: View {
             appState.setNotice(appState.localized("ForgePlay Runtime을 먼저 확인하세요."), kind: .warning)
             return
         }
-        activeSteamSessionConfiguration = nil
-        selectedRendererForNextSteamLaunch = nil
-        isExperimentalGameModeEnabledForNextLaunch = false
+
+        let savedConfiguration: SavedStandardSteamLaunchConfiguration
+        let resolvedJournal: SteamLaunchConfigurationTransactionJournal
+        do {
+            let snapshot = try currentStandardLaunchConfigurationSnapshot()
+            let selection = try currentStandardLaunchProductSelection()
+            guard let savedDigest = savedStandardLaunchConfigurationDigest,
+                  snapshot == standardLaunchDraftBase,
+                  try snapshot.canonicalDigest == savedDigest else {
+                throw SteamLaunchConfigurationPersistenceError.digestMismatch
+            }
+            savedConfiguration = SavedStandardSteamLaunchConfiguration(
+                snapshot: snapshot,
+                selection: selection
+            )
+            resolvedJournal = try SteamLaunchConfigurationProductAdapter.resolvedJournal(
+                for: savedConfiguration.snapshot,
+                transactionID: UUID()
+            )
+        } catch {
+            presentStandardLaunchConfigurationPersistenceError(
+                error,
+                fallbackFormatKey: "Steam 실행 구성을 저장하지 못해 실행을 시작하지 않았습니다: %@"
+            )
+            return
+        }
+
+        let productSelection = savedConfiguration.selection
+        let rendererPolicySelection = productSelection.rendererPolicySelection
+        let networkSelection = productSelection.networkSelection
+        let audioInputSelection = productSelection.audioInputSelection
+        let gameModePolicy = productSelection.gameModePolicy
+        let launchingConfiguration = ActiveSteamSessionConfiguration(
+            rendererSelection: rendererPolicySelection,
+            networkSelection: networkSelection,
+            audioInputSelection: audioInputSelection,
+            synchronizationSelection: productSelection.synchronizationSelection,
+            videoMemorySelection: productSelection.videoMemorySelection,
+            gameModePolicy: gameModePolicy,
+            fpsCursorPolicy: productSelection.fpsCursorPolicy,
+            controllerPolicy: productSelection.controllerPolicy,
+            keyboardMapping: productSelection.keyboardMapping
+        )
+        let compatibilitySessionCoordinator =
+            services.steamCompatibilitySessionCoordinator
+        let standardLaunchReservation: StandardSteamLaunchReservation
+        do {
+            standardLaunchReservation = try compatibilitySessionCoordinator
+                .reserveStandardSteamLaunch(
+                    prefixLifecycleIsBusy:
+                        services.steamPrefixLifecycleCoordinator.isBusy
+                )
+        } catch let ownershipError as NavigationStableSessionOwnershipError {
+            let messageKey = StandardSteamLaunchReservationFailurePolicy
+                .localizationKey(for: ownershipError)
+            appState.setNotice(appState.localized(messageKey), kind: .warning)
+            return
+        } catch {
+            appState.setError(error)
+            return
+        }
+        steamSessionConfigurationBeingLaunched = launchingConfiguration
         appState.isSteamLaunchInProgress = true
         appState.setTask(appState.localized("Windows용 Steam을 실행하는 중입니다."))
-        let selectedGameContext = appState.selectedSteamReference.map {
-            DiagnosticEnvironmentSnapshotCollector.captureLaunchSelectedGameContext($0.game)
+        let selectedGame = appState.selectedSteamReference
+        let selectedGameContext = selectedGame.map {
+            DiagnosticEnvironmentSnapshotCollector.captureLaunchSelectedGameContext($0)
         }
+        let steamClientLanguage = appState.effectiveSteamClientLanguage
         Task {
-            defer { appState.isSteamLaunchInProgress = false }
+            defer {
+                compatibilitySessionCoordinator.releaseStandardSteamLaunchReservation(
+                    standardLaunchReservation
+                )
+                steamSessionConfigurationBeingLaunched = nil
+                appState.isSteamLaunchInProgress = false
+            }
             var launchRecord: LaunchRecord?
             do {
+                if standardLaunchReservation.requiresCompatibilityReconciliation {
+                    appState.setTask(
+                        appState.localized(
+                            "관리 Wine 프로세스 종료와 기준 상태 복원을 확인하는 중입니다."
+                        )
+                    )
+                    try await compatibilitySessionCoordinator
+                        .reconcileCompatibilitySessionForStandardSteamLaunch(
+                            standardLaunchReservation
+                        )
+                }
                 let libraryAccess = try appState.restorePersistedSteamStorageAccess(
                     in: modelContext
                 )
+                try compatibilitySessionCoordinator.validateStandardSteamLaunchReservation(
+                    standardLaunchReservation,
+                    prefixLifecycleIsBusy:
+                        services.steamPrefixLifecycleCoordinator.isBusy
+                )
                 let launch = try await services.steamPrefixService.launchSteam(
                     runtimeExecutable: runtimeExecutable,
+                    steamClientLanguage: steamClientLanguage,
                     rendererPolicySelection: rendererPolicySelection,
+                    networkSelection: networkSelection,
+                    audioInputSelection: audioInputSelection,
+                    fpsCursorPolicy: productSelection.fpsCursorPolicy,
+                    controllerPolicy: productSelection.controllerPolicy,
+                    keyboardMapping: productSelection.keyboardMapping,
                     gameModePolicy: gameModePolicy,
-                    videoMemorySelection: appState.steamVideoMemorySelection,
-                    synchronizationSelection: appState.wineSynchronizationSelection,
+                    videoMemorySelection: productSelection.videoMemorySelection,
+                    synchronizationSelection: productSelection.synchronizationSelection,
                     libraryRoots: libraryAccess.roots,
                     reservedLibraryRoots: libraryAccess.driveReservationRoots,
                     prepareLaunch: {
@@ -1464,7 +2904,9 @@ struct SteamLaunchView: View {
                         let record = try modelContext.createSteamLaunchRecord(
                             appSessionID: services.appSessionID,
                             environmentGenerationID: environmentGenerationID,
-                            selectedGameContext: selectedGameContext
+                            selectedGameContext: selectedGameContext,
+                            resolvedSnapshot: savedConfiguration.snapshot,
+                            resolvedJournal: resolvedJournal
                         )
                         launchRecord = record
                         return record
@@ -1475,21 +2917,33 @@ struct SteamLaunchView: View {
                 let launchPersistenceWarning = steamLaunchRecordLifecycle.saveLaunchResult(result, launchRecord: record)
                 let processUserFacingWarning =
                     result.userFacingWarningLocalizationKey.map(appState.localized)
-                let gameModeVerificationWarning =
-                    gameModePolicy == .experimentalRequiredHost
+                let detachedInputProtectionWarning =
+                    result.inputProtectionDegradedForDetachedHandoff
                     ? appState.localized(
-                        "현재 Steam 세션은 Game Mode(베타) 켬으로 시작했습니다. Steam에서 실행하는 게임 프로세스에 호스트를 적용하며, 전체 화면 실행 중 macOS 메뉴 막대에서 활성 상태를 확인할 수 있습니다."
+                        "이번 Steam 세션에서는 포인터 숨김 보호를 적용하지 못했습니다. Steam과 게임 실행은 계속되며, 권한이 필요한 키 보호 설정에는 이 예외를 적용하지 않습니다."
                     )
                     : nil
-                refreshSetupReadiness()
-                if result.succeeded {
-                    activeSteamSessionConfiguration = ActiveSteamSessionConfiguration(
-                        rendererSelection: rendererPolicySelection,
-                        gameModePolicy: gameModePolicy
+                let gameModeSessionInformation =
+                    gameModePolicy == .experimentalRequiredHost
+                    ? appState.localized(
+                        "현재 Steam 세션은 Game Mode 켬으로 시작했습니다. Steam에서 실행하는 게임 프로세스에 호스트를 적용하며, 전체 화면 실행 중 macOS 메뉴 막대에서 활성 상태를 확인할 수 있습니다."
                     )
+                    : nil
+                let providerReceiptsApplied =
+                    (result.inputCompatibilityReceipt?
+                        .isLifecycleAdmissionVerified == true ||
+                        result.inputProtectionDegradedForDetachedHandoff) &&
+                    result.controllerCompatibilityReceipt?.isStaticPreparationVerified == true &&
+                    result.windowsFontProvisioningReceipt?.isAppliedAndReadBack == true &&
+                    result.rendererRouteApplicationReceipt?.isPreparationVerified == true
+                if result.succeeded && providerReceiptsApplied {
                     let message = result.steamUIStartupRecoveryAttemptCount > 0
                         ? appState.localized("Steam UI 초기화 실패를 자동으로 복구하고 Windows용 Steam을 다시 시작했습니다. 로그인 또는 라이브러리 화면을 확인하세요.")
                         : appState.localized("Windows용 Steam 프로세스를 시작했습니다. Steam 창에서 로그인 또는 라이브러리 화면이 보이는지 확인하세요.")
+                    let hasLaunchWarning = libraryAccess.unavailableCount > 0 ||
+                        processUserFacingWarning != nil ||
+                        detachedInputProtectionWarning != nil ||
+                        launchPersistenceWarning != nil
                     let notice = appState.setNotice(
                         DiagnosticWarningText.combined(
                             message,
@@ -1500,36 +2954,30 @@ struct SteamLaunchView: View {
                                 )
                                 : nil,
                             processUserFacingWarning,
-                            gameModeVerificationWarning,
+                            detachedInputProtectionWarning,
+                            gameModeSessionInformation,
                             launchPersistenceWarning
                         ) ?? message,
-                        kind: .warning,
+                        kind: hasLaunchWarning ? .warning : .success,
                         logURL: result.preferredDiagnosticLog
                     )
-                    if libraryAccess.unavailableCount == 0 &&
-                        processUserFacingWarning == nil &&
-                        gameModeVerificationWarning == nil &&
-                        launchPersistenceWarning == nil {
+                    if !hasLaunchWarning {
                         clearTaskLater(notice.id)
                     }
                 } else if result.forgePlayStatusCode == SteamManager.steamBootstrapUpdateInProgressExitCode {
-                    activeSteamSessionConfiguration = ActiveSteamSessionConfiguration(
-                        rendererSelection: rendererPolicySelection,
-                        gameModePolicy: gameModePolicy
-                    )
                     let message = appState.localized("Windows용 Steam 업데이트가 진행 중입니다. ForgePlay가 Steam을 종료하지 않았습니다. 업데이트가 끝나면 같은 화면에서 Steam UI 렌더링을 확인하세요.")
                     let notice = appState.setNotice(
                         DiagnosticWarningText.combined(
                             message,
                             processUserFacingWarning,
-                            gameModeVerificationWarning,
+                            detachedInputProtectionWarning,
+                            gameModeSessionInformation,
                             launchPersistenceWarning
                         ) ?? message,
                         kind: .warning,
                         logURL: result.preferredDiagnosticLog
                     )
                     if processUserFacingWarning == nil &&
-                        gameModeVerificationWarning == nil &&
                         launchPersistenceWarning == nil {
                         clearTaskLater(notice.id)
                     }
@@ -1539,14 +2987,14 @@ struct SteamLaunchView: View {
                         DiagnosticWarningText.combined(
                             message,
                             processUserFacingWarning,
-                            gameModeVerificationWarning,
+                            detachedInputProtectionWarning,
+                            gameModeSessionInformation,
                             launchPersistenceWarning
                         ) ?? message,
                         kind: .warning,
                         logURL: result.preferredDiagnosticLog
                     )
                     if processUserFacingWarning == nil &&
-                        gameModeVerificationWarning == nil &&
                         launchPersistenceWarning == nil {
                         clearTaskLater(notice.id)
                     }
@@ -1555,7 +3003,8 @@ struct SteamLaunchView: View {
                         for: result,
                         launchPersistenceWarning: launchPersistenceWarning,
                         launchRecordId: record.id,
-                        gameId: record.gameId
+                        gameId: record.gameId,
+                        game: selectedGame
                     )
                     appState.setNotice(
                         appState.localizedFormat("Steam 실행에 실패했습니다. 로그를 확인하세요: %@", result.preferredDiagnosticLog.path),
@@ -1565,12 +3014,12 @@ struct SteamLaunchView: View {
                     )
                 }
             } catch {
-                activeSteamSessionConfiguration = nil
                 if let result = processRunResult(from: error) {
                     presentSteamGuidance(
                         for: result,
                         launchRecordId: launchRecord?.id,
-                        gameId: launchRecord?.gameId ?? selectedGameContext?.steamAppID
+                        gameId: launchRecord?.gameId ?? selectedGameContext?.steamAppID,
+                        game: selectedGame
                     )
                 }
                 steamLaunchRecordLifecycle.handleLaunchFailure(
@@ -1595,14 +3044,6 @@ struct SteamLaunchView: View {
         } catch {
             appState.setError(error)
         }
-    }
-
-    private func refreshSetupReadiness() {
-        services.synchronizeSetupWorkflow(
-            appState: appState,
-            hasSteamReferences: !games.isEmpty,
-            launchRecords: launchRecords
-        )
     }
 
     private func savePrefixRecordWarning(metadata: PrefixMetadata) -> String? {
@@ -1630,14 +3071,12 @@ struct SteamLaunchView: View {
         ) {
             clearTaskLater(notice.id)
         }
-        refreshSetupReadiness()
     }
 
     private func markSteamUIBlackScreen(_ launchRecord: LaunchRecord) {
         if let notice = steamLaunchRecordLifecycle.markSteamUIBlackScreen(launchRecord) {
             clearTaskLater(notice.id)
         }
-        refreshSetupReadiness()
     }
 
     private func presentSteamGuidance(
@@ -1645,12 +3084,16 @@ struct SteamLaunchView: View {
         prefixPersistenceWarning: String? = nil,
         launchPersistenceWarning: String? = nil,
         launchRecordId: String? = nil,
-        gameId: String? = nil
+        gameId: String? = nil,
+        game: SteamGame? = nil
     ) {
         let logSnapshot = LogTextReader.tolerantDiagnosticSnapshot(from: result.diagnosticSourceLogs)
+        let compatibilityGuidance = diagnosticCompatibilityGuidance(for: game)
         let diagnostics = DiagnosticGuidanceBuilder.diagnostics(
             ruleEngine: services.ruleEngine,
             logText: logSnapshot.text,
+            game: game,
+            recipe: compatibilityGuidance.recipe,
             context: .setupOrInstaller,
             language: appState.effectiveLanguageMode,
             fallbackReason: appState.localized("Steam 실행 단계에서 실패했습니다. 로그를 열어 마지막 오류를 확인하고, Steam 프리픽스와 ForgePlay Runtime 상태를 다시 점검하세요.")
@@ -1658,7 +3101,7 @@ struct SteamLaunchView: View {
         let diagnosticPersistenceWarning = saveDiagnosticRecords(
             diagnostics,
             launchRecordId: launchRecordId,
-            gameId: gameId ?? appState.selectedSteamReference?.steamAppId
+            gameId: gameId ?? game?.steamAppId
         )
         appState.presentDiagnosticGuide(
             title: "Steam",
@@ -1668,9 +3111,44 @@ struct SteamLaunchView: View {
                 logSnapshot.readError.map { appState.localizedError($0) },
                 prefixPersistenceWarning,
                 launchPersistenceWarning,
+                compatibilityGuidance.warning,
                 diagnosticPersistenceWarning
             )
         )
+    }
+
+    private func diagnosticCompatibilityGuidance(
+        for game: SteamGame?
+    ) -> (recipe: CompatibilityRecipe?, warning: String?) {
+        guard let game else { return (nil, nil) }
+        do {
+            let steamAppID = game.steamAppId
+            var descriptor = FetchDescriptor<CompatibilityRecipeRecord>(
+                predicate: #Predicate {
+                    $0.steamAppId == steamAppID
+                },
+                sortBy: [SortDescriptor(\.recipeId)]
+            )
+            // Two rows are enough to prove ambiguity without materializing
+            // the complete signed guidance snapshot for every launch failure.
+            descriptor.fetchLimit = 2
+            let storedRecords = try modelContext.fetch(descriptor)
+            return (
+                try services.compatibilityService.diagnosticGuidanceRecipe(
+                    for: game,
+                    storedRecords: storedRecords
+                ),
+                nil
+            )
+        } catch {
+            return (
+                nil,
+                appState.localizedFormat(
+                    "선택한 게임의 호환성 안내를 읽지 못했습니다: %@",
+                    appState.localizedError(error)
+                )
+            )
+        }
     }
 
     private func saveDiagnosticRecords(
@@ -1710,7 +3188,6 @@ struct SteamLaunchView: View {
                 kind: .success
             )
             clearTaskLater(notice.id)
-            refreshSetupReadiness()
         } catch {
             appState.setError(error)
         }

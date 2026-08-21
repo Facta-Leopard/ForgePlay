@@ -2,8 +2,8 @@
 +++ b/dlls/kernelbase/process.c
 @@ -332,6 +332,15 @@ static BOOL forgeplay_game_renderer_policy_enabled(void)
  }
- 
- 
+
+
 +static BOOL forgeplay_steam_game_cef_browser_policy_enabled(void)
 +{
 +    WCHAR value[8];
@@ -18,8 +18,8 @@
      FORGEPLAY_DIRECT3D_NONE = 0,
 @@ -452,6 +461,50 @@ static BOOL forgeplay_ascii_contains_case_insensitive( const char *text, const
  }
- 
- 
+
+
 +static BOOL forgeplay_wide_contains_case_insensitive( const WCHAR *text, const WCHAR *needle )
 +{
 +    SIZE_T text_length, needle_length, i, j;
@@ -69,8 +69,8 @@
  {
 @@ -662,6 +715,94 @@ done:
  }
- 
- 
+
+
 +static BOOL forgeplay_pe_contains_ascii_marker(
 +    const WCHAR *filename, const WCHAR *cur_dir, const char *marker )
 +{
@@ -170,16 +170,23 @@
      };
      const WCHAR *target_name, *cursor;
      WCHAR bridge_required_value[2];
-@@ -1669,6 +1811,12 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
-         tidy_cmdline = policy_cmdline;
-         process_argument_policy_applied = TRUE;
+@@ -2047,6 +2189,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
+     const struct proc_thread_attr *handle_list = NULL, *job_list = NULL;
+     WCHAR name[MAX_PATH];
+     WCHAR *game_renderer_environment = NULL;
++    WCHAR *game_cef_policy_cmdline = NULL;
+     WCHAR *p, *policy_cmdline, *tidy_cmdline = cmd_line;
+     struct forgeplay_game_renderer_route game_renderer_route = {0};
+     RTL_USER_PROCESS_PARAMETERS *params = NULL;
+@@ -1664,5 +1807,11 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
+                 if (attrs->attrs[i].attr == PROC_THREAD_ATTRIBUTE_MACHINE_TYPE)
+                     machine = *(USHORT *)attrs->attrs[i].value;
      }
-+    if ((policy_cmdline = append_forgeplay_steam_game_cef_browser_argument(
++    if ((game_cef_policy_cmdline = append_forgeplay_steam_game_cef_browser_argument(
 +             app_name, cur_dir, tidy_cmdline )))
 +    {
 +        if (tidy_cmdline != cmd_line) HeapFree( GetProcessHeap(), 0, tidy_cmdline );
-+        tidy_cmdline = policy_cmdline;
++        tidy_cmdline = game_cef_policy_cmdline;
 +    }
  
-     /* The PE scanner is authoritative when readable. If it cannot open the
-      * image, preserve the caller's explicit machine attribute instead of
+     if (forgeplay_game_renderer_policy_enabled() &&

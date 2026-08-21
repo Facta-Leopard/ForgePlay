@@ -20,6 +20,14 @@ Microsoft Visual C++ Redistributable, DirectX End-User Runtime, .NET Framework, 
 
 NVIDIA PhysX belongs to NVIDIA. OpenAL and other runtime components belong to their respective owners. ForgePlay uses user-selected installers only when the user chooses to apply them to a local Prefix running through the bundled ForgePlay Runtime.
 
+## Noto Fonts in the Native App
+
+The ForgePlay macOS app bundles unmodified regular and bold files from Noto Sans and the Korean, Japanese, Simplified Chinese, and Traditional Chinese (Taiwan) regional families of Noto Sans CJK. Noto Sans provides the common Latin, Greek, and Cyrillic fallback, including the complete Russian and Ukrainian alphabets; the CJK families provide the region-specific fallback for the app’s eight supported UI localizations. Native macOS UI activation registers only the locale-selected fonts in the ForgePlay process. The explicit Windows font compatibility workflow may separately copy the exact unmodified Noto files into ForgePlay’s managed Wine prefix; it does not install them as host-wide macOS fonts. The fonts are distributed under the SIL Open Font License, Version 1.1, and the exact license texts are included as `NotoSans-OFL.txt` and `NotoSansCJK-OFL.txt` next to the app font resources. Cyrillic glyph coverage does not claim Russian or Ukrainian UI translation. ForgePlay does not claim ownership of the fonts and does not modify or rename them.
+
+`NotoSans-OFL.txt` applies to the bundled Noto Sans files: Copyright 2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic)
+
+`NotoSansCJK-OFL.txt` applies to the bundled Noto Sans CJK files: © 2014-2021 Adobe (http://www.adobe.com/).
+
 ## Wine and Runtime Components
 
 Wine and the renderer/runtime components bundled with ForgePlay are separate open-source projects or vendor technologies with their own licenses and terms. ForgePlay does not claim ownership of those upstream components.
@@ -30,6 +38,6 @@ ForgePlay's Wine modifications are implemented as project-owned patches against 
 
 Bundled ForgePlay Runtime candidates may also include libsdl-org sdl2-compat 2.32.70 for Windows Steam client compatibility. ForgePlay uses this zlib-licensed SDL3-backed compatibility pair to satisfy the 32-bit `Steam/bin/gldriverquery.exe` `SDL2.dll` ABI import. The included `SDL2.dll` file name is an ABI compatibility requirement and is not a renamed Steam `SDL3.dll`.
 
-Bundled ForgePlay Runtime candidates include the regular and bold faces of Nanum Gothic as a Korean glyph fallback for Windows applications running through Wine. Nanum Gothic is copyright (c) 2010, NHN Corporation and is distributed under the SIL Open Font License, Version 1.1. The bundled files come unmodified from a pinned Google Fonts repository revision; their source revision, SHA-256 hashes, copyright notice, Reserved Font Names, and complete license text are included under `Contents/Resources/Runners/ForgePlayRuntime/Legal/NanumGothic/`.
+Bundled ForgePlay Runtime candidates include the regular and bold faces of Nanum Gothic as a Korean glyph fallback for Windows applications running through Wine. Nanum Gothic is copyright (c) 2010, NHN Corporation and is distributed under the SIL Open Font License, Version 1.1. The bundled files are unmodified bytes from the Google Fonts repository at commit `16680f8688ffcd467d2eb2146a9ce0343404581d`: Regular SHA-256 `76f45ef4a6bcff344c837c95a7dcc26e017e38b5846d5ae0cdcb5b86be2e2d31`, Bold SHA-256 `21f9d3a7f1ca82ca1dc9a288e30138b4f1feb6e71fc89b5a9181fed174b6bbe2`, and OFL SHA-256 `eeacf16032901d0ed0456876ec77b8f0fda6b3fecec7d972f8543eb602e6c30f`. The machine-readable source identity, copyright notice, Reserved Font Names, and complete license text are included under `Contents/Resources/Runners/ForgePlayRuntime/Legal/NanumGothic/`.
 
 The ForgePlay macOS app targets Apple Silicon (`arm64`) hosts only. Inside that arm64 app, the current bundled Wine compatibility-runtime candidates use `x86_64` Wine Unix binaries and therefore require Rosetta. Those internal binaries exist only to run Windows game workloads. They must be treated as transitional until an arm64 Wine Unix runtime or other review-safe long-term architecture is available.

@@ -20,6 +20,10 @@ Original source: https://github.com/Facta-Leopard/ForgePlay
 
 Wine, 글꼴, 렌더러, Apple 기술 및 기타 제3자 구성요소에는 각자의 라이선스와 조건이 적용됩니다. ForgePlay는 해당 구성요소의 소유권을 주장하지 않습니다. 직접 배포 DMG에는 별도로 식별된 Apple 구성요소인 D3DMetal이 포함될 수 있으며, Apple 라이선스·승인 고지·원본 서명은 해당 페이로드와 함께 유지됩니다.
 
+## Noto 글꼴 대체 지원
+
+ForgePlay는 네이티브 앱 UI의 글꼴 대체 지원을 위해 수정하지 않은 Noto Sans 및 Noto Sans CJK 파일을 SIL Open Font License 1.1 조건으로 포함합니다. 라이선스 전문은 `NotoSans-OFL.txt`와 `NotoSansCJK-OFL.txt`로 동봉됩니다. 글꼴의 권리는 각 저작권자에게 있으며 ForgePlay는 소유권을 주장하지 않습니다. 앱 UI 언어를 Windows 프리픽스의 글꼴 정책으로 암묵적으로 사용하지도 않습니다.
+
 ## 개인정보와 지원
 
 ForgePlay는 Steam 비밀번호나 Steam Guard 코드를 요청하거나 저장하지 않습니다. 지원 번들은 사용자가 요청할 때만 로컬에서 만들며 공유 전에 직접 검토해야 합니다. 자세한 개인정보 고지, 지원 안내 및 외부 구성요소 고지는 같은 법무 섹션에서 열 수 있습니다.

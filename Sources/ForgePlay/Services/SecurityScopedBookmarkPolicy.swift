@@ -171,9 +171,25 @@ enum SecurityScopedBookmarkPolicy {
         return forgePlayTechnicalErrorSummary(error)
     }
 
+    static var readWriteBookmarkCreationOptions: URL.BookmarkCreationOptions {
+        [.withSecurityScope]
+    }
+
     static func bookmarkData(for url: URL) throws -> Data {
         try url.bookmarkData(
-            options: [.withSecurityScope],
+            options: readWriteBookmarkCreationOptions,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+    }
+
+    static var readOnlyBookmarkCreationOptions: URL.BookmarkCreationOptions {
+        [.withSecurityScope, .securityScopeAllowOnlyReadAccess]
+    }
+
+    static func readOnlyBookmarkData(for url: URL) throws -> Data {
+        try url.bookmarkData(
+            options: readOnlyBookmarkCreationOptions,
             includingResourceValuesForKeys: nil,
             relativeTo: nil
         )
