@@ -371,16 +371,6 @@ select {
   line-height: 1.6;
 }
 
-.beta-note {
-  max-width: 690px;
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin: 20px 0 0;
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-
 .status-light {
   width: 9px;
   height: 9px;
