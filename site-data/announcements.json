@@ -1,37 +1,37 @@
 {
   "$schema": "./announcements.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-08-21",
+  "updatedAt": "2026-08-22",
   "announcements": [
     {
-      "id": "forgeplay-1-1-update-imminent",
-      "type": "project",
-      "publishedAt": "2026-08-21",
+      "id": "forgeplay-1-1-released",
+      "type": "release",
+      "publishedAt": "2026-08-22",
       "featured": true,
       "titles": {
-        "en": "ForgePlay 1.1 update is almost here!",
-        "ko": "ForgePlay 1.1 업데이트 임박!",
-        "de": "Das ForgePlay-1.1-Update steht kurz bevor!",
-        "es": "¡La actualización ForgePlay 1.1 está a punto de llegar!",
-        "fr": "La mise à jour ForgePlay 1.1 arrive bientôt !",
-        "ja": "ForgePlay 1.1アップデート間近！",
-        "zh-Hans": "ForgePlay 1.1 更新即将上线！",
-        "zh-Hant": "ForgePlay 1.1 更新即將推出！"
+        "en": "ForgePlay 1.1 is now available!",
+        "ko": "ForgePlay 1.1 업데이트 출시!",
+        "de": "ForgePlay 1.1 ist jetzt verfügbar!",
+        "es": "¡ForgePlay 1.1 ya está disponible!",
+        "fr": "ForgePlay 1.1 est maintenant disponible !",
+        "ja": "ForgePlay 1.1を公開しました！",
+        "zh-Hans": "ForgePlay 1.1 现已发布！",
+        "zh-Hant": "ForgePlay 1.1 現已推出！"
       },
       "summaries": {
-        "en": "ForgePlay 1.1 promotes Game Mode to a standard feature and expands graphics, network, input, compatibility, diagnostics, and per-game controls.",
-        "ko": "Game Mode 정식 편입과 함께 그래픽·네트워크·입력·호환성·진단·게임별 설정 기능을 대폭 확장하는 ForgePlay 1.1 업데이트가 곧 공개됩니다.",
-        "de": "ForgePlay 1.1 übernimmt den Spielmodus als reguläre Funktion und erweitert Grafik-, Netzwerk-, Eingabe-, Kompatibilitäts-, Diagnose- und spielbezogene Einstellungen.",
-        "es": "ForgePlay 1.1 integra el modo Juego como función estable y amplía los controles de gráficos, red, entrada, compatibilidad, diagnóstico y configuración por juego.",
-        "fr": "ForgePlay 1.1 intègre le mode Jeu comme fonction standard et étend les réglages graphiques, réseau, d’entrée, de compatibilité, de diagnostic et propres à chaque jeu.",
-        "ja": "ForgePlay 1.1ではGame Modeを正式機能として統合し、グラフィックス、ネットワーク、入力、互換性、診断、ゲーム別設定を大幅に拡張します。",
-        "zh-Hans": "ForgePlay 1.1 将 Game Mode 正式纳入核心功能，并扩展图形、网络、输入、兼容性、诊断与游戏独立设置。",
-        "zh-Hant": "ForgePlay 1.1 將 Game Mode 正式納入核心功能，並擴充圖形、網路、輸入、相容性、診斷與遊戲獨立設定。"
+        "en": "ForgePlay 1.1 (build 2) is now available, promoting Game Mode to a standard feature and expanding graphics, network, input, compatibility, diagnostics, and per-game controls.",
+        "ko": "Game Mode 정식 편입과 함께 그래픽·네트워크·입력·호환성·진단·게임별 설정 기능을 대폭 확장한 ForgePlay 1.1(빌드 2)을 공개했습니다.",
+        "de": "ForgePlay 1.1 (Build 2) ist jetzt verfügbar, übernimmt den Spielmodus als reguläre Funktion und erweitert Grafik-, Netzwerk-, Eingabe-, Kompatibilitäts-, Diagnose- und spielbezogene Einstellungen.",
+        "es": "ForgePlay 1.1 (compilación 2) ya está disponible; integra el modo Juego como función estable y amplía los controles de gráficos, red, entrada, compatibilidad, diagnóstico y configuración por juego.",
+        "fr": "ForgePlay 1.1 (build 2) est maintenant disponible ; il intègre le mode Jeu comme fonction standard et étend les réglages graphiques, réseau, d’entrée, de compatibilité, de diagnostic et propres à chaque jeu.",
+        "ja": "Game Modeを正式機能として統合し、グラフィックス、ネットワーク、入力、互換性、診断、ゲーム別設定を大幅に拡張したForgePlay 1.1（ビルド2）を公開しました。",
+        "zh-Hans": "ForgePlay 1.1（构建版本 2）现已发布，正式纳入 Game Mode，并扩展图形、网络、输入、兼容性、诊断与游戏独立设置。",
+        "zh-Hant": "ForgePlay 1.1（建置版本 2）現已推出，正式納入 Game Mode，並擴充圖形、網路、輸入、相容性、診斷與遊戲獨立設定。"
       },
       "paragraphs": {
         "en": [
           "## ForgePlay update details",
-          "※ The following applies to the upcoming version 1.1.",
+          "※ These details apply to released version 1.1 (build 2).",
           "- Game Mode promoted to a standard feature\n- Graphics backend selection added (beta)\n  - D3DMetal NVIDIA beta: NVIDIA GPU detection and DLSS → MetalFX emulation through the MetalFX NGX bridge\n- Selection of the network type exposed to games (beta)\n  - Wi‑Fi compatibility\n  - Ethernet compatibility\n- Microphone input on/off control (beta)\n- Game video-memory settings (beta)\n  - Automatic\n  - 2GB\n  - 4GB\n  - 8GB\n  - 12GB\n  - 16GB\n- Save and reuse standard Steam launch options\n- Independent compatibility profiles per game (beta)\n  - Dedicated compatibility profile for HELLDIVERS 2\n  - Renderer, network, microphone, video-memory, and Game Mode settings\n  - Heap Zero Memory setting\n  - Automatic renderer-exclusion policy for GameGuard helper processes\n- Direct launch of user-selected .exe files (beta)\n  - Launch-backend selection per EXE\n- Protection for game input and macOS shortcuts (beta)\n- Hide the macOS pointer while a game is frontmost (beta)\n- Game-specific modifier-key mapping (beta)\n  - Map Command to Ctrl or Alt\n  - Map Option to Ctrl or Alt\n  - Map Control to Ctrl or Alt\n- Block app quit and window-management shortcuts during games (beta)\n  - Command-Q·W·H·M\n- Block app-switching and search shortcuts during games (beta)\n  - Command-Tab\n  - Shift-Command-Tab\n  - Command-Space\n- Block Mission Control and Spaces keyboard shortcuts (beta)\n- Block macOS screenshot shortcuts (beta)\n- Check controller detection before launching Steam (beta)\n- AWDL on/off control (beta)\n- Apple Intelligence-based AI problem diagnostics (beta)\n- Game compatibility database updates (beta)\n- ForgePlay update checking (beta)\n- App languages\n  - Cyrillic fonts added (beta)\n- App color styles\n  - macOS styling applied to the close button and related controls",
           "## Bug fixes",
           "- Fixed an issue that prevented Steam from creating a library when installing a game after selecting an external drive\n- Fixed an issue where Rosetta AVX was not applied\n- Fixed an issue where DirectX 12 was not applied",
@@ -44,7 +44,7 @@
         ],
         "ko": [
           "## ForgePlay 업데이트 내용",
-          "※ 업데이트될 1.1 버전 기준입니다.",
+          "※ 출시된 1.1 버전(빌드 2) 기준입니다.",
           "- Game Mode 본 기능 정식 편입\n- 그래픽 백엔드 선택 추가(베타)\n  - D3DMetal NVIDIA 베타: NVIDIA GPU 식별 및 MetalFX NGX 브리지를 통한 DLSS -> MetalFX 에뮬레이팅\n- 게임에 전달되는 네트워크 유형 선택(베타)\n  - Wi‑Fi 호환성\n  - Ethernet 호환성\n- 마이크 입력 켜기·끄기(베타)\n- 게임 비디오 메모리 설정(베타)\n  - 자동\n  - 2GB\n  - 4GB\n  - 8GB\n  - 12GB\n  - 16GB\n- 표준 Steam 실행 설정 저장 및 재사용\n- 게임별 독립 호환성 프로필(베타)\n  - HELLDIVERS 2 전용 호환성 프로필\n  - 렌더러·네트워크·마이크·비디오 메모리·Game Mode 설정\n  - Heap Zero Memory 설정\n  - GameGuard 보조 프로세스 자동 렌더러 제외 정책\n- 사용자가 선택한 .exe 파일 직접 실행(베타)\n  - EXE별 실행 백엔드 선택\n- 게임 입력 및 macOS 단축키 보호(베타)\n- 게임이 전면에 있을 때 macOS 마우스 포인터 숨기기(베타)\n- 게임용 보조키 바인딩을 통한 매핑(베타)\n  - Command 키를 Ctrl 또는 Alt로\n  - Option 키를 Ctrl 또는 Alt로\n  - Control 키를 Ctrl 또는 Alt로\n- 게임 중 앱 종료·창 관리 단축키 차단(베타)\n  - Command-Q·W·H·M\n- 게임 중 앱 전환·검색 단축키 차단(베타)\n  - Command-Tab\n  - Shift-Command-Tab\n  - Command-Space\n- Mission Control·Spaces 키보드 단축키 차단(베타)\n- macOS 스크린샷 단축키 차단(베타)\n- Steam 실행 전 컨트롤러 감지 상태 확인(베타)\n- AWDL 켜기·끄기(베타)\n- Apple Intelligence 기반 AI 문제 진단(베타)\n- 게임 호환성 DB 업데이트 기능(베타)\n- ForgePlay 업데이트 확인 기능(베타)\n- 앱 언어\n  - 키릴 문자 폰트 추가(베타)\n- 앱 색상 스타일\n  - 닫기 버튼 등 MacOS 스타일 적용",
           "## 버그 수정",
           "- 스팀 내 외장 드라이브 선택 후, 게임 설치시 라이브러리 생성 불가 문제 수정\n- Rosseta AVX 적용이 되지 않던 문제 수정\n- DirectX12 적용이 되지 않던 문제 수정",
@@ -57,7 +57,7 @@
         ],
         "de": [
           "## ForgePlay-Update-Inhalte",
-          "※ Die folgenden Angaben beziehen sich auf die kommende Version 1.1.",
+          "※ Diese Angaben beziehen sich auf die veröffentlichte Version 1.1 (Build 2).",
           "- Spielmodus als reguläre Funktion integriert\n- Auswahl des Grafik-Backends hinzugefügt (Beta)\n  - D3DMetal NVIDIA Beta: NVIDIA-GPU-Erkennung und DLSS-zu-MetalFX-Emulation über die MetalFX-NGX-Bridge\n- Auswahl des an Spiele übermittelten Netzwerktyps (Beta)\n  - Wi‑Fi-Kompatibilität\n  - Ethernet-Kompatibilität\n- Mikrofoneingang ein- und ausschalten (Beta)\n- Videospeicher-Einstellungen für Spiele (Beta)\n  - Automatisch\n  - 2GB\n  - 4GB\n  - 8GB\n  - 12GB\n  - 16GB\n- Standard-Steam-Startoptionen speichern und wiederverwenden\n- Unabhängige Kompatibilitätsprofile pro Spiel (Beta)\n  - Eigenes Kompatibilitätsprofil für HELLDIVERS 2\n  - Renderer-, Netzwerk-, Mikrofon-, Videospeicher- und Spielmodus-Einstellungen\n  - Heap-Zero-Memory-Einstellung\n  - Automatischer Renderer-Ausschluss für GameGuard-Hilfsprozesse\n- Direkter Start benutzerseitig ausgewählter .exe-Dateien (Beta)\n  - Auswahl des Start-Backends pro EXE\n- Schutz von Spieleingaben und macOS-Tastenkürzeln (Beta)\n- macOS-Mauszeiger ausblenden, wenn das Spiel im Vordergrund ist (Beta)\n- Zuordnung von Sondertasten für Spiele (Beta)\n  - Command zu Ctrl oder Alt\n  - Option zu Ctrl oder Alt\n  - Control zu Ctrl oder Alt\n- Tastenkürzel zum Beenden von Apps und Verwalten von Fenstern im Spiel blockieren (Beta)\n  - Command-Q·W·H·M\n- Tastenkürzel für App-Wechsel und Suche im Spiel blockieren (Beta)\n  - Command-Tab\n  - Shift-Command-Tab\n  - Command-Space\n- Tastenkürzel für Mission Control und Spaces blockieren (Beta)\n- macOS-Bildschirmfoto-Tastenkürzel blockieren (Beta)\n- Controller-Erkennung vor dem Steam-Start prüfen (Beta)\n- AWDL ein- und ausschalten (Beta)\n- KI-Fehlerdiagnose auf Basis von Apple Intelligence (Beta)\n- Aktualisierung der Spielekompatibilitätsdatenbank (Beta)\n- ForgePlay-Updateprüfung (Beta)\n- App-Sprachen\n  - Kyrillische Schriftarten hinzugefügt (Beta)\n- App-Farbstile\n  - macOS-Stil für Schließen-Schaltfläche und weitere Bedienelemente",
           "## Fehlerbehebungen",
           "- Problem behoben, durch das Steam nach Auswahl eines externen Laufwerks beim Installieren eines Spiels keine Bibliothek erstellen konnte\n- Problem behoben, durch das Rosetta AVX nicht angewendet wurde\n- Problem behoben, durch das DirectX 12 nicht angewendet wurde",
@@ -70,7 +70,7 @@
         ],
         "es": [
           "## Contenido de la actualización de ForgePlay",
-          "※ La información siguiente corresponde a la próxima versión 1.1.",
+          "※ La información siguiente corresponde a la versión 1.1 publicada (compilación 2).",
           "- Integración del modo Juego como función estable\n- Selección del backend gráfico (beta)\n  - D3DMetal NVIDIA beta: detección de GPU NVIDIA y emulación de DLSS a MetalFX mediante el puente MetalFX NGX\n- Selección del tipo de red que se comunica a los juegos (beta)\n  - Compatibilidad Wi‑Fi\n  - Compatibilidad Ethernet\n- Activación y desactivación de la entrada de micrófono (beta)\n- Ajustes de memoria de vídeo para juegos (beta)\n  - Automático\n  - 2GB\n  - 4GB\n  - 8GB\n  - 12GB\n  - 16GB\n- Guardado y reutilización de opciones de lanzamiento estándar de Steam\n- Perfiles de compatibilidad independientes por juego (beta)\n  - Perfil de compatibilidad específico para HELLDIVERS 2\n  - Ajustes de renderizador, red, micrófono, memoria de vídeo y modo Juego\n  - Ajuste Heap Zero Memory\n  - Exclusión automática del renderizador para procesos auxiliares de GameGuard\n- Ejecución directa de archivos .exe elegidos por el usuario (beta)\n  - Selección del backend de ejecución por EXE\n- Protección de la entrada del juego y los atajos de macOS (beta)\n- Ocultar el puntero de macOS cuando el juego está en primer plano (beta)\n- Asignación de teclas modificadoras para juegos (beta)\n  - Command a Ctrl o Alt\n  - Option a Ctrl o Alt\n  - Control a Ctrl o Alt\n- Bloqueo de atajos para cerrar apps y gestionar ventanas durante el juego (beta)\n  - Command-Q·W·H·M\n- Bloqueo de atajos para cambiar de app y buscar durante el juego (beta)\n  - Command-Tab\n  - Shift-Command-Tab\n  - Command-Space\n- Bloqueo de atajos de teclado de Mission Control y Spaces (beta)\n- Bloqueo de atajos de captura de pantalla de macOS (beta)\n- Comprobación de detección del mando antes de iniciar Steam (beta)\n- Activación y desactivación de AWDL (beta)\n- Diagnóstico de problemas con IA basada en Apple Intelligence (beta)\n- Actualización de la base de datos de compatibilidad de juegos (beta)\n- Comprobación de actualizaciones de ForgePlay (beta)\n- Idiomas de la app\n  - Fuentes cirílicas añadidas (beta)\n- Estilos de color de la app\n  - Estilo de macOS aplicado al botón de cierre y otros controles",
           "## Correcciones de errores",
           "- Corregido un problema que impedía a Steam crear una biblioteca al instalar un juego después de seleccionar una unidad externa\n- Corregido un problema por el que Rosetta AVX no se aplicaba\n- Corregido un problema por el que DirectX 12 no se aplicaba",
@@ -83,7 +83,7 @@
         ],
         "fr": [
           "## Contenu de la mise à jour ForgePlay",
-          "※ Les informations suivantes concernent la prochaine version 1.1.",
+          "※ Les informations suivantes concernent la version 1.1 publiée (build 2).",
           "- Intégration du mode Jeu comme fonction standard\n- Ajout du choix du backend graphique (bêta)\n  - D3DMetal NVIDIA bêta : détection des GPU NVIDIA et émulation de DLSS vers MetalFX via le pont MetalFX NGX\n- Choix du type de réseau présenté aux jeux (bêta)\n  - Compatibilité Wi‑Fi\n  - Compatibilité Ethernet\n- Activation et désactivation de l’entrée microphone (bêta)\n- Réglages de mémoire vidéo pour les jeux (bêta)\n  - Automatique\n  - 2GB\n  - 4GB\n  - 8GB\n  - 12GB\n  - 16GB\n- Enregistrement et réutilisation des options de lancement Steam standard\n- Profils de compatibilité indépendants par jeu (bêta)\n  - Profil de compatibilité dédié à HELLDIVERS 2\n  - Réglages du moteur de rendu, du réseau, du microphone, de la mémoire vidéo et du mode Jeu\n  - Réglage Heap Zero Memory\n  - Exclusion automatique du moteur de rendu pour les processus auxiliaires GameGuard\n- Lancement direct des fichiers .exe choisis par l’utilisateur (bêta)\n  - Choix du backend de lancement pour chaque EXE\n- Protection des entrées du jeu et des raccourcis macOS (bêta)\n- Masquage du pointeur macOS lorsque le jeu est au premier plan (bêta)\n- Mappage des touches de modification pour les jeux (bêta)\n  - Command vers Ctrl ou Alt\n  - Option vers Ctrl ou Alt\n  - Control vers Ctrl ou Alt\n- Blocage des raccourcis de fermeture d’app et de gestion des fenêtres pendant le jeu (bêta)\n  - Command-Q·W·H·M\n- Blocage des raccourcis de changement d’app et de recherche pendant le jeu (bêta)\n  - Command-Tab\n  - Shift-Command-Tab\n  - Command-Space\n- Blocage des raccourcis clavier Mission Control et Spaces (bêta)\n- Blocage des raccourcis de capture d’écran macOS (bêta)\n- Vérification de la détection de la manette avant le lancement de Steam (bêta)\n- Activation et désactivation d’AWDL (bêta)\n- Diagnostic des problèmes par IA avec Apple Intelligence (bêta)\n- Mise à jour de la base de compatibilité des jeux (bêta)\n- Recherche de mises à jour ForgePlay (bêta)\n- Langues de l’app\n  - Ajout de polices cyrilliques (bêta)\n- Styles de couleur de l’app\n  - Style macOS appliqué au bouton de fermeture et aux contrôles associés",
           "## Corrections de bugs",
           "- Correction d’un problème empêchant Steam de créer une bibliothèque lors de l’installation d’un jeu après la sélection d’un disque externe\n- Correction d’un problème empêchant l’application de Rosetta AVX\n- Correction d’un problème empêchant l’application de DirectX 12",
@@ -96,7 +96,7 @@
         ],
         "ja": [
           "## ForgePlayアップデート内容",
-          "※ 以下は今後公開されるバージョン1.1の内容です。",
+          "※ 以下は公開済みのバージョン1.1（ビルド2）の内容です。",
           "- Game Modeを正式機能として統合\n- グラフィックスバックエンド選択を追加（ベータ）\n  - D3DMetal NVIDIAベータ：NVIDIA GPUの識別とMetalFX NGXブリッジによるDLSSからMetalFXへのエミュレーション\n- ゲームに渡すネットワーク種類の選択（ベータ）\n  - Wi‑Fi互換性\n  - Ethernet互換性\n- マイク入力のオン・オフ（ベータ）\n- ゲーム用ビデオメモリ設定（ベータ）\n  - 自動\n  - 2GB\n  - 4GB\n  - 8GB\n  - 12GB\n  - 16GB\n- 標準Steam起動設定の保存と再利用\n- ゲーム別の独立した互換性プロファイル（ベータ）\n  - HELLDIVERS 2専用互換性プロファイル\n  - レンダラー、ネットワーク、マイク、ビデオメモリ、Game Mode設定\n  - Heap Zero Memory設定\n  - GameGuard補助プロセスをレンダラーから自動除外するポリシー\n- ユーザーが選択した.exeファイルの直接実行（ベータ）\n  - EXEごとの起動バックエンド選択\n- ゲーム入力とmacOSショートカットの保護（ベータ）\n- ゲームが最前面のときmacOSマウスポインタを非表示（ベータ）\n- ゲーム用修飾キーのマッピング（ベータ）\n  - CommandキーをCtrlまたはAltへ\n  - OptionキーをCtrlまたはAltへ\n  - ControlキーをCtrlまたはAltへ\n- ゲーム中のアプリ終了・ウインドウ管理ショートカットをブロック（ベータ）\n  - Command-Q·W·H·M\n- ゲーム中のアプリ切り替え・検索ショートカットをブロック（ベータ）\n  - Command-Tab\n  - Shift-Command-Tab\n  - Command-Space\n- Mission Control・Spacesのキーボードショートカットをブロック（ベータ）\n- macOSスクリーンショットショートカットをブロック（ベータ）\n- Steam起動前のコントローラー検出状態確認（ベータ）\n- AWDLのオン・オフ（ベータ）\n- Apple IntelligenceベースのAI問題診断（ベータ）\n- ゲーム互換性データベース更新（ベータ）\n- ForgePlayアップデート確認（ベータ）\n- アプリ言語\n  - キリル文字フォントを追加（ベータ）\n- アプリのカラースタイル\n  - 閉じるボタンなどにmacOSスタイルを適用",
           "## バグ修正",
           "- Steamで外付けドライブを選択した後、ゲームのインストール時にライブラリを作成できなかった問題を修正\n- Rosetta AVXが適用されなかった問題を修正\n- DirectX 12が適用されなかった問題を修正",
@@ -109,7 +109,7 @@
         ],
         "zh-Hans": [
           "## ForgePlay 更新内容",
-          "※ 以下内容以即将发布的 1.1 版本为准。",
+          "※ 以下内容以已发布的 1.1 版本（构建版本 2）为准。",
           "- Game Mode 正式纳入核心功能\n- 新增图形后端选择（测试版）\n  - D3DMetal NVIDIA 测试版：识别 NVIDIA GPU，并通过 MetalFX NGX 桥接将 DLSS 模拟为 MetalFX\n- 选择传递给游戏的网络类型（测试版）\n  - Wi‑Fi 兼容模式\n  - Ethernet 兼容模式\n- 麦克风输入开关（测试版）\n- 游戏显存设置（测试版）\n  - 自动\n  - 2GB\n  - 4GB\n  - 8GB\n  - 12GB\n  - 16GB\n- 保存并重复使用标准 Steam 启动设置\n- 按游戏独立兼容性配置（测试版）\n  - HELLDIVERS 2 专用兼容性配置\n  - 渲染器、网络、麦克风、显存和 Game Mode 设置\n  - Heap Zero Memory 设置\n  - 自动将 GameGuard 辅助进程排除在渲染器之外\n- 直接运行用户选择的 .exe 文件（测试版）\n  - 按 EXE 选择启动后端\n- 保护游戏输入和 macOS 快捷键（测试版）\n- 游戏位于前台时隐藏 macOS 鼠标指针（测试版）\n- 游戏修饰键映射（测试版）\n  - 将 Command 映射为 Ctrl 或 Alt\n  - 将 Option 映射为 Ctrl 或 Alt\n  - 将 Control 映射为 Ctrl 或 Alt\n- 游戏中屏蔽退出 App 和窗口管理快捷键（测试版）\n  - Command-Q·W·H·M\n- 游戏中屏蔽 App 切换和搜索快捷键（测试版）\n  - Command-Tab\n  - Shift-Command-Tab\n  - Command-Space\n- 屏蔽 Mission Control 和 Spaces 键盘快捷键（测试版）\n- 屏蔽 macOS 截图快捷键（测试版）\n- 启动 Steam 前检查手柄检测状态（测试版）\n- AWDL 开关（测试版）\n- 基于 Apple Intelligence 的 AI 问题诊断（测试版）\n- 游戏兼容性数据库更新（测试版）\n- ForgePlay 更新检查（测试版）\n- App 语言\n  - 新增西里尔文字体（测试版）\n- App 配色样式\n  - 关闭按钮等采用 macOS 样式",
           "## 错误修复",
           "- 修复在 Steam 中选择外置硬盘后安装游戏时无法创建游戏库的问题\n- 修复 Rosetta AVX 未能应用的问题\n- 修复 DirectX 12 未能应用的问题",
@@ -122,7 +122,7 @@
         ],
         "zh-Hant": [
           "## ForgePlay 更新內容",
-          "※ 以下內容以即將推出的 1.1 版本為準。",
+          "※ 以下內容以已推出的 1.1 版本（建置版本 2）為準。",
           "- Game Mode 正式納入核心功能\n- 新增圖形後端選擇（測試版）\n  - D3DMetal NVIDIA 測試版：識別 NVIDIA GPU，並透過 MetalFX NGX 橋接將 DLSS 模擬為 MetalFX\n- 選擇傳遞給遊戲的網路類型（測試版）\n  - Wi‑Fi 相容模式\n  - Ethernet 相容模式\n- 麥克風輸入開關（測試版）\n- 遊戲視訊記憶體設定（測試版）\n  - 自動\n  - 2GB\n  - 4GB\n  - 8GB\n  - 12GB\n  - 16GB\n- 儲存並重複使用標準 Steam 啟動設定\n- 各遊戲獨立相容性設定檔（測試版）\n  - HELLDIVERS 2 專用相容性設定檔\n  - 轉譯器、網路、麥克風、視訊記憶體和 Game Mode 設定\n  - Heap Zero Memory 設定\n  - 自動將 GameGuard 輔助程序排除在轉譯器之外\n- 直接執行使用者選擇的 .exe 檔案（測試版）\n  - 依 EXE 選擇啟動後端\n- 保護遊戲輸入和 macOS 快捷鍵（測試版）\n- 遊戲位於最前方時隱藏 macOS 滑鼠指標（測試版）\n- 遊戲輔助鍵映射（測試版）\n  - 將 Command 映射為 Ctrl 或 Alt\n  - 將 Option 映射為 Ctrl 或 Alt\n  - 將 Control 映射為 Ctrl 或 Alt\n- 遊戲中封鎖結束 App 和視窗管理快捷鍵（測試版）\n  - Command-Q·W·H·M\n- 遊戲中封鎖 App 切換和搜尋快捷鍵（測試版）\n  - Command-Tab\n  - Shift-Command-Tab\n  - Command-Space\n- 封鎖 Mission Control 和 Spaces 鍵盤快捷鍵（測試版）\n- 封鎖 macOS 截圖快捷鍵（測試版）\n- 啟動 Steam 前檢查控制器偵測狀態（測試版）\n- AWDL 開關（測試版）\n- 基於 Apple Intelligence 的 AI 問題診斷（測試版）\n- 遊戲相容性資料庫更新（測試版）\n- ForgePlay 更新檢查（測試版）\n- App 語言\n  - 新增西里爾文字型（測試版）\n- App 配色樣式\n  - 關閉按鈕等採用 macOS 樣式",
           "## 錯誤修正",
           "- 修正在 Steam 中選擇外接硬碟後安裝遊戲時無法建立遊戲庫的問題\n- 修正 Rosetta AVX 未能套用的問題\n- 修正 DirectX 12 未能套用的問題",
@@ -134,7 +134,7 @@
           "ForgePlay 是全球首款在 Apple Silicon Mac 上以 macOS 原生 Game Mode 執行 Windows 遊戲的 App。"
         ]
       },
-      "href": "updates.html#update-forgeplay-1-1-update-imminent"
+      "href": "updates.html#update-forgeplay-1-1-released"
     },
     {
       "id": "next-forgeplay-update-underway",
