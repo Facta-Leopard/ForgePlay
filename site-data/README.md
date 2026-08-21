@@ -87,6 +87,12 @@ provides the full notice on the updates page while the homepage keeps the short
 summary. Validate changes against `announcements.schema.json` before
 publication.
 
+Localized paragraph items remain plain text and are always inserted with
+`textContent`. The updates renderer recognizes a deliberately small set of
+line-oriented markers for structured notices: `## ` for a section heading,
+`- ` for a list item, two leading spaces before `- ` for a nested list item,
+and an exact `---` item for a divider. No raw HTML or Markdown is rendered.
+
 Routine compatibility database additions and result changes must not create
 project notices. They belong only in `compatibility-games.json` and appear on
 the compatibility page and its live homepage count. This keeps the project

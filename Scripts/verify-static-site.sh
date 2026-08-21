@@ -1262,7 +1262,7 @@ for html in index.html why.html license.html privacy.html support.html compatibi
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260811-22"'
     require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260811-22"'
   elif [[ "$html" == "updates.html" ]]; then
-    require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260801-17"'
+    require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260821-1"'
     require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260801-17"'
   elif [[ "$html" == "index.html" ]]; then
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-14"'
@@ -1314,7 +1314,7 @@ require_snippet "$ROOT_DIR/index.html" 'PLAYABLE IN GAME MODE'
 require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
 require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260802-21"'
-require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260802-20"'
+require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260821-1"'
 require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260729-14"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
 require_snippet "$ROOT_DIR/index.html" 'id="other-apps"'
@@ -1422,9 +1422,10 @@ require_snippet "$ROOT_DIR/site-data/README.md" 'DeveloperAppCatalog.swift'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Why ForgePlay exists — full text'
 require_snippet "$ROOT_DIR/site-data/README.md" 'raw Markdown is never inserted into the page'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Routine compatibility database additions and result changes must not create'
+require_snippet "$ROOT_DIR/site-data/README.md" 'No raw HTML or Markdown is rendered.'
 require_snippet "$ROOT_DIR/updates.html" 'data-announcement-list'
 require_snippet "$ROOT_DIR/updates.html" 'data-nav-page="updates"'
-require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260802-20"'
+require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260821-1"'
 require_snippet "$ROOT_DIR/updates.html" 'Releases, project notices, and development updates in one place.'
 require_snippet "$ROOT_DIR/announcements.js" 'site-data/announcements.json'
 require_snippet "$ROOT_DIR/announcements.js" 'forgeplay:localechange'
@@ -1437,9 +1438,17 @@ require_snippet "$ROOT_DIR/announcements.js" 'article.id = announcementAnchorId(
 require_snippet "$ROOT_DIR/announcements.js" 'announcement.href !== announcementDetailHref(announcement.id)'
 require_snippet "$ROOT_DIR/announcements.js" 'requestedCard.scrollIntoView({ block: "center" })'
 require_snippet "$ROOT_DIR/announcements.js" 'body.className = "update-card-body"'
+require_snippet "$ROOT_DIR/announcements.js" 'const bulletLinePattern = /^(\s*)-\s+(.+)$/'
+require_snippet "$ROOT_DIR/announcements.js" 'const appendStructuredParagraph = (parent, paragraph) =>'
 require_snippet "$ROOT_DIR/announcements.js" 'cache: "no-store"'
 require_snippet "$ROOT_DIR/site.css" '.update-card-body {'
 require_snippet "$ROOT_DIR/site.css" 'gap: 20px;'
+require_snippet "$ROOT_DIR/site.css" '.update-card-section-title {'
+require_snippet "$ROOT_DIR/site.css" '.update-card-list {'
+if grep -Eq 'innerHTML|outerHTML|insertAdjacentHTML|document\.write' \
+  "$ROOT_DIR/announcements.js"; then
+  fail "announcements.js must render notices without unsafe HTML insertion"
+fi
 require_snippet "$ROOT_DIR/developer-apps.js" 'site-data/developer-apps.json'
 require_snippet "$ROOT_DIR/developer-apps.js" 'data-developer-platform'
 require_snippet "$ROOT_DIR/developer-apps.js" 'forgeplay:localechange'
@@ -1497,12 +1506,19 @@ require_snippet "$ROOT_DIR/site-data/announcements.json" '"fr": "ForgePlay place
 require_snippet "$ROOT_DIR/site-data/announcements.json" '"ja": "ForgePlayはmacOSのゲームモードを中核に据えました。"'
 require_snippet "$ROOT_DIR/site-data/announcements.json" '"id": "next-forgeplay-update-underway"'
 require_snippet "$ROOT_DIR/site-data/announcements.json" '"ko": "다음 ForgePlay 업데이트를 준비하고 있습니다."'
+require_snippet "$ROOT_DIR/site-data/announcements.json" '"id": "forgeplay-1-1-update-imminent"'
+require_snippet "$ROOT_DIR/site-data/announcements.json" '"ko": "ForgePlay 1.1 업데이트 임박!"'
+require_snippet "$ROOT_DIR/site-data/announcements.json" 'DirectX12 적용이 되지 않던 문제 수정'
 require_snippet "$ROOT_DIR/site-data/announcements.json" 'Wine 11.12'
 require_snippet "$ROOT_DIR/site-data/announcements.json" 'Game Porting Toolkit(GPTK) 4.0 beta'
 require_snippet "$ROOT_DIR/site-data/announcements.json" 'GitHub Sponsors'
 require_snippet "$ROOT_DIR/site-data/announcements.json" '"id": "forgeplay-1-0-released"'
 require_snippet "$ROOT_DIR/site-data/announcements.json" '"ko": "ForgePlay 1.0을 공개했습니다."'
 require_snippet "$ROOT_DIR/site-data/announcements.json" '"href": "https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0"'
+
+if grep -Fq 'home.releaseTitle' "$ROOT_DIR/index.html" "$ROOT_DIR/site.js"; then
+  fail "the removed homepage release title must not remain"
+fi
 
 if grep -Fq '"id": "compatibility-database-opens"' \
   "$ROOT_DIR/site-data/announcements.json"; then

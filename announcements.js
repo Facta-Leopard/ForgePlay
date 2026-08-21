@@ -118,6 +118,64 @@
     return element;
   };
 
+  const bulletLinePattern = /^(\s*)-\s+(.+)$/;
+
+  const appendBulletList = (parent, lines) => {
+    const rootList = document.createElement("ul");
+    rootList.className = "update-card-list";
+    const stack = [{ indentation: 0, list: rootList, lastItem: null }];
+
+    lines.forEach((line) => {
+      const match = bulletLinePattern.exec(line);
+      if (!match) return;
+      const indentation = match[1].replaceAll("\t", "  ").length;
+
+      while (stack.length > 1 && indentation < stack.at(-1).indentation) {
+        stack.pop();
+      }
+
+      let context = stack.at(-1);
+      if (indentation > context.indentation && context.lastItem) {
+        const nestedList = document.createElement("ul");
+        context.lastItem.append(nestedList);
+        context = { indentation, list: nestedList, lastItem: null };
+        stack.push(context);
+      }
+
+      const item = appendTextElement(context.list, "li", "", match[2]);
+      context.lastItem = item;
+    });
+
+    parent.append(rootList);
+  };
+
+  const appendStructuredParagraph = (parent, paragraph) => {
+    const trimmed = paragraph.trim();
+    if (trimmed.startsWith("## ")) {
+      appendTextElement(parent, "h3", "update-card-section-title", trimmed.slice(3));
+      return;
+    }
+    if (trimmed === "---") {
+      const divider = document.createElement("hr");
+      divider.className = "update-card-divider";
+      parent.append(divider);
+      return;
+    }
+
+    const lines = trimmed.split(/\r?\n/);
+    if (lines.length && lines.every((line) => bulletLinePattern.test(line))) {
+      appendBulletList(parent, lines);
+      return;
+    }
+
+    appendTextElement(
+      parent,
+      "p",
+      trimmed.startsWith("※") ? "update-card-note" : "",
+      trimmed
+    );
+  };
+
   const renderList = (announcements, selectedLocale) => {
     if (!list) return;
     const fragment = document.createDocumentFragment();
@@ -150,9 +208,7 @@
       if (paragraphs.length) {
         const body = document.createElement("div");
         body.className = "update-card-body";
-        paragraphs.forEach((paragraph) => {
-          appendTextElement(body, "p", "", paragraph);
-        });
+        paragraphs.forEach((paragraph) => appendStructuredParagraph(body, paragraph));
         copy.append(body);
       } else {
         appendTextElement(copy, "p", "", localizedText(announcement.summaries, selectedLocale));
