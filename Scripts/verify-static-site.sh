@@ -236,6 +236,10 @@ from urllib.parse import urlsplit
 
 root = Path(sys.argv[1])
 root_resolved = root.resolve()
+forgeplay_icon_path = root / "site-assets" / "forgeplay-icon.png"
+forgeplay_icon_hash = hashlib.sha256(forgeplay_icon_path.read_bytes()).hexdigest()
+if forgeplay_icon_hash != "65a8602880ce0d14f623f81ce9aa8a1dc6c87da2ea617654e54bdbd0740511b3":
+    raise SystemExit("website ForgePlay icon differs from the in-app dark appearance")
 paths = [Path(value) for value in sys.argv[2:]]
 parsed_pages = {}
 
@@ -1376,7 +1380,7 @@ for html in index.html why.html license.html privacy.html support.html compatibi
     require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260729-14"'
   fi
   require_snippet "$ROOT_DIR/$html" 'data-language-select'
-  require_snippet "$ROOT_DIR/$html" 'site-assets/forgeplay-icon.png'
+  require_snippet "$ROOT_DIR/$html" 'site-assets/forgeplay-icon.png?v=20260821-dark-1'
   require_snippet "$ROOT_DIR/$html" 'target="_blank" rel="noopener noreferrer"'
   require_snippet "$ROOT_DIR/$html" 'href="https://github.com/Facta-Leopard/ForgePlay/releases/latest"'
   require_snippet "$ROOT_DIR/$html" 'href="https://github.com/Facta-Leopard/ForgePlay/tree/main"'
