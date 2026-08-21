@@ -404,6 +404,10 @@ if present_retired_keys:
     )
 
 required_localized_keys = {
+    "developerApps.count",
+    "developerApps.countOne",
+    "developerApps.projectCount",
+    "developerApps.projectCountOne",
     "home.worldFirstRouteGameMode",
     "home.sponsorMark",
     "license.mastheadLabel",
@@ -1366,7 +1370,7 @@ for html in index.html why.html license.html privacy.html support.html compatibi
     require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260801-17"'
   elif [[ "$html" == "index.html" ]]; then
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260821-2"'
-    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260821-2"'
+    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260821-3"'
   else
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-14"'
     require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260729-14"'
@@ -1415,7 +1419,7 @@ require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-li
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
 require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260802-21"'
 require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260821-1"'
-require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260821-2"'
+require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260821-3"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
 require_snippet "$ROOT_DIR/index.html" 'id="other-apps"'
 require_snippet "$ROOT_DIR/index.html" 'data-developer-app-grid'

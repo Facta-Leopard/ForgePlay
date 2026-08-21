@@ -208,11 +208,16 @@
     renderTabState(platformButtons, "developerPlatform", selectedPlatform);
     renderTabState(viewButtons, "developerView", selectedView);
     if (count) {
+      const isSingular = entries.length === 1;
+      const countKey = selectedView === "development"
+        ? isSingular ? "developerApps.projectCountOne" : "developerApps.projectCount"
+        : isSingular ? "developerApps.countOne" : "developerApps.count";
+      const countFallback = selectedView === "development"
+        ? isSingular ? "{count} project" : "{count} projects"
+        : isSingular ? "{count} app" : "{count} apps";
       count.textContent = formattedMessage(
-        selectedView === "development"
-          ? "developerApps.projectCount"
-          : "developerApps.count",
-        selectedView === "development" ? "{count} projects" : "{count} apps",
+        countKey,
+        countFallback,
         { count: entries.length }
       );
     }
