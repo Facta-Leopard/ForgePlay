@@ -23,12 +23,12 @@
   <link rel="preload" href="site-assets/forgeplay-hero.jpg" as="image"
         imagesrcset="site-assets/forgeplay-hero.jpg 1600w, site-assets/forgeplay-hero-3200.jpg 3200w"
         imagesizes="100vw" fetchpriority="high">
-  <link rel="stylesheet" href="site.css?v=20260729-14">
-  <script src="site.js?v=20260811-22" defer></script>
+  <link rel="stylesheet" href="site.css?v=20260821-2">
+  <script src="site.js?v=20260821-2" defer></script>
   <script src="site-assets/current-release.js?v=20260811-22" defer></script>
   <script src="compatibility.js?v=20260802-21" defer></script>
   <script src="announcements.js?v=20260821-1" defer></script>
-  <script src="developer-apps.js?v=20260729-14" defer></script>
+  <script src="developer-apps.js?v=20260821-2" defer></script>
 </head>
 <body data-page="home">
   <a class="skip-link" href="#main" data-i18n="shared.skip">Skip to content</a>
@@ -162,7 +162,6 @@
         </div>
 
         <div class="game-mode-foot" data-reveal>
-          <p data-i18n="home.gameModeCheck">ForgePlay’s Game Mode path is an opt-in beta. Run the game full screen and confirm activation in macOS Game Overlay.</p>
           <a class="text-link" href="https://support.apple.com/105118" target="_blank" rel="noreferrer" data-i18n="home.gameModeAppleLink">Apple’s Game Mode guide ↗</a>
         </div>
       </div>
@@ -245,8 +244,27 @@
             <p class="section-label" data-i18n="developerApps.eyebrow">FROM THE SAME DEVELOPER</p>
             <h2 id="developer-apps-title" data-i18n="developerApps.title">Other Apps by the Developer</h2>
           </div>
-          <p data-i18n="developerApps.lead">Mac utilities, iPad knowledge tools, and iPhone games—all built to be useful, focused, and easy to use.</p>
+          <p data-i18n="developerApps.lead">Explore released apps and projects in development.</p>
         </header>
+
+        <div class="developer-view-tabs"
+             role="tablist"
+             aria-label="Developer app view"
+             data-i18n-aria-label="developerApps.viewLabel"
+             data-reveal>
+          <button type="button"
+                  role="tab"
+                  aria-selected="true"
+                  aria-controls="developer-app-grid"
+                  data-developer-view="catalog"
+                  data-i18n="developerApps.catalog">App Catalog</button>
+          <button type="button"
+                  role="tab"
+                  aria-selected="false"
+                  aria-controls="developer-app-grid"
+                  data-developer-view="development"
+                  data-i18n="developerApps.inDevelopment">In Development</button>
+        </div>
 
         <div class="developer-apps-controls" data-reveal>
           <div class="developer-platform-tabs"
@@ -269,7 +287,7 @@
                     aria-controls="developer-app-grid"
                     data-developer-platform="iphone">iPhone</button>
           </div>
-          <span class="developer-app-count" data-developer-app-count>5 apps</span>
+          <span class="developer-app-count" data-developer-app-count>6 apps</span>
         </div>
 
         <div id="developer-app-grid"
@@ -302,7 +320,7 @@
       <div class="release-layout">
         <div data-reveal>
           <p class="section-label" data-current-release-label data-i18n="home.releaseLabel">CURRENT STABLE RELEASE</p>
-          <p data-i18n="home.releaseBody">Download the Apple-notarized DMG, inspect the version-matched source, and verify the release on GitHub.</p>
+          <p class="release-evidence-copy" data-i18n="home.releaseBody">Download the Apple-notarized DMG, inspect the version-matched source, and verify the release on GitHub.</p>
         </div>
         <div class="release-panel compact-panel" data-reveal>
           <div class="release-status live">

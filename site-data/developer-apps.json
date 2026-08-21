@@ -1,8 +1,30 @@
 {
   "$schema": "./developer-apps.schema.json",
-  "schemaVersion": 1,
-  "updatedAt": "2026-07-28",
+  "schemaVersion": 2,
+  "updatedAt": "2026-08-21",
+  "sourceRevision": "566e4f4530d489175c512e7e431a343192d510b1",
   "apps": [
+    {
+      "id": "forgeplay",
+      "appStoreID": null,
+      "name": "ForgePlay",
+      "platform": "mac",
+      "kind": "app",
+      "summaries": {
+        "ko": "세계최초, Apple Silicon Mac에서 Windows 게임을 맥 네이티브 게임모드로 실행하는 앱입니다.",
+        "en": "The world’s first app to run Windows games in native macOS Game Mode on Apple Silicon Macs.",
+        "de": "Die weltweit erste App, die Windows-Spiele auf Apple-Silicon-Macs im nativen macOS-Spielmodus ausführt.",
+        "es": "La primera app del mundo que ejecuta juegos de Windows en el modo Juego nativo de macOS en equipos Mac con Apple Silicon.",
+        "fr": "La première app au monde à exécuter des jeux Windows dans le mode Jeu natif de macOS sur les Mac avec puce Apple.",
+        "ja": "Appleシリコン搭載MacでWindowsゲームをmacOSネイティブのゲームモードで実行する、世界初のアプリです。",
+        "zh-Hans": "全球首款可在 Apple 芯片 Mac 上以 macOS 原生游戏模式运行 Windows 游戏的 App。",
+        "zh-Hant": "全球首款可在 Apple 晶片 Mac 上以 macOS 原生遊戲模式執行 Windows 遊戲的 App。"
+      },
+      "supportedLanguages": ["en", "ko", "es", "de", "ja", "zh-Hans", "zh-Hant", "fr"],
+      "appleSiliconMacCompatible": false,
+      "artwork": "site-assets/forgeplay-icon.png",
+      "href": "index.html"
+    },
     {
       "id": "hopdisk",
       "appStoreID": "6782226580",
@@ -212,6 +234,77 @@
       "appleSiliconMacCompatible": false,
       "artwork": "site-assets/developer-apps/moonwhisk-vale.jpg",
       "href": "https://apps.apple.com/us/app/moonwhisk-vale/id6767978392"
+    }
+  ],
+  "inDevelopment": [
+    {
+      "id": "majordex",
+      "name": "MajorDex",
+      "platform": "mac",
+      "kind": "app",
+      "summaries": {
+        "ko": "선택한 프로젝트를 실행하지 않고 읽기 전용으로 분석해 구조와 실행 흐름을 시각적으로 살펴볼 수 있는 macOS 앱입니다.",
+        "en": "A macOS app that analyzes a selected project in read-only mode, without running it, so you can explore its structure and execution flow visually.",
+        "de": "Eine macOS-App, die ein ausgewähltes Projekt schreibgeschützt analysiert, ohne es auszuführen, sodass Struktur und Ausführungsablauf visuell untersucht werden können.",
+        "es": "Una app para macOS que analiza en modo de solo lectura un proyecto seleccionado, sin ejecutarlo, para explorar visualmente su estructura y flujo de ejecución.",
+        "fr": "Une app macOS qui analyse un projet sélectionné en lecture seule, sans l’exécuter, afin d’en explorer visuellement la structure et le flux d’exécution.",
+        "ja": "選択したプロジェクトを実行せずに読み取り専用で解析し、構造と実行フローを視覚的に確認できるmacOSアプリです。",
+        "zh-Hans": "这是一款 macOS App，可在不运行所选项目的情况下以只读方式进行分析，并以可视化方式查看其结构和执行流程。",
+        "zh-Hant": "這是一款 macOS App，可在不執行所選專案的情況下以唯讀方式分析，並以視覺化方式查看其結構與執行流程。"
+      },
+      "artwork": "site-assets/developer-apps/majordex.png"
+    },
+    {
+      "id": "forgekit",
+      "name": "ForgeKit",
+      "platform": "mac",
+      "kind": "app",
+      "summaries": {
+        "ko": "Apple 플랫폼 전용 게임 엔진으로, Apple Intelligence 기반 AI를 활용해 2D·3D 게임을 제작할 수 있습니다.",
+        "en": "A game engine built exclusively for Apple platforms, using AI powered by Apple Intelligence to create 2D and 3D games.",
+        "de": "Eine exklusiv für Apple-Plattformen entwickelte Spiele-Engine, mit der sich mithilfe von auf Apple Intelligence basierender KI 2D- und 3D-Spiele erstellen lassen.",
+        "es": "Un motor de juegos exclusivo para plataformas Apple que permite crear juegos 2D y 3D con IA basada en Apple Intelligence.",
+        "fr": "Un moteur de jeu exclusivement conçu pour les plateformes Apple, permettant de créer des jeux 2D et 3D grâce à une IA basée sur Apple Intelligence.",
+        "ja": "Appleプラットフォーム専用のゲームエンジンで、Apple Intelligenceを基盤とするAIを活用して2D・3Dゲームを制作できます。",
+        "zh-Hans": "一款 Apple 平台专用游戏引擎，可借助基于 Apple Intelligence 的 AI 制作 2D 和 3D 游戏。",
+        "zh-Hant": "一款 Apple 平台專用遊戲引擎，可運用以 Apple Intelligence 為基礎的 AI 製作 2D 與 3D 遊戲。"
+      },
+      "artwork": "site-assets/developer-apps/forgekit.png"
+    },
+    {
+      "id": "harewatch",
+      "name": "HareWatch",
+      "platform": "mac",
+      "kind": "utility",
+      "artwork": "site-assets/developer-apps/harewatch.png"
+    },
+    {
+      "id": "warrennet",
+      "name": "WarrenNet",
+      "platform": "mac",
+      "kind": "utility",
+      "artwork": "site-assets/developer-apps/warrennet.png"
+    },
+    {
+      "id": "leporis-ascendant",
+      "name": "Leporis Ascendant",
+      "platform": "ipad",
+      "kind": "game",
+      "artwork": "site-assets/developer-apps/leporis-ascendant.png"
+    },
+    {
+      "id": "hazel-and-peanut",
+      "name": "Hazel&Peanut",
+      "platform": "iphone",
+      "kind": "game",
+      "artwork": "site-assets/developer-apps/hazel-and-peanut.png"
+    },
+    {
+      "id": "grayline",
+      "name": "GrayLine",
+      "platform": "iphone",
+      "kind": "game",
+      "artwork": "site-assets/developer-apps/grayline.png"
     }
   ]
 }

@@ -100,15 +100,21 @@ timeline focused on releases and substantive project updates.
 
 ## Developer app catalog
 
-`developer-apps.json` mirrors the catalog shown inside ForgePlay. It keeps the
-developer's Mac, iPad, and iPhone apps in a data file so the homepage can render
-the catalog without hardcoding product cards. Every entry includes:
+`developer-apps.json` mirrors the catalog shown inside ForgePlay. Schema version
+2 follows the in-app 1.1 preview catalog recorded by `sourceRevision` and keeps
+both released apps and in-development projects in data so the homepage can
+render the cards without hardcoding them. Released app entries include:
 
 - a stable identifier and platform;
-- the official App Store ID and URL;
+- the official App Store ID and URL, or the ForgePlay homepage for ForgePlay;
 - a local 512-by-512 App Store artwork file;
 - a summary in all eight website locales; and
 - Apple Silicon Mac compatibility where the App Store listing supports it.
+
+The `inDevelopment` collection mirrors the app's separate development tab. It
+groups MajorDex, ForgeKit, HareWatch, WarrenNet, Leporis Ascendant,
+Hazel&Peanut, and GrayLine by Mac, iPad, and iPhone and uses the same bundled
+first-party artwork as the app catalog.
 
 Keep this catalog synchronized with
 `Sources/ForgePlay/Models/DeveloperAppCatalog.swift` and validate structural

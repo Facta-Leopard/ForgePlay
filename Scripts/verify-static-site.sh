@@ -53,6 +53,13 @@ PAGES=(
   site-assets/developer-apps/seolapin.jpg
   site-assets/developer-apps/brambletread.jpg
   site-assets/developer-apps/moonwhisk-vale.jpg
+  site-assets/developer-apps/majordex.png
+  site-assets/developer-apps/forgekit.png
+  site-assets/developer-apps/harewatch.png
+  site-assets/developer-apps/warrennet.png
+  site-assets/developer-apps/hazel-and-peanut.png
+  site-assets/developer-apps/grayline.png
+  site-assets/developer-apps/leporis-ascendant.png
   LICENSE.md
   LICENSES/ForgePlayGameMode/GAME_MODE_LICENSE_SCOPE.md
   LICENSES/ForgePlayGameMode/GAME_MODE_LICENSE_SCOPE_KO.md
@@ -218,6 +225,7 @@ python3 - "$ROOT_DIR" \
   "$ROOT_DIR/support.html" \
   "$ROOT_DIR/compatibility.html" \
   "$ROOT_DIR/updates.html" <<'PY'
+import hashlib
 import json
 import re
 import sys
@@ -384,6 +392,7 @@ retired_keys = {
     "home.licenseManifest",
     "home.licenseScope",
     "home.licenseFootnote",
+    "home.gameModeCheck",
     "privacy.languages",
     "support.languages",
 }
@@ -1131,16 +1140,21 @@ try:
 except (OSError, json.JSONDecodeError) as exc:
     raise SystemExit(f"developer app catalog JSON is invalid: {exc}")
 
-if developer_apps_database.get("schemaVersion") != 1:
-    raise SystemExit("developer app catalog schemaVersion must be 1")
+if developer_apps_database.get("schemaVersion") != 2:
+    raise SystemExit("developer app catalog schemaVersion must be 2")
 if developer_apps_schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
     raise SystemExit("developer app schema must use JSON Schema draft 2020-12")
+if developer_apps_database.get("sourceRevision") != (
+    "566e4f4530d489175c512e7e431a343192d510b1"
+):
+    raise SystemExit("developer app catalog must identify the in-app 1.1 preview source")
 
 developer_apps = developer_apps_database.get("apps")
 if not isinstance(developer_apps, list):
     raise SystemExit("developer app catalog apps must be an array")
 
 expected_developer_app_ids = {
+    "forgeplay",
     "hopdisk",
     "bunmixer",
     "latchcast",
@@ -1170,15 +1184,19 @@ for app in developer_apps:
         raise SystemExit(f"developer app {identifier} contains an empty summary translation")
     app_store_id = app.get("appStoreID")
     href = app.get("href")
-    if not isinstance(app_store_id, str) or not app_store_id.isdigit():
-        raise SystemExit(f"developer app {identifier} has an invalid App Store ID")
-    if not isinstance(href, str) or not re.fullmatch(
-        rf"https://apps\.apple\.com/us/app/[a-z0-9-]+/id{re.escape(app_store_id)}",
-        href,
-    ):
-        raise SystemExit(f"developer app {identifier} has an invalid App Store URL")
+    if identifier == "forgeplay":
+        if app_store_id is not None or href != "index.html":
+            raise SystemExit("ForgePlay developer catalog entry must link to the homepage")
+    else:
+        if not isinstance(app_store_id, str) or not app_store_id.isdigit():
+            raise SystemExit(f"developer app {identifier} has an invalid App Store ID")
+        if not isinstance(href, str) or not re.fullmatch(
+            rf"https://apps\.apple\.com/us/app/[a-z0-9-]+/id{re.escape(app_store_id)}",
+            href,
+        ):
+            raise SystemExit(f"developer app {identifier} has an invalid App Store URL")
     artwork = app.get("artwork")
-    if not isinstance(artwork, str) or not artwork.startswith("site-assets/developer-apps/"):
+    if not isinstance(artwork, str) or not artwork.startswith("site-assets/"):
         raise SystemExit(f"developer app {identifier} has an invalid artwork path")
     artwork_path = (root / artwork).resolve()
     try:
@@ -1190,20 +1208,102 @@ for app in developer_apps:
 
 if developer_app_ids != expected_developer_app_ids:
     raise SystemExit("developer app catalog does not match the in-app catalog")
-if platform_counts != {"mac": 5, "ipad": 3, "iphone": 2}:
+if platform_counts != {"mac": 6, "ipad": 3, "iphone": 2}:
     raise SystemExit(f"developer app platform counts are invalid: {platform_counts}")
+
+development_projects = developer_apps_database.get("inDevelopment")
+if not isinstance(development_projects, list):
+    raise SystemExit("developer app catalog inDevelopment must be an array")
+
+expected_development_projects = {
+    "majordex": ("MajorDex", "mac", "app"),
+    "forgekit": ("ForgeKit", "mac", "app"),
+    "harewatch": ("HareWatch", "mac", "utility"),
+    "warrennet": ("WarrenNet", "mac", "utility"),
+    "leporis-ascendant": ("Leporis Ascendant", "ipad", "game"),
+    "hazel-and-peanut": ("Hazel&Peanut", "iphone", "game"),
+    "grayline": ("GrayLine", "iphone", "game"),
+}
+expected_development_artwork_hashes = {
+    "majordex": "3455a1b4ff3afe34df01db3aa6ef187bed7edd57fb670a8629be381aad17bd52",
+    "forgekit": "03e6dfc77bf72e442ed85e036997ca340ec00d8e22636d7c9f7117e6b35461c9",
+    "harewatch": "6f73ec849436bdeb91398ed7b1b76cd67e2cec3d4782fbfc5de475d73afd5cd0",
+    "warrennet": "11ee5bf49f59cd1578644432c167b6b693cef90c910677af908dde93bb5a79d8",
+    "hazel-and-peanut": "328158bc8681ee6b2d5731e914f39fe8897b57408fc7bdd6b24d764cf1837063",
+    "grayline": "e711d6fc39786b8650cdadd876c4a785425c18717bde78589400c5d38d3d6f88",
+    "leporis-ascendant": "a17ebfcb31b77fc57e8a53f230d62c1d8d02cf7d4600d1a873fd7704aea27215",
+}
+development_ids = set()
+development_projection = {}
+development_platform_counts = {"mac": 0, "ipad": 0, "iphone": 0}
+for project in development_projects:
+    identifier = project.get("id") if isinstance(project, dict) else None
+    if not isinstance(identifier, str) or not identifier or identifier in development_ids:
+        raise SystemExit(
+            f"developer project catalog contains an invalid or duplicate id: {identifier}"
+        )
+    development_ids.add(identifier)
+    platform = project.get("platform")
+    if platform not in development_platform_counts:
+        raise SystemExit(f"developer project {identifier} has an invalid platform")
+    development_platform_counts[platform] += 1
+    kind = project.get("kind")
+    if kind not in {"app", "utility", "game"}:
+        raise SystemExit(f"developer project {identifier} has an invalid kind")
+    development_projection[identifier] = (project.get("name"), platform, kind)
+    summaries = project.get("summaries")
+    if summaries is not None:
+        if not isinstance(summaries, dict) or set(summaries) != set(locale_names):
+            raise SystemExit(
+                f"developer project {identifier} summaries must contain all eight locales"
+            )
+        if not all(isinstance(value, str) and value.strip() for value in summaries.values()):
+            raise SystemExit(
+                f"developer project {identifier} contains an empty summary translation"
+            )
+    artwork = project.get("artwork")
+    if not isinstance(artwork, str) or not artwork.startswith(
+        "site-assets/developer-apps/"
+    ):
+        raise SystemExit(f"developer project {identifier} has an invalid artwork path")
+    artwork_path = (root / artwork).resolve()
+    try:
+        artwork_path.relative_to(root_resolved)
+    except ValueError:
+        raise SystemExit(f"developer project {identifier} artwork escapes the project root")
+    if not artwork_path.is_file() or artwork_path.is_symlink():
+        raise SystemExit(f"developer project {identifier} artwork is missing or unsafe")
+    artwork_hash = hashlib.sha256(artwork_path.read_bytes()).hexdigest()
+    if artwork_hash != expected_development_artwork_hashes.get(identifier):
+        raise SystemExit(
+            f"developer project {identifier} artwork differs from the in-app asset"
+        )
+
+if development_ids != set(expected_development_projects):
+    raise SystemExit("developer projects do not match the in-app 1.1 preview catalog")
+if development_projection != expected_development_projects:
+    raise SystemExit("developer project names, platforms, or kinds differ from the app")
+if development_platform_counts != {"mac": 4, "ipad": 1, "iphone": 2}:
+    raise SystemExit(
+        f"developer project platform counts are invalid: {development_platform_counts}"
+    )
 
 developer_app_source_path = (
     root / "Sources" / "ForgePlay" / "Models" / "DeveloperAppCatalog.swift"
 )
 if developer_app_source_path.is_file() and not developer_app_source_path.is_symlink():
     source = developer_app_source_path.read_text(encoding="utf-8")
-    source_blocks = re.findall(
-        r"DeveloperAppListing\((.*?)\n        \)(?:,|\n    \])",
-        source,
-        flags=re.DOTALL,
-    )
-    if len(source_blocks) != len(developer_apps):
+    source_blocks = [
+        block
+        for block in re.findall(
+            r"DeveloperAppListing\((.*?)\n        \)(?:,|\n    \])",
+            source,
+            flags=re.DOTALL,
+        )
+        if re.search(r'appStoreID: "[0-9]+"', block)
+    ]
+    app_store_apps = [app for app in developer_apps if app.get("appStoreID")]
+    if len(source_blocks) != len(app_store_apps):
         raise SystemExit(
             "website developer app catalog count differs from DeveloperAppCatalog.swift"
         )
@@ -1230,7 +1330,7 @@ if developer_app_source_path.is_file() and not developer_app_source_path.is_syml
             "appleSiliconMacCompatible": ".appleSiliconMac" in block,
         }
 
-    website_apps = {app["appStoreID"]: app for app in developer_apps}
+    website_apps = {app["appStoreID"]: app for app in app_store_apps}
     if set(website_apps) != set(source_apps):
         raise SystemExit(
             "website developer app IDs differ from DeveloperAppCatalog.swift"
@@ -1265,8 +1365,8 @@ for html in index.html why.html license.html privacy.html support.html compatibi
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260821-1"'
     require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260801-17"'
   elif [[ "$html" == "index.html" ]]; then
-    require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-14"'
-    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260811-22"'
+    require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260821-2"'
+    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260821-2"'
   else
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-14"'
     require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260729-14"'
@@ -1315,10 +1415,12 @@ require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-li
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
 require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260802-21"'
 require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260821-1"'
-require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260729-14"'
+require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260821-2"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
 require_snippet "$ROOT_DIR/index.html" 'id="other-apps"'
 require_snippet "$ROOT_DIR/index.html" 'data-developer-app-grid'
+require_snippet "$ROOT_DIR/index.html" 'data-developer-view="development"'
+require_snippet "$ROOT_DIR/index.html" 'class="release-evidence-copy"'
 require_snippet "$ROOT_DIR/index.html" 'DIRECTX'
 require_snippet "$ROOT_DIR/index.html" 'METAL'
 require_snippet "$ROOT_DIR/index.html" 'macOS GAME MODE'
@@ -1451,7 +1553,14 @@ if grep -Eq 'innerHTML|outerHTML|insertAdjacentHTML|document\.write' \
 fi
 require_snippet "$ROOT_DIR/developer-apps.js" 'site-data/developer-apps.json'
 require_snippet "$ROOT_DIR/developer-apps.js" 'data-developer-platform'
+require_snippet "$ROOT_DIR/developer-apps.js" 'data-developer-view'
+require_snippet "$ROOT_DIR/developer-apps.js" 'database.inDevelopment'
+require_snippet "$ROOT_DIR/developer-apps.js" 'cache: "no-store"'
 require_snippet "$ROOT_DIR/developer-apps.js" 'forgeplay:localechange'
+if grep -Eq 'innerHTML|outerHTML|insertAdjacentHTML|document\.write' \
+  "$ROOT_DIR/developer-apps.js"; then
+  fail "developer-apps.js must render the catalog without unsafe HTML insertion"
+fi
 
 require_snippet "$ROOT_DIR/why.html" 'Why I Built ForgePlay'
 require_snippet "$ROOT_DIR/why.html" 'site-assets/forgeplay-manifesto-3200.jpg 3200w'
@@ -1564,6 +1673,9 @@ require_snippet "$ROOT_DIR/site.css" ".world-first-route"
 require_snippet "$ROOT_DIR/site.css" ".updates-list"
 require_snippet "$ROOT_DIR/site.css" '.nav-links a[aria-current="page"]'
 require_snippet "$ROOT_DIR/site.css" ".developer-app-grid"
+require_snippet "$ROOT_DIR/site.css" ".developer-view-tabs"
+require_snippet "$ROOT_DIR/site.css" ".developer-project-card"
+require_snippet "$ROOT_DIR/site.css" ".release-evidence-copy"
 require_snippet "$ROOT_DIR/site.css" ".release-actions"
 require_snippet "$ROOT_DIR/site.css" ".release-status.live"
 require_snippet "$ROOT_DIR/site-assets/why-story.css" ".founder-note-cover"

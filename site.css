@@ -766,6 +766,14 @@ select {
   margin: 0;
 }
 
+.release-layout > div:first-child > .release-evidence-copy:last-child {
+  max-width: 800px;
+  color: #d7dce4;
+  font-size: clamp(1.22rem, 2.15vw, 1.58rem);
+  font-weight: 650;
+  line-height: 1.52;
+}
+
 .architecture {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr) 34px minmax(0, 1fr) 34px minmax(0, 1fr);
@@ -2455,16 +2463,9 @@ select {
 
 .game-mode-foot {
   display: flex;
-  justify-content: space-between;
-  gap: 34px;
+  justify-content: flex-end;
   align-items: center;
   margin-top: 22px;
-}
-
-.game-mode-foot p {
-  max-width: 760px;
-  margin: 0;
-  color: var(--muted);
 }
 
 .game-mode-foot a {
@@ -2513,25 +2514,36 @@ select {
   font-size: 1.08rem;
 }
 
+.developer-view-tabs {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(150px, 1fr));
+  margin-top: clamp(48px, 7vw, 86px);
+}
+
 .developer-apps-controls {
   display: flex;
   justify-content: space-between;
   gap: 24px;
   align-items: center;
-  margin-top: clamp(48px, 7vw, 86px);
+  margin-top: 18px;
   padding-bottom: 20px;
   border-bottom: 1px solid var(--line-strong);
 }
 
+.developer-view-tabs,
 .developer-platform-tabs {
   display: inline-grid;
-  grid-template-columns: repeat(3, minmax(84px, 1fr));
   padding: 4px;
   background: #1c1f22;
   border: 1px solid var(--line-strong);
   border-radius: 12px;
 }
 
+.developer-platform-tabs {
+  grid-template-columns: repeat(3, minmax(84px, 1fr));
+}
+
+.developer-view-tabs button,
 .developer-platform-tabs button {
   min-height: 42px;
   padding: 8px 18px;
@@ -2544,11 +2556,14 @@ select {
   transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease;
 }
 
+.developer-view-tabs button:hover,
+.developer-view-tabs button:focus-visible,
 .developer-platform-tabs button:hover,
 .developer-platform-tabs button:focus-visible {
   color: var(--ink);
 }
 
+.developer-view-tabs button[aria-selected="true"],
 .developer-platform-tabs button[aria-selected="true"] {
   color: #130d0a;
   background: var(--orange);
@@ -2651,6 +2666,18 @@ select {
   border-color: var(--lime);
 }
 
+.developer-app-badge.development {
+  color: #171022;
+  background: var(--violet);
+  border-color: var(--violet);
+}
+
+.developer-app-badge.utility {
+  color: #08141f;
+  background: #73c7ff;
+  border-color: #73c7ff;
+}
+
 .developer-app-summary {
   margin: 28px 0 24px;
   color: var(--muted);
@@ -2673,11 +2700,37 @@ select {
 }
 
 .developer-app-loading,
-.developer-app-error {
+.developer-app-error,
+.developer-app-empty {
   grid-column: 1 / -1;
   margin: 0;
   padding: 52px 0;
   color: var(--muted);
+}
+
+.developer-project-card {
+  min-height: 300px;
+  align-items: center;
+  text-align: center;
+}
+
+.developer-project-card .developer-app-heading {
+  flex-direction: column;
+  align-items: center;
+}
+
+.developer-project-card .developer-app-artwork {
+  width: 104px;
+  height: 104px;
+  border-radius: 24px;
+}
+
+.developer-project-card .developer-app-badges {
+  justify-content: center;
+}
+
+.developer-project-card .developer-app-summary {
+  margin: 24px 0 0;
 }
 
 /* Compatibility and sponsorship teasers */
@@ -3788,10 +3841,12 @@ html[lang="ko"] .compatibility-teaser-copy h2 {
     flex-direction: column;
   }
 
+  .developer-view-tabs,
   .developer-platform-tabs {
     width: 100%;
   }
 
+  .developer-view-tabs button,
   .developer-platform-tabs button {
     padding-inline: 10px;
   }

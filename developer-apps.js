@@ -1,14 +1,23 @@
 (() => {
   "use strict";
 
-  const databaseURL = "site-data/developer-apps.json";
+  const cacheBustedDataURL = (path) => {
+    const url = new URL(path, document.baseURI);
+    url.searchParams.set("refresh", Date.now().toString());
+    return url.href;
+  };
+
+  const databaseURL = cacheBustedDataURL("site-data/developer-apps.json");
   const platforms = new Set(["mac", "ipad", "iphone"]);
+  const views = new Set(["catalog", "development"]);
   const grid = document.querySelector("[data-developer-app-grid]");
   const count = document.querySelector("[data-developer-app-count]");
   const errorState = document.querySelector("[data-developer-app-error]");
   const platformButtons = document.querySelectorAll("[data-developer-platform]");
+  const viewButtons = document.querySelectorAll("[data-developer-view]");
   let database = null;
   let selectedPlatform = "mac";
+  let selectedView = "catalog";
 
   const site = () => window.ForgePlaySite;
   const locale = () => site()?.getLocale() || document.documentElement.lang || "en";
@@ -27,6 +36,13 @@
     );
   };
 
+  const localizedHref = (href, selectedLocale) => {
+    if (!href || /^[a-z][a-z0-9+.-]*:/i.test(href)) return href;
+    const [pathAndQuery, fragment = ""] = href.split("#", 2);
+    const [path] = pathAndQuery.split("?", 1);
+    return `${path}?lang=${encodeURIComponent(selectedLocale)}${fragment ? `#${fragment}` : ""}`;
+  };
+
   const appendTextElement = (parent, tag, className, text) => {
     const element = document.createElement(tag);
     if (className) element.className = className;
@@ -35,24 +51,18 @@
     return element;
   };
 
-  const renderPlatformState = () => {
-    platformButtons.forEach((button) => {
-      const isSelected = button.dataset.developerPlatform === selectedPlatform;
+  const renderTabState = (buttons, datasetKey, selectedValue) => {
+    buttons.forEach((button) => {
+      const isSelected = button.dataset[datasetKey] === selectedValue;
       button.setAttribute("aria-selected", String(isSelected));
       button.tabIndex = isSelected ? 0 : -1;
     });
   };
 
-  const renderCard = (app, selectedLocale) => {
-    const article = document.createElement("article");
-    article.className = "developer-app-card";
-
-    const heading = document.createElement("div");
-    heading.className = "developer-app-heading";
-
+  const renderArtwork = (entry) => {
     const artwork = document.createElement("img");
     artwork.className = "developer-app-artwork";
-    artwork.src = app.artwork;
+    artwork.src = entry.artwork;
     artwork.width = 512;
     artwork.height = 512;
     artwork.loading = "lazy";
@@ -60,8 +70,21 @@
     artwork.alt = formattedMessage(
       "developerApps.artworkAlt",
       "{name} app icon",
-      { name: app.name }
+      { name: entry.name }
     );
+    return artwork;
+  };
+
+  const appendBadge = (parent, className, label) => {
+    appendTextElement(parent, "span", `developer-app-badge ${className}`.trim(), label);
+  };
+
+  const renderAppCard = (app, selectedLocale) => {
+    const article = document.createElement("article");
+    article.className = "developer-app-card";
+
+    const heading = document.createElement("div");
+    heading.className = "developer-app-heading";
 
     const identity = document.createElement("div");
     identity.className = "developer-app-identity";
@@ -69,30 +92,27 @@
 
     const badges = document.createElement("div");
     badges.className = "developer-app-badges";
-    appendTextElement(
+    appendBadge(
       badges,
-      "span",
-      "developer-app-badge",
+      "",
       message(`developerApps.platform${app.platform[0].toUpperCase()}${app.platform.slice(1)}`, app.platform)
     );
     if (app.kind === "game") {
-      appendTextElement(
+      appendBadge(
         badges,
-        "span",
-        "developer-app-badge game",
+        "game",
         message("developerApps.kindGame", "Game")
       );
     }
     if (app.appleSiliconMacCompatible) {
-      appendTextElement(
+      appendBadge(
         badges,
-        "span",
-        "developer-app-badge compatible",
+        "compatible",
         message("developerApps.macCompatible", "Apple Silicon Mac compatible")
       );
     }
     identity.append(badges);
-    heading.append(artwork, identity);
+    heading.append(renderArtwork(app), identity);
     article.append(heading);
 
     appendTextElement(
@@ -106,29 +126,94 @@
       article,
       "a",
       "developer-app-link",
-      message("developerApps.appStoreLink", "View on the App Store ↗")
+      app.appStoreID
+        ? message("developerApps.appStoreLink", "View on the App Store ↗")
+        : message("developerApps.homepageLink", "Open homepage ↗")
     );
-    link.href = app.href;
-    link.target = "_blank";
-    link.rel = "noreferrer";
+    link.href = localizedHref(app.href, selectedLocale);
+    if (/^https?:/i.test(app.href)) {
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+    }
 
     return article;
   };
 
+  const renderProjectCard = (project, selectedLocale) => {
+    const article = document.createElement("article");
+    article.className = "developer-app-card developer-project-card";
+
+    const heading = document.createElement("div");
+    heading.className = "developer-app-heading";
+
+    const identity = document.createElement("div");
+    identity.className = "developer-app-identity";
+    appendTextElement(identity, "h3", "", project.name);
+
+    const badges = document.createElement("div");
+    badges.className = "developer-app-badges";
+    appendBadge(
+      badges,
+      "development",
+      message("developerApps.inDevelopment", "In Development")
+    );
+    appendBadge(
+      badges,
+      project.kind === "game"
+        ? "game"
+        : project.kind === "utility" ? "utility" : "",
+      project.kind === "game"
+        ? message("developerApps.kindGame", "Game")
+        : project.kind === "utility"
+          ? message("developerApps.kindUtility", "Utility")
+          : message("developerApps.kindApp", "App")
+    );
+    identity.append(badges);
+    heading.append(renderArtwork(project), identity);
+    article.append(heading);
+
+    const summary = localizedText(project.summaries, selectedLocale);
+    if (summary) {
+      appendTextElement(article, "p", "developer-app-summary", summary);
+    }
+
+    return article;
+  };
+
+  const renderCard = (entry, selectedLocale) => (
+    selectedView === "development"
+      ? renderProjectCard(entry, selectedLocale)
+      : renderAppCard(entry, selectedLocale)
+  );
+
   const render = () => {
     if (!database || !grid) return;
     const selectedLocale = locale();
-    const apps = database.apps.filter((app) => app.platform === selectedPlatform);
+    const collection = selectedView === "development"
+      ? (database.inDevelopment || [])
+      : (database.apps || []);
+    const entries = collection.filter((entry) => entry.platform === selectedPlatform);
     const fragment = document.createDocumentFragment();
-    apps.forEach((app) => fragment.append(renderCard(app, selectedLocale)));
+    entries.forEach((entry) => fragment.append(renderCard(entry, selectedLocale)));
+    if (entries.length === 0) {
+      appendTextElement(
+        fragment,
+        "p",
+        "developer-app-empty",
+        message("developerApps.emptyDevelopment", "No projects are currently in development for this device.")
+      );
+    }
     grid.replaceChildren(fragment);
     grid.setAttribute("aria-busy", "false");
-    renderPlatformState();
+    renderTabState(platformButtons, "developerPlatform", selectedPlatform);
+    renderTabState(viewButtons, "developerView", selectedView);
     if (count) {
       count.textContent = formattedMessage(
-        "developerApps.count",
-        "{count} apps",
-        { count: apps.length }
+        selectedView === "development"
+          ? "developerApps.projectCount"
+          : "developerApps.count",
+        selectedView === "development" ? "{count} projects" : "{count} apps",
+        { count: entries.length }
       );
     }
   };
@@ -139,29 +224,39 @@
     render();
   };
 
-  platformButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      selectPlatform(button.dataset.developerPlatform);
+  const selectView = (view) => {
+    if (!views.has(view)) return;
+    selectedView = view;
+    render();
+  };
+
+  const bindTabs = (buttons, datasetKey, select) => {
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => select(button.dataset[datasetKey]));
+      button.addEventListener("keydown", (event) => {
+        if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+        event.preventDefault();
+        const orderedValues = [...buttons].map(
+          (candidate) => candidate.dataset[datasetKey]
+        );
+        const direction = event.key === "ArrowRight" ? 1 : -1;
+        const currentIndex = orderedValues.indexOf(button.dataset[datasetKey]);
+        const nextIndex = (
+          currentIndex + direction + orderedValues.length
+        ) % orderedValues.length;
+        select(orderedValues[nextIndex]);
+        buttons[nextIndex].focus();
+      });
     });
-    button.addEventListener("keydown", (event) => {
-      if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
-      event.preventDefault();
-      const orderedPlatforms = [...platformButtons].map(
-        (candidate) => candidate.dataset.developerPlatform
-      );
-      const direction = event.key === "ArrowRight" ? 1 : -1;
-      const currentIndex = orderedPlatforms.indexOf(selectedPlatform);
-      const nextIndex = (
-        currentIndex + direction + orderedPlatforms.length
-      ) % orderedPlatforms.length;
-      selectPlatform(orderedPlatforms[nextIndex]);
-      platformButtons[nextIndex].focus();
-    });
-  });
+  };
+
+  bindTabs(platformButtons, "developerPlatform", selectPlatform);
+  bindTabs(viewButtons, "developerView", selectView);
 
   const load = async () => {
     try {
       const response = await fetch(databaseURL, {
+        cache: "no-store",
         headers: { Accept: "application/json" }
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);

@@ -4,22 +4,32 @@
   "title": "ForgePlay developer app catalog",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "updatedAt", "apps"],
+  "required": ["schemaVersion", "updatedAt", "sourceRevision", "apps", "inDevelopment"],
   "properties": {
     "$schema": {
       "type": "string"
     },
     "schemaVersion": {
-      "const": 1
+      "const": 2
     },
     "updatedAt": {
       "type": "string",
       "format": "date"
     },
+    "sourceRevision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
     "apps": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/app"
+      }
+    },
+    "inDevelopment": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/project"
       }
     }
   },
@@ -60,8 +70,15 @@
           "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
         },
         "appStoreID": {
-          "type": "string",
-          "pattern": "^[0-9]+$"
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "name": {
           "type": "string",
@@ -90,11 +107,46 @@
         },
         "artwork": {
           "type": "string",
-          "pattern": "^site-assets/developer-apps/[a-z0-9-]+\\.(?:png|jpg)$"
+          "pattern": "^site-assets/(?:developer-apps/[a-z0-9-]+\\.(?:png|jpg)|forgeplay-icon\\.png)$"
         },
         "href": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^https://apps\\.apple\\.com/us/app/[a-z0-9-]+/id[0-9]+$"
+            },
+            {
+              "const": "index.html"
+            }
+          ]
+        }
+      }
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "platform", "kind", "artwork"],
+      "properties": {
+        "id": {
           "type": "string",
-          "pattern": "^https://apps\\.apple\\.com/us/app/[a-z0-9-]+/id[0-9]+$"
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platform": {
+          "enum": ["mac", "ipad", "iphone"]
+        },
+        "kind": {
+          "enum": ["app", "utility", "game"]
+        },
+        "summaries": {
+          "$ref": "#/$defs/localizedText"
+        },
+        "artwork": {
+          "type": "string",
+          "pattern": "^site-assets/developer-apps/[a-z0-9-]+\\.png$"
         }
       }
     }
