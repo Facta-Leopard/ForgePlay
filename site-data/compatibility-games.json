@@ -326,6 +326,13 @@
         "en": "Sekiro™: Shadows Die Twice - GOTY Edition",
         "ko": "세키로: 섀도우 다이 트와이스 - GOTY 에디션"
       }
+    },
+    {
+      "id": "peak",
+      "titles": {
+        "en": "PEAK",
+        "ko": "피크(PEAK)"
+      }
     }
   ],
   "reports": [
@@ -935,6 +942,28 @@
         "de": "Läuft bei 2K-Auflösung und hoher Qualitätsstufe sehr flüssig. Während des kurzen Tests wurden keine Probleme festgestellt.",
         "es": "Funciona muy bien a resolución 2K con el ajuste de calidad en alto. No se observaron problemas durante la breve sesión de prueba.",
         "fr": "Fonctionne très bien en résolution 2K avec le préréglage de qualité élevé. Aucun problème n’a été constaté pendant la courte session de test."
+      },
+      "blocker": null
+    },
+    {
+      "id": "peak-community-macgallery-20260824",
+      "gameId": "peak",
+      "testProfileId": null,
+      "forgePlayVersion": null,
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "맥갤러",
+      "testedAt": null,
+      "notes": {
+        "en": "Gameplay works well overall without any major issues. Joining a co-op lobby hosted by another player works, but creating a lobby as the host does not.",
+        "ko": "게임 플레이 자체에는 큰 문제가 없고 전반적으로 정상 작동합니다. 다른 사용자가 만든 협동 방에는 정상적으로 참가할 수 있지만, 직접 호스트가 되어 방을 만드는 것은 작동하지 않습니다.",
+        "ja": "ゲームプレイ自体には大きな問題がなく、全体的に正常に動作します。ほかのプレイヤーがホストする協力プレイのルームには正常に参加できますが、自分がホストとしてルームを作成することはできません。",
+        "zh-Hans": "游戏本身总体运行正常，没有明显的大问题。可以正常加入其他玩家主持的合作房间，但无法由自己作为主机创建房间。",
+        "zh-Hant": "遊戲本身整體執行正常，沒有明顯的大問題。可以正常加入其他玩家主持的合作房間，但無法由自己作為主機建立房間。",
+        "de": "Das Spiel funktioniert insgesamt gut und weist keine größeren Probleme auf. Der Beitritt zu einer von einem anderen Spieler gehosteten Koop-Lobby funktioniert, das Erstellen einer eigenen Lobby als Host jedoch nicht.",
+        "es": "El juego funciona bien en general y no presenta problemas importantes. Es posible unirse a una sala cooperativa alojada por otro jugador, pero no crear una sala propia como anfitrión.",
+        "fr": "Le jeu fonctionne globalement bien et ne présente pas de problème majeur. Il est possible de rejoindre une partie coopérative hébergée par un autre joueur, mais pas de créer une partie en tant qu’hôte."
       },
       "blocker": null
     }
