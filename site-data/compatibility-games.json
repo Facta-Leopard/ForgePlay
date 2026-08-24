@@ -1,7 +1,7 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-08-13",
+  "updatedAt": "2026-08-24",
   "testProfiles": [
     {
       "id": "apple-silicon-m4-pro-24gb",
@@ -99,8 +99,8 @@
     {
       "id": "overwatch",
       "titles": {
-        "en": "Overwatch",
-        "ko": "오버워치"
+        "en": "Overwatch 2",
+        "ko": "오버워치 2"
       }
     },
     {
@@ -360,6 +360,28 @@
       "source": "project-test",
       "testedAt": null,
       "notes": null,
+      "blocker": null
+    },
+    {
+      "id": "overwatch-2-forgeplay-1-1-github-issue-12",
+      "gameId": "overwatch",
+      "testProfileId": null,
+      "forgePlayVersion": "1.1.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "github-issue",
+      "reporter": "jeongbin2004",
+      "testedAt": "2026-08-23",
+      "notes": {
+        "en": "After updating to ForgePlay 1.1.0, the reporter said the Steam version of Overwatch 2 was almost fully playable. With mostly default settings and Low graphics, it ran at about 100–110 FPS with roughly 60 ms latency. Mouse sensitivity seemed slightly different and was partially improved with LinearMouse. Some lag and about 14 GB of total memory use during gameplay were reported on a 16 GB system. The hardware was entered in the issue as ‘m5pro/m5기본/16gb’, and the macOS version as 26.5.2.",
+        "ko": "ForgePlay 1.1.0 업데이트 후 Steam판 오버워치 2가 거의 정상적으로 플레이된다고 제보했습니다. 거의 기본 설정과 낮음 그래픽에서 약 100–110 FPS, 핑 약 60ms를 기록했습니다. 마우스 감도가 조금 달라진 듯했으며 LinearMouse 설치로 일부 완화되었다고 했습니다. 16GB 환경에서 약간의 렉과 게임 중 전체 메모리 사용량 약 14GB도 보고했습니다. 하드웨어는 이슈에 ‘m5pro/m5기본/16gb’, macOS는 26.5.2로 기재되었습니다.",
+        "ja": "ForgePlay 1.1.0へのアップデート後、Steam版Overwatch 2はほぼ正常にプレイできたと報告されています。ほぼ既定の設定・低グラフィック設定で約100～110 FPS、遅延は約60msでした。マウス感度が少し変わったように感じられ、LinearMouseの導入で一部改善したとのことです。16GB環境では若干のラグと、プレイ中のシステム全体で約14GBのメモリ使用量も報告されました。ハードウェアはIssueに「m5pro/m5기본/16gb」、macOSは26.5.2と記載されています。",
+        "zh-Hans": "更新至 ForgePlay 1.1.0 后，报告者表示 Steam 版 Overwatch 2 几乎可以正常游玩。在接近默认设置和低画质下，帧率约为 100–110 FPS，延迟约为 60ms。鼠标灵敏度似乎略有变化，安装 LinearMouse 后有所缓解。报告者还提到，在 16GB 环境中存在少量卡顿，游玩时系统总内存占用约为 14GB。Issue 中的硬件信息填写为“m5pro/m5기본/16gb”，macOS 版本为 26.5.2。",
+        "zh-Hant": "更新至 ForgePlay 1.1.0 後，回報者表示 Steam 版 Overwatch 2 幾乎可以正常遊玩。在接近預設設定與低畫質下，影格率約為 100–110 FPS，延遲約為 60ms。滑鼠靈敏度似乎略有變化，安裝 LinearMouse 後有所緩解。回報者也提到，在 16GB 環境中有少量卡頓，遊玩時系統總記憶體占用約為 14GB。Issue 中的硬體資訊填寫為「m5pro/m5기본/16gb」，macOS 版本為 26.5.2。",
+        "de": "Nach dem Update auf ForgePlay 1.1.0 war die Steam-Version von Overwatch 2 laut Bericht nahezu vollständig spielbar. Mit weitgehend unveränderten Standardeinstellungen und niedriger Grafikqualität wurden etwa 100–110 FPS bei rund 60 ms Latenz erreicht. Die Mausempfindlichkeit schien sich leicht verändert zu haben und ließ sich mit LinearMouse teilweise verbessern. Auf einem System mit 16 GB wurden außerdem etwas Ruckeln und eine gesamte Speichernutzung von etwa 14 GB während des Spiels gemeldet. Die Hardware wurde im Issue als „m5pro/m5기본/16gb“ und die macOS-Version als 26.5.2 angegeben.",
+        "es": "Tras actualizar a ForgePlay 1.1.0, el informante indicó que la versión de Steam de Overwatch 2 era casi totalmente jugable. Con ajustes prácticamente predeterminados y gráficos en nivel bajo, funcionó a unos 100–110 FPS con aproximadamente 60 ms de latencia. La sensibilidad del ratón parecía haber cambiado ligeramente y mejoró en parte al instalar LinearMouse. También se notificaron algo de retardo y un uso total de memoria de unos 14 GB durante el juego en un sistema de 16 GB. En el issue, el hardware figura como «m5pro/m5기본/16gb» y la versión de macOS como 26.5.2.",
+        "fr": "Après la mise à jour vers ForgePlay 1.1.0, la personne ayant fait le signalement a indiqué que la version Steam d’Overwatch 2 était presque entièrement jouable. Avec des réglages proches des valeurs par défaut et une qualité graphique faible, le jeu tournait à environ 100–110 FPS avec une latence proche de 60 ms. La sensibilité de la souris semblait légèrement différente et l’installation de LinearMouse a permis une amélioration partielle. De légers ralentissements et une utilisation totale de la mémoire d’environ 14 Go pendant le jeu ont également été signalés sur un système doté de 16 Go. Le matériel a été saisi dans l’issue sous la forme « m5pro/m5기본/16gb » et la version de macOS sous la forme 26.5.2."
+      },
       "blocker": null
     },
     {
