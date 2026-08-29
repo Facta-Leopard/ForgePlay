@@ -11,6 +11,7 @@ PAGES=(
   compatibility.html
   updates.html
   site.css
+  site-assets/home-experience.css
   site-assets/why-story.css
   locale-bootstrap.js
   site.js
@@ -19,6 +20,7 @@ PAGES=(
   compatibility.js
   announcements.js
   developer-apps.js
+  site-assets/home-experience.js
   site-data/compatibility-games.json
   site-data/compatibility.schema.json
   site-data/current-release.json
@@ -1736,6 +1738,7 @@ for script in \
   compatibility.js \
   announcements.js \
   developer-apps.js \
+  site-assets/home-experience.js \
   site-assets/why-story.js; do
   node --check "$ROOT_DIR/$script" >/dev/null || fail "$script has invalid JavaScript syntax"
 done

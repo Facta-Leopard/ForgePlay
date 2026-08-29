@@ -13,6 +13,7 @@ PAGES=(
   compatibility.html
   updates.html
   site.css
+  site-assets/home-experience.css
   site-assets/why-story.css
   locale-bootstrap.js
   site.js
@@ -21,6 +22,7 @@ PAGES=(
   compatibility.js
   announcements.js
   developer-apps.js
+  site-assets/home-experience.js
   site-data/compatibility-games.json
   site-data/compatibility.schema.json
   site-data/current-release.json
@@ -55,6 +57,13 @@ PAGES=(
   site-assets/developer-apps/seolapin.jpg
   site-assets/developer-apps/brambletread.jpg
   site-assets/developer-apps/moonwhisk-vale.jpg
+  site-assets/developer-apps/majordex.png
+  site-assets/developer-apps/forgekit.png
+  site-assets/developer-apps/harewatch.png
+  site-assets/developer-apps/warrennet.png
+  site-assets/developer-apps/hazel-and-peanut.png
+  site-assets/developer-apps/grayline.png
+  site-assets/developer-apps/leporis-ascendant.png
   LICENSE.md
   LICENSES/ForgePlayGameMode/GAME_MODE_LICENSE_SCOPE.md
   LICENSES/ForgePlayGameMode/GAME_MODE_LICENSE_SCOPE_KO.md

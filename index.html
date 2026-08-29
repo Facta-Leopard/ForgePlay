@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#141618">
+  <meta name="theme-color" content="#000000">
   <title>ForgePlay — Windows games inside macOS Game Mode</title>
   <meta name="description" content="An open-source Windows gaming platform built around a native macOS Game Mode-capable host on Apple Silicon.">
   <meta property="og:type" content="website">
@@ -24,13 +24,15 @@
         imagesrcset="site-assets/forgeplay-hero.jpg 1600w, site-assets/forgeplay-hero-3200.jpg 3200w"
         imagesizes="100vw" fetchpriority="high">
   <link rel="stylesheet" href="site.css?v=20260821-2">
+  <link rel="stylesheet" href="site-assets/home-experience.css?v=20260829-3">
   <script src="site.js?v=20260821-3" defer></script>
   <script src="site-assets/current-release.js?v=20260811-22" defer></script>
   <script src="compatibility.js?v=20260802-21" defer></script>
   <script src="announcements.js?v=20260821-1" defer></script>
   <script src="developer-apps.js?v=20260821-3" defer></script>
+  <script src="site-assets/home-experience.js?v=20260829-3" defer></script>
 </head>
-<body data-page="home">
+<body class="home-experience" data-page="home">
   <a class="skip-link" href="#main" data-i18n="shared.skip">Skip to content</a>
 
   <header class="site-header">
@@ -65,12 +67,6 @@
 
   <main id="main">
     <section class="home-hero" aria-labelledby="hero-title">
-      <div class="hero-art" aria-hidden="true">
-        <img src="site-assets/forgeplay-hero.jpg"
-             srcset="site-assets/forgeplay-hero.jpg 1600w, site-assets/forgeplay-hero-3200.jpg 3200w"
-             sizes="100vw" alt="" width="1600" height="1000" fetchpriority="high">
-      </div>
-      <div class="hero-shade" aria-hidden="true"></div>
       <div class="hero-layout">
         <div class="hero-copy" data-reveal>
           <p class="eyebrow"><span class="eyebrow-mark"></span><span data-i18n="home.eyebrow">WORLD’S FIRST* · WINDOWS GAMES × macOS GAME MODE</span></p>
@@ -98,35 +94,48 @@
             <a class="hero-notice-all" href="updates.html" data-locale-link data-i18n="home.latestAll">All updates ↗</a>
           </article>
         </div>
-        <div class="hero-proof hero-stamp" data-reveal>
-          <span class="proof-kicker" data-i18n="home.worldFirstLabel">THE WORLD’S FIRST*</span>
-          <strong data-i18n="home.proofTitle">WINDOWS GAMES IN macOS GAME MODE</strong>
-          <span data-i18n="home.proofBody">DirectX → Metal · open source</span>
+        <div class="hero-visual" data-reveal>
+          <div class="hero-art" aria-hidden="true">
+            <img src="site-assets/forgeplay-hero.jpg"
+                 srcset="site-assets/forgeplay-hero.jpg 1600w, site-assets/forgeplay-hero-3200.jpg 3200w"
+                 sizes="(max-width: 760px) 100vw, 54vw" alt="" width="1600" height="1000" fetchpriority="high">
+          </div>
+          <div class="hero-shade" aria-hidden="true"></div>
+          <div class="hero-proof hero-stamp">
+            <span class="proof-kicker" data-i18n="home.worldFirstLabel">THE WORLD’S FIRST*</span>
+            <strong data-i18n="home.proofTitle">WINDOWS GAMES IN macOS GAME MODE</strong>
+            <span data-i18n="home.proofBody">DirectX → Metal · open source</span>
+          </div>
         </div>
       </div>
-    </section>
-
-    <section class="status-rail" aria-label="Project status" data-i18n-aria-label="home.statusLabel">
-      <div><span>HOST</span><strong data-i18n="home.statusApple">Apple Silicon</strong></div>
-      <div><span>OS</span><strong data-i18n="home.statusOS">macOS 26+ · Rosetta required</strong></div>
-      <div><span>GAME MODE</span><strong data-i18n="home.statusBeta">Opt-in beta</strong></div>
-      <div><span>RELEASE</span><strong data-current-release-status-summary data-i18n="home.statusRelease">Current release available</strong></div>
+      <div class="status-rail" aria-label="Project status" data-i18n-aria-label="home.statusLabel">
+        <div><span>HOST</span><strong data-i18n="home.statusApple">Apple Silicon</strong></div>
+        <div><span>OS</span><strong data-i18n="home.statusOS">macOS 26+ · Rosetta required</strong></div>
+        <div><span>GAME MODE</span><strong data-i18n="home.statusBeta">Opt-in beta</strong></div>
+        <div><span>RELEASE</span><strong data-current-release-status-summary data-i18n="home.statusRelease">Current release available</strong></div>
+      </div>
     </section>
 
     <section class="world-first-campaign" aria-labelledby="world-first-title">
       <div class="world-first-shell">
-        <p class="campaign-kicker" data-i18n="home.worldFirstLabel">THE WORLD’S FIRST*</p>
-        <div class="world-first-route" aria-label="DirectX to Metal to macOS Game Mode" data-i18n-aria-label="home.worldFirstRouteLabel">
-          <strong>DIRECTX</strong>
-          <span aria-hidden="true">→</span>
-          <strong>METAL</strong>
-          <span aria-hidden="true">→</span>
-          <strong data-i18n="home.worldFirstRouteGameMode">macOS GAME MODE</strong>
+        <div class="world-first-grid">
+          <div class="world-first-copy" data-reveal>
+            <p class="campaign-kicker" data-i18n="home.worldFirstLabel">THE WORLD’S FIRST*</p>
+            <h2 id="world-first-title" data-i18n="home.worldFirstTitle">Windows games, carried by macOS Game Mode.</h2>
+            <p class="world-first-lead" data-i18n="home.worldFirstLead">Not a game badge on a launcher. The live Windows game session belongs in a native Game Mode-capable macOS context.</p>
+            <a class="button primary" href="#game-mode" data-i18n="home.worldFirstButton">See the difference</a>
+            <p class="world-first-scope" data-i18n="home.worldFirstScope">*To our knowledge, the first publicly documented open-source Windows gaming platform designed to carry a live Wine game session through a native macOS Game Mode-capable host, as of 28 July 2026.</p>
+          </div>
+          <div class="world-first-route-panel" data-reveal>
+            <div class="world-first-route" aria-label="DirectX to Metal to macOS Game Mode" data-i18n-aria-label="home.worldFirstRouteLabel">
+              <strong>DIRECTX</strong>
+              <span aria-hidden="true">→</span>
+              <strong>METAL</strong>
+              <span aria-hidden="true">→</span>
+              <strong data-i18n="home.worldFirstRouteGameMode">macOS GAME MODE</strong>
+            </div>
+          </div>
         </div>
-        <h2 id="world-first-title" data-i18n="home.worldFirstTitle">Windows games, carried by macOS Game Mode.</h2>
-        <p class="world-first-lead" data-i18n="home.worldFirstLead">Not a game badge on a launcher. The live Windows game session belongs in a native Game Mode-capable macOS context.</p>
-        <a class="button primary" href="#game-mode" data-i18n="home.worldFirstButton">See the difference</a>
-        <p class="world-first-scope" data-i18n="home.worldFirstScope">*To our knowledge, the first publicly documented open-source Windows gaming platform designed to carry a live Wine game session through a native macOS Game Mode-capable host, as of 28 July 2026.</p>
       </div>
     </section>
 
@@ -138,31 +147,33 @@
           <p data-i18n="home.gameModeLead">Game Mode reduces background activity, prioritizes CPU and GPU access for the game, and lowers wireless input and audio latency.</p>
         </header>
 
-        <div class="game-mode-metrics">
-          <article data-reveal>
-            <strong>CPU + GPU</strong>
-            <span data-i18n="home.gameModeMetric1">Highest-priority access</span>
-          </article>
-          <article data-reveal>
-            <strong>2×</strong>
-            <span data-i18n="home.gameModeMetric2">Bluetooth sampling rate</span>
-          </article>
-          <article data-reveal>
-            <strong aria-hidden="true">↓</strong>
-            <span data-i18n="home.gameModeMetric3">Background activity</span>
-          </article>
-        </div>
+        <div class="game-mode-workbench">
+          <div class="game-mode-bridge" data-reveal role="tablist" aria-label="ForgePlay Game Mode path" data-i18n-aria-label="home.gameModePathLabel">
+            <button id="game-mode-step-game" type="button" role="tab" aria-selected="true" aria-controls="game-mode-metric-priority" data-game-mode-step="0" data-i18n="home.gameModePath1">Windows game</button>
+            <b role="presentation" aria-hidden="true">→</b>
+            <button id="game-mode-step-host" class="bridge-core" type="button" role="tab" aria-selected="false" aria-controls="game-mode-metric-wireless" data-game-mode-step="1" data-i18n="home.gameModePath2">ForgePlay Game Host</button>
+            <b role="presentation" aria-hidden="true">→</b>
+            <button id="game-mode-step-macos" type="button" role="tab" aria-selected="false" aria-controls="game-mode-metric-background" data-game-mode-step="2" data-i18n="home.gameModePath3">macOS Game Mode</button>
+          </div>
 
-        <div class="game-mode-bridge" data-reveal aria-label="ForgePlay Game Mode path" data-i18n-aria-label="home.gameModePathLabel">
-          <span data-i18n="home.gameModePath1">Windows game</span>
-          <b aria-hidden="true">→</b>
-          <span class="bridge-core" data-i18n="home.gameModePath2">ForgePlay Game Host</span>
-          <b aria-hidden="true">→</b>
-          <span data-i18n="home.gameModePath3">macOS Game Mode</span>
-        </div>
+          <div class="game-mode-metrics">
+            <article id="game-mode-metric-priority" role="tabpanel" aria-labelledby="game-mode-step-game" data-game-mode-panel="0" data-reveal>
+              <strong>CPU + GPU</strong>
+              <span data-i18n="home.gameModeMetric1">Highest-priority access</span>
+            </article>
+            <article id="game-mode-metric-wireless" role="tabpanel" aria-labelledby="game-mode-step-host" data-game-mode-panel="1" data-reveal>
+              <strong>2×</strong>
+              <span data-i18n="home.gameModeMetric2">Bluetooth sampling rate</span>
+            </article>
+            <article id="game-mode-metric-background" role="tabpanel" aria-labelledby="game-mode-step-macos" data-game-mode-panel="2" data-reveal>
+              <strong aria-hidden="true">↓</strong>
+              <span data-i18n="home.gameModeMetric3">Background activity</span>
+            </article>
+          </div>
 
-        <div class="game-mode-foot" data-reveal>
-          <a class="text-link" href="https://support.apple.com/105118" target="_blank" rel="noreferrer" data-i18n="home.gameModeAppleLink">Apple’s Game Mode guide ↗</a>
+          <div class="game-mode-foot" data-reveal>
+            <a class="text-link" href="https://support.apple.com/105118" target="_blank" rel="noreferrer" data-i18n="home.gameModeAppleLink">Apple’s Game Mode guide ↗</a>
+          </div>
         </div>
       </div>
     </section>
@@ -174,7 +185,7 @@
       </div>
 
       <div class="difference-grid">
-        <article class="difference-card difference-lime" data-reveal>
+        <article class="difference-card difference-lime difference-featured" data-reveal>
           <span class="difference-number">01</span>
           <h3 data-i18n="home.feature1Title">A native Game Mode path</h3>
           <p data-i18n="home.feature1Body">A dedicated macOS game context carries the Windows game session.</p>
@@ -302,6 +313,7 @@
       </div>
     </section>
 
+    <div class="closing-chapter">
     <section id="support-project" class="sponsor-section">
       <div class="sponsor-mark" aria-hidden="true">
         <span data-i18n="home.sponsorMark">OPEN</span>
@@ -335,6 +347,7 @@
         </div>
       </div>
     </section>
+    </div>
   </main>
 
   <footer class="site-footer">
