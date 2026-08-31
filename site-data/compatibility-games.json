@@ -1,7 +1,7 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-08-24",
+  "updatedAt": "2026-08-31",
   "testProfiles": [
     {
       "id": "apple-silicon-m4-pro-24gb",
@@ -79,6 +79,13 @@
       "chip": "M4 Pro",
       "unifiedMemoryGB": 24,
       "macOSVersion": "Tahoe 26.6.1"
+    },
+    {
+      "id": "macbook-pro-m5-16gb-tahoe-26-6",
+      "platform": "MacBook Pro",
+      "chip": "M5",
+      "unifiedMemoryGB": 16,
+      "macOSVersion": "Tahoe 26.6"
     }
   ],
   "games": [
@@ -332,6 +339,13 @@
       "titles": {
         "en": "PEAK",
         "ko": "피크(PEAK)"
+      }
+    },
+    {
+      "id": "prominence-poker",
+      "titles": {
+        "en": "Prominence Poker",
+        "ko": "프로미넌스 포커"
       }
     }
   ],
@@ -964,6 +978,28 @@
         "de": "Das Spiel funktioniert insgesamt gut und weist keine größeren Probleme auf. Der Beitritt zu einer von einem anderen Spieler gehosteten Koop-Lobby funktioniert, das Erstellen einer eigenen Lobby als Host jedoch nicht.",
         "es": "El juego funciona bien en general y no presenta problemas importantes. Es posible unirse a una sala cooperativa alojada por otro jugador, pero no crear una sala propia como anfitrión.",
         "fr": "Le jeu fonctionne globalement bien et ne présente pas de problème majeur. Il est possible de rejoindre une partie coopérative hébergée par un autre joueur, mais pas de créer une partie en tant qu’hôte."
+      },
+      "blocker": null
+    },
+    {
+      "id": "prominence-poker-macbook-pro-m5-16gb-community-macgallery-20260831",
+      "gameId": "prominence-poker",
+      "testProfileId": "macbook-pro-m5-16gb-tahoe-26-6",
+      "forgePlayVersion": "1.1",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "맥갤러",
+      "testedAt": null,
+      "notes": {
+        "en": "Runs well overall. Although it is an older game, the MacBook Pro produces some noticeable heat during play.",
+        "ko": "전반적으로 원활하게 플레이됩니다. 구형 게임임에도 플레이 중 MacBook Pro에서 발열이 다소 발생합니다.",
+        "ja": "全体的に快適にプレイできます。古いゲームですが、プレイ中はMacBook Proにやや発熱が生じます。",
+        "zh-Hans": "整体运行流畅。虽然是一款较老的游戏，但游玩时 MacBook Pro 仍会出现一定程度的发热。",
+        "zh-Hant": "整體執行流暢。雖然是一款較舊的遊戲，但遊玩時 MacBook Pro 仍會出現一定程度的發熱。",
+        "de": "Läuft insgesamt flüssig. Obwohl es sich um ein älteres Spiel handelt, erwärmt sich das MacBook Pro beim Spielen merklich.",
+        "es": "Funciona con fluidez en general. Aunque es un juego antiguo, el MacBook Pro se calienta de forma perceptible durante la partida.",
+        "fr": "Fonctionne globalement de manière fluide. Bien qu’il s’agisse d’un jeu ancien, le MacBook Pro chauffe de façon perceptible pendant la partie."
       },
       "blocker": null
     }
