@@ -1,13 +1,114 @@
 {
   "$schema": "./announcements.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-08-23",
+  "updatedAt": "2026-09-02",
   "announcements": [
+    {
+      "id": "forgeplay-1-2-coming-soon",
+      "type": "project",
+      "publishedAt": "2026-09-02",
+      "featured": true,
+      "titles": {
+        "en": "ForgePlay 1.2 is coming soon.",
+        "ko": "ForgePlay 1.2 업데이트가 곧 출시됩니다.",
+        "de": "ForgePlay 1.2 erscheint in Kürze.",
+        "es": "ForgePlay 1.2 llegará muy pronto.",
+        "fr": "ForgePlay 1.2 arrive prochainement.",
+        "ja": "ForgePlay 1.2をまもなくリリースします。",
+        "zh-Hans": "ForgePlay 1.2 即将发布。",
+        "zh-Hant": "ForgePlay 1.2 即將發布。"
+      },
+      "summaries": {
+        "en": "ForgePlay 1.2 is undergoing final optimization with a revised frame-generation approach, localization font fixes, Steam-library preservation across prefix reinstalls, and stronger Xbox gamepad compatibility.",
+        "ko": "프레임 생성 방식 변경과 함께 다국어 글꼴 충돌 개선, 프리픽스 재설치 시 Steam 라이브러리 유지, Xbox 게임패드 호환성 강화를 최종 최적화하고 있습니다.",
+        "de": "ForgePlay 1.2 wird abschließend optimiert: mit überarbeiteter Frame-Generation, Korrekturen für Schriftkonflikte bei der Lokalisierung, Erhalt der Steam-Bibliothek bei einer Prefix-Neuinstallation und verbesserter Xbox-Gamepad-Kompatibilität.",
+        "es": "ForgePlay 1.2 está en su fase final de optimización, con un sistema revisado de generación de fotogramas, correcciones de conflictos tipográficos en la localización, conservación de la biblioteca de Steam al reinstalar el prefijo y mayor compatibilidad con mandos Xbox.",
+        "fr": "ForgePlay 1.2 est en cours d’optimisation finale avec une génération d’images remaniée, la correction des conflits de polices liés à la localisation, la conservation de la bibliothèque Steam lors de la réinstallation du préfixe et une meilleure compatibilité avec les manettes Xbox.",
+        "ja": "ForgePlay 1.2では、フレーム生成方式の見直し、多言語化時のフォント競合修正、Prefix再インストール時のSteamライブラリ保持、Xboxゲームパッド互換性の強化について最終最適化を進めています。",
+        "zh-Hans": "ForgePlay 1.2 正在进行最终优化，包括调整帧生成方式、改善多语言本地化时的字体冲突、重装 Prefix 时保留 Steam 游戏库，以及增强 Xbox 手柄兼容性。",
+        "zh-Hant": "ForgePlay 1.2 正在進行最終最佳化，包括調整影格生成方式、改善多語言本地化時的字型衝突、重新安裝 Prefix 時保留 Steam 遊戲庫，以及增強 Xbox 控制器相容性。"
+      },
+      "paragraphs": {
+        "en": [
+          "ForgePlay 1.2 will be released soon.",
+          "Although input latency can be reduced further during frame generation, we have decided not to pursue the ultra-low-latency approach because of GPTK licensing constraints and severe visual artifacts observed in actual game output.",
+          "We are now optimizing a revised frame-generation structure that moves beyond focusing only on latency reduction and instead supplements missing frames naturally. The goal is to balance game compatibility, image stability, and input responsiveness.",
+          "## Additional improvements included with ForgePlay 1.2",
+          "- Improved font conflicts during multilingual localization\n- Preserve the existing Steam game library when reinstalling a prefix\n- Stronger compatibility with Xbox gamepads",
+          "We are completing final checks for feature stability and per-game behavior. We will return soon with a more stable and polished release.",
+          "Stay tuned."
+        ],
+        "ko": [
+          "ForgePlay 1.2 업데이트가 조만간 릴리스됩니다.",
+          "프레임 생성 과정에서 입력 지연을 더욱 줄이는 것은 가능하지만, GPTK 라이선스 문제와 실제 게임 화면에서 발생하는 심한 아티팩트 등을 고려하여 초저지연 방식의 적용은 지양하기로 했습니다.",
+          "현재는 지연시간 단축에만 집중하는 방식에서 벗어나, 부족한 프레임을 자연스럽게 보충하는 방식으로 프레임 생성 구조를 변경하여 최적화하고 있습니다. 게임 호환성, 화면 안정성, 입력 반응성 사이의 균형을 맞추는 것이 목표입니다.",
+          "## ForgePlay 1.2에 함께 포함될 개선 사항",
+          "- 다국어 로컬라이징 과정에서 발생하는 글꼴 충돌 문제 개선\n- 프리픽스를 재설치해도 기존 Steam 게임 라이브러리가 유지되도록 개선\n- Xbox용 게임패드 호환성 강화",
+          "현재 각 기능의 안정성과 게임별 동작을 최종적으로 점검하고 있습니다. 더욱 안정적이고 완성도 높은 모습으로 곧 선보이겠습니다.",
+          "Stay tuned."
+        ],
+        "de": [
+          "ForgePlay 1.2 wird in Kürze veröffentlicht.",
+          "Die Eingabeverzögerung bei der Frame-Generation ließe sich weiter reduzieren. Wegen der GPTK-Lizenzbedingungen und starker Bildartefakte in der tatsächlichen Spielausgabe verzichten wir jedoch auf den Ultra-Low-Latency-Ansatz.",
+          "Statt ausschließlich die Latenz zu minimieren, optimieren wir nun eine überarbeitete Frame-Generation, die fehlende Bilder auf natürliche Weise ergänzt. Ziel ist ein ausgewogenes Verhältnis zwischen Spielekompatibilität, Bildstabilität und Eingabereaktion.",
+          "## Weitere Verbesserungen in ForgePlay 1.2",
+          "- Behebung von Schriftkonflikten bei mehrsprachiger Lokalisierung\n- Erhalt der vorhandenen Steam-Spielebibliothek bei einer Neuinstallation des Prefix\n- Verbesserte Kompatibilität mit Xbox-Gamepads",
+          "Derzeit schließen wir die letzten Prüfungen zur Stabilität der Funktionen und zum Verhalten in einzelnen Spielen ab. Eine stabilere und ausgereiftere Version folgt in Kürze.",
+          "Stay tuned."
+        ],
+        "es": [
+          "ForgePlay 1.2 se publicará muy pronto.",
+          "Es posible reducir aún más la latencia de entrada durante la generación de fotogramas, pero hemos decidido no aplicar el enfoque de latencia ultrabaja debido a las restricciones de la licencia de GPTK y a los graves artefactos visuales observados en la imagen real de los juegos.",
+          "Ahora estamos optimizando una estructura revisada que deja de centrarse únicamente en reducir la latencia y pasa a completar de forma natural los fotogramas que faltan. El objetivo es equilibrar la compatibilidad de los juegos, la estabilidad de imagen y la respuesta de entrada.",
+          "## Otras mejoras incluidas en ForgePlay 1.2",
+          "- Corrección de conflictos de fuentes durante la localización multilingüe\n- Conservación de la biblioteca de juegos de Steam al reinstalar un prefijo\n- Mayor compatibilidad con mandos Xbox",
+          "Estamos completando las comprobaciones finales de estabilidad y funcionamiento en cada juego. Muy pronto presentaremos una versión más estable y completa.",
+          "Stay tuned."
+        ],
+        "fr": [
+          "ForgePlay 1.2 sera publié prochainement.",
+          "Il est possible de réduire davantage la latence d’entrée pendant la génération d’images, mais nous avons choisi de ne pas adopter l’approche à latence ultra-faible en raison des contraintes de licence de GPTK et des importants artefacts visuels constatés dans l’image réelle des jeux.",
+          "Nous optimisons désormais une structure remaniée qui ne se concentre plus uniquement sur la réduction de la latence, mais complète naturellement les images manquantes. L’objectif est d’équilibrer la compatibilité des jeux, la stabilité de l’image et la réactivité des commandes.",
+          "## Autres améliorations incluses dans ForgePlay 1.2",
+          "- Correction des conflits de polices pendant la localisation multilingue\n- Conservation de la bibliothèque de jeux Steam lors de la réinstallation d’un préfixe\n- Compatibilité renforcée avec les manettes Xbox",
+          "Nous terminons les dernières vérifications de stabilité et de comportement selon les jeux. Une version plus stable et aboutie sera bientôt disponible.",
+          "Stay tuned."
+        ],
+        "ja": [
+          "ForgePlay 1.2アップデートをまもなくリリースします。",
+          "フレーム生成時の入力遅延をさらに減らすことは可能ですが、GPTKのライセンス上の問題と実際のゲーム画面で発生する深刻なアーティファクトを考慮し、超低遅延方式の採用は見送ることにしました。",
+          "現在は遅延時間の短縮だけを重視する方式から離れ、不足するフレームを自然に補う構造へ変更して最適化しています。ゲーム互換性、画面の安定性、入力応答性のバランスを取ることが目標です。",
+          "## ForgePlay 1.2に含まれるその他の改善",
+          "- 多言語ローカライズ時に発生するフォント競合の改善\n- Prefixを再インストールしても既存のSteamゲームライブラリを保持\n- Xboxゲームパッドとの互換性を強化",
+          "現在、各機能の安定性とゲームごとの動作を最終確認しています。より安定し、完成度を高めた形でまもなくお届けします。",
+          "Stay tuned."
+        ],
+        "zh-Hans": [
+          "ForgePlay 1.2 更新即将发布。",
+          "帧生成过程中的输入延迟还可以进一步降低，但考虑到 GPTK 许可问题以及实际游戏画面中出现的严重视觉伪影，我们决定不采用超低延迟方案。",
+          "目前，我们不再只追求缩短延迟，而是将帧生成结构调整为自然补充缺失帧的方式并继续优化。目标是在游戏兼容性、画面稳定性和输入响应之间取得平衡。",
+          "## ForgePlay 1.2 同时包含的其他改进",
+          "- 改善多语言本地化过程中出现的字体冲突\n- 重新安装 Prefix 时保留现有 Steam 游戏库\n- 增强 Xbox 手柄兼容性",
+          "目前正在完成各项功能稳定性和不同游戏运行情况的最终检查。我们将很快带来更加稳定、完成度更高的版本。",
+          "Stay tuned."
+        ],
+        "zh-Hant": [
+          "ForgePlay 1.2 更新即將發布。",
+          "影格生成過程中的輸入延遲還可以進一步降低，但考量 GPTK 授權問題以及實際遊戲畫面中出現的嚴重視覺瑕疵，我們決定不採用超低延遲方案。",
+          "目前，我們不再只追求縮短延遲，而是將影格生成結構調整為自然補充缺少影格的方式並持續最佳化。目標是在遊戲相容性、畫面穩定性與輸入反應之間取得平衡。",
+          "## ForgePlay 1.2 同時包含的其他改善",
+          "- 改善多語言本地化過程中出現的字型衝突\n- 重新安裝 Prefix 時保留現有 Steam 遊戲庫\n- 增強 Xbox 控制器相容性",
+          "目前正在完成各項功能穩定性與不同遊戲運作情況的最終檢查。我們將很快帶來更加穩定、完成度更高的版本。",
+          "Stay tuned."
+        ]
+      },
+      "href": "updates.html#update-forgeplay-1-2-coming-soon"
+    },
     {
       "id": "forgeplay-1-2-in-development",
       "type": "project",
       "publishedAt": "2026-08-23",
-      "featured": true,
+      "featured": false,
       "titles": {
         "en": "Development is underway for the ForgePlay 1.2 update.",
         "ko": "ForgePlay 1.2 업데이트를 위해 개발하고 있습니다.",
