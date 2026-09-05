@@ -178,14 +178,27 @@
 
   const renderList = (announcements, selectedLocale) => {
     if (!list) return;
+    const previousOpenStates = new Map(
+      [...list.querySelectorAll(".update-card")].map((article) => [
+        article.id,
+        article.querySelector("details")?.open
+      ])
+    );
     const fragment = document.createDocumentFragment();
     announcements.forEach((announcement, index) => {
       const article = document.createElement("article");
       article.className = "update-card";
       article.id = announcementAnchorId(announcement.id);
       article.dataset.type = announcement.type;
+      if (index === 0) article.classList.add("update-card-latest");
 
-      const meta = document.createElement("div");
+      const disclosure = document.createElement("details");
+      disclosure.className = "update-card-disclosure";
+      disclosure.open = previousOpenStates.get(article.id) ?? index === 0;
+      const heading = document.createElement("summary");
+      heading.className = "update-card-summary";
+
+      const meta = document.createElement("span");
       meta.className = "update-card-meta";
       appendTextElement(meta, "span", "update-card-index", String(index + 1).padStart(2, "0"));
       appendTextElement(
@@ -201,22 +214,33 @@
         formatDate(announcement.publishedAt, selectedLocale)
       ).dateTime = announcement.publishedAt;
 
-      const copy = document.createElement("div");
+      const copy = document.createElement("span");
       copy.className = "update-card-copy";
-      appendTextElement(copy, "h2", "", localizedText(announcement.titles, selectedLocale));
+      const title = appendTextElement(
+        copy, "span", "update-card-title", localizedText(announcement.titles, selectedLocale)
+      );
+      title.setAttribute("role", "heading");
+      title.setAttribute("aria-level", "2");
+      appendTextElement(
+        copy, "span", "update-card-excerpt", localizedText(announcement.summaries, selectedLocale)
+      );
+      const indicator = appendTextElement(heading, "span", "update-card-toggle", "+");
+      indicator.setAttribute("aria-hidden", "true");
+      heading.prepend(meta, copy);
+
+      const content = document.createElement("div");
+      content.className = "update-card-content";
       const paragraphs = localizedParagraphs(announcement.paragraphs, selectedLocale);
       if (paragraphs.length) {
         const body = document.createElement("div");
         body.className = "update-card-body";
         paragraphs.forEach((paragraph) => appendStructuredParagraph(body, paragraph));
-        copy.append(body);
-      } else {
-        appendTextElement(copy, "p", "", localizedText(announcement.summaries, selectedLocale));
+        content.append(body);
       }
 
       if (announcement.href !== announcementDetailHref(announcement.id)) {
         const link = appendTextElement(
-          copy,
+          content,
           "a",
           "text-link update-card-link",
           message("updates.openLink", "Open update ↗")
@@ -224,7 +248,8 @@
         applyLinkDestination(link, announcement.href, selectedLocale);
       }
 
-      article.append(meta, copy);
+      disclosure.append(heading, content);
+      article.append(disclosure);
       fragment.append(article);
     });
 
@@ -232,10 +257,15 @@
     list.setAttribute("aria-busy", "false");
     if (emptyState) emptyState.hidden = announcements.length !== 0;
 
+    openRequestedAnnouncement();
+  };
+
+  const openRequestedAnnouncement = () => {
     const requestedCard = document.getElementById(window.location.hash.slice(1));
-    if (requestedCard?.classList.contains("update-card")) {
-      window.requestAnimationFrame(() => requestedCard.scrollIntoView({ block: "center" }));
-    }
+    if (!requestedCard?.classList.contains("update-card")) return;
+    const disclosure = requestedCard.querySelector("details");
+    if (disclosure) disclosure.open = true;
+    window.requestAnimationFrame(() => requestedCard.scrollIntoView({ block: "start" }));
   };
 
   const render = () => {
@@ -271,5 +301,6 @@
   };
 
   document.addEventListener("forgeplay:localechange", render);
+  window.addEventListener("hashchange", openRequestedAnnouncement);
   load();
 })();

@@ -14,6 +14,8 @@ PAGES=(
   updates.html
   site.css
   site-assets/home-experience.css
+  site-assets/site-shell.css
+  site-assets/page-experience.css
   site-assets/why-story.css
   locale-bootstrap.js
   site.js
@@ -23,6 +25,7 @@ PAGES=(
   announcements.js
   developer-apps.js
   site-assets/home-experience.js
+  site-assets/site-shell.js
   site-data/compatibility-games.json
   site-data/compatibility.schema.json
   site-data/current-release.json

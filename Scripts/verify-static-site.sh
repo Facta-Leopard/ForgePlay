@@ -12,6 +12,8 @@ PAGES=(
   updates.html
   site.css
   site-assets/home-experience.css
+  site-assets/site-shell.css
+  site-assets/page-experience.css
   site-assets/why-story.css
   locale-bootstrap.js
   site.js
@@ -21,6 +23,7 @@ PAGES=(
   announcements.js
   developer-apps.js
   site-assets/home-experience.js
+  site-assets/site-shell.js
   site-data/compatibility-games.json
   site-data/compatibility.schema.json
   site-data/current-release.json
@@ -1370,17 +1373,16 @@ for html in index.html why.html license.html privacy.html support.html compatibi
   require_snippet "$ROOT_DIR/$html" 'src="locale-bootstrap.js?v=20260729-14"'
   if [[ "$html" == "compatibility.html" ]]; then
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260811-22"'
-    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260811-22"'
   elif [[ "$html" == "updates.html" ]]; then
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260821-1"'
-    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260801-17"'
   elif [[ "$html" == "index.html" ]]; then
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260821-2"'
-    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260821-3"'
   else
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-14"'
-    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260729-14"'
   fi
+  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260905-4"'
+  require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.css?v=20260905-2'
+  require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.js?v=20260905-2'
   require_snippet "$ROOT_DIR/$html" 'data-language-select'
   require_snippet "$ROOT_DIR/$html" 'site-assets/forgeplay-icon.png?v=20260821-dark-1'
   require_snippet "$ROOT_DIR/$html" 'target="_blank" rel="noopener noreferrer"'
@@ -1420,11 +1422,13 @@ require_snippet "$ROOT_DIR/index.html" 'site-assets/forgeplay-hero-3200.jpg 3200
 require_snippet "$ROOT_DIR/index.html" 'site-assets/forgeplay-manifesto-3200.jpg 3200w'
 require_snippet "$ROOT_DIR/index.html" 'data-compatibility-count'
 require_snippet "$ROOT_DIR/index.html" 'href="compatibility.html"'
-require_snippet "$ROOT_DIR/index.html" 'PLAYABLE IN GAME MODE'
+require_snippet "$ROOT_DIR/index.html" 'data-i18n="refresh.playable"'
+require_snippet "$ROOT_DIR/index.html" 'data-home-search'
+require_snippet "$ROOT_DIR/index.html" 'data-home-games'
 require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
 require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260802-21"'
-require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260821-1"'
+require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260905-2"'
 require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260821-3"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
 require_snippet "$ROOT_DIR/index.html" 'id="other-apps"'
@@ -1448,7 +1452,7 @@ require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.logLabel"'
 require_snippet "$ROOT_DIR/compatibility.html" 'issues/new?template=compatibility-report.yml'
 require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/compatibility.html" 'href="site.css?v=20260811-22"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260811-22"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260905-4"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/current-release.js?v=20260811-22"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260802-21"'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-card'
@@ -1537,7 +1541,7 @@ require_snippet "$ROOT_DIR/site-data/README.md" 'Routine compatibility database 
 require_snippet "$ROOT_DIR/site-data/README.md" 'No raw HTML or Markdown is rendered.'
 require_snippet "$ROOT_DIR/updates.html" 'data-announcement-list'
 require_snippet "$ROOT_DIR/updates.html" 'data-nav-page="updates"'
-require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260821-1"'
+require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260905-2"'
 require_snippet "$ROOT_DIR/updates.html" 'Releases, project notices, and development updates in one place.'
 require_snippet "$ROOT_DIR/announcements.js" 'site-data/announcements.json'
 require_snippet "$ROOT_DIR/announcements.js" 'forgeplay:localechange'
@@ -1548,7 +1552,8 @@ require_snippet "$ROOT_DIR/announcements.js" 'const localizedParagraphs = (value
 require_snippet "$ROOT_DIR/announcements.js" 'const announcementAnchorId = (identifier) => `update-${identifier}`'
 require_snippet "$ROOT_DIR/announcements.js" 'article.id = announcementAnchorId(announcement.id)'
 require_snippet "$ROOT_DIR/announcements.js" 'announcement.href !== announcementDetailHref(announcement.id)'
-require_snippet "$ROOT_DIR/announcements.js" 'requestedCard.scrollIntoView({ block: "center" })'
+require_snippet "$ROOT_DIR/announcements.js" 'requestedCard.scrollIntoView({ block: "start" })'
+require_snippet "$ROOT_DIR/announcements.js" 'disclosure.open = true'
 require_snippet "$ROOT_DIR/announcements.js" 'body.className = "update-card-body"'
 require_snippet "$ROOT_DIR/announcements.js" 'const bulletLinePattern = /^(\s*)-\s+(.+)$/'
 require_snippet "$ROOT_DIR/announcements.js" 'const appendStructuredParagraph = (parent, paragraph) =>'
@@ -1739,6 +1744,7 @@ for script in \
   announcements.js \
   developer-apps.js \
   site-assets/home-experience.js \
+  site-assets/site-shell.js \
   site-assets/why-story.js; do
   node --check "$ROOT_DIR/$script" >/dev/null || fail "$script has invalid JavaScript syntax"
 done

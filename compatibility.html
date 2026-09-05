@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0b0d0e">
+  <meta name="theme-color" content="#0e1013">
   <title>ForgePlay — Compatibility</title>
   <meta name="description" content="Games tested with ForgePlay, the Mac used for each test, current playability, and notes for known compatibility limits.">
   <meta property="og:type" content="website">
@@ -13,44 +13,35 @@
   <link rel="icon" type="image/png" href="site-assets/forgeplay-favicon.png">
   <script src="locale-bootstrap.js?v=20260729-14"></script>
   <link rel="stylesheet" href="site.css?v=20260811-22">
-  <script src="site.js?v=20260811-22" defer></script>
+  <link rel="stylesheet" href="site-assets/site-shell.css?v=20260905-2">
+  <link rel="stylesheet" href="site-assets/page-experience.css?v=20260905-1">
+  <script src="site.js?v=20260905-4" defer></script>
+  <script src="site-assets/site-shell.js?v=20260905-2" defer></script>
   <script src="site-assets/current-release.js?v=20260811-22" defer></script>
   <script src="compatibility.js?v=20260802-21" defer></script>
 </head>
-<body class="compatibility-page" data-page="compatibility">
+<body class="fp-site compatibility-page" data-page="compatibility">
   <a class="skip-link" href="#main" data-i18n="shared.skip">Skip to content</a>
 
-  <header class="site-header">
-    <nav class="nav" aria-label="Primary" data-i18n-aria-label="shared.primaryNav">
-      <a class="brand" href="index.html" data-locale-link>
-        <img class="brand-icon" src="site-assets/forgeplay-icon.png?v=20260821-dark-1" alt="" width="44" height="44">
-        <span class="brand-word">ForgePlay</span>
-      </a>
-      <div class="nav-links">
+  <header class="fp-header">
+    <nav class="fp-nav fp-wrap" aria-label="Primary navigation" data-i18n-aria-label="shared.primaryNav">
+      <a class="fp-brand" href="index.html" data-locale-link><img src="site-assets/forgeplay-icon.png?v=20260821-dark-1" width="36" height="36" alt=""><span>ForgePlay</span></a>
+      <div class="nav-links fp-links" id="fp-navigation">
         <a href="index.html#game-mode" data-locale-link data-i18n="shared.navGameMode">Game Mode</a>
         <a href="compatibility.html" data-locale-link data-nav-page="compatibility" data-i18n="shared.navCompatibility">Compatibility</a>
-        <a href="updates.html" data-locale-link data-i18n="shared.navUpdates">Updates</a>
-        <a href="why.html" data-locale-link data-i18n="shared.navWhy">Why</a>
-        <a href="license.html" data-locale-link data-i18n="shared.navLicense">License</a>
-        <a href="support.html" data-locale-link data-i18n="shared.navSupport">Support</a>
+        <a href="updates.html" data-locale-link data-nav-page="updates" data-i18n="shared.navUpdates">Updates</a>
+        <a href="why.html" data-locale-link data-nav-page="why" data-i18n="shared.navWhy">Why</a>
+        <a href="license.html" data-locale-link data-nav-page="license" data-i18n="shared.navLicense">License</a>
+        <a href="support.html" data-locale-link data-nav-page="support" data-i18n="shared.navSupport">Support</a>
       </div>
-      <label class="language-control">
-        <span class="visually-hidden" data-i18n="shared.language">Language</span>
-        <select data-language-select aria-label="Language">
-          <option value="ko">한국어</option>
-          <option value="en">English</option>
-          <option value="de">Deutsch</option>
-          <option value="es">Español</option>
-          <option value="fr">Français</option>
-          <option value="ja">日本語</option>
-          <option value="zh-Hans">简体中文</option>
-          <option value="zh-Hant">繁體中文</option>
-        </select>
-      </label>
+      <div class="fp-nav-tools">
+        <label class="fp-language"><span class="visually-hidden" data-i18n="shared.language">Language</span><select data-language-select aria-label="Language"><option value="ko">한국어</option><option value="en">English</option><option value="de">Deutsch</option><option value="es">Español</option><option value="fr">Français</option><option value="ja">日本語</option><option value="zh-Hans">简体中文</option><option value="zh-Hant">繁體中文</option></select></label>
+        <button class="fp-menu" type="button" aria-expanded="false" aria-controls="fp-navigation" data-i18n-aria-label="refresh.menu" aria-label="Menu"><span></span><span></span></button>
+      </div>
     </nav>
   </header>
 
-  <main id="main">
+  <main id="main" class="page-main">
     <section class="compatibility-hero">
       <div class="compatibility-hero-grid">
         <div class="compatibility-hero-copy" data-reveal>
@@ -114,7 +105,7 @@
           <span data-i18n="compat.columnNotes">Notes</span>
           <span></span>
         </div>
-        <div id="compatibility-list-title" class="visually-hidden" data-i18n="compat.listTitle">Compatibility results</div>
+        <h2 id="compatibility-list-title" class="visually-hidden" data-i18n="compat.listTitle">Compatibility results</h2>
         <div class="compatibility-list" data-compatibility-list aria-live="polite" aria-busy="true">
           <p class="compatibility-loading" data-i18n="compat.loading">Loading compatibility records…</p>
         </div>
@@ -144,26 +135,12 @@
     </section>
   </main>
 
-  <footer class="site-footer">
-    <div class="footer-grid">
-      <div>
-        <a class="brand footer-brand" href="index.html" data-locale-link>
-          <img class="brand-icon" src="site-assets/forgeplay-icon.png?v=20260821-dark-1" alt="" width="44" height="44">
-          <span class="brand-word">ForgePlay</span>
-        </a>
-        <p data-i18n="shared.footerTagline">Windows game architecture, forged for Apple Silicon Mac.</p>
-      </div>
-      <div class="footer-links">
-        <a href="index.html" data-locale-link data-i18n="shared.home">Home</a>
-        <a href="updates.html" data-locale-link data-i18n="shared.navUpdates">Updates</a>
-        <a href="why.html" data-locale-link data-i18n="shared.navWhy">Why</a>
-        <a href="license.html" data-locale-link data-i18n="shared.navLicense">License</a>
-        <a href="support.html" data-locale-link data-i18n="shared.navSupport">Support</a>
-        <a href="https://github.com/Facta-Leopard/ForgePlay/releases/latest" target="_blank" rel="noopener noreferrer" data-current-release-link data-i18n="shared.navRelease">Release</a>
-        <a href="https://github.com/Facta-Leopard/ForgePlay/tree/main" target="_blank" rel="noopener noreferrer" data-i18n="shared.navSource">Source</a>
-      </div>
-      <p class="footer-note" data-i18n="shared.footerNote">Apple, macOS, Game Mode, Steam, Windows, Wine, and renderer names belong to their respective owners. ForgePlay is not affiliated with them.</p>
+  <footer class="fp-footer fp-wrap">
+    <div class="fp-footer-top">
+      <a class="fp-brand" href="index.html" data-locale-link><img src="site-assets/forgeplay-icon.png?v=20260821-dark-1" width="30" height="30" alt=""><span>ForgePlay</span></a>
+      <div class="fp-footer-links"><a href="compatibility.html" data-locale-link data-i18n="shared.navCompatibility">Compatibility</a><a href="updates.html" data-locale-link data-i18n="shared.navUpdates">Updates</a><a href="why.html" data-locale-link data-i18n="shared.navWhy">Why</a><a href="license.html" data-locale-link data-i18n="shared.navLicense">License</a><a href="privacy.html" data-locale-link data-i18n="shared.navPrivacy">Privacy</a><a href="support.html" data-locale-link data-i18n="shared.navSupport">Support</a><a href="https://github.com/Facta-Leopard/ForgePlay/releases/latest" target="_blank" rel="noopener noreferrer" data-i18n="shared.navRelease">Release</a><a href="https://github.com/Facta-Leopard/ForgePlay/tree/main" target="_blank" rel="noopener noreferrer" data-i18n="shared.navSource">Source</a></div>
     </div>
+    <p data-i18n="shared.footerNote">Apple, macOS, Game Mode, Steam, Windows, Wine, and renderer names belong to their respective owners. ForgePlay is not affiliated with them.</p>
   </footer>
 </body>
 </html>
