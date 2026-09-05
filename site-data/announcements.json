@@ -1,13 +1,106 @@
 {
   "$schema": "./announcements.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-09-02",
+  "updatedAt": "2026-09-05",
   "announcements": [
+    {
+      "id": "forgeplay-1-2-released",
+      "type": "release",
+      "publishedAt": "2026-09-05",
+      "featured": true,
+      "titles": {
+        "en": "ForgePlay 1.2 update released!",
+        "ko": "ForgePlay 1.2 업데이트 출시!",
+        "de": "ForgePlay 1.2-Update veröffentlicht!",
+        "es": "¡Ya está disponible la actualización ForgePlay 1.2!",
+        "fr": "La mise à jour ForgePlay 1.2 est disponible !",
+        "ja": "ForgePlay 1.2 アップデートをリリース！",
+        "zh-Hans": "ForgePlay 1.2 更新发布！",
+        "zh-Hant": "ForgePlay 1.2 更新推出！"
+      },
+      "summaries": {
+        "en": "Added frame generation and improved Steam shutdown/relaunch and multilingual font handling.",
+        "ko": "프레임 생성 기능을 추가하고, Steam 종료·재실행과 다국어 글꼴 처리를 개선했습니다.",
+        "de": "Wir haben eine Frame-Generation-Funktion hinzugefügt und das Beenden und Neustarten von Steam sowie die Verarbeitung von Schriftarten für mehrere Sprachen verbessert.",
+        "es": "Hemos añadido la generación de fotogramas y mejorado el cierre y reinicio de Steam, así como la gestión de fuentes para distintos idiomas.",
+        "fr": "Nous avons ajouté la génération d’images et amélioré la fermeture et le redémarrage de Steam, ainsi que la gestion des polices pour plusieurs langues.",
+        "ja": "フレーム生成機能を追加し、Steam の終了・再起動と多言語フォントの処理を改善しました。",
+        "zh-Hans": "新增帧生成功能，并改进了 Steam 的退出与重新启动以及多语言字体处理。",
+        "zh-Hant": "新增影格生成功能，並改善了 Steam 的結束與重新啟動，以及多語言字型處理。"
+      },
+      "paragraphs": {
+        "en": [
+          "Added frame generation and improved Steam shutdown/relaunch and multilingual font handling.",
+          "## New features",
+          "- Frame Generation (Beta)\n  - Added our own Metal-based frame generation. It blends two consecutive frames to display an intermediate frame.\n  - Available with D3DMetal - NVIDIA; this version supports a target of 120 FPS.\n- Frame Check (Beta)\n  - View original, generated, and final FPS on screen. It is enabled alongside frame generation when you turn frame generation on for the first time, and can be turned off independently.",
+          "Configure frame generation before launching Steam. Actual output FPS, effectiveness, and input latency may vary depending on the game, device, and display environment.",
+          "## Improvements and fixes",
+          "- Added a force-quit feature for Wine.\n- If an installed prefix already exists, prefix installation is no longer required.\n- Also improved the Steam environment reconfiguration process to preserve the existing game library.\n- Improved font selection for the chosen Steam language and handling of conflicts with existing fonts.\n- Updated the license guidance in all eight languages and supplemented the frame-generation GPL notice and the Noto and Nanum Gothic font notices."
+        ],
+        "ko": [
+          "프레임 생성 기능을 추가하고, Steam 종료·재실행과 다국어 글꼴 처리를 개선했습니다.",
+          "## 새로운 기능",
+          "- Frame Generation(베타)\n  - Metal 기반의 자체 프레임 생성 기능을 추가했습니다. 연속된 두 프레임을 혼합해 중간 프레임을 표시합니다.\n  - D3DMetal - NVIDIA에서 사용할 수 있으며, 이번 버전은 120 FPS 목표를 지원합니다.\n- Frame Check(베타)\n  - 원본·생성·최종 FPS를 화면에서 확인할 수 있습니다. 프레임 생성을 처음 켜면 함께 활성화되며, 별도로 끌 수 있습니다.",
+          "프레임 생성은 Steam 실행 전에 설정해 주세요. 실제 출력 FPS와 효과, 입력 지연은 게임·기기·디스플레이 환경에 따라 달라질 수 있습니다.",
+          "## 개선 및 수정",
+          "- Wine 강제 종료 기능을 추가했습니다.\n- 기 설치된 기존 프리픽스가 존재하는 경우, 더 이상 프리픽스 설치를 요하지 않습니다.\n- 또한, Steam 실행환경을 재구성할 때 기존 게임 라이브러리를 보존하도록 개선했습니다.\n- 선택한 Steam 언어에 맞는 글꼴 적용과 기존 글꼴과의 충돌 처리를 개선했습니다.\n- 8개 언어의 라이선스 안내를 정비하고, 프레임 생성 GPL 고지와 Noto·나눔고딕 글꼴 안내를 보완했습니다."
+        ],
+        "de": [
+          "Wir haben eine Frame-Generation-Funktion hinzugefügt und das Beenden und Neustarten von Steam sowie die Verarbeitung von Schriftarten für mehrere Sprachen verbessert.",
+          "## Neue Funktionen",
+          "- Frame Generation (Beta)\n  - Wir haben eine eigene, auf Metal basierende Frame-Generation-Funktion hinzugefügt. Sie mischt zwei aufeinanderfolgende Frames, um einen Zwischenframe anzuzeigen.\n  - Die Funktion ist mit D3DMetal - NVIDIA verfügbar. Diese Version unterstützt eine Zielbildrate von 120 FPS.\n- Frame Check (Beta)\n  - Die ursprünglichen, generierten und endgültigen FPS lassen sich auf dem Bildschirm anzeigen. Frame Check wird beim erstmaligen Einschalten von Frame Generation mit aktiviert und kann separat ausgeschaltet werden.",
+          "Bitte konfigurieren Sie Frame Generation, bevor Sie Steam starten. Die tatsächlichen Ausgabe-FPS, die Wirkung und die Eingabeverzögerung können je nach Spiel, Gerät und Display variieren.",
+          "## Verbesserungen und Fehlerbehebungen",
+          "- Eine Funktion zum erzwungenen Beenden von Wine wurde hinzugefügt.\n- Ist bereits ein installierter Prefix vorhanden, ist keine erneute Prefix-Installation mehr erforderlich.\n- Außerdem bleiben bestehende Spielebibliotheken beim Neukonfigurieren der Steam-Laufzeitumgebung erhalten.\n- Die Anwendung von Schriftarten passend zur ausgewählten Steam-Sprache und die Behandlung von Konflikten mit vorhandenen Schriftarten wurden verbessert.\n- Die Lizenzhinweise in acht Sprachen wurden überarbeitet. Die GPL-Hinweise zu Frame Generation und die Hinweise zu den Schriftarten Noto und Nanum Gothic wurden ergänzt."
+        ],
+        "es": [
+          "Hemos añadido la generación de fotogramas y mejorado el cierre y reinicio de Steam, así como la gestión de fuentes para distintos idiomas.",
+          "## Nuevas funciones",
+          "- Frame Generation (beta)\n  - Hemos añadido una función propia de generación de fotogramas basada en Metal. Combina dos fotogramas consecutivos para mostrar un fotograma intermedio.\n  - Está disponible con D3DMetal - NVIDIA. Esta versión admite una tasa objetivo de 120 FPS.\n- Frame Check (beta)\n  - Permite ver en pantalla los FPS originales, generados y finales. Se activa al habilitar Frame Generation por primera vez y puede desactivarse por separado.",
+          "Configura Frame Generation antes de iniciar Steam. Los FPS de salida reales, el efecto y la latencia de entrada pueden variar según el juego, el dispositivo y la pantalla.",
+          "## Mejoras y correcciones",
+          "- Se ha añadido una función para forzar el cierre de Wine.\n- Si ya existe un prefijo instalado, ya no es necesario volver a instalarlo.\n- Además, se ha mejorado la conservación de la biblioteca de juegos existente al reconfigurar el entorno de ejecución de Steam.\n- Se han mejorado la aplicación de fuentes adecuadas al idioma seleccionado en Steam y la gestión de conflictos con las fuentes existentes.\n- Se ha revisado la información sobre licencias en ocho idiomas y se han ampliado el aviso GPL de Frame Generation y la información sobre las fuentes Noto y Nanum Gothic."
+        ],
+        "fr": [
+          "Nous avons ajouté la génération d’images et amélioré la fermeture et le redémarrage de Steam, ainsi que la gestion des polices pour plusieurs langues.",
+          "## Nouvelles fonctionnalités",
+          "- Frame Generation (bêta)\n  - Nous avons ajouté notre propre fonction de génération d’images basée sur Metal. Elle mélange deux images consécutives pour afficher une image intermédiaire.\n  - Elle est disponible avec D3DMetal - NVIDIA. Cette version prend en charge un objectif de 120 FPS.\n- Frame Check (bêta)\n  - Permet d’afficher à l’écran les FPS d’origine, générés et finaux. Cette fonction s’active lors de la première activation de Frame Generation et peut être désactivée séparément.",
+          "Veuillez configurer Frame Generation avant de lancer Steam. Les FPS de sortie réels, l’effet obtenu et la latence des commandes peuvent varier selon le jeu, l’appareil et l’écran.",
+          "## Améliorations et corrections",
+          "- Ajout d’une fonction permettant de forcer la fermeture de Wine.\n- Si un préfixe est déjà installé, il n’est plus nécessaire de le réinstaller.\n- La reconfiguration de l’environnement d’exécution de Steam a également été améliorée pour préserver la bibliothèque de jeux existante.\n- Amélioration de l’application des polices adaptées à la langue sélectionnée dans Steam et de la gestion des conflits avec les polices existantes.\n- Révision des informations de licence dans huit langues et complément de la notice GPL de Frame Generation ainsi que des informations sur les polices Noto et Nanum Gothic."
+        ],
+        "ja": [
+          "フレーム生成機能を追加し、Steam の終了・再起動と多言語フォントの処理を改善しました。",
+          "## 新機能",
+          "- Frame Generation（ベータ）\n  - Metal ベースの独自のフレーム生成機能を追加しました。連続する 2 つのフレームを混合し、中間フレームを表示します。\n  - D3DMetal - NVIDIA で使用でき、今回のバージョンでは目標 120 FPS に対応しています。\n- Frame Check（ベータ）\n  - 元フレーム・生成フレーム・最終出力の FPS を画面上で確認できます。フレーム生成を初めて有効にすると同時に有効になり、個別に無効にすることもできます。",
+          "フレーム生成は Steam を起動する前に設定してください。実際の出力 FPS、効果、入力遅延は、ゲーム・デバイス・ディスプレイの環境によって異なる場合があります。",
+          "## 改善と修正",
+          "- Wine の強制終了機能を追加しました。\n- インストール済みのプレフィックスが存在する場合、プレフィックスの再インストールが不要になりました。\n- また、Steam の実行環境を再構成する際に、既存のゲームライブラリを保持するよう改善しました。\n- 選択した Steam の言語に合ったフォントの適用と、既存フォントとの競合処理を改善しました。\n- 8 言語のライセンス案内を整備し、フレーム生成に関する GPL 表記と Noto・Nanum Gothic フォントの案内を補完しました。"
+        ],
+        "zh-Hans": [
+          "新增帧生成功能，并改进了 Steam 的退出与重新启动以及多语言字体处理。",
+          "## 新功能",
+          "- Frame Generation（测试版）\n  - 新增基于 Metal 的自研帧生成功能。通过混合连续的两帧来显示中间帧。\n  - 可在 D3DMetal - NVIDIA 中使用，本版本支持以 120 FPS 为目标。\n- Frame Check（测试版）\n  - 可在屏幕上查看原始、生成及最终 FPS。首次启用帧生成时会一并启用，也可单独关闭。",
+          "请在启动 Steam 前设置帧生成。实际输出 FPS、效果及输入延迟可能因游戏、设备和显示器环境而异。",
+          "## 改进与修复",
+          "- 新增强制退出 Wine 的功能。\n- 如果已有安装完成的前缀，则不再需要重新安装前缀。\n- 此外，改进了 Steam 运行环境的重新配置流程，以保留现有游戏库。\n- 改进了与所选 Steam 语言相匹配的字体应用，以及与现有字体的冲突处理。\n- 整理了 8 种语言的许可证说明，并补充了帧生成的 GPL 声明以及 Noto、Nanum Gothic 字体说明。"
+        ],
+        "zh-Hant": [
+          "新增影格生成功能，並改善了 Steam 的結束與重新啟動，以及多語言字型處理。",
+          "## 新功能",
+          "- Frame Generation（測試版）\n  - 新增以 Metal 為基礎、自行開發的影格生成功能。透過混合連續的兩個影格來顯示中間影格。\n  - 可在 D3DMetal - NVIDIA 中使用，本版本支援以 120 FPS 為目標。\n- Frame Check（測試版）\n  - 可在畫面上查看原始、生成及最終 FPS。首次啟用影格生成時會一併啟用，也可單獨關閉。",
+          "請在啟動 Steam 前設定影格生成。實際輸出 FPS、效果及輸入延遲可能因遊戲、裝置和顯示器環境而異。",
+          "## 改善與修正",
+          "- 新增強制結束 Wine 的功能。\n- 如果已有安裝完成的前綴，便不再需要重新安裝前綴。\n- 此外，改善了 Steam 執行環境的重新設定流程，以保留現有遊戲收藏庫。\n- 改善了符合所選 Steam 語言的字型套用，以及與現有字型的衝突處理。\n- 整理了 8 種語言的授權說明，並補充了影格生成的 GPL 聲明，以及 Noto、Nanum Gothic 字型說明。"
+        ]
+      },
+      "href": "updates.html#update-forgeplay-1-2-released"
+    },
     {
       "id": "forgeplay-1-2-coming-soon",
       "type": "project",
       "publishedAt": "2026-09-02",
-      "featured": true,
+      "featured": false,
       "titles": {
         "en": "ForgePlay 1.2 is coming soon.",
         "ko": "ForgePlay 1.2 업데이트가 곧 출시됩니다.",
