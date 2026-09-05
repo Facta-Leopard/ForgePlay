@@ -1,15 +1,25 @@
 /* ForgePlay homepage — continuous dark surfaces, restrained ember accents.
    Inspired by the Awesome DESIGN.md Raycast surface system; uses ForgePlay's
    own artwork and type stack. This stylesheet owns the homepage layout. */
-.fp-hero { text-align:center; padding-top:42px; padding-bottom:38px; }
-.fp-news-pill { display:inline-flex; max-width:100%; align-items:center; gap:10px; padding:7px 13px; margin-bottom:35px; border:1px solid #32343a; border-radius:999px; background:#191b20; font-size:12px; color:#d3d4d8; line-height:1.6; }
-.fp-news-pill:hover { border-color:var(--fp-accent); color:var(--fp-text); }
+.fp-hero { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,.85fr); grid-template-areas:"heading notice" "details notice"; column-gap:64px; text-align:left; padding-block:46px; }
+.fp-hero-heading { grid-area:heading; min-width:0; }
+.fp-hero-details { grid-area:details; min-width:0; }
+.fp-news-preview { grid-area:notice; align-self:center; min-width:0; padding:26px; border:1px solid var(--fp-line); border-top:2px solid #b77961; border-radius:12px; background:#16191e; }
+.fp-news-meta { display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px 18px; align-items:center; margin-bottom:17px; }
+.fp-news-meta [data-announcement-date] { font-size:11px; color:#9ca5b2; }
+.fp-news-preview h2 { font-size:23px; line-height:1.4; letter-spacing:-.035em; text-wrap:pretty; }
+.fp-home .fp-news-summary { margin-top:15px; font-size:14px; line-height:1.75; color:#bdc4ce; }
+.fp-news-links { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:22px; padding-top:16px; border-top:1px solid var(--fp-line); }
+.fp-news-links .fp-text-link { font-size:12px; }
+.fp-news-links [data-announcement-link] { color:var(--fp-accent); }
+.fp-hero .fp-first-flag,.fp-hero .fp-actions { justify-content:flex-start; }
 .fp-live-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--fp-green); flex-shrink:0; }
 .fp-eyebrow { color:var(--fp-accent); font-size:11px; font-weight:650; letter-spacing:.12em; line-height:1.6; text-transform:uppercase; }
-.fp-hero h1 { margin-top:15px; font-size:clamp(44px,5.5vw,70px); line-height:1.1; letter-spacing:-.058em; }
+.fp-hero h1 { margin-top:15px; font-size:clamp(44px,5vw,66px); line-height:1.1; letter-spacing:-.058em; }
 .fp-hero h1 span { display:block; }
 .fp-hero h1 span:last-child { color:var(--fp-accent); }
-.fp-home .fp-hero-lead { max-width:650px; margin:22px auto 0; color:#d3d5da; font-size:18px; line-height:1.65; word-break:keep-all; }
+.fp-home .fp-hero-lead { max-width:650px; margin:22px 0 0; color:#d3d5da; font-size:18px; line-height:1.65; word-break:keep-all; }
+.fp-home .fp-hero-lead:lang(ja) { word-break:normal; }
 .fp-first-flag { display:flex; justify-content:center; flex-wrap:wrap; align-items:center; gap:10px; color:#bdc6d2; font-size:12px; letter-spacing:.035em; margin-bottom:18px!important; }
 .fp-first-flag strong { color:#bddec7; border:1px solid #405747; border-radius:6px; padding:5px 10px; background:#1a2b22; font-size:12px; letter-spacing:.08em; }
 .fp-scope-link { display:inline-block; margin-top:9px; color:#9ea7b5; font-size:10px; text-decoration:underline!important; text-underline-offset:3px; }
@@ -167,6 +177,7 @@
 .fp-open { font-size:10px; letter-spacing:.1em; font-weight:600; color:#b7c0cd; padding:5px 8px; border:1px solid #46505a; border-radius:5px; white-space:nowrap; }
 .fp-support>a { flex-shrink:0; font-size:12px; }
 @media(max-width:1050px) {
+  .fp-hero { column-gap:32px; }.fp-news-preview { padding:22px; }
   .fp-nav { gap:18px; }.fp-home .fp-links { gap:0; }.fp-home .fp-links a { padding:8px;font-size:12px; }
   .fp-wrap { width:calc(100% - 48px); }.fp-feature-panel { gap:25px; padding-inline:28px; }
   .fp-game-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }.fp-game summary { padding:20px 16px;gap:10px; }
@@ -174,6 +185,8 @@
   .fp-download-grid { gap:38px; }.fp-story { gap:38px; }
 }
 @media(max-width:900px) {
+  .fp-hero { grid-template-columns:minmax(0,1fr); grid-template-areas:"heading" "notice" "details"; row-gap:25px; padding-block:32px; }
+  .fp-news-preview { max-width:650px; width:100%; }.fp-hero-details .fp-hero-lead { margin-top:0; }
   .fp-menu { display:block; }.fp-nav-tools { margin-left:auto; }
   .fp-home .fp-links { display:none; position:absolute; top:100%; left:0; right:0; padding:14px 18px; margin:0; background:#171b21; border-bottom:1px solid var(--fp-line); }
   .fp-home .fp-links.is-open { display:grid; grid-template-columns:1fr 1fr; }
@@ -184,9 +197,11 @@
   .fp-brand { font-size:18px; }.fp-menu { display:block; }.fp-nav-tools { margin-left:auto; }
   .fp-home .fp-links { display:none; position:absolute; top:64px; left:0; right:0; padding:14px 18px; margin:0; background:#171b21; border-bottom:1px solid var(--fp-line); }
   .fp-home .fp-links.is-open { display:grid; grid-template-columns:1fr 1fr; }.fp-home .fp-links a { padding:12px;font-size:14px; }
-  .fp-hero { padding-top:26px; padding-bottom:29px; }.fp-news-pill { font-size:10px; margin-bottom:27px; padding:7px 10px;gap:7px; }
+  .fp-hero { padding-top:24px; padding-bottom:29px; row-gap:22px; }
+  .fp-news-preview { padding:19px; }.fp-news-meta { margin-bottom:11px; }.fp-news-meta .fp-eyebrow { font-size:10px; }.fp-news-meta [data-announcement-date] { font-size:10px; }
+  .fp-news-preview h2 { font-size:20px; }.fp-home .fp-news-summary { margin-top:11px; font-size:13px; line-height:1.7; }.fp-news-links { margin-top:16px; padding-top:13px; }
   .fp-hero h1 { font-size:44px; letter-spacing:-.07em; line-height:1.17; }.fp-hero .fp-eyebrow { font-size:9px; }
-  .fp-home .fp-hero-lead { font-size:14px; max-width:360px; margin-top:18px; }.fp-actions { gap:9px; margin-top:21px; }
+  .fp-home .fp-hero-lead { font-size:14px; max-width:360px; margin-top:0; }.fp-actions { gap:9px; margin-top:21px; }
   .fp-button { font-size:12px; padding:11px 14px; min-height:44px; }.fp-home .fp-requirements { font-size:10px; }
   .fp-panorama { height:260px; }.fp-panorama>img { object-position:58% center; }
   .fp-panorama figcaption { left:19px; right:19px; bottom:19px; flex-direction:column; align-items:start; gap:12px; }

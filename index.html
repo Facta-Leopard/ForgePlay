@@ -25,7 +25,7 @@
         imagesizes="100vw" fetchpriority="high">
   <link rel="stylesheet" href="site.css?v=20260821-2">
   <link rel="stylesheet" href="site-assets/site-shell.css?v=20260905-2">
-  <link rel="stylesheet" href="site-assets/home-experience.css?v=20260905-3">
+  <link rel="stylesheet" href="site-assets/home-experience.css?v=20260905-6">
   <script src="site.js?v=20260905-4" defer></script>
   <script src="site-assets/site-shell.js?v=20260905-2" defer></script>
   <script src="site-assets/current-release.js?v=20260811-22" defer></script>
@@ -56,13 +56,17 @@
 
   <main id="main">
     <section class="fp-hero fp-wrap" aria-labelledby="hero-title">
-      <div data-latest-announcement><a class="fp-news-pill" href="updates.html" data-announcement-link>
-        <span class="fp-live-dot" aria-hidden="true"></span>
-        <span data-announcement-title data-i18n="shared.navUpdates">Updates</span>
-        <span aria-hidden="true">↗</span>
-      </a></div>
+      <div class="fp-hero-heading">
       <p class="fp-first-flag"><span class="fp-live-dot" aria-hidden="true"></span><strong data-i18n="home.worldFirstLabel">THE WORLD’S FIRST*</strong><span aria-hidden="true">/</span><span>macOS <span data-i18n="refresh.featureTab1">Game Mode</span></span></p>
       <h1 id="hero-title"><span data-i18n="home.heroLine1">Windows games.</span><span data-i18n="home.heroLine2">Forged for Mac.</span></h1>
+      </div>
+      <aside class="fp-news-preview" data-latest-announcement aria-labelledby="fp-news-title">
+        <div class="fp-news-meta"><span class="fp-eyebrow" data-i18n="home.latestLabel">LATEST</span><span data-announcement-date></span></div>
+        <h2 id="fp-news-title" data-announcement-title data-i18n="shared.navUpdates">Updates</h2>
+        <p class="fp-news-summary" data-announcement-summary data-i18n="updates.lead">Releases, project notices, and development updates in one place.</p>
+        <div class="fp-news-links"><a class="fp-text-link" href="updates.html" data-announcement-link data-i18n="updates.openLink">Open update ↗</a><a class="fp-text-link" href="updates.html" data-locale-link data-i18n="home.latestAll">All updates ↗</a></div>
+      </aside>
+      <div class="fp-hero-details">
       <p class="fp-hero-lead fp-first-lead" data-i18n="refresh.firstLead">The world’s first app to run Windows games in native macOS Game Mode.*</p>
       <a class="fp-scope-link" href="#difference" data-open-evidence data-i18n="refresh.firstScope">*Read the scope and basis of the first-of-its-kind claim</a>
       <div class="fp-actions">
@@ -70,6 +74,7 @@
         <a class="fp-button fp-secondary" href="#library"><span data-i18n="refresh.explore">Find your game</span><span aria-hidden="true">→</span></a>
       </div>
       <p class="fp-requirements" data-i18n="refresh.requirements">Apple Silicon · macOS 26+ · Rosetta required</p>
+      </div>
     </section>
 
     <div class="fp-stage fp-wrap">
@@ -86,16 +91,6 @@
       </div>
     </div>
 
-    <section class="fp-purpose fp-wrap" id="purpose" aria-labelledby="fp-purpose-title">
-      <div class="fp-purpose-art"><img src="site-assets/forgeplay-manifesto.jpg" srcset="site-assets/forgeplay-manifesto.jpg 1935w, site-assets/forgeplay-manifesto-3200.jpg 3200w" sizes="(max-width: 700px) 90vw, 40vw" width="1935" height="812" alt="" loading="lazy"><span aria-hidden="true">ForgePlay<br><small data-i18n="home.sponsorMark">OPEN</small></span></div>
-      <div class="fp-purpose-copy"><p class="fp-eyebrow" data-i18n="refresh.purposeLabel">WHY FORGEPLAY EXISTS</p><h2 id="fp-purpose-title" data-i18n="refresh.purposeTitle">Open source belongs to no one exclusively.</h2><p data-i18n="refresh.purposeBody">ForgePlay was created to confront CodeWeavers’ complacency and de facto privatization of open-source Wine in the public interest. CodeWeavers builds its business on the community’s work, yet keeps some improvements and compatibility knowledge as advantages exclusive to its own products and does not clearly explain its authorization for commercial distribution. It nevertheless touts its contributions to Wine, but that credit is no absolution for these problems.
-
-Moreover, why has a company with years of experience and resources not made improvements that an individual developer can conceive and implement? With so much room for progress, has it not simply grown complacent in the absence of real competition? That is why ForgePlay does not stop at criticism. By implementing improvements they have not made, it demonstrates that an individual developer can build technology and features better than what already exists.
-
-And to keep those results from being fenced off yet again, ForgePlay publishes all the source code it develops or modifies. For changes not incorporated upstream, it also provides the reasons, complete patch sets, and build materials. It does not hide critical exceptions behind claims that ‘most of the source is public’; anyone can examine, modify, and build on the work.
-
-Creating competition through better implementations and public results, so that existing products can no longer coast on their current position—that is why ForgePlay is developed and made public.</p><blockquote data-i18n="home.whyQuote">“If progress stalled because no one could challenge it, we’ll build the challenger ourselves!”</blockquote><a class="fp-text-link" href="why.html" data-locale-link data-i18n="refresh.purposeLink">Read the developer’s statement and references</a></div>
-    </section>
 
     <section class="fp-library fp-wrap fp-section" id="library" aria-labelledby="compatibility-teaser-title">
       <header class="fp-section-head">
@@ -158,6 +153,17 @@ Creating competition through better implementations and public results, so that 
         <aside class="fp-trust"><img src="site-assets/forgeplay-icon.png" width="64" height="64" alt=""><p class="release-evidence-copy" data-i18n="home.releaseBody">Download the Apple-notarized DMG, inspect the version-matched source, and verify the release on GitHub.</p><a class="fp-text-link" href="license.html" data-locale-link data-i18n="home.licensePageLink">Read the license guide</a></aside>
       </div>
     </section>
+    <section class="fp-purpose fp-wrap" id="purpose" aria-labelledby="fp-purpose-title">
+      <div class="fp-purpose-art"><img src="site-assets/forgeplay-manifesto.jpg" srcset="site-assets/forgeplay-manifesto.jpg 1935w, site-assets/forgeplay-manifesto-3200.jpg 3200w" sizes="(max-width: 700px) 90vw, 40vw" width="1935" height="812" alt="" loading="lazy"><span aria-hidden="true">ForgePlay<br><small data-i18n="home.sponsorMark">OPEN</small></span></div>
+      <div class="fp-purpose-copy"><p class="fp-eyebrow" data-i18n="refresh.purposeLabel">WHY FORGEPLAY EXISTS</p><h2 id="fp-purpose-title" data-i18n="refresh.purposeTitle">Open source belongs to no one exclusively.</h2><p data-i18n="refresh.purposeBody">ForgePlay was created to confront CodeWeavers’ complacency and de facto privatization of open-source Wine in the public interest. CodeWeavers builds its business on the community’s work, yet keeps some improvements and compatibility knowledge as advantages exclusive to its own products and does not clearly explain its authorization for commercial distribution. It nevertheless touts its contributions to Wine, but that credit is no absolution for these problems.
+
+Moreover, why has a company with years of experience and resources not made improvements that an individual developer can conceive and implement? With so much room for progress, has it not simply grown complacent in the absence of real competition? That is why ForgePlay does not stop at criticism. By implementing improvements they have not made, it demonstrates that an individual developer can build technology and features better than what already exists.
+
+And to keep those results from being fenced off yet again, ForgePlay publishes all the source code it develops or modifies. For changes not incorporated upstream, it also provides the reasons, complete patch sets, and build materials. It does not hide critical exceptions behind claims that ‘most of the source is public’; anyone can examine, modify, and build on the work.
+
+Creating competition through better implementations and public results, so that existing products can no longer coast on their current position—that is why ForgePlay is developed and made public.</p><blockquote data-i18n="home.whyQuote">“If progress stalled because no one could challenge it, we’ll build the challenger ourselves!”</blockquote><a class="fp-text-link" href="why.html" data-locale-link data-i18n="refresh.purposeLink">Read the developer’s statement and references</a></div>
+    </section>
+
     <aside class="fp-support fp-wrap" id="support-project"><div><span class="fp-open" data-i18n="home.sponsorMark">OPEN</span><p data-i18n="home.sponsorLead">Sponsorship supports compatibility testing, hardware coverage, documentation, and long-term open-source maintenance.</p></div><a class="fp-text-link" href="https://github.com/sponsors/facta-leopard" target="_blank" rel="noopener noreferrer" data-i18n="home.sponsorButton">Sponsor ForgePlay on GitHub ↗</a></aside>
   </main>
   <footer class="fp-footer fp-wrap">
