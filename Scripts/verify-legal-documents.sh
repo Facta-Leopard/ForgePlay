@@ -143,6 +143,12 @@ validate_localized_license_notice() {
   require_snippet "$path" "LICENSE.md"
   require_snippet "$path" "LICENSES/GPL-3.0-only.txt"
   require_snippet "$path" "LICENSES/LGPL-2.1-or-later.txt"
+  require_snippet "$path" "ForgePlay Frame Generation"
+  require_snippet "$path" "LICENSES/ForgePlayFrameGeneration/FRAME_GENERATION_LICENSE_SCOPE.md"
+  require_snippet "$path" "NotoSans-OFL.txt"
+  require_snippet "$path" "NotoSansCJK-OFL.txt"
+  require_snippet "$path" "NHN Corporation"
+  require_snippet "$path" "Legal/NanumGothic/OFL.txt"
 }
 
 while [[ "$#" -gt 0 ]]; do

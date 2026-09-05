@@ -562,18 +562,6 @@ struct DashboardView: View {
         guard appState.runtimeExecutableURL != nil else {
             return appState.localized("ForgePlay Runtime을 먼저 확인하세요.")
         }
-        guard let runtimeSystemCheck else {
-            return appState.localized("ForgePlay Runtime을 확인하는 중입니다.")
-        }
-        if runtimeSystemCheck.status == .error {
-            return appState.localized(runtimeSystemCheck.detail)
-        }
-        if runtimeSystemCheck.status == .unknown {
-            return appState.localized("ForgePlay Runtime을 확인하는 중입니다.")
-        }
-        if let issue = readiness.steamPrefixIssue {
-            return appState.localizedError(issue)
-        }
         guard readiness.hasSteamPrefix else {
             return appState.localized("Steam 프리픽스를 먼저 만들어야 합니다.")
         }

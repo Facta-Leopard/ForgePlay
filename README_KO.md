@@ -1,5 +1,24 @@
 # ForgePlay Source — 한국어
 
+## ForgePlay 1.2 공개 준비본
+
+제품 기준은 `1.2_Release` 커밋
+`72a2598c99f0b649d1384ed0763a00037f5d1d2e`다. 이 준비본은 실행 코드와
+Wine 패치의 바이트를 유지하면서 라이선스 고지와 누락된 소스 배포 입력을
+보완한다. `SOURCE-INVENTORY.json`의 커밋은 이 보완을 기록한 준비 커밋이다.
+
+독립 구현한 프레임 생성은 Game Mode와 같은 `GPL-3.0-only`로 공개한다.
+정확한 파일·해시 및 혼합 파일의 적용 부분은
+`LICENSES/ForgePlayFrameGeneration/`에 구분했다. Wine 유래 연결 패치와
+Apple의 D3DMetal 구성요소에 이 GPL 지정을 일괄 적용하지 않는다.
+
+개인 키·키체인·로그인 자료는 공개 대상이 아니다.
+`Resources/CompatibilityDBPublicKey.base64`는 배포 앱이 호환성 DB 서명을
+확인하는 제품용 공개키로, 개인 인증키나 서명용 비밀키가 아니다.
+
+이 자료는 사용자 확인을 위한 공개 준비본이다. 바이너리와 실제 대응 관계는
+최종 DMG가 정해졌을 때 확인하며, 이 자료 생성만으로 릴리스되지는 않는다.
+
 [English](README_EN.md) | [언어 선택](README.md)
 
 ## 먼저 밝히는 입장

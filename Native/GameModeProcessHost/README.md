@@ -56,11 +56,14 @@ The host:
 5. loads the exact bundled `x86_64-unix/ntdll.so` and calls `__wine_main` in the
    same PID with the original `argc` and `argv`.
 
-Every host-side failure before `__wine_main` is entered records a bounded
-failure event and exits nonzero. The host never execs a standard Wine loader,
-and the patched Wine child loader also returns a failure status when this
-required host cannot run. A Steam game child therefore cannot silently continue
-outside Game Mode after a host validation or startup failure.
+After the signed Runtime identity and inherited argument vector are validated,
+a host-only failure before `__wine_main` records a bounded failure event and
+execs the exact bundled standard Wine loader with the original game arguments.
+Only the Game Mode routing keys and Wine's no-reexec marker are removed; the
+selected renderer and frame-generation environment remain intact. The fallback
+is recorded as Game Mode inactive and is never reported as Game Mode success.
+An invalid Runtime identity or unsafe argument vector still fails without
+executing an untrusted path.
 
 The outer app validates the complete bundled Runtime and host capability before
 it enables routing. The host repeats the full schema-3 Runtime identity check.

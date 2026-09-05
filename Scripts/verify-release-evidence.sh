@@ -98,12 +98,12 @@ import sys
 from pathlib import Path
 value = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
 kind = value.get("releaseKind")
-if kind not in {"official-notarized-dmg", "local-unnotarized-dmg"}:
+if kind not in {"commercial-notarized-dmg", "local-unnotarized-dmg"}:
     raise SystemExit("unsupported releaseKind")
 print(kind)
 PY
 )" || fail "release manifest releaseKind could not be read"
-if [[ "$RELEASE_KIND" == "official-notarized-dmg" ]]; then
+if [[ "$RELEASE_KIND" == "commercial-notarized-dmg" ]]; then
   require_regular_file "$PROJECT_SOURCE_ARCHIVE" "project Corresponding Source archive"
   require_regular_file "$COPYLEFT_SOURCE_ARCHIVE" "copyleft source-package archive"
   require_regular_file "$COPYLEFT_SOURCE_RECEIPT" "copyleft source-package receipt"
@@ -233,7 +233,7 @@ require(payload.get("product") == "ForgePlay", "product must be ForgePlay")
 require_iso_utc_timestamp("createdAtUTC", payload.get("createdAtUTC"))
 require(payload.get("configuration") == "Distribution", "configuration must be Distribution")
 require(payload.get("signingStyle") in {"automatic", "manual"}, "signingStyle must be automatic or manual")
-require(payload.get("releaseKind") in {"official-notarized-dmg", "local-unnotarized-dmg"}, "releaseKind is unsupported")
+require(payload.get("releaseKind") in {"commercial-notarized-dmg", "local-unnotarized-dmg"}, "releaseKind is unsupported")
 require(isinstance(payload.get("notarized"), bool), "notarized must be boolean")
 require(isinstance(payload.get("stapled"), bool), "stapled must be boolean")
 require(isinstance(payload.get("gatekeeperAssessed"), bool), "gatekeeperAssessed must be boolean")
@@ -247,13 +247,13 @@ require(isinstance(notarization.get("staplerValidated"), bool), "staplerValidate
 require(isinstance(notarization.get("gatekeeperAssessed"), bool), "notarization gatekeeperAssessed must be boolean")
 require(notarization["gatekeeperAssessed"] == payload["gatekeeperAssessed"], "notarization gatekeeperAssessed must match the top-level gatekeeperAssessed flag")
 
-if payload["releaseKind"] == "official-notarized-dmg":
-    require(payload["notarized"] and payload["stapled"] and payload["gatekeeperAssessed"], "official release manifest must prove notarization, stapling, and Gatekeeper assessment")
-    require(notarization["notarytoolStatus"] == "Accepted", "official release manifest must record notarytoolStatus Accepted")
-    require(re.fullmatch(r"[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}", notarization["submissionId"]), "official release manifest must record a notary submission id")
-    require(notarization["staplerValidated"] is True, "official release manifest must prove stapler validation")
+if payload["releaseKind"] == "commercial-notarized-dmg":
+    require(payload["notarized"] and payload["stapled"] and payload["gatekeeperAssessed"], "commercial release manifest must prove notarization, stapling, and Gatekeeper assessment")
+    require(notarization["notarytoolStatus"] == "Accepted", "commercial release manifest must record notarytoolStatus Accepted")
+    require(re.fullmatch(r"[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}", notarization["submissionId"]), "commercial release manifest must record a notary submission id")
+    require(notarization["staplerValidated"] is True, "commercial release manifest must prove stapler validation")
 else:
-    require(not payload["notarized"] and not payload["stapled"] and not payload["gatekeeperAssessed"], "local release manifest must not claim official notarization gates")
+    require(not payload["notarized"] and not payload["stapled"] and not payload["gatekeeperAssessed"], "local release manifest must not claim commercial notarization gates")
     require(notarization["notarytoolStatus"] == "not-run", "local release manifest must record notarytoolStatus not-run")
     require(notarization["submissionId"] == "", "local release manifest must not record a notary submission id")
     require(notarization["staplerValidated"] is False, "local release manifest must not claim stapler validation")
@@ -280,8 +280,8 @@ require(isinstance(authorities, list) and all(isinstance(item, str) and item for
 attestation_binding = payload.get("publicRuntimeReleaseAttestation")
 project_source_binding = payload.get("projectCorrespondingSource")
 copyleft_source_binding = payload.get("copyleftSourcePackage")
-if payload["releaseKind"] == "official-notarized-dmg":
-    require(isinstance(attestation_binding, dict), "official release manifest must bind a public Runtime release attestation")
+if payload["releaseKind"] == "commercial-notarized-dmg":
+    require(isinstance(attestation_binding, dict), "commercial release manifest must bind a public Runtime release attestation")
     require(set(attestation_binding) == {"sha256", "value"}, "public Runtime release attestation binding schema is invalid")
     attestation = attestation_binding.get("value")
     require(isinstance(attestation, dict), "public Runtime release attestation value must be an object")
@@ -384,7 +384,7 @@ require(isinstance(team_identifier, str) and re.fullmatch(r"[A-Z0-9]{10}", team_
 print("Release evidence verification passed.")
 PY
 
-if [[ "$RELEASE_KIND" == "official-notarized-dmg" ]]; then
+if [[ "$RELEASE_KIND" == "commercial-notarized-dmg" ]]; then
   require_regular_file "$PROJECT_SOURCE_EXPORT_FREEZER" "project Corresponding Source verifier"
   PROJECT_SOURCE_BINDING_TEMP="$(mktemp "${TMPDIR:-/tmp}/forgeplay-project-source-binding.XXXXXX")" ||
     fail "project Corresponding Source binding temporary file could not be created"

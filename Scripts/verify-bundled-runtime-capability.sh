@@ -2,7 +2,6 @@
 set -euo pipefail
 
 INPUT_PATH="${1:-}"
-RELEASE_RUNTIME_INVENTORY_ONLY=0
 REQUIRE_APP_STORE_RUNTIME="${FORGEPLAY_REQUIRE_APP_STORE_RUNTIME:-0}"
 REQUIRE_DIRECT_DMG_RUNTIME="${FORGEPLAY_REQUIRE_DIRECT_DMG_RUNTIME:-0}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -23,7 +22,7 @@ NANUM_GOTHIC_REGULAR_SHA256="76f45ef4a6bcff344c837c95a7dcc26e017e38b5846d5ae0cdc
 NANUM_GOTHIC_BOLD_SHA256="21f9d3a7f1ca82ca1dc9a288e30138b4f1feb6e71fc89b5a9181fed174b6bbe2"
 NANUM_GOTHIC_OFL_SHA256="eeacf16032901d0ed0456876ec77b8f0fda6b3fecec7d972f8543eb602e6c30f"
 NANUM_GOTHIC_SOURCE_IDENTITY_SHA256="c1fbfce859af7446bde6e2f88877cafc92535fde63f7cce9ae0003d29399926c"
-FORGEPLAY_WINE_MODIFICATIONS_SHA256="613ab79178fece6ea534589d64c1e9716b7a8a5c8730eebb4ea067fdd46ff081"
+FORGEPLAY_WINE_MODIFICATIONS_SHA256="153cc183ac50e991e937591236b77e084ca63df0cc24140f60c4bbca495be7a9"
 GPL_3_ONLY_LICENSE_SHA256="3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
 LGPL_2_1_LICENSE_SHA256="e237fa56668030e928551ddd60f05df5fe957f75eab874bbd017e085ed722e7c"
 APPLE_GPTK_LICENSE_SHA256="5abb2d059be217663b00e8fd37e14411d374e11d17e3b744eebd49b8d17118c8"
@@ -365,734 +364,6 @@ verify_wine_launcher_uses_installed_unix_loader() {
     fail "ForgePlay Runtime wine launcher must execute the installed Unix loader beside ntdll.so: $launcher"
 }
 
-runtime_file_inventory() {
-  local mode="$1"
-  local runtime_root="$2"
-  local inventory_path="$3"
-  /usr/bin/python3 - "$mode" "$runtime_root" "$inventory_path" <<'PY'
-import hashlib
-import json
-import os
-import stat
-import struct
-import sys
-from pathlib import PurePosixPath
-
-mode, runtime_root, inventory_path = sys.argv[1:]
-runtime_root = os.path.abspath(os.path.normpath(runtime_root))
-inventory_path = os.path.abspath(os.path.normpath(inventory_path))
-
-inventory_name = "RuntimeFileInventory.json"
-manifest_name = "RuntimeManifest.json"
-public_claim_name = "PublicRuntimeBuildClaim.json"
-reserved_claim_paths = sorted((inventory_name, manifest_name, public_claim_name))
-hash_algorithm = "sha256-macho-code-signature-normalized-v1"
-signed_release_path_transforms = ["apple-d3dmetal-framework-canonical-alias-v1"]
-fingerprint_domain = b"forgeplay-runtime-file-inventory-v1\n"
-maximum_entry_count = 200000
-maximum_file_bytes = 1024 * 1024 * 1024
-maximum_total_bytes = 32 * 1024 * 1024 * 1024
-maximum_inventory_bytes = 128 * 1024 * 1024
-mh_magic_64 = 0xFEEDFACF
-lc_segment_64 = 0x19
-lc_code_signature = 0x1D
-
-
-def fail_inventory(message):
-    raise SystemExit(message)
-
-
-def metadata_token(value):
-    return (
-        value.st_dev,
-        value.st_ino,
-        value.st_mode,
-        value.st_nlink,
-        value.st_size,
-        value.st_mtime_ns,
-        value.st_ctime_ns,
-        value.st_uid,
-    )
-
-
-def validate_relative_path(value):
-    if (
-        not isinstance(value, str)
-        or not value
-        or len(value.encode("utf-8")) > 4096
-        or "\\" in value
-        or any(ord(character) < 32 or ord(character) == 127 for character in value)
-    ):
-        fail_inventory(f"runtime inventory path is unsafe: {value!r}")
-    parsed = PurePosixPath(value)
-    if parsed.is_absolute() or parsed.as_posix() != value or any(
-        component in {"", ".", ".."} for component in parsed.parts
-    ):
-        fail_inventory(f"runtime inventory path is unsafe: {value!r}")
-
-
-def stable_regular_bytes(path, label, maximum_bytes):
-    descriptor = os.open(
-        path,
-        os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW | os.O_NONBLOCK,
-    )
-    try:
-        before = os.fstat(descriptor)
-        if (
-            not stat.S_ISREG(before.st_mode)
-            or before.st_nlink != 1
-            or before.st_uid != os.geteuid()
-            or before.st_mode & (stat.S_IWGRP | stat.S_IWOTH | stat.S_ISUID | stat.S_ISGID)
-            or before.st_size < 0
-            or before.st_size > maximum_bytes
-        ):
-            fail_inventory(f"{label} is not a safe single-link regular file: {path}")
-        payload = bytearray()
-        offset = 0
-        while offset < before.st_size:
-            chunk = os.pread(descriptor, min(1024 * 1024, before.st_size - offset), offset)
-            if not chunk:
-                fail_inventory(f"{label} became incomplete while being read: {path}")
-            payload.extend(chunk)
-            offset += len(chunk)
-        after = os.fstat(descriptor)
-        if metadata_token(before) != metadata_token(after):
-            fail_inventory(f"{label} changed while being read: {path}")
-        return bytes(payload), before
-    finally:
-        os.close(descriptor)
-
-
-def normalized_macho_content(data, relative):
-    if len(data) < 32 or struct.unpack_from("<I", data, 0)[0] != mh_magic_64:
-        return data
-
-    normalized = bytearray(data)
-    command_count, command_bytes = struct.unpack_from("<II", normalized, 16)
-    command_offset = 32
-    command_limit = command_offset + command_bytes
-    if command_limit > len(normalized) or command_count > command_bytes // 8:
-        fail_inventory(f"Mach-O load commands exceed the runtime file: {relative}")
-
-    linkedit_offset = None
-    signature_command = None
-    signature_offset = None
-    for _ in range(command_count):
-        if command_offset + 8 > command_limit:
-            fail_inventory(f"Mach-O load command header is truncated: {relative}")
-        command, command_size = struct.unpack_from("<II", normalized, command_offset)
-        if command_size < 8 or command_offset + command_size > command_limit:
-            fail_inventory(f"Mach-O load command is invalid: {relative}")
-        if command == lc_segment_64:
-            if command_size < 72:
-                fail_inventory(f"Mach-O segment command is truncated: {relative}")
-            segment_name = bytes(normalized[command_offset + 8:command_offset + 24]).split(b"\0", 1)[0]
-            if segment_name == b"__LINKEDIT":
-                if linkedit_offset is not None:
-                    fail_inventory(f"Mach-O contains duplicate __LINKEDIT segments: {relative}")
-                linkedit_offset = command_offset
-        elif command == lc_code_signature:
-            if command_size != 16 or signature_command is not None:
-                fail_inventory(f"Mach-O code-signature command is invalid: {relative}")
-            data_offset, data_size = struct.unpack_from("<II", normalized, command_offset + 8)
-            if (
-                data_offset < command_limit
-                or data_offset > len(normalized)
-                or data_size == 0
-                or data_size > len(normalized) - data_offset
-                or data_offset + data_size != len(normalized)
-            ):
-                fail_inventory(f"Mach-O code-signature range is invalid: {relative}")
-            signature_command = command_offset
-            signature_offset = data_offset
-        command_offset += command_size
-
-    if command_offset != command_limit or linkedit_offset is None:
-        fail_inventory(f"Mach-O load-command accounting is invalid: {relative}")
-
-    normalized[linkedit_offset + 32:linkedit_offset + 40] = b"\0" * 8
-    normalized[linkedit_offset + 48:linkedit_offset + 56] = b"\0" * 8
-    if signature_command is None:
-        return bytes(normalized)
-
-    normalized[signature_command:command_limit - 16] = normalized[signature_command + 16:command_limit]
-    normalized[command_limit - 16:command_limit] = b"\0" * 16
-    struct.pack_into("<II", normalized, 16, command_count - 1, command_bytes - 16)
-    return bytes(normalized[:signature_offset])
-
-
-def content_identity(path, relative):
-    data, metadata = stable_regular_bytes(path, "runtime payload", maximum_file_bytes)
-    normalized = normalized_macho_content(data, relative)
-    return {
-        "contentByteCount": len(normalized),
-        "contentSHA256": hashlib.sha256(normalized).hexdigest(),
-        "executable": bool(metadata.st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)),
-        "path": relative,
-        "type": "file",
-    }, metadata.st_size
-
-
-def require_reserved_regular(path, label, maximum_bytes=maximum_inventory_bytes):
-    data, _ = stable_regular_bytes(path, label, maximum_bytes)
-    return data
-
-
-def validate_claim_paths(for_write):
-    root_metadata = os.lstat(runtime_root)
-    if not stat.S_ISDIR(root_metadata.st_mode) or stat.S_ISLNK(root_metadata.st_mode):
-        fail_inventory("runtime inventory root must be a non-symlink directory")
-    expected_inventory = os.path.join(runtime_root, inventory_name)
-    if inventory_path != expected_inventory:
-        fail_inventory("runtime inventory must use the canonical RuntimeFileInventory.json path")
-    require_reserved_regular(os.path.join(runtime_root, manifest_name), "runtime manifest")
-    if for_write:
-        for path in (inventory_path, os.path.join(runtime_root, public_claim_name)):
-            try:
-                os.lstat(path)
-            except FileNotFoundError:
-                pass
-            else:
-                fail_inventory(f"runtime claim path is already occupied: {path}")
-    else:
-        require_reserved_regular(inventory_path, "runtime file inventory")
-        public_claim = os.path.join(runtime_root, public_claim_name)
-        try:
-            metadata = os.lstat(public_claim)
-        except FileNotFoundError:
-            pass
-        else:
-            if not stat.S_ISREG(metadata.st_mode) or stat.S_ISLNK(metadata.st_mode):
-                fail_inventory("public Runtime build claim has an unsafe type")
-    return root_metadata
-
-
-def scan_runtime(root_metadata):
-    rows = []
-    total_bytes = 0
-
-    def visit(directory, prefix):
-        nonlocal total_bytes
-        before = os.lstat(directory)
-        if not stat.S_ISDIR(before.st_mode) or stat.S_ISLNK(before.st_mode):
-            fail_inventory(f"runtime directory changed type while being inventoried: {prefix or '.'}")
-        with os.scandir(directory) as iterator:
-            entries = sorted(iterator, key=lambda entry: entry.name)
-        for entry in entries:
-            relative = entry.name if not prefix else f"{prefix}/{entry.name}"
-            validate_relative_path(relative)
-            if relative in reserved_claim_paths:
-                continue
-            metadata = entry.stat(follow_symlinks=False)
-            if stat.S_ISDIR(metadata.st_mode):
-                rows.append({"path": relative, "type": "directory"})
-                visit(entry.path, relative)
-            elif stat.S_ISREG(metadata.st_mode):
-                row, physical_bytes = content_identity(entry.path, relative)
-                rows.append(row)
-                total_bytes += physical_bytes
-            elif stat.S_ISLNK(metadata.st_mode):
-                target = os.readlink(entry.path)
-                if (
-                    not target
-                    or os.path.isabs(target)
-                    or "\\" in target
-                    or any(ord(character) < 32 or ord(character) == 127 for character in target)
-                ):
-                    fail_inventory(f"runtime symlink target is unsafe: {relative}")
-                resolved = os.path.realpath(entry.path)
-                try:
-                    contained = os.path.commonpath((runtime_root, resolved)) == runtime_root
-                except ValueError:
-                    contained = False
-                if not contained or not os.path.exists(resolved):
-                    fail_inventory(f"runtime symlink escapes or is dangling: {relative}")
-                rows.append({"linkTarget": target, "path": relative, "type": "symlink"})
-            else:
-                fail_inventory(f"runtime contains an unsupported entry type: {relative}")
-            if len(rows) > maximum_entry_count or total_bytes > maximum_total_bytes:
-                fail_inventory("runtime file inventory exceeds its size bound")
-        after = os.lstat(directory)
-        if metadata_token(before) != metadata_token(after):
-            fail_inventory(f"runtime directory changed while being inventoried: {prefix or '.'}")
-
-    visit(runtime_root, "")
-    if metadata_token(os.lstat(runtime_root)) != metadata_token(root_metadata):
-        fail_inventory("runtime root changed while being inventoried")
-    rows.sort(key=lambda row: row["path"])
-    entries_raw = json.dumps(rows, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    fingerprint = hashlib.sha256(fingerprint_domain + entries_raw).hexdigest()
-    return {
-        "entries": rows,
-        "fileContentHashAlgorithm": hash_algorithm,
-        "payloadFingerprint": fingerprint,
-        "reservedClaimPaths": reserved_claim_paths,
-        "schemaVersion": 2,
-        "signedReleasePathTransforms": signed_release_path_transforms,
-    }
-
-
-def project_signed_release_paths(value):
-    rows = value["entries"]
-    framework = "Frameworks/renderer/d3dmetal/external/D3DMetal.framework"
-    canonical_version = f"{framework}/Versions/A"
-    canonical_executable = f"{canonical_version}/D3DMetal"
-    canonical_resources = f"{canonical_version}/Resources"
-    current_version = f"{framework}/Versions/Current"
-    alias_executable = f"{framework}/D3DMetal"
-    alias_resources = f"{framework}/Resources"
-    canonical_aliases = {
-        current_version: {
-            "linkTarget": "A",
-            "path": current_version,
-            "type": "symlink",
-        },
-        alias_executable: {
-            "linkTarget": "Versions/Current/D3DMetal",
-            "path": alias_executable,
-            "type": "symlink",
-        },
-        alias_resources: {
-            "linkTarget": "Versions/Current/Resources",
-            "path": alias_resources,
-            "type": "symlink",
-        },
-    }
-    by_path = {row["path"]: row for row in rows}
-    if not all(by_path.get(path) == row for path, row in canonical_aliases.items()):
-        return value
-    if any(row["path"].startswith(f"{current_version}/") for row in rows):
-        fail_inventory("canonical Apple D3DMetal Current alias has materialized descendants")
-    executable_row = by_path.get(canonical_executable)
-    resources_row = by_path.get(canonical_resources)
-    if executable_row is None or executable_row.get("type") != "file":
-        fail_inventory("canonical Apple D3DMetal executable target is invalid")
-    if resources_row != {"path": canonical_resources, "type": "directory"}:
-        fail_inventory("canonical Apple D3DMetal Resources target is invalid")
-
-    transformed_rows = [
-        row for row in rows if row["path"] not in canonical_aliases
-    ]
-    projected_executable = dict(executable_row)
-    projected_executable["path"] = alias_executable
-    transformed_rows.append(projected_executable)
-    resource_projection_count = 0
-    for row in rows:
-        relative = row["path"]
-        if relative == canonical_resources:
-            suffix = ""
-        elif relative.startswith(f"{canonical_resources}/"):
-            suffix = relative[len(canonical_resources):]
-        else:
-            continue
-        projected = dict(row)
-        projected["path"] = f"{alias_resources}{suffix}"
-        transformed_rows.append(projected)
-        resource_projection_count += 1
-    if resource_projection_count == 0:
-        fail_inventory("canonical Apple D3DMetal Resources projection is empty")
-    transformed_rows.sort(key=lambda row: row["path"])
-    transformed_entries_raw = json.dumps(
-        transformed_rows,
-        sort_keys=True,
-        separators=(",", ":"),
-    ).encode("utf-8")
-    transformed = dict(value)
-    transformed["entries"] = transformed_rows
-    transformed["payloadFingerprint"] = hashlib.sha256(
-        fingerprint_domain + transformed_entries_raw
-    ).hexdigest()
-    return transformed
-
-
-def canonical_json(value):
-    return (json.dumps(value, indent=2, sort_keys=True) + "\n").encode("utf-8")
-
-
-def validate_inventory_schema(value, raw):
-    if (
-        not isinstance(value, dict)
-        or set(value) != {
-            "entries",
-            "fileContentHashAlgorithm",
-            "payloadFingerprint",
-            "reservedClaimPaths",
-            "schemaVersion",
-            "signedReleasePathTransforms",
-        }
-        or value.get("schemaVersion") != 2
-        or value.get("fileContentHashAlgorithm") != hash_algorithm
-        or value.get("reservedClaimPaths") != reserved_claim_paths
-        or value.get("signedReleasePathTransforms") != signed_release_path_transforms
-        or raw != canonical_json(value)
-    ):
-        fail_inventory("runtime file inventory schema or canonical encoding is invalid")
-    rows = value.get("entries")
-    if not isinstance(rows, list) or len(rows) > maximum_entry_count:
-        fail_inventory("runtime file inventory entries are invalid")
-    paths = []
-    for row in rows:
-        if not isinstance(row, dict):
-            fail_inventory("runtime file inventory row is invalid")
-        row_type = row.get("type")
-        expected_keys = {
-            "directory": {"path", "type"},
-            "file": {"contentByteCount", "contentSHA256", "executable", "path", "type"},
-            "symlink": {"linkTarget", "path", "type"},
-        }.get(row_type)
-        if expected_keys is None or set(row) != expected_keys:
-            fail_inventory("runtime file inventory row schema is invalid")
-        validate_relative_path(row.get("path"))
-        if row["path"] in reserved_claim_paths:
-            fail_inventory("runtime file inventory must not enumerate a reserved claim path")
-        if row_type == "file" and (
-            not isinstance(row["contentByteCount"], int)
-            or row["contentByteCount"] < 0
-            or not isinstance(row["executable"], bool)
-            or not isinstance(row["contentSHA256"], str)
-            or len(row["contentSHA256"]) != 64
-            or any(character not in "0123456789abcdef" for character in row["contentSHA256"])
-        ):
-            fail_inventory("runtime file inventory content identity is invalid")
-        if row_type == "symlink" and not isinstance(row["linkTarget"], str):
-            fail_inventory("runtime file inventory symlink target is invalid")
-        paths.append(row["path"])
-    if paths != sorted(paths) or len(paths) != len(set(paths)):
-        fail_inventory("runtime file inventory paths are duplicated or unordered")
-    entries_raw = json.dumps(rows, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    expected_fingerprint = hashlib.sha256(fingerprint_domain + entries_raw).hexdigest()
-    if value.get("payloadFingerprint") != expected_fingerprint:
-        fail_inventory("runtime file inventory payload fingerprint is invalid")
-
-
-def validate_public_claim_if_present():
-    claim_path = os.path.join(runtime_root, public_claim_name)
-    try:
-        os.lstat(claim_path)
-    except FileNotFoundError:
-        return
-    claim_raw = require_reserved_regular(claim_path, "public Runtime build claim", 16 * 1024 * 1024)
-    try:
-        claim = json.loads(claim_raw.decode("utf-8"))
-    except (UnicodeError, json.JSONDecodeError) as error:
-        fail_inventory(f"public Runtime build claim is unreadable: {error}")
-    if claim_raw != canonical_json(claim) or not isinstance(claim, dict):
-        fail_inventory("public Runtime build claim is not canonical JSON")
-    manifest_raw = require_reserved_regular(
-        os.path.join(runtime_root, manifest_name), "runtime manifest", 4 * 1024 * 1024
-    )
-    inventory_raw = require_reserved_regular(inventory_path, "runtime file inventory")
-    try:
-        manifest = json.loads(manifest_raw.decode("utf-8"))
-        inventory = json.loads(inventory_raw.decode("utf-8"))
-    except (UnicodeError, json.JSONDecodeError) as error:
-        fail_inventory(f"public Runtime inventory authority is unreadable: {error}")
-    base_manifest_keys = {
-        "architecture",
-        "corePayloadFingerprint",
-        "corePayloadHashAlgorithm",
-        "corePayloadSHA256",
-        "hostSupportPayloadFingerprint",
-        "hostSupportSBOMPath",
-        "hostSupportSBOMSHA256",
-        "patchApplicationOrder",
-        "patchSetSHA256",
-        "prefixCompatibilityFingerprint",
-        "runnerBuildFingerprint",
-        "runnerLauncherSHA256",
-        "runtimeIdentifier",
-        "schemaVersion",
-        "sourceTreeSHA256",
-        "wineInfSHA256",
-        "wineVersion",
-        "winebootSHA256",
-    }
-    inventory_manifest_keys = {
-        "runtimeFileInventoryFingerprint",
-        "runtimeFileInventoryHashAlgorithm",
-        "runtimeFileInventoryPath",
-        "runtimeFileInventorySHA256",
-    }
-    if (
-        not isinstance(manifest, dict)
-        or manifest_raw != canonical_json(manifest)
-        or set(manifest) != base_manifest_keys | inventory_manifest_keys
-        or manifest.get("schemaVersion") != 3
-        or manifest.get("runtimeFileInventoryPath") != inventory_name
-        or manifest.get("runtimeFileInventoryHashAlgorithm") != hash_algorithm
-        or manifest.get("runtimeFileInventorySHA256")
-        != hashlib.sha256(inventory_raw).hexdigest()
-        or not isinstance(inventory, dict)
-        or manifest.get("runtimeFileInventoryFingerprint")
-        != inventory.get("payloadFingerprint")
-    ):
-        fail_inventory("public Runtime manifest does not bind the complete file inventory")
-    manifest_sha256 = hashlib.sha256(manifest_raw).hexdigest()
-    receipt = claim.get("runtimeBuildReceipt")
-    outputs = receipt.get("runtimeOutputs") if isinstance(receipt, dict) else None
-    if (
-        claim.get("schemaVersion") != 2
-        or claim.get("claimStatus") != "unsigned build claim awaiting release attestation"
-        or claim.get("runtimeManifestSHA256") != manifest_sha256
-        or not isinstance(outputs, dict)
-        or outputs.get("runtimeManifestSHA256") != manifest_sha256
-    ):
-        fail_inventory("public Runtime build claim does not bind the final Runtime manifest")
-
-
-root_metadata = validate_claim_paths(mode == "write")
-actual = scan_runtime(root_metadata)
-if mode == "write":
-    payload = canonical_json(actual)
-    descriptor = os.open(
-        inventory_path,
-        os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_CLOEXEC | os.O_NOFOLLOW,
-        0o644,
-    )
-    try:
-        offset = 0
-        while offset < len(payload):
-            written = os.write(descriptor, payload[offset:])
-            if written <= 0:
-                fail_inventory("runtime file inventory write made no progress")
-            offset += written
-        os.fchmod(descriptor, 0o644)
-        os.fsync(descriptor)
-    finally:
-        os.close(descriptor)
-elif mode in {"verify", "verify-signed-release"}:
-    raw = require_reserved_regular(inventory_path, "runtime file inventory")
-    try:
-        expected = json.loads(raw.decode("utf-8"))
-    except (UnicodeError, json.JSONDecodeError) as error:
-        fail_inventory(f"runtime file inventory is unreadable: {error}")
-    validate_inventory_schema(expected, raw)
-    if mode == "verify-signed-release":
-        actual = project_signed_release_paths(actual)
-    if expected != actual:
-        fail_inventory("runtime paths, types, or content differ from the complete file inventory")
-    validate_public_claim_if_present()
-else:
-    fail_inventory("runtime file inventory mode is unsupported")
-PY
-}
-
-verify_release_runtime_inventory_contract() {
-  local runtime_root="$1"
-  local manifest="$runtime_root/RuntimeManifest.json"
-  local inventory="$runtime_root/RuntimeFileInventory.json"
-  local public_claim="$runtime_root/PublicRuntimeBuildClaim.json"
-  local sbom="$runtime_root/RuntimeSBOM.json"
-
-  require_non_symlink_directory "$runtime_root" "public Release Runtime root"
-  require_non_symlink_regular_file "$manifest" "public Release Runtime manifest"
-  require_non_symlink_regular_file "$inventory" "public Release Runtime complete file inventory"
-  require_non_symlink_regular_file "$public_claim" "public Release Runtime build claim"
-  require_non_symlink_regular_file "$sbom" "public Release Runtime host-support SBOM"
-  require_non_symlink_regular_file "$RUNTIME_DEPENDENCY_LOCK" "runtime dependency lock"
-  require_non_symlink_regular_file "$RENDERER_PAYLOAD_LOCK" "runtime renderer payload lock"
-  require_non_symlink_regular_file "$GSTREAMER_PAYLOAD_LOCK" "runtime GStreamer payload lock"
-  require_non_symlink_regular_file "$RUNTIME_SBOM_TOOL" "runtime SBOM verifier"
-
-  runtime_file_inventory verify-signed-release "$runtime_root" "$inventory" ||
-    fail "public Release Runtime differs from its complete file inventory"
-
-  /usr/bin/python3 - "$manifest" "$inventory" "$public_claim" "$sbom" <<'PY' ||
-import hashlib
-import json
-import re
-import sys
-from pathlib import Path
-
-manifest_path, inventory_path, claim_path, sbom_path = map(Path, sys.argv[1:])
-
-
-def canonical_json(value):
-    return (json.dumps(value, indent=2, sort_keys=True) + "\n").encode("utf-8")
-
-
-def load_canonical(path, label):
-    raw = path.read_bytes()
-    try:
-        value = json.loads(raw.decode("utf-8"))
-    except (UnicodeError, json.JSONDecodeError) as error:
-        raise SystemExit(f"{label} is unreadable: {error}")
-    if not isinstance(value, dict) or raw != canonical_json(value):
-        raise SystemExit(f"{label} is not a canonical JSON object")
-    return value, raw
-
-
-def sha256(raw):
-    return hashlib.sha256(raw).hexdigest()
-
-
-def is_hash(value):
-    return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
-
-
-manifest, manifest_raw = load_canonical(manifest_path, "public Release Runtime manifest")
-inventory, inventory_raw = load_canonical(inventory_path, "public Release Runtime inventory")
-claim, _ = load_canonical(claim_path, "public Release Runtime build claim")
-sbom, sbom_raw = load_canonical(sbom_path, "public Release Runtime SBOM")
-
-base_manifest_keys = {
-    "architecture",
-    "corePayloadFingerprint",
-    "corePayloadHashAlgorithm",
-    "corePayloadSHA256",
-    "hostSupportPayloadFingerprint",
-    "hostSupportSBOMPath",
-    "hostSupportSBOMSHA256",
-    "patchApplicationOrder",
-    "patchSetSHA256",
-    "prefixCompatibilityFingerprint",
-    "runnerBuildFingerprint",
-    "runnerLauncherSHA256",
-    "runtimeIdentifier",
-    "schemaVersion",
-    "sourceTreeSHA256",
-    "wineInfSHA256",
-    "wineVersion",
-    "winebootSHA256",
-}
-inventory_manifest_keys = {
-    "runtimeFileInventoryFingerprint",
-    "runtimeFileInventoryHashAlgorithm",
-    "runtimeFileInventoryPath",
-    "runtimeFileInventorySHA256",
-}
-if (
-    set(manifest) != base_manifest_keys | inventory_manifest_keys
-    or manifest.get("schemaVersion") != 3
-    or manifest.get("runtimeIdentifier") != "com.forgeplay.runtime.wine-11.12"
-    or manifest.get("architecture") != "win64"
-    or manifest.get("runtimeFileInventoryPath") != "RuntimeFileInventory.json"
-    or manifest.get("runtimeFileInventoryHashAlgorithm")
-    != "sha256-macho-code-signature-normalized-v1"
-):
-    raise SystemExit("public Release Runtime manifest inventory extension is invalid")
-for key in (
-    "corePayloadFingerprint",
-    "hostSupportPayloadFingerprint",
-    "hostSupportSBOMSHA256",
-    "patchSetSHA256",
-    "prefixCompatibilityFingerprint",
-    "runnerBuildFingerprint",
-    "runnerLauncherSHA256",
-    "runtimeFileInventoryFingerprint",
-    "runtimeFileInventorySHA256",
-    "sourceTreeSHA256",
-    "wineInfSHA256",
-    "winebootSHA256",
-):
-    if not is_hash(manifest.get(key)):
-        raise SystemExit(f"public Release Runtime manifest digest is invalid: {key}")
-if (
-    manifest["runtimeFileInventorySHA256"] != sha256(inventory_raw)
-    or manifest["runtimeFileInventoryFingerprint"] != inventory.get("payloadFingerprint")
-    or manifest.get("hostSupportSBOMPath") != "RuntimeSBOM.json"
-    or manifest["hostSupportSBOMSHA256"] != sha256(sbom_raw)
-    or manifest["hostSupportPayloadFingerprint"] != sbom.get("payloadFingerprint")
-):
-    raise SystemExit("public Release Runtime manifest does not bind its inventory and SBOM")
-
-prefix_input = (
-    "forgeplay-prefix-compatibility-v1\n"
-    f"wineVersion={manifest['wineVersion']}\n"
-    f"architecture={manifest['architecture']}\n"
-    f"wineInfSHA256={manifest['wineInfSHA256']}\n"
-    f"winebootSHA256={manifest['winebootSHA256']}\n"
-).encode("utf-8")
-build_input = (
-    "forgeplay-runtime-build-v3\n"
-    f"sourceTreeSHA256={manifest['sourceTreeSHA256']}\n"
-    f"patchSetSHA256={manifest['patchSetSHA256']}\n"
-    f"runnerLauncherSHA256={manifest['runnerLauncherSHA256']}\n"
-    f"prefixCompatibilityFingerprint={manifest['prefixCompatibilityFingerprint']}\n"
-    f"hostSupportPayloadFingerprint={manifest['hostSupportPayloadFingerprint']}\n"
-    f"corePayloadFingerprint={manifest['corePayloadFingerprint']}\n"
-).encode("utf-8")
-if (
-    manifest["prefixCompatibilityFingerprint"] != sha256(prefix_input)
-    or manifest["runnerBuildFingerprint"] != sha256(build_input)
-):
-    raise SystemExit("public Release Runtime must preserve the app-compatible v3 fingerprints")
-
-claim_keys = {
-    "claimStatus",
-    "commandGraph",
-    "corePayloadFingerprint",
-    "currentFinalPatchedSourceTreeSHA256",
-    "hostSupportPayloadFingerprint",
-    "patchSetSHA256",
-    "releaseCommit",
-    "runnerBuildFingerprint",
-    "runtimeBuildReceipt",
-    "runtimeManifestSHA256",
-    "schemaVersion",
-    "sourceInventorySHA256",
-}
-receipt = claim.get("runtimeBuildReceipt")
-outputs = receipt.get("runtimeOutputs") if isinstance(receipt, dict) else None
-expected_outputs = {
-    "corePayloadFingerprint": manifest["corePayloadFingerprint"],
-    "hostSupportPayloadFingerprint": manifest["hostSupportPayloadFingerprint"],
-    "patchSetSHA256": manifest["patchSetSHA256"],
-    "runnerBuildFingerprint": manifest["runnerBuildFingerprint"],
-    "runtimeManifestSHA256": sha256(manifest_raw),
-    "sourceTreeSHA256": manifest["sourceTreeSHA256"],
-}
-if (
-    set(claim) != claim_keys
-    or claim.get("schemaVersion") != 2
-    or claim.get("claimStatus") != "unsigned build claim awaiting release attestation"
-    or not isinstance(receipt, dict)
-    or receipt.get("schemaVersion") != 2
-    or receipt.get("claimStatus") != "unsigned build claim awaiting release attestation"
-    or outputs != expected_outputs
-    or claim.get("runtimeManifestSHA256") != expected_outputs["runtimeManifestSHA256"]
-    or claim.get("corePayloadFingerprint") != expected_outputs["corePayloadFingerprint"]
-    or claim.get("hostSupportPayloadFingerprint") != expected_outputs["hostSupportPayloadFingerprint"]
-    or claim.get("patchSetSHA256") != expected_outputs["patchSetSHA256"]
-    or claim.get("runnerBuildFingerprint") != expected_outputs["runnerBuildFingerprint"]
-    or claim.get("currentFinalPatchedSourceTreeSHA256") != expected_outputs["sourceTreeSHA256"]
-):
-    raise SystemExit("public Release Runtime build claim does not bind the final manifest")
-PY
-    fail "public Release Runtime inventory authority is invalid"
-
-  /usr/bin/python3 "$RUNTIME_SBOM_TOOL" verify \
-    "$runtime_root" \
-    "$RUNTIME_DEPENDENCY_LOCK" \
-    "$RENDERER_PAYLOAD_LOCK" \
-    "$GSTREAMER_PAYLOAD_LOCK" \
-    "$sbom" ||
-    fail "public Release Runtime renderer/SBOM lock verification failed"
-}
-
-case "$INPUT_PATH" in
-  --write-runtime-file-inventory)
-    [[ "$#" -eq 3 ]] ||
-      fail "usage: verify-bundled-runtime-capability.sh --write-runtime-file-inventory <Runtime root> <RuntimeFileInventory.json>"
-    runtime_file_inventory write "$2" "$3" ||
-      fail "complete Runtime file inventory could not be written"
-    exit 0
-    ;;
-  --verify-runtime-file-inventory)
-    [[ "$#" -eq 3 ]] ||
-      fail "usage: verify-bundled-runtime-capability.sh --verify-runtime-file-inventory <Runtime root> <RuntimeFileInventory.json>"
-    runtime_file_inventory verify "$2" "$3" ||
-      fail "complete Runtime file inventory verification failed"
-    exit 0
-    ;;
-  --release-runtime-inventory-only)
-    [[ "$#" -eq 2 ]] ||
-      fail "usage: verify-bundled-runtime-capability.sh --release-runtime-inventory-only <app bundle, resource root, or ForgePlayRuntime root>"
-    RELEASE_RUNTIME_INVENTORY_ONLY=1
-    INPUT_PATH="$2"
-    ;;
-esac
-
 [[ -n "$INPUT_PATH" ]] || fail "usage: verify-bundled-runtime-capability.sh <app bundle, resource root, or ForgePlayRuntime root>"
 
 require_boolean_flag "$REQUIRE_APP_STORE_RUNTIME" "FORGEPLAY_REQUIRE_APP_STORE_RUNTIME"
@@ -1116,14 +387,6 @@ elif [[ -d "$INPUT_PATH/wine" && -f "$INPUT_PATH/RuntimeManifest.json" ]]; then
   RUNTIME_ROOT="$INPUT_PATH"
 else
   fail "input must be an app bundle, resource root containing Runners, or ForgePlayRuntime root: $INPUT_PATH"
-fi
-
-if [[ "$RELEASE_RUNTIME_INVENTORY_ONLY" == "1" ]]; then
-  verify_release_runtime_inventory_contract "$RUNTIME_ROOT" ||
-    fail "public Release Runtime inventory-only gate failed"
-  printf 'Verified public Release Runtime complete inventory and renderer/SBOM locks: %s\n' \
-    "$RUNTIME_ROOT"
-  exit 0
 fi
 
 require_non_symlink_regular_file \
@@ -1156,7 +419,6 @@ APPLE_GPTK_VERSIONED_FRAMEWORK_LICENSE="$D3DMETAL_FRAMEWORK/Versions/A/Resources
 APPLE_D3DMETAL_CODE_RESOURCES="$D3DMETAL_FRAMEWORK/Versions/A/_CodeSignature/CodeResources"
 METADATA="$RUNTIME_ROOT/BUILD-METADATA.md"
 RUNTIME_MANIFEST="$RUNTIME_ROOT/RuntimeManifest.json"
-RUNTIME_FILE_INVENTORY="$RUNTIME_ROOT/RuntimeFileInventory.json"
 RUNTIME_SBOM="$RUNTIME_ROOT/RuntimeSBOM.json"
 SOURCE_AVAILABILITY="$RUNTIME_ROOT/SOURCE-AVAILABILITY.md"
 WINE_LICENSE="$RUNTIME_ROOT/Legal/Wine/LICENSE"
@@ -1201,28 +463,6 @@ if [[ -e "$WINE_ROOT/bin/wineserver.bin" ]]; then
 fi
 require_non_symlink_regular_file "$METADATA" "ForgePlay Runtime build metadata"
 require_non_symlink_regular_file "$RUNTIME_MANIFEST" "ForgePlay Runtime identity manifest"
-LEGACY_RUNTIME_MANIFEST=0
-if [[ -e "$RUNTIME_FILE_INVENTORY" || -L "$RUNTIME_FILE_INVENTORY" ]]; then
-  require_non_symlink_regular_file "$RUNTIME_FILE_INVENTORY" "ForgePlay Runtime complete file inventory"
-  RUNTIME_FILE_INVENTORY_MODE="verify"
-  if [[ -e "$RUNTIME_ROOT/PublicRuntimeBuildClaim.json" ||
-        -L "$RUNTIME_ROOT/PublicRuntimeBuildClaim.json" ]]; then
-    RUNTIME_FILE_INVENTORY_MODE="verify-signed-release"
-  fi
-  runtime_file_inventory \
-    "$RUNTIME_FILE_INVENTORY_MODE" \
-    "$RUNTIME_ROOT" \
-    "$RUNTIME_FILE_INVENTORY" ||
-    fail "ForgePlay Runtime paths, types, or content differ from its complete file inventory"
-elif [[ -e "$RUNTIME_ROOT/PublicRuntimeBuildClaim.json" ||
-        -L "$RUNTIME_ROOT/PublicRuntimeBuildClaim.json" ]]; then
-  fail "public Runtime build claim requires the complete Runtime file inventory"
-else
-  # Checked-in/App Store Runtime schema 3 remains readable without the
-  # public-release additive inventory fields. Every public-source Runtime
-  # carries PublicRuntimeBuildClaim.json and must take the exact-inventory path.
-  LEGACY_RUNTIME_MANIFEST=1
-fi
 require_non_symlink_regular_file "$RUNTIME_SBOM" "ForgePlay Runtime host-support SBOM"
 require_non_symlink_regular_file "$RUNTIME_DEPENDENCY_LOCK" "ForgePlay Runtime dependency lock"
 require_non_symlink_regular_file "$RENDERER_PAYLOAD_LOCK" "ForgePlay Runtime renderer payload lock"
@@ -1529,6 +769,8 @@ for marker in \
   FORGEPLAY_MANAGED_APPLICATION_OWNER_START_US \
   FORGEPLAY_MANAGED_WINE_OWNER_V1 \
   forgeplay_start_application_owner_monitor \
+  forgeplay_terminate_managed_wine_process \
+  'ForgePlay managed application owner monitor failed' \
   EVFILT_PROC \
   NOTE_EXIT \
   'The managed-process identity belongs to the trusted Unix launch' \
@@ -1593,6 +835,7 @@ WINE_NSI_X86="$WINE_ROOT/lib/wine/i386-windows/nsi.dll"
 WINE_NSI_X86_64="$WINE_ROOT/lib/wine/x86_64-windows/nsi.dll"
 WINE_COREAUDIO_UNIX="$WINE_ROOT/lib/wine/x86_64-unix/winecoreaudio.so"
 WINE_WIN32U_UNIX="$WINE_ROOT/lib/wine/x86_64-unix/win32u.so"
+WINE_DXGI_X86_64="$WINE_ROOT/lib/wine/x86_64-windows/dxgi.dll"
 WINE_DWRITE_X86="$WINE_ROOT/lib/wine/i386-windows/dwrite.dll"
 WINE_DWRITE_X86_64="$WINE_ROOT/lib/wine/x86_64-windows/dwrite.dll"
 require_non_symlink_regular_file "$WINE_NTDLL_UNIX" "Wine ntdll Unix module"
@@ -1609,6 +852,22 @@ require_non_symlink_regular_file "$WINE_NSI_X86" "Wine i386 NSI module"
 require_non_symlink_regular_file "$WINE_NSI_X86_64" "Wine x86_64 NSI module"
 require_non_symlink_regular_file "$WINE_COREAUDIO_UNIX" "Wine CoreAudio Unix module"
 require_non_symlink_regular_file "$WINE_WIN32U_UNIX" "Wine GDI font module"
+require_non_symlink_regular_file "$WINE_DXGI_X86_64" "Wine x86_64 DXGI module"
+for marker in \
+  FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_PROFILE \
+  FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_DISPLAY_DRIVER_VERSION \
+  'Ignoring incomplete or invalid ForgePlay NVIDIA identity policy.' \
+  'using ForgePlay NVIDIA identity profile'; do
+  binary_contains_text "$WINE_WIN32U_UNIX" "$marker" ||
+    fail "Wine win32u is missing the centralized NVIDIA writer contract: $marker"
+done
+for forbidden_marker in \
+  forgeplay_dxgi_nvidia_umd_version \
+  'Returning host-selected ForgePlay NVIDIA UMD version.'; do
+  if binary_contains_text "$WINE_DXGI_X86_64" "$forbidden_marker"; then
+    fail "base Wine DXGI retains an unreachable or non-conforming NVIDIA IID override: $forbidden_marker"
+  fi
+done
 binary_contains_text "$WINE_WIN32U_UNIX" 'libvulkan.1.dylib' ||
   fail "Wine win32u host backend is missing the required Vulkan loader binding"
 if binary_contains_text "$WINE_WIN32U_UNIX" 'Wine was built without Vulkan support.'; then
@@ -1700,10 +959,50 @@ for binary in "$WINE_KERNELBASE_X86" "$WINE_KERNELBASE_X86_64"; do
     binary_contains_text "$binary" "$marker" ||
       fail "ForgePlay Runtime kernelbase is missing a Steam compatibility control: $binary: $marker"
   done
+  for marker in \
+    FORGEPLAY_D3DMETAL_FRAME_GENERATION \
+    FORGEPLAY_D3DMETAL_FRAME_GENERATION_TARGET_HZ \
+    FORGEPLAY_D3DMETAL_FRAME_CHECK \
+    FORGEPLAY_D3DMETAL_FRAME_GENERATION_PROXY \
+    FORGEPLAY_D3DMETAL_FRAME_GENERATION_OBSERVATION_FILE; do
+    binary_contains_text \
+      "$binary" \
+      "FORGEPLAY_GAME_RENDERER_BASE_ENV_$marker" ||
+      fail "ForgePlay Runtime kernelbase is missing a base frame-generation mapping: $binary: $marker"
+    binary_contains_text \
+      "$binary" \
+      "FORGEPLAY_GAME_RENDERER_ENV_$marker" ||
+      fail "ForgePlay Runtime kernelbase is missing a selected frame-generation mapping: $binary: $marker"
+  done
+  binary_contains_text "$binary" \
+    'FORGEPLAY_GAME_RENDERER_PROVIDER_ALIAS_PATHS_X64' ||
+    fail "ForgePlay Runtime kernelbase drops the exact NVIDIA provider alias control: $binary"
 done
 for marker in D3DM_VENDOR_ID FORGEPLAY_NETWORK_PROFILE FORGEPLAY_AUDIO_INPUT_MODE; do
   binary_contains_text "$WINE_NTDLL_UNIX" "$marker" ||
     fail "ForgePlay Runtime ntdll is missing child compatibility environment synchronization: $marker"
+done
+for marker in \
+  FORGEPLAY_D3DMETAL_FRAME_GENERATION \
+  FORGEPLAY_D3DMETAL_FRAME_GENERATION_TARGET_HZ \
+  FORGEPLAY_D3DMETAL_FRAME_CHECK \
+  FORGEPLAY_D3DMETAL_FRAME_GENERATION_PROXY \
+  FORGEPLAY_D3DMETAL_FRAME_GENERATION_OBSERVATION_FILE; do
+  binary_contains_text "$WINE_NTDLL_UNIX" "$marker" ||
+    fail "ForgePlay Runtime ntdll drops a frame-generation Unix environment key: $marker"
+  binary_contains_text "$WINEMAC_DRIVER" "$marker" ||
+    fail "ForgePlay Runtime mac driver does not consume a frame-generation environment key: $marker"
+done
+binary_contains_text "$WINE_NTDLL_X86_64" \
+  'FORGEPLAY_GAME_RENDERER_PROVIDER_ALIAS_PATHS_X64' ||
+  fail "ForgePlay Runtime Windows ntdll drops the exact NVIDIA provider alias control"
+binary_contains_text "$WINE_NTDLL_X86_64" '_nvngx.dll' ||
+  fail "ForgePlay Runtime Windows ntdll omits the _nvngx compatibility provider alias"
+for binary in "$WINE_NTDLL_X86" "$WINE_NTDLL_X86_64"; do
+  binary_contains_text \
+    "$binary" \
+    'continuing with the default Wine DLL path' ||
+    fail "ForgePlay Runtime ntdll still lacks fail-open renderer DLL-path loading: $binary"
 done
 for binary in "$WINE_NSI_X86" "$WINE_NSI_X86_64"; do
   for marker in FORGEPLAY_NETWORK_PROFILE wifi-identity ethernet-identity; do
@@ -1745,25 +1044,20 @@ LC_ALL=C grep -aFq 'wineserver: using pathless executable mapping probe' "$WINES
   fail "ForgePlay Runtime must unlink temporary executable mapping files before probing them"
 python3 - \
   "$RUNTIME_MANIFEST" \
-  "$RUNTIME_FILE_INVENTORY" \
   "$RUNTIME_SBOM" \
   "$WINE_ROOT/bin/wine" \
   "$WINE_ROOT/share/wine/wine.inf" \
   "$WINEBOOT_BINARY" \
   "$RUNTIME_PATCH_PROVENANCE_LOCK" \
   "$METADATA" \
-  "$SOURCE_AVAILABILITY" \
-  "$LEGACY_RUNTIME_MANIFEST" <<'PY' || fail "ForgePlay Runtime identity manifest validation failed"
+  "$SOURCE_AVAILABILITY" <<'PY' || fail "ForgePlay Runtime identity manifest validation failed"
 import hashlib
 import json
 import sys
 from pathlib import Path
 
-path_arguments = sys.argv[1:-1]
-legacy_runtime_manifest = sys.argv[-1] == "1"
 (
     manifest_path,
-    inventory_path,
     sbom_path,
     launcher_path,
     inf_path,
@@ -1771,7 +1065,7 @@ legacy_runtime_manifest = sys.argv[-1] == "1"
     provenance_path,
     metadata_path,
     source_availability_path,
-) = map(Path, path_arguments)
+) = map(Path, sys.argv[1:])
 manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
 
@@ -1782,7 +1076,7 @@ def digest(path):
             value.update(chunk)
     return value.hexdigest()
 
-base_required = {
+required = {
     "schemaVersion",
     "runtimeIdentifier",
     "wineVersion",
@@ -1802,13 +1096,6 @@ base_required = {
     "corePayloadSHA256",
     "corePayloadFingerprint",
 }
-inventory_required = {
-    "runtimeFileInventoryFingerprint",
-    "runtimeFileInventoryHashAlgorithm",
-    "runtimeFileInventoryPath",
-    "runtimeFileInventorySHA256",
-}
-required = base_required if legacy_runtime_manifest else base_required | inventory_required
 if set(manifest) != required or manifest["schemaVersion"] != 3 or manifest["architecture"] != "win64":
     raise SystemExit("runtime manifest schema is invalid")
 for key in required - {
@@ -1817,8 +1104,6 @@ for key in required - {
     "wineVersion",
     "architecture",
     "hostSupportSBOMPath",
-    "runtimeFileInventoryHashAlgorithm",
-    "runtimeFileInventoryPath",
     "corePayloadHashAlgorithm",
     "corePayloadSHA256",
     "patchApplicationOrder",
@@ -1906,17 +1191,6 @@ if manifest["hostSupportSBOMSHA256"] != digest(sbom_path):
 sbom = json.loads(sbom_path.read_text(encoding="utf-8"))
 if sbom.get("payloadFingerprint") != manifest["hostSupportPayloadFingerprint"]:
     raise SystemExit("runtime host-support payload fingerprint mismatch")
-
-if not legacy_runtime_manifest:
-    if manifest["runtimeFileInventoryPath"] != "RuntimeFileInventory.json":
-        raise SystemExit("runtime complete file inventory path is invalid")
-    if manifest["runtimeFileInventoryHashAlgorithm"] != "sha256-macho-code-signature-normalized-v1":
-        raise SystemExit("runtime complete file inventory hash algorithm is invalid")
-    if manifest["runtimeFileInventorySHA256"] != digest(inventory_path):
-        raise SystemExit("runtime complete file inventory digest mismatch")
-    inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
-    if inventory.get("payloadFingerprint") != manifest["runtimeFileInventoryFingerprint"]:
-        raise SystemExit("runtime complete file inventory fingerprint mismatch")
 
 required_core_paths = {
     "wine/bin/wine",

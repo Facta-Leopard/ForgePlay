@@ -15,8 +15,8 @@ The corresponding source is available without relying on a developer machine pat
 - Wine release-key fingerprint: `DA23579A74D4AD9AF9D3F945CEFAC8EAAF17519D`
 - ForgePlay modifications: the complete patch set shipped in this package under `Patches/`
 - Independent renderer behavior contract: `Patches/wine-11.12-forgeplay-d3dmetal-bridge-contract.md`
-- Validated corresponding source tree SHA-256: `2d0c24a9f9ebdb84b7703204d1a72071b06ac48800e2314a9635f851200a1f66`
-- Packaged ForgePlay patch-set SHA-256: `11af77aa6a1ce172505faa641c9ef5783ad10878ed552e0b55ab234a6dac1a07`
+- Validated corresponding source tree SHA-256: `5f5d93000e059d4ab388bc4ecfcd7dbdd19ada0a5da1400d28ea58f46ba95038`
+- Packaged ForgePlay patch-set SHA-256: `b7939311ece8dcf37d6228e239932bec9c2f81ab2663b6f15017be51ec6f2493`
 - Packaging source authority: internal-reviewed-source-provenance-v1
 
 The upstream archive and the complete packaged patch set are the machine-readable materials used to
@@ -100,18 +100,24 @@ non-CEF executables, Steam infrastructure roles, and command lines that already 
 remain unchanged. The executable itself is never replaced or modified.
 
 ForgePlay's Steam game renderer process patch leaves Steam and Steam WebHelper on the base Wine
-renderer environment. Before every Steam launch the user must select exactly one of D3DMetal
-Standard, D3DMetal NVIDIA/DLSS Compatibility, DXMT, D9VK, or DXVK. Both D3DMetal choices route the
-same exact D3DMetal modules. The experimental NVIDIA choice additionally passes
-`D3DM_VENDOR_ID=0x10de` only through the routed game environment, provides the exact verified
-`nvapi.dll` and Unix-module aliases required by the bundled Apple NVAPI implementation, and invokes
-`NvAPI_Initialize` before the game entry point. It does not change the reported device ID, force
-DirectX 11 or DirectX 12, or claim that a game's DLSS path will work. That single renderer is applied
-to Steam game children for the whole session.
+renderer environment. The current app exposes exactly D3DMetal-NVIDIA, DXMT, and D9VK; plain
+D3DMetal and DXVK remain recognized only as hidden legacy selector values. Both D3DMetal selectors
+route the same exact D3DMetal modules. The NVIDIA selector projects one complete RTX 4090 / 561.09
+identity through the Steam session control plane and routed game environment. Wine's primary GPU,
+SetupAPI/Display Class, and volatile DirectX writers consume the corresponding vendor/device/name and
+`32.0.15.6109` version so later base-Wine enumeration cannot restore the Apple host identity. The
+same route passes `D3DM_VENDOR_ID=0x10de` and the exact verified NVAPI/NGX aliases to normal in-game
+provider calls. DXGI UMD version validation uses the public
+`CheckInterfaceSupport(IID_IDXGIDevice)` contract; Direct3D 11-or-later interface IIDs correctly
+remain unsupported and are never forced to succeed. The selection does not force DirectX 11 or
+DirectX 12 or claim that a game's DLSS path will work. That single renderer is applied to Steam game
+children for the whole session.
 Automatic Direct3D import classification, loader-stage profiles, and mixed renderer compositions
-are not used. A missing or invalid manual selection is rejected instead of falling back to another
-renderer. The Unix loader places only the selected renderer root ahead of Wine's compiled DLL
-directory, while the Windows loader prepends only its matching i386 or x86_64 directories. Route V2
+are not used. The Unix loader places only the selected renderer root ahead of Wine's compiled DLL
+directory, while the Windows loader prepends only its matching i386 or x86_64 directories. If that
+selected search path cannot be constructed, Wine records the loader error and continues with its
+default DLL path instead of terminating the game; ForgePlay retains the degradation diagnostic and
+does not report NVIDIA or frame generation as active. Route V2
 records use `manual-session-d3dmetal`, `manual-session-dxmt`, `manual-session-d9vk`, or
   `manual-session-dxvk` as the exact selection reason and describe the selected plan. A Load V3
   record proves an actual renderer load only when its
@@ -145,9 +151,12 @@ targets outside that tree clear the Game Mode target identity and continue throu
 Wine loader. When the beta host is requested, each accepted target enters the fixed pre-signed
 `Contents/Helpers/GameModeProcessHost.app` before PE mapping. Its argv, current directory,
 inherited handles, Wine server context, and Darwin PID remain on the original Steam-created process
-path. A host contract or exec failure for an accepted target remains fail-closed. The helper
-retains its fixed executable, process identity, and icon; ForgePlay does not replace them with a
-per-game display name or PE icon.
+path. Game Mode off is the only standard Wine route for eligible game targets. When Game Mode is
+requested, a host contract rejection, allocation failure, failed host exec, or native bootstrap or
+handshake failure records a bounded error and stops that game launch instead of continuing through
+the standard Wine loader. A successfully entered helper preserves the inherited renderer, NVIDIA,
+and frame-generation controls and retains its fixed executable, process identity, and icon;
+ForgePlay does not replace them with a per-game display name or PE icon.
 
 ForgePlay's external-storage grant activation patch runs explicitly at the start of both the Unix
 `ntdll` loader and `wineserver`. If all four grant environment values are absent, Wine continues

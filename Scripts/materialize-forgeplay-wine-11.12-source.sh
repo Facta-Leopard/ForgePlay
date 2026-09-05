@@ -9,11 +9,11 @@ unset CDPATH
 SCRIPT_DIR="$(cd "$(/usr/bin/dirname "${BASH_SOURCE[0]}")" && /bin/pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && /bin/pwd -P)"
 MANIFEST="$REPO_ROOT/Resources/Runners/ForgePlayRuntime/RuntimeManifest.json"
+BUILD_METADATA="$REPO_ROOT/Resources/Runners/ForgePlayRuntime/BUILD-METADATA.md"
 SOURCE_AVAILABILITY="$REPO_ROOT/Resources/Runners/ForgePlayRuntime/SOURCE-AVAILABILITY.md"
 PROVENANCE_LOCK="$REPO_ROOT/Config/ForgePlayRuntimePatchProvenance.lock.json"
 SOURCE_IDENTITY_LOCK="$REPO_ROOT/Config/ForgePlayRuntimeSourceIdentity.lock.json"
 PATCH_ROOT="$REPO_ROOT/Resources/Runners/ForgePlayRuntime/Patches"
-PUBLIC_EXPORT_MARKER="$REPO_ROOT/.forgeplay-source-export"
 OWNED_DIRECTORY_QUARANTINE_TOOL="$SCRIPT_DIR/quarantine-owned-directory.py"
 EXPECTED_ARCHIVE_SHA256="d3bc091192d985846c9f20065cc81f21331f01e22b736b131e3449e1306671bc"
 EXPECTED_ARCHIVE_ROOT="wine-11.12"
@@ -197,23 +197,36 @@ OUTPUT_BASENAME="$(/usr/bin/basename "$OUTPUT_INPUT")"
 [[ -n "$OUTPUT_BASENAME" && "$OUTPUT_BASENAME" != "." && "$OUTPUT_BASENAME" != ".." ]] ||
   fail "output basename is unsafe"
 OUTPUT_ROOT="$OUTPUT_PARENT/$OUTPUT_BASENAME"
+PROJECT_BUILD_SCRATCH="$REPO_ROOT/Artifacts/BuildScratch"
+[[ -d "$PROJECT_BUILD_SCRATCH" && ! -L "$PROJECT_BUILD_SCRATCH" ]] ||
+  fail "project build scratch root is unavailable or unsafe"
 reject_symlink_parent_components "$ARCHIVE" "archive"
 reject_symlink_parent_components "$OUTPUT_ROOT" "output source root"
 OUTPUT_PARENT_ID="$(directory_identity "$OUTPUT_PARENT")" || fail "output parent identity is unavailable"
 
-/usr/bin/python3 - "$ARCHIVE" "$OUTPUT_ROOT" "$REPO_ROOT" <<'PY' ||
+/usr/bin/python3 - "$ARCHIVE" "$OUTPUT_ROOT" "$REPO_ROOT" "$PROJECT_BUILD_SCRATCH" <<'PY' ||
 import os
 import pwd
 import sys
 
-archive, output, repository = map(os.path.realpath, sys.argv[1:])
+archive, output, repository, project_scratch = map(os.path.realpath, sys.argv[1:])
 home = os.path.realpath(pwd.getpwuid(os.getuid()).pw_dir)
 protected = {os.path.sep, home, repository, archive}
 if output in protected:
     raise SystemExit("output equals a protected path")
-for path in (repository, archive):
-    if os.path.commonpath([output, path]) in {output, path}:
-        raise SystemExit("output must not contain or be contained by repository/archive inputs")
+if os.path.commonpath([project_scratch, repository]) != repository or project_scratch == repository:
+    raise SystemExit("project build scratch root is outside the repository contract")
+repository_overlap = os.path.commonpath([output, repository]) in {output, repository}
+output_is_project_scratch_child = (
+    output != project_scratch
+    and os.path.commonpath([output, project_scratch]) == project_scratch
+)
+if repository_overlap and not output_is_project_scratch_child:
+    raise SystemExit(
+        "output may be inside the repository only under Artifacts/BuildScratch"
+    )
+if os.path.commonpath([output, archive]) in {output, archive}:
+    raise SystemExit("output must not contain or be contained by the archive input")
 if os.path.commonpath([output, home]) == output:
     raise SystemExit("output must not contain the user home directory")
 PY
@@ -227,11 +240,6 @@ WORKSPACE_ID="$(directory_identity "$WORKSPACE_ROOT")" || fail "workspace identi
   fail "output parent changed while staging was created"
 trap cleanup_owned_workspace EXIT
 
-PATCH_LICENSE_SIDECAR_MODE="repository"
-if [[ -e "$PUBLIC_EXPORT_MARKER" || -L "$PUBLIC_EXPORT_MARKER" ]]; then
-  PATCH_LICENSE_SIDECAR_MODE="public-export"
-fi
-
 SNAPSHOT_ROOT="$WORKSPACE_ROOT/inputs"
 STAGED_OUTPUT="$WORKSPACE_ROOT/output"
 ARCHIVE_SNAPSHOT="$SNAPSHOT_ROOT/wine-11.12.tar.xz"
@@ -242,12 +250,11 @@ ORDER_FILE="$SNAPSHOT_ROOT/patch-order.txt"
 /usr/bin/python3 - \
   "$ARCHIVE" \
   "$MANIFEST" \
+  "$BUILD_METADATA" \
   "$SOURCE_AVAILABILITY" \
   "$PROVENANCE_LOCK" \
   "$SOURCE_IDENTITY_LOCK" \
   "$PATCH_ROOT" \
-  "$PATCH_LICENSE_SIDECAR_MODE" \
-  "$PUBLIC_EXPORT_MARKER" \
   "$ARCHIVE_SNAPSHOT" \
   "$PATCH_SNAPSHOT_ROOT" \
   "$ORDER_FILE" \
@@ -263,12 +270,11 @@ from pathlib import PurePosixPath
 (
     archive_path,
     manifest_path,
+    build_metadata_path,
     source_availability_path,
     lock_path,
     source_identity_path,
     patch_root_path,
-    patch_license_sidecar_mode,
-    public_export_marker_path,
     archive_snapshot,
     patch_snapshot_root,
     order_path,
@@ -277,24 +283,6 @@ from pathlib import PurePosixPath
 
 SAFE_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 CHUNK = 1024 * 1024
-EXPECTED_EXPORT_LICENSE_SIDECARS = (
-    (
-        "wine-11.12-game-mode-process-host-routing.patch.license",
-        "wine-11.12-game-mode-process-host-routing.patch",
-        "479efa2903cd8e63fcde50b441cbf2fba316cdd840c190a3df3d7c5e6311e8cf",
-    ),
-    (
-        "wine-11.12-game-mode-direct-target-scope.patch.license",
-        "wine-11.12-game-mode-direct-target-scope.patch",
-        "479efa2903cd8e63fcde50b441cbf2fba316cdd840c190a3df3d7c5e6311e8cf",
-    ),
-)
-PUBLIC_EXPORT_MARKER_SHA256 = (
-    "b311ae9f7becd7629934c36983b242f7dff4a9fb520b73a09b5ffa3c12383559"
-)
-
-if patch_license_sidecar_mode not in {"repository", "public-export"}:
-    raise SystemExit("patch license sidecar mode is invalid")
 
 
 def identity(metadata):
@@ -318,29 +306,16 @@ def safe_basename(value, label, suffix):
     return value
 
 
-def copy_snapshot(
-    source,
-    destination,
-    label,
-    maximum_bytes,
-    expected_digest=None,
-    directory_fd=None,
-    expected_mode=None,
-):
-    try:
-        source_fd = os.open(
-            source,
-            os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW,
-            dir_fd=directory_fd,
-        )
-    except OSError as error:
-        raise SystemExit(f"{label} could not be opened safely: {error}") from error
+def copy_snapshot(source, destination, label, maximum_bytes, expected_digest=None, directory_fd=None):
+    source_fd = os.open(
+        source,
+        os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW,
+        dir_fd=directory_fd,
+    )
     try:
         before = os.fstat(source_fd)
         if not stat.S_ISREG(before.st_mode) or before.st_nlink != 1:
             raise SystemExit(f"{label} must be a single-link regular file")
-        if expected_mode is not None and stat.S_IMODE(before.st_mode) != expected_mode:
-            raise SystemExit(f"{label} mode must be {expected_mode:04o}")
         if before.st_size < 0 or before.st_size > maximum_bytes:
             raise SystemExit(f"{label} exceeds its bounded snapshot size")
         destination_fd = os.open(
@@ -411,30 +386,13 @@ def copy_snapshot(
 
 
 manifest_snapshot = os.path.join(os.path.dirname(archive_snapshot), "RuntimeManifest.json")
+build_metadata_snapshot = os.path.join(os.path.dirname(archive_snapshot), "BUILD-METADATA.md")
 source_availability_snapshot = os.path.join(os.path.dirname(archive_snapshot), "SOURCE-AVAILABILITY.md")
 lock_snapshot = os.path.join(os.path.dirname(archive_snapshot), "PatchProvenance.lock.json")
 source_identity_snapshot = os.path.join(os.path.dirname(archive_snapshot), "SourceIdentity.lock.json")
-public_export_marker_snapshot = os.path.join(
-    os.path.dirname(archive_snapshot), ".forgeplay-source-export"
-)
-if patch_license_sidecar_mode == "public-export":
-    copy_snapshot(
-        public_export_marker_path,
-        public_export_marker_snapshot,
-        "public source export marker",
-        4096,
-        PUBLIC_EXPORT_MARKER_SHA256,
-        expected_mode=0o644,
-    )
-else:
-    try:
-        os.lstat(public_export_marker_path)
-    except FileNotFoundError:
-        pass
-    else:
-        raise SystemExit("repository mode must not contain a public source export marker")
 copy_snapshot(archive_path, archive_snapshot, "Wine source archive", 2 * 1024 * 1024 * 1024, expected_archive_digest)
 copy_snapshot(manifest_path, manifest_snapshot, "runtime manifest", 4 * 1024 * 1024)
+copy_snapshot(build_metadata_path, build_metadata_snapshot, "runtime build metadata", 4 * 1024 * 1024)
 copy_snapshot(source_availability_path, source_availability_snapshot, "runtime source availability", 4 * 1024 * 1024)
 copy_snapshot(lock_path, lock_snapshot, "patch provenance lock", 4 * 1024 * 1024)
 copy_snapshot(source_identity_path, source_identity_snapshot, "runtime source identity lock", 4 * 1024 * 1024)
@@ -566,7 +524,17 @@ def parse_transition_boundary(document):
     for entry in overrides:
         if not isinstance(entry, dict) or set(entry) != {"path", "sha256"}:
             raise SystemExit("development boundary changed-patch override schema is invalid")
-        safe_basename(entry["path"], "development boundary changed patch", ".patch")
+        name = entry["path"]
+        if isinstance(name, str) and name.endswith(".patch"):
+            safe_basename(name, "development boundary changed patch", ".patch")
+        elif isinstance(name, str) and name.endswith("-contract.md"):
+            safe_basename(
+                name,
+                "development boundary changed behavior contract",
+                "-contract.md",
+            )
+        else:
+            raise SystemExit("development boundary override has an unsupported patch-set suffix")
         require_digest(entry["sha256"], "development boundary changed-patch override")
     return boundary
 
@@ -574,6 +542,7 @@ def parse_transition_boundary(document):
 manifest = load_json_snapshot(manifest_snapshot, "runtime manifest")
 lock = load_json_snapshot(lock_snapshot, "patch provenance lock")
 source_identity = load_json_snapshot(source_identity_snapshot, "runtime source identity lock")
+build_metadata = load_text_snapshot(build_metadata_snapshot, "runtime build metadata")
 source_availability = load_text_snapshot(source_availability_snapshot, "runtime source availability")
 
 if manifest.get("schemaVersion") != 3 or manifest.get("runtimeIdentifier") != "com.forgeplay.runtime.wine-11.12":
@@ -676,29 +645,16 @@ if order != patch_names:
 if not order or len(order) != len(set(order)) or not contract_names or len(contract_names) != len(set(contract_names)):
     raise SystemExit("patch order must be non-empty and unique")
 
-export_license_sidecars = []
-if patch_license_sidecar_mode == "public-export":
-    for name, patch_name, expected_digest in EXPECTED_EXPORT_LICENSE_SIDECARS:
-        name = safe_basename(name, "public export patch license sidecar", ".patch.license")
-        patch_name = safe_basename(
-            patch_name,
-            "public export sidecar patch",
-            ".patch",
-        )
-        if name != f"{patch_name}.license" or patch_name not in order:
-            raise SystemExit(
-                f"public export patch license sidecar is not bound to an ordered patch: {name}"
-            )
-        export_license_sidecars.append(
-            (
-                name,
-                require_digest(
-                    expected_digest,
-                    f"public export patch license sidecar {name}",
-                ),
-            )
-        )
-
+current_build_patch_set = single_document_digest(
+    build_metadata,
+    r"^- ForgePlay patch-set SHA-256: ([0-9a-f]{64})$",
+    "BUILD-METADATA current-binary patch set",
+)
+current_build_source_tree = single_document_digest(
+    build_metadata,
+    r"^- Corresponding source tree SHA-256: ([0-9a-f]{64})$",
+    "BUILD-METADATA current-binary source tree",
+)
 current_available_patch_set = single_document_digest(
     source_availability,
     r"^- Packaged ForgePlay patch-set SHA-256: `([0-9a-f]{64})`$",
@@ -709,13 +665,16 @@ current_available_source_tree = single_document_digest(
     r"^- Validated corresponding source tree SHA-256: `([0-9a-f]{64})`$",
     "SOURCE-AVAILABILITY current-binary source tree",
 )
-if (
-    current_available_patch_set != manifest_patch_set
-    or current_available_source_tree != manifest_source_tree
-):
-    raise SystemExit(
-        "current-binary source identity disagrees across manifest and source availability"
-    )
+if {
+    current_build_patch_set,
+    current_available_patch_set,
+    manifest_patch_set,
+} != {manifest_patch_set} or {
+    current_build_source_tree,
+    current_available_source_tree,
+    manifest_source_tree,
+} != {manifest_source_tree}:
+    raise SystemExit("current-binary source identity disagrees across manifest and metadata")
 
 patch_root_fd = os.open(
     patch_root_path,
@@ -778,33 +737,11 @@ try:
             directory_fd=patch_root_fd,
         )
 
-    reviewed_names = {
-        *patch_names,
-        *contract_names,
-        *(entry["path"] for entry in sidecars),
-        *(name for name, _ in export_license_sidecars),
-    }
+    reviewed_names = {*patch_names, *contract_names, *(entry["path"] for entry in sidecars)}
     actual_names = set(os.listdir(patch_root_fd))
     if actual_names != reviewed_names:
-        raise SystemExit(
-            "patch root does not exactly match the reviewed provenance and export-license inventory "
-            f"for {patch_license_sidecar_mode} mode"
-        )
-
-    for name, expected_digest in export_license_sidecars:
-        copy_snapshot(
-            name,
-            os.path.join(patch_snapshot_root, name),
-            f"public export patch license sidecar {name}",
-            1024 * 1024,
-            expected_digest,
-            directory_fd=patch_root_fd,
-        )
-
-    if (
-        set(os.listdir(patch_root_fd)) != reviewed_names
-        or identity(os.fstat(patch_root_fd)) != patch_root_identity
-    ):
+        raise SystemExit("patch root does not exactly match the reviewed provenance inventory")
+    if identity(os.fstat(patch_root_fd)) != patch_root_identity:
         raise SystemExit("patch root changed while its reviewed snapshot was created")
 finally:
     os.close(patch_root_fd)
@@ -826,15 +763,18 @@ if transition_required:
     if pending["patchSetSHA256"] != pending_patch_set or pending["sourceTreeSHA256"] != pending_source_tree:
         raise SystemExit("development boundary pending identity does not match reviewed inputs")
 
-    patch_index = {name: index for index, name in enumerate(patch_names)}
+    canonical_index = {
+        name: index
+        for index, name in enumerate([*patch_names, *contract_names])
+    }
     pending_patch_digests = dict(canonical_digests)
     override_items = current["changedPatchSHA256Overrides"]
     override_names = [entry["path"] for entry in override_items]
     if len(override_names) != len(set(override_names)):
         raise SystemExit("development boundary changed-patch overrides are duplicated")
-    if any(name not in patch_index for name in override_names):
-        raise SystemExit("development boundary changed-patch override is not an ordered reviewed patch")
-    override_indices = [patch_index[name] for name in override_names]
+    if any(name not in canonical_index for name in override_names):
+        raise SystemExit("development boundary override is not an ordered reviewed patch-set input")
+    override_indices = [canonical_index[name] for name in override_names]
     if override_indices != sorted(override_indices):
         raise SystemExit("development boundary changed-patch overrides are out of application order")
     overrides = {entry["path"]: entry["sha256"] for entry in override_items}

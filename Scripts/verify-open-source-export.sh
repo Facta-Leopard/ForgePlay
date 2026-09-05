@@ -87,6 +87,12 @@ PROHIBITED_NAMES="$(
     -iname 'AuthKey_*.p8' -o \
     -iname '*.p8' -o \
     -iname '*.p12' -o \
+    -iname '*.keychain' -o \
+    -iname '*.keychain-db' -o \
+    -iname '*.pem' -o \
+    -iname '*.pub' -o \
+    -name 'loginusers.vdf' -o \
+    -name 'ssfn*' -o \
     -iname '*.mobileprovision' -o \
     -iname '*.provisionprofile' -o \
     -iname '*.app' -o \
@@ -181,6 +187,7 @@ allowed_configs = {
     "ForgePlayDefaults.xcconfig",
     "ForgePlayDirectRelease.xcconfig",
     "ForgePlayDistribution.xcconfig",
+    "ForgePlayD3DMetalFrameGenerationProxy.xcconfig",
     "ForgePlayExternalStorageAccessBridge.xcconfig",
     "ForgePlayGameModeProcessHost.xcconfig",
     "ForgePlayGameModeProcessHostAppStore.xcconfig",
@@ -234,8 +241,8 @@ allowed_scripts = {
     "sign-app-store-runtime-code.sh",
     "sign-compatibility-db-feed.swift",
     "test-wine-session-compatibility.sh",
+    "test-wine-game-renderer-d3dmetal.sh",
     "tests",
-    "validate-d3dmetal-ngx-bridge.sh",
     "validate-compatibility-db-public-key.swift",
     "validate-product-identity.sh",
     "verify-app-store-app-security.sh",
@@ -273,7 +280,7 @@ if actual_scripts != allowed_scripts:
 fixture_root = root / "Scripts" / "Fixtures"
 if not fixture_root.is_dir() or fixture_root.is_symlink():
     raise SystemExit("source fixture directory is unavailable")
-expected_fixture_groups = {"WineSessionCompatibility"}
+expected_fixture_groups = {"WineSessionCompatibility", "WineGameRendererPolicy"}
 actual_fixture_groups = {path.name for path in fixture_root.iterdir()}
 if actual_fixture_groups != expected_fixture_groups:
     raise SystemExit(
@@ -283,6 +290,11 @@ if actual_fixture_groups != expected_fixture_groups:
     )
 
 expected_compatibility_fixtures = {"session_compatibility_probe.c"}
+renderer_fixture_root = fixture_root / "WineGameRendererPolicy"
+if {path.name for path in renderer_fixture_root.iterdir()} != {
+    "base_desktop_initializer.c", "d3dmetal_probe.c", "launcher.c"
+}:
+    raise SystemExit("D3DMetal renderer fixture source set is incomplete or unexpected")
 compatibility_fixture_root = fixture_root / "WineSessionCompatibility"
 if (
     not compatibility_fixture_root.is_dir()
@@ -302,6 +314,7 @@ if actual_compatibility_fixtures != expected_compatibility_fixtures:
 required_test_sources = {
     "GameModeHostCapabilityTests.swift",
     "GameModeLaunchRequestStoreTests.swift",
+    "D3DMetalFrameGenerationContractTests.swift",
 }
 test_source_root = root / "Tests" / "ForgePlayTests"
 if not test_source_root.is_dir() or test_source_root.is_symlink():
@@ -316,10 +329,22 @@ for path in test_source_root.iterdir():
     if not path.is_file() or path.is_symlink() or path.suffix != ".swift":
         raise SystemExit(f"unexpected non-Swift test source: {path.name}")
 
+# These inputs are consumed by the existing application and native test targets.
+for relative in (
+    "Tests/ForgePlayD3DMetalFrameGenerationProxyTests/state_machine_tests.c",
+    "Native/NetworkControlHelper/main.swift",
+    "Native/NetworkControlHelper/Info.plist",
+    "Native/NetworkControlHelper/ForgePlayNetworkControl.plist",
+    *(f"site-data/why-story/{locale}.md" for locale in
+      ("en", "ko", "es", "de", "ja", "zh-Hans", "zh-Hant", "fr")),
+):
+    if not (root / relative).is_file():
+        raise SystemExit(f"required application/test source is missing: {relative}")
+
 expected_script_tests = {
     "test-copyleft-source-packages.py",
+    "test-d3dmetal-frame-generation-production-contract.sh",
     "test-freeze-public-source-export.py",
-    "test-generate-xcode-project.sh",
     "test-open-source-export-transaction.py",
     "test-packaging-license-release-contracts.py",
     "test-public-distribution-archive-graph.py",
@@ -478,7 +503,6 @@ if list(inventory_rows) != sorted(inventory_rows):
 for executable_path in (
     "Scripts/export-open-source.sh",
     "Scripts/freeze-public-source-export.py",
-    "Scripts/tests/test-generate-xcode-project.sh",
     "Scripts/public-release-set-transaction.py",
     "Scripts/verify-copyleft-source-packages.py",
     "Scripts/tests/test-copyleft-source-packages.py",
@@ -725,7 +749,7 @@ if (
     graph["archiveCommandPath"] != "Scripts/build-public-distribution-archive.sh"
     or graph["buildClaimResourcePath"]
     != "Resources/PublicDistributionBuildClaim.json"
-    or graph["runtimePayloadInjectionRoot"] != "Resources/Runners/ForgePlayRuntime"
+    or graph["runtimePayloadInjectionRoot"] != "Resources/Runners"
     or graph["excludedThirdPartyPayloadRoots"]
     != ["Resources/Runners/ForgePlayRuntime/Frameworks/renderer/d3dmetal"]
 ):
@@ -737,12 +761,11 @@ expected_graph_paths = {
     "Config/ForgePlayDefaults.xcconfig",
     "Config/ForgePlayDirectRelease.xcconfig",
     "Config/ForgePlayDistribution.xcconfig",
+    "Config/ForgePlayD3DMetalFrameGenerationProxy.xcconfig",
     "Config/ForgePlayExternalStorageAccessBridge.xcconfig",
     "Config/ForgePlayGameModeProcessHost.xcconfig",
     "Config/ForgePlayGameModeProcessHostDistribution.xcconfig",
     "Config/ForgePlayGameModeProcessHostRelease.xcconfig",
-    "Config/ForgePlayNetworkControlHelper.xcconfig",
-    "Config/ForgePlayNetworkControlHelperDistribution.xcconfig",
     "Config/ForgePlayPublicDistributionSourceGraph.json",
     "Sources/ForgePlay/ForgePlay-Distribution.entitlements",
     "Sources/ForgePlay/ForgePlay-DirectRelease.entitlements",
@@ -750,12 +773,11 @@ expected_graph_paths = {
     "Sources/ForgePlay/ForgePlay-Runtime-Inherit.entitlements",
     "Native/GameModeProcessHost/GameModeProcessHost-Distribution.entitlements",
     "Native/GameModeProcessHost/GameModeProcessHost-Release.entitlements",
-    "Native/NetworkControlHelper/ForgePlayNetworkControl.plist",
-    "Native/NetworkControlHelper/Info.plist",
-    "Native/NetworkControlHelper/main.swift",
-    "Resources/AppIcon.icon/Assets/ForgePlay_ICON_Dark.png",
-    "Resources/AppIcon.icon/Assets/ForgePlay_ICON_Default.png",
-    "Resources/AppIcon.icon/icon.json",
+    "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.m",
+    "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.h",
+    "Native/D3DMetalFrameGenerationProxy/FrameGenerationStateMachine.c",
+    "Native/D3DMetalFrameGenerationProxy/FrameGenerationStateMachine.h",
+    "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.exports",
 } | {
     f"Scripts/{name}" for name in allowed_scripts if name not in {"Fixtures", "tests"}
 }
@@ -782,14 +804,11 @@ for relative in required_graph_paths:
 project_definition = (root / "project.yml").read_text(encoding="utf-8")
 for required_fragment in (
     "Distribution: Config/ForgePlayDistribution.xcconfig",
-    "Distribution: Config/ForgePlayNetworkControlHelperDistribution.xcconfig",
     '"$SRCROOT/Scripts/sign-app-store-runtime-code.sh"',
     '"$SRCROOT/Scripts/prepare-game-mode-host-build-identity.sh"',
     "Sources/ForgePlay/ForgePlay-Runtime-Inherit.entitlements",
     "Sources/ForgePlay/ForgePlay-Runtime-Direct.entitlements",
     "Resources/PublicDistributionBuildClaim.json",
-    "Native/NetworkControlHelper/ForgePlayNetworkControl.plist",
-    "Native/NetworkControlHelper/main.swift",
     '/usr/bin/install -m 0444 "$claim_source" "$claim_destination"',
 ):
     if required_fragment not in project_definition:
@@ -811,6 +830,35 @@ if current.get("sha256") != provenance.get("upstreamSource", {}).get("patchedSou
     raise SystemExit("current source identity is not bound to patch provenance")
 if current.get("sha256") != runtime_manifest.get("sourceTreeSHA256"):
     raise SystemExit("current final source identity is not shared by the Runtime manifest")
+
+# A release must carry the declared GPL Frame Generation copies and preserve
+# the separately identified LGPL Wine glue; check actual bytes, not filenames alone.
+fg_root = root / "LICENSES/ForgePlayFrameGeneration"
+fg = json.loads((fg_root / "FRAME_GENERATION_FILE_LICENSES.json").read_text(encoding="utf-8"))
+if fg.get("licenseExpression") != "GPL-3.0-only" or fg.get("baseCommit") != "72a2598c99f0b649d1384ed0763a00037f5d1d2e":
+    raise SystemExit("Frame Generation release/license assignment is invalid")
+dedicated = fg.get("wholeFileExternalNotice", [])
+if len(dedicated) != 10 or len({entry["path"] for entry in dedicated}) != 10:
+    raise SystemExit("Frame Generation dedicated source assignment is incomplete")
+if {entry["path"] for entry in dedicated if entry["path"].startswith("Native/")} != {
+    str(path.relative_to(root)) for path in (root / "Native/D3DMetalFrameGenerationProxy").iterdir() if path.is_file()
+}:
+    raise SystemExit("Frame Generation native files lack complete license coverage")
+glue = fg.get("excludedWineGlueCopies", [])
+if len(glue) != 2 or any(entry.get("licenseExpression") != "LGPL-2.1-or-later" for entry in glue):
+    raise SystemExit("Frame Generation Wine glue license boundary is invalid")
+for entry in dedicated + glue:
+    rel = entry["path"]
+    if rel not in inventory_rows or inventory_rows[rel]["sha256"] != entry["sha256"]:
+        raise SystemExit(f"Frame Generation license identity mismatch: {rel}")
+symbol_text = (fg_root / "FRAME_GENERATION_SYMBOL_MANIFEST.md").read_text(encoding="utf-8")
+for rel in fg.get("mixedSymbolScope", []):
+    if rel not in inventory_rows or rel not in symbol_text:
+        raise SystemExit(f"Frame Generation mixed source or symbol notice is missing: {rel}")
+for name in ("FRAME_GENERATION_LICENSE_SCOPE.md", "FRAME_GENERATION_LICENSE_SCOPE_KO.md", "FRAME_GENERATION_NOTICE"):
+    if "GPL-3.0-only" not in (fg_root / name).read_text(encoding="utf-8"):
+        raise SystemExit(f"Frame Generation license notice is incomplete: {name}")
+print("Frame Generation GPL scope verified: 10 dedicated files; 22 mixed paths; 2 separate LGPL Wine glue copies")
 PY
 
 for localization in en ko es de ja zh-Hans zh-Hant fr; do

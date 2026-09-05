@@ -23,7 +23,7 @@ struct UsageGuideView: View {
                 id: 3,
                 title: "Steam 실행",
                 systemImage: "play.circle.fill",
-                body: "Steam 실행은 모든 게임에 공통으로 사용하는 표준 경로입니다. 그래픽 백엔드와 호환성 설정을 직접 선택해 저장하고, Windows용 Steam이 열리면 라이브러리에서 게임을 실행합니다."
+                body: "Steam 실행은 모든 게임에 공통으로 사용하는 표준 경로입니다. 그래픽 백엔드와 호환성 설정을 선택하고, 다음 실행에도 재사용하려면 저장하세요. Windows용 Steam이 열리면 라이브러리에서 게임을 실행합니다."
             ),
             UsageGuideStep(
                 id: 4,
@@ -33,9 +33,9 @@ struct UsageGuideView: View {
             ),
             UsageGuideStep(
                 id: 5,
-                title: "D3DMetal - NVIDIA (베타)",
+                title: "D3DMetal - NVIDIA",
                 systemImage: "sparkles.tv",
-                body: "D3DMetal - NVIDIA (베타)는 지원되는 NVIDIA DLSS/NGX 요청을 Apple MetalFX 업스케일링으로 연결합니다.",
+                body: "D3DMetal - NVIDIA는 지원되는 NVIDIA DLSS/NGX 요청을 Apple MetalFX 업스케일링으로 연결합니다.",
                 linkTitle: "Apple WWDC25에서 MetalFX 업스케일링 보기",
                 linkURL: URL(string: "https://developer.apple.com/videos/play/wwdc2025/211/?time=133")
             ),
@@ -477,11 +477,11 @@ private struct SectionHelpGuide {
                 title: HelpText(ko: "Steam 실행에서 할 일", en: "Using Steam launch"),
                 systemImage: "play.circle",
                 items: [
-                    HelpText(ko: "Steam 실행은 모든 게임에 공통으로 사용하는 표준 경로입니다. 그래픽 백엔드와 호환성 설정을 직접 선택해 저장하고, Windows용 Steam이 열리면 라이브러리에서 게임을 실행합니다.", en: "Steam Launch is the standard path shared by all games. Choose and save the graphics backend and compatibility settings, then start the game from the library after Windows Steam opens."),
+                    HelpText(ko: "Steam 실행은 모든 게임에 공통으로 사용하는 표준 경로입니다. 그래픽 백엔드와 호환성 설정을 선택하고, 다음 실행에도 재사용하려면 저장하세요. Windows용 Steam이 열리면 라이브러리에서 게임을 실행합니다.", en: "Steam Launch is the standard path shared by all games. Choose the graphics backend and compatibility settings, and save them if you want to reuse them on later launches. Start the game from the library after Windows Steam opens."),
                     HelpText(ko: "외장 저장공간은 Steam 실행 전에 쓰기 가능한 전용 Windows 드라이브로 연결됩니다. 기존 라이브러리만 자동 등록하며, 빈 위치의 새 라이브러리는 Steam 저장공간 화면에서 직접 만듭니다.", en: "External storage is mapped as a writable dedicated Windows drive before Steam launches. Existing libraries are registered automatically; create a new library in an empty location from Steam's Storage screen."),
                     HelpText(ko: "감지된 실행 파일은 진단 참고용입니다. 기본 실행 경로는 Steam 클라이언트이며, 런처 선택을 사용자가 직접 고르는 방식이 아닙니다.", en: "Detected executables are diagnostic references. The primary launch path is the Steam client, not manual launcher selection."),
-                    HelpText(ko: "Windows용 Steam UI는 렌더러 주입 없이 기본 Wine 경로로 엽니다. 다음 실행 초안에는 그래픽 백엔드, 네트워크 표시, 오디오 입력, 동기화, 비디오 메모리, Game Mode 값이 함께 표시됩니다. 구성을 저장하거나 Steam을 실행하면 다음에도 다시 사용하며, 새 구성의 Game Mode 호스트 기본값은 켬입니다. 게임에는 선택한 백엔드 하나만 적용되고 D3DMetal NVIDIA는 GPU 공급자와 Apple MetalFX용 NGX 브리지를 함께 준비하는 실험 기능입니다.", en: "Windows Steam UI opens on the base Wine path without renderer injection. The next-launch draft shows the graphics backend, network presentation, audio input, synchronization, video memory, and Game Mode together. Saving the configuration or launching Steam reuses those values next time, and Game Mode defaults to on for a new configuration. Games receive only the selected backend; D3DMetal NVIDIA remains an experimental option that prepares the reported GPU vendor and Apple's MetalFX NGX bridge."),
-                    HelpText(ko: "D3DMetal - NVIDIA (베타)는 지원되는 NVIDIA DLSS/NGX 요청을 Apple MetalFX 업스케일링으로 연결합니다.", en: "D3DMetal - NVIDIA (Beta) routes supported NVIDIA DLSS/NGX requests through Apple MetalFX upscaling.")
+                    HelpText(ko: "Windows용 Steam UI는 렌더러 주입 없이 기본 Wine 경로로 엽니다. 다음 실행 초안에는 그래픽 백엔드, 네트워크 표시, 오디오 입력, 동기화, 비디오 메모리, Game Mode 값이 함께 표시됩니다. 구성을 저장하면 다음 실행에도 다시 사용하고, 저장하지 않고 Steam을 실행하면 현재 초안은 이번 세션에만 적용됩니다. 새 구성의 Game Mode 호스트 기본값은 켬입니다. 게임에는 선택한 백엔드 하나만 적용되고 D3DMetal - NVIDIA는 GPU 공급자와 Apple MetalFX용 NGX 브리지를 함께 준비합니다.", en: "Windows Steam UI opens on the base Wine path without renderer injection. The next-launch draft shows the graphics backend, network presentation, audio input, synchronization, video memory, and Game Mode together. Saving the configuration reuses it on later launches; launching Steam without saving applies the current draft only to this session. Game Mode defaults to on for a new configuration. Games receive only the selected backend, and D3DMetal - NVIDIA prepares the reported GPU vendor and Apple's MetalFX NGX bridge."),
+                    HelpText(ko: "D3DMetal - NVIDIA는 지원되는 NVIDIA DLSS/NGX 요청을 Apple MetalFX 업스케일링으로 연결합니다.", en: "D3DMetal - NVIDIA routes supported NVIDIA DLSS/NGX requests through Apple MetalFX upscaling.")
                 ]
             ),
             Group(
@@ -719,18 +719,19 @@ private struct SectionHelpGuide {
 
     private static let developerApps = SectionHelpGuide(
         summary: HelpText(
-            ko: "제작자의 다른 앱 화면은 앱 카탈로그에서 출시된 앱을 소개하고, 별도의 개발 중 탭에서 기기별 진행 프로젝트를 보여줍니다.",
-            en: "Other Apps by the Developer presents released apps in the App Catalog and shows ongoing projects by device in a separate In Development tab."
+            ko: "제작자의 다른 앱 화면은 출시된 앱과 출시 예정 프로젝트를 앱 카탈로그에서 소개하고, 별도의 개발 중 탭에서 진행 중인 프로젝트를 보여줍니다.",
+            en: "Other Apps by the Developer presents released apps and upcoming projects in the App Catalog, with a separate In Development tab for ongoing projects."
         ),
         groups: [
             Group(
                 id: "developer-apps-catalog",
-                title: HelpText(ko: "앱 카탈로그", en: "App Catalog"),
+                title: HelpText(ko: "앱 카탈로그와 출시 예정", en: "App Catalog and upcoming releases"),
                 systemImage: "rectangle.3.group",
                 items: [
+                    HelpText(ko: "앱 카탈로그 탭 상단에는 MajorDex와 ForgeKit이 출시 예정 프로젝트로 표시됩니다.", en: "The top of the App Catalog tab presents MajorDex and ForgeKit as upcoming projects."),
                     HelpText(ko: "Mac, iPad, iPhone 탭을 선택하면 해당 플랫폼용 앱만 표시됩니다.", en: "Choose the Mac, iPad, or iPhone tab to show only apps for that platform."),
                     HelpText(ko: "앱 이름 검색은 현재 선택한 플랫폼 안에서 이름과 짧은 소개를 함께 검색합니다.", en: "App search checks names and short descriptions within the selected platform."),
-                    HelpText(ko: "각 앱 카드에는 실제 지원 언어가 표시됩니다. App Store 앱은 App Store에서 보기를 누르면 공식 제품 페이지가 열립니다.", en: "Each app card lists its actual supported languages. For App Store apps, View in App Store opens the official product page.")
+                    HelpText(ko: "각 출시된 앱 카드에는 실제 지원 언어가 표시됩니다. App Store에서 보기를 누르면 공식 제품 페이지가 열립니다.", en: "Each released-app card lists its actual supported languages. View in App Store opens the official product page.")
                 ]
             ),
             Group(
@@ -738,9 +739,7 @@ private struct SectionHelpGuide {
                 title: HelpText(ko: "개발 중 프로젝트", en: "Projects in development"),
                 systemImage: "hammer",
                 items: [
-                    HelpText(ko: "개발 중 탭에서도 Mac, iPad, iPhone을 선택해 해당 디바이스용 프로젝트만 볼 수 있습니다.", en: "In the In Development tab, choose Mac, iPad, or iPhone to show only projects for that device."),
-                    HelpText(ko: "Mac에는 MajorDex, ForgeKit, HareWatch, WarrenNet이, iPad에는 Leporis Ascendant가, iPhone에는 Hazel&Peanut과 GrayLine이 표시됩니다.", en: "Mac shows MajorDex, ForgeKit, HareWatch, and WarrenNet; iPad shows Leporis Ascendant; and iPhone shows Hazel&Peanut and GrayLine."),
-                    HelpText(ko: "개발 중 탭에서 HareWatch와 WarrenNet은 유틸리티로, Hazel&Peanut, GrayLine, Leporis Ascendant는 게임으로 표시됩니다.", en: "In the In Development tab, HareWatch and WarrenNet are labeled as utilities, while Hazel&Peanut, GrayLine, and Leporis Ascendant are labeled as games."),
+                    HelpText(ko: "개발 중 탭에는 HareWatch와 WarrenNet의 아이콘과 프로젝트 이름만 표시됩니다.", en: "The In Development tab shows only the project icons and names for HareWatch and WarrenNet."),
                     HelpText(ko: "개발 중 표시는 출시 일정이나 배포 준비 완료를 의미하지 않습니다.", en: "In Development does not indicate a release date or distribution readiness.")
                 ]
             )

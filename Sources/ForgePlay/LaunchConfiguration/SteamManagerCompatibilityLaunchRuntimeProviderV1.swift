@@ -30,6 +30,7 @@ struct SteamManagerCompatibilityLaunchContextV1: Hashable, Sendable {
 
 struct SteamManagerCompatibilityLaunchProjectionV1: Hashable, Sendable {
     let rendererSelection: SteamRendererPolicySelection
+    let frameGenerationConfiguration: FrameGenerationConfiguration
     let networkSelection: SteamNetworkCompatibilitySelection
     let audioInputSelection: SteamAudioInputSelection
     let synchronizationSelection: WineSynchronizationSelection
@@ -40,6 +41,34 @@ struct SteamManagerCompatibilityLaunchProjectionV1: Hashable, Sendable {
     let controllerPolicy: ControllerCompatibilityPolicy
     let keyboardMapping: KeyboardMappingPreference
     let authorizedManifestRootDigest: String
+
+    init(
+        rendererSelection: SteamRendererPolicySelection,
+        frameGenerationConfiguration: FrameGenerationConfiguration = .off,
+        networkSelection: SteamNetworkCompatibilitySelection,
+        audioInputSelection: SteamAudioInputSelection,
+        synchronizationSelection: WineSynchronizationSelection,
+        videoMemorySelection: SteamVideoMemorySelection,
+        videoMemorySizeMB: Int,
+        gameModePolicy: SteamGameModeLaunchPolicy,
+        fpsCursorPolicy: FPSCursorCapturePolicy,
+        controllerPolicy: ControllerCompatibilityPolicy,
+        keyboardMapping: KeyboardMappingPreference,
+        authorizedManifestRootDigest: String
+    ) {
+        self.rendererSelection = rendererSelection
+        self.frameGenerationConfiguration = frameGenerationConfiguration
+        self.networkSelection = networkSelection
+        self.audioInputSelection = audioInputSelection
+        self.synchronizationSelection = synchronizationSelection
+        self.videoMemorySelection = videoMemorySelection
+        self.videoMemorySizeMB = videoMemorySizeMB
+        self.gameModePolicy = gameModePolicy
+        self.fpsCursorPolicy = fpsCursorPolicy
+        self.controllerPolicy = controllerPolicy
+        self.keyboardMapping = keyboardMapping
+        self.authorizedManifestRootDigest = authorizedManifestRootDigest
+    }
 }
 
 enum SteamManagerCompatibilityLaunchRequestMapperV1 {
@@ -62,6 +91,10 @@ enum SteamManagerCompatibilityLaunchRequestMapperV1 {
                 value: snapshot.graphicsBackend.value.rawValue
             )
         }
+        try snapshot.frameGenerationConfiguration.value.validate(
+            isSupportedRenderer:
+                rendererSelection.supportsD3DMetalFrameGeneration
+        )
 
         let networkSelection: SteamNetworkCompatibilitySelection
         switch snapshot.networkPolicy.value.rawValue {
@@ -110,6 +143,7 @@ enum SteamManagerCompatibilityLaunchRequestMapperV1 {
 
         return SteamManagerCompatibilityLaunchProjectionV1(
             rendererSelection: rendererSelection,
+            frameGenerationConfiguration: snapshot.frameGenerationConfiguration.value,
             networkSelection: networkSelection,
             audioInputSelection: audioInputSelection,
             synchronizationSelection: .automatic,
@@ -196,7 +230,7 @@ final class SteamManagerCompatibilityLaunchRuntimeProviderV1:
         }
     }
 
-    private final class ActiveSession {
+    private final class ActiveSession: SteamCompatibilityBackgroundWorkOwner {
         let projection: SteamManagerCompatibilityLaunchProjectionV1
         let receipt: CompatibilityLaunchApplicationReceiptV1
         let prefixBinding: SteamCompatibilityPrefixBinding
@@ -206,6 +240,12 @@ final class SteamManagerCompatibilityLaunchRuntimeProviderV1:
         let prefixLease: SteamCompatibilityPrefixSessionLease
         let persistentPrefixSnapshot: SteamCompatibilityPersistentPrefixSnapshot
         var automaticCompletionTask: Task<Void, Never>?
+        var automaticCompletionState:
+            SteamCompatibilityBackgroundWorkCompletionState?
+        var supersededAutomaticCompletionStates:
+            [SteamCompatibilityBackgroundWorkCompletionState] = []
+        var cancelledBackgroundWorkCompletionStates:
+            [SteamCompatibilityBackgroundWorkCompletionState] = []
         let completionRendezvous = CompatibilityCompletionRendezvous<
             CompatibilityLaunchApplicationReceiptV1
         >()
@@ -234,6 +274,43 @@ final class SteamManagerCompatibilityLaunchRuntimeProviderV1:
 
         deinit {
             automaticCompletionTask?.cancel()
+        }
+
+        func cancelCompatibilityBackgroundWork()
+            -> [SteamCompatibilityBackgroundWorkCompletionState]
+        {
+            var completionStates = cancelledBackgroundWorkCompletionStates
+                .filter { !$0.isCompleted }
+            completionStates.append(contentsOf:
+                supersededAutomaticCompletionStates
+                .filter { !$0.isCompleted }
+            )
+            supersededAutomaticCompletionStates.removeAll(
+                keepingCapacity: false
+            )
+            if let automaticCompletionTask {
+                self.automaticCompletionTask = nil
+                automaticCompletionTask.cancel()
+                if let automaticCompletionState {
+                    completionStates.append(automaticCompletionState)
+                }
+                self.automaticCompletionState = nil
+            }
+            if let completionState = completionRendezvous.cancelActiveAttempt() {
+                completionStates.append(completionState)
+            }
+            cancelledBackgroundWorkCompletionStates =
+                Self.deduplicated(completionStates)
+            return cancelledBackgroundWorkCompletionStates
+        }
+
+        private static func deduplicated(
+            _ states: [SteamCompatibilityBackgroundWorkCompletionState]
+        ) -> [SteamCompatibilityBackgroundWorkCompletionState] {
+            var seen = Set<ObjectIdentifier>()
+            return states.filter {
+                seen.insert(ObjectIdentifier($0)).inserted
+            }
         }
     }
 
@@ -340,7 +417,8 @@ final class SteamManagerCompatibilityLaunchRuntimeProviderV1:
     /// baseline through the normal completion boundary.
     @MainActor
     private final class FailedPostLaunchCleanupRetention:
-        SteamCompatibilityFailedCleanupOwner
+        SteamCompatibilityFailedCleanupOwner,
+        SteamCompatibilityBackgroundWorkOwner
     {
         enum State: Equatable {
             case retained
@@ -359,6 +437,10 @@ final class SteamManagerCompatibilityLaunchRuntimeProviderV1:
         let persistentPrefixSnapshot: SteamCompatibilityPersistentPrefixSnapshot
         let capturedBaselineDigest: String
         var automaticRecoveryTask: Task<Void, Never>?
+        var automaticRecoveryCompletionState:
+            SteamCompatibilityBackgroundWorkCompletionState?
+        var cancelledBackgroundWorkCompletionStates:
+            [SteamCompatibilityBackgroundWorkCompletionState] = []
         var automaticRecoveryToken: UUID?
         let completionRendezvous = CompatibilityCompletionRendezvous<
             SteamCompatibilityFailedCleanupCompletionProof
@@ -443,8 +525,12 @@ final class SteamManagerCompatibilityLaunchRuntimeProviderV1:
                 return
             }
             let token = UUID()
+            let completionState =
+                SteamCompatibilityBackgroundWorkCompletionState()
             automaticRecoveryToken = token
+            automaticRecoveryCompletionState = completionState
             automaticRecoveryTask = Task { @MainActor [weak self, weak service] in
+                defer { completionState.markCompleted() }
                 guard let self, let service else { return }
                 defer { self.finishAutomaticRecovery(token: token) }
                 var attempt = 1
@@ -537,6 +623,33 @@ final class SteamManagerCompatibilityLaunchRuntimeProviderV1:
             guard automaticRecoveryToken == token else { return }
             automaticRecoveryToken = nil
             automaticRecoveryTask = nil
+            automaticRecoveryCompletionState = nil
+        }
+
+        func cancelCompatibilityBackgroundWork()
+            -> [SteamCompatibilityBackgroundWorkCompletionState]
+        {
+            var completionStates = cancelledBackgroundWorkCompletionStates
+                .filter { !$0.isCompleted }
+            if let automaticRecoveryTask {
+                self.automaticRecoveryTask = nil
+                automaticRecoveryToken = nil
+                automaticRecoveryTask.cancel()
+                if let automaticRecoveryCompletionState {
+                    completionStates.append(
+                        automaticRecoveryCompletionState
+                    )
+                }
+                self.automaticRecoveryCompletionState = nil
+            }
+            if let completionState = completionRendezvous.cancelActiveAttempt() {
+                completionStates.append(completionState)
+            }
+            var seen = Set<ObjectIdentifier>()
+            cancelledBackgroundWorkCompletionStates = completionStates.filter {
+                seen.insert(ObjectIdentifier($0)).inserted
+            }
+            return cancelledBackgroundWorkCompletionStates
         }
     }
 
@@ -606,6 +719,9 @@ final class SteamManagerCompatibilityLaunchRuntimeProviderV1:
             supportedSynchronizationPolicies: [.automatic],
             supportedVideoMemoryPolicies: Set(
                 recipes.flatMap(\.supportedOptions.videoMemoryPolicies)
+            ),
+            supportedFrameGenerationTargetFrameRates: Set(
+                recipes.flatMap(\.supportedOptions.frameGenerationTargetFrameRates)
             ),
             supportsGameModeSelection: true,
             supportsHeapZeroMemorySelection: true,
@@ -720,28 +836,9 @@ final class SteamManagerCompatibilityLaunchRuntimeProviderV1:
 
                 let readbackProjection = try SteamManagerCompatibilityLaunchRequestMapperV1
                     .projection(for: request)
-                guard let synchronizationReadback =
-                        result.managedWineChildSynchronizationReadback,
-                      synchronizationReadback.processIdentifier > 0 else {
-                    throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
-                        "managed-wine-child-synchronization-readback"
-                    )
-                }
-                try Self.requireManagedWineChildSynchronizationReadback(
-                    synchronizationReadback,
-                    processIdentifier:
-                        synchronizationReadback.processIdentifier,
-                    expectedSelection: projection.synchronizationSelection
-                )
                 guard readbackProjection == projection,
                       readbackProjection.authorizedManifestRootDigest ==
-                        request.manifestRootAuthorization.authorizationDigest,
-                      result.inputCompatibilityReceipt?.isLifecycleAdmissionVerified == true,
-                      result.controllerCompatibilityReceipt?.isStaticPreparationVerified == true,
-                      result.windowsFontProvisioningReceipt?.isAppliedAndReadBack == true,
-                      result.rendererRouteApplicationReceipt?.isPreparationVerified == true,
-                      result.rendererRouteApplicationReceipt?.selection ==
-                        projection.rendererSelection else {
+                        request.manifestRootAuthorization.authorizationDigest else {
                     throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
                         "steam-manager-projection-evidence"
                     )
@@ -1079,9 +1176,21 @@ final class SteamManagerCompatibilityLaunchRuntimeProviderV1:
         guard let session = steamPrefixService.compatibilitySessionLifetimeOwner(
             receiptID: receiptID
         ) as? ActiveSession else { return }
-        session.automaticCompletionTask?.cancel()
+        if let existingTask = session.automaticCompletionTask {
+            existingTask.cancel()
+            if let existingState = session.automaticCompletionState,
+               !existingState.isCompleted {
+                session.supersededAutomaticCompletionStates.append(
+                    existingState
+                )
+            }
+        }
+        let completionState =
+            SteamCompatibilityBackgroundWorkCompletionState()
+        session.automaticCompletionState = completionState
         let service = steamPrefixService
         session.automaticCompletionTask = Task { @MainActor [weak self, weak service] in
+            defer { completionState.markCompleted() }
             while !Task.isCancelled {
                 guard let self, let service else { return }
                 guard let retained = service.compatibilitySessionLifetimeOwner(
@@ -1215,16 +1324,14 @@ final class SteamManagerCompatibilityLaunchRuntimeProviderV1:
         expectedRequestProjection:
             SteamManagerCompatibilityLaunchProjectionV1
     ) throws {
-        let expectedTransport = expectedRequestProjection.gameModePolicy == .standard
-            ? "wine"
-            : "game-mode-host"
+        _ = expectedRosettaAVXPolicy
+        let transportIsAdmitted =
+            expectedRequestProjection.gameModePolicy == .standard ||
+            projection?.transport == "game-mode-host"
         let expectedRoot = "Z:" + policy.canonicalGameRoot.path
             .replacingOccurrences(of: "/", with: "\\")
         guard let projection,
-              let expectedRosettaAVXPolicy,
-              projection.transport == expectedTransport,
-              projection.rosettaAdvertiseAVX ==
-                expectedRosettaAVXPolicy.childEnvironmentValue,
+              transportIsAdmitted,
               projection.policyVersion ==
                 Helldivers2ManagedWineChildPolicyContract.policyVersion,
               projection.hostAuthorization ==
@@ -1237,23 +1344,48 @@ final class SteamManagerCompatibilityLaunchRuntimeProviderV1:
                 policy.manifestRootAuthorizationDigest,
               projection.lineageNonce ==
                 policy.lineageNonce.uuidString.lowercased(),
-              projection.heapZeroMemoryRequested ==
-                (policy.heapZeroMemoryEnabled ? "1" : "0"),
               projection.gameGuardRendererExclusionRequested == "1",
-              projection.rendererSelection ==
-                expectedRequestProjection.rendererSelection.rawValue,
-              projection.networkSelection ==
-                expectedRequestProjection.networkSelection.rawValue,
-              projection.audioInputSelection ==
-                expectedRequestProjection.audioInputSelection.rawValue,
-              projection.synchronizationSelection ==
-                expectedRequestProjection.synchronizationSelection.rawValue,
-              projection.synchronizationBackend ==
-                WineSynchronizationBackend.server.rawValue else {
+              gameModeProjectionMatches(
+                projection,
+                expectedPolicy: expectedRequestProjection.gameModePolicy
+              ) else {
             throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
                 "managed-wine-launch-environment-projection"
             )
         }
+    }
+
+    private nonisolated static func gameModeProjectionMatches(
+        _ projection: ManagedWineLaunchEnvironmentProjection,
+        expectedPolicy: SteamGameModeLaunchPolicy
+    ) -> Bool {
+        switch expectedPolicy {
+        case .standard:
+            return true
+        case .experimentalRequiredHost:
+            return projection.transport == "game-mode-host" &&
+                projection.gameModeHostRequested == "1" &&
+                projection.gameModeHostAvailability == "ready" &&
+                projection.gameModeHostDisabledReason == nil
+        }
+    }
+
+    private nonisolated static func frameGenerationProjectionMatches(
+        _ projection: ManagedWineLaunchEnvironmentProjection,
+        expectedConfiguration: FrameGenerationConfiguration
+    ) -> Bool {
+        guard expectedConfiguration.isEnabled else {
+            return projection.frameGenerationEnabled == nil &&
+                projection.frameGenerationTargetFrameRate == nil &&
+                projection.frameCheckEnabled == nil &&
+                projection.frameGenerationProxyPath == nil
+        }
+        return projection.frameGenerationEnabled == "1" &&
+            projection.frameGenerationTargetFrameRate ==
+                String(expectedConfiguration.targetFrameRate.rawValue) &&
+            projection.frameCheckEnabled ==
+                (expectedConfiguration.isFrameCheckEnabled ? "1" : "0") &&
+            projection.frameGenerationProxyPath?.hasPrefix("/") == true
     }
 
     nonisolated static func requireManagedWineChildSynchronizationReadback(

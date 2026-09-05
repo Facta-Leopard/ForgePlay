@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "component": "ForgePlay Frame Generation",
+  "licenseExpression": "GPL-3.0-only",
+  "copyrightNotice": "Copyright (C) 2026 Facta-Leopard",
+  "originalSource": "https://github.com/Facta-Leopard/ForgePlay",
+  "baseRelease": "1.2_Release",
+  "baseCommit": "72a2598c99f0b649d1384ed0763a00037f5d1d2e",
+  "hashAlgorithm": "sha256",
+  "assignmentMode": "external-notice-preserve-base-source-bytes",
+  "scopeDocument": "LICENSES/ForgePlayFrameGeneration/FRAME_GENERATION_LICENSE_SCOPE.md",
+  "symbolManifest": "LICENSES/ForgePlayFrameGeneration/FRAME_GENERATION_SYMBOL_MANIFEST.md",
+  "additionalTerms": "FRAME_GENERATION_LICENSE_SCOPE.md section 7; applicable only to copyright held by Facta-Leopard",
+  "wholeFileExternalNotice": [
+    {
+      "path": "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.exports",
+      "sha256": "9918a6d51b3bd8b798dacb098960aba09db44b36c97b0c93e104e08156c04c5a"
+    },
+    {
+      "path": "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.h",
+      "sha256": "75400dd7e6db05301ba7eaf4634177ee5ef41a8879f0f005a42738ff992b2dce"
+    },
+    {
+      "path": "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.m",
+      "sha256": "3d12c4e3d3b299d3717bf5326e8765642b34170548ed7d83ee60c5304305c85f"
+    },
+    {
+      "path": "Native/D3DMetalFrameGenerationProxy/FrameGenerationStateMachine.c",
+      "sha256": "b4e02ed5b0873b3277e16cdb1a8c3d451b89618d0a78b00cbe0440f71e033130"
+    },
+    {
+      "path": "Native/D3DMetalFrameGenerationProxy/FrameGenerationStateMachine.h",
+      "sha256": "3ad8bb385a4547bff15f7e1cbc9e2f3b825b21f9e630cc4d8e2266a91dfc64a6"
+    },
+    {
+      "path": "Sources/ForgePlay/FrameGeneration/FrameGenerationDomain.swift",
+      "sha256": "4a3f4e8c465fa6dd83987abff4effab14a631ac2a011b2777c9ebd940243d89f"
+    },
+    {
+      "path": "Config/ForgePlayD3DMetalFrameGenerationProxy.xcconfig",
+      "sha256": "fb4c0ddaf68be55591ff9d452486f19c43a30ee6451ea8f307b4e35e332a432a"
+    },
+    {
+      "path": "Tests/ForgePlayD3DMetalFrameGenerationProxyTests/state_machine_tests.c",
+      "sha256": "3424bbc398e9ca7d2b4c8f554b34dedb9ace3948ca1ccdda4202f4e06a305a5b"
+    },
+    {
+      "path": "Tests/ForgePlayTests/D3DMetalFrameGenerationContractTests.swift",
+      "sha256": "fc6a80d042e5326e87dfea4bec9fa0d223420bfda22ec374d77a7c6b306b266e"
+    },
+    {
+      "path": "Scripts/tests/test-d3dmetal-frame-generation-production-contract.sh",
+      "sha256": "b795909fc8d927d6f756242d6e650e4c786f3139452ad261d5774ab1ef5c73c7"
+    }
+  ],
+  "mixedSymbolScope": [
+    "Sources/ForgePlay/Models/DomainModels.swift",
+    "Sources/ForgePlay/LaunchConfiguration/SteamLaunchConfigurationDomain.swift",
+    "Sources/ForgePlay/LaunchConfiguration/SteamLaunchConfigurationProductAdapter.swift",
+    "Sources/ForgePlay/LaunchConfiguration/SteamCompatibilityLaunchProfileV1.swift",
+    "Sources/ForgePlay/LaunchConfiguration/SteamCompatibilityLaunchRuntimeV1.swift",
+    "Sources/ForgePlay/LaunchConfiguration/SteamManagerCompatibilityLaunchRuntimeProviderV1.swift",
+    "Sources/ForgePlay/LaunchConfiguration/SteamCompatibilityLaunchPreferencePersistenceV1.swift",
+    "Sources/ForgePlay/Services/SafeProcessRunner.swift",
+    "Sources/ForgePlay/Services/SteamManager.swift",
+    "Sources/ForgePlay/Services/SteamPrefixService.swift",
+    "Sources/ForgePlay/UI/SteamLaunchView.swift",
+    "Sources/ForgePlay/UI/SteamCompatibilityLaunchView.swift",
+    "Tests/ForgePlayTests/LocalizationTests.swift",
+    "Tests/ForgePlayTests/SteamLaunchConfigurationPersistenceTests.swift",
+    "Tests/ForgePlayTests/SteamLaunchConfigurationTests.swift",
+    "Tests/ForgePlayTests/SafeProcessRunnerTests.swift",
+    "Tests/ForgePlayTests/SteamCompatibilityLaunchProfileV1Tests.swift",
+    "project.yml",
+    "Config/ForgePlayPublicDistributionSourceGraph.json",
+    "Scripts/package-forgeplay-runtime.sh",
+    "Scripts/verify-bundled-runtime-capability.sh",
+    "Scripts/test-wine-game-renderer-d3dmetal.sh"
+  ],
+  "excludedWineGlueCopies": [
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forgeplay-metal-window-surface-contract.patch",
+      "sha256": "5bd899aba26eb2ac64ce0943eb7c1ea2ce2510c0242d70c40dac6967e158087e",
+      "licenseExpression": "LGPL-2.1-or-later",
+      "assignment": "Excluded from Frame Generation GPL assignment; retain Wine-derived source notices and exact bytes."
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-session-compatibility-controls.patch",
+      "sha256": "969247505447baba41f002262462dc19d48c2851ec2eaf6f8fd6f94673453a44",
+      "licenseExpression": "LGPL-2.1-or-later",
+      "assignment": "Excluded from Frame Generation GPL assignment; retain Wine-derived source notices and exact bytes."
+    }
+  ],
+  "thirdPartyExclusions": [
+    "Apple D3DMetal, MetalFX, other Apple binaries and SDK/framework implementations",
+    "Wine upstream and other third-party source, binaries, artwork, fonts and trademarks"
+  ],
+  "provenanceLimitation": "Hash and repository ownership records identify the reviewed source; they do not independently prove authorship or a complete clean-room provenance chain.",
+  "combinedWorkCaveat": "Separate source-copy boundaries do not override applicable GPLv3 rights or Corresponding Source obligations for a conveyed combined work; no third-party compatibility or linking exception is granted."
+}

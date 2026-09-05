@@ -705,7 +705,7 @@ diff --git a/dlls/kernelbase/process.c b/dlls/kernelbase/process.c
      BOOL game_renderer_route_observed = FALSE;
      BOOL observe_process_arguments = FALSE;
  
-@@ -2142,61 +1694,31 @@
+@@ -2142,61 +1694,37 @@
                is_forgeplay_steam_game_path( cur_dir ) ||
                forgeplay_game_renderer_lineage_is_active()))
      {
@@ -757,30 +757,38 @@ diff --git a/dlls/kernelbase/process.c b/dlls/kernelbase/process.c
 -                                  L"renderer-environment-identity-fallback");
 -            forgeplay_set_deferred_renderer_route( &game_renderer_route, fallback_reason );
 +                L"manual-route", app_name, STATUS_NOT_SUPPORTED,
-+                L"process-creation-rejected" );
-+            status = STATUS_NOT_SUPPORTED;
-+            goto done;
++                L"original-environment" );
          }
 -        else
-+        renderer_status = create_forgeplay_game_renderer_environment(
-+            env, flags, &game_renderer_route, app_name,
-+            &game_renderer_environment );
-+        if (renderer_status)
-         {
++        else
++        {
++            renderer_status = create_forgeplay_game_renderer_environment(
++                env, flags, &game_renderer_route, app_name,
++                &game_renderer_environment );
++            if (renderer_status)
++            {
++                if (game_renderer_environment)
++                    RtlDestroyEnvironment( game_renderer_environment );
++                game_renderer_environment = NULL;
++                record_forgeplay_game_renderer_fallback(
++                    L"selected-renderer-environment", app_name, renderer_status,
++                    L"original-environment" );
++            }
++            else
++            {
++                env = game_renderer_environment;
++                flags |= CREATE_UNICODE_ENVIRONMENT;
++            }
++        }
+-        {
 -            env = game_renderer_environment;
 -            flags |= CREATE_UNICODE_ENVIRONMENT;
-+            record_forgeplay_game_renderer_fallback(
-+                L"selected-renderer-environment", app_name, renderer_status,
-+                L"process-creation-rejected" );
-+            status = renderer_status;
-+            goto done;
-         }
-+        env = game_renderer_environment;
-+        flags |= CREATE_UNICODE_ENVIRONMENT;
+-        }
          game_renderer_route_observed = TRUE;
 -        TRACE( "%s ForgePlay Steam game renderer process policy for %s\n",
 -               game_renderer_route.deferred ? "deferred" : "applied",
-+        TRACE( "applied ForgePlay Steam game renderer process policy for %s\n",
++        TRACE( "%s ForgePlay Steam game renderer process policy for %s\n",
++               game_renderer_environment ? "applied" : "fallback",
                 debugstr_w(app_name) );
      }
  

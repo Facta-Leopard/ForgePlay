@@ -294,8 +294,8 @@ extension RecommendedAction {
         case .noAction:
             if reason == "Steam 실행 화면에서 현재 게임의 DirectX 세대에 맞는 단일 백엔드를 직접 선택한 뒤 Steam을 다시 실행합니다." {
                 return [
-                    appState.localized("Steam을 실행하기 전에 D3DMetal 표준, D3DMetal NVIDIA, DXMT, D9VK 또는 DXVK 중 하나를 직접 선택해야 합니다."),
-                    appState.localized("DirectX 11/12는 D3DMetal, DirectX 9는 D9VK를 먼저 시도하고, DXMT 또는 DXVK는 같은 세대의 대체 경로로 비교합니다."),
+                    appState.localized("Steam을 실행하기 전에 D3DMetal - NVIDIA, DXMT 또는 D9VK 중 하나를 직접 선택해야 합니다."),
+                    appState.localized("DirectX 11/12는 D3DMetal - NVIDIA 또는 DXMT를, DirectX 9는 D9VK를 선택하세요."),
                     appState.localized("백엔드를 바꿔도 같은 page fault로 종료되면 최신 실행 로그를 문제 진단에서 다시 분석합니다.")
                 ]
             }

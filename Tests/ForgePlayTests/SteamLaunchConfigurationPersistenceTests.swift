@@ -45,6 +45,86 @@ final class SteamLaunchConfigurationPersistenceTests: XCTestCase {
         }
     }
 
+    func testDeployedSchema4SingletonMigratesThenSavesAndReloads() throws {
+        let container = try ForgePlayApp.makeModelContainer(isStoredInMemoryOnly: true)
+        let context = ModelContext(container)
+        context.autosaveEnabled = false
+        let record = try StandardSteamLaunchConfigurationRecord(
+            snapshot: .standardDefault,
+            now: Date(timeIntervalSince1970: 1)
+        )
+        let deployedPayload = Data(
+            """
+            forgeplay-steam-launch-configuration-v4
+            schemaVersion=1:4
+            mode=8:standard
+            configurationIdentity=16:standard-default
+            steamAppID=0:
+            profileID=0:
+            recipeRevision=0:
+            graphicsBackend=14:d3dMetalNVIDIA
+            frameGenerationTargetFPS=3:120
+            networkPolicy=8:standard
+            audioInputPolicy=8:disabled
+            synchronizationPolicy=9:automatic
+            videoMemoryPolicy=9:automatic
+            gameModeEnabled=1:1
+            fpsCursorPolicy=3:off
+            controllerPolicy=9:automatic
+            keyboardPreset=13:systemDefault
+            hasCustomPermutation=1:0
+            customCommandRole=1:-
+            customOptionRole=1:-
+            customControlRole=1:-
+
+            """.utf8
+        )
+        record.schemaVersion = 4
+        record.canonicalConfigurationPayload = deployedPayload
+        record.configurationDigest =
+            SteamLaunchIdentifierValidation.lowercaseSHA256(deployedPayload)
+        let deployedRevision = record.persistenceRevision
+        context.insert(record)
+        try context.save()
+
+        let repository = SteamLaunchConfigurationRepository(container: container)
+        let migrated = try XCTUnwrap(repository.loadStandard())
+        XCTAssertEqual(migrated.snapshot.schemaVersion, 5)
+        XCTAssertTrue(migrated.snapshot.frameGenerationConfiguration.isEnabled)
+        XCTAssertTrue(
+            migrated.snapshot.frameGenerationConfiguration.isFrameCheckEnabled
+        )
+        XCTAssertNotEqual(migrated.version.revision, deployedRevision)
+
+        let observer = ModelContext(container)
+        let migratedRecord = try XCTUnwrap(
+            observer.fetch(
+                FetchDescriptor<StandardSteamLaunchConfigurationRecord>()
+            ).first
+        )
+        XCTAssertEqual(migratedRecord.schemaVersion, 5)
+        XCTAssertTrue(
+            migratedRecord.canonicalConfigurationPayload.starts(
+                with: Data(
+                    "forgeplay-steam-launch-configuration-v5\n".utf8
+                )
+            )
+        )
+
+        let replacement = try SteamLaunchConfigurationSnapshot(
+            identity: .standard,
+            graphicsBackend: .d3dMetalNVIDIA,
+            frameGenerationConfiguration: .off,
+            gameModeEnabled: false
+        )
+        let saved = try repository.saveStandard(
+            replacement,
+            expectedVersion: migrated.version
+        )
+        XCTAssertEqual(saved.snapshot, replacement)
+        XCTAssertEqual(try XCTUnwrap(repository.loadStandard()), saved)
+    }
+
     func testStandardRecordUpsertRoundTripPreservesCreationTime() throws {
         let container = try ForgePlayApp.makeModelContainer(isStoredInMemoryOnly: true)
         let context = container.mainContext
@@ -586,7 +666,10 @@ final class SteamLaunchConfigurationPersistenceTests: XCTestCase {
         try record.bindResolvedLaunchConfiguration(snapshot: snapshot, journal: journal)
         XCTAssertEqual(record.launchModeRawValue, SteamLaunchMode.standard.rawValue)
         XCTAssertEqual(record.launchConfigurationIdentity, "standard-default")
-        XCTAssertEqual(record.launchConfigurationSchemaVersion, 1)
+        XCTAssertEqual(
+            record.launchConfigurationSchemaVersion,
+            snapshot.schemaVersion
+        )
         XCTAssertEqual(record.launchConfigurationPayload, try snapshot.canonicalPayload())
         XCTAssertEqual(record.launchConfigurationDigest, digest)
         XCTAssertEqual(record.launchConfigurationTransactionState, "resolved")

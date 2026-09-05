@@ -40,7 +40,7 @@
       "requiredRequirementIds": ["gst-libav-source", "gst-ffmpeg-source", "gst-cerbero-build-recipe", "forgeplay-dynamic-relinking-guide"]
     },
     {
-      "key": "gstreamer:proxy-libintl@0.5",
+      "key": "gstreamer:proxy-libintl@0.4",
       "requiredRequirementIds": ["gst-proxy-libintl-source", "gst-cerbero-build-recipe", "forgeplay-dynamic-relinking-guide"]
     },
     {
@@ -172,7 +172,7 @@
       "deliveryPath": "archives/proxy-libintl-0.5.tar.gz",
       "sourceURL": "https://github.com/frida/proxy-libintl/archive/refs/tags/0.5.tar.gz",
       "sha256": "f7a1cbd7579baaf575c66f9d99fb6295e9b0684a28b095967cfda17857595303",
-      "consumerBindings": [{"authority": "gstreamer", "component": "proxy-libintl", "version": "0.5"}],
+      "consumerBindings": [{"authority": "gstreamer", "component": "proxy-libintl", "version": "0.4"}],
       "status": "pinned"
     },
     {
@@ -192,7 +192,7 @@
         {"authority": "gstreamer", "component": "GStreamer Good Plug-ins", "version": "1.28.5"},
         {"authority": "gstreamer", "component": "GStreamer Ugly Plug-ins", "version": "1.28.5"},
         {"authority": "gstreamer", "component": "GStreamer libav", "version": "1.28.5"},
-        {"authority": "gstreamer", "component": "proxy-libintl", "version": "0.5"}
+        {"authority": "gstreamer", "component": "proxy-libintl", "version": "0.4"}
       ],
       "status": "pinned"
     },
@@ -367,7 +367,7 @@
         {"authority": "gstreamer", "component": "GStreamer Good Plug-ins", "version": "1.28.5"},
         {"authority": "gstreamer", "component": "GStreamer Ugly Plug-ins", "version": "1.28.5"},
         {"authority": "gstreamer", "component": "GStreamer libav", "version": "1.28.5"},
-        {"authority": "gstreamer", "component": "proxy-libintl", "version": "0.5"},
+        {"authority": "gstreamer", "component": "proxy-libintl", "version": "0.4"},
         {"authority": "homebrew", "component": "gettext", "version": "1.0"},
         {"authority": "homebrew", "component": "gmp", "version": "6.3.0"},
         {"authority": "homebrew", "component": "gnutls", "version": "3.8.13_2"},

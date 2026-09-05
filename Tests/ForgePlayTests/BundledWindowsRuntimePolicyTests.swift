@@ -287,6 +287,15 @@ final class BundledWindowsRuntimePolicyTests: XCTestCase {
                 "Missing renderer environment failure evidence in \(architecture) kernelbase"
             )
             XCTAssertTrue(
+                try Self.binary(
+                    kernelbase,
+                    contains:
+                        D3DMetalNVIDIAProviderContract
+                            .providerAliasPathsEnvironmentKey
+                ),
+                "Missing NVIDIA provider alias child-environment control in \(architecture) kernelbase"
+            )
+            XCTAssertTrue(
                 try Self.binary(kernelbase, contains: "FORGEPLAY_GAME_RENDERER_FALLBACK_V1"),
                 "Missing renderer fail-open evidence in \(architecture) kernelbase"
             )
@@ -295,6 +304,22 @@ final class BundledWindowsRuntimePolicyTests: XCTestCase {
                 "Missing game renderer DLL loader policy in \(architecture) ntdll"
             )
         }
+        let x64NTDLL = runtimeRoot.appending(
+            path: "wine/lib/wine/x86_64-windows/ntdll.dll"
+        )
+        XCTAssertTrue(
+            try Self.binary(
+                x64NTDLL,
+                contains:
+                    D3DMetalNVIDIAProviderContract
+                        .providerAliasPathsEnvironmentKey
+            ),
+            "Missing exact NVIDIA provider alias ownership in x86_64 ntdll"
+        )
+        XCTAssertTrue(
+            try Self.binary(x64NTDLL, contains: "_nvngx.dll"),
+            "Missing _nvngx provider observation support in x86_64 ntdll"
+        )
         XCTAssertTrue(
             try Self.binary(
                 runtimeRoot.appending(path: "wine/lib/wine/x86_64-unix/ntdll.so"),
@@ -312,7 +337,7 @@ final class BundledWindowsRuntimePolicyTests: XCTestCase {
                     runtimeRoot.appending(path: "wine/lib/wine/x86_64-unix/ntdll.so"),
                     contains: marker
                 ),
-                "Missing Game Mode loader-host fallback contract marker: \(marker)"
+                "Missing Game Mode loader-host fail-closed contract marker: \(marker)"
             )
         }
         let winemacSymbols = try Self.exportedSymbols(
@@ -949,7 +974,15 @@ final class BundledWindowsRuntimePolicyTests: XCTestCase {
         )
         XCTAssertTrue(
             environment["FORGEPLAY_GAME_RENDERER_ENV_WINEDLLOVERRIDES"]?
-                .contains("nvngx") == true
+                .contains("_nvngx") == true
+        )
+        XCTAssertEqual(
+            environment[
+                D3DMetalNVIDIAProviderContract
+                    .providerAliasPathsEnvironmentKey
+            ],
+            D3DMetalNVIDIAProviderContract.exactNGXAliasWindowsPaths
+                .joined(separator: ";")
         )
         XCTAssertFalse(environment.keys.contains { $0.contains("_PROFILE_") })
         XCTAssertNil(environment["FORGEPLAY_GAME_RENDERER_ROUTING_MODE"])
@@ -1247,7 +1280,12 @@ final class BundledWindowsRuntimePolicyTests: XCTestCase {
     }
 
     private static func binary(_ url: URL, contains marker: String) throws -> Bool {
-        try Data(contentsOf: url).range(of: Data(marker.utf8)) != nil
+        let data = try Data(contentsOf: url)
+        if data.range(of: Data(marker.utf8)) != nil { return true }
+        guard let wideMarker = marker.data(using: .utf16LittleEndian) else {
+            return false
+        }
+        return data.range(of: wideMarker) != nil
     }
 
     private static func exportedSymbols(_ url: URL) throws -> String {

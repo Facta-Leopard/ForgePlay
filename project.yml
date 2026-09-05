@@ -82,6 +82,12 @@ targets:
         codeSign: true
         copy:
           destination: frameworks
+      - target: D3DMetalFrameGenerationProxy
+        embed: true
+        link: false
+        codeSign: true
+        copy:
+          destination: frameworks
       - target: GameModeProcessHost
         embed: true
         link: false
@@ -204,6 +210,29 @@ targets:
         headerVisibility: project
     dependencies:
       - sdk: Foundation.framework
+  D3DMetalFrameGenerationProxy:
+    type: library.dynamic
+    productName: ForgePlayD3DMetalFrameGenerationProxy
+    platform: macOS
+    deploymentTarget: "26.0"
+    configFiles:
+      Debug: Config/ForgePlayD3DMetalFrameGenerationProxy.xcconfig
+      Release: Config/ForgePlayD3DMetalFrameGenerationProxy.xcconfig
+      Distribution: Config/ForgePlayD3DMetalFrameGenerationProxy.xcconfig
+      AppStore: Config/ForgePlayD3DMetalFrameGenerationProxy.xcconfig
+    sources:
+      - path: Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.m
+      - path: Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.h
+        headerVisibility: project
+      - path: Native/D3DMetalFrameGenerationProxy/FrameGenerationStateMachine.c
+      - path: Native/D3DMetalFrameGenerationProxy/FrameGenerationStateMachine.h
+        headerVisibility: project
+      - path: Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.exports
+        buildPhase: none
+    dependencies:
+      - sdk: AppKit.framework
+      - sdk: Metal.framework
+      - sdk: QuartzCore.framework
   GameModeProcessHost:
     type: application
     platform: macOS

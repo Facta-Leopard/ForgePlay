@@ -25,6 +25,9 @@ HOST_EVIDENCE_SOURCE="$REPO_ROOT/Native/GameModeProcessHost/GameModeApplicationG
 HOST_BUILDER="$REPO_ROOT/Native/GameModeProcessHost/build-game-mode-process-host.sh"
 APP_SECURITY_VERIFIER="$REPO_ROOT/Scripts/verify-app-store-app-security.sh"
 WARNING_CHECKER="$REPO_ROOT/Scripts/check-project-build-warnings.sh"
+RUNTIME_PACKAGER="$REPO_ROOT/Scripts/package-forgeplay-runtime.sh"
+RUNTIME_BUILD_METADATA="$REPO_ROOT/Resources/Runners/ForgePlayRuntime/BUILD-METADATA.md"
+RUNTIME_SOURCE_AVAILABILITY="$REPO_ROOT/Resources/Runners/ForgePlayRuntime/SOURCE-AVAILABILITY.md"
 
 python3 - \
     "$PATCH_FILE" \
@@ -42,7 +45,10 @@ python3 - \
     "$HOST_EVIDENCE_SOURCE" \
     "$HOST_BUILDER" \
     "$APP_SECURITY_VERIFIER" \
-    "$WARNING_CHECKER" <<'PY'
+    "$WARNING_CHECKER" \
+    "$RUNTIME_PACKAGER" \
+    "$RUNTIME_BUILD_METADATA" \
+    "$RUNTIME_SOURCE_AVAILABILITY" <<'PY'
 import sys
 import plistlib
 from pathlib import Path
@@ -65,6 +71,9 @@ from pathlib import Path
     host_builder_path,
     app_security_verifier_path,
     warning_checker_path,
+    runtime_packager_path,
+    runtime_build_metadata_path,
+    runtime_source_availability_path,
 ) = map(Path, sys.argv[1:])
 
 
@@ -105,6 +114,11 @@ host_evidence_source = host_evidence_source_path.read_text(encoding="utf-8")
 host_builder = host_builder_path.read_text(encoding="utf-8")
 app_security_verifier = app_security_verifier_path.read_text(encoding="utf-8")
 warning_checker = warning_checker_path.read_text(encoding="utf-8")
+runtime_packager = runtime_packager_path.read_text(encoding="utf-8")
+runtime_build_metadata = runtime_build_metadata_path.read_text(encoding="utf-8")
+runtime_source_availability = runtime_source_availability_path.read_text(
+    encoding="utf-8"
+)
 added_source = "\n".join(
     line[1:]
     for line in patch.splitlines()
@@ -165,10 +179,11 @@ require("execv( argv[1], argv + 1 )" in host_body,
         "host exec no longer preserves the Wine child argument vector")
 require('"loader_contract_rejected"' in host_body and
         '"loader_exec_failed"' in host_body and
-        'return STATUS_NOT_SUPPORTED;' in host_body and
+        host_body.count('return STATUS_SUCCESS;') == 2 and
         'return STATUS_INVALID_PARAMETER;' in host_body and
+        'return STATUS_NO_MEMORY;' in host_body and
         'return STATUS_UNSUCCESSFUL;' in host_body,
-        "an accepted beta Game Mode target must fail closed when its required host cannot run")
+        "Game Mode ON host selection, allocation, and exec failures must fail closed")
 
 loader_start = patch.find("static NTSTATUS loader_exec")
 require(loader_start >= 0, "loader_exec integration hunk is missing")
@@ -181,7 +196,7 @@ require(0 <= no_reexec_state < host_attempt < standard_loader,
         "Wine child-loader no-reexec state must exist before the fixed host attempt")
 require("if ((status = forgeplay_exec_required_game_mode_host( argv ))) return status;" in
         loader_body,
-        "an accepted beta Game Mode host failure must not fall through to the standard loader")
+        "a Game Mode host failure can continue into an alternate or preloader Wine path")
 
 for fragment in (
     "/Contents/Helpers/GameModeProcessHost.app/Contents/MacOS/GameModeProcessHost",
@@ -283,28 +298,47 @@ require("fp_wine_reserve" not in reservation_body and
 
 require("FPExecValidatedWineLoaderFallback" not in host_source,
         "Game Mode host still contains a standard Wine loader fallback")
-require("fixedLoaderFallbackIdentityWithError" not in host_identity_source,
-        "Runtime identity still exposes the removed standard-loader fallback")
 for fragment in (
     "wine_loader_fallback_selected",
     "wine_loader_fallback_exec_failed",
-    "runtime_fallback_executable_open_failed",
-    "runtime_fallback_executable_policy_failed",
+    "FPClearGameModeHostRoutingEnvironment",
 ):
-    require(fragment not in host_source and fragment not in host_identity_source,
+    require(fragment not in host_source,
             f"removed Game Mode fallback marker remains: {fragment}")
 require("execv(" not in host_source and "execve(" not in host_source,
         "Game Mode host must not re-exec a non-Game-Mode Wine loader")
+require("setenv(" not in host_source and "unsetenv(" not in host_source and
+        "wineMain(argc, argv)" in host_source,
+        "successful native bootstrap must preserve the inherited renderer and frame-generation environment")
+
+for document, label in (
+    (runtime_packager, "Runtime packager"),
+    (runtime_build_metadata, "Runtime build metadata"),
+    (runtime_source_availability, "Runtime source availability"),
+):
+    require(
+        "continues through the exact validated standard Wine loader" not in document,
+        f"{label} still describes the removed Game Mode fallback",
+    )
+require(
+    "it never continues through the standard Wine loader" in runtime_packager and
+    "it never continues through the standard Wine loader" in runtime_build_metadata,
+    "Runtime packaging metadata does not state the Game Mode fail-closed contract",
+)
+require(
+    "stops that game launch instead of continuing through" in
+        runtime_source_availability,
+    "Runtime source availability does not state the Game Mode fail-closed contract",
+)
 
 failure_start = host_source.find("if (!group)")
 wine_main_entry = host_source.find("wineMain(argc, argv)")
 require(0 <= failure_start < wine_main_entry,
         "host fail-closed coverage boundary is unavailable")
 pre_entry_body = host_source[failure_start:wine_main_entry]
-require(pre_entry_body.count("return FPFail(") >= 13,
-        "a post-identity host failure does not fail closed")
-require("return FPExecValidatedWineLoaderFallback(" not in pre_entry_body,
-        "a post-identity host failure can still re-exec standard Wine")
+require(pre_entry_body.count("return FPFail(") >= 12 and
+        "return FPExecValidatedWineLoaderFallback(" not in pre_entry_body,
+        "a native host bootstrap or handshake failure does not fail closed")
 require('"WINELOADERNOEXEC", 8' in host_execution_source and
         '@"wine_loader_noexec_environment_invalid"' in host_execution_source,
         "host execution must validate Wine 11.12's no-reexec loader state")
@@ -364,7 +398,7 @@ for fragment in (
 for forbidden in (
     "/Users/",
     "/Volumes/",
-    "ForgePlayFixtureVolume",
+    "EnclosureDisk",
     "SteamLibrary",
     "E:\\\\",
 ):
@@ -384,6 +418,7 @@ print("same_process_exec_contract=present")
 print("wine_loader_host_failure=fail_closed")
 print("host_post_identity_failure=fail_closed")
 print("wine_loader_noexec_semantics=preserved")
+print("renderer_frame_generation_environment=preserved-on-host-success")
 print("activity_monitor_process_label=fixed-host-identity")
 print("fixed_address_host_debug_dylib=disabled")
 print("distant_reservation_rip_reference=absent")

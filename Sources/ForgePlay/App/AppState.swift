@@ -210,7 +210,7 @@ final class AppState {
     }
     var themeMode: ForgePlayThemeMode = .system
     var languageMode: ForgePlayLanguageMode = .system
-    var steamRendererPolicySelection: SteamRendererPolicySelection = .d3dMetal
+    var steamRendererPolicySelection: SteamRendererPolicySelection = .d3dMetalNVIDIA
     var wineSynchronizationSelection: WineSynchronizationSelection = .automatic
     var steamVideoMemorySelection: SteamVideoMemorySelection = .automatic
     var isGameInputModifierMappingEnabled = false
@@ -577,7 +577,7 @@ final class AppState {
         }
         steamRendererPolicySelection = SteamRendererPolicySelection.persistedValue(
             settings.steamGraphicsBackendSelection
-        )
+        ).normalizedForCurrentRelease
         wineSynchronizationSelection = .automatic
         if settings.wineSynchronizationSelection != nil {
             settings.wineSynchronizationSelection = nil
@@ -963,19 +963,15 @@ final class AppState {
             setupStage = blockingStage
         } else if systemCheckSummary.phase == .unverified {
             setupStage = .checkMac
-        } else if runtimeExecutableURL == nil || readiness.steamPrefixState == .runtimeUnavailable {
+        } else if runtimeExecutableURL == nil {
             setupStage = .prepareEngine
-        } else if readiness.steamPrefixState == .prefixMissing ||
-                    readiness.steamPrefixState == .prefixInvalid ||
-                    readiness.steamPrefixState == .runtimeMigrationRequired ||
+        } else if !readiness.hasSteamPrefix ||
+                    (readiness.steamPrefixState == .prefixInvalid &&
+                        !readiness.canAttemptWindowsSteamLaunch) ||
                     readiness.steamPrefixState == .rootNotConfigured {
             setupStage = .prepareSteamEnvironment
         } else if readiness.steamPrefixState == .steamMissing {
             setupStage = .installSteam
-        } else if readiness.steamPrefixState == .rendererUnverified ||
-                    readiness.steamPrefixState == .rendererNeedsApply ||
-                    readiness.steamPrefixState == .rendererNeedsRepair {
-            setupStage = .configureRenderer
         } else if readiness.steamUIVerificationState == .blackScreenSuspected ||
                     readiness.steamUIVerificationState == .failed {
             setupStage = .authenticateSteam
@@ -996,24 +992,21 @@ final class AppState {
             hasBlockingSystemCheck(.operatingSystem) {
             return .checkMac
         }
-        if runtimeExecutableURL == nil ||
-            readiness.steamPrefixState == .runtimeUnavailable ||
-            hasBlockingSystemCheck(.windowsRuntime) {
+        if runtimeExecutableURL == nil {
             return .prepareEngine
         }
-        if readiness.steamPrefixState == .prefixMissing ||
-            readiness.steamPrefixState == .prefixInvalid ||
-            readiness.steamPrefixState == .runtimeMigrationRequired ||
+        if !readiness.hasSteamPrefix ||
+            (readiness.steamPrefixState == .prefixInvalid &&
+                !readiness.canAttemptWindowsSteamLaunch) ||
             readiness.steamPrefixState == .rootNotConfigured ||
-            hasBlockingSystemCheck(.steamPrefix) {
+            (!readiness.canAttemptWindowsSteamLaunch &&
+                hasBlockingSystemCheck(.steamPrefix)) {
             return .prepareSteamEnvironment
         }
-        if readiness.steamPrefixState == .rendererUnverified ||
-            readiness.steamPrefixState == .rendererNeedsApply ||
-            readiness.steamPrefixState == .rendererNeedsRepair {
-            return .configureRenderer
-        }
-        return .checkMac
+        // Other failed checks are operational diagnostics. They remain visible
+        // without becoming a setup-stage launch gate; concrete missing inputs
+        // below still route to their owning preparation stage.
+        return nil
     }
 
     private func hasBlockingSystemCheck(_ category: SystemCheckCategory) -> Bool {
@@ -1198,7 +1191,7 @@ final class AppState {
             }
             setNotice(
                 localizedFormat(
-                    "게임 입력 보호가 %@ 이유로 중단되어 관리되는 Steam 세션을 종료하고 입력 상태를 복원했습니다. 진단 기록을 확인하세요.",
+                    "게임 입력 보호가 %@ 이유로 중단되어 입력 보호만 비활성화했습니다. Wine과 Steam 실행은 유지되며, 진단 기록을 확인하세요.",
                     localizedError(failure)
                 ),
                 kind: .warning,

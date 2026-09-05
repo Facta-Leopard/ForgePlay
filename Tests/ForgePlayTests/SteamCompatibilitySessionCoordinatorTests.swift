@@ -721,6 +721,96 @@ final class SteamCompatibilitySessionCoordinatorTests: XCTestCase {
     }
 
     @MainActor
+    func testForceStopThenImmediateTerminationDoesNotCompleteActiveProviderThroughWine()
+        async throws
+    {
+        let services = AppServices(appSessionID: "force-stop-active-provider")
+        let coordinator = services.steamCompatibilitySessionCoordinator
+        let provider = AppTerminationRuntimeProviderProbe()
+        _ = try await prepareActiveCompatibilitySession(
+            coordinator: coordinator,
+            provider: provider
+        )
+        XCTAssertTrue(coordinator.hasActiveSession)
+        XCTAssertTrue(provider.hasPersistentLeaseAndScopes)
+
+        let forceResult = await services
+            .forceTerminateAllForgePlayWineProcesses(forceTerminator: {
+                StartupWineProcessCleanupResult(
+                    initiallyTargetedProcessIDs: [88],
+                    remainingProcessIDs: [],
+                    inspectionFailures: [],
+                    signalFailures: []
+                )
+            })
+        XCTAssertTrue(forceResult.succeeded)
+        XCTAssertTrue(coordinator.hasActiveSession)
+        XCTAssertEqual(provider.terminationCompletionCalls, 0)
+
+        let summary = await services.shutdownSteamProcessesForAppTermination(
+            runtimeExecutable: nil,
+            wineProcessInspector: {
+                StartupWineProcessCleanupPlan(
+                    targets: [],
+                    inspectionFailures: []
+                )
+            }
+        )
+
+        XCTAssertTrue(summary.succeeded, summary.diagnosticDescription)
+        XCTAssertTrue(summary.results.isEmpty, summary.diagnosticDescription)
+        XCTAssertEqual(provider.terminationCompletionCalls, 0)
+        XCTAssertEqual(provider.normalCompletionCalls, 0)
+        XCTAssertTrue(
+            provider.hasPersistentLeaseAndScopes,
+            "Force stop must preserve the truthful incomplete receipt until app teardown or an explicit next-launch reconciliation"
+        )
+        XCTAssertTrue(coordinator.hasActiveSession)
+    }
+
+    @MainActor
+    func testNewLifecycleOperationInvalidatesEarlierForceStopProof()
+        async throws
+    {
+        let services = AppServices(appSessionID: "force-stop-proof-generation")
+        let coordinator = services.steamCompatibilitySessionCoordinator
+        let provider = AppTerminationRuntimeProviderProbe()
+        _ = try await prepareActiveCompatibilitySession(
+            coordinator: coordinator,
+            provider: provider
+        )
+        let forceResult = await services
+            .forceTerminateAllForgePlayWineProcesses(forceTerminator: {
+                StartupWineProcessCleanupResult(
+                    initiallyTargetedProcessIDs: [99],
+                    remainingProcessIDs: [],
+                    inspectionFailures: [],
+                    signalFailures: []
+                )
+            })
+        XCTAssertTrue(forceResult.succeeded)
+
+        let token = try services.steamPrefixLifecycleCoordinator
+            .begin(.maintenance)
+        services.steamPrefixLifecycleCoordinator.end(token)
+
+        let summary = await services.shutdownSteamProcessesForAppTermination(
+            runtimeExecutable: nil,
+            wineProcessInspector: {
+                StartupWineProcessCleanupPlan(
+                    targets: [],
+                    inspectionFailures: []
+                )
+            }
+        )
+
+        XCTAssertTrue(summary.succeeded, summary.diagnosticDescription)
+        XCTAssertEqual(provider.terminationCompletionCalls, 1)
+        XCTAssertFalse(coordinator.hasActiveSession)
+        XCTAssertFalse(provider.hasPersistentLeaseAndScopes)
+    }
+
+    @MainActor
     func testApplicationTerminationRestorationFailureDeniesAdmissionAndRetainsOwnerForRetry()
         async throws
     {
@@ -1066,6 +1156,12 @@ final class SteamCompatibilitySessionCoordinatorTests: XCTestCase {
             [SteamCompatibilityFailedCleanupCompletionReason] = []
         private(set) var observedLifecycleTerminationStates: [Bool] = []
         private(set) var ownershipReleaseCount = 0
+
+        func cancelCompatibilityBackgroundWork()
+            -> [SteamCompatibilityBackgroundWorkCompletionState]
+        {
+            []
+        }
 
         func completeFailedPostLaunchCleanup(
             using service: SteamPrefixService,

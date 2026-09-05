@@ -138,32 +138,34 @@ int main(int argc, char *argv[])
     BOOL mainThreadReady = pthread_main_np();
 
     @autoreleasepool {
-        NSError *groupError = nil;
-        FPGameModeApplicationGroup * __attribute__((objc_precise_lifetime)) group =
-            [FPGameModeApplicationGroup validatedGroupWithError:&groupError];
-        BOOL hostStartedRecorded = group
-            ? [group recordEventCode:@"host_started" runID:nil]
-            : NO;
-
         NSError *runtimeError = nil;
         FPGameModeRuntimeIdentity * __attribute__((objc_precise_lifetime)) runtime =
             [FPGameModeRuntimeIdentity validatedIdentityWithError:&runtimeError];
         if (!runtime) {
             return FPFail(
-                group,
+                nil,
                 nil,
                 FPFailureReasonCode(runtimeError, @"runtime_validation_failed"),
                 78
             );
         }
+        if (!FPValidateInheritedArguments(argc, argv, runtime.hostExecutableURL)) {
+            return FPFail(nil, nil, @"inherited_arguments_invalid", 64);
+        }
+
+        NSError *groupError = nil;
+        FPGameModeApplicationGroup * __attribute__((objc_precise_lifetime)) group =
+            [FPGameModeApplicationGroup validatedGroupWithError:&groupError];
         if (!group) {
             return FPFail(
                 nil,
                 nil,
                 FPFailureReasonCode(groupError,
                                     @"application_group_validation_failed"),
-                78);
+                78
+            );
         }
+        BOOL hostStartedRecorded = [group recordEventCode:@"host_started" runID:nil];
         if (!hostStartedRecorded) {
             return FPFail(group, nil, @"evidence_write_failed", 74);
         }
@@ -177,10 +179,6 @@ int main(int argc, char *argv[])
             return FPFail(group, nil, @"main_thread_required", 70);
         }
 
-        if (!FPValidateInheritedArguments(argc, argv, runtime.hostExecutableURL)) {
-            return FPFail(group, nil, @"inherited_arguments_invalid", 64);
-        }
-
         NSError *executionError = nil;
         FPGameModeInheritedExecution * __attribute__((objc_precise_lifetime)) execution =
             [FPGameModeInheritedExecution validatedExecutionForRuntime:runtime
@@ -192,15 +190,15 @@ int main(int argc, char *argv[])
                 nil,
                 FPFailureReasonCode(executionError,
                                     @"inherited_environment_invalid"),
-                78);
+                78
+            );
         }
         if (![group recordEventCode:@"inherited_execution_verified"
                               runID:execution.runIdentifier]) {
-            return FPFail(
-                group,
-                execution.runIdentifier,
-                @"evidence_write_failed",
-                74);
+            return FPFail(group,
+                          execution.runIdentifier,
+                          @"evidence_write_failed",
+                          74);
         }
 
         NSError *leaseError = nil;
@@ -215,24 +213,23 @@ int main(int argc, char *argv[])
                 execution.runIdentifier,
                 FPFailureReasonCode(leaseError,
                                     @"prefix_execution_lock_failed"),
-                75);
+                75
+            );
         }
         if (![group recordEventCode:@"prefix_execution_lease_acquired"
                               runID:execution.runIdentifier]) {
-            return FPFail(
-                group,
-                execution.runIdentifier,
-                @"evidence_write_failed",
-                74);
+            return FPFail(group,
+                          execution.runIdentifier,
+                          @"evidence_write_failed",
+                          74);
         }
 
         void *ntdll = dlopen(runtime.ntdllURL.path.fileSystemRepresentation, RTLD_NOW);
         if (!ntdll) {
-            return FPFail(
-                group,
-                execution.runIdentifier,
-                @"exact_ntdll_load_failed",
-                78);
+            return FPFail(group,
+                          execution.runIdentifier,
+                          @"exact_ntdll_load_failed",
+                          78);
         }
         void *wineMainSymbol = dlsym(ntdll, "__wine_main");
         void (*wineMain)(int, char **) = NULL;
@@ -240,20 +237,18 @@ int main(int argc, char *argv[])
                        "Wine function and data pointers must have equal size");
         memcpy(&wineMain, &wineMainSymbol, sizeof(wineMain));
         if (!wineMainSymbol || !wineMain) {
-            return FPFail(
-                group,
-                execution.runIdentifier,
-                @"wine_main_symbol_unavailable",
-                78);
+            return FPFail(group,
+                          execution.runIdentifier,
+                          @"wine_main_symbol_unavailable",
+                          78);
         }
 
         if (![group recordEventCode:@"wine_main_entered"
                               runID:execution.runIdentifier]) {
-            return FPFail(
-                group,
-                execution.runIdentifier,
-                @"evidence_write_failed",
-                74);
+            return FPFail(group,
+                          execution.runIdentifier,
+                          @"evidence_write_failed",
+                          74);
         }
         wineMain(argc, argv);
         return FPFail(group,

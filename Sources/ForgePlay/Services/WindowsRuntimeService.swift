@@ -1,279 +1,6 @@
 import CryptoKit
 import Darwin
 import Foundation
-import Security
-
-protocol AppleStaticCodeValidating: Sendable {
-    func validate(
-        codeAt url: URL,
-        requirement: String,
-        validatesNestedCode: Bool
-    ) throws
-}
-
-struct SecurityFrameworkAppleStaticCodeValidator: AppleStaticCodeValidating {
-    func validate(
-        codeAt url: URL,
-        requirement: String,
-        validatesNestedCode: Bool
-    ) throws {
-        var staticCode: SecStaticCode?
-        let createStatus = SecStaticCodeCreateWithPath(
-            url as CFURL,
-            SecCSFlags(),
-            &staticCode
-        )
-        guard createStatus == errSecSuccess, let staticCode else {
-            throw AppleSupplementalRendererAuthenticationError
-                .signatureRejected(url, createStatus)
-        }
-
-        var codeRequirement: SecRequirement?
-        let requirementStatus = SecRequirementCreateWithString(
-            requirement as CFString,
-            SecCSFlags(),
-            &codeRequirement
-        )
-        guard requirementStatus == errSecSuccess,
-              let codeRequirement else {
-            throw AppleSupplementalRendererAuthenticationError
-                .invalidRequirement(requirement, requirementStatus)
-        }
-
-        var rawFlags = kSecCSStrictValidate | kSecCSCheckAllArchitectures
-        if validatesNestedCode {
-            rawFlags |= kSecCSCheckNestedCode
-        }
-        let validationStatus = SecStaticCodeCheckValidity(
-            staticCode,
-            SecCSFlags(rawValue: rawFlags),
-            codeRequirement
-        )
-        guard validationStatus == errSecSuccess else {
-            throw AppleSupplementalRendererAuthenticationError
-                .signatureRejected(url, validationStatus)
-        }
-    }
-}
-
-protocol AppleSupplementalRendererAuthenticating: Sendable {
-    func authenticate(
-        rendererRoot: URL,
-        fileManager: FileManager
-    ) throws
-}
-
-enum AppleSupplementalRendererAuthenticationError: LocalizedError {
-    case missingExpectedNativeCode(URL)
-    case unlistedNativeCode(URL)
-    case invalidRequirement(String, OSStatus)
-    case signatureRejected(URL, OSStatus)
-    case scanFailed(URL, Error)
-
-    var errorDescription: String? {
-        switch self {
-        case .missingExpectedNativeCode(let url):
-            return "Apple D3DMetal 보조 렌더러의 필수 native code가 없거나 안전하지 않습니다: \(url.path)"
-        case .unlistedNativeCode(let url):
-            return "Apple D3DMetal 보조 렌더러에 허용되지 않은 native code가 포함되어 있습니다: \(url.path)"
-        case .invalidRequirement(let requirement, let status):
-            return "Apple 코드 서명 requirement를 구성하지 못했습니다(\(status)): \(requirement)"
-        case .signatureRejected(let url, let status):
-            let detail = SecCopyErrorMessageString(status, nil) as String? ??
-                "OSStatus \(status)"
-            return "Apple이 서명한 D3DMetal 코드인지 확인하지 못했습니다: \(url.path). \(detail)"
-        case .scanFailed(let root, let error):
-            return "Apple D3DMetal 보조 렌더러의 native code를 검사하지 못했습니다: \(root.path). \(forgePlayTechnicalErrorSummary(error))"
-        }
-    }
-}
-
-/// Authenticates every host-native object that a managed Apple D3DMetal
-/// renderer can place on Wine's DYLD search path. Windows PE modules and data
-/// remain structure-checked, while the complete Mach-O set is closed to these
-/// six Apple-signed objects and their pinned designated identifiers.
-struct AppleSupplementalRendererTrustPolicy: AppleSupplementalRendererAuthenticating {
-    struct NativeCodeRequirement: Hashable, Sendable {
-        let relativePath: String
-        let identifier: String
-
-        var requirement: String {
-            "identifier \"\(identifier)\" and anchor apple"
-        }
-    }
-
-    static let nativeCodeRequirements = [
-        NativeCodeRequirement(
-            relativePath: "external/D3DMetal.framework/D3DMetal",
-            identifier: "com.apple.D3DMetal"
-        ),
-        NativeCodeRequirement(
-            relativePath: "external/libd3dshared.dylib",
-            identifier: "com.apple.libd3dshared"
-        ),
-        NativeCodeRequirement(
-            relativePath: "external/D3DMetal.framework/Resources/libdxccontainer.dylib",
-            identifier: "libdxccontainer-555549444898ba00ad1839edb58895783e058678"
-        ),
-        NativeCodeRequirement(
-            relativePath: "external/D3DMetal.framework/Resources/libdxcompiler.dylib",
-            identifier: "com.apple.libdxcompiler"
-        ),
-        NativeCodeRequirement(
-            relativePath: "external/D3DMetal.framework/Resources/libdxilconv.dylib",
-            identifier: "com.apple.libdxilconv"
-        ),
-        NativeCodeRequirement(
-            relativePath: "external/D3DMetal.framework/Resources/libmetalirconverter.dylib",
-            identifier: "com.apple.libmetalirconverter"
-        )
-    ]
-
-    private let staticCodeValidator: any AppleStaticCodeValidating
-
-    init(
-        staticCodeValidator: any AppleStaticCodeValidating =
-            SecurityFrameworkAppleStaticCodeValidator()
-    ) {
-        self.staticCodeValidator = staticCodeValidator
-    }
-
-    func authenticate(
-        rendererRoot: URL,
-        fileManager: FileManager = .default
-    ) throws {
-        let normalizedRoot = rendererRoot.standardizedFileURL
-        do {
-            try WindowsRuntimeService.validateSupplementalRedistLinks(
-                in: normalizedRoot,
-                fileManager: fileManager
-            )
-        } catch let error as WindowsRuntimeServiceError {
-            throw error
-        } catch {
-            throw AppleSupplementalRendererAuthenticationError
-                .scanFailed(normalizedRoot, error)
-        }
-
-        var allowedNativeCodePaths = Set<String>()
-        for entry in Self.nativeCodeRequirements {
-            let candidate = normalizedRoot.appending(path: entry.relativePath)
-            guard D3DMetalRendererPayloadContract.isSafePayloadPath(
-                entry.relativePath,
-                at: normalizedRoot,
-                fileManager: fileManager
-            ) else {
-                throw AppleSupplementalRendererAuthenticationError
-                    .missingExpectedNativeCode(candidate)
-            }
-            let isMachO: Bool
-            do {
-                isMachO = try Self.isMachO(candidate)
-            } catch {
-                throw AppleSupplementalRendererAuthenticationError
-                    .scanFailed(candidate, error)
-            }
-            guard isMachO else {
-                throw AppleSupplementalRendererAuthenticationError
-                    .missingExpectedNativeCode(candidate)
-            }
-            allowedNativeCodePaths.insert(
-                candidate.resolvingSymlinksInPath().standardizedFileURL.path
-            )
-        }
-
-        let framework = normalizedRoot.appending(
-            path: "external/D3DMetal.framework",
-            directoryHint: .isDirectory
-        )
-        try staticCodeValidator.validate(
-            codeAt: framework,
-            requirement: Self.nativeCodeRequirements[0].requirement,
-            validatesNestedCode: true
-        )
-        for entry in Self.nativeCodeRequirements {
-            try staticCodeValidator.validate(
-                codeAt: normalizedRoot.appending(path: entry.relativePath),
-                requirement: entry.requirement,
-                validatesNestedCode: false
-            )
-        }
-
-        var enumerationError: Error?
-        guard let enumerator = fileManager.enumerator(
-            at: normalizedRoot,
-            includingPropertiesForKeys: [
-                .isDirectoryKey,
-                .isRegularFileKey,
-                .isSymbolicLinkKey
-            ],
-            options: [],
-            errorHandler: { _, error in
-                enumerationError = error
-                return false
-            }
-        ) else {
-            throw AppleSupplementalRendererAuthenticationError
-                .scanFailed(normalizedRoot, CocoaError(.fileReadUnknown))
-        }
-
-        do {
-            for case let item as URL in enumerator {
-                let values = try item.resourceValues(forKeys: [
-                    .isDirectoryKey,
-                    .isRegularFileKey,
-                    .isSymbolicLinkKey
-                ])
-                if values.isSymbolicLink == true {
-                    if values.isDirectory == true {
-                        enumerator.skipDescendants()
-                    }
-                    continue
-                }
-                guard values.isRegularFile == true,
-                      try Self.isMachO(item) else {
-                    continue
-                }
-                let resolvedPath = item.resolvingSymlinksInPath()
-                    .standardizedFileURL.path
-                guard allowedNativeCodePaths.contains(resolvedPath) else {
-                    throw AppleSupplementalRendererAuthenticationError
-                        .unlistedNativeCode(item)
-                }
-            }
-        } catch let authenticationError as
-            AppleSupplementalRendererAuthenticationError {
-            throw authenticationError
-        } catch {
-            throw AppleSupplementalRendererAuthenticationError
-                .scanFailed(normalizedRoot, error)
-        }
-        if let enumerationError {
-            throw AppleSupplementalRendererAuthenticationError
-                .scanFailed(normalizedRoot, enumerationError)
-        }
-    }
-
-    private static func isMachO(_ url: URL) throws -> Bool {
-        let handle = try FileHandle(forReadingFrom: url)
-        defer { try? handle.close() }
-        let magic = try handle.read(upToCount: 4) ?? Data()
-        guard magic.count == 4 else {
-            return false
-        }
-        let bytes = Array(magic)
-        return [
-            [0xfe, 0xed, 0xfa, 0xce],
-            [0xce, 0xfa, 0xed, 0xfe],
-            [0xfe, 0xed, 0xfa, 0xcf],
-            [0xcf, 0xfa, 0xed, 0xfe],
-            [0xca, 0xfe, 0xba, 0xbe],
-            [0xbe, 0xba, 0xfe, 0xca],
-            [0xca, 0xfe, 0xba, 0xbf],
-            [0xbf, 0xba, 0xfe, 0xca]
-        ].contains(bytes)
-    }
-}
 
 enum D3DMetalRendererPayloadContract {
     enum LaunchScope: String, Sendable {
@@ -686,6 +413,8 @@ enum D3DMetalNGXBridgeContract {
         "wine/x86_64-windows/nvngx-on-metalfx.dll"
     nonisolated static let windowsModuleRelativePath =
         "wine/x86_64-windows/nvngx.dll"
+    nonisolated static let windowsAliasRelativePath =
+        "wine/x86_64-windows/_nvngx.dll"
     nonisolated static let unixModuleRelativePath =
         "wine/x86_64-unix/nvngx.so"
     nonisolated static let sharedLibraryRelativePath =
@@ -749,12 +478,14 @@ enum D3DMetalNGXBridgeContract {
             .appending(path: "d3dmetal", directoryHint: .isDirectory)
             .appending(path: identity, directoryHint: .isDirectory)
         let windowsModule = bridgeRoot.appending(path: windowsModuleRelativePath)
+        let windowsAlias = bridgeRoot.appending(path: windowsAliasRelativePath)
         let sharedLibrary = bridgeRoot.appending(path: sharedLibraryRelativePath)
         let unixModule = bridgeRoot.appending(path: unixModuleRelativePath)
 
         for directory in [
             bridgeRoot,
             windowsModule.deletingLastPathComponent(),
+            windowsAlias.deletingLastPathComponent(),
             sharedLibrary.deletingLastPathComponent(),
             unixModule.deletingLastPathComponent()
         ] {
@@ -771,6 +502,11 @@ enum D3DMetalNGXBridgeContract {
         try materialize(
             windowsModuleData,
             at: windowsModule,
+            fileManager: fileManager
+        )
+        try materialize(
+            windowsModuleData,
+            at: windowsAlias,
             fileManager: fileManager
         )
         try materialize(
@@ -797,6 +533,7 @@ enum D3DMetalNGXBridgeContract {
         fileManager: FileManager = .default
     ) -> Bool {
         let windowsModule = bridgeRoot.appending(path: windowsModuleRelativePath)
+        let windowsAlias = bridgeRoot.appending(path: windowsAliasRelativePath)
         let sharedLibrary = bridgeRoot.appending(path: sharedLibraryRelativePath)
         let unixModule = bridgeRoot.appending(path: unixModuleRelativePath)
         guard FileSystemItemPolicy.hasOnlyNonSymlinkDirectoryComponents(
@@ -812,6 +549,14 @@ enum D3DMetalNGXBridgeContract {
         FileSystemItemPolicy.isRegularNonSymlinkFile(
             windowsModule,
             fileManager: fileManager
+        ),
+        FileSystemItemPolicy.isRegularNonSymlinkFile(
+            windowsAlias,
+            fileManager: fileManager
+        ),
+        fileManager.contentsEqual(
+            atPath: windowsModule.path,
+            andPath: windowsAlias.path
         ),
         FileSystemItemPolicy.isRegularNonSymlinkFile(
             sharedLibrary,
@@ -906,6 +651,35 @@ enum D3DMetalNGXBridgeContract {
             try fileManager.removeItem(at: url)
         }
     }
+}
+
+/// One provider identity shared by staging, game environment projection and
+/// Wine's loader ownership readback. Apple's documented MetalFX procedure owns
+/// `nvapi64.dll` and `nvngx.dll` in System32. ForgePlay keeps the two
+/// byte-identical compatibility names required by released games without
+/// allowing arbitrary System32 modules to masquerade as renderer ownership.
+enum D3DMetalNVIDIAProviderContract {
+    nonisolated static let moduleSessionSchemaVersion = 3
+    nonisolated static let system32WindowsDirectory =
+        "C:\\windows\\system32"
+    nonisolated static let providerAliasPathsEnvironmentKey =
+        "FORGEPLAY_GAME_RENDERER_PROVIDER_ALIAS_PATHS_X64"
+
+    nonisolated static let legacyThreeModuleNames = [
+        "nvapi.dll",
+        "nvapi64.dll",
+        "nvngx.dll"
+    ]
+    nonisolated static let system32ModuleNames = [
+        "_nvngx.dll",
+        "nvapi.dll",
+        "nvapi64.dll",
+        "nvngx.dll"
+    ]
+    nonisolated static let exactNGXAliasWindowsPaths = [
+        "\(system32WindowsDirectory)\\nvngx.dll",
+        "\(system32WindowsDirectory)\\_nvngx.dll"
+    ]
 }
 
 struct WindowsRuntimeValidation: Hashable {
@@ -1767,8 +1541,6 @@ final class WindowsRuntimeService {
     private let bundledRuntimeExecutableProvider: () -> URL?
     private let lifecycleCoordinator: SteamPrefixLifecycleCoordinator
     private let runtimeCapabilityProvider: WindowsRuntimeCapabilityProvider
-    private let supplementalRendererAuthenticator:
-        any AppleSupplementalRendererAuthenticating
 
     init(
         pathManager: PathManager,
@@ -1778,10 +1550,7 @@ final class WindowsRuntimeService {
             ForgePlayBundledWindowsRuntimePolicy.bundledRuntimeExecutableURL()
         },
         lifecycleCoordinator: SteamPrefixLifecycleCoordinator? = nil,
-        runtimeCapabilityProvider: WindowsRuntimeCapabilityProvider = .shared,
-        supplementalRendererAuthenticator:
-            any AppleSupplementalRendererAuthenticating =
-                AppleSupplementalRendererTrustPolicy()
+        runtimeCapabilityProvider: WindowsRuntimeCapabilityProvider = .shared
     ) {
         self.pathManager = pathManager
         self.runner = runner
@@ -1789,8 +1558,6 @@ final class WindowsRuntimeService {
         self.bundledRuntimeExecutableProvider = bundledRuntimeExecutableProvider
         self.lifecycleCoordinator = lifecycleCoordinator ?? SteamPrefixLifecycleCoordinator()
         self.runtimeCapabilityProvider = runtimeCapabilityProvider
-        self.supplementalRendererAuthenticator =
-            supplementalRendererAuthenticator
     }
 
     func validateExecutable(_ url: URL) -> WindowsRuntimeValidation {
@@ -1863,8 +1630,6 @@ final class WindowsRuntimeService {
 
         let bundledRunner = try requiredBundledRuntimeExecutable(actionName: "importAppleSupplementalRenderer")
         let supplementalStorageRoot = try supplementalRendererStorageRoot()
-        let supplementalRendererAuthenticator =
-            self.supplementalRendererAuthenticator
         let result: AppleSupplementalRendererImportResult
         if selectedURL.pathExtension.lowercased() == "dmg" {
             result = try await Task.detached(priority: .userInitiated) {
@@ -1872,8 +1637,6 @@ final class WindowsRuntimeService {
                     from: selectedURL,
                     supplementalStorageRoot: supplementalStorageRoot,
                     bundledRuntimeExecutable: bundledRunner,
-                    supplementalRendererAuthenticator:
-                        supplementalRendererAuthenticator,
                     fileManager: .default
                 )
             }.value
@@ -1888,8 +1651,6 @@ final class WindowsRuntimeService {
                     from: selectedURL,
                     supplementalStorageRoot: supplementalStorageRoot,
                     bundledRuntimeExecutable: bundledRunner,
-                    supplementalRendererAuthenticator:
-                        supplementalRendererAuthenticator,
                     fileManager: .default
                 )
             }.value
@@ -2066,8 +1827,6 @@ final class WindowsRuntimeService {
         from dmgURL: URL,
         supplementalStorageRoot: URL,
         bundledRuntimeExecutable: URL,
-        supplementalRendererAuthenticator:
-            any AppleSupplementalRendererAuthenticating,
         fileManager: FileManager
     ) throws -> AppleSupplementalRendererImportResult {
         var mountedVolumes: [URL] = []
@@ -2083,8 +1842,6 @@ final class WindowsRuntimeService {
                 at: mountURL,
                 supplementalStorageRoot: supplementalStorageRoot,
                 bundledRuntimeExecutable: bundledRuntimeExecutable,
-                supplementalRendererAuthenticator:
-                    supplementalRendererAuthenticator,
                 fileManager: fileManager,
                 mountedVolumes: &mountedVolumes,
                 nestedDepth: 0
@@ -2182,8 +1939,6 @@ final class WindowsRuntimeService {
         at mountURL: URL,
         supplementalStorageRoot: URL,
         bundledRuntimeExecutable: URL,
-        supplementalRendererAuthenticator:
-            any AppleSupplementalRendererAuthenticating,
         fileManager: FileManager,
         mountedVolumes: inout [URL],
         nestedDepth: Int
@@ -2193,8 +1948,6 @@ final class WindowsRuntimeService {
                 from: mountURL,
                 supplementalStorageRoot: supplementalStorageRoot,
                 bundledRuntimeExecutable: bundledRuntimeExecutable,
-                supplementalRendererAuthenticator:
-                    supplementalRendererAuthenticator,
                 fileManager: fileManager
             )
         }
@@ -2210,8 +1963,6 @@ final class WindowsRuntimeService {
                     at: nestedMountURL,
                     supplementalStorageRoot: supplementalStorageRoot,
                     bundledRuntimeExecutable: bundledRuntimeExecutable,
-                    supplementalRendererAuthenticator:
-                        supplementalRendererAuthenticator,
                     fileManager: fileManager,
                     mountedVolumes: &mountedVolumes,
                     nestedDepth: nestedDepth + 1
@@ -2313,10 +2064,6 @@ final class WindowsRuntimeService {
         for rendererRoot in candidateRoots where fileManager.fileExists(atPath: rendererRoot.path) {
             do {
                 try FileSystemItemPolicy.requireNonSymlinkDirectory(rendererRoot, fileManager: fileManager)
-                try supplementalRendererAuthenticator.authenticate(
-                    rendererRoot: rendererRoot,
-                    fileManager: fileManager
-                )
             } catch {
                 throw WindowsRuntimeServiceError.supplementalRedistScanFailed(rendererRoot, error)
             }
@@ -2422,15 +2169,11 @@ final class WindowsRuntimeService {
         from source: URL,
         supplementalStorageRoot: URL,
         bundledRuntimeExecutable: URL,
-        supplementalRendererAuthenticator:
-            any AppleSupplementalRendererAuthenticating,
         fileManager: FileManager
     ) throws -> AppleSupplementalRendererImportResult {
         let installedRedist = try installSupplementalRedist(
             from: source,
             supplementalStorageRoot: supplementalStorageRoot,
-            supplementalRendererAuthenticator:
-                supplementalRendererAuthenticator,
             fileManager: fileManager
         )
         try validateWineRuntimeIntegrity(for: bundledRuntimeExecutable, fileManager: fileManager)
@@ -2444,18 +2187,12 @@ final class WindowsRuntimeService {
     private nonisolated static func installSupplementalRedist(
         from source: URL,
         supplementalStorageRoot: URL,
-        supplementalRendererAuthenticator:
-            any AppleSupplementalRendererAuthenticating,
         fileManager: FileManager
     ) throws -> URL {
         guard let redistLib = try evaluationRedistLibraryStrict(in: source, fileManager: fileManager) else {
             throw WindowsRuntimeServiceError.invalidSelection("Evaluation environment 안에서 redist/lib 폴더를 찾지 못했습니다.")
         }
         try validateSupplementalRedistLinks(in: redistLib, fileManager: fileManager)
-        try supplementalRendererAuthenticator.authenticate(
-            rendererRoot: redistLib,
-            fileManager: fileManager
-        )
         let destination = supplementalRedistDirectory(for: supplementalStorageRoot)
         try fileManager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
         let installedRedist = try replaceDirectory(
@@ -2464,14 +2201,6 @@ final class WindowsRuntimeService {
             fileManager: fileManager
         ) { installed in
             try FileSystemItemPolicy.requireNonSymlinkDirectory(installed, fileManager: fileManager)
-            try validateSupplementalRedistLinks(
-                in: installed,
-                fileManager: fileManager
-            )
-            try supplementalRendererAuthenticator.authenticate(
-                rendererRoot: installed,
-                fileManager: fileManager
-            )
             return installed
         }
         return installedRedist
@@ -2970,17 +2699,21 @@ final class WindowsRuntimeService {
             appendLimitation("missing-dxmt-macdrv-metal-window-bridge")
         }
 
-        let metadataLimitations = runnerMetadataLimitations(roots: roots, fileManager: fileManager)
-        limitations.append(contentsOf: metadataLimitations)
+        let metadataDiagnostics = runnerMetadataDiagnostics(
+            roots: roots,
+            fileManager: fileManager
+        )
+        evidence.append(contentsOf: metadataDiagnostics.map {
+            "BUILD-METADATA diagnostic: \($0)"
+        })
         let steamUIConformance = steamUIConformanceEvidence(
             roots: roots,
             fileManager: fileManager
         )
         evidence.append(contentsOf: steamUIConformance.evidence)
-        limitations.append(contentsOf: steamUIConformance.limitations)
-
-        let isBuiltWithoutVulkan = metadataLimitations.contains("built-without-vulkan") ||
-            metadataLimitations.contains("built-without-vulkan-or-d3dmetal")
+        evidence.append(contentsOf: steamUIConformance.diagnostics.map {
+            "Steam UI conformance diagnostic: \($0)"
+        })
         let hasCompleteVulkanRuntime =
             !vulkanLoaderEvidence.isEmpty &&
             !moltenVKEvidence.isEmpty &&
@@ -3028,8 +2761,7 @@ final class WindowsRuntimeService {
             appleD3DMetalInspection.supportsDirect3D12 ||
             hasCompleteDXMTLaunchPayload
         let hasVulkanDirect3DRenderer =
-            (hasVulkanDirect3D9Renderer || hasVulkanDirect3D11Renderer) &&
-            !isBuiltWithoutVulkan
+            hasVulkanDirect3D9Renderer || hasVulkanDirect3D11Renderer
         if !d3dMetalEvidence.isEmpty, !hasCompleteD3DMetalPayload {
             appendLimitation("incomplete-d3dmetal-runtime")
         }
@@ -3062,7 +2794,7 @@ final class WindowsRuntimeService {
                 appendLimitation("missing-wine-vulkan-icd")
             }
         }
-        if !hasD3DMetalDirect3DRenderer && !hasVulkanDirect3DRenderer && !isBuiltWithoutVulkan {
+        if !hasD3DMetalDirect3DRenderer && !hasVulkanDirect3DRenderer {
             appendLimitation("missing-direct3d-renderer")
         }
         let backend: WindowsRuntimeCapability.GraphicsBackend
@@ -3070,8 +2802,6 @@ final class WindowsRuntimeService {
             backend = .d3dMetal
         } else if hasVulkanDirect3DRenderer {
             backend = .moltenVKOrVulkan
-        } else if isBuiltWithoutVulkan {
-            backend = .unsupportedByMetadata
         } else {
             backend = .unknown
         }
@@ -3093,10 +2823,10 @@ final class WindowsRuntimeService {
         }
         if hasVulkanDirect3DRenderer {
             var generations = Set<WindowsRuntimeCapability.Direct3DGeneration>()
-            if hasVulkanDirect3D9Renderer, !isBuiltWithoutVulkan {
+            if hasVulkanDirect3D9Renderer {
                 generations.insert(.d3d9)
             }
-            if hasVulkanDirect3D11Renderer, !isBuiltWithoutVulkan {
+            if hasVulkanDirect3D11Renderer {
                 generations.insert(.d3d11)
             }
             supportedDirect3DGenerationsByBackend[.moltenVKOrVulkan] = generations
@@ -3166,14 +2896,14 @@ final class WindowsRuntimeService {
     private nonisolated static func steamUIConformanceEvidence(
         roots: [URL],
         fileManager: FileManager
-    ) -> (evidence: [String], limitations: [String]) {
+    ) -> (evidence: [String], diagnostics: [String]) {
         let markerNames = [
             "STEAM-UI-CONFORMANCE.json",
             "steam-ui-conformance.json",
             "SteamUIConformance.json"
         ]
         var evidence: [String] = []
-        var limitations: [String] = []
+        var diagnostics: [String] = []
         var seen = Set<String>()
         for root in roots {
             for markerName in markerNames {
@@ -3191,7 +2921,7 @@ final class WindowsRuntimeService {
                 if normalized.contains("failed-known-bad") ||
                     normalized.contains("steam-ui-failed-known-bad") {
                     evidence.append("\(markerName): steam_ui_status=failed_known_bad")
-                    limitations.append("steam-ui-failed-known-bad")
+                    diagnostics.append("steam-ui-failed-known-bad")
                 } else if normalized.contains("known-good-control") ||
                             normalized.contains("known-good") {
                     evidence.append("\(markerName): steam_ui_status=known_good_control")
@@ -3200,7 +2930,7 @@ final class WindowsRuntimeService {
                 }
             }
         }
-        return (evidence, limitations)
+        return (evidence, diagnostics)
     }
 
     private struct AppleD3DMetalRuntimeInspection: Sendable {
@@ -3523,7 +3253,7 @@ final class WindowsRuntimeService {
         }
     }
 
-    private nonisolated static func runnerMetadataLimitations(
+    private nonisolated static func runnerMetadataDiagnostics(
         roots: [URL],
         fileManager: FileManager
     ) -> [String] {
@@ -3813,7 +3543,7 @@ final class WindowsRuntimeService {
         )
     }
 
-    nonisolated static func validateSupplementalRedistLinks(
+    private nonisolated static func validateSupplementalRedistLinks(
         in root: URL,
         fileManager: FileManager
     ) throws {

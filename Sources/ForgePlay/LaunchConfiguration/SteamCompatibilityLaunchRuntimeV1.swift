@@ -384,6 +384,7 @@ struct CompatibilitySteamLaunchRuntimeCapabilitiesV1: Hashable, Sendable {
     let supportedAudioInputPolicies: Set<SteamAudioInputPolicyIdentifier>
     let supportedSynchronizationPolicies: Set<SteamSynchronizationPolicyIdentifier>
     let supportedVideoMemoryPolicies: Set<SteamVideoMemoryPolicyIdentifier>
+    let supportedFrameGenerationTargetFrameRates: Set<FrameGenerationTargetFrameRate>
     let supportsGameModeSelection: Bool
     let supportsHeapZeroMemorySelection: Bool
     let supportedFPSCursorPolicies: Set<FPSCursorCapturePolicy>
@@ -402,6 +403,7 @@ struct CompatibilitySteamLaunchRuntimeCapabilitiesV1: Hashable, Sendable {
         supportedAudioInputPolicies: Set<SteamAudioInputPolicyIdentifier>,
         supportedSynchronizationPolicies: Set<SteamSynchronizationPolicyIdentifier>,
         supportedVideoMemoryPolicies: Set<SteamVideoMemoryPolicyIdentifier>,
+        supportedFrameGenerationTargetFrameRates: Set<FrameGenerationTargetFrameRate> = [.fps120],
         supportsGameModeSelection: Bool,
         supportsHeapZeroMemorySelection: Bool,
         supportedFPSCursorPolicies: Set<FPSCursorCapturePolicy>,
@@ -419,6 +421,8 @@ struct CompatibilitySteamLaunchRuntimeCapabilitiesV1: Hashable, Sendable {
         self.supportedAudioInputPolicies = supportedAudioInputPolicies
         self.supportedSynchronizationPolicies = supportedSynchronizationPolicies
         self.supportedVideoMemoryPolicies = supportedVideoMemoryPolicies
+        self.supportedFrameGenerationTargetFrameRates =
+            supportedFrameGenerationTargetFrameRates
         self.supportsGameModeSelection = supportsGameModeSelection
         self.supportsHeapZeroMemorySelection = supportsHeapZeroMemorySelection
         self.supportedFPSCursorPolicies = supportedFPSCursorPolicies
@@ -436,6 +440,15 @@ struct CompatibilitySteamLaunchRuntimeCapabilitiesV1: Hashable, Sendable {
                 value: String(schemaVersion)
             )
         }
+        guard !supportedFrameGenerationTargetFrameRates.isEmpty,
+              supportedFrameGenerationTargetFrameRates.allSatisfy(
+                  \.isSelectableInCurrentRelease
+              ) else {
+            throw SteamCompatibilityLaunchProfileErrorV1.unsupportedCapability(
+                category: "frame-generation-target-frame-rate",
+                value: "availability"
+            )
+        }
     }
 
     static func supporting(
@@ -449,6 +462,9 @@ struct CompatibilitySteamLaunchRuntimeCapabilitiesV1: Hashable, Sendable {
             supportedAudioInputPolicies: Set(recipe.supportedOptions.audioInputPolicies),
             supportedSynchronizationPolicies: Set(recipe.supportedOptions.synchronizationPolicies),
             supportedVideoMemoryPolicies: Set(recipe.supportedOptions.videoMemoryPolicies),
+            supportedFrameGenerationTargetFrameRates: Set(
+                recipe.supportedOptions.frameGenerationTargetFrameRates
+            ),
             supportsGameModeSelection: true,
             supportsHeapZeroMemorySelection: true,
             supportedFPSCursorPolicies: Set(recipe.supportedOptions.fpsCursorPolicies),
@@ -468,6 +484,7 @@ struct CompatibilitySteamLaunchOneLaunchOverrideV1: Hashable, Sendable {
     var audioInputPolicy: SteamAudioInputPolicyIdentifier?
     var synchronizationPolicy: SteamSynchronizationPolicyIdentifier?
     var videoMemoryPolicy: SteamVideoMemoryPolicyIdentifier?
+    var frameGenerationConfiguration: FrameGenerationConfiguration?
     var gameModeEnabled: Bool?
     var heapZeroMemoryEnabled: Bool?
     var fpsCursorPolicy: FPSCursorCapturePolicy?
@@ -486,6 +503,7 @@ struct ResolvedCompatibilitySteamLaunchSnapshotV1: Hashable, Sendable {
     let audioInputPolicy: CompatibilityResolvedValueV1<SteamAudioInputPolicyIdentifier>
     let synchronizationPolicy: CompatibilityResolvedValueV1<SteamSynchronizationPolicyIdentifier>
     let videoMemoryPolicy: CompatibilityResolvedValueV1<SteamVideoMemoryPolicyIdentifier>
+    let frameGenerationConfiguration: CompatibilityResolvedValueV1<FrameGenerationConfiguration>
     let gameModeEnabled: CompatibilityResolvedValueV1<Bool>
     let heapZeroMemoryEnabled: CompatibilityResolvedValueV1<Bool>
     let fpsCursorPolicy: CompatibilityResolvedValueV1<FPSCursorCapturePolicy>
@@ -497,7 +515,7 @@ struct ResolvedCompatibilitySteamLaunchSnapshotV1: Hashable, Sendable {
 }
 
 struct ResolvedCompatibilityLaunchRequestV1: Hashable, Sendable {
-    static let canonicalHeader = Data("forgeplay-steam-compatibility-request-v1\n".utf8)
+    static let canonicalHeader = Data("forgeplay-steam-compatibility-request-v2\n".utf8)
 
     let schemaVersion: Int
     let profileContractVersion: Int
@@ -545,6 +563,11 @@ struct ResolvedCompatibilityLaunchRequestV1: Hashable, Sendable {
             )
         }
         try manifestRootAuthorization.validate()
+        try snapshot.frameGenerationConfiguration.value.validate(
+            isSupportedRenderer:
+                snapshot.graphicsBackend.value
+                    .supportsCurrentReleaseFrameGeneration
+        )
         guard transactionID.uuidString.lowercased() != "00000000-0000-0000-0000-000000000000" else {
             throw SteamCompatibilityLaunchProfileErrorV1.invalidCanonicalPayload(
                 "transaction-id"
@@ -610,6 +633,24 @@ struct ResolvedCompatibilityLaunchRequestV1: Hashable, Sendable {
         append(snapshot.audioInputPolicy, name: "audioInputPolicy", rawValue: \.rawValue, to: &encoder)
         append(snapshot.synchronizationPolicy, name: "synchronizationPolicy", rawValue: \.rawValue, to: &encoder)
         append(snapshot.videoMemoryPolicy, name: "videoMemoryPolicy", rawValue: \.rawValue, to: &encoder)
+        encoder.append(
+            name: "frameGenerationEnabled",
+            value: snapshot.frameGenerationConfiguration.value.isEnabled ? "1" : "0"
+        )
+        encoder.append(
+            name: "frameGenerationTargetFPS",
+            value: String(
+                snapshot.frameGenerationConfiguration.value.targetFrameRate.rawValue
+            )
+        )
+        encoder.append(
+            name: "frameCheckEnabled",
+            value: snapshot.frameGenerationConfiguration.value.isFrameCheckEnabled ? "1" : "0"
+        )
+        encoder.append(
+            name: "frameGenerationProvenance",
+            value: snapshot.frameGenerationConfiguration.provenance.rawValue
+        )
         append(snapshot.gameModeEnabled, name: "gameModeEnabled", rawValue: { $0 ? "1" : "0" }, to: &encoder)
         append(snapshot.heapZeroMemoryEnabled, name: "heapZeroMemoryEnabled", rawValue: { $0 ? "1" : "0" }, to: &encoder)
         append(snapshot.fpsCursorPolicy, name: "fpsCursorPolicy", rawValue: \.rawValue, to: &encoder)
@@ -679,6 +720,10 @@ enum SteamCompatibilityLaunchResolverV1 {
             value: recipe.initialSelections.videoMemoryPolicy,
             provenance: .recipe
         )
+        var frameGenerationConfiguration = CompatibilityResolvedValueV1(
+            value: recipe.initialSelections.frameGenerationConfiguration,
+            provenance: .recipe
+        )
         var gameModeEnabled = CompatibilityResolvedValueV1(
             value: recipe.initialSelections.gameModeEnabled,
             provenance: .recipe
@@ -709,6 +754,10 @@ enum SteamCompatibilityLaunchResolverV1 {
             audioInputPolicy = .init(value: selections.audioInputPolicy, provenance: .savedPreference)
             synchronizationPolicy = .init(value: selections.synchronizationPolicy, provenance: .savedPreference)
             videoMemoryPolicy = .init(value: selections.videoMemoryPolicy, provenance: .savedPreference)
+            frameGenerationConfiguration = .init(
+                value: selections.frameGenerationConfiguration,
+                provenance: .savedPreference
+            )
             gameModeEnabled = .init(value: selections.gameModeEnabled, provenance: .savedPreference)
             heapZeroMemoryEnabled = .init(value: selections.heapZeroMemoryEnabled, provenance: .savedPreference)
             fpsCursorPolicy = .init(value: selections.fpsCursorPolicy, provenance: .savedPreference)
@@ -738,6 +787,12 @@ enum SteamCompatibilityLaunchResolverV1 {
             if let value = oneLaunchOverride.videoMemoryPolicy {
                 videoMemoryPolicy = .init(value: value, provenance: .oneLaunchOverride)
             }
+            if let value = oneLaunchOverride.frameGenerationConfiguration {
+                frameGenerationConfiguration = .init(
+                    value: value,
+                    provenance: .oneLaunchOverride
+                )
+            }
             if let value = oneLaunchOverride.gameModeEnabled {
                 gameModeEnabled = .init(value: value, provenance: .oneLaunchOverride)
             }
@@ -761,6 +816,7 @@ enum SteamCompatibilityLaunchResolverV1 {
             audioInputPolicy: audioInputPolicy,
             synchronizationPolicy: synchronizationPolicy,
             videoMemoryPolicy: videoMemoryPolicy,
+            frameGenerationConfiguration: frameGenerationConfiguration,
             gameModeEnabled: gameModeEnabled,
             heapZeroMemoryEnabled: heapZeroMemoryEnabled,
             fpsCursorPolicy: fpsCursorPolicy,
@@ -808,6 +864,14 @@ enum SteamCompatibilityLaunchResolverV1 {
         try requireCapability(snapshot.audioInputPolicy.value, in: capabilities.supportedAudioInputPolicies, category: "audio-input-policy", rawValue: snapshot.audioInputPolicy.value.rawValue)
         try requireCapability(snapshot.synchronizationPolicy.value, in: capabilities.supportedSynchronizationPolicies, category: "synchronization-policy", rawValue: snapshot.synchronizationPolicy.value.rawValue)
         try requireCapability(snapshot.videoMemoryPolicy.value, in: capabilities.supportedVideoMemoryPolicies, category: "video-memory-policy", rawValue: snapshot.videoMemoryPolicy.value.rawValue)
+        try requireCapability(
+            snapshot.frameGenerationConfiguration.value.targetFrameRate,
+            in: capabilities.supportedFrameGenerationTargetFrameRates,
+            category: "frame-generation-target-frame-rate",
+            rawValue: String(
+                snapshot.frameGenerationConfiguration.value.targetFrameRate.rawValue
+            )
+        )
         guard capabilities.supportsGameModeSelection else {
             throw SteamCompatibilityLaunchProfileErrorV1.unsupportedCapability(
                 category: "game-mode",
@@ -866,6 +930,16 @@ enum SteamCompatibilityLaunchResolverV1 {
         try requireRecipeSupport(snapshot.audioInputPolicy.value, in: recipe.supportedOptions.audioInputPolicies, category: "recipe.audio-input-policy")
         try requireRecipeSupport(snapshot.synchronizationPolicy.value, in: recipe.supportedOptions.synchronizationPolicies, category: "recipe.synchronization-policy")
         try requireRecipeSupport(snapshot.videoMemoryPolicy.value, in: recipe.supportedOptions.videoMemoryPolicies, category: "recipe.video-memory-policy")
+        try requireRecipeSupport(
+            snapshot.frameGenerationConfiguration.value.targetFrameRate,
+            in: recipe.supportedOptions.frameGenerationTargetFrameRates,
+            category: "recipe.frame-generation-target-frame-rate"
+        )
+        try snapshot.frameGenerationConfiguration.value.validate(
+            isSupportedRenderer:
+                snapshot.graphicsBackend.value
+                    .supportsCurrentReleaseFrameGeneration
+        )
         try requireRecipeSupport(snapshot.fpsCursorPolicy.value, in: recipe.supportedOptions.fpsCursorPolicies, category: "recipe.fps-cursor-policy")
         try requireRecipeSupport(snapshot.controllerPolicy.value, in: recipe.supportedOptions.controllerPolicies, category: "recipe.controller-policy")
         try requireRecipeSupport(snapshot.keyboardMapping.value.preset, in: recipe.supportedOptions.keyboardPresets, category: "recipe.keyboard-preset")
@@ -1140,6 +1214,8 @@ final class CompatibilityCompletionRendezvous<Value: Sendable> {
     struct Attempt: Sendable {
         fileprivate let id: UUID
         fileprivate let task: Task<Value, Error>
+        fileprivate let completionState:
+            SteamCompatibilityBackgroundWorkCompletionState
     }
 
     private final class WaitGate: @unchecked Sendable {
@@ -1184,11 +1260,15 @@ final class CompatibilityCompletionRendezvous<Value: Sendable> {
         if let activeAttempt {
             return (activeAttempt, false)
         }
+        let completionState =
+            SteamCompatibilityBackgroundWorkCompletionState()
         let attempt = Attempt(
             id: UUID(),
             task: Task { @MainActor in
-                try await operation()
-            }
+                defer { completionState.markCompleted() }
+                return try await operation()
+            },
+            completionState: completionState
         )
         activeAttempt = attempt
         return (attempt, true)
@@ -1232,6 +1312,18 @@ final class CompatibilityCompletionRendezvous<Value: Sendable> {
         guard activeAttempt?.id == attempt.id else { return false }
         activeAttempt = nil
         return true
+    }
+
+    /// Application/force termination invalidates retry ownership before Wine
+    /// cleanup begins. Return a type-erased waiter so the lifecycle coordinator
+    /// can drain the cancelled operation instead of merely dropping its handle.
+    func cancelActiveAttempt()
+        -> SteamCompatibilityBackgroundWorkCompletionState?
+    {
+        guard let attempt = activeAttempt else { return nil }
+        activeAttempt = nil
+        attempt.task.cancel()
+        return attempt.completionState
     }
 }
 

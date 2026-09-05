@@ -1,7 +1,9 @@
 import CryptoKit
 import Foundation
 
-enum SteamLaunchConfigurationError: LocalizedError, Equatable {
+enum SteamLaunchConfigurationError:
+    LocalizedError, Equatable, ForgePlayTechnicalDescribingError
+{
     case unsupportedSchemaVersion(Int)
     case invalidIdentity(String)
     case invalidOptionIdentifier(category: String, value: String)
@@ -21,6 +23,11 @@ enum SteamLaunchConfigurationError: LocalizedError, Equatable {
         case .invalidCanonicalPayload(let reason):
             "저장된 Steam 실행 구성을 읽지 못했습니다: \(reason)"
         }
+    }
+
+
+    var forgePlayTechnicalDescription: String {
+        "SteamLaunchConfigurationError \(String(describing: self))"
     }
 }
 
@@ -247,6 +254,33 @@ struct SteamGraphicsBackendIdentifier: SteamLaunchOptionIdentifierProtocol {
     private init(validatedRawValue: String) {
         rawValue = validatedRawValue
     }
+
+    /// Retains exact decoding and validation for configurations saved by an
+    /// earlier release. Current-release UI and launch admission use
+    /// `supportsCurrentReleaseFrameGeneration` instead.
+    var supportsD3DMetalFrameGeneration: Bool {
+        self == .d3dMetal || self == .d3dMetalNVIDIA
+    }
+
+    var supportsCurrentReleaseFrameGeneration: Bool {
+        SteamRendererCurrentReleasePolicy.supportsFrameGeneration(rawValue)
+    }
+
+    static var currentReleaseSelectableCases: [Self] {
+        SteamRendererCurrentReleasePolicy.selectableRawValues.compactMap {
+            Self(rawValue: $0)
+        }
+    }
+
+    var isCurrentReleaseUserSelectable: Bool {
+        SteamRendererCurrentReleasePolicy.isUserSelectable(rawValue)
+    }
+
+    var normalizedForCurrentRelease: Self {
+        Self(
+            rawValue: SteamRendererCurrentReleasePolicy.normalizedRawValue(rawValue)
+        ) ?? .d3dMetalNVIDIA
+    }
 }
 
 struct SteamNetworkPolicyIdentifier: SteamLaunchOptionIdentifierProtocol {
@@ -467,8 +501,47 @@ struct KeyboardMappingPreference: Codable, Hashable, Sendable {
 }
 
 struct SteamLaunchConfigurationSnapshot: Hashable, Sendable {
-    static let currentSchemaVersion = 1
-    private static let canonicalHeader = Data("forgeplay-steam-launch-configuration-v1\n".utf8)
+    static let legacySchemaVersion = 1
+    static let rendererScopedFrameGenerationSchemaVersion = 2
+    static let frameGenerationEnabledSchemaVersion = 3
+    static let frameGenerationTargetSchemaVersion = 4
+    static let currentSchemaVersion = 5
+    private static let legacyCanonicalHeader = Data(
+        "forgeplay-steam-launch-configuration-v1\n".utf8
+    )
+    private static let rendererScopedCanonicalHeader = Data(
+        "forgeplay-steam-launch-configuration-v2\n".utf8
+    )
+    private static let frameGenerationEnabledCanonicalHeader = Data(
+        "forgeplay-steam-launch-configuration-v3\n".utf8
+    )
+    private static let frameGenerationTargetCanonicalHeader = Data(
+        "forgeplay-steam-launch-configuration-v4\n".utf8
+    )
+    private static let canonicalHeader = Data(
+        "forgeplay-steam-launch-configuration-v5\n".utf8
+    )
+    private static let legacyCanonicalFieldNames = [
+        "schemaVersion",
+        "mode",
+        "configurationIdentity",
+        "steamAppID",
+        "profileID",
+        "recipeRevision",
+        "graphicsBackend",
+        "networkPolicy",
+        "audioInputPolicy",
+        "synchronizationPolicy",
+        "videoMemoryPolicy",
+        "gameModeEnabled",
+        "fpsCursorPolicy",
+        "controllerPolicy",
+        "keyboardPreset",
+        "hasCustomPermutation",
+        "customCommandRole",
+        "customOptionRole",
+        "customControlRole"
+    ]
     private static let canonicalFieldNames = [
         "schemaVersion",
         "mode",
@@ -477,6 +550,84 @@ struct SteamLaunchConfigurationSnapshot: Hashable, Sendable {
         "profileID",
         "recipeRevision",
         "graphicsBackend",
+        "networkPolicy",
+        "audioInputPolicy",
+        "synchronizationPolicy",
+        "videoMemoryPolicy",
+        "frameGenerationEnabled",
+        "frameGenerationTargetFPS",
+        "frameCheckEnabled",
+        "gameModeEnabled",
+        "fpsCursorPolicy",
+        "controllerPolicy",
+        "keyboardPreset",
+        "hasCustomPermutation",
+        "customCommandRole",
+        "customOptionRole",
+        "customControlRole"
+    ]
+    /// A short-lived schema-2 writer used this field set before the deployed
+    /// renderer-scoped schema-2 contract was restored. Both dialects exist in
+    /// real 1.2 (3) launch history, so the reader distinguishes them by field
+    /// names and migrates either one to schema 5.
+    private static let interimSchema2CanonicalFieldNames = canonicalFieldNames
+    private static let rendererScopedCanonicalFieldNames = [
+        "schemaVersion",
+        "mode",
+        "configurationIdentity",
+        "steamAppID",
+        "profileID",
+        "recipeRevision",
+        "graphicsBackend",
+        "d3dMetalFrameGenerationMode",
+        "d3dMetalNVIDIAFrameGenerationMode",
+        "dxmtFrameGenerationMode",
+        "d9vkFrameGenerationMode",
+        "vulkanFrameGenerationMode",
+        "networkPolicy",
+        "audioInputPolicy",
+        "synchronizationPolicy",
+        "videoMemoryPolicy",
+        "gameModeEnabled",
+        "fpsCursorPolicy",
+        "controllerPolicy",
+        "keyboardPreset",
+        "hasCustomPermutation",
+        "customCommandRole",
+        "customOptionRole",
+        "customControlRole"
+    ]
+    private static let frameGenerationEnabledCanonicalFieldNames = [
+        "schemaVersion",
+        "mode",
+        "configurationIdentity",
+        "steamAppID",
+        "profileID",
+        "recipeRevision",
+        "graphicsBackend",
+        "frameGenerationEnabled",
+        "networkPolicy",
+        "audioInputPolicy",
+        "synchronizationPolicy",
+        "videoMemoryPolicy",
+        "gameModeEnabled",
+        "fpsCursorPolicy",
+        "controllerPolicy",
+        "keyboardPreset",
+        "hasCustomPermutation",
+        "customCommandRole",
+        "customOptionRole",
+        "customControlRole"
+    ]
+    private static let frameGenerationTargetCanonicalFieldNames = [
+        "schemaVersion",
+        "mode",
+        "configurationIdentity",
+        "steamAppID",
+        "profileID",
+        "recipeRevision",
+        "graphicsBackend",
+        "frameGenerationTargetFPS",
         "networkPolicy",
         "audioInputPolicy",
         "synchronizationPolicy",
@@ -498,6 +649,7 @@ struct SteamLaunchConfigurationSnapshot: Hashable, Sendable {
     let audioInputPolicy: SteamAudioInputPolicyIdentifier
     let synchronizationPolicy: SteamSynchronizationPolicyIdentifier
     let videoMemoryPolicy: SteamVideoMemoryPolicyIdentifier
+    let frameGenerationConfiguration: FrameGenerationConfiguration
     let gameModeEnabled: Bool
     let fpsCursorPolicy: FPSCursorCapturePolicy
     let controllerPolicy: ControllerCompatibilityPolicy
@@ -511,6 +663,7 @@ struct SteamLaunchConfigurationSnapshot: Hashable, Sendable {
         audioInputPolicy: SteamAudioInputPolicyIdentifier = .disabled,
         synchronizationPolicy: SteamSynchronizationPolicyIdentifier = .automatic,
         videoMemoryPolicy: SteamVideoMemoryPolicyIdentifier = .automatic,
+        frameGenerationConfiguration: FrameGenerationConfiguration = .off,
         gameModeEnabled: Bool = true,
         fpsCursorPolicy: FPSCursorCapturePolicy = .off,
         controllerPolicy: ControllerCompatibilityPolicy = .automatic,
@@ -523,6 +676,7 @@ struct SteamLaunchConfigurationSnapshot: Hashable, Sendable {
         self.audioInputPolicy = audioInputPolicy
         self.synchronizationPolicy = synchronizationPolicy
         self.videoMemoryPolicy = videoMemoryPolicy
+        self.frameGenerationConfiguration = frameGenerationConfiguration
         self.gameModeEnabled = gameModeEnabled
         self.fpsCursorPolicy = fpsCursorPolicy
         self.controllerPolicy = controllerPolicy
@@ -535,11 +689,12 @@ struct SteamLaunchConfigurationSnapshot: Hashable, Sendable {
     private init(standardDefaults: Void) {
         schemaVersion = Self.currentSchemaVersion
         identity = .standard
-        graphicsBackend = .d3dMetal
+        graphicsBackend = .d3dMetalNVIDIA
         networkPolicy = .standard
         audioInputPolicy = .disabled
         synchronizationPolicy = .automatic
         videoMemoryPolicy = .automatic
+        frameGenerationConfiguration = .off
         gameModeEnabled = true
         fpsCursorPolicy = .off
         controllerPolicy = .automatic
@@ -571,6 +726,10 @@ struct SteamLaunchConfigurationSnapshot: Hashable, Sendable {
         _ = try SteamAudioInputPolicyIdentifier.validated(audioInputPolicy.rawValue)
         _ = try SteamSynchronizationPolicyIdentifier.validated(synchronizationPolicy.rawValue)
         _ = try SteamVideoMemoryPolicyIdentifier.validated(videoMemoryPolicy.rawValue)
+        try frameGenerationConfiguration.validate(
+            isSupportedRenderer:
+                graphicsBackend.supportsCurrentReleaseFrameGeneration
+        )
         _ = try KeyboardMappingPreference(
             preset: keyboardMapping.preset,
             customPermutation: keyboardMapping.customPermutation
@@ -603,6 +762,9 @@ struct SteamLaunchConfigurationSnapshot: Hashable, Sendable {
             audioInputPolicy.rawValue,
             synchronizationPolicy.rawValue,
             videoMemoryPolicy.rawValue,
+            frameGenerationConfiguration.isEnabled ? "1" : "0",
+            String(frameGenerationConfiguration.targetFrameRate.rawValue),
+            frameGenerationConfiguration.isFrameCheckEnabled ? "1" : "0",
             gameModeEnabled ? "1" : "0",
             fpsCursorPolicy.rawValue,
             controllerPolicy.rawValue,
@@ -627,17 +789,80 @@ struct SteamLaunchConfigurationSnapshot: Hashable, Sendable {
         }
     }
 
+    static func canonicalPayloadSchemaVersion(_ data: Data) -> Int? {
+        if data.starts(with: canonicalHeader) {
+            return currentSchemaVersion
+        }
+        if data.starts(with: frameGenerationTargetCanonicalHeader) {
+            return frameGenerationTargetSchemaVersion
+        }
+        if data.starts(with: frameGenerationEnabledCanonicalHeader) {
+            return frameGenerationEnabledSchemaVersion
+        }
+        if data.starts(with: rendererScopedCanonicalHeader) {
+            return rendererScopedFrameGenerationSchemaVersion
+        }
+        if data.starts(with: legacyCanonicalHeader) {
+            return legacySchemaVersion
+        }
+        return nil
+    }
+
     init(canonicalPayload data: Data) throws {
+        let sourceSchemaVersion: Int
+        let header: Data
+        let fieldNames: [String]
+        let schema2UsesInterimFieldSet: Bool
+        switch Self.canonicalPayloadSchemaVersion(data) {
+        case Self.currentSchemaVersion:
+            sourceSchemaVersion = Self.currentSchemaVersion
+            header = Self.canonicalHeader
+            fieldNames = Self.canonicalFieldNames
+            schema2UsesInterimFieldSet = false
+        case Self.frameGenerationTargetSchemaVersion:
+            sourceSchemaVersion = Self.frameGenerationTargetSchemaVersion
+            header = Self.frameGenerationTargetCanonicalHeader
+            fieldNames = Self.frameGenerationTargetCanonicalFieldNames
+            schema2UsesInterimFieldSet = false
+        case Self.frameGenerationEnabledSchemaVersion:
+            sourceSchemaVersion = Self.frameGenerationEnabledSchemaVersion
+            header = Self.frameGenerationEnabledCanonicalHeader
+            fieldNames = Self.frameGenerationEnabledCanonicalFieldNames
+            schema2UsesInterimFieldSet = false
+        case Self.rendererScopedFrameGenerationSchemaVersion:
+            sourceSchemaVersion = Self.rendererScopedFrameGenerationSchemaVersion
+            header = Self.rendererScopedCanonicalHeader
+            let interimMarker = Data("networkPolicy=".utf8)
+            let rendererScopedMarker = Data("d3dMetalFrameGenerationMode=".utf8)
+            let searchStart = header.count
+            let markerRange = searchStart..<data.count
+            if data.range(of: interimMarker, options: [], in: markerRange) != nil,
+               data.range(of: rendererScopedMarker, options: [], in: markerRange) == nil {
+                fieldNames = Self.interimSchema2CanonicalFieldNames
+                schema2UsesInterimFieldSet = true
+            } else {
+                fieldNames = Self.rendererScopedCanonicalFieldNames
+                schema2UsesInterimFieldSet = false
+            }
+        case Self.legacySchemaVersion:
+            sourceSchemaVersion = Self.legacySchemaVersion
+            header = Self.legacyCanonicalHeader
+            fieldNames = Self.legacyCanonicalFieldNames
+            schema2UsesInterimFieldSet = false
+        default:
+            throw SteamLaunchConfigurationError.invalidCanonicalPayload("header")
+        }
+
         var parser = SteamLaunchCanonicalPayloadParser(data: data)
-        try parser.consume(Self.canonicalHeader, reason: "header")
+        try parser.consume(header, reason: "header")
         var values: [String] = []
-        values.reserveCapacity(Self.canonicalFieldNames.count)
-        for fieldName in Self.canonicalFieldNames {
+        values.reserveCapacity(fieldNames.count)
+        for fieldName in fieldNames {
             values.append(try parser.readField(named: fieldName))
         }
         try parser.requireEnd()
 
-        guard values[0] == String(Self.currentSchemaVersion) else {
+        guard values[0] == String(sourceSchemaVersion) else {
             if let version = Int(values[0]) {
                 throw SteamLaunchConfigurationError.unsupportedSchemaVersion(version)
             }
@@ -665,26 +890,149 @@ struct SteamLaunchConfigurationSnapshot: Hashable, Sendable {
         guard values[2] == identity.configurationIdentity else {
             throw SteamLaunchConfigurationError.invalidIdentity("configuration-identity-mismatch")
         }
-        guard let fpsCursorPolicy = FPSCursorCapturePolicy(rawValue: values[12]) else {
+
+        let networkIndex: Int
+        let frameGenerationConfiguration: FrameGenerationConfiguration
+        let graphicsBackend = try SteamGraphicsBackendIdentifier.validated(values[6])
+        switch sourceSchemaVersion {
+        case Self.legacySchemaVersion:
+            networkIndex = 7
+            frameGenerationConfiguration = .off
+        case Self.rendererScopedFrameGenerationSchemaVersion where
+            !schema2UsesInterimFieldSet:
+            networkIndex = 12
+            let rendererModes = values[7...11]
+            guard rendererModes.allSatisfy({
+                $0 == "off" || $0 == "midpoint"
+            }) else {
+                throw SteamLaunchConfigurationError.invalidCanonicalPayload(
+                    "renderer-scoped-frame-generation-mode"
+                )
+            }
+            let modeIndexByRenderer = [
+                "d3dMetal": 7,
+                "d3dMetalNVIDIA": 8,
+                "dxmt": 9,
+                "d9vk": 10,
+                "dxvk": 11
+            ]
+            let mode = modeIndexByRenderer[graphicsBackend.rawValue]
+                .map { values[$0] } ?? "off"
+            frameGenerationConfiguration = Self.migratedFrameGenerationConfiguration(
+                enabled: mode == "midpoint",
+                rawTargetFrameRate: 120,
+                graphicsBackend: graphicsBackend
+            )
+        case Self.frameGenerationEnabledSchemaVersion:
+            networkIndex = 8
+            frameGenerationConfiguration = Self.migratedFrameGenerationConfiguration(
+                enabled: try Self.decodeCanonicalBoolean(
+                    values[7],
+                    field: "frame-generation-enabled"
+                ),
+                rawTargetFrameRate: 120,
+                graphicsBackend: graphicsBackend
+            )
+        case Self.frameGenerationTargetSchemaVersion:
+            networkIndex = 8
+            let targetText = values[7]
+            let enabled = targetText != "off" && targetText != "0"
+            let rawTargetFrameRate: Int
+            if enabled {
+                guard let decodedTarget = Int(targetText),
+                      FrameGenerationTargetFrameRate(rawValue: decodedTarget) != nil else {
+                    throw SteamLaunchConfigurationError.invalidCanonicalPayload(
+                        "frame-generation-target-fps"
+                    )
+                }
+                rawTargetFrameRate = decodedTarget
+            } else {
+                rawTargetFrameRate = 120
+            }
+            frameGenerationConfiguration = Self.migratedFrameGenerationConfiguration(
+                enabled: enabled,
+                rawTargetFrameRate: rawTargetFrameRate,
+                graphicsBackend: graphicsBackend
+            )
+        case Self.rendererScopedFrameGenerationSchemaVersion,
+             Self.currentSchemaVersion:
+            networkIndex = 7
+            let isEnabled = try Self.decodeCanonicalBoolean(
+                values[11],
+                field: "frame-generation-enabled"
+            )
+            guard let rawTargetFrameRate = Int(values[12]) else {
+                throw SteamLaunchConfigurationError.invalidCanonicalPayload(
+                    "frame-generation-target-fps"
+                )
+            }
+            let isFrameCheckEnabled = try Self.decodeCanonicalBoolean(
+                values[13],
+                field: "frame-check-enabled"
+            )
+            frameGenerationConfiguration = try Self.currentFrameGenerationConfiguration(
+                enabled: isEnabled,
+                rawTargetFrameRate: rawTargetFrameRate,
+                frameCheckEnabled: isFrameCheckEnabled,
+                graphicsBackend: graphicsBackend
+            )
+        default:
+            throw SteamLaunchConfigurationError.unsupportedSchemaVersion(
+                sourceSchemaVersion
+            )
+        }
+
+        let gameModeIndex: Int
+        switch sourceSchemaVersion {
+        case Self.legacySchemaVersion:
+            gameModeIndex = 11
+        case Self.rendererScopedFrameGenerationSchemaVersion where
+            schema2UsesInterimFieldSet:
+            gameModeIndex = 14
+        case Self.rendererScopedFrameGenerationSchemaVersion:
+            gameModeIndex = 16
+        case Self.frameGenerationEnabledSchemaVersion,
+             Self.frameGenerationTargetSchemaVersion:
+            gameModeIndex = 12
+        case Self.currentSchemaVersion:
+            gameModeIndex = 14
+        default:
+            throw SteamLaunchConfigurationError.unsupportedSchemaVersion(
+                sourceSchemaVersion
+            )
+        }
+        let fpsCursorIndex = gameModeIndex + 1
+        let controllerIndex = gameModeIndex + 2
+        let keyboardPresetIndex = gameModeIndex + 3
+        let customPresenceIndex = gameModeIndex + 4
+        let customCommandIndex = gameModeIndex + 5
+        let customOptionIndex = gameModeIndex + 6
+        let customControlIndex = gameModeIndex + 7
+
+        guard let fpsCursorPolicy = FPSCursorCapturePolicy(rawValue: values[fpsCursorIndex]) else {
             throw SteamLaunchConfigurationError.invalidCanonicalPayload("fps-cursor-policy")
         }
-        guard let controllerPolicy = ControllerCompatibilityPolicy(rawValue: values[13]) else {
+        guard let controllerPolicy = ControllerCompatibilityPolicy(
+            rawValue: values[controllerIndex]
+        ) else {
             throw SteamLaunchConfigurationError.invalidCanonicalPayload("controller-policy")
         }
-        guard let keyboardPreset = KeyboardMappingPreset(rawValue: values[14]) else {
+        guard let keyboardPreset = KeyboardMappingPreset(rawValue: values[keyboardPresetIndex]) else {
             throw SteamLaunchConfigurationError.invalidCanonicalPayload("keyboard-preset")
         }
         let customPermutation: ModifierKeyPermutation?
-        switch values[15] {
+        switch values[customPresenceIndex] {
         case "0":
-            guard values[16] == "-", values[17] == "-", values[18] == "-" else {
+            guard values[customCommandIndex] == "-",
+                  values[customOptionIndex] == "-",
+                  values[customControlIndex] == "-" else {
                 throw SteamLaunchConfigurationError.invalidCanonicalPayload("unexpected-custom-mapping")
             }
             customPermutation = nil
         case "1":
-            guard let command = WindowsModifierRole(rawValue: values[16]),
-                  let option = WindowsModifierRole(rawValue: values[17]),
-                  let control = WindowsModifierRole(rawValue: values[18]) else {
+            guard let command = WindowsModifierRole(rawValue: values[customCommandIndex]),
+                  let option = WindowsModifierRole(rawValue: values[customOptionIndex]),
+                  let control = WindowsModifierRole(rawValue: values[customControlIndex]) else {
                 throw SteamLaunchConfigurationError.invalidCanonicalPayload("custom-mapping-role")
             }
             customPermutation = try ModifierKeyPermutation(
@@ -696,7 +1044,7 @@ struct SteamLaunchConfigurationSnapshot: Hashable, Sendable {
             throw SteamLaunchConfigurationError.invalidCanonicalPayload("custom-mapping-presence")
         }
         let gameModeEnabled: Bool
-        switch values[11] {
+        switch values[gameModeIndex] {
         case "1": gameModeEnabled = true
         case "0": gameModeEnabled = false
         default:
@@ -705,11 +1053,18 @@ struct SteamLaunchConfigurationSnapshot: Hashable, Sendable {
 
         try self.init(
             identity: identity,
-            graphicsBackend: SteamGraphicsBackendIdentifier.validated(values[6]),
-            networkPolicy: SteamNetworkPolicyIdentifier.validated(values[7]),
-            audioInputPolicy: SteamAudioInputPolicyIdentifier.validated(values[8]),
-            synchronizationPolicy: SteamSynchronizationPolicyIdentifier.validated(values[9]),
-            videoMemoryPolicy: SteamVideoMemoryPolicyIdentifier.validated(values[10]),
+            graphicsBackend: graphicsBackend,
+            networkPolicy: SteamNetworkPolicyIdentifier.validated(values[networkIndex]),
+            audioInputPolicy: SteamAudioInputPolicyIdentifier.validated(
+                values[networkIndex + 1]
+            ),
+            synchronizationPolicy: SteamSynchronizationPolicyIdentifier.validated(
+                values[networkIndex + 2]
+            ),
+            videoMemoryPolicy: SteamVideoMemoryPolicyIdentifier.validated(
+                values[networkIndex + 3]
+            ),
+            frameGenerationConfiguration: frameGenerationConfiguration,
             gameModeEnabled: gameModeEnabled,
             fpsCursorPolicy: fpsCursorPolicy,
             controllerPolicy: controllerPolicy,
@@ -718,8 +1073,73 @@ struct SteamLaunchConfigurationSnapshot: Hashable, Sendable {
                 customPermutation: customPermutation
             )
         )
-        guard try canonicalPayload() == data else {
-            throw SteamLaunchConfigurationError.invalidCanonicalPayload("noncanonical-reencoding")
+        if sourceSchemaVersion == Self.currentSchemaVersion,
+           try canonicalPayload() != data {
+            throw SteamLaunchConfigurationError.invalidCanonicalPayload(
+                "noncanonical-reencoding"
+            )
+        }
+    }
+
+    private static func currentFrameGenerationConfiguration(
+        enabled: Bool,
+        rawTargetFrameRate: Int,
+        frameCheckEnabled: Bool,
+        graphicsBackend: SteamGraphicsBackendIdentifier
+    ) throws -> FrameGenerationConfiguration {
+        guard let targetFrameRate = FrameGenerationTargetFrameRate(
+            rawValue: rawTargetFrameRate
+        ) else {
+            throw SteamLaunchConfigurationError.invalidCanonicalPayload(
+                "frame-generation-target-fps"
+            )
+        }
+        let configuration = FrameGenerationConfiguration(
+            isEnabled: enabled,
+            targetFrameRate: targetFrameRate,
+            isFrameCheckEnabled: frameCheckEnabled
+        )
+        try configuration.validate(
+            isSupportedRenderer:
+                graphicsBackend.supportsCurrentReleaseFrameGeneration
+        )
+        return configuration
+    }
+
+    private static func migratedFrameGenerationConfiguration(
+        enabled: Bool,
+        rawTargetFrameRate: Int,
+        graphicsBackend: SteamGraphicsBackendIdentifier
+    ) -> FrameGenerationConfiguration {
+        // Legacy schemas may name the now-hidden plain D3DMetal backend. Keep
+        // the record readable, but never migrate that legacy identity into an
+        // enabled current-release NVIDIA-only Frame Generation request.
+        guard enabled,
+              graphicsBackend.supportsCurrentReleaseFrameGeneration else {
+            return .off
+        }
+        let decodedTarget = FrameGenerationTargetFrameRate(
+            rawValue: rawTargetFrameRate
+        ) ?? .fps120
+        let target = decodedTarget.isSelectableInCurrentRelease
+            ? decodedTarget
+            : .fps120
+        return FrameGenerationConfiguration(
+            isEnabled: true,
+            targetFrameRate: target,
+            isFrameCheckEnabled: true
+        )
+    }
+
+    private static func decodeCanonicalBoolean(
+        _ value: String,
+        field: String
+    ) throws -> Bool {
+        switch value {
+        case "1": true
+        case "0": false
+        default:
+            throw SteamLaunchConfigurationError.invalidCanonicalPayload(field)
         }
     }
 }

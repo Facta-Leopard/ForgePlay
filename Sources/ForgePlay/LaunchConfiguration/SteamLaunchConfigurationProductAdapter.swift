@@ -2,6 +2,7 @@ import Foundation
 
 struct SteamLaunchConfigurationProductSelection: Hashable, Sendable {
     let rendererPolicySelection: SteamRendererPolicySelection
+    let frameGenerationConfiguration: FrameGenerationConfiguration
     let networkSelection: SteamNetworkCompatibilitySelection
     let audioInputSelection: SteamAudioInputSelection
     let synchronizationSelection: WineSynchronizationSelection
@@ -10,9 +11,35 @@ struct SteamLaunchConfigurationProductSelection: Hashable, Sendable {
     let fpsCursorPolicy: FPSCursorCapturePolicy
     let controllerPolicy: ControllerCompatibilityPolicy
     let keyboardMapping: KeyboardMappingPreference
+
+    init(
+        rendererPolicySelection: SteamRendererPolicySelection,
+        frameGenerationConfiguration: FrameGenerationConfiguration = .off,
+        networkSelection: SteamNetworkCompatibilitySelection,
+        audioInputSelection: SteamAudioInputSelection,
+        synchronizationSelection: WineSynchronizationSelection,
+        videoMemorySelection: SteamVideoMemorySelection,
+        gameModePolicy: SteamGameModeLaunchPolicy,
+        fpsCursorPolicy: FPSCursorCapturePolicy,
+        controllerPolicy: ControllerCompatibilityPolicy,
+        keyboardMapping: KeyboardMappingPreference
+    ) {
+        self.rendererPolicySelection = rendererPolicySelection
+        self.frameGenerationConfiguration = frameGenerationConfiguration
+        self.networkSelection = networkSelection
+        self.audioInputSelection = audioInputSelection
+        self.synchronizationSelection = synchronizationSelection
+        self.videoMemorySelection = videoMemorySelection
+        self.gameModePolicy = gameModePolicy
+        self.fpsCursorPolicy = fpsCursorPolicy
+        self.controllerPolicy = controllerPolicy
+        self.keyboardMapping = keyboardMapping
+    }
 }
 
-enum SteamLaunchConfigurationProductAdapterError: LocalizedError, Equatable {
+enum SteamLaunchConfigurationProductAdapterError:
+    LocalizedError, Equatable, ForgePlayTechnicalDescribingError
+{
     case unsupportedMode(SteamLaunchMode)
     case unsupportedOption(category: String, value: String)
     case standardIdentityMismatch(String)
@@ -26,6 +53,10 @@ enum SteamLaunchConfigurationProductAdapterError: LocalizedError, Equatable {
         case .standardIdentityMismatch(let identity):
             "표준 Steam 실행 구성 식별자가 일치하지 않습니다: \(identity)"
         }
+    }
+
+    var forgePlayTechnicalDescription: String {
+        "SteamLaunchConfigurationProductAdapterError \(String(describing: self))"
     }
 }
 
@@ -47,6 +78,7 @@ enum SteamLaunchConfigurationProductAdapter {
                 for: selection.synchronizationSelection
             ),
             videoMemoryPolicy: try videoMemoryPolicy(for: selection.videoMemorySelection),
+            frameGenerationConfiguration: selection.frameGenerationConfiguration,
             gameModeEnabled: gameModeEnabled(for: selection.gameModePolicy),
             fpsCursorPolicy: selection.fpsCursorPolicy,
             controllerPolicy: selection.controllerPolicy,
@@ -64,6 +96,7 @@ enum SteamLaunchConfigurationProductAdapter {
             rendererPolicySelection: try rendererSelection(
                 for: snapshot.graphicsBackend
             ),
+            frameGenerationConfiguration: snapshot.frameGenerationConfiguration,
             networkSelection: try networkSelection(for: snapshot.networkPolicy),
             audioInputSelection: try audioInputSelection(for: snapshot.audioInputPolicy),
             synchronizationSelection: try synchronizationSelection(

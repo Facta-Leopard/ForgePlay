@@ -169,7 +169,7 @@ require_release_directory_contents() {
   done < <(find "$directory" -mindepth 1 -maxdepth 1 -print0)
 
   if [[ "${#unexpected_entries[@]}" -ne 0 ]]; then
-    fail "official release asset directory must contain only the exact six-file DMG, checksum, manifest, project source archive, copyleft source archive, and copyleft receipt set; unexpected entries: ${unexpected_entries[*]}"
+    fail "commercial release asset directory must contain only the exact six-file DMG, checksum, manifest, project source archive, copyleft source archive, and copyleft receipt set; unexpected entries: ${unexpected_entries[*]}"
   fi
 }
 
@@ -416,7 +416,7 @@ def require(condition, message):
     if not condition:
         raise SystemExit(message)
 
-require(payload.get("releaseKind") == "official-notarized-dmg", "public release must use official-notarized-dmg manifest")
+require(payload.get("releaseKind") == "commercial-notarized-dmg", "public release must use commercial-notarized-dmg manifest")
 require(payload.get("notarized") is True, "public release manifest must be notarized")
 require(payload.get("stapled") is True, "public release manifest must be stapled")
 require(payload.get("gatekeeperAssessed") is True, "public release manifest must be Gatekeeper assessed")
@@ -425,7 +425,7 @@ require(isinstance(notarization, dict), "public release manifest must include no
 require(notarization.get("notarytoolStatus") == "Accepted", "public release manifest must include accepted notarytool status")
 require(re.fullmatch(r"[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}", notarization.get("submissionId", "")), "public release manifest must include a notary submission id")
 require(notarization.get("staplerValidated") is True, "public release manifest must include stapler validation evidence")
-print("Public release asset manifest is official-notarized-dmg.")
+print("Public release asset manifest is commercial-notarized-dmg.")
 PY
 
 hdiutil verify "$DMG_PATH" >/dev/null || fail "public release DMG failed hdiutil verify"

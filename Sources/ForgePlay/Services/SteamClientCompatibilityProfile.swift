@@ -212,24 +212,32 @@ struct SteamClientCompatibilityProfileInspection: Hashable {
     var appliedOverrides: [String]
     var missingOverrides: [String]
     var staleOverrides: [String] = []
+    var obsoleteHostFiles: SteamClientCompatibilityFileInspection = .empty
     var webHelperFiles: SteamClientCompatibilityFileInspection = .empty
     var driverQueryCompatibilityFiles: SteamClientCompatibilityFileInspection = .empty
 
     var appliedFiles: [String] {
-        webHelperFiles.applied + driverQueryCompatibilityFiles.applied
+        obsoleteHostFiles.applied +
+            webHelperFiles.applied +
+            driverQueryCompatibilityFiles.applied
     }
 
     var missingFiles: [String] {
-        webHelperFiles.missing + driverQueryCompatibilityFiles.missing
+        obsoleteHostFiles.missing +
+            webHelperFiles.missing +
+            driverQueryCompatibilityFiles.missing
     }
 
     var staleFiles: [String] {
-        webHelperFiles.stale + driverQueryCompatibilityFiles.stale
+        obsoleteHostFiles.stale +
+            webHelperFiles.stale +
+            driverQueryCompatibilityFiles.stale
     }
 
     var isSatisfied: Bool {
         missingOverrides.isEmpty &&
             staleOverrides.isEmpty &&
+            obsoleteHostFiles.isSatisfied &&
             webHelperFiles.isSatisfied &&
             driverQueryCompatibilityFiles.isSatisfied
     }
@@ -385,12 +393,16 @@ enum SteamClientCompatibilityProfileContract {
                 valueData: "0",
                 expectedValue: "dword:00000000"
             ),
+            // The bundled macOS runtime has no SDL/UDEV/USB fallback. Wine
+            // selects generic IOHID gamepads as raw devices only when SDL and
+            // the non-raw input route are disabled; DisableHidraw=0 above
+            // keeps IOHID itself, including DualSense, enabled.
             SteamClientCompatibilityRegistryRequirement(
                 registryPath: "HKLM\\System\\CurrentControlSet\\Services\\winebus",
                 valueName: "DisableInput",
                 valueType: "REG_DWORD",
-                valueData: "0",
-                expectedValue: "dword:00000000"
+                valueData: "1",
+                expectedValue: "dword:00000001"
             ),
             SteamClientCompatibilityRegistryRequirement(
                 registryPath: "HKLM\\System\\CurrentControlSet\\Services\\winebus",
@@ -421,6 +433,12 @@ enum SteamClientCompatibilityProfileContract {
         "cef.win7x64",
         "cef.win64"
     ]
+    nonisolated static let obsoleteSteamCompatibilityBackupNamespaceNames = [
+        "sdl2-compat-\(sdl2CompatVersion)",
+        "steamwebhelper-legacy-shim-replaced",
+        "steamwebhelper-original-replaced",
+        "steamwebhelper-shim-in-process-gpu-1"
+    ]
     nonisolated static let obsoleteSteamBootstrapPinContents = """
     BootStrapperInhibitAll=enable
     BootStrapperForceSelfUpdate=disable
@@ -437,6 +455,10 @@ enum SteamClientCompatibilityProfileContract {
         let obsoleteOverrides = obsoleteRegistryOverrides
         let userRegistry = prefix.appending(path: "user.reg")
         let systemRegistry = prefix.appending(path: "system.reg")
+        let obsoleteHostFiles = inspectObsoleteHostFiles(
+            prefix: prefix,
+            fileManager: fileManager
+        )
         let fileInspection = inspectRequiredFiles(
             prefix: prefix,
             fileManager: fileManager
@@ -490,6 +512,7 @@ enum SteamClientCompatibilityProfileContract {
             appliedOverrides: applied,
             missingOverrides: missing,
             staleOverrides: stale,
+            obsoleteHostFiles: obsoleteHostFiles,
             webHelperFiles: fileInspection.webHelper,
             driverQueryCompatibilityFiles: fileInspection.driverQueryCompatibility
         )
@@ -568,10 +591,48 @@ enum SteamClientCompatibilityProfileContract {
         cefDirectory.appending(path: legacySteamWebHelperOriginalFileName)
     }
 
+    nonisolated static func obsoleteSteamCompatibilityBackupsDirectory(in prefix: URL) -> URL {
+        prefix.appending(
+            path: "drive_c/ForgePlay/SteamCompatBackups",
+            directoryHint: .isDirectory
+        )
+    }
+
+    nonisolated static func obsoleteSteamCompatibilityBackupDirectories(in prefix: URL) -> [URL] {
+        let root = obsoleteSteamCompatibilityBackupsDirectory(in: prefix)
+        return obsoleteSteamCompatibilityBackupNamespaceNames.map {
+            root.appending(path: $0, directoryHint: .isDirectory)
+        }
+    }
+
     nonisolated static func legacySteamWebHelperOriginalFile(in cefDirectory: URL) -> URL {
         cefDirectory
             .appending(path: legacySteamWebHelperOriginalDirectoryName, directoryHint: .isDirectory)
             .appending(path: steamWebHelperExecutableName)
+    }
+
+    private nonisolated static func inspectObsoleteHostFiles(
+        prefix: URL,
+        fileManager: FileManager
+    ) -> SteamClientCompatibilityFileInspection {
+        var stale: [String] = []
+        let steamConfig = steamDirectory(in: prefix).appending(path: "steam.cfg")
+        if FileSystemItemPolicy.isRegularNonSymlinkFile(steamConfig, fileManager: fileManager),
+           (try? String(contentsOf: steamConfig, encoding: .utf8)) ==
+            obsoleteSteamBootstrapPinContents {
+            stale.append("Steam/steam.cfg=obsolete-forgeplay-bootstrap-pin")
+        }
+        for backupDirectory in obsoleteSteamCompatibilityBackupDirectories(in: prefix)
+        where fileManager.fileExists(atPath: backupDirectory.path) {
+            stale.append(
+                "ForgePlay/SteamCompatBackups/\(backupDirectory.lastPathComponent)=obsolete-forgeplay-backup"
+            )
+        }
+        return SteamClientCompatibilityFileInspection(
+            applied: [],
+            missing: [],
+            stale: stale
+        )
     }
 
     private nonisolated static func inspectRequiredFiles(
@@ -747,6 +808,12 @@ struct WineUserRegistrySnapshot {
         valuesBySection[Self.normalizedRegistryPath(registryPath)]?[valueName.lowercased()]
     }
 
+    func values(forRegistryPath registryPath: String) -> [(name: String, value: String)] {
+        (valuesBySection[Self.normalizedRegistryPath(registryPath)] ?? [:])
+            .map { (name: $0.key, value: $0.value) }
+            .sorted { $0.name < $1.name }
+    }
+
     func multiStringValues(forRegistryPath registryPath: String, valueName: String) -> [String]? {
         guard let rawValue = value(
             forRegistryPath: registryPath,
@@ -824,8 +891,6 @@ final class SteamClientCompatibilityProfile {
         logDirectory: URL,
         videoMemorySizeMB: Int = SteamClientCompatibilityProfileContract.recommendedVideoMemorySizeMB
     ) async throws -> ProcessRunResult? {
-        try removeObsoleteSteamBootstrapPin(prefix: prefix)
-        try removeObsoleteSteamCompatibilityBackups(prefix: prefix)
         let initialInspection = SteamClientCompatibilityProfileContract.inspect(
             prefix: prefix,
             fileManager: fileManager,
@@ -833,8 +898,6 @@ final class SteamClientCompatibilityProfile {
         )
         guard !initialInspection.isSatisfied else { return nil }
 
-        try restoreValveManagedSteamWebHelperIfNeeded(prefix: prefix)
-        try installSDL2CompatForSteamGPUQueryIfNeeded(prefix: prefix)
         let actions = overrideActions(
             runtimeExecutable: runtimeExecutable,
             prefix: prefix,
@@ -842,22 +905,390 @@ final class SteamClientCompatibilityProfile {
             inspection: initialInspection,
             videoMemorySizeMB: videoMemorySizeMB
         )
-        for action in actions {
-            let result = try await runner.run(action)
-            guard result.succeeded else { return result }
+        guard !actions.isEmpty else {
+            try applyHostFileCompatibility(prefix: prefix)
+            let finalInspection = SteamClientCompatibilityProfileContract.inspect(
+                prefix: prefix,
+                fileManager: fileManager,
+                videoMemorySizeMB: videoMemorySizeMB
+            )
+            guard finalInspection.isSatisfied else {
+                throw SteamLaunchError.steamClientCompatibilityFileInstallFailed(
+                    prefix,
+                    finalInspection.missingOverrides.joined(separator: " | ")
+                )
+            }
+            return nil
         }
-        guard !actions.isEmpty else { return nil }
 
-        // Registry writes are committed when the short-lived Wine session
-        // exits naturally. A forced prefix shutdown can terminate wineserver
-        // before user.reg/system.reg have been persisted.
-        let registryFlush = try await runner.run(.waitForWinePrefix(
-            runtimeExecutable: runtimeExecutable,
-            prefix: prefix,
+        let registrySnapshots = try captureRegistrySnapshots(prefix: prefix)
+        let registryFile = try writeRegistryBatchFile(
+            actions: actions,
             logDirectory: logDirectory
-        ))
-        guard registryFlush.succeeded else { return registryFlush }
+        )
+        defer { try? fileManager.removeItem(at: registryFile) }
+
+        var failureResult: ProcessRunResult?
+        var thrownFailure: Error?
+        do {
+            let importResult = try await runner.run(.importRegistryFile(
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix,
+                registryFile: registryFile,
+                logDirectory: logDirectory
+            ))
+            if importResult.succeeded {
+                let flushResult = try await runner.run(.waitForWinePrefix(
+                    runtimeExecutable: runtimeExecutable,
+                    prefix: prefix,
+                    logDirectory: logDirectory
+                ))
+                if !flushResult.succeeded { failureResult = flushResult }
+            } else {
+                failureResult = importResult
+            }
+        } catch {
+            thrownFailure = error
+        }
+
+        let cleanupResult: ProcessRunResult?
+        let cleanupError: Error?
+        do {
+            cleanupResult = try await runner.run(.shutdownWinePrefix(
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix,
+                logDirectory: logDirectory
+            ))
+            cleanupError = nil
+        } catch {
+            cleanupResult = nil
+            cleanupError = error
+        }
+
+        guard cleanupError == nil,
+              cleanupResult?.succeeded == true else {
+            let originalDescription = thrownFailure.map {
+                forgePlayTechnicalErrorSummary($0)
+            } ?? failureResult.map {
+                "process exit \($0.diagnosticExitCodeDescription), log: \($0.stderrLog.path)"
+            } ?? "registry mutation completed but cleanup was not verified"
+            let cleanupDescription = cleanupError.map {
+                forgePlayTechnicalErrorSummary($0)
+            } ?? cleanupResult.map {
+                "process exit \($0.diagnosticExitCodeDescription), " +
+                "ForgePlay status \($0.diagnosticForgePlayStatusDescription), " +
+                "log: \($0.stderrLog.path)"
+            } ?? "cleanup result unavailable"
+            throw SteamPrefixLifecycleCleanupError(
+                originalDescription: originalDescription,
+                cleanupDescription: cleanupDescription,
+                originalError: thrownFailure,
+                cleanupError: cleanupError,
+                originalProcessResult: failureResult,
+                cleanupProcessResults: cleanupResult.map { [$0] } ?? []
+            )
+        }
+
+        if var failureResult {
+            do {
+                try restoreRegistrySnapshots(registrySnapshots)
+            } catch {
+                throw SteamPrefixLifecycleCleanupError(
+                    originalDescription:
+                        "registry mutation failed: " +
+                        failureResult.diagnosticExitCodeDescription,
+                    cleanupDescription:
+                        "registry rollback failed: " +
+                        forgePlayTechnicalErrorSummary(error),
+                    cleanupError: error,
+                    originalProcessResult: failureResult,
+                    cleanupProcessResults: cleanupResult.map { [$0] } ?? []
+                )
+            }
+            if let cleanupEvidence = cleanupResult?.runEvidenceLog {
+                failureResult.relatedRunEvidenceLogs.append(cleanupEvidence)
+                failureResult.relatedRunEvidenceLogs = Array(Set(
+                    failureResult.relatedRunEvidenceLogs
+                )).sorted { $0.path < $1.path }
+            }
+            return failureResult
+        }
+        if let thrownFailure {
+            do {
+                try restoreRegistrySnapshots(registrySnapshots)
+            } catch {
+                throw SteamPrefixLifecycleCleanupError(
+                    originalDescription:
+                        forgePlayTechnicalErrorSummary(thrownFailure),
+                    cleanupDescription:
+                        "registry rollback failed: " +
+                        forgePlayTechnicalErrorSummary(error),
+                    originalError: thrownFailure,
+                    cleanupError: error,
+                    cleanupProcessResults: cleanupResult.map { [$0] } ?? []
+                )
+            }
+            throw thrownFailure
+        }
+
+        do {
+            try applyHostFileCompatibility(prefix: prefix)
+            let finalInspection = SteamClientCompatibilityProfileContract.inspect(
+                prefix: prefix,
+                fileManager: fileManager,
+                videoMemorySizeMB: videoMemorySizeMB
+            )
+            guard finalInspection.isSatisfied else {
+                throw SteamLaunchError.steamClientCompatibilityFileInstallFailed(
+                    prefix,
+                    finalInspection.missingOverrides.joined(separator: " | ")
+                )
+            }
+        } catch {
+            do {
+                try restoreRegistrySnapshots(registrySnapshots)
+            } catch let rollbackError {
+                throw SteamPrefixLifecycleCleanupError(
+                    originalDescription: forgePlayTechnicalErrorSummary(error),
+                    cleanupDescription:
+                        "registry rollback failed: " +
+                        forgePlayTechnicalErrorSummary(rollbackError),
+                    originalError: error,
+                    cleanupError: rollbackError,
+                    cleanupProcessResults: cleanupResult.map { [$0] } ?? []
+                )
+            }
+            throw error
+        }
         return nil
+    }
+
+    private func applyHostFileCompatibility(prefix: URL) throws {
+        try removeObsoleteSteamBootstrapPin(prefix: prefix)
+        try removeObsoleteSteamCompatibilityBackups(prefix: prefix)
+        try restoreValveManagedSteamWebHelperIfNeeded(prefix: prefix)
+        try installSDL2CompatForSteamGPUQueryIfNeeded(prefix: prefix)
+    }
+
+    private struct RegistrySnapshot {
+        let url: URL
+        let contents: Data?
+        let permissions: Int?
+    }
+
+    private func captureRegistrySnapshots(
+        prefix: URL
+    ) throws -> [RegistrySnapshot] {
+        try ["user.reg", "system.reg"].map { name in
+            let url = prefix.appending(path: name)
+            guard fileManager.fileExists(atPath: url.path) else {
+                return RegistrySnapshot(
+                    url: url,
+                    contents: nil,
+                    permissions: nil
+                )
+            }
+            try FileSystemItemPolicy.requireRegularNonSymlinkFile(
+                url,
+                fileManager: fileManager
+            )
+            let attributes = try fileManager.attributesOfItem(
+                atPath: url.path
+            )
+            let byteCount = (attributes[.size] as? NSNumber)?.int64Value ?? -1
+            guard (0...64 * 1024 * 1024).contains(byteCount) else {
+                throw SteamLaunchError
+                    .steamClientCompatibilityFileInstallFailed(
+                        url,
+                        "registry baseline exceeds the transaction limit"
+                    )
+            }
+            return RegistrySnapshot(
+                url: url,
+                contents: try Data(contentsOf: url, options: .mappedIfSafe),
+                permissions:
+                    (attributes[.posixPermissions] as? NSNumber)?.intValue
+            )
+        }
+    }
+
+    private func restoreRegistrySnapshots(
+        _ snapshots: [RegistrySnapshot]
+    ) throws {
+        for snapshot in snapshots {
+            if let contents = snapshot.contents {
+                if fileManager.fileExists(atPath: snapshot.url.path) {
+                    try FileSystemItemPolicy.requireRegularNonSymlinkFile(
+                        snapshot.url,
+                        fileManager: fileManager
+                    )
+                }
+                try contents.write(to: snapshot.url, options: [.atomic])
+                if let permissions = snapshot.permissions {
+                    try fileManager.setAttributes(
+                        [.posixPermissions: permissions],
+                        ofItemAtPath: snapshot.url.path
+                    )
+                }
+            } else if fileManager.fileExists(atPath: snapshot.url.path) {
+                try FileSystemItemPolicy.requireRegularNonSymlinkFile(
+                    snapshot.url,
+                    fileManager: fileManager
+                )
+                try fileManager.removeItem(at: snapshot.url)
+            }
+        }
+    }
+
+    private func writeRegistryBatchFile(
+        actions: [RunnerAction],
+        logDirectory: URL
+    ) throws -> URL {
+        try fileManager.createDirectory(
+            at: logDirectory,
+            withIntermediateDirectories: true
+        )
+        try FileSystemItemPolicy.requireNonSymlinkDirectory(
+            logDirectory,
+            fileManager: fileManager
+        )
+        var text = "Windows Registry Editor Version 5.00\r\n\r\n"
+        for action in actions {
+            let entry = try registryBatchEntry(for: action)
+            text += "[\(entry.section)]\r\n"
+            text += "\"\(registryEscaped(entry.valueName))\"="
+            if let value = entry.value {
+                switch entry.valueType?.uppercased() {
+                case "REG_DWORD":
+                    guard let number = UInt32(value) else {
+                        throw SafeProcessRunnerError.unsafeCommandArgument(
+                            "registryBatchDWORD"
+                        )
+                    }
+                    text += String(format: "dword:%08x", number)
+                case nil, "REG_SZ":
+                    text += "\"\(registryEscaped(value))\""
+                default:
+                    throw SafeProcessRunnerError.unsafeCommandArgument(
+                        "registryBatchValueType"
+                    )
+                }
+            } else {
+                text += "-"
+            }
+            text += "\r\n\r\n"
+        }
+        guard let payload = text.data(using: .utf16LittleEndian) else {
+            throw SafeProcessRunnerError.unsafeCommandArgument(
+                "registryBatchEncoding"
+            )
+        }
+        var data = Data([0xff, 0xfe])
+        data.append(payload)
+        let url = logDirectory.appending(
+            path: "steam-client-profile-\(UUID().uuidString.lowercased()).reg"
+        )
+        try data.write(to: url, options: [.atomic])
+        try fileManager.setAttributes(
+            [.posixPermissions: 0o600],
+            ofItemAtPath: url.path
+        )
+        try FileSystemItemPolicy.requireRegularNonSymlinkFile(
+            url,
+            fileManager: fileManager
+        )
+        return url
+    }
+
+    private func registryBatchEntry(
+        for action: RunnerAction
+    ) throws -> (
+        section: String,
+        valueName: String,
+        valueType: String?,
+        value: String?
+    ) {
+        let registryPath: String
+        let valueName: String
+        let valueType: String?
+        let value: String?
+        switch action {
+        case .setRegistryValue(
+            _, _, let path, let name, let type, let data, let view, _
+        ):
+            guard view == nil else {
+                throw SafeProcessRunnerError.unsafeCommandArgument(
+                    "registryBatchView"
+                )
+            }
+            registryPath = path
+            valueName = name
+            valueType = type
+            value = data
+        case .setDLLOverride(_, _, let dll, let override, _):
+            registryPath = "HKCU\\Software\\Wine\\DllOverrides"
+            valueName = dll
+            valueType = nil
+            value = override
+        case .setAppDLLOverride(
+            _, _, let executable, let dll, let override, _
+        ):
+            registryPath =
+                "HKCU\\Software\\Wine\\AppDefaults\\\(executable)\\DllOverrides"
+            valueName = dll
+            valueType = nil
+            value = override
+        case .deleteAppDLLOverrideIfPresent(
+            _, _, let executable, let dll, _
+        ):
+            registryPath =
+                "HKCU\\Software\\Wine\\AppDefaults\\\(executable)\\DllOverrides"
+            valueName = dll
+            valueType = nil
+            value = nil
+        case .deleteRegistryValue(
+            _, _, let path, let name, let view, _
+        ):
+            guard view == nil else {
+                throw SafeProcessRunnerError.unsafeCommandArgument(
+                    "registryBatchView"
+                )
+            }
+            registryPath = path
+            valueName = name
+            valueType = nil
+            value = nil
+        case .deleteRegistryValueIfPresent(_, _, let path, let name, _):
+            registryPath = path
+            valueName = name
+            valueType = nil
+            value = nil
+        default:
+            throw SafeProcessRunnerError.unsafeCommandArgument(
+                "registryBatchAction"
+            )
+        }
+        let section: String
+        if registryPath.hasPrefix("HKCU\\") {
+            section = "HKEY_CURRENT_USER\\" +
+                registryPath.dropFirst("HKCU\\".count)
+        } else if registryPath.hasPrefix("HKLM\\") {
+            section = "HKEY_LOCAL_MACHINE\\" +
+                registryPath.dropFirst("HKLM\\".count)
+        } else {
+            throw SafeProcessRunnerError.unsafeCommandArgument(
+                "registryBatchPath"
+            )
+        }
+        return (section, valueName, valueType, value)
+    }
+
+    private func registryEscaped(_ value: String) -> String {
+        value
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+            .replacingOccurrences(of: "\r", with: "")
+            .replacingOccurrences(of: "\n", with: "")
     }
 
     private func overrideActions(
@@ -1007,15 +1438,28 @@ final class SteamClientCompatibilityProfile {
     }
 
     private func removeObsoleteSteamCompatibilityBackups(prefix: URL) throws {
-        let backups = prefix.appending(
-            path: "drive_c/ForgePlay/SteamCompatBackups",
-            directoryHint: .isDirectory
-        )
+        let backups = SteamClientCompatibilityProfileContract
+            .obsoleteSteamCompatibilityBackupsDirectory(in: prefix)
         guard fileManager.fileExists(atPath: backups.path) else { return }
         guard FileSystemItemPolicy.isNonSymlinkDirectory(backups, fileManager: fileManager) else {
             throw FileSystemItemPolicyError.notNonSymlinkDirectory(backups)
         }
-        try fileManager.removeItem(at: backups)
+        for backupDirectory in SteamClientCompatibilityProfileContract
+            .obsoleteSteamCompatibilityBackupDirectories(in: prefix)
+        where fileManager.fileExists(atPath: backupDirectory.path) {
+            guard FileSystemItemPolicy.isNonSymlinkDirectory(
+                backupDirectory,
+                fileManager: fileManager
+            ) else {
+                throw FileSystemItemPolicyError.notNonSymlinkDirectory(
+                    backupDirectory
+                )
+            }
+            try fileManager.removeItem(at: backupDirectory)
+        }
+        if (try fileManager.contentsOfDirectory(atPath: backups.path)).isEmpty {
+            try fileManager.removeItem(at: backups)
+        }
     }
 
     private func removeEmptySteamWebHelperOriginalDirectoryIfNeeded(_ directory: URL) throws {

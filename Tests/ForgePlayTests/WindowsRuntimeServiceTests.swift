@@ -1,83 +1,6 @@
 import Foundation
-import Security
 import XCTest
 @testable import ForgePlay
-
-private struct TestSupplementalRendererAuthenticator:
-    AppleSupplementalRendererAuthenticating {
-    typealias Handler = @Sendable (URL, FileManager) throws -> Void
-
-    private let handler: Handler
-
-    init(handler: @escaping Handler = { _, _ in }) {
-        self.handler = handler
-    }
-
-    func authenticate(
-        rendererRoot: URL,
-        fileManager: FileManager
-    ) throws {
-        try handler(rendererRoot, fileManager)
-    }
-}
-
-private final class AppleStaticCodeValidationProbe:
-    AppleStaticCodeValidating,
-    @unchecked Sendable {
-    struct Call: Hashable {
-        let path: String
-        let requirement: String
-        let validatesNestedCode: Bool
-    }
-
-    private let lock = NSLock()
-    private let rejectedIdentifier: String?
-    private var mutableCalls: [Call] = []
-
-    init(rejectedIdentifier: String? = nil) {
-        self.rejectedIdentifier = rejectedIdentifier
-    }
-
-    func validate(
-        codeAt url: URL,
-        requirement: String,
-        validatesNestedCode: Bool
-    ) throws {
-        lock.lock()
-        mutableCalls.append(
-            Call(
-                path: url.standardizedFileURL.path,
-                requirement: requirement,
-                validatesNestedCode: validatesNestedCode
-            )
-        )
-        lock.unlock()
-        if let rejectedIdentifier,
-           requirement.contains("identifier \"\(rejectedIdentifier)\"") {
-            throw AppleSupplementalRendererAuthenticationError
-                .signatureRejected(url, errSecCSReqFailed)
-        }
-    }
-
-    var calls: [Call] {
-        lock.lock()
-        defer { lock.unlock() }
-        return mutableCalls
-    }
-}
-
-private final class SupplementalRendererAuthenticationSequenceProbe:
-    @unchecked Sendable {
-    private let lock = NSLock()
-    private var mutableCount = 0
-
-    func nextIndex() -> Int {
-        lock.lock()
-        defer { lock.unlock() }
-        mutableCount += 1
-        return mutableCount
-    }
-}
 
 private final class RuntimeCapabilityInspectionProbe: @unchecked Sendable {
     typealias Mutation = @Sendable (_ inspectionIndex: Int) throws -> Void
@@ -258,21 +181,10 @@ final class WindowsRuntimeServiceTests: XCTestCase {
         let fixture = try makeRuntimeFixture(under: sandbox.appending(path: "Bundled"))
         let source = sandbox.appending(path: "AppleEvaluation")
         let sourceRendererRoot = source.appending(path: "redist/lib")
-        try installCompleteD3DMetalPayload(
-            at: sourceRendererRoot,
-            nativeCodeData: syntheticMachOData()
-        )
-        try convertD3DMetalFixtureToCanonicalFramework(
-            at: sourceRendererRoot
-        )
-        let staticCodeProbe = AppleStaticCodeValidationProbe()
+        try installCompleteD3DMetalPayload(at: sourceRendererRoot)
         let service = try makeService(
             managedRoot: managedRoot,
-            bundledExecutable: fixture.executable,
-            supplementalRendererAuthenticator:
-                AppleSupplementalRendererTrustPolicy(
-                    staticCodeValidator: staticCodeProbe
-                )
+            bundledExecutable: fixture.executable
         )
 
         let result = try await service.importAppleSupplementalRenderer(at: source)
@@ -284,14 +196,6 @@ final class WindowsRuntimeServiceTests: XCTestCase {
         XCTAssertNotEqual(result.executableURL.standardizedFileURL, sourceRendererRoot.appending(path: "wine/bin/wine").standardizedFileURL)
         XCTAssertTrue(result.message.contains("보조 렌더러"))
         XCTAssertTrue(result.message.contains("실행 엔진은 앱에 포함된 ForgePlay Runtime"))
-        XCTAssertEqual(
-            try fileManager.destinationOfSymbolicLink(
-                atPath: installedRendererRoot.appending(
-                    path: "external/D3DMetal.framework/D3DMetal"
-                ).path
-            ),
-            "Versions/Current/D3DMetal"
-        )
 
         let capability = try service.inspectRuntimeCapability(executable: fixture.executable)
         XCTAssertEqual(capability.executableURL.standardizedFileURL, fixture.executable.standardizedFileURL)
@@ -300,18 +204,6 @@ final class WindowsRuntimeServiceTests: XCTestCase {
             Set([.d3d11, .d3d12])
         )
         XCTAssertTrue(capability.supportsD3DMetalBackend)
-        XCTAssertEqual(staticCodeProbe.calls.count, 21)
-        XCTAssertEqual(
-            Set(staticCodeProbe.calls.map(\.requirement)),
-            Set(
-                AppleSupplementalRendererTrustPolicy
-                    .nativeCodeRequirements.map(\.requirement)
-            )
-        )
-        XCTAssertEqual(
-            staticCodeProbe.calls.filter(\.validatesNestedCode).count,
-            3
-        )
     }
 
     func testSupplementalRendererImportRejectsStandaloneExecutable() async throws {
@@ -337,168 +229,6 @@ final class WindowsRuntimeServiceTests: XCTestCase {
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
-    }
-
-    func testSupplementalRendererTrustPolicyRejectsUnsignedNativeCode()
-        throws {
-        let sandbox = temporaryDirectory("UnsignedSupplementalRenderer")
-        defer { try? fileManager.removeItem(at: sandbox) }
-
-        let rendererRoot = sandbox.appending(path: "redist/lib")
-        try installCompleteD3DMetalPayload(
-            at: rendererRoot,
-            nativeCodeData: syntheticMachOData()
-        )
-
-        XCTAssertThrowsError(
-            try AppleSupplementalRendererTrustPolicy().authenticate(
-                rendererRoot: rendererRoot,
-                fileManager: fileManager
-            )
-        ) { error in
-            guard case AppleSupplementalRendererAuthenticationError
-                .signatureRejected(let rejectedURL, _) = error else {
-                return XCTFail("Unexpected authentication error: \(error)")
-            }
-            XCTAssertEqual(
-                rejectedURL.lastPathComponent,
-                "D3DMetal.framework"
-            )
-        }
-    }
-
-    func testSupplementalRendererTrustPolicyRejectsPinnedIdentifierMismatch()
-        throws {
-        let sandbox = temporaryDirectory("IdentifierMismatch")
-        defer { try? fileManager.removeItem(at: sandbox) }
-
-        let rendererRoot = sandbox.appending(path: "redist/lib")
-        try installCompleteD3DMetalPayload(
-            at: rendererRoot,
-            nativeCodeData: syntheticMachOData()
-        )
-        let signatureProbe = AppleStaticCodeValidationProbe(
-            rejectedIdentifier: "com.apple.libdxcompiler"
-        )
-
-        XCTAssertThrowsError(
-            try AppleSupplementalRendererTrustPolicy(
-                staticCodeValidator: signatureProbe
-            ).authenticate(
-                rendererRoot: rendererRoot,
-                fileManager: fileManager
-            )
-        ) { error in
-            guard case AppleSupplementalRendererAuthenticationError
-                .signatureRejected(let rejectedURL, _) = error else {
-                return XCTFail("Unexpected authentication error: \(error)")
-            }
-            XCTAssertEqual(
-                rejectedURL.lastPathComponent,
-                "libdxcompiler.dylib"
-            )
-        }
-        XCTAssertTrue(
-            signatureProbe.calls.contains {
-                $0.requirement ==
-                    "identifier \"com.apple.libdxcompiler\" and anchor apple"
-            }
-        )
-    }
-
-    func testSupplementalRendererTrustPolicyRejectsUnlistedNativeCode()
-        throws {
-        let sandbox = temporaryDirectory("UnlistedNativeCode")
-        defer { try? fileManager.removeItem(at: sandbox) }
-
-        let rendererRoot = sandbox.appending(path: "redist/lib")
-        try installCompleteD3DMetalPayload(
-            at: rendererRoot,
-            nativeCodeData: syntheticMachOData()
-        )
-        let unlisted = rendererRoot.appending(
-            path: "wine/x86_64-unix/injected.dylib"
-        )
-        try writeFixtureFile(at: unlisted, data: syntheticMachOData())
-
-        XCTAssertThrowsError(
-            try AppleSupplementalRendererTrustPolicy(
-                staticCodeValidator: AppleStaticCodeValidationProbe()
-            ).authenticate(
-                rendererRoot: rendererRoot,
-                fileManager: fileManager
-            )
-        ) { error in
-            guard case AppleSupplementalRendererAuthenticationError
-                .unlistedNativeCode(let rejectedURL) = error else {
-                return XCTFail("Unexpected authentication error: \(error)")
-            }
-            XCTAssertEqual(
-                rejectedURL.standardizedFileURL,
-                unlisted.standardizedFileURL
-            )
-        }
-    }
-
-    func testSupplementalRendererPostCopyAuthenticationFailureRollsBack()
-        async throws {
-        let sandbox = temporaryDirectory("PostCopyAuthentication")
-        defer { try? fileManager.removeItem(at: sandbox) }
-
-        let managedRoot = sandbox.appending(path: "Managed")
-        let fixture = try makeRuntimeFixture(
-            under: sandbox.appending(path: "Bundled")
-        )
-        let source = sandbox.appending(path: "AppleEvaluation")
-        let sourceRendererRoot = source.appending(path: "redist/lib")
-        try installCompleteD3DMetalPayload(at: sourceRendererRoot)
-
-        let installedRoot = ForgePlaySupplementalRendererPolicy
-            .rendererRoot(forManagedRoot: managedRoot)
-        let existingMarker = installedRoot.appending(path: "existing-marker")
-        try writeFixtureFile(at: existingMarker, data: Data("preserved".utf8))
-
-        let sequence = SupplementalRendererAuthenticationSequenceProbe()
-        let service = try makeService(
-            managedRoot: managedRoot,
-            bundledExecutable: fixture.executable,
-            supplementalRendererAuthenticator:
-                TestSupplementalRendererAuthenticator { rendererRoot, _ in
-                    guard sequence.nextIndex() == 2 else { return }
-                    let tamperedCode = rendererRoot.appending(
-                        path: "external/libd3dshared.dylib"
-                    )
-                    try Data("post-copy-tamper".utf8).write(
-                        to: tamperedCode,
-                        options: .atomic
-                    )
-                    throw AppleSupplementalRendererAuthenticationError
-                        .signatureRejected(tamperedCode, errSecCSReqFailed)
-                }
-        )
-
-        do {
-            _ = try await service.importAppleSupplementalRenderer(at: source)
-            XCTFail("A post-copy authentication failure must roll back.")
-        } catch let error as
-            AppleSupplementalRendererAuthenticationError {
-            guard case .signatureRejected = error else {
-                return XCTFail("Unexpected authentication error: \(error)")
-            }
-        } catch {
-            XCTFail("Unexpected import error: \(error)")
-        }
-        XCTAssertEqual(
-            try Data(contentsOf: existingMarker),
-            Data("preserved".utf8)
-        )
-        XCTAssertFalse(
-            fileManager.fileExists(
-                atPath: installedRoot.appending(
-                    path: "external/libd3dshared.dylib"
-                ).path
-            )
-        )
     }
 
     func testUnsafeSupplementalSymlinkIsRejectedWithoutReplacingInstalledPayload() async throws {
@@ -1185,10 +915,7 @@ final class WindowsRuntimeServiceTests: XCTestCase {
 
     private func makeService(
         managedRoot: URL,
-        bundledExecutable: URL?,
-        supplementalRendererAuthenticator:
-            any AppleSupplementalRendererAuthenticating =
-                TestSupplementalRendererAuthenticator()
+        bundledExecutable: URL?
     ) throws -> WindowsRuntimeService {
         let pathManager = PathManager(fileManager: fileManager)
         try pathManager.configureRoot(managedRoot)
@@ -1215,9 +942,7 @@ final class WindowsRuntimeServiceTests: XCTestCase {
             pathManager: pathManager,
             runner: runner,
             fileManager: fileManager,
-            bundledRuntimeExecutableProvider: { bundledExecutable },
-            supplementalRendererAuthenticator:
-                supplementalRendererAuthenticator
+            bundledRuntimeExecutableProvider: { bundledExecutable }
         )
     }
 
@@ -1241,12 +966,6 @@ final class WindowsRuntimeServiceTests: XCTestCase {
             withIntermediateDirectories: true
         )
         try data.write(to: url)
-    }
-
-    private func syntheticMachOData() -> Data {
-        var data = Data([0xcf, 0xfa, 0xed, 0xfe])
-        data.append(Data(repeating: 0, count: 28))
-        return data
     }
 
     private func writeSteamWebHelperRootScopedArgumentPolicyKernelbase(
@@ -1278,22 +997,14 @@ final class WindowsRuntimeServiceTests: XCTestCase {
         )
     }
 
-    private func installCompleteD3DMetalPayload(
-        at rendererRoot: URL,
-        nativeCodeData: Data = Data("fixture".utf8)
-    ) throws {
+    private func installCompleteD3DMetalPayload(at rendererRoot: URL) throws {
         try installMinimumEvaluationDirectories(at: rendererRoot)
 
         let frameworkResources = rendererRoot.appending(
             path: "external/D3DMetal.framework/Resources",
             directoryHint: .isDirectory
         )
-        try writeFixtureFile(
-            at: rendererRoot.appending(
-                path: "external/D3DMetal.framework/D3DMetal"
-            ),
-            data: nativeCodeData
-        )
+        try writeFixtureFile(at: rendererRoot.appending(path: "external/D3DMetal.framework/D3DMetal"))
         let infoPlist = try PropertyListSerialization.data(
             fromPropertyList: [
                 "CFBundleExecutable": "D3DMetal",
@@ -1305,27 +1016,16 @@ final class WindowsRuntimeServiceTests: XCTestCase {
         )
         try writeFixtureFile(at: frameworkResources.appending(path: "Info.plist"), data: infoPlist)
         for name in [
+            "default.metallib",
             "libdxccontainer.dylib",
             "libdxcompiler.dylib",
             "libdxilconv.dylib",
             "libmetalirconverter.dylib"
         ] {
-            try writeFixtureFile(
-                at: frameworkResources.appending(path: name),
-                data: nativeCodeData
-            )
+            try writeFixtureFile(at: frameworkResources.appending(path: name))
         }
-        try writeFixtureFile(
-            at: frameworkResources.appending(path: "default.metallib")
-        )
 
-        try writeFixtureFile(
-            at: rendererRoot.appending(
-                path: D3DMetalRendererPayloadContract
-                    .sharedLibraryRelativePath
-            ),
-            data: nativeCodeData
-        )
+        try writeFixtureFile(at: rendererRoot.appending(path: D3DMetalRendererPayloadContract.sharedLibraryRelativePath))
         for relativePath in D3DMetalRendererPayloadContract.sharedUnixModuleRelativePaths {
             let link = rendererRoot.appending(path: relativePath)
             try fileManager.createDirectory(

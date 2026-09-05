@@ -108,6 +108,26 @@ license assignment to a root launcher.
 
 ## Other ForgePlay-authored material
 
+### ForgePlay Frame Generation (1.2)
+
+The independent frame-generation implementation is expressly designated
+`GPL-3.0-only` in
+`LICENSES/ForgePlayFrameGeneration/FRAME_GENERATION_LICENSE_SCOPE.md`.
+The adjacent path-and-hash file manifest assigns dedicated implementation,
+configuration and test files; the symbol manifest identifies frame-generation
+responsibilities in mixed Swift and build files. These external notices
+preserve the implementation bytes of `1.2_Release`.
+
+The Wine-derived `wine-11.12-metal-window-surface-contract.patch` and
+`wine-11.12-steam-session-compatibility-controls.patch` are separately retained
+LGPL integration inputs. Running the ForgePlay proxy in a Wine process does
+not assign Wine's source license to the independently authored proxy. This
+source-scope distinction does not waive obligations for a combined program.
+
+Apple's D3DMetal and platform frameworks are not covered by this GPL grant.
+
+### Other source responsibilities
+
 Publishing a file in this source tree does not by itself apply the Game Mode
 GPL designation to the entire file or repository. Other ForgePlay-authored
 material follows only the license expressly assigned to it by `LICENSE.md`, a

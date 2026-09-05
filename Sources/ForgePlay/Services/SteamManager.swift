@@ -480,6 +480,11 @@ final class GameInputProtectionContainmentProcessEvidence {
 
 @MainActor
 final class SteamManager {
+    struct ForcedTerminationCompatibilityDeferral {
+        var blockingErrors: [String] = []
+        var diagnosticWarnings: [String] = []
+    }
+
     typealias CompatibilityPrefixExitWaiter = @Sendable (
         _ prefix: URL,
         _ timeout: TimeInterval,
@@ -497,7 +502,6 @@ final class SteamManager {
     ) -> SteamLaunchProcessSnapshot
     typealias GameInputProtectionDriverFactory = @MainActor () ->
         any GameInputProtectionDriving
-    typealias GameModeHostLaunchAdmission = () throws -> Void
     typealias SteamClientServicePreparer = @MainActor (
         _ runtimeExecutable: URL,
         _ prefix: URL,
@@ -575,6 +579,37 @@ final class SteamManager {
     private nonisolated static let steamUIStartupObservationPollInterval: TimeInterval = 0.25
     private nonisolated static let steamUIProvisionalSurfaceStabilizationInterval: TimeInterval = 3
     nonisolated static let defaultSteamLaunchArguments = SteamClientCompatibilityProfile.defaultLaunchArguments
+    nonisolated static let operationalFontLocaleFallbackWarning =
+        "Windows font locale/baseline compatibility was not converged; this " +
+        "scoped fallback did not change the selected Steam UI language, set " +
+        "the Wine child POSIX locale to en_US.UTF-8 for this launch, and " +
+        "Steam launch continued."
+
+    nonisolated static func isWindowsFontLocaleBaselineCollision(
+        _ error: Error
+    ) -> Bool {
+        if let fontError = error as? WindowsFontCompatibilityProfileError,
+           case .collision = fontError {
+            return true
+        }
+        if let lifecycleError = error as? SteamPrefixLifecycleCleanupError,
+           let originalError = lifecycleError.originalError {
+            return isWindowsFontLocaleBaselineCollision(originalError)
+        }
+        return false
+    }
+
+    nonisolated static func requiresPriorNVIDIARestoration(
+        requestedSelection: SteamRendererPolicySelection,
+        hasRecoverableModuleResidue: Bool,
+        hasRecoverableRegistryResidue: Bool,
+        hasActiveSession: Bool
+    ) -> Bool {
+        requestedSelection.usesD3DMetalNVIDIACompatibility ||
+            hasRecoverableModuleResidue ||
+            hasRecoverableRegistryResidue ||
+            hasActiveSession
+    }
 
     nonisolated static func shouldDeferSteamUIVerification(
         bootstrapUpdateInProgress: Bool,
@@ -625,7 +660,6 @@ final class SteamManager {
     private let gameInputProtectionDriverFactory:
         GameInputProtectionDriverFactory
     private let gameInputProtectionPolicyStore: GameInputProtectionPolicyStore
-    private let gameModeHostLaunchAdmission: GameModeHostLaunchAdmission
     private let steamClientServicePreparationOverride:
         SteamClientServicePreparer?
     private var gameLaunchDiagnosticMonitorTask: Task<Void, Never>?
@@ -678,11 +712,7 @@ final class SteamManager {
         screenEvidenceProvider: ((ProcessRunResult) -> SteamLaunchScreenEvidence)? = nil,
         gameInputProtectionPolicyStore: GameInputProtectionPolicyStore =
             GameInputProtectionPolicyStore(),
-        steamClientServicePreparer: SteamClientServicePreparer? = nil,
-        gameModeHostLaunchAdmission: @escaping GameModeHostLaunchAdmission = {
-            _ = try GameModeHostCapabilityInspector()
-                .inspectBundledHostForSteamLaunchAdmission()
-        }
+        steamClientServicePreparer: SteamClientServicePreparer? = nil
     ) {
         self.pathManager = pathManager
         self.runner = runner
@@ -730,7 +760,6 @@ final class SteamManager {
         self.gameInputProtectionPolicyStore = gameInputProtectionPolicyStore
         self.steamClientServicePreparationOverride =
             steamClientServicePreparer
-        self.gameModeHostLaunchAdmission = gameModeHostLaunchAdmission
         self.rendererPolicyManager = SteamRendererPolicyManager(fileManager: fileManager)
         self.windowsFontCompatibilityProfile = WindowsFontCompatibilityProfile(
             runner: runner,
@@ -770,11 +799,20 @@ final class SteamManager {
     }
 
     /// Stops admission synchronously before the termination coordinator waits
-    /// on any other owner. Existing workers are cancelled but remain the owner
-    /// of their claim cleanup until the bounded drain observes both registries
-    /// empty.
+    /// on any other owner. Existing workers and every session monitor are
+    /// cancelled before process cleanup can inspect prefix activity. In
+    /// particular, a restoration monitor must not observe a just-force-killed
+    /// prefix and start a Wine registry process while application termination
+    /// is deciding whether Steam needs a graceful shutdown.
     func beginApplicationTerminationInputContainmentDrain() {
         isApplicationTerminationContainmentDrainActive = true
+        gameLaunchDiagnosticMonitorKey = nil
+        gameLaunchDiagnosticMonitorTask?.cancel()
+        gameLaunchDiagnosticMonitorTask = nil
+        cancelSteamLanguageUserControlMonitor()
+        for monitor in inputCompatibilityTerminationMonitors.values {
+            monitor.task.cancel()
+        }
         for task in gameInputProtectionTerminalContainmentTasks.values {
             task.cancel()
         }
@@ -788,8 +826,12 @@ final class SteamManager {
         timeout: TimeInterval = 10
     ) async -> Bool {
         let deadline = Date().addingTimeInterval(max(timeout, 0))
-        while !gameInputProtectionTerminalContainmentTasks.isEmpty ||
+        while !inputCompatibilityTerminationMonitors.isEmpty ||
+                !gameInputProtectionTerminalContainmentTasks.isEmpty ||
                 !gameInputProtectionContainmentClaims.isEmpty {
+            for monitor in inputCompatibilityTerminationMonitors.values {
+                monitor.task.cancel()
+            }
             for task in gameInputProtectionTerminalContainmentTasks.values {
                 task.cancel()
             }
@@ -804,13 +846,95 @@ final class SteamManager {
     }
 
     var canCancelApplicationTerminationContainmentDrain: Bool {
-        gameInputProtectionTerminalContainmentTasks.isEmpty &&
+        inputCompatibilityTerminationMonitors.isEmpty &&
+            gameInputProtectionTerminalContainmentTasks.isEmpty &&
             gameInputProtectionContainmentClaims.isEmpty
     }
 
-    func cancelApplicationTerminationContainmentDrain() {
+    func cancelApplicationTerminationContainmentDrain(
+        rearmRestorationMonitors: Bool = true
+    ) {
         guard canCancelApplicationTerminationContainmentDrain else { return }
         isApplicationTerminationContainmentDrainActive = false
+        guard rearmRestorationMonitors else { return }
+        for key in Set(
+            Array(activeInputCompatibilitySessions.keys) +
+                Array(activeControllerCompatibilitySessions.keys) +
+                Array(activeNVIDIARendererSessions.keys)
+        ) where inputCompatibilityTerminationMonitors[key] == nil {
+            if activeCompatibilityRestorationPrefixLeases[key] != nil {
+                startCompatibilityRestorationMonitor(
+                    prefix: URL(fileURLWithPath: key, isDirectory: true),
+                    prefixKey: key
+                )
+            } else if activeInputCompatibilitySessions[key] != nil,
+                      activeControllerCompatibilitySessions[key] == nil,
+                      activeNVIDIARendererSessions[key] == nil {
+                startInputOnlyCompatibilityRestorationMonitor(
+                    prefix: URL(fileURLWithPath: key, isDirectory: true),
+                    prefixKey: key
+                )
+            }
+        }
+    }
+
+    /// A successful emergency force stop already established the stronger
+    /// process postcondition that no ForgePlay Wine child remains. Restore only
+    /// host-owned input state here. Keep NVIDIA registry/module ownership and
+    /// its prefix lease in memory, but leave its automatic monitor stopped; the
+    /// retained provider or the next explicit prelaunch mutation restores the
+    /// durable marker without restarting Wine during force termination.
+    func deferRetainedCompatibilityRestorationAfterForcedWineTermination()
+        -> ForcedTerminationCompatibilityDeferral
+    {
+        guard isApplicationTerminationContainmentDrainActive,
+              inputCompatibilityTerminationMonitors.isEmpty,
+              gameInputProtectionTerminalContainmentTasks.isEmpty,
+              gameInputProtectionContainmentClaims.isEmpty,
+              compatibilityRestorationClaims.isEmpty else {
+            return ForcedTerminationCompatibilityDeferral(
+                blockingErrors: [
+                    "Steam compatibility lifecycle work did not drain before force termination"
+                ]
+            )
+        }
+
+        var restoredInputKeys: [String] = []
+        var diagnosticWarnings: [String] = []
+        for (key, session) in activeInputCompatibilitySessions {
+            if session.restore() {
+                restoredInputKeys.append(key)
+            } else {
+                diagnosticWarnings.append(
+                    "host input compatibility restoration failed for \(key); " +
+                        "the retained session will retry on the next explicit launch"
+                )
+            }
+        }
+        for key in restoredInputKeys {
+            activeInputCompatibilitySessions.removeValue(forKey: key)
+        }
+        for session in activeControllerCompatibilitySessions.values {
+            session.restore()
+        }
+        activeControllerCompatibilitySessions.removeAll(keepingCapacity: false)
+
+        let fullyRestoredKeys = activeCompatibilityRestorationPrefixLeases.keys
+            .filter {
+                activeInputCompatibilitySessions[$0] == nil &&
+                    activeControllerCompatibilitySessions[$0] == nil &&
+                    activeNVIDIARendererSessions[$0] == nil
+            }
+        for key in fullyRestoredKeys {
+            if let lease = activeCompatibilityRestorationPrefixLeases
+                .removeValue(forKey: key) {
+                lease.release()
+            }
+            compatibilitySessionRestorationFailures.removeValue(forKey: key)
+        }
+        return ForcedTerminationCompatibilityDeferral(
+            diagnosticWarnings: diagnosticWarnings
+        )
     }
 
     func validateSteamInstaller(_ url: URL) -> Bool {
@@ -1039,7 +1163,10 @@ final class SteamManager {
         case .running, .runningHeadless:
             15
         case .earlyExit, .exitedWithError, .exited, .rendererError:
-            nil
+            // A Steam session can launch another game after one terminal
+            // attempt. Keep the service-owned monitor alive until the managed
+            // prefix itself becomes inactive so later attempts are captured.
+            15
         case nil:
             15
         }
@@ -1147,55 +1274,103 @@ final class SteamManager {
     ) async throws -> Bool {
         let prefix = try steamPrefixURL(for: runtimeExecutable)
         let logDirectory = try pathManager.url(for: .installLogs)
-        _ = try await prefixProcessSupervisor.shutdownBeforeLaunch(
-            runtimeExecutable: runtimeExecutable,
-            prefix: prefix,
-            logDirectory: logDirectory
-        )
-        let languageLease: SteamClientLanguageOwnershipLease?
-        if let language {
-            languageLease = try await steamClientLanguageOwnershipPolicy
-                .resumeFreshInstallation(
-                    runtimeExecutable: runtimeExecutable,
-                    prefix: prefix,
-                    logDirectory: logDirectory,
-                    language: language
-                )
-        } else {
-            languageLease = nil
-        }
-        try await prepareSteamClientServiceForLaunch(
-            runtimeExecutable: runtimeExecutable,
-            prefix: prefix,
-            logDirectory: logDirectory
-        )
-        try await applySteamClientCompatibilityProfile(
-            runtimeExecutable: runtimeExecutable,
-            prefix: prefix,
-            videoMemorySizeMB: videoMemorySizeMB
-        )
-        try await restoreSteamRendererBridgeModules(
-            prefix: prefix,
-            runtimeExecutable: runtimeExecutable,
-            logDirectory: logDirectory
-        )
-        if let languageLease {
-            _ = try await steamClientLanguageOwnershipPolicy.reaffirm(
-                languageLease,
+        var preparationError: Error?
+        var failedPreparationResult: ProcessRunResult?
+        do {
+            _ = try await prefixProcessSupervisor.shutdownBeforeLaunch(
                 runtimeExecutable: runtimeExecutable,
                 prefix: prefix,
                 logDirectory: logDirectory
             )
+            let languageLease: SteamClientLanguageOwnershipLease?
+            if let language {
+                languageLease = try await steamClientLanguageOwnershipPolicy
+                    .resumeFreshInstallation(
+                        runtimeExecutable: runtimeExecutable,
+                        prefix: prefix,
+                        logDirectory: logDirectory,
+                        language: language
+                    )
+            } else {
+                languageLease = nil
+            }
+            try await prepareSteamClientServiceForLaunch(
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix,
+                logDirectory: logDirectory
+            )
+            try await applySteamClientCompatibilityProfile(
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix,
+                videoMemorySizeMB: videoMemorySizeMB
+            )
+            try await restoreSteamRendererBridgeModules(
+                prefix: prefix,
+                runtimeExecutable: runtimeExecutable,
+                logDirectory: logDirectory
+            )
+            if let languageLease {
+                _ = try await steamClientLanguageOwnershipPolicy.reaffirm(
+                    languageLease,
+                    runtimeExecutable: runtimeExecutable,
+                    prefix: prefix,
+                    logDirectory: logDirectory
+                )
+            }
+            _ = try await reconcileWindowsFontCompatibilityProfile(
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix,
+                steamClientLanguage: language
+            )
+        } catch {
+            preparationError = error
+            failedPreparationResult = diagnosticProcessRunResult(from: error)
         }
-        _ = try await reconcileWindowsFontCompatibilityProfile(
-            runtimeExecutable: runtimeExecutable,
-            prefix: prefix
-        )
-        _ = try await prefixProcessSupervisor.shutdownBeforeLaunch(
-            runtimeExecutable: runtimeExecutable,
-            prefix: prefix,
-            logDirectory: logDirectory
-        )
+
+        let processSupervisor = prefixProcessSupervisor
+        let cleanup = await Task.detached {
+            await processSupervisor.shutdownAfterFailure(
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix,
+                logDirectory: logDirectory
+            )
+        }.value
+        let cleanupError: Error?
+        if let error = cleanup.error {
+            cleanupError = error
+        } else if let result = cleanup.result,
+                  result.succeeded,
+                  result.postconditionSatisfied == true {
+            cleanupError = nil
+        } else if let result = cleanup.result {
+            cleanupError = SteamLaunchError.prefixShutdownFailed(result)
+        } else {
+            cleanupError = SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                "first-launch-cleanup-missing-result"
+            )
+        }
+        let cleanupResults = cleanup.result.map { [$0] } ?? []
+        if let preparationError {
+            throw SteamPrefixLifecycleCleanupError(
+                originalDescription:
+                    forgePlayTechnicalErrorSummary(preparationError),
+                cleanupDescription: cleanupError.map {
+                    forgePlayTechnicalErrorSummary($0)
+                } ?? "managed prefix shutdown and inactivity verified",
+                originalError: preparationError,
+                cleanupError: cleanupError,
+                originalProcessResult: failedPreparationResult,
+                cleanupProcessResults: cleanupResults
+            )
+        }
+        if let cleanupError {
+            throw SteamPrefixLifecycleCleanupError(
+                originalDescription: "Steam first-launch preparation completed",
+                cleanupDescription: forgePlayTechnicalErrorSummary(cleanupError),
+                cleanupError: cleanupError,
+                cleanupProcessResults: cleanupResults
+            )
+        }
         return true
     }
 
@@ -1243,48 +1418,187 @@ final class SteamManager {
             )
         }
 
-        let installResult = try await runner.run(.maintainSteamClientService(
-            runtimeExecutable: runtimeExecutable,
-            prefix: prefix,
-            operation: .install,
-            logDirectory: logDirectory
-        ))
-        guard installResult.succeeded else {
-            throw SteamLaunchError.steamClientCompatibilitySetupFailed(
-                installResult
+        var mutationError: Error?
+        var failedMutationResult: ProcessRunResult?
+        do {
+            let installResult = try await runner.run(
+                .maintainSteamClientService(
+                    runtimeExecutable: runtimeExecutable,
+                    prefix: prefix,
+                    operation: .install,
+                    logDirectory: logDirectory
+                )
+            )
+            if !installResult.succeeded {
+                failedMutationResult = installResult
+                mutationError = SteamLaunchError
+                    .steamClientCompatibilitySetupFailed(installResult)
+            }
+
+            if mutationError == nil {
+                let queryResult = try await runner.run(
+                    .maintainSteamClientService(
+                        runtimeExecutable: runtimeExecutable,
+                        prefix: prefix,
+                        operation: .query,
+                        logDirectory: logDirectory
+                    )
+                )
+                if !queryResult.succeeded {
+                    failedMutationResult = queryResult
+                    mutationError = SteamLaunchError
+                        .steamClientCompatibilitySetupFailed(queryResult)
+                }
+            }
+
+            if mutationError == nil {
+                let flushResult = try await runner.run(.waitForWinePrefix(
+                    runtimeExecutable: runtimeExecutable,
+                    prefix: prefix,
+                    logDirectory: logDirectory
+                ))
+                if !flushResult.succeeded {
+                    failedMutationResult = flushResult
+                    mutationError = SteamLaunchError
+                        .steamClientCompatibilitySetupFailed(flushResult)
+                }
+            }
+        } catch {
+            mutationError = error
+            failedMutationResult = diagnosticProcessRunResult(from: error)
+        }
+
+        // Every Wine-backed service mutation owns one transaction. Cleanup is
+        // detached from caller cancellation so a thrown/cancelled action cannot
+        // strand the managed session or its active ownership descriptor.
+        let processSupervisor = prefixProcessSupervisor
+        let cleanup = await Task.detached {
+            await processSupervisor.shutdownAfterFailure(
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix,
+                logDirectory: logDirectory
+            )
+        }.value
+        var cleanupError = cleanup.error
+        if cleanupError == nil {
+            if let cleanupResult = cleanup.result {
+                if !cleanupResult.succeeded ||
+                    cleanupResult.postconditionSatisfied != true {
+                    cleanupError = SteamLaunchError.prefixShutdownFailed(
+                        cleanupResult
+                    )
+                }
+            } else {
+                cleanupError = SteamCompatibilityLaunchProfileErrorV1
+                    .invalidReceipt(
+                        "steam-client-service-shutdown-missing-result"
+                    )
+            }
+        }
+        if cleanupError == nil {
+            do {
+                let processRunner = runner
+                try await Task.detached {
+                    try await processRunner
+                        .requirePrefixReplacementQuiescence(prefix)
+                }.value
+            } catch {
+                cleanupError = error
+            }
+        }
+
+        let cleanupResults = cleanup.result.map { [$0] } ?? []
+        if let mutationError {
+            throw SteamPrefixLifecycleCleanupError(
+                originalDescription:
+                    forgePlayTechnicalErrorSummary(mutationError),
+                cleanupDescription: cleanupError.map {
+                    forgePlayTechnicalErrorSummary($0)
+                } ?? "managed prefix shutdown and inactivity verified",
+                originalError: mutationError,
+                cleanupError: cleanupError,
+                originalProcessResult: failedMutationResult,
+                cleanupProcessResults: cleanupResults
             )
         }
-        let queryResult = try await runner.run(.maintainSteamClientService(
-            runtimeExecutable: runtimeExecutable,
-            prefix: prefix,
-            operation: .query,
-            logDirectory: logDirectory
-        ))
-        guard queryResult.succeeded else {
-            throw SteamLaunchError.steamClientCompatibilitySetupFailed(
-                queryResult
-            )
-        }
-        let flushResult = try await runner.run(.waitForWinePrefix(
-            runtimeExecutable: runtimeExecutable,
-            prefix: prefix,
-            logDirectory: logDirectory
-        ))
-        guard flushResult.succeeded else {
-            throw SteamLaunchError.steamClientCompatibilitySetupFailed(
-                flushResult
+        if let cleanupError {
+            throw SteamPrefixLifecycleCleanupError(
+                originalDescription:
+                    "Steam client service mutation completed",
+                cleanupDescription:
+                    forgePlayTechnicalErrorSummary(cleanupError),
+                cleanupError: cleanupError,
+                cleanupProcessResults: cleanupResults
             )
         }
 
+        // Service state is authoritative only after the transaction's Wine
+        // processes and managed ownership records have been retired.
         let finalInspection = SteamClientServiceContract.inspect(
             prefix: prefix,
             fileManager: fileManager
         )
         guard finalInspection.isReady else {
-            throw SteamLaunchError.steamClientCompatibilityVerificationFailed(
-                finalInspection.failureDetail
+            let verificationError = SteamLaunchError
+                .steamClientCompatibilityVerificationFailed(
+                    finalInspection.failureDetail
+                )
+            throw SteamPrefixLifecycleCleanupError(
+                originalDescription:
+                    forgePlayTechnicalErrorSummary(verificationError),
+                cleanupDescription:
+                    "managed prefix shutdown and inactivity verified",
+                originalError: verificationError,
+                cleanupProcessResults: cleanupResults
             )
         }
+    }
+
+    /// Retires a stopped session's in-memory owner before the next explicit
+    /// launch acquires fresh prefix mutation ownership. Durable NVIDIA markers
+    /// stay owned by the existing prelaunch restoration path.
+    func acquirePrefixMutationLeaseForLaunch(
+        prefix: URL
+    ) async throws -> PrefixExecutionLease {
+        let key = prefix.standardizedFileURL.path
+        if activeCompatibilityRestorationPrefixLeases[key] != nil {
+            // Force stop leaves the previous NVIDIA owner inert so cleanup
+            // cannot restart Wine. On an explicit relaunch, retire that owner
+            // using its existing descriptor before opening another exclusive
+            // lock: a second descriptor conflicts with our own shared lease.
+            await quiesceCompatibilityRestorationMonitor(forPrefixKey: key)
+            try Task.checkCancellation()
+            try await requireManagedPrefixInactivityBeforeRendererRestoration(
+                prefix
+            )
+            try Task.checkCancellation()
+            if let retainedLease = activeCompatibilityRestorationPrefixLeases[key] {
+                try retainedLease.prepareForMutation()
+                if let session = activeInputCompatibilitySessions
+                    .removeValue(forKey: key), !session.restore() {
+                    NSLog(
+                        "ForgePlay stopped-session host input restoration warning " +
+                            "for %@; continuing explicit launch",
+                        key
+                    )
+                }
+                activeControllerCompatibilitySessions
+                    .removeValue(forKey: key)?.restore()
+                // Registry/module restoration can run Wine and can fail for
+                // optional NVIDIA state. Keep its durable marker untouched so
+                // ordinary preflight performs it with its diagnostic policy.
+                activeNVIDIARendererSessions.removeValue(forKey: key)
+                activeCompatibilityRestorationPrefixLeases
+                    .removeValue(forKey: key)
+                retainedLease.release()
+            }
+            compatibilitySessionRestorationFailures.removeValue(forKey: key)
+        }
+        try Task.checkCancellation()
+        return try PrefixExecutionLease.acquireExclusiveMutation(
+            forPrefix: prefix,
+            fileManager: fileManager
+        )
     }
 
     /// Direct-call boundary that owns the prefix lease for the entire launch
@@ -1304,15 +1618,10 @@ final class SteamManager {
         libraryRoots: [URL] = [],
         reservedLibraryRoots: [URL] = []
     ) async throws -> ProcessRunResult {
-        // The direct boundary checks before acquiring a prefix lease because
-        // lease preparation itself creates coordination state.
-        try requireGameModeHostLaunchAdmission(for: gameModePolicy)
         let prefix = try steamPrefixURL(for: runtimeExecutable)
-        let prefixExecutionLease = try PrefixExecutionLease
-            .acquireExclusiveMutation(
-                forPrefix: prefix,
-                fileManager: fileManager
-            )
+        let prefixExecutionLease = try await acquirePrefixMutationLeaseForLaunch(
+            prefix: prefix
+        )
         let restorationLease = SteamCompatibilityRestorationPrefixLease(
             prepareForMutation: {
                 try prefixExecutionLease.transitionToExclusiveMutation()
@@ -1365,10 +1674,6 @@ final class SteamManager {
         reservedLibraryRoots: [URL] = [],
         prefixExecutionLeaseTransition: SteamPrefixExecutionLeaseTransition
     ) async throws -> ProcessRunResult {
-        // Recheck at the lease-aware boundary. Besides covering orchestrators
-        // that already own a lease, this closes the host-artifact TOCTOU window
-        // before any compatibility profile or renderer staging begins.
-        try requireGameModeHostLaunchAdmission(for: gameModePolicy)
         do {
             let result = try await launchSteamUnfinalized(
                 runtimeExecutable: runtimeExecutable,
@@ -1411,13 +1716,6 @@ final class SteamManager {
                 result: primaryResult
             )
         }
-    }
-
-    private func requireGameModeHostLaunchAdmission(
-        for policy: SteamGameModeLaunchPolicy
-    ) throws {
-        guard policy == .experimentalRequiredHost else { return }
-        try gameModeHostLaunchAdmission()
     }
 
     /// Runs a user-selected Windows maintenance utility in the existing
@@ -1719,32 +2017,97 @@ final class SteamManager {
                 fileManager: fileManager
             )
         let steamCompatibility = steamClientCompatibilityVerifier.verify(capability: capability)
-        let steamRendererPolicy = try rendererPolicyManager.resolvedPolicy(
-            requestedRendererPolicy,
-            capability: capability
-        )
-        let launchCompatibilitySelection =
+        var launchAdmissionWarnings: [String] = []
+        var launchCompatibilitySelection =
             requestedCompatibilitySelection ??
             SteamPrelaunchCompatibilitySelection(
-                rendererSelection: SteamRendererPolicyManager.selection(
-                    for: steamRendererPolicy
-                ),
+                rendererSelection: SteamRendererPolicyManager.selection(for:
+                    requestedRendererPolicy ?? .d3dMetal),
                 networkSelection: .standard,
                 audioInputSelection: .enabled,
                 keyboardMapping: .systemDefault
             )
-        guard launchCompatibilitySelection.rendererPreference ==
-                steamRendererPolicy else {
-            throw SteamLaunchError.rendererPolicyUnavailable(
-                "선택한 그래픽 백엔드와 Steam 실행 호환성 설정이 일치하지 않습니다."
+        if verificationMode == .operational,
+           (launchCompatibilitySelection.fpsCursorPolicy != .off ||
+            launchCompatibilitySelection.controllerPolicy != .automatic ||
+            launchCompatibilitySelection.keyboardMapping.preset !=
+                .systemDefault ||
+            launchCompatibilitySelection.keyboardMapping.customPermutation != nil) {
+            launchAdmissionWarnings.append(
+                "Unsupported legacy input settings were normalized to cursor " +
+                    "off, automatic controller passthrough, and the system " +
+                    "keyboard mapping for this launch."
+            )
+            launchCompatibilitySelection = SteamPrelaunchCompatibilitySelection(
+                rendererSelection:
+                    launchCompatibilitySelection.rendererSelection,
+                frameGenerationConfiguration:
+                    launchCompatibilitySelection.frameGenerationConfiguration,
+                networkSelection: launchCompatibilitySelection.networkSelection,
+                audioInputSelection:
+                    launchCompatibilitySelection.audioInputSelection,
+                fpsCursorPolicy: .off,
+                controllerPolicy: .automatic,
+                keyboardMapping: .systemDefault,
+                managedWineChildPolicy:
+                    launchCompatibilitySelection.managedWineChildPolicy,
+                wineChildPOSIXLocalePolicy:
+                    launchCompatibilitySelection.wineChildPOSIXLocalePolicy
             )
         }
-        let rendererSelection =
+        let steamRendererPolicy: SteamRendererPolicyPreference
+        if verificationMode == .conformance {
+            steamRendererPolicy = try rendererPolicyManager.resolvedPolicy(
+                requestedRendererPolicy,
+                capability: capability
+            )
+            guard launchCompatibilitySelection.rendererPreference ==
+                    steamRendererPolicy else {
+                throw SteamLaunchError.rendererPolicyUnavailable(
+                    "선택한 그래픽 백엔드와 Steam 실행 호환성 설정이 일치하지 않습니다."
+                )
+            }
+        } else {
+            steamRendererPolicy =
+                launchCompatibilitySelection.rendererPreference ??
+                requestedRendererPolicy ?? .d3dMetal
+            if requestedRendererPolicy != nil,
+               requestedRendererPolicy != steamRendererPolicy {
+                launchAdmissionWarnings.append(
+                    "A stale renderer policy disagreed with the selected " +
+                        "backend; the selected backend request was used."
+                )
+            }
+            if !steamRendererPolicy.isSatisfied(by: capability) {
+                launchAdmissionWarnings.append(
+                    "The runtime capability readback did not verify the " +
+                        "selected renderer; operational Steam launch continued " +
+                        "and the runner will use base Wine if necessary."
+                )
+            }
+        }
+        let requestedRendererSelection =
             launchCompatibilitySelection.rendererSelection
+        var effectiveRendererSelection = requestedRendererSelection
+        var effectiveFrameGenerationConfiguration =
+            launchCompatibilitySelection.frameGenerationConfiguration
+        var nvidiaProviderPrepared = false
+        var rendererRestorationRequired = false
+        func fallBackFromNVIDIA(_ reason: String) {
+            guard requestedRendererSelection
+                .usesD3DMetalNVIDIACompatibility else { return }
+            effectiveRendererSelection = .d3dMetal
+            effectiveFrameGenerationConfiguration = .off
+            launchAdmissionWarnings.append(
+                "NVIDIA/MetalFX compatibility was disabled for this launch; " +
+                    "requested=d3dMetalNVIDIA, effective=d3dMetal, " +
+                    "frameGeneration=disabled: \(reason)"
+            )
+        }
         // Admission precedes process snapshots and the conformance preflight,
         // which may execute an isolated Wine smoke prefix. Unsupported input
         // requests therefore cannot cause even temporary preflight effects.
-        let inputCompatibilitySession = try SteamInputCompatibilitySession(
+        var inputCompatibilitySession = try SteamInputCompatibilitySession(
             cursorPolicy: launchCompatibilitySelection.fpsCursorPolicy,
             keyboardMapping: launchCompatibilitySelection.keyboardMapping,
             gameInputProtectionPolicy:
@@ -1813,7 +2176,7 @@ final class SteamManager {
             prefix: prefix,
             runtimeExecutable: runtimeExecutable,
             runtimeCapability: capability,
-            selection: rendererSelection,
+            selection: requestedRendererSelection,
             videoMemorySizeMB: videoMemorySizeMB
         )
         let hasRecoverableNVIDIAMetalFXResidue =
@@ -1823,10 +2186,29 @@ final class SteamManager {
                     prefix: prefix,
                     runtimeExecutable: runtimeExecutable
                 )
-        guard initialRendererInspection.status == .ok ||
-                initialRendererInspection.requiresApply ||
-                hasRecoverableNVIDIAMetalFXResidue else {
-            throw SteamLaunchError.rendererPolicyVerificationFailed(initialRendererInspection.userMessage)
+        let hasRecoverableNVIDIARegistryResidue =
+            rendererPolicyManager
+                .hasRecoverableNVIDIAMetalFXRegistrySession(in: prefix)
+        if initialRendererInspection.status != .ok,
+           !initialRendererInspection.requiresApply,
+           !hasRecoverableNVIDIAMetalFXResidue {
+            if requestedRendererSelection
+                .usesD3DMetalNVIDIACompatibility {
+                launchAdmissionWarnings.append(
+                    "Initial NVIDIA renderer inspection was unavailable; " +
+                        "preparation will retry before selecting the effective " +
+                        "renderer: " + initialRendererInspection.userMessage
+                )
+            } else if verificationMode == .conformance {
+                throw SteamLaunchError.rendererPolicyVerificationFailed(
+                    initialRendererInspection.userMessage
+                )
+            }
+            launchAdmissionWarnings.append(
+                "Renderer inspection did not verify the selected route; " +
+                    "operational Steam launch continued: " +
+                    initialRendererInspection.userMessage
+            )
         }
         let runnerVersionEvidence = await captureWineVersionEvidence(for: expectedLaunchRunner)
         var preflightShutdown = try await prefixProcessSupervisor.shutdownBeforeLaunch(
@@ -1839,70 +2221,167 @@ final class SteamManager {
             preflightShutdown.diagnosticCaptureWarning,
             await rotateOfflineSteamClientLogsIfNeeded(prefix: prefix)
         )
-        try await reconcileCompatibilitySessionsAfterSuccessfulShutdown(
-            prefix: prefix
-        )
+        do {
+            try await reconcileCompatibilitySessionsAfterSuccessfulShutdown(
+                prefix: prefix
+            )
+        } catch {
+            if verificationMode == .conformance &&
+                !requestedRendererSelection
+                    .usesD3DMetalNVIDIACompatibility {
+                throw error
+            }
+            rendererRestorationRequired =
+                activeNVIDIARendererSessions[prefixKey] != nil
+            if rendererRestorationRequired {
+                fallBackFromNVIDIA(
+                    "prior NVIDIA compatibility-session restoration failed: " +
+                        forgePlayTechnicalErrorSummary(error)
+                )
+            }
+            launchAdmissionWarnings.append(
+                "Prior compatibility-session restoration was retained for " +
+                    "later cleanup; operational Steam launch continued: " +
+                    forgePlayTechnicalErrorSummary(error)
+            )
+        }
         cancelSteamLanguageUserControlMonitor()
-        let steamLanguageOwnershipLease = try await
-            steamClientLanguageOwnershipPolicy.prepareForLaunch(
+        var steamLanguageOwnershipLease: SteamClientLanguageOwnershipLease?
+        do {
+            steamLanguageOwnershipLease = try await
+                steamClientLanguageOwnershipPolicy.prepareForLaunch(
                 runtimeExecutable: runtimeExecutable,
                 prefix: prefix,
                 logDirectory: logDirectory,
                 desiredLanguage: steamClientLanguage
             )
-        try await prepareSteamClientServiceForLaunch(
-            runtimeExecutable: runtimeExecutable,
-            prefix: prefix,
-            logDirectory: logDirectory
-        )
-        try await applySteamClientCompatibilityProfile(
-            runtimeExecutable: runtimeExecutable,
-            prefix: prefix,
-            videoMemorySizeMB: videoMemorySizeMB
-        )
-        try await rendererPolicyManager
-            .restoreNVIDIAMetalFXRegistrySessionIfNeeded(
-                prefix: prefix,
-                runtimeExecutable: runtimeExecutable,
-                runner: runner,
-                logDirectory: logDirectory,
-                phase: .priorSessionRestoration
+        } catch {
+            if verificationMode == .conformance { throw error }
+            launchAdmissionWarnings.append(
+                "Steam language ownership preparation failed; the existing " +
+                    "language state was kept: " +
+                    forgePlayTechnicalErrorSummary(error)
             )
+        }
+        do {
+            try await prepareSteamClientServiceForLaunch(
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix,
+                logDirectory: logDirectory
+            )
+        } catch {
+            if verificationMode == .conformance { throw error }
+            launchAdmissionWarnings.append(
+                "Steam Client Service preparation failed; launch continued: " +
+                    forgePlayTechnicalErrorSummary(error)
+            )
+        }
+        do {
+            try await applySteamClientCompatibilityProfile(
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix,
+                videoMemorySizeMB: videoMemorySizeMB
+            )
+        } catch {
+            if verificationMode == .conformance { throw error }
+            launchAdmissionWarnings.append(
+                "Steam compatibility profile application/readback failed; " +
+                    "launch continued with the prefix's current registry: " +
+                    forgePlayTechnicalErrorSummary(error)
+            )
+        }
+        var rendererPreparationPermitted = true
+        let requiresPriorNVIDIARestoration =
+            Self.requiresPriorNVIDIARestoration(
+                requestedSelection: requestedRendererSelection,
+                hasRecoverableModuleResidue:
+                    hasRecoverableNVIDIAMetalFXResidue,
+                hasRecoverableRegistryResidue:
+                    hasRecoverableNVIDIARegistryResidue,
+                hasActiveSession:
+                    activeNVIDIARendererSessions[prefixKey] != nil
+            )
+        if requiresPriorNVIDIARestoration {
+            do {
+                try await rendererPolicyManager
+                    .restoreNVIDIAMetalFXRegistrySessionIfNeeded(
+                        prefix: prefix,
+                        runtimeExecutable: runtimeExecutable,
+                        runner: runner,
+                        logDirectory: logDirectory,
+                        phase: .priorSessionRestoration
+                    )
+            } catch {
+                rendererPreparationPermitted = false
+                rendererRestorationRequired = true
+                fallBackFromNVIDIA(
+                    "prior NVIDIA registry restoration failed: " +
+                        forgePlayTechnicalErrorSummary(error)
+                )
+                launchAdmissionWarnings.append(
+                    "Prior ForgePlay-owned NVIDIA registry state could not " +
+                        "be restored; cleanup ownership was retained: " +
+                        forgePlayTechnicalErrorSummary(error)
+                )
+            }
+        }
         // Wine registry tools can resynchronize System32. Re-inspect after
-        // every registry mutation, then normalize only the exact three files
+        // every registry mutation, then normalize only the exact module set
         // owned by a prior NVIDIA MetalFX session. Unrelated renderer
         // contamination remains blocked by the final inspection.
         let postRegistryRendererInspection = inspectSteamRendererPolicy(
             prefix: prefix,
             runtimeExecutable: runtimeExecutable,
             runtimeCapability: capability,
-            selection: rendererSelection,
+            selection: requestedRendererSelection,
             videoMemorySizeMB: videoMemorySizeMB
         )
-        if rendererPolicyManager
+        if rendererPreparationPermitted,
+           rendererPolicyManager
             .isRecoverableNVIDIAMetalFXSessionResidue(
                 postRegistryRendererInspection,
                 prefix: prefix,
                 runtimeExecutable: runtimeExecutable
             ) {
-            try rendererPolicyManager
-                .restoreNVIDIAMetalFXSessionModules(
+            do {
+                try rendererPolicyManager.restoreNVIDIAMetalFXSessionModules(
                     prefix: prefix,
                     runtimeExecutable: runtimeExecutable
                 )
+            } catch {
+                rendererPreparationPermitted = false
+                rendererRestorationRequired = true
+                fallBackFromNVIDIA(
+                    "prior NVIDIA module restoration failed: " +
+                        forgePlayTechnicalErrorSummary(error)
+                )
+            }
         }
         let rendererInspection = inspectSteamRendererPolicy(
             prefix: prefix,
             runtimeExecutable: runtimeExecutable,
             runtimeCapability: capability,
-            selection: rendererSelection,
+            selection: requestedRendererSelection,
             videoMemorySizeMB: videoMemorySizeMB
         )
-        guard rendererInspection.status == .ok else {
-            throw SteamLaunchError.rendererPolicyVerificationFailed(rendererInspection.userMessage)
+        if rendererInspection.status != .ok {
+            if requestedRendererSelection
+                .usesD3DMetalNVIDIACompatibility {
+                fallBackFromNVIDIA(rendererInspection.userMessage)
+            } else if verificationMode == .conformance {
+                throw SteamLaunchError.rendererPolicyVerificationFailed(
+                    rendererInspection.userMessage
+                )
+            }
+            rendererPreparationPermitted = false
+            launchAdmissionWarnings.append(
+                "Renderer policy readback was not exact; new provider staging " +
+                    "was skipped and Steam launch continued: " +
+                    rendererInspection.userMessage
+            )
         }
-        var rendererSessionStaged = false
-        if rendererSelection.usesD3DMetalNVIDIACompatibility {
+        if rendererPreparationPermitted,
+           requestedRendererSelection.usesD3DMetalNVIDIACompatibility {
             do {
                 try await rendererPolicyManager
                     .stageNVIDIAMetalFXRegistrySession(
@@ -1911,13 +2390,15 @@ final class SteamManager {
                         runner: runner,
                         logDirectory: logDirectory
                     )
+                rendererRestorationRequired = true
                 _ = try rendererPolicyManager
                     .stageNVIDIAMetalFXBridgeModules(
                         prefix: prefix,
                         runtimeExecutable: runtimeExecutable
                     )
-                rendererSessionStaged = true
+                nvidiaProviderPrepared = true
             } catch let stageError {
+                rendererRestorationRequired = true
                 let registryRollbackError: Error?
                 do {
                     try await rendererPolicyManager
@@ -1932,97 +2413,211 @@ final class SteamManager {
                 } catch {
                     registryRollbackError = error
                 }
-                let preservationSource: Error
-                let fallbackPhase: SteamRendererLifecyclePhase
-                let fallbackOperation: SteamRendererLifecycleOperation
-                let fallbackDetail: String?
-                let additionalDetail: String?
-                if let registryRollbackError {
-                    preservationSource = registryRollbackError
-                    fallbackPhase = .preparationRollback
-                    fallbackOperation = .sessionRestoration
-                    fallbackDetail =
-                        "NGXCore registry rollback failed: " +
-                        forgePlayTechnicalErrorSummary(registryRollbackError)
-                    additionalDetail =
-                        "renderer preparation failed before rollback: " +
-                        forgePlayTechnicalErrorSummary(stageError)
+                let moduleRollbackError: Error?
+                if registryRollbackError == nil {
+                    do {
+                        try rendererPolicyManager
+                            .restoreNVIDIAMetalFXSessionModules(
+                                prefix: prefix,
+                                runtimeExecutable: runtimeExecutable
+                            )
+                        moduleRollbackError = nil
+                    } catch {
+                        moduleRollbackError = error
+                    }
                 } else {
-                    preservationSource = stageError
-                    fallbackPhase = .preparation
-                    fallbackOperation = .ngxCoreFullPathRegistration
-                    fallbackDetail = nil
-                    additionalDetail = nil
+                    moduleRollbackError = nil
                 }
-                let lifecycleFailure = Self
-                    .rendererLifecycleFailurePreservingStructuredError(
-                        preservationSource,
-                        fallbackPhase: fallbackPhase,
-                        fallbackOperation: fallbackOperation,
-                        fallbackTarget: prefix,
-                        fallbackDetail: fallbackDetail,
-                        additionalDetail: additionalDetail,
-                        additionalProcessResults:
-                            diagnosticProcessRunResults(from: stageError) +
-                            (registryRollbackError.map {
-                                diagnosticProcessRunResults(from: $0)
-                            } ?? [])
-                    )
-                throw SteamLaunchError.rendererLifecycleFailed(
-                    lifecycleFailure
+                if registryRollbackError == nil,
+                   moduleRollbackError == nil {
+                    rendererRestorationRequired = false
+                }
+                let rollbackDetails = [
+                    registryRollbackError.map {
+                        "registry rollback failed: " +
+                            forgePlayTechnicalErrorSummary($0)
+                    },
+                    moduleRollbackError.map {
+                        "module rollback failed: " +
+                            forgePlayTechnicalErrorSummary($0)
+                    }
+                ].compactMap { $0 }.joined(separator: "; ")
+                fallBackFromNVIDIA(
+                    "NVIDIA renderer staging failed: " +
+                        forgePlayTechnicalErrorSummary(stageError) +
+                        (rollbackDetails.isEmpty
+                            ? "; rollback=complete"
+                            : "; \(rollbackDetails)")
                 )
             }
         }
+        if requestedRendererSelection.usesD3DMetalNVIDIACompatibility,
+           !nvidiaProviderPrepared,
+           effectiveRendererSelection.usesD3DMetalNVIDIACompatibility {
+            fallBackFromNVIDIA("NVIDIA provider preparation did not complete")
+        }
+        var effectiveLaunchCompatibilitySelection =
+            SteamPrelaunchCompatibilitySelection(
+                rendererSelection: effectiveRendererSelection,
+                frameGenerationConfiguration:
+                    effectiveFrameGenerationConfiguration,
+                networkSelection: launchCompatibilitySelection.networkSelection,
+                audioInputSelection:
+                    launchCompatibilitySelection.audioInputSelection,
+                fpsCursorPolicy: launchCompatibilitySelection.fpsCursorPolicy,
+                controllerPolicy: launchCompatibilitySelection.controllerPolicy,
+                keyboardMapping: launchCompatibilitySelection.keyboardMapping,
+                managedWineChildPolicy:
+                    launchCompatibilitySelection.managedWineChildPolicy,
+                wineChildPOSIXLocalePolicy:
+                    launchCompatibilitySelection.wineChildPOSIXLocalePolicy
+            )
         let postDispatchRollbackOwnership =
             GameInputProtectionPostDispatchRollbackOwnership(
-                requiresRendererRollback: rendererSessionStaged
+                requiresRendererRollback: rendererRestorationRequired
             )
         var launchResultForRestorationRecovery: ProcessRunResult?
         do {
-        let libraryDrivePreparation = try prepareSteamLibraryDriveLinksWithEvidence(
-            prefix: prefix,
-            libraryRoots: libraryRoots,
-            reservedLibraryRoots: reservedLibraryRoots,
-            logDirectory: logDirectory
-        )
-        let libraryDriveMappings = libraryDrivePreparation.mappings
-        try synchronizeSteamLibraryRegistrations(
-            prefix: prefix,
-            mappings: libraryDriveMappings,
-            pendingMappings: libraryDrivePreparation.pendingMappings,
-            discoveries: libraryDrivePreparation.discoveries,
-            logDirectory: logDirectory
-        )
-        if let steamLanguageOwnershipLease {
-            _ = try await steamClientLanguageOwnershipPolicy.reaffirm(
-                steamLanguageOwnershipLease,
-                runtimeExecutable: runtimeExecutable,
-                prefix: prefix,
-                logDirectory: logDirectory
+        let libraryDrivePreparation: SteamLibraryDrivePreparation
+        do {
+            libraryDrivePreparation = try
+                prepareSteamLibraryDriveLinksWithEvidence(
+                    prefix: prefix,
+                    libraryRoots: libraryRoots,
+                    reservedLibraryRoots: reservedLibraryRoots,
+                    logDirectory: logDirectory
+                )
+        } catch {
+            if verificationMode == .conformance { throw error }
+            libraryDrivePreparation = SteamLibraryDrivePreparation(
+                mappings: [],
+                pendingMappings: [],
+                externalStorageRoots: [],
+                discoveries: []
+            )
+            launchAdmissionWarnings.append(
+                "External Steam library preparation failed; internal Steam " +
+                    "launch continued without external roots: " +
+                    forgePlayTechnicalErrorSummary(error)
             )
         }
-        let fontProvisioningReceipt = try await
-            reconcileWindowsFontCompatibilityProfile(
-                runtimeExecutable: runtimeExecutable,
-                prefix: prefix
+        let libraryDriveMappings = libraryDrivePreparation.mappings
+        do {
+            try synchronizeSteamLibraryRegistrations(
+                prefix: prefix,
+                mappings: libraryDriveMappings,
+                pendingMappings: libraryDrivePreparation.pendingMappings,
+                discoveries: libraryDrivePreparation.discoveries,
+                logDirectory: logDirectory
             )
+        } catch {
+            if verificationMode == .conformance { throw error }
+            launchAdmissionWarnings.append(
+                "Steam library registration readback failed; launch " +
+                    "continued with Steam's existing library configuration: " +
+                    forgePlayTechnicalErrorSummary(error)
+            )
+        }
+        if let steamLanguageOwnershipLease {
+            do {
+                _ = try await steamClientLanguageOwnershipPolicy.reaffirm(
+                    steamLanguageOwnershipLease,
+                    runtimeExecutable: runtimeExecutable,
+                    prefix: prefix,
+                    logDirectory: logDirectory
+                )
+            } catch {
+                if verificationMode == .conformance { throw error }
+                launchAdmissionWarnings.append(
+                    "Steam language readback failed; launch continued: " +
+                        forgePlayTechnicalErrorSummary(error)
+                )
+            }
+        }
+        let fontProvisioningReceipt: WindowsFontProvisioningApplicationReceipt
+        do {
+            let receipt = try await
+                reconcileWindowsFontCompatibilityProfile(
+                    runtimeExecutable: runtimeExecutable,
+                    prefix: prefix,
+                    steamClientLanguage: steamClientLanguage
+                )
+            fontProvisioningReceipt = receipt
+            if receipt.requiresScopedWineChildPOSIXLocaleFallback {
+                effectiveLaunchCompatibilitySelection =
+                    effectiveLaunchCompatibilitySelection
+                        .withWineChildPOSIXLocalePolicy(
+                            .englishUTF8FontFallback
+                        )
+                launchAdmissionWarnings.append(
+                    Self.operationalFontLocaleFallbackWarning + " " +
+                    "fontProvisioningState=" + receipt.state.rawValue + "; " +
+                    "requestedSteamLanguage=" +
+                    (steamClientLanguage?.rawValue ?? "existing-default")
+                )
+            }
+        } catch {
+            if verificationMode == .conformance { throw error }
+            let usesScopedLocaleFallback =
+                Self.isWindowsFontLocaleBaselineCollision(error)
+            if usesScopedLocaleFallback {
+                effectiveLaunchCompatibilitySelection =
+                    effectiveLaunchCompatibilitySelection
+                        .withWineChildPOSIXLocalePolicy(
+                            .englishUTF8FontFallback
+                        )
+            }
+            fontProvisioningReceipt =
+                WindowsFontProvisioningApplicationReceipt(
+                    profileIdentifier: "unverified-operational-font-profile",
+                    state: .unverifiedOperationalPassthrough,
+                    baselineDigest: "",
+                    appliedDigest: "",
+                    appliedItemCount: 0,
+                    missingItemCount: 1
+                )
+            if usesScopedLocaleFallback {
+                launchAdmissionWarnings.append(
+                    Self.operationalFontLocaleFallbackWarning + " " +
+                    "requestedSteamLanguage=" +
+                    (steamClientLanguage?.rawValue ?? "existing-default") +
+                    "; detail=" + forgePlayTechnicalErrorSummary(error)
+                )
+            } else {
+                launchAdmissionWarnings.append(
+                    "Windows font compatibility preparation/readback failed; " +
+                        "Steam launch continued with the prefix's existing fonts: " +
+                        forgePlayTechnicalErrorSummary(error)
+                )
+            }
+        }
         let finalRendererInspection = inspectSteamRendererPolicy(
             prefix: prefix,
             runtimeExecutable: runtimeExecutable,
             runtimeCapability: capability,
-            selection: rendererSelection,
+            selection: effectiveRendererSelection,
             videoMemorySizeMB: videoMemorySizeMB
         )
-        let finalRendererSessionIsExact = rendererSessionStaged &&
+        let finalRendererSessionIsExact = nvidiaProviderPrepared &&
             rendererPolicyManager.isRecoverableNVIDIAMetalFXSessionResidue(
                 finalRendererInspection,
                 prefix: prefix,
                 runtimeExecutable: runtimeExecutable
             )
-        guard finalRendererInspection.status == .ok ||
-                finalRendererSessionIsExact else {
-            throw SteamLaunchError.rendererPolicyVerificationFailed(
-                finalRendererInspection.userMessage
+        if finalRendererInspection.status != .ok,
+           !finalRendererSessionIsExact {
+            if verificationMode == .conformance &&
+                !(requestedRendererSelection
+                    .usesD3DMetalNVIDIACompatibility &&
+                  effectiveRendererSelection == .d3dMetal) {
+                throw SteamLaunchError.rendererPolicyVerificationFailed(
+                    finalRendererInspection.userMessage
+                )
+            }
+            launchAdmissionWarnings.append(
+                "Final renderer readback was not exact; Steam launch " +
+                    "continued and the runner may use base Wine: " +
+                    finalRendererInspection.userMessage
             )
         }
         let launchExternalStorageRoots = libraryDrivePreparation.externalStorageRoots
@@ -2032,13 +2627,36 @@ final class SteamManager {
                     SteamClientCompatibilityProfile.defaultLaunchArguments,
                 lease: steamLanguageOwnershipLease
             )
-        let rendererRouteReceipt = try rendererPolicyManager.applicationReceipt(
-            prefix: prefix,
-            runtimeExecutable: runtimeExecutable,
-            runtimeCapability: capability,
-            selection: rendererSelection,
-            videoMemorySizeMB: videoMemorySizeMB
-        )
+        let rendererRouteReceipt: SteamRendererRouteApplicationReceipt
+        do {
+            rendererRouteReceipt = try rendererPolicyManager.applicationReceipt(
+                prefix: prefix,
+                runtimeExecutable: runtimeExecutable,
+                runtimeCapability: capability,
+                selection: effectiveRendererSelection,
+                videoMemorySizeMB: videoMemorySizeMB
+            )
+        } catch {
+            if verificationMode == .conformance &&
+                !(requestedRendererSelection
+                    .usesD3DMetalNVIDIACompatibility &&
+                  effectiveRendererSelection == .d3dMetal) {
+                throw error
+            }
+            rendererRouteReceipt = SteamRendererRouteApplicationReceipt(
+                selection: effectiveRendererSelection,
+                resolvedPolicy: steamRendererPolicy,
+                staticRouteEligibilityVerified: false,
+                providerRegistryReadBack: false,
+                providerModulesReadBack: false,
+                reportedScope: .staticRouteEligibility
+            )
+            launchAdmissionWarnings.append(
+                "Renderer provider receipt was unavailable; Steam launch " +
+                    "continued and the failure remains diagnostic: " +
+                    forgePlayTechnicalErrorSummary(error)
+            )
+        }
         var compatibilitySessionsCommitted = false
         defer {
             if !compatibilitySessionsCommitted &&
@@ -2066,7 +2684,28 @@ final class SteamManager {
         // renderer preparation step has succeeded. Pre-dispatch preparation
         // failures must not leave an input session active, and failures after
         // this point are covered by the restoration defer above.
-        try inputCompatibilitySession.captureBeforeLaunch()
+        do {
+            try inputCompatibilitySession.captureBeforeLaunch()
+            try inputCompatibilitySession.requireNoTerminalFailure()
+        } catch {
+            if verificationMode == .conformance { throw error }
+            // macOS event-tap protection is optional. Permission denial or a
+            // local filter startup failure must degrade only that protection,
+            // never the Wine/Steam launch itself.
+            _ = inputCompatibilitySession.restore()
+            launchAdmissionWarnings.append(
+                "Optional game input protection could not start and was " +
+                    "disabled for this launch: " +
+                    forgePlayTechnicalErrorSummary(error)
+            )
+            inputCompatibilitySession = try SteamInputCompatibilitySession(
+                cursorPolicy: launchCompatibilitySelection.fpsCursorPolicy,
+                keyboardMapping: launchCompatibilitySelection.keyboardMapping,
+                gameInputProtectionPolicy: .disabled,
+                gameInputProtection: gameInputProtectionDriverFactory()
+            )
+            try inputCompatibilitySession.captureBeforeLaunch()
+        }
         let processSnapshotBeforeLaunch = processSnapshotProvider()
         let hostSteamProcessesBeforeLaunch =
             processSnapshotBeforeLaunch.hostMacOSSteamProcesses
@@ -2082,13 +2721,17 @@ final class SteamManager {
         let priorLaunchAttempts: [SteamLaunchAttemptEvidence] = []
         let steamUIStartupLogCursor = steamLaunchDiagnosticsReporter
             .captureSteamWebHelperStartupLogCursor(in: steamDirectory)
-        try await awaitGameInputProtectionDispatchAdmission(
-            prefixKey: prefixKey,
-            site: .initial
-        )
         try prefixExecutionLeaseTransition.prepareForExecution()
-        try controllerCompatibilitySession.revalidateBeforeSpawn()
-        try inputCompatibilitySession.requireNoTerminalFailure()
+        do {
+            try controllerCompatibilitySession.revalidateBeforeSpawn()
+        } catch {
+            if verificationMode == .conformance { throw error }
+            launchAdmissionWarnings.append(
+                "Controller inventory revalidation failed; automatic Wine " +
+                    "IOHID passthrough remained enabled and Steam launch " +
+                    "continued: " + forgePlayTechnicalErrorSummary(error)
+            )
+        }
         var result = try await runManagedSteamLaunchDispatch(
             runtimeExecutable: runtimeExecutable,
             prefix: prefix,
@@ -2100,11 +2743,30 @@ final class SteamManager {
                 steamExecutable: steamExecutable,
                 steamArguments: resolvedSteamArguments,
                 graphicsBackend: steamRendererPolicy,
-                compatibilitySelection: launchCompatibilitySelection,
+                compatibilitySelection: effectiveLaunchCompatibilitySelection,
                 gameModePolicy: gameModePolicy,
                 logDirectory: logDirectory,
                 externalStorageRoots: launchExternalStorageRoots
             ))
+        }
+        result.runtimeCompatibility["rendererUserRequested"] =
+            requestedRendererSelection.rawValue
+        if result.runtimeCompatibility["rendererEffective"] == nil {
+            result.runtimeCompatibility["rendererEffective"] =
+                effectiveRendererSelection.rawValue
+        }
+        if requestedRendererSelection.usesD3DMetalNVIDIACompatibility,
+           effectiveRendererSelection == .d3dMetal {
+            result.runtimeCompatibility["nvidiaPreparationStatus"] =
+                "failed-fallback-d3dmetal"
+            result.runtimeCompatibility["frameGenerationStatus"] =
+                "disabled-nvidia-fallback"
+        }
+        if !launchAdmissionWarnings.isEmpty {
+            result.diagnosticCaptureWarning = DiagnosticWarningText.combined(
+                result.diagnosticCaptureWarning,
+                launchAdmissionWarnings.joined(separator: " | ")
+            )
         }
         defer { launchResultForRestorationRecovery = result }
         let steamBootstrapUpdaterEvidenceSession =
@@ -2125,7 +2787,8 @@ final class SteamManager {
                 prefix: prefix,
                 runtimeExecutable: runtimeExecutable,
                 logDirectory: logDirectory,
-                expectedCompatibilitySelection: launchCompatibilitySelection
+                expectedCompatibilitySelection:
+                    effectiveLaunchCompatibilitySelection
             )
         }
         let steamUIStartupObservation = await observeSteamUIStartup(
@@ -2140,6 +2803,7 @@ final class SteamManager {
         // into renderer rollback, which first terminates the entire Prefix.
         let steamUIStartupFailureReason =
             verificationMode == .conformance &&
+            steamUIStartupObservationTimeout > 0 &&
             steamUIStartupObservation.state != .ready
             ? (steamUIStartupObservation.reason ??
                 "Steam WebHelper did not expose a usable login or desktop surface before the startup observation ended")
@@ -2321,9 +2985,20 @@ final class SteamManager {
         let acceptedGateStatus: SteamLaunchGateStatus = verificationMode == .conformance ? .success : .launched
         let launchAssessmentAccepted = effectiveHardGateAssessment.status == acceptedGateStatus
         if shouldDeferSteamUIVerification {
-            result.forgePlayStatusCode = bootstrapUpdateInProgress
-                ? Self.steamBootstrapUpdateInProgressExitCode
-                : Self.steamLaunchProcessVerificationUnavailableExitCode
+            if verificationMode == .conformance {
+                result.forgePlayStatusCode = bootstrapUpdateInProgress
+                    ? Self.steamBootstrapUpdateInProgressExitCode
+                    : Self.steamLaunchProcessVerificationUnavailableExitCode
+            } else {
+                result.diagnosticCaptureWarning = DiagnosticWarningText.combined(
+                    result.diagnosticCaptureWarning,
+                    bootstrapUpdateInProgress
+                        ? "Steam bootstrap update is still in progress; the " +
+                            "launched session was kept running."
+                        : "Steam process verification was unavailable; the " +
+                            "launched session was kept running."
+                )
+            }
         }
         // Once the user's Steam session has been dispatched, operational
         // diagnostics never acquire authority to terminate it. Cleanup after
@@ -2507,7 +3182,7 @@ final class SteamManager {
                 logDirectory: logDirectory,
                 restorationLease:
                     prefixExecutionLeaseTransition.restorationLease,
-                rendererSession: rendererSessionStaged
+                rendererSession: rendererRestorationRequired
                     ? ActiveNVIDIARendererSession(
                         prefix: prefix,
                         runtimeExecutable: runtimeExecutable,
@@ -2528,35 +3203,46 @@ final class SteamManager {
                 rollbackOwnership: postDispatchRollbackOwnership
             )
             compatibilitySessionsCommitted = true
-            rendererSessionStaged = false
+            rendererRestorationRequired = false
         }
-        if rendererSessionStaged,
+        if rendererRestorationRequired,
            launchCommandSucceeded,
            !shouldStopSteamAfterLaunch,
            !didRequestFailureShutdown {
-            let admissionFailure =
-                SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
-                    "renderer-session-lifetime-admission-unavailable"
-                )
-            try await containForegroundPostDispatchCommitFailure(
-                admissionFailure,
-                initialTerminalResolution: nil,
-                inputSession: inputCompatibilitySession,
-                controllerSession: controllerCompatibilitySession,
-                rendererSession: ActiveNVIDIARendererSession(
-                    prefix: prefix,
-                    runtimeExecutable: runtimeExecutable,
-                    logDirectory: logDirectory
-                ),
-                rollbackOwnership: postDispatchRollbackOwnership,
-                runtimeExecutable: runtimeExecutable,
-                prefix: prefix,
-                logDirectory: logDirectory,
-                prepareForMutation:
-                    prefixExecutionLeaseTransition.prepareForMutation
+            result.diagnosticCaptureWarning = DiagnosticWarningText.combined(
+                result.diagnosticCaptureWarning,
+                "Renderer provider receipts were unavailable after Steam " +
+                    "launch; Steam was kept running and pending renderer " +
+                    "restoration ownership was retained."
             )
+            if !inputCompatibilitySession.restore() {
+                result.diagnosticCaptureWarning = DiagnosticWarningText.combined(
+                    result.diagnosticCaptureWarning,
+                    "Input compatibility state could not be restored after " +
+                        "provider receipt degradation."
+                )
+            }
+            controllerCompatibilitySession.restore()
+            let key = prefix.standardizedFileURL.path
+            activeNVIDIARendererSessions[key] = ActiveNVIDIARendererSession(
+                prefix: prefix,
+                runtimeExecutable: runtimeExecutable,
+                logDirectory: logDirectory
+            )
+            if let restorationLease =
+                prefixExecutionLeaseTransition.restorationLease {
+                activeCompatibilityRestorationPrefixLeases[key] =
+                    restorationLease
+                restorationLease.markTransferred()
+                startCompatibilityRestorationMonitor(
+                    prefix: prefix,
+                    prefixKey: key
+                )
+            }
+            compatibilitySessionsCommitted = true
+            rendererRestorationRequired = false
         }
-        if rendererSessionStaged {
+        if rendererRestorationRequired {
             try await requireManagedPrefixInactivityBeforeRendererRestoration(
                 prefix
             )
@@ -2568,7 +3254,7 @@ final class SteamManager {
                     logDirectory: logDirectory
                 )
             )
-            rendererSessionStaged = false
+            rendererRestorationRequired = false
         }
         if let steamLanguageOwnershipLease,
            launchCommandSucceeded,
@@ -2593,7 +3279,7 @@ final class SteamManager {
             if postDispatchRollbackOwnership.rendererRollbackCompleted {
                 throw launchError
             }
-            guard rendererSessionStaged else { throw launchError }
+            guard rendererRestorationRequired else { throw launchError }
             var rendererRecoveryShutdownResult: ProcessRunResult?
             do {
                 rendererRecoveryShutdownResult =
@@ -2610,7 +3296,7 @@ final class SteamManager {
                         logDirectory: logDirectory
                     )
                 )
-                rendererSessionStaged = false
+                rendererRestorationRequired = false
             } catch let rollbackError {
                 let processResults = (
                     diagnosticProcessRunResults(from: launchError) +
@@ -2762,64 +3448,16 @@ final class SteamManager {
                 expectedCompatibilitySelection: expectedCompatibilitySelection
             )
         } catch let receiptError {
-            // Receipt construction occurs after the detached launcher exists.
-            // A failed readback must therefore shut down the prefix before the
-            // error is allowed to escape; otherwise a failed launch can leave
-            // an unmanaged Steam process running.
-            let cleanup = await prefixProcessSupervisor.shutdownAfterFailure(
-                runtimeExecutable: runtimeExecutable,
-                prefix: prefix,
-                logDirectory: logDirectory
+            /* The Steam process already exists at this boundary. Provider
+             * receipts are diagnostic evidence, not authority to terminate the
+             * user's live Wine/Steam session. Preserve the failure in the
+             * launch result and let the normal process lifecycle continue. */
+            result.diagnosticCaptureWarning = DiagnosticWarningText.combined(
+                result.diagnosticCaptureWarning,
+                "Compatibility provider readback failed after Steam launch; " +
+                    "Steam was left running: " +
+                    forgePlayTechnicalErrorSummary(receiptError)
             )
-            if let cleanupError = cleanup.error {
-                throw SteamPrefixLifecycleCleanupError(
-                    originalDescription:
-                        forgePlayTechnicalErrorSummary(receiptError),
-                    cleanupDescription:
-                        forgePlayTechnicalErrorSummary(cleanupError),
-                    originalError: receiptError,
-                    cleanupError: cleanupError,
-                    cleanupProcessResults: cleanup.result.map { [$0] } ?? []
-                )
-            }
-            guard let cleanupResult = cleanup.result,
-                  cleanupResult.succeeded else {
-                let cleanupError = cleanup.result.map {
-                    SteamLaunchError.prefixShutdownFailed($0)
-                }
-                throw SteamPrefixLifecycleCleanupError(
-                    originalDescription:
-                        forgePlayTechnicalErrorSummary(receiptError),
-                    cleanupDescription: cleanupError.map {
-                        forgePlayTechnicalErrorSummary($0)
-                    } ?? "prefix shutdown returned no result",
-                    originalError: receiptError,
-                    cleanupError: cleanupError,
-                    cleanupProcessResults: cleanup.result.map { [$0] } ?? []
-                )
-            }
-            do {
-                guard try await compatibilityPrefixExitWaiter(
-                    prefix,
-                    30,
-                    0.2
-                ) else {
-                    throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
-                        "post-receipt-failure-prefix-still-active"
-                    )
-                }
-            } catch let cleanupVerificationError {
-                throw SteamPrefixLifecycleCleanupError(
-                    originalDescription:
-                        forgePlayTechnicalErrorSummary(receiptError),
-                    cleanupDescription:
-                        forgePlayTechnicalErrorSummary(cleanupVerificationError),
-                    originalError: receiptError,
-                    cleanupError: cleanupVerificationError,
-                    cleanupProcessResults: [cleanupResult]
-                )
-            }
-            throw receiptError
         }
     }
 
@@ -2832,12 +3470,6 @@ final class SteamManager {
         prefix: URL,
         expectedCompatibilitySelection: SteamPrelaunchCompatibilitySelection
     ) async throws {
-        let currentFontReadback =
-            WindowsFontCompatibilityProfileContract.inspect(
-                prefix: prefix,
-                fileManager: fileManager,
-                requiresProfileMarker: true
-            )
         let disposition = SteamLaunchDispatchDisposition.resolve(result)
         let processIdentifier: pid_t
         switch disposition {
@@ -2880,7 +3512,6 @@ final class SteamManager {
               environmentProjection.audioInputSelection ==
                 expectedCompatibilitySelection.audioInputSelection.rawValue,
               fontReceipt.isAppliedAndReadBack,
-              currentFontReadback.isSatisfied,
               rendererReceipt.isPreparationVerified else {
             throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
                 "launch-provider-boundary-readback"
@@ -3054,26 +3685,33 @@ final class SteamManager {
             )
         } catch {
             let commitFailure = error
-            let resolution = GameInputProtectionCommitFailureResolver
-                .resolve(
-                    sessionTerminalFailure: inputSession.terminalFailure,
-                    commitFailure: commitFailure,
-                    technicalDescription: {
-                        forgePlayTechnicalErrorSummary($0)
-                    }
-                )
-            try await containForegroundPostDispatchCommitFailure(
-                commitFailure,
-                initialTerminalResolution: resolution,
-                inputSession: inputSession,
-                controllerSession: controllerSession,
-                rendererSession: rendererSession,
-                rollbackOwnership: rollbackOwnership,
-                runtimeExecutable: runtimeExecutable,
-                prefix: prefix,
-                logDirectory: logDirectory,
-                prepareForMutation: prepareForMutation
+            result.diagnosticCaptureWarning = DiagnosticWarningText.combined(
+                result.diagnosticCaptureWarning,
+                "Compatibility session commit failed after Steam launch; " +
+                    "Steam was left running: " +
+                    forgePlayTechnicalErrorSummary(commitFailure)
             )
+            if !inputSession.restore() {
+                result.diagnosticCaptureWarning = DiagnosticWarningText.combined(
+                    result.diagnosticCaptureWarning,
+                    "Input compatibility state could not be restored after the " +
+                        "advisory commit failure."
+                )
+            }
+            controllerSession.restore()
+            if let rendererSession {
+                let key = prefix.standardizedFileURL.path
+                activeNVIDIARendererSessions[key] = rendererSession
+                if let restorationLease {
+                    activeCompatibilityRestorationPrefixLeases[key] =
+                        restorationLease
+                    restorationLease.markTransferred()
+                    startCompatibilityRestorationMonitor(
+                        prefix: prefix,
+                        prefixKey: key
+                    )
+                }
+            }
         }
     }
 
@@ -3238,97 +3876,50 @@ final class SteamManager {
     ) {
         let key = prefix.standardizedFileURL.path
         guard !isApplicationTerminationContainmentDrainActive else { return }
-        guard GameInputProtectionCommittedSessionGate
-            .permitsBackgroundContainment(
-                terminalSession: session,
-                committedSession:
-                    activeInputCompatibilitySessions[key]?.identity,
-                hasExistingContainment:
-                    gameInputProtectionContainmentClaims.hasClaim(
-                        prefixKey: key
-                    )
-            ) else {
+        guard activeInputCompatibilitySessions[key]?.identity == session,
+              gameInputProtectionTerminalContainmentTasks[key] == nil else {
             return
         }
-        guard case .acquired(let claimToken) =
-                gameInputProtectionContainmentClaims.acquire(prefixKey: key)
-        else { return }
-        compatibilitySessionRestorationFailures[key] =
-            "game input protection terminal failure; containment started: " +
-            (failure.errorDescription ?? String(describing: failure))
-        let lifecycleGate = GameInputProtectionSafetyFirstLifecycleGate()
         let lifecycleHandler = gameInputProtectionLifecycleEventHandler
-        let protectionLostDelivery: (@MainActor @Sendable () -> Void)?
-        let containmentCompletedDelivery: (@MainActor @Sendable () -> Void)?
-        if let lifecycleHandler {
-            protectionLostDelivery = {
-                lifecycleHandler(
-                    .protectionLost(session: session, failure: failure)
-                )
-            }
-            containmentCompletedDelivery = {
-                lifecycleHandler(
-                    .containmentCompleted(session: session, failure: failure)
-                )
-            }
-        } else {
-            protectionLostDelivery = nil
-            containmentCompletedDelivery = nil
-        }
-        let processEvidence =
-            GameInputProtectionContainmentProcessEvidence()
+        lifecycleHandler?(.protectionLost(session: session, failure: failure))
+
+        // Host pointer filtering is optional. Losing its event tap must never
+        // acquire authority to terminate the user's Wine/Steam prefix. Restore
+        // only the failed local input session, keep controller/renderer owners
+        // alive, and leave a bounded diagnostic warning.
         gameInputProtectionTerminalContainmentTasks[key] = Task { [weak self] in
-            let completed = await
-                GameInputProtectionTerminalContainmentCoordinator.run(
-                    attempt: { phase in
-                        guard let self else { return .cancelled }
-                        if phase == .shutdown {
-                            lifecycleGate
-                                .admitShutdownAttemptAndQueueLossEvent(
-                                    protectionLostDelivery
-                                )
-                        }
-                        return await self
-                            .performGameInputProtectionTerminalContainmentAttempt(
-                                phase: phase,
-                                runtimeExecutable: runtimeExecutable,
-                                prefix: prefix,
-                                prefixKey: key,
-                                logDirectory: logDirectory,
-                                processEvidence: processEvidence
-                            )
-                    },
-                    failureRecorded: { state, detail in
-                        self?.compatibilitySessionRestorationFailures[key] =
-                            "game input protection terminal containment " +
-                            "\(state.phase) attempt " +
-                            "\(state.consecutiveFailures) failed after " +
-                            "\(failure): \(detail); retrying"
-                    }
-                )
             guard let self else { return }
-            guard self.gameInputProtectionContainmentClaims.release(
-                prefixKey: key,
-                token: claimToken
-            ) else { return }
+            await self.quiesceCompatibilityRestorationMonitor(
+                forPrefixKey: key
+            )
+            let failedSession = self.activeInputCompatibilitySessions[key]
+            if failedSession?.identity == session {
+                self.activeInputCompatibilitySessions.removeValue(forKey: key)
+            }
+            let restored = failedSession?.restore() ?? true
+            if self.hasCompatibilityRestorationState(forPrefixKey: key),
+               self.activeCompatibilityRestorationPrefixLeases[key] != nil {
+                self.startCompatibilityRestorationMonitor(
+                    prefix: prefix,
+                    prefixKey: key
+                )
+            }
             self.gameInputProtectionTerminalContainmentTasks.removeValue(
                 forKey: key
             )
-            guard completed else {
-                self.compatibilitySessionRestorationFailures[key] =
-                    "game input protection terminal containment was drained; " +
-                    "retained compatibility state awaits the termination " +
-                    "coordinator"
-                return
-            }
-            self.compatibilitySessionRestorationFailures.removeValue(
-                forKey: key
+            let detail = failure.errorDescription ?? String(describing: failure)
+            NSLog(
+                "ForgePlay disabled optional game input protection without " +
+                    "terminating Wine/Steam: %@; local restore=%@; runtime=%@; " +
+                    "logDirectory=%@",
+                detail,
+                restored ? "ok" : "failed",
+                runtimeExecutable.path,
+                logDirectory.path
             )
-            if let containmentCompletedDelivery {
-                lifecycleGate.queueCompletionAfterLossEvent(
-                    containmentCompletedDelivery
-                )
-            }
+            lifecycleHandler?(
+                .containmentCompleted(session: session, failure: failure)
+            )
         }
     }
 
@@ -3442,6 +4033,27 @@ final class SteamManager {
     /// nil-restoration-lease path and must never absorb controller/renderer
     /// restoration responsibilities.
 #if DEBUG
+    /// Installs the production NVIDIA restoration owner without dispatching a
+    /// game, so the same-process prefix-lease handoff can be exercised offline.
+    func debugInstallNVIDIACompatibilityRestorationSession(
+        prefix: URL,
+        runtimeExecutable: URL,
+        logDirectory: URL,
+        restorationLease: SteamCompatibilityRestorationPrefixLease
+    ) {
+        let key = prefix.standardizedFileURL.path
+        precondition(!hasCompatibilityRestorationState(forPrefixKey: key))
+        precondition(activeCompatibilityRestorationPrefixLeases[key] == nil)
+        activeNVIDIARendererSessions[key] = ActiveNVIDIARendererSession(
+            prefix: prefix,
+            runtimeExecutable: runtimeExecutable,
+            logDirectory: logDirectory
+        )
+        activeCompatibilityRestorationPrefixLeases[key] = restorationLease
+        restorationLease.markTransferred()
+        startCompatibilityRestorationMonitor(prefix: prefix, prefixKey: key)
+    }
+
     /// Debug-only lifecycle seam. It installs the same retained session and
     /// production monitor used by the precommit handoff, allowing cancellation
     /// and owner-deallocation behavior to be verified without launching Wine.
@@ -3657,12 +4269,20 @@ final class SteamManager {
             try restorationLease.prepareForMutation()
         }
         if let inputSession = activeInputCompatibilitySessions[key] {
-            guard inputSession.restore() else {
-                throw SteamInputCompatibilitySessionError.cursorRestoreFailed(
-                    "active-session"
+            let didRestoreInput = inputSession.restore()
+            activeInputCompatibilitySessions.removeValue(forKey: key)
+            if !didRestoreInput {
+                // Host input protection owns no prefix mutation. Do not let a
+                // host-only cleanup error strand the NVIDIA registry/module
+                // owner or prevent the next explicit prefix reconciliation.
+                // Releasing the retained session also gives its deinitializer
+                // one final idempotent restore attempt.
+                NSLog(
+                    "ForgePlay host input compatibility restoration warning " +
+                        "for %@; continuing prefix-owned restoration",
+                    key
                 )
             }
-            activeInputCompatibilitySessions.removeValue(forKey: key)
         }
         if let controllerSession = activeControllerCompatibilitySessions[key] {
             controllerSession.restore()
@@ -5066,13 +5686,16 @@ final class SteamManager {
     /// run.
     func reconcileWindowsFontCompatibilityProfile(
         runtimeExecutable: URL,
-        prefix: URL
+        prefix: URL,
+        steamClientLanguage: SteamClientLanguage? = nil
     ) async throws -> WindowsFontProvisioningApplicationReceipt {
         let logDirectory = try pathManager.url(for: .launchLogs)
         return try await windowsFontCompatibilityProfile.provisionForLaunch(
             runtimeExecutable: runtimeExecutable,
             prefix: prefix,
-            logDirectory: logDirectory
+            logDirectory: logDirectory,
+            preferredLocaleIdentifier:
+                steamClientLanguage?.webHelperLocaleIdentifier
         )
     }
 
@@ -5086,6 +5709,26 @@ final class SteamManager {
             prefix: prefix,
             logDirectory: logDirectory
         )
+    }
+
+    /// Failure cleanup entry point for callers that detach from a cancelled
+    /// operation task. Returning the concrete process result preserves the
+    /// shutdown postcondition and evidence instead of reducing cleanup to a
+    /// warning string.
+    func shutdownSteamPrefixAfterFailure(
+        runtimeExecutable: URL,
+        prefix: URL
+    ) async -> (result: ProcessRunResult?, error: Error?) {
+        do {
+            let logDirectory = try pathManager.url(for: .launchLogs)
+            return await prefixProcessSupervisor.shutdownAfterFailure(
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix,
+                logDirectory: logDirectory
+            )
+        } catch {
+            return (nil, error)
+        }
     }
 
     /// Runs only after a successful prefix shutdown while the caller retains
@@ -5485,62 +6128,83 @@ final class SteamManager {
     ) async -> SteamLaunchGateAssessment {
         var reasonCodes: [SteamLaunchGateReasonCode] = []
         var details: [String] = []
+        var hasExecutionBlocker = false
 
         func append(_ code: SteamLaunchGateReasonCode, _ detail: String) {
             reasonCodes.appendUnique(code)
             details.append(detail)
         }
 
+        func block(_ code: SteamLaunchGateReasonCode, _ detail: String) {
+            hasExecutionBlocker = true
+            append(code, detail)
+        }
+
         let runnerPath = target.normalizedRunnerPath
         let normalizedRunnerPath = runnerPath.lowercased()
         if normalizedRunnerPath.hasSuffix(".dmg") || normalizedRunnerPath.contains(".dmg/") {
-            append(.blockedSupplementalDMGIsNotRuntime, "selected Apple supplemental renderer image is not the bundled runtime executable: \(runnerPath)")
+            block(.blockedSupplementalDMGIsNotRuntime, "selected Apple supplemental renderer image is not the bundled runtime executable: \(runnerPath)")
         }
         guard FileSystemItemPolicy.isRegularNonSymlinkFile(target.expectedRunnerPath, fileManager: fileManager),
               fileManager.isExecutableFile(atPath: runnerPath) else {
-            append(.blockedRunnerMissing, "expected runner path is missing or not executable: \(runnerPath)")
+            block(.blockedRunnerMissing, "expected runner path is missing or not executable: \(runnerPath)")
             return SteamLaunchGateAssessment(status: .blocked, reasonCodes: reasonCodes, details: details)
         }
 
         if !FileSystemItemPolicy.isNonSymlinkDirectory(target.expectedPrefixPath, fileManager: fileManager) {
-            append(.blockedRunnerPreflightFailed, "expected WINEPREFIX directory is missing or unsafe: \(target.normalizedPrefixPath)")
+            block(.blockedRunnerPreflightFailed, "expected WINEPREFIX directory is missing or unsafe: \(target.normalizedPrefixPath)")
         }
         if !FileSystemItemPolicy.isRegularNonSymlinkFile(target.expectedSteamExecutablePath, fileManager: fileManager) {
-            append(.blockedRunnerPreflightFailed, "expected Windows Steam executable is missing or unsafe: \(target.normalizedSteamExecutablePath)")
+            block(.blockedRunnerPreflightFailed, "expected Windows Steam executable is missing or unsafe: \(target.normalizedSteamExecutablePath)")
         }
         if capability.isUnsupportedExternalApplicationRunner || SteamLaunchProcessSnapshot.isExternalApplicationRunnerCommand(runnerPath) {
-            append(.blockedExternalApplicationRunner, "configured executable belongs to another macOS application and cannot be used as a ForgePlay runtime: \(runnerPath)")
+            block(.blockedExternalApplicationRunner, "configured executable belongs to another macOS application and cannot be used as a ForgePlay runtime: \(runnerPath)")
         }
         if !target.allowHostSteam, !processSnapshot.hostMacOSSteamProcesses.isEmpty {
-            append(
+            block(
                 .blockedHostSteamRunning,
                 "macOS Steam.app process is already running before Windows Steam validation: \(processSnapshot.hostMacOSSteamProcesses.prefix(3).map { "PID \($0.processID)" }.joined(separator: ", "))"
             )
         }
         if verificationMode == .conformance,
            !processSnapshot.externalApplicationRunnerProcesses.isEmpty {
-            append(
+            block(
                 .blockedExternalApplicationRunner,
                 "an external app-bundled Wine/Steam process is already running before ForgePlay target validation: \(processSnapshot.externalApplicationRunnerProcesses.prefix(3).map(\.diagnosticLine).joined(separator: " | "))"
             )
         }
 
         for blocker in compatibility.launchBlockers {
+            let detail: String
+            let code: SteamLaunchGateReasonCode
             switch blocker {
             case .unsupportedExternalApplicationRunner:
-                append(.blockedExternalApplicationRunner, "another macOS application's embedded runner cannot be used as a ForgePlay product runtime")
+                code = .blockedExternalApplicationRunner
+                detail = "another macOS application's embedded runner cannot be used as a ForgePlay product runtime"
             case .missingSteamTextRuntime:
-                append(.blockedMissingWineFreetypeRuntime, "Wine-root FreeType runtime is missing; Windows Steam launch was not attempted")
+                code = .blockedMissingWineFreetypeRuntime
+                detail = "Wine-root FreeType runtime is missing"
             case .knownBadSteamUIConformance:
-                append(.blockedRunnerPreflightFailed, "the bundled ForgePlay Runtime is classified as Windows Steam UI failed_known_bad")
+                code = .blockedRunnerPreflightFailed
+                detail = "the bundled ForgePlay Runtime is classified as Windows Steam UI failed_known_bad"
             case .missingSteamNetworking:
-                append(.blockedRunnerPreflightFailed, "the bundled ForgePlay Runtime lacks Steam networking runtime support")
+                code = .blockedRunnerPreflightFailed
+                detail = "the bundled ForgePlay Runtime lacks Steam networking runtime support"
             case .unsupportedSteamUIRenderer:
-                append(.blockedRunnerPreflightFailed, "the bundled ForgePlay Runtime has an unsupported Windows Steam CEF/WebHelper renderer profile")
+                code = .blockedRunnerPreflightFailed
+                detail = "the bundled ForgePlay Runtime has an unsupported Windows Steam CEF/WebHelper renderer profile"
             case .activeD3DMetalOverlay:
-                append(.blockedRunnerPreflightFailed, "the bundled ForgePlay Runtime globally overlays D3DMetal into base Wine modules and is unsafe for Steam UI validation")
+                code = .blockedRunnerPreflightFailed
+                detail = "the bundled ForgePlay Runtime globally overlays D3DMetal into base Wine modules"
             case .missingModernDirect3DRenderer:
-                append(.blockedRunnerPreflightFailed, "the bundled ForgePlay Runtime lacks D3DMetal/Vulkan renderer payload needed for Steam-launched games")
+                code = .blockedRunnerPreflightFailed
+                detail = "the bundled ForgePlay Runtime lacks D3DMetal/Vulkan renderer payload needed for Steam-launched games"
+            }
+            if verificationMode == .conformance ||
+                blocker == .unsupportedExternalApplicationRunner {
+                block(code, detail)
+            } else {
+                details.append("WARNING: \(detail); operational Steam launch continued")
             }
         }
 
@@ -5548,10 +6212,10 @@ final class SteamManager {
             switch await prefixHolderProcessIDs(under: target.expectedPrefixPath) {
             case .success(let pids):
                 if !pids.isEmpty {
-                    append(.blockedPrefixHeldByStaleProcess, "expected WINEPREFIX is held by existing process(es): \(pids.map(String.init).joined(separator: ", "))")
+                    block(.blockedPrefixHeldByStaleProcess, "expected WINEPREFIX is held by existing process(es): \(pids.map(String.init).joined(separator: ", "))")
                 }
             case .failure(let error):
-                append(.blockedRunnerPreflightFailed, "could not verify stale prefix holders before Steam launch: \(forgePlayTechnicalErrorSummary(error))")
+                block(.blockedRunnerPreflightFailed, "could not verify stale prefix holders before Steam launch: \(forgePlayTechnicalErrorSummary(error))")
             }
         }
 
@@ -5562,12 +6226,13 @@ final class SteamManager {
             )
             details.append(contentsOf: smoke.details)
             if !smoke.passed {
+                hasExecutionBlocker = true
                 reasonCodes.appendUnique(.blockedRunnerPreflightFailed)
             }
         }
 
-        if reasonCodes.isEmpty {
-            return SteamLaunchGateAssessment(status: .success, reasonCodes: [], details: details)
+        if !hasExecutionBlocker {
+            return SteamLaunchGateAssessment(status: .success, reasonCodes: reasonCodes, details: details)
         }
         return SteamLaunchGateAssessment(status: .blocked, reasonCodes: reasonCodes, details: details)
     }
@@ -7460,7 +8125,7 @@ enum DarwinProcessSnapshotReader {
         return .success(path)
     }
 
-    private static func executablePath(for processID: pid_t) -> String? {
+    static func executablePath(for processID: pid_t) -> String? {
         guard case .success(let path) = executablePathResult(for: processID)
         else { return nil }
         return path
@@ -7597,6 +8262,9 @@ struct SteamGameRendererObservation: Sendable, Hashable {
     var processID: Int32
     /// The exact user-selected renderer for this Steam session.
     var rendererPolicy: SteamRendererPolicyPreference
+    /// Preserves compatibility variants, such as NVIDIA identity, that share
+    /// the same underlying renderer implementation.
+    var rendererSelection: SteamRendererPolicySelection
     /// Named profile selected before process creation. This is a plan, not
     /// evidence that any renderer module was actually loaded.
     var plannedProfile: String
@@ -7613,11 +8281,15 @@ struct SteamGameRendererObservation: Sendable, Hashable {
         recordSequence: Int = 0,
         processID: Int32,
         rendererPolicy: SteamRendererPolicyPreference,
+        rendererSelection: SteamRendererPolicySelection? = nil,
         executable: String
     ) {
         self.recordSequence = recordSequence
         self.processID = processID
         self.rendererPolicy = rendererPolicy
+        self.rendererSelection = rendererSelection ??
+            SteamRendererPolicySelection(rawValue: rendererPolicy.rawValue) ??
+            .d3dMetal
         self.plannedProfile = rendererPolicy.rawValue
         switch rendererPolicy {
         case .d3dMetal:
@@ -7642,6 +8314,7 @@ struct SteamGameRendererObservation: Sendable, Hashable {
         recordSequence: Int = 0,
         processID: Int32,
         rendererPolicy: SteamRendererPolicyPreference,
+        rendererSelection: SteamRendererPolicySelection? = nil,
         plannedProfile: String,
         plannedComponentOwnership: SteamGameRendererPlannedComponentOwnership,
         plannedComponentsX64: String = "unreported",
@@ -7655,6 +8328,9 @@ struct SteamGameRendererObservation: Sendable, Hashable {
         self.recordSequence = recordSequence
         self.processID = processID
         self.rendererPolicy = rendererPolicy
+        self.rendererSelection = rendererSelection ??
+            SteamRendererPolicySelection(rawValue: rendererPolicy.rawValue) ??
+            .d3dMetal
         self.plannedProfile = plannedProfile
         self.plannedComponentOwnership = plannedComponentOwnership
         self.plannedComponentsX64 = plannedComponentsX64
@@ -7736,31 +8412,277 @@ struct SteamGameRendererBaseHelperObservation: Sendable, Hashable {
     var executable: String
 }
 
-enum SteamD3DMetalNVAPIBootstrapState: String, Sendable, Hashable {
-    case initialized
-    case failed
+enum SteamD3DMetalFrameGenerationState: String, Sendable, Hashable {
+    case monitoring
+    case priming
+    case active
+    case inactive
+    case error
 }
 
-struct SteamD3DMetalNVAPIBootstrapObservation: Sendable, Hashable {
-    var recordSequence: Int
-    var processID: Int32
-    var state: SteamD3DMetalNVAPIBootstrapState
-    var module: String
-    var loadStatus: UInt32
-    var procedureStatus: UInt32
-    var exceptionStatus: UInt32
-    var initializeResult: Int32
+private enum SteamD3DMetalFrameGenerationPipelineBounds {
+    static let maximumCaptureDepth: UInt32 = 3
+}
 
-    var diagnosticDescription: String {
-        "state=\(state.rawValue); module=\(module); " +
-            "load-status=\(Self.statusHex(loadStatus)); " +
-            "procedure-status=\(Self.statusHex(procedureStatus)); " +
-            "exception-status=\(Self.statusHex(exceptionStatus)); " +
-            "initialize-result=\(initializeResult)"
+struct SteamD3DMetalFrameGenerationObservation: Sendable, Hashable {
+    private static let maximumPresentationPipelineDepth: UInt32 = 3
+    private struct SessionKey: Hashable {
+        var processID: Int32
+        var sessionIdentifier: UInt64
     }
 
-    private static func statusHex(_ status: UInt32) -> String {
-        String(format: "0x%08X", status)
+    var recordSequence: Int
+    var processID: Int32
+    var state: SteamD3DMetalFrameGenerationState
+    var targetFrameRate: Int
+    var epoch: UInt64 = 0
+    var sourcePresentSeen: UInt64
+    var sourcePresentAccepted: UInt64? = nil
+    var captureReady: UInt64
+    var generatedSubmitted: UInt64
+    var generatedCompleted: UInt64
+    var generatedPresented: UInt64
+    var midpointPresented: UInt64
+    var outputActive: Bool
+    var displayUpdates: UInt64
+    var cadenceHz: Double
+    var reason: String
+    var currentPresented: UInt64? = nil
+    var midpointAdmitted: UInt64? = nil
+    var midpointDroppedLate: UInt64? = nil
+    var midpointDroppedSuperseded: UInt64? = nil
+    var midpointDroppedPresentationStall: UInt64? = nil
+    var presentationsInFlight: UInt32? = nil
+    var maximumPresentationsInFlight: UInt32? = nil
+    var presentationReceiptsPending: UInt32? = nil
+    var maximumPresentationReceiptsPending: UInt32? = nil
+    var writerCompleted: UInt64? = nil
+    var currentWriterCompleted: UInt64? = nil
+    var generationReserved: Bool? = nil
+    var generationOutstanding: Bool? = nil
+    var effectiveDisplaySlotMilliseconds: Double? = nil
+    var captureSkippedBusy: UInt64? = nil
+    var captureInFlight: UInt32? = nil
+    var maximumCaptureInFlight: UInt32? = nil
+    var captureBusyEpisode: UInt32? = nil
+    var captureOutstandingMilliseconds: Double? = nil
+    var outputUnderrunWindows: UInt32? = nil
+    var midpointStarvationWindows: UInt32? = nil
+    var emptyDisplayUpdates: UInt32? = nil
+    var displayResumeCount: UInt64? = nil
+    var sourceCadenceHz: Double? = nil
+    var originalCadenceHz: Double? = nil
+    var generatedCadenceHz: Double? = nil
+    var outputSourceRatio: Double? = nil
+    var currentSourceRatio: Double? = nil
+    var admissionScale: Double? = nil
+    var rawDebt: Double? = nil
+    var outputPolicy: String? = nil
+    var presentationStallChecks: UInt32? = nil
+    var sourcePresentCommandBufferBound: UInt64? = nil
+    var sourceCaptureEncodedOnSourceCommandBuffer: UInt64? = nil
+    var sourceCaptureJoined: UInt64? = nil
+    var sourcePresentUncovered: UInt64? = nil
+    var sourceDemandCredit: Double? = nil
+    var readyBundleDepth: UInt32? = nil
+    var maximumReadyBundleDepth: UInt32? = nil
+    var currentQueueCapacityHandoffs: UInt64? = nil
+    var demandProbeCount: UInt64? = nil
+    var demandProbePhase: String? = nil
+    var timelineRebaseCount: UInt64? = nil
+    var admissionBlockMask: UInt32? = nil
+    var sourceCadenceRatio: Double? = nil
+    var sourceCadenceLower95: Double? = nil
+    var sourceCadenceUpper95: Double? = nil
+    var captureCommandBuffersOutstanding: UInt32? = nil
+    var displayCommandBuffersOutstanding: UInt32? = nil
+    var capturePoolAllocations: UInt64? = nil
+    var capturePoolReleases: UInt64? = nil
+    var capturePoolTextureCount: UInt32? = nil
+    var sessionIdentifier: UInt64? = nil
+    var recordMonotonicTime: Double? = nil
+    var executableSHA256: String? = nil
+
+    var diagnosticDescription: String {
+        "state=\(state.rawValue); target-hz=\(targetFrameRate); " +
+            "epoch=\(epoch); " +
+            "source-present-seen=\(sourcePresentSeen); " +
+            (sourcePresentAccepted.map {
+                "source-present-accepted=\($0); "
+            } ?? "") +
+            "capture-ready=\(captureReady); " +
+            "generated-submitted=\(generatedSubmitted); " +
+            "generated-completed=\(generatedCompleted); " +
+            "generated-presented=\(generatedPresented); " +
+            "midpoint=\(midpointPresented); " +
+            "output-active=\(outputActive ? 1 : 0); " +
+            "display-updates=\(displayUpdates); " +
+            "cadence-hz=\(cadenceHz); reason=\(reason)" +
+            (currentPresented.map { "; current-presented=\($0)" } ?? "") +
+            (midpointAdmitted.map { "; midpoint-admitted=\($0)" } ?? "") +
+            (midpointDroppedLate.map { "; midpoint-dropped-late=\($0)" } ?? "") +
+            (midpointDroppedSuperseded.map {
+                "; midpoint-dropped-superseded=\($0)"
+            } ?? "") +
+            (midpointDroppedPresentationStall.map {
+                "; midpoint-dropped-presentation-stall=\($0)"
+            } ?? "") +
+            (presentationsInFlight.map { "; presentations-in-flight=\($0)" } ?? "") +
+            (maximumPresentationsInFlight.map {
+                "; max-presentations-in-flight=\($0)"
+            } ?? "") +
+            (presentationReceiptsPending.map {
+                "; presentation-receipts-pending=\($0)"
+            } ?? "") +
+            (maximumPresentationReceiptsPending.map {
+                "; max-presentation-receipts-pending=\($0)"
+            } ?? "") +
+            (writerCompleted.map { "; writer-completed=\($0)" } ?? "") +
+            (currentWriterCompleted.map {
+                "; current-writer-completed=\($0)"
+            } ?? "") +
+            (captureSkippedBusy.map { "; capture-skipped-busy=\($0)" } ?? "") +
+            (captureBusyEpisode.map { "; capture-busy-episode=\($0)" } ?? "") +
+            (outputUnderrunWindows.map { "; output-underrun-windows=\($0)" } ?? "") +
+            (midpointStarvationWindows.map {
+                "; midpoint-starvation-windows=\($0)"
+            } ?? "") +
+            (sourceCadenceHz.map { "; source-cadence-hz=\($0)" } ?? "") +
+            (originalCadenceHz.map { "; original-cadence-hz=\($0)" } ?? "") +
+            (generatedCadenceHz.map { "; generated-cadence-hz=\($0)" } ?? "") +
+            (outputSourceRatio.map { "; output-source-ratio=\($0)" } ?? "") +
+            (currentSourceRatio.map { "; current-source-ratio=\($0)" } ?? "") +
+            (admissionScale.map { "; admission-scale=\($0)" } ?? "") +
+            (rawDebt.map { "; raw-debt=\($0)" } ?? "") +
+            (outputPolicy.map { "; output-policy=\($0)" } ?? "") +
+            (presentationStallChecks.map {
+                "; presentation-stall-checks=\($0)"
+            } ?? "") +
+            (sourcePresentCommandBufferBound.map {
+                "; source-present-command-buffer-bound=\($0)"
+            } ?? "") +
+            (sourceCaptureEncodedOnSourceCommandBuffer.map {
+                "; source-capture-encoded-on-source-cb=\($0)"
+            } ?? "") +
+            (sourceCaptureJoined.map {
+                "; source-capture-joined=\($0)"
+            } ?? "") +
+            (sourcePresentUncovered.map {
+                "; source-present-uncovered=\($0)"
+            } ?? "") +
+            (sourceDemandCredit.map { "; source-demand-credit=\($0)" } ?? "") +
+            (readyBundleDepth.map { "; ready-bundle-depth=\($0)" } ?? "") +
+            (maximumReadyBundleDepth.map {
+                "; max-ready-bundle-depth=\($0)"
+            } ?? "") +
+            (currentQueueCapacityHandoffs.map {
+                "; current-queue-capacity-handoffs=\($0)"
+            } ?? "") +
+            (demandProbeCount.map { "; demand-probe-count=\($0)" } ?? "") +
+            (demandProbePhase.map { "; demand-probe-phase=\($0)" } ?? "") +
+            (timelineRebaseCount.map { "; timeline-rebase-count=\($0)" } ?? "") +
+            (admissionBlockMask.map { "; admission-block-mask=\($0)" } ?? "") +
+            (sourceCadenceRatio.map { "; source-q=\($0)" } ?? "") +
+            (sourceCadenceLower95.map { "; source-q-lower95=\($0)" } ?? "") +
+            (sourceCadenceUpper95.map { "; source-q-upper95=\($0)" } ?? "") +
+            (captureCommandBuffersOutstanding.map {
+                "; capture-cb-outstanding=\($0)"
+            } ?? "") +
+            (displayCommandBuffersOutstanding.map {
+                "; display-cb-outstanding=\($0)"
+            } ?? "") +
+            (capturePoolAllocations.map {
+                "; capture-pool-allocations=\($0)"
+            } ?? "") +
+            (capturePoolReleases.map {
+                "; capture-pool-releases=\($0)"
+            } ?? "") +
+            (capturePoolTextureCount.map {
+                "; capture-pool-textures=\($0)"
+            } ?? "") +
+            (sessionIdentifier.map { "; session-id=\($0)" } ?? "") +
+            (recordMonotonicTime.map { "; record-time=\($0)" } ?? "") +
+            (executableSHA256.map { "; executable-sha256=\($0)" } ?? "")
+    }
+
+    /// Capture or GPU completion alone is never activation evidence. The
+    /// display-link counter must advance between two snapshots from the same
+    /// process while generated and midpoint frames are actually presented.
+    func meetsActivationContract(
+        after previous: SteamD3DMetalFrameGenerationObservation
+    ) -> Bool {
+        guard let currentPresented,
+              let previousCurrentPresented = previous.currentPresented,
+              let outputSourceRatio,
+              let currentSourceRatio,
+              let sourceCadenceRatio,
+              let sourceCadenceLower95,
+              let presentationsInFlight,
+              let maximumPresentationsInFlight,
+              let captureInFlight,
+              let maximumCaptureInFlight,
+              let captureCommandBuffersOutstanding,
+              let displayCommandBuffersOutstanding,
+              let sessionIdentifier,
+              let previousSessionIdentifier = previous.sessionIdentifier,
+              let recordMonotonicTime,
+              let previousRecordMonotonicTime = previous.recordMonotonicTime,
+              let executableSHA256,
+              let previousExecutableSHA256 = previous.executableSHA256,
+              sessionIdentifier > 0,
+              sessionIdentifier == previousSessionIdentifier,
+              executableSHA256 == previousExecutableSHA256 else {
+            // Older layouts remain readable diagnostics, but they do not carry
+            // enough Direct-baseline and bounded-pipeline evidence for a current
+            // frame-generation success claim.
+            return false
+        }
+
+        return processID == previous.processID &&
+            recordSequence > previous.recordSequence &&
+            recordMonotonicTime > previousRecordMonotonicTime &&
+            state == .active &&
+            generatedPresented > previous.generatedPresented &&
+            midpointPresented > previous.midpointPresented &&
+            currentPresented > previousCurrentPresented &&
+            outputActive &&
+            displayUpdates > previous.displayUpdates &&
+            sourceCadenceRatio > 0 &&
+            outputSourceRatio > 1.0 &&
+            currentSourceRatio >= 1.0 &&
+            cadenceHz >= sourceCadenceLower95 * Double(targetFrameRate) &&
+            presentationsInFlight <= Self.maximumPresentationPipelineDepth &&
+            maximumPresentationsInFlight <=
+                Self.maximumPresentationPipelineDepth &&
+            captureInFlight <=
+                SteamD3DMetalFrameGenerationPipelineBounds.maximumCaptureDepth &&
+            maximumCaptureInFlight <=
+                SteamD3DMetalFrameGenerationPipelineBounds.maximumCaptureDepth &&
+            captureCommandBuffersOutstanding <=
+                SteamD3DMetalFrameGenerationPipelineBounds.maximumCaptureDepth &&
+            displayCommandBuffersOutstanding <=
+                Self.maximumPresentationPipelineDepth
+    }
+
+    static func activationContractResults(
+        in observations: [SteamD3DMetalFrameGenerationObservation]
+    ) -> [Bool] {
+        var previousBySession: [SessionKey: SteamD3DMetalFrameGenerationObservation] = [:]
+        return observations.map { observation in
+            guard let sessionIdentifier = observation.sessionIdentifier,
+                  sessionIdentifier > 0 else {
+                return false
+            }
+            let key = SessionKey(
+                processID: observation.processID,
+                sessionIdentifier: sessionIdentifier
+            )
+            let result = previousBySession[key].map {
+                observation.meetsActivationContract(after: $0)
+            } ?? false
+            previousBySession[key] = observation
+            return result
+        }
     }
 }
 
@@ -7809,7 +8731,8 @@ struct SteamProcessObservationReadResult: Sendable, Hashable {
     var gameRendererFallbacks: [SteamGameRendererFallbackObservation] = []
     var gameRendererModuleLoads: [SteamGameRendererModuleLoadObservation] = []
     var gameRendererBaseHelpers: [SteamGameRendererBaseHelperObservation] = []
-    var d3dMetalNVAPIBootstraps: [SteamD3DMetalNVAPIBootstrapObservation] = []
+    var d3dMetalFrameGenerationObservations:
+        [SteamD3DMetalFrameGenerationObservation] = []
     var state: SteamProcessObservationReadState
     var issues: [SteamProcessObservationReadIssue]
 
@@ -7833,12 +8756,137 @@ enum SteamProcessCreationObservationLog {
         "FORGEPLAY_GAME_RENDERER_LOAD_V2"
     private static let gameRendererBaseHelperRecordPrefix =
         "FORGEPLAY_GAME_RENDERER_BASE_HELPER_V1"
-    private static let d3dMetalNVAPIBootstrapRecordPrefix =
-        "FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP_V1"
+    private static let d3dMetalFrameGenerationRecordPrefix =
+        "FORGEPLAY_D3DMETAL_FRAMEGEN_V1"
+    private static let d3dMetalFrameGenerationBoundedMetricNames: Set<String> = [
+        "current_presented",
+        "midpoint_admitted",
+        "midpoint_dropped_late",
+        "midpoint_dropped_superseded",
+        "presentations_in_flight",
+        "max_presentations_in_flight",
+        "generation_reserved",
+        "generation_outstanding",
+        "effective_slot_ms",
+        "capture_skipped_busy",
+        "capture_inflight",
+        "max_capture_inflight"
+    ]
+    private static let d3dMetalFrameGenerationRecoveryMetricNames: Set<String> = [
+        "capture_busy_episode",
+        "capture_outstanding_ms",
+        "output_underrun_windows",
+        "midpoint_starvation_windows",
+        "empty_display_updates",
+        "display_resume_count",
+        "source_cadence_hz",
+        "output_source_ratio",
+        "presentation_stall_checks",
+        "executable_sha256"
+    ]
+    private static let d3dMetalFrameGenerationExtendedMetricNames =
+        d3dMetalFrameGenerationBoundedMetricNames.union(
+            d3dMetalFrameGenerationRecoveryMetricNames
+        )
+    private static let d3dMetalFrameGenerationCadenceMetricNames =
+        d3dMetalFrameGenerationExtendedMetricNames.union([
+            "original_cadence_hz",
+            "generated_cadence_hz"
+        ])
+    private static let d3dMetalFrameGenerationLatestMetricNames =
+        d3dMetalFrameGenerationCadenceMetricNames.union([
+            "current_source_ratio",
+            "admission_scale",
+            "raw_debt",
+            "output_policy"
+        ])
+    private static let d3dMetalFrameGenerationOrderedMetricNames =
+        d3dMetalFrameGenerationLatestMetricNames.union([
+            "source_demand_credit",
+            "ready_bundle_depth",
+            "max_ready_bundle_depth",
+            "current_queue_capacity_handoffs",
+            "demand_probe_count",
+            "demand_probe_phase",
+            "timeline_rebase_count"
+        ])
+    private static let d3dMetalFrameGenerationPreSessionRuntimeMetricNames =
+        d3dMetalFrameGenerationOrderedMetricNames.union([
+            "source_present_accepted",
+            "admission_block_mask",
+            "source_q",
+            "source_q_lower95",
+            "source_q_upper95",
+            "capture_cb_outstanding",
+            "display_cb_outstanding",
+            "capture_pool_allocations",
+            "capture_pool_releases",
+            "capture_pool_textures",
+            "record_time",
+        ])
+    private static let d3dMetalFrameGenerationRuntimeEvidenceMetricNames =
+        d3dMetalFrameGenerationPreSessionRuntimeMetricNames.union([
+            "session_id"
+        ])
+    private static let d3dMetalFrameGenerationSinglePathMetricNames: Set<String> = [
+        "current_presented",
+        "midpoint_admitted",
+        "midpoint_dropped_late",
+        "midpoint_dropped_superseded",
+        "presentations_in_flight",
+        "max_presentations_in_flight",
+        "generation_reserved",
+        "generation_outstanding",
+        "effective_slot_ms",
+        "capture_skipped_busy",
+        "capture_inflight",
+        "max_capture_inflight",
+        "capture_busy_episode",
+        "capture_outstanding_ms",
+        "empty_display_updates",
+        "display_resume_count",
+        "source_cadence_hz",
+        "original_cadence_hz",
+        "generated_cadence_hz",
+        "output_source_ratio",
+        "current_source_ratio",
+        "presentation_stall_checks",
+        "source_present_accepted",
+        "source_q",
+        "source_q_lower95",
+        "source_q_upper95",
+        "capture_cb_outstanding",
+        "display_cb_outstanding",
+        "capture_pool_allocations",
+        "capture_pool_releases",
+        "capture_pool_textures",
+        "record_time",
+        "session_id",
+        "executable_sha256"
+    ]
+    private static let d3dMetalFrameGenerationCurrentMetricNames =
+        d3dMetalFrameGenerationSinglePathMetricNames.union([
+            "midpoint_dropped_presentation_stall",
+            "source_present_command_buffer_bound",
+            "source_capture_encoded_on_source_cb",
+            "source_capture_joined",
+            "source_present_uncovered",
+        ])
+    private static let d3dMetalFrameGenerationWriterReceiptMetricNames =
+        d3dMetalFrameGenerationCurrentMetricNames.union([
+            "presentation_receipts_pending",
+            "max_presentation_receipts_pending",
+            "writer_completed",
+            "current_writer_completed",
+        ])
+    private static let d3dMetalFrameGenerationAcceptedMetricNames =
+        d3dMetalFrameGenerationRuntimeEvidenceMetricNames.union(
+            d3dMetalFrameGenerationWriterReceiptMetricNames
+        )
     private static let maximumFileSize = 1024 * 1024
     private static let maximumRecordCount = 4_096
     private static let maximumCommandSize = 256 * 1024
-    private static let rendererModuleNames: Set<String> = [
+    private static let rendererModuleNames: Set<String> = Set([
         "d3d8.dll",
         "d3d9.dll",
         "d3d10.dll",
@@ -7849,11 +8897,8 @@ enum SteamProcessCreationObservationLog {
         "d3d12core.dll",
         "dxgi.dll",
         "winemetal.dll",
-        "nvapi.dll",
-        "nvapi64.dll",
-        "nvngx.dll",
         "nvngx-on-metalfx.dll"
-    ]
+    ]).union(D3DMetalNVIDIAProviderContract.system32ModuleNames)
 
     private static func value(in component: String, after prefix: String) -> String? {
         guard component.hasPrefix(prefix) else { return nil }
@@ -7909,11 +8954,14 @@ enum SteamProcessCreationObservationLog {
         read(at: url, fileManager: fileManager).gameRendererBaseHelpers
     }
 
-    static func d3dMetalNVAPIBootstraps(
+    static func d3dMetalFrameGenerationObservations(
         at url: URL?,
         fileManager: FileManager = .default
-    ) -> [SteamD3DMetalNVAPIBootstrapObservation] {
-        read(at: url, fileManager: fileManager).d3dMetalNVAPIBootstraps
+    ) -> [SteamD3DMetalFrameGenerationObservation] {
+        read(
+            at: url,
+            fileManager: fileManager
+        ).d3dMetalFrameGenerationObservations
     }
 
     static func parse(_ data: Data) -> [SteamLaunchObservedProcess] {
@@ -7952,10 +9000,10 @@ enum SteamProcessCreationObservationLog {
         parseResult(data).gameRendererBaseHelpers
     }
 
-    static func parseD3DMetalNVAPIBootstraps(
+    static func parseD3DMetalFrameGenerationObservations(
         _ data: Data
-    ) -> [SteamD3DMetalNVAPIBootstrapObservation] {
-        parseResult(data).d3dMetalNVAPIBootstraps
+    ) -> [SteamD3DMetalFrameGenerationObservation] {
+        parseResult(data).d3dMetalFrameGenerationObservations
     }
 
     static func read(
@@ -8143,7 +9191,9 @@ enum SteamProcessCreationObservationLog {
         var rendererFallbacks: [SteamGameRendererFallbackObservation] = []
         var rendererModuleLoads: [SteamGameRendererModuleLoadObservation] = []
         var rendererBaseHelpers: [SteamGameRendererBaseHelperObservation] = []
-        var nvapiBootstraps: [SteamD3DMetalNVAPIBootstrapObservation] = []
+        var frameGenerationObservations:
+            [SteamD3DMetalFrameGenerationObservation] = []
+        var frameGenerationCapacityReached = false
         var invalidUTF8Count = 0
         var malformedCount = 0
         for (recordSequence, recordData) in lineData.enumerated() {
@@ -8152,7 +9202,32 @@ enum SteamProcessCreationObservationLog {
                 continue
             }
             let fields = rawLine.split(separator: "\t", omittingEmptySubsequences: false)
-            guard fields.count == 3 else {
+            let isFrameGenerationRecord =
+                fields.first == Substring(d3dMetalFrameGenerationRecordPrefix)
+            let fieldCountIsValid = isFrameGenerationRecord
+                ? fields.count == 14 || fields.count == 15 ||
+                    fields.count == 15 +
+                        d3dMetalFrameGenerationBoundedMetricNames.count ||
+                    fields.count == 15 +
+                        d3dMetalFrameGenerationExtendedMetricNames.count ||
+                    fields.count == 15 +
+                        d3dMetalFrameGenerationCadenceMetricNames.count ||
+                    fields.count == 15 +
+                        d3dMetalFrameGenerationLatestMetricNames.count ||
+                    fields.count == 15 +
+                        d3dMetalFrameGenerationOrderedMetricNames.count ||
+                    fields.count == 15 +
+                        d3dMetalFrameGenerationPreSessionRuntimeMetricNames.count ||
+                    fields.count == 15 +
+                        d3dMetalFrameGenerationRuntimeEvidenceMetricNames.count ||
+                    fields.count == 15 +
+                        d3dMetalFrameGenerationSinglePathMetricNames.count ||
+                    fields.count == 15 +
+                        d3dMetalFrameGenerationCurrentMetricNames.count ||
+                    fields.count == 15 +
+                        d3dMetalFrameGenerationWriterReceiptMetricNames.count
+                : fields.count == 3
+            guard fieldCountIsValid else {
                 malformedCount += 1
                 continue
             }
@@ -8216,9 +9291,10 @@ enum SteamProcessCreationObservationLog {
                     rawValue: actualLoadedText
                    ),
                    appliedText == plannedOwnerText {
-                    let rendererPolicy = SteamRendererPolicyPreference(
+                    let rendererSelection = SteamRendererPolicySelection(
                         rawValue: requestedText
                     )
+                    let rendererPolicy = rendererSelection?.forcedPreference
                     let isVersion2 = fields[0] == gameRendererRouteV2RecordPrefix
                     let correlationIdentifier: String?
                     let executableStartIndex: Int
@@ -8241,7 +9317,8 @@ enum SteamProcessCreationObservationLog {
                     }
                     let executable = components.dropFirst(executableStartIndex)
                         .joined(separator: " | ")
-                    guard let rendererPolicy,
+                    guard let rendererSelection,
+                          let rendererPolicy,
                           !plannedProfile.isEmpty,
                           !plannedComponentsX64.isEmpty,
                           !plannedComponentsX86.isEmpty,
@@ -8255,6 +9332,7 @@ enum SteamProcessCreationObservationLog {
                         recordSequence: recordSequence,
                         processID: processID,
                         rendererPolicy: rendererPolicy,
+                        rendererSelection: rendererSelection,
                         plannedProfile: plannedProfile,
                         plannedComponentOwnership: plannedComponentOwnership,
                         plannedComponentsX64: plannedComponentsX64,
@@ -8272,11 +9350,13 @@ enum SteamProcessCreationObservationLog {
                           let routingEvidence = value(in: components[3], after: "evidence="),
                           let plannedComponentOwnership =
                             SteamGameRendererPlannedComponentOwnership(rawValue: appliedText) {
-                    let rendererPolicy = SteamRendererPolicyPreference(
+                    let rendererSelection = SteamRendererPolicySelection(
                         rawValue: requestedText
                     )
+                    let rendererPolicy = rendererSelection?.forcedPreference
                     let executable = components.dropFirst(4).joined(separator: " | ")
-                    guard let rendererPolicy,
+                    guard let rendererSelection,
+                          let rendererPolicy,
                           !routingReason.isEmpty,
                           !routingEvidence.isEmpty,
                           !executable.isEmpty else {
@@ -8287,6 +9367,7 @@ enum SteamProcessCreationObservationLog {
                         recordSequence: recordSequence,
                         processID: processID,
                         rendererPolicy: rendererPolicy,
+                        rendererSelection: rendererSelection,
                         plannedProfile: appliedText,
                         plannedComponentOwnership: plannedComponentOwnership,
                         actualLoadedState: .unobserved,
@@ -8297,7 +9378,10 @@ enum SteamProcessCreationObservationLog {
                 } else if let separator = payload.range(of: " | ") {
                     let policyText = String(payload[..<separator.lowerBound])
                     let executable = String(payload[separator.upperBound...])
-                    guard let rendererPolicy = SteamRendererPolicyPreference(rawValue: policyText),
+                    guard let rendererSelection = SteamRendererPolicySelection(
+                        rawValue: policyText
+                    ),
+                          let rendererPolicy = rendererSelection.forcedPreference,
                           !executable.isEmpty else {
                         malformedCount += 1
                         continue
@@ -8306,6 +9390,7 @@ enum SteamProcessCreationObservationLog {
                         recordSequence: recordSequence,
                         processID: processID,
                         rendererPolicy: rendererPolicy,
+                        rendererSelection: rendererSelection,
                         executable: executable
                     ))
                 } else {
@@ -8437,68 +9522,724 @@ enum SteamProcessCreationObservationLog {
                         executable: executable
                     )
                 )
-            } else if fields[0] == d3dMetalNVAPIBootstrapRecordPrefix {
-                let payload = String(fields[2])
-                let components = payload.components(separatedBy: " | ")
-                guard components.count == 6,
-                      payload.utf8.count <= maximumCommandSize,
-                      !payload.unicodeScalars.contains(where: {
+            } else if isFrameGenerationRecord {
+                if frameGenerationCapacityReached {
+                    continue
+                }
+                // V1 initially omitted epoch; current native and pre-proxy
+                // writers include it after target_hz. Accept both layouts so
+                // released evidence remains readable while indexing every
+                // current metric from the actual writer contract.
+                let metricOffset = fields.count >= 15 ? 1 : 0
+                let epochValue = metricOffset == 1
+                    ? value(in: String(fields[4]), after: "epoch=")
+                    : "0"
+                let stateValue = value(
+                    in: String(fields[2]),
+                    after: "state="
+                )
+                let targetValue = value(
+                    in: String(fields[3]),
+                    after: "target_hz="
+                )
+                let sourcePresentValue = value(
+                    in: String(fields[4 + metricOffset]),
+                    after: "source_present_seen="
+                )
+                let captureReadyValue = value(
+                    in: String(fields[5 + metricOffset]),
+                    after: "capture_ready="
+                )
+                let generatedSubmittedValue = value(
+                    in: String(fields[6 + metricOffset]),
+                    after: "generated_submitted="
+                )
+                let generatedCompletedValue = value(
+                    in: String(fields[7 + metricOffset]),
+                    after: "generated_completed="
+                )
+                let generatedPresentedValue = value(
+                    in: String(fields[8 + metricOffset]),
+                    after: "generated_presented="
+                )
+                let midpointValue = value(
+                    in: String(fields[9 + metricOffset]),
+                    after: "midpoint="
+                )
+                let outputActiveValue = value(
+                    in: String(fields[10 + metricOffset]),
+                    after: "output_active="
+                )
+                let displayUpdatesValue = value(
+                    in: String(fields[11 + metricOffset]),
+                    after: "display_updates="
+                )
+                let cadenceValue = value(
+                    in: String(fields[12 + metricOffset]),
+                    after: "cadence_hz="
+                )
+                let reason = value(
+                    in: String(fields[13 + metricOffset]),
+                    after: "reason="
+                )
+                let extendedFields = fields.dropFirst(14 + metricOffset)
+                var extendedMetrics: [String: String] = [:]
+                var extendedMetricsAreValid = true
+                for field in extendedFields {
+                    let component = String(field)
+                    guard let separator = component.firstIndex(of: "="),
+                          separator != component.startIndex,
+                          separator != component.index(before: component.endIndex) else {
+                        extendedMetricsAreValid = false
+                        break
+                    }
+                    let name = String(component[..<separator])
+                    let metricValue = String(component[component.index(after: separator)...])
+                    guard d3dMetalFrameGenerationAcceptedMetricNames
+                            .contains(name),
+                          extendedMetrics[name] == nil,
+                          !metricValue.unicodeScalars.contains(where: {
+                              $0.value < 0x20
+                          }) else {
+                        extendedMetricsAreValid = false
+                        break
+                    }
+                    extendedMetrics[name] = metricValue
+                }
+                let hasExtendedMetrics = !extendedFields.isEmpty
+                let extendedMetricNames = Set(extendedMetrics.keys)
+                guard extendedMetricsAreValid,
+                      !hasExtendedMetrics ||
+                        extendedMetricNames ==
+                            d3dMetalFrameGenerationBoundedMetricNames ||
+                        extendedMetricNames ==
+                            d3dMetalFrameGenerationExtendedMetricNames ||
+                        extendedMetricNames ==
+                            d3dMetalFrameGenerationCadenceMetricNames ||
+                        extendedMetricNames ==
+                            d3dMetalFrameGenerationLatestMetricNames ||
+                        extendedMetricNames ==
+                            d3dMetalFrameGenerationOrderedMetricNames ||
+                        extendedMetricNames ==
+                            d3dMetalFrameGenerationPreSessionRuntimeMetricNames ||
+                        extendedMetricNames ==
+                            d3dMetalFrameGenerationRuntimeEvidenceMetricNames ||
+                        extendedMetricNames ==
+                            d3dMetalFrameGenerationSinglePathMetricNames ||
+                        extendedMetricNames ==
+                            d3dMetalFrameGenerationCurrentMetricNames ||
+                        extendedMetricNames ==
+                            d3dMetalFrameGenerationWriterReceiptMetricNames else {
+                    malformedCount += 1
+                    continue
+                }
+                let currentPresented = extendedMetrics["current_presented"]
+                    .flatMap(UInt64.init)
+                let midpointAdmitted = extendedMetrics["midpoint_admitted"]
+                    .flatMap(UInt64.init)
+                let midpointDroppedLate = extendedMetrics["midpoint_dropped_late"]
+                    .flatMap(UInt64.init)
+                let midpointDroppedSuperseded =
+                    extendedMetrics["midpoint_dropped_superseded"]
+                        .flatMap(UInt64.init)
+                let midpointDroppedPresentationStall =
+                    extendedMetrics["midpoint_dropped_presentation_stall"]
+                        .flatMap(UInt64.init)
+                let presentationsInFlight =
+                    extendedMetrics["presentations_in_flight"]
+                        .flatMap(UInt32.init)
+                let maximumPresentationsInFlight =
+                    extendedMetrics["max_presentations_in_flight"]
+                        .flatMap(UInt32.init)
+                let presentationReceiptsPending =
+                    extendedMetrics["presentation_receipts_pending"]
+                        .flatMap(UInt32.init)
+                let maximumPresentationReceiptsPending =
+                    extendedMetrics["max_presentation_receipts_pending"]
+                        .flatMap(UInt32.init)
+                let writerCompleted = extendedMetrics["writer_completed"]
+                    .flatMap(UInt64.init)
+                let currentWriterCompleted =
+                    extendedMetrics["current_writer_completed"]
+                        .flatMap(UInt64.init)
+                let parsedGeneratedCompleted = generatedCompletedValue
+                    .flatMap(UInt64.init)
+                let generationReserved = extendedMetrics["generation_reserved"]
+                    .flatMap { $0 == "0" ? false : ($0 == "1" ? true : nil) }
+                let generationOutstanding =
+                    extendedMetrics["generation_outstanding"]
+                        .flatMap { $0 == "0" ? false : ($0 == "1" ? true : nil) }
+                let effectiveDisplaySlotMilliseconds =
+                    extendedMetrics["effective_slot_ms"]
+                        .flatMap(Double.init)
+                let captureSkippedBusy = extendedMetrics["capture_skipped_busy"]
+                    .flatMap(UInt64.init)
+                let captureInFlight = extendedMetrics["capture_inflight"]
+                    .flatMap(UInt32.init)
+                let maximumCaptureInFlight =
+                    extendedMetrics["max_capture_inflight"]
+                        .flatMap(UInt32.init)
+                let captureBusyEpisode = extendedMetrics["capture_busy_episode"]
+                    .flatMap(UInt32.init)
+                let captureOutstandingMilliseconds =
+                    extendedMetrics["capture_outstanding_ms"]
+                        .flatMap(Double.init)
+                let outputUnderrunWindows =
+                    extendedMetrics["output_underrun_windows"]
+                        .flatMap(UInt32.init)
+                let midpointStarvationWindows =
+                    extendedMetrics["midpoint_starvation_windows"]
+                        .flatMap(UInt32.init)
+                let emptyDisplayUpdates = extendedMetrics["empty_display_updates"]
+                    .flatMap(UInt32.init)
+                let displayResumeCount = extendedMetrics["display_resume_count"]
+                    .flatMap(UInt64.init)
+                let sourceCadenceHz = extendedMetrics["source_cadence_hz"]
+                    .flatMap(Double.init)
+                let originalCadenceHz = extendedMetrics["original_cadence_hz"]
+                    .flatMap(Double.init)
+                let generatedCadenceHz = extendedMetrics["generated_cadence_hz"]
+                    .flatMap(Double.init)
+                let outputSourceRatio = extendedMetrics["output_source_ratio"]
+                    .flatMap(Double.init)
+                let currentSourceRatio = extendedMetrics["current_source_ratio"]
+                    .flatMap(Double.init)
+                let admissionScale = extendedMetrics["admission_scale"]
+                    .flatMap(Double.init)
+                let rawDebt = extendedMetrics["raw_debt"]
+                    .flatMap(Double.init)
+                let outputPolicy = extendedMetrics["output_policy"]
+                let sourceDemandCredit = extendedMetrics["source_demand_credit"]
+                    .flatMap(Double.init)
+                let readyBundleDepth = extendedMetrics["ready_bundle_depth"]
+                    .flatMap(UInt32.init)
+                let maximumReadyBundleDepth =
+                    extendedMetrics["max_ready_bundle_depth"]
+                        .flatMap(UInt32.init)
+                let currentQueueCapacityHandoffs =
+                    extendedMetrics["current_queue_capacity_handoffs"]
+                        .flatMap(UInt64.init)
+                let demandProbeCount = extendedMetrics["demand_probe_count"]
+                    .flatMap(UInt64.init)
+                let demandProbePhase = extendedMetrics["demand_probe_phase"]
+                let timelineRebaseCount =
+                    extendedMetrics["timeline_rebase_count"]
+                        .flatMap(UInt64.init)
+                let sourcePresentAccepted =
+                    extendedMetrics["source_present_accepted"]
+                        .flatMap(UInt64.init)
+                let admissionBlockMask =
+                    extendedMetrics["admission_block_mask"]
+                        .flatMap(UInt32.init)
+                let sourceCadenceRatio = extendedMetrics["source_q"]
+                    .flatMap(Double.init)
+                let sourceCadenceLower95 =
+                    extendedMetrics["source_q_lower95"]
+                        .flatMap(Double.init)
+                let sourceCadenceUpper95 =
+                    extendedMetrics["source_q_upper95"]
+                        .flatMap(Double.init)
+                let captureCommandBuffersOutstanding =
+                    extendedMetrics["capture_cb_outstanding"]
+                        .flatMap(UInt32.init)
+                let displayCommandBuffersOutstanding =
+                    extendedMetrics["display_cb_outstanding"]
+                        .flatMap(UInt32.init)
+                let capturePoolAllocations =
+                    extendedMetrics["capture_pool_allocations"]
+                        .flatMap(UInt64.init)
+                let capturePoolReleases =
+                    extendedMetrics["capture_pool_releases"]
+                        .flatMap(UInt64.init)
+                let capturePoolTextureCount =
+                    extendedMetrics["capture_pool_textures"]
+                        .flatMap(UInt32.init)
+                let sessionIdentifier = extendedMetrics["session_id"]
+                    .flatMap(UInt64.init)
+                let recordMonotonicTime = extendedMetrics["record_time"]
+                    .flatMap(Double.init)
+                let presentationStallChecks =
+                    extendedMetrics["presentation_stall_checks"]
+                        .flatMap(UInt32.init)
+                let sourcePresentCommandBufferBound =
+                    extendedMetrics["source_present_command_buffer_bound"]
+                        .flatMap(UInt64.init)
+                let sourceCaptureEncodedOnSourceCommandBuffer =
+                    extendedMetrics["source_capture_encoded_on_source_cb"]
+                        .flatMap(UInt64.init)
+                let sourceCaptureJoined =
+                    extendedMetrics["source_capture_joined"]
+                        .flatMap(UInt64.init)
+                let sourcePresentUncovered =
+                    extendedMetrics["source_present_uncovered"]
+                        .flatMap(UInt64.init)
+                let executableIdentityValue =
+                    extendedMetrics["executable_sha256"]
+                let executableSHA256: String? = {
+                    guard let executableIdentityValue,
+                          executableIdentityValue != "unavailable",
+                          executableIdentityValue.count == 64,
+                          executableIdentityValue.allSatisfy({
+                              $0.isHexDigit && !$0.isUppercase
+                          }) else {
+                        return nil
+                    }
+                    return executableIdentityValue
+                }()
+                let hasRecoveryMetrics =
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationExtendedMetricNames ||
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationCadenceMetricNames ||
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationLatestMetricNames ||
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationOrderedMetricNames ||
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationPreSessionRuntimeMetricNames ||
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationRuntimeEvidenceMetricNames
+                let hasCadenceMetrics =
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationCadenceMetricNames ||
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationLatestMetricNames ||
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationOrderedMetricNames ||
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationPreSessionRuntimeMetricNames ||
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationRuntimeEvidenceMetricNames
+                let hasLatestMetrics =
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationLatestMetricNames ||
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationOrderedMetricNames ||
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationPreSessionRuntimeMetricNames ||
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationRuntimeEvidenceMetricNames
+                let hasOrderedMetrics =
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationOrderedMetricNames ||
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationPreSessionRuntimeMetricNames ||
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationRuntimeEvidenceMetricNames
+                let hasRuntimeEvidenceMetrics =
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationPreSessionRuntimeMetricNames ||
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationRuntimeEvidenceMetricNames
+                let hasSessionIdentity =
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationRuntimeEvidenceMetricNames
+                let hasCurrentMetrics =
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationCurrentMetricNames ||
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationWriterReceiptMetricNames
+                let hasWriterReceiptMetrics =
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationWriterReceiptMetricNames
+                let hasSinglePathMetrics = hasCurrentMetrics ||
+                    extendedMetricNames ==
+                        d3dMetalFrameGenerationSinglePathMetricNames
+                let currentMetricsAreValid: Bool = {
+                    guard hasCurrentMetrics else { return true }
+                    guard let midpointDroppedPresentationStall,
+                          let midpointDroppedLate,
+                          let sourcePresentCommandBufferBound,
+                          let sourceCaptureEncodedOnSourceCommandBuffer,
+                          let sourceCaptureJoined,
+                          sourcePresentUncovered != nil else {
+                        return false
+                    }
+                    return midpointDroppedPresentationStall <=
+                            midpointDroppedLate &&
+                        sourceCaptureEncodedOnSourceCommandBuffer <=
+                            sourcePresentCommandBufferBound &&
+                        sourceCaptureJoined <=
+                            sourceCaptureEncodedOnSourceCommandBuffer
+                }()
+                let writerReceiptMetricsAreValid: Bool = {
+                    guard hasWriterReceiptMetrics else { return true }
+                    guard let presentationReceiptsPending,
+                          let maximumPresentationReceiptsPending,
+                          let writerCompleted,
+                          let currentWriterCompleted,
+                          let parsedGeneratedCompleted else {
+                        return false
+                    }
+                    let completedSum = currentWriterCompleted
+                        .addingReportingOverflow(parsedGeneratedCompleted)
+                    return presentationReceiptsPending <= 6 &&
+                        maximumPresentationReceiptsPending <= 6 &&
+                        presentationReceiptsPending <=
+                            maximumPresentationReceiptsPending &&
+                        currentWriterCompleted <= writerCompleted &&
+                        parsedGeneratedCompleted <= writerCompleted &&
+                        !completedSum.overflow &&
+                        writerCompleted == completedSum.partialValue
+                }()
+                guard rawLine.utf8.count <= maximumCommandSize,
+                      currentMetricsAreValid,
+                      writerReceiptMetricsAreValid,
+                      let stateValue,
+                      let state = SteamD3DMetalFrameGenerationState(
+                        rawValue: stateValue
+                      ),
+                      let targetValue,
+                      let targetFrameRate = Int(targetValue),
+                      targetFrameRate >= 0,
+                      targetFrameRate <= 1_000,
+                      targetFrameRate > 0 || state == .error ||
+                        state == .inactive,
+                      let epochValue,
+                      let epoch = UInt64(epochValue),
+                      let sourcePresentValue,
+                      let sourcePresentSeen = UInt64(sourcePresentValue),
+                      let captureReadyValue,
+                      let captureReady = UInt64(captureReadyValue),
+                      let generatedSubmittedValue,
+                      let generatedSubmitted = UInt64(
+                        generatedSubmittedValue
+                      ),
+                      let generatedCompletedValue,
+                      let generatedCompleted = UInt64(
+                        generatedCompletedValue
+                      ),
+                      let generatedPresentedValue,
+                      let generatedPresented = UInt64(
+                        generatedPresentedValue
+                      ),
+                      let midpointValue,
+                      let midpointPresented = UInt64(midpointValue),
+                      let outputActiveValue,
+                      outputActiveValue == "0" || outputActiveValue == "1",
+                      let displayUpdatesValue,
+                      let displayUpdates = UInt64(displayUpdatesValue),
+                      let cadenceValue,
+                      let cadenceHz = Double(cadenceValue),
+                      cadenceHz.isFinite,
+                      cadenceHz >= 0,
+                      cadenceHz <= 10_000,
+                      let reason,
+                      !reason.unicodeScalars.contains(where: {
                           $0.value < 0x20
                       }),
-                      let stateText = value(
-                        in: components[0],
-                        after: "state="
+                      !hasExtendedMetrics || (
+                        currentPresented != nil &&
+                        midpointAdmitted != nil &&
+                        midpointDroppedLate != nil &&
+                        midpointDroppedSuperseded != nil &&
+                        presentationsInFlight != nil &&
+                        presentationsInFlight! <= 3 &&
+                        maximumPresentationsInFlight != nil &&
+                        maximumPresentationsInFlight! <= 3 &&
+                        generationReserved != nil &&
+                        generationOutstanding != nil &&
+                        effectiveDisplaySlotMilliseconds != nil &&
+                        effectiveDisplaySlotMilliseconds!.isFinite &&
+                        effectiveDisplaySlotMilliseconds! >= 0 &&
+                        effectiveDisplaySlotMilliseconds! <= 1_000 &&
+                        captureSkippedBusy != nil &&
+                        captureInFlight != nil &&
+                        captureInFlight! <=
+                            SteamD3DMetalFrameGenerationPipelineBounds
+                                .maximumCaptureDepth &&
+                        maximumCaptureInFlight != nil &&
+                        maximumCaptureInFlight! <=
+                            SteamD3DMetalFrameGenerationPipelineBounds
+                                .maximumCaptureDepth
                       ),
-                      let state = SteamD3DMetalNVAPIBootstrapState(
-                        rawValue: stateText
+                      !hasRecoveryMetrics || (
+                        captureBusyEpisode != nil &&
+                        captureOutstandingMilliseconds != nil &&
+                        captureOutstandingMilliseconds!.isFinite &&
+                        captureOutstandingMilliseconds! >= 0 &&
+                        captureOutstandingMilliseconds! <= 60_000 &&
+                        outputUnderrunWindows != nil &&
+                        outputUnderrunWindows! <= 2 &&
+                        midpointStarvationWindows != nil &&
+                        midpointStarvationWindows! <= 2 &&
+                        emptyDisplayUpdates != nil &&
+                        displayResumeCount != nil &&
+                        sourceCadenceHz != nil &&
+                        sourceCadenceHz!.isFinite &&
+                        sourceCadenceHz! >= 0 &&
+                        sourceCadenceHz! <= 10_000 &&
+                        outputSourceRatio != nil &&
+                        outputSourceRatio!.isFinite &&
+                        outputSourceRatio! >= 0 &&
+                        outputSourceRatio! <= 1_000 &&
+                        presentationStallChecks != nil &&
+                        presentationStallChecks! <= 3 &&
+                        executableIdentityValue != nil &&
+                        (executableIdentityValue == "unavailable" ||
+                         executableSHA256 != nil)
                       ),
-                      let module = value(
-                        in: components[1],
-                        after: "module="
-                      )?.lowercased(),
-                      module == "nvapi64.dll",
-                      let loadStatus = hexadecimalStatus(
-                        in: components[2],
-                        after: "load-status=0x"
+                      !hasCadenceMetrics || (
+                        originalCadenceHz != nil &&
+                        originalCadenceHz!.isFinite &&
+                        originalCadenceHz! >= 0 &&
+                        originalCadenceHz! <= 10_000 &&
+                        generatedCadenceHz != nil &&
+                        generatedCadenceHz!.isFinite &&
+                        generatedCadenceHz! >= 0 &&
+                        generatedCadenceHz! <= 10_000
                       ),
-                      let procedureStatus = hexadecimalStatus(
-                        in: components[3],
-                        after: "procedure-status=0x"
+                      !hasLatestMetrics || (
+                        currentSourceRatio != nil &&
+                        currentSourceRatio!.isFinite &&
+                        currentSourceRatio! >= 0 &&
+                        currentSourceRatio! <= 1_000 &&
+                        admissionScale != nil &&
+                        admissionScale!.isFinite &&
+                        admissionScale! >= 0 &&
+                        admissionScale! <= 1 &&
+                        rawDebt != nil &&
+                        rawDebt!.isFinite &&
+                        rawDebt! >= -1 &&
+                        rawDebt! <= 1 &&
+                        outputPolicy != nil &&
+                        [
+                            "augmenting",
+                            "current-only",
+                            "capacity-probe",
+                            "generated-burst",
+                        ]
+                            .contains(outputPolicy!)
                       ),
-                      let exceptionStatus = hexadecimalStatus(
-                        in: components[4],
-                        after: "exception-status=0x"
+                      !hasOrderedMetrics || (
+                        sourceDemandCredit != nil &&
+                        sourceDemandCredit!.isFinite &&
+                        sourceDemandCredit! >= 0 &&
+                        sourceDemandCredit! <= 1 &&
+                        readyBundleDepth != nil &&
+                        readyBundleDepth! <= 2 &&
+                        maximumReadyBundleDepth != nil &&
+                        maximumReadyBundleDepth! <= 2 &&
+                        currentQueueCapacityHandoffs != nil &&
+                        demandProbeCount != nil &&
+                        demandProbePhase != nil &&
+                        ["none", "current-replay", "generated-output"]
+                            .contains(demandProbePhase!) &&
+                        timelineRebaseCount != nil
                       ),
-                      let initializeResultText = value(
-                        in: components[5],
-                        after: "initialize-result="
+                      !hasRuntimeEvidenceMetrics || (
+                        sourcePresentAccepted != nil &&
+                        sourcePresentAccepted! <= sourcePresentSeen &&
+                        admissionBlockMask != nil &&
+                        admissionBlockMask! <= 0x3f &&
+                        sourceCadenceRatio != nil &&
+                        sourceCadenceRatio!.isFinite &&
+                        sourceCadenceRatio! >= 0 &&
+                        sourceCadenceRatio! <= 1_000 &&
+                        sourceCadenceLower95 != nil &&
+                        sourceCadenceLower95!.isFinite &&
+                        sourceCadenceLower95! >= 0 &&
+                        sourceCadenceLower95! <= sourceCadenceRatio! &&
+                        sourceCadenceUpper95 != nil &&
+                        sourceCadenceUpper95!.isFinite &&
+                        sourceCadenceUpper95! >= sourceCadenceRatio! &&
+                        sourceCadenceUpper95! <= 1_000 &&
+                        captureCommandBuffersOutstanding != nil &&
+                        displayCommandBuffersOutstanding != nil &&
+                        capturePoolAllocations != nil &&
+                        capturePoolReleases != nil &&
+                        capturePoolReleases! <= capturePoolAllocations! &&
+                        capturePoolTextureCount != nil &&
+                        capturePoolTextureCount! <= 6 &&
+                        recordMonotonicTime != nil &&
+                        recordMonotonicTime!.isFinite &&
+                        recordMonotonicTime! > 0
                       ),
-                      let initializeResult = Int32(
-                        initializeResultText
+                      !hasSessionIdentity || (
+                        sessionIdentifier != nil &&
+                        (sessionIdentifier! > 0 || state == .error ||
+                         state == .inactive)
+                      ),
+                      !hasSinglePathMetrics || (
+                        currentPresented != nil &&
+                        midpointAdmitted != nil &&
+                        midpointDroppedLate != nil &&
+                        midpointDroppedSuperseded != nil &&
+                        presentationsInFlight != nil &&
+                        presentationsInFlight! <= 3 &&
+                        maximumPresentationsInFlight != nil &&
+                        maximumPresentationsInFlight! <= 3 &&
+                        generationReserved != nil &&
+                        generationOutstanding != nil &&
+                        effectiveDisplaySlotMilliseconds != nil &&
+                        effectiveDisplaySlotMilliseconds!.isFinite &&
+                        effectiveDisplaySlotMilliseconds! >= 0 &&
+                        effectiveDisplaySlotMilliseconds! <= 1_000 &&
+                        captureSkippedBusy != nil &&
+                        captureInFlight != nil &&
+                        captureInFlight! <=
+                            SteamD3DMetalFrameGenerationPipelineBounds
+                                .maximumCaptureDepth &&
+                        maximumCaptureInFlight != nil &&
+                        maximumCaptureInFlight! <=
+                            SteamD3DMetalFrameGenerationPipelineBounds
+                                .maximumCaptureDepth &&
+                        captureBusyEpisode != nil &&
+                        captureOutstandingMilliseconds != nil &&
+                        captureOutstandingMilliseconds!.isFinite &&
+                        captureOutstandingMilliseconds! >= 0 &&
+                        captureOutstandingMilliseconds! <= 60_000 &&
+                        emptyDisplayUpdates != nil &&
+                        displayResumeCount != nil &&
+                        sourceCadenceHz != nil &&
+                        sourceCadenceHz!.isFinite &&
+                        sourceCadenceHz! >= 0 &&
+                        sourceCadenceHz! <= 10_000 &&
+                        originalCadenceHz != nil &&
+                        originalCadenceHz!.isFinite &&
+                        originalCadenceHz! >= 0 &&
+                        originalCadenceHz! <= 10_000 &&
+                        generatedCadenceHz != nil &&
+                        generatedCadenceHz!.isFinite &&
+                        generatedCadenceHz! >= 0 &&
+                        generatedCadenceHz! <= 10_000 &&
+                        outputSourceRatio != nil &&
+                        outputSourceRatio!.isFinite &&
+                        outputSourceRatio! >= 0 &&
+                        outputSourceRatio! <= 1_000 &&
+                        currentSourceRatio != nil &&
+                        currentSourceRatio!.isFinite &&
+                        currentSourceRatio! >= 0 &&
+                        currentSourceRatio! <= 1_000 &&
+                        presentationStallChecks != nil &&
+                        presentationStallChecks! <= 3 &&
+                        sourcePresentAccepted != nil &&
+                        sourcePresentAccepted! <= sourcePresentSeen &&
+                        sourceCadenceRatio != nil &&
+                        sourceCadenceRatio!.isFinite &&
+                        sourceCadenceRatio! >= 0 &&
+                        sourceCadenceRatio! <= 1_000 &&
+                        sourceCadenceLower95 != nil &&
+                        sourceCadenceLower95!.isFinite &&
+                        sourceCadenceLower95! >= 0 &&
+                        sourceCadenceLower95! <= sourceCadenceRatio! &&
+                        sourceCadenceUpper95 != nil &&
+                        sourceCadenceUpper95!.isFinite &&
+                        sourceCadenceUpper95! >= sourceCadenceRatio! &&
+                        sourceCadenceUpper95! <= 1_000 &&
+                        captureCommandBuffersOutstanding != nil &&
+                        captureCommandBuffersOutstanding! <=
+                            SteamD3DMetalFrameGenerationPipelineBounds
+                                .maximumCaptureDepth &&
+                        displayCommandBuffersOutstanding != nil &&
+                        displayCommandBuffersOutstanding! <= 3 &&
+                        capturePoolAllocations != nil &&
+                        capturePoolReleases != nil &&
+                        capturePoolReleases! <= capturePoolAllocations! &&
+                        capturePoolTextureCount != nil &&
+                        capturePoolTextureCount! <= 6 &&
+                        recordMonotonicTime != nil &&
+                        recordMonotonicTime!.isFinite &&
+                        recordMonotonicTime! > 0 &&
+                        sessionIdentifier != nil &&
+                        (sessionIdentifier! > 0 || state == .error ||
+                         state == .inactive) &&
+                        executableIdentityValue != nil &&
+                        (executableIdentityValue == "unavailable" ||
+                         executableSHA256 != nil)
                       ) else {
                     malformedCount += 1
                     continue
                 }
-                let initialized = loadStatus == 0 &&
-                    procedureStatus == 0 &&
-                    exceptionStatus == 0 &&
-                    initializeResult == 0
-                guard (state == .initialized) == initialized else {
-                    malformedCount += 1
-                    continue
-                }
-                nvapiBootstraps.append(
-                    SteamD3DMetalNVAPIBootstrapObservation(
+                frameGenerationObservations.append(
+                    SteamD3DMetalFrameGenerationObservation(
                         recordSequence: recordSequence,
                         processID: processID,
                         state: state,
-                        module: module,
-                        loadStatus: loadStatus,
-                        procedureStatus: procedureStatus,
-                        exceptionStatus: exceptionStatus,
-                        initializeResult: initializeResult
+                        targetFrameRate: targetFrameRate,
+                        epoch: epoch,
+                        sourcePresentSeen: sourcePresentSeen,
+                        sourcePresentAccepted: sourcePresentAccepted,
+                        captureReady: captureReady,
+                        generatedSubmitted: generatedSubmitted,
+                        generatedCompleted: generatedCompleted,
+                        generatedPresented: generatedPresented,
+                        midpointPresented: midpointPresented,
+                        outputActive: outputActiveValue == "1",
+                        displayUpdates: displayUpdates,
+                        cadenceHz: cadenceHz,
+                        reason: reason,
+                        currentPresented: currentPresented,
+                        midpointAdmitted: midpointAdmitted,
+                        midpointDroppedLate: midpointDroppedLate,
+                        midpointDroppedSuperseded: midpointDroppedSuperseded,
+                        midpointDroppedPresentationStall:
+                            midpointDroppedPresentationStall,
+                        presentationsInFlight: presentationsInFlight,
+                        maximumPresentationsInFlight: maximumPresentationsInFlight,
+                        presentationReceiptsPending:
+                            presentationReceiptsPending,
+                        maximumPresentationReceiptsPending:
+                            maximumPresentationReceiptsPending,
+                        writerCompleted: writerCompleted,
+                        currentWriterCompleted: currentWriterCompleted,
+                        generationReserved: generationReserved,
+                        generationOutstanding: generationOutstanding,
+                        effectiveDisplaySlotMilliseconds:
+                            effectiveDisplaySlotMilliseconds,
+                        captureSkippedBusy: captureSkippedBusy,
+                        captureInFlight: captureInFlight,
+                        maximumCaptureInFlight: maximumCaptureInFlight,
+                        captureBusyEpisode: captureBusyEpisode,
+                        captureOutstandingMilliseconds:
+                            captureOutstandingMilliseconds,
+                        outputUnderrunWindows: outputUnderrunWindows,
+                        midpointStarvationWindows: midpointStarvationWindows,
+                        emptyDisplayUpdates: emptyDisplayUpdates,
+                        displayResumeCount: displayResumeCount,
+                        sourceCadenceHz: sourceCadenceHz,
+                        originalCadenceHz: originalCadenceHz,
+                        generatedCadenceHz: generatedCadenceHz,
+                        outputSourceRatio: outputSourceRatio,
+                        currentSourceRatio: currentSourceRatio,
+                        admissionScale: admissionScale,
+                        rawDebt: rawDebt,
+                        outputPolicy: outputPolicy,
+                        presentationStallChecks: presentationStallChecks,
+                        sourcePresentCommandBufferBound:
+                            sourcePresentCommandBufferBound,
+                        sourceCaptureEncodedOnSourceCommandBuffer:
+                            sourceCaptureEncodedOnSourceCommandBuffer,
+                        sourceCaptureJoined: sourceCaptureJoined,
+                        sourcePresentUncovered: sourcePresentUncovered,
+                        sourceDemandCredit: sourceDemandCredit,
+                        readyBundleDepth: readyBundleDepth,
+                        maximumReadyBundleDepth: maximumReadyBundleDepth,
+                        currentQueueCapacityHandoffs:
+                            currentQueueCapacityHandoffs,
+                        demandProbeCount: demandProbeCount,
+                        demandProbePhase: demandProbePhase,
+                        timelineRebaseCount: timelineRebaseCount,
+                        admissionBlockMask: admissionBlockMask,
+                        sourceCadenceRatio: sourceCadenceRatio,
+                        sourceCadenceLower95: sourceCadenceLower95,
+                        sourceCadenceUpper95: sourceCadenceUpper95,
+                        captureCommandBuffersOutstanding:
+                            captureCommandBuffersOutstanding,
+                        displayCommandBuffersOutstanding:
+                            displayCommandBuffersOutstanding,
+                        capturePoolAllocations: capturePoolAllocations,
+                        capturePoolReleases: capturePoolReleases,
+                        capturePoolTextureCount: capturePoolTextureCount,
+                        sessionIdentifier: sessionIdentifier,
+                        recordMonotonicTime: recordMonotonicTime,
+                        executableSHA256: executableSHA256
                     )
                 )
+                if state == .inactive &&
+                    reason == "telemetry-capacity-reached" {
+                    frameGenerationCapacityReached = true
+                }
             } else if fields[0] == gameRendererModuleLoadRecordPrefix ||
                         fields[0] == legacyGameRendererModuleLoadRecordPrefix {
                 let payload = String(fields[2])
@@ -8615,7 +10356,8 @@ enum SteamProcessCreationObservationLog {
             gameRendererFallbacks: rendererFallbacks,
             gameRendererModuleLoads: rendererModuleLoads,
             gameRendererBaseHelpers: rendererBaseHelpers,
-            d3dMetalNVAPIBootstraps: nvapiBootstraps,
+            d3dMetalFrameGenerationObservations:
+                frameGenerationObservations,
             state: issues.isEmpty ? .complete : .recovered,
             issues: issues
         )
@@ -9024,8 +10766,8 @@ enum SteamGameLaunchDiagnosticAnalyzer {
         let rendererModuleLoads = rendererObservation.map {
             correlatedRendererModuleLoads(for: $0, in: processObservation)
         } ?? []
-        let nvapiBootstraps = rendererObservation.map {
-            correlatedD3DMetalNVAPIBootstraps(
+        let frameGenerationObservations = rendererObservation.map {
+            correlatedD3DMetalFrameGenerationObservations(
                 for: $0,
                 in: processObservation
             )
@@ -9143,10 +10885,22 @@ enum SteamGameLaunchDiagnosticAnalyzer {
                 "planned-owner=\(load.plannedOwner); status=\(load.statusHex); " +
                 "correlation=\(load.correlationIdentifier)"
         })
-        evidence.append(contentsOf: nvapiBootstraps.suffix(8).map {
-            "FORGEPLAY D3DMetal NVAPI bootstrap: pid=\($0.processID); " +
-                $0.diagnosticDescription
-        })
+        let recentFrameGenerationObservations = Array(
+            frameGenerationObservations.suffix(16)
+        )
+        let activationResults = SteamD3DMetalFrameGenerationObservation
+            .activationContractResults(in: recentFrameGenerationObservations)
+        evidence.append(contentsOf:
+            recentFrameGenerationObservations.enumerated().map {
+                index, observation in
+                let activationContract = activationResults[index]
+                return "FORGEPLAY D3DMetal frame generation: " +
+                    "pid=\(observation.processID); " +
+                    observation.diagnosticDescription +
+                    "; activation-contract=" +
+                    (activationContract ? "met" : "not-met")
+            }
+        )
         evidence.append(contentsOf: baseHelperEvidence.suffix(16))
         if let rendererError {
             evidence.append(
@@ -9212,17 +10966,13 @@ enum SteamGameLaunchDiagnosticAnalyzer {
                 ? nil
                 : successfulRendererModuleLoads.compactMap(\.actualPath),
             rendererModuleLoadFailures: failedRendererModuleLoads.isEmpty &&
-                unverifiedRendererModuleLoads.isEmpty &&
-                nvapiBootstraps.allSatisfy { $0.state == .initialized }
+                unverifiedRendererModuleLoads.isEmpty
                 ? nil
                 : failedRendererModuleLoads.map {
                     "\($0.module)=\($0.statusHex)"
                 } + unverifiedRendererModuleLoads.map {
                     "\($0.module)=load-path-\($0.pathOwnership.rawValue):" +
                         "\($0.actualPath ?? "unavailable")"
-                } + nvapiBootstraps.compactMap {
-                    guard $0.state == .failed else { return nil }
-                    return "nvapi-bootstrap=\($0.diagnosticDescription)"
                 },
             rendererRoutingReason: rendererObservation?.routingReason,
             rendererRoutingEvidence: rendererObservation?.routingEvidence,
@@ -9770,33 +11520,88 @@ enum SteamGameLaunchDiagnosticAnalyzer {
         .sorted { $0.recordSequence < $1.recordSequence }
     }
 
-    /// NVAPI initializes before the game entry point and therefore before the
-    /// parent commits the matching route record. Bind it to the uniquely
-    /// nearest route for the same Wine PID so PID reuse cannot move bootstrap
-    /// evidence between launch attempts.
-    private static func correlatedD3DMetalNVAPIBootstraps(
+    /// Native frame-generation telemetry uses the Darwin host PID while Wine's
+    /// renderer route uses the Windows PID. Prefer the historical exact-PID
+    /// layout when available. For the NVIDIA route, bind each native snapshot
+    /// to the nearest preceding matching executable route that actually loaded
+    /// a verified central NVIDIA provider module. Per-snapshot ownership is
+    /// required because Darwin PIDs can be reused within one long launch log;
+    /// grouping the entire PID lifetime merges separate game sessions.
+    static func correlatedD3DMetalFrameGenerationObservations(
         for route: SteamGameRendererObservation,
         in observation: SteamProcessObservationReadResult
-    ) -> [SteamD3DMetalNVAPIBootstrapObservation] {
+    ) -> [SteamD3DMetalFrameGenerationObservation] {
         let sameProcessRoutes = observation.gameRendererObservations.filter {
             $0.processID == route.processID
         }
-        return observation.d3dMetalNVAPIBootstraps.filter { bootstrap in
-            guard bootstrap.processID == route.processID else {
+        let exactProcessSnapshots = observation
+            .d3dMetalFrameGenerationObservations.filter {
+            snapshot in
+            guard snapshot.processID == route.processID else {
                 return false
             }
             let distances = sameProcessRoutes.map {
-                abs($0.recordSequence - bootstrap.recordSequence)
+                abs($0.recordSequence - snapshot.recordSequence)
             }
             guard let nearestDistance = distances.min() else {
                 return false
             }
             let nearestRoutes = sameProcessRoutes.filter {
-                abs($0.recordSequence - bootstrap.recordSequence) ==
+                abs($0.recordSequence - snapshot.recordSequence) ==
                     nearestDistance
             }
             return nearestRoutes.count == 1 &&
                 nearestRoutes[0].recordSequence == route.recordSequence
+        }
+        .sorted { $0.recordSequence < $1.recordSequence }
+        if route.rendererSelection != .d3dMetalNVIDIA,
+           !exactProcessSnapshots.isEmpty {
+            return exactProcessSnapshots
+        }
+
+        guard route.rendererSelection == .d3dMetalNVIDIA,
+              let correlationIdentifier = route.correlationIdentifier else {
+            return []
+        }
+        let providerNames = Set(
+            D3DMetalNVIDIAProviderContract.system32ModuleNames.map {
+                $0.lowercased()
+            }
+        )
+        let providerRoutes = observation.gameRendererObservations.filter {
+            candidate in
+            guard candidate.rendererSelection == .d3dMetalNVIDIA,
+                  candidate.correlationIdentifier == correlationIdentifier else {
+                return false
+            }
+            return correlatedRendererModuleLoads(
+                for: candidate,
+                in: observation
+            ).contains {
+                $0.state == .loaded &&
+                    $0.pathOwnership == .verified &&
+                    providerNames.contains($0.module.lowercased())
+            }
+        }
+        guard providerRoutes.contains(where: {
+            $0.recordSequence == route.recordSequence
+        }) else {
+            return []
+        }
+
+        return observation.d3dMetalFrameGenerationObservations.filter {
+            snapshot in
+            guard let executableDigest = snapshot.executableSHA256,
+                  let owner = providerRoutes
+                    .filter({
+                        frameGenerationExecutableSHA256($0.executable) ==
+                            executableDigest &&
+                        $0.recordSequence < snapshot.recordSequence
+                    })
+                    .max(by: { $0.recordSequence < $1.recordSequence }) else {
+                return false
+            }
+            return owner.recordSequence == route.recordSequence
         }
         .sorted { $0.recordSequence < $1.recordSequence }
     }
@@ -10099,6 +11904,15 @@ enum SteamGameLaunchDiagnosticAnalyzer {
             normalized = normalized.replacingOccurrences(of: "\\\\", with: "\\")
         }
         return normalized.lowercased()
+    }
+
+    static func frameGenerationExecutableSHA256(_ executable: String) -> String? {
+        guard let normalized = normalizedWindowsPath(executable) else {
+            return nil
+        }
+        return SHA256.hash(data: Data(normalized.utf8)).map {
+            String(format: "%02x", $0)
+        }.joined()
     }
 
     private static func timestampAndBody(in line: String) -> (timestamp: Date, body: String)? {

@@ -14,7 +14,19 @@ diff --git a/dlls/winemac.drv/cocoa_event.m b/dlls/winemac.drv/cocoa_event.m
 index 410ab4320451bbd61a8b902173a8ece42a1edbf4..1b959df3c49562338ca765bb68fe5f26676d9c59 100644
 --- a/dlls/winemac.drv/cocoa_event.m
 +++ b/dlls/winemac.drv/cocoa_event.m
-@@ -535,6 +535,19 @@ void OnMainThread(dispatch_block_t block)
+@@ -489,5 +489,11 @@ void OnMainThread(dispatch_block_t block)
+ @autoreleasepool
+ {
++    if ([NSThread isMainThread])
++    {
++        if (block) block();
++        return;
++    }
++
+     NSMutableDictionary* threadDict = [[NSThread currentThread] threadDictionary];
+     WineEventQueue* queue = threadDict[WineEventQueueThreadDictionaryKey];
+     dispatch_semaphore_t semaphore = NULL;
+@@ -535,6 +541,19 @@ void OnMainThread(dispatch_block_t block)
  }
  }
  
@@ -212,3 +224,441 @@ index 0000000000000000000000000000000000000000..e071beae1c2847e3f36cb18b8b92a3f7
 +    macdrv_view_release_metal_view,
 +    macdrv_on_main_thread,
 +};
+diff --git a/dlls/winemac.drv/metal_surface_contract.c b/dlls/winemac.drv/metal_surface_contract.c
+--- a/dlls/winemac.drv/metal_surface_contract.c
++++ b/dlls/winemac.drv/metal_surface_contract.c
+@@ -25,7 +25,16 @@
+ #include "config.h"
+ 
++#include <dlfcn.h>
++#include <fcntl.h>
++#include <limits.h>
++#include <pthread.h>
+ #include <stddef.h>
++#include <stdint.h>
++#include <stdio.h>
+ #include <stdlib.h>
++#include <string.h>
++#include <sys/stat.h>
++#include <unistd.h>
+ 
+ #include "macdrv.h"
+ #include "ntuser.h"
+@@ -60,6 +69,405 @@ struct macdrv_metal_surface_window_data
+ C_ASSERT(offsetof(struct macdrv_metal_surface_functions, view_create_metal_view) == 6 * sizeof(void *));
+ C_ASSERT(offsetof(struct macdrv_metal_surface_functions, view_release_metal_view) == 8 * sizeof(void *));
+ 
++#define FORGEPLAY_FRAMEGEN_ABI_VERSION 1u
++#define FORGEPLAY_FRAMEGEN_OBSERVATION_LIMIT (1024 * 1024)
++
++struct forgeplay_framegen_configuration_v1
++{
++    uint32_t structure_size;
++    uint32_t abi_version;
++    uint32_t target_frame_rate;
++    uint32_t frame_check_enabled;
++};
++
++struct forgeplay_framegen_api_v1
++{
++    uint32_t structure_size;
++    uint32_t abi_version;
++    void *(*create_session)(
++        void *owning_metal_view,
++        void *metal_device,
++        const struct forgeplay_framegen_configuration_v1 *configuration,
++        void **source_metal_layer,
++        char *failure_reason,
++        size_t failure_reason_capacity );
++    void (*destroy_session)(void *session);
++};
++
++typedef const struct forgeplay_framegen_api_v1 *
++    (*forgeplay_framegen_get_api_v1_func)(void);
++
++struct forgeplay_framegen_view
++{
++    macdrv_view client_view;
++    macdrv_metal_view original_view;
++    macdrv_metal_layer source_layer;
++    void *session;
++    unsigned int reference_count;
++    BOOL initializing;
++    BOOL retiring;
++    struct forgeplay_framegen_view *next;
++};
++
++static struct forgeplay_framegen_view *framegen_views;
++static pthread_once_t framegen_load_once = PTHREAD_ONCE_INIT;
++static const struct forgeplay_framegen_api_v1 *framegen_api;
++static const char *framegen_load_failure = "proxy-unavailable";
++static BOOL framegen_error_recorded;
++
++static BOOL framegen_string_has_suffix( const char *value, const char *suffix )
++{
++    size_t value_length, suffix_length;
++
++    if (!value || !suffix) return FALSE;
++    value_length = strlen( value );
++    suffix_length = strlen( suffix );
++    return value_length >= suffix_length &&
++           !strcmp( value + value_length - suffix_length, suffix );
++}
++
++static BOOL framegen_observation_path_is_valid( const char *path )
++{
++    const unsigned char *cursor;
++
++    if (!path || path[0] != '/') return FALSE;
++    for (cursor = (const unsigned char *)path; *cursor; ++cursor)
++        if (*cursor < 0x20 || *cursor == 0x7f) return FALSE;
++    return TRUE;
++}
++
++static BOOL framegen_parse_target_rate( const char *value, uint32_t *target )
++{
++    if (!value || !target) return FALSE;
++    if (!strcmp( value, "120" )) *target = 120;
++    else if (!strcmp( value, "144" )) *target = 144;
++    else if (!strcmp( value, "240" )) *target = 240;
++    else return FALSE;
++    return TRUE;
++}
++
++static BOOL framegen_requested_configuration(
++    struct forgeplay_framegen_configuration_v1 *configuration,
++    const char **failure )
++{
++    const char *enabled = getenv( "FORGEPLAY_D3DMETAL_FRAME_GENERATION" );
++    const char *target = getenv( "FORGEPLAY_D3DMETAL_FRAME_GENERATION_TARGET_HZ" );
++    const char *frame_check = getenv( "FORGEPLAY_D3DMETAL_FRAME_CHECK" );
++
++    if (!enabled || strcmp( enabled, "1" )) return FALSE;
++    memset( configuration, 0, sizeof(*configuration) );
++    configuration->structure_size = sizeof(*configuration);
++    configuration->abi_version = FORGEPLAY_FRAMEGEN_ABI_VERSION;
++    if (!framegen_parse_target_rate( target, &configuration->target_frame_rate ))
++    {
++        *failure = "invalid-target-hz";
++        return TRUE;
++    }
++    if (!frame_check || !strcmp( frame_check, "0" ))
++        configuration->frame_check_enabled = 0;
++    else if (!strcmp( frame_check, "1" ))
++        configuration->frame_check_enabled = 1;
++    else
++    {
++        *failure = "invalid-frame-check";
++        return TRUE;
++    }
++    return TRUE;
++}
++
++static BOOL framegen_proxy_path_is_valid( const char *path )
++{
++    static const char suffix[] = "/ForgePlayD3DMetalFrameGenerationProxy.dylib";
++    char canonical[PATH_MAX];
++    struct stat metadata;
++
++    if (!path || path[0] != '/' || strlen( path ) >= sizeof(canonical) ||
++        !framegen_string_has_suffix( path, suffix )) return FALSE;
++    if (lstat( path, &metadata ) || !S_ISREG( metadata.st_mode ) ||
++        metadata.st_nlink != 1 || metadata.st_uid != geteuid() ||
++        (metadata.st_mode & (S_IWGRP | S_IWOTH)))
++        return FALSE;
++    if (!realpath( path, canonical ) || strcmp( path, canonical )) return FALSE;
++    return access( path, R_OK ) == 0;
++}
++
++static void framegen_load_proxy(void)
++{
++    const char *path = getenv( "FORGEPLAY_D3DMETAL_FRAME_GENERATION_PROXY" );
++    forgeplay_framegen_get_api_v1_func get_api;
++    const struct forgeplay_framegen_api_v1 *api;
++    void *handle;
++
++    if (!framegen_proxy_path_is_valid( path ))
++    {
++        framegen_load_failure = "invalid-proxy-path";
++        return;
++    }
++    if (!(handle = dlopen( path, RTLD_NOW | RTLD_LOCAL )))
++    {
++        framegen_load_failure = "proxy-load-failed";
++        return;
++    }
++    if (!(get_api = (forgeplay_framegen_get_api_v1_func)dlsym(
++            handle, "FPD3DMetalFrameGenerationProxyGetAPIV1" )))
++    {
++        framegen_load_failure = "proxy-entrypoint-missing";
++        dlclose( handle );
++        return;
++    }
++    if (!(api = get_api()) || api->structure_size != sizeof(*api) ||
++        api->abi_version != FORGEPLAY_FRAMEGEN_ABI_VERSION ||
++        !api->create_session || !api->destroy_session)
++    {
++        framegen_load_failure = "proxy-abi-mismatch";
++        dlclose( handle );
++        return;
++    }
++    framegen_api = api;
++    framegen_load_failure = NULL;
++    /* The process-lifetime handle remains loaded while function pointers and
++     * sessions from this exact ABI can still be observed. */
++}
++
++static void framegen_record_error( uint32_t target, const char *reason )
++{
++    const char *path;
++    char record[512];
++    struct stat metadata;
++    int descriptor, length;
++
++    if (framegen_error_recorded)
++        return;
++    framegen_error_recorded = TRUE;
++
++    path = getenv( "FORGEPLAY_D3DMETAL_FRAME_GENERATION_OBSERVATION_FILE" );
++    if (!framegen_observation_path_is_valid( path ))
++        path = getenv( "FORGEPLAY_PROCESS_OBSERVATION_FILE" );
++    if (!framegen_observation_path_is_valid( path )) return;
++    descriptor = open( path, O_WRONLY | O_APPEND | O_CLOEXEC | O_NOFOLLOW );
++    if (descriptor < 0) return;
++    if (fstat( descriptor, &metadata ) || !S_ISREG( metadata.st_mode ) ||
++        metadata.st_nlink != 1 || metadata.st_uid != geteuid() ||
++        metadata.st_size < 0 ||
++        metadata.st_size >= FORGEPLAY_FRAMEGEN_OBSERVATION_LIMIT)
++        goto done;
++    length = snprintf(
++        record, sizeof(record),
++        "FORGEPLAY_D3DMETAL_FRAMEGEN_V1\t%ld\tstate=error"
++        "\ttarget_hz=%u\tepoch=0\tsource_present_seen=0"
++        "\tcapture_ready=0\tgenerated_submitted=0"
++        "\tgenerated_completed=0\tgenerated_presented=0"
++        "\tmidpoint=0\toutput_active=0\tdisplay_updates=0"
++        "\tcadence_hz=0.0\treason=%s\n",
++        (long)getpid(), target, reason ? reason : "runtime-error" );
++    if (length > 0 && (size_t)length < sizeof(record) &&
++        (size_t)metadata.st_size + (size_t)length <=
++            FORGEPLAY_FRAMEGEN_OBSERVATION_LIMIT)
++        (void)write( descriptor, record, (size_t)length );
++done:
++    close( descriptor );
++}
++
++static struct forgeplay_framegen_view *framegen_find_view(
++    macdrv_metal_view public_handle )
++{
++    struct forgeplay_framegen_view *view;
++
++    for (view = framegen_views; view; view = view->next)
++        if (view->original_view == public_handle) return view;
++    return NULL;
++}
++
++static struct forgeplay_framegen_view *framegen_find_client_view(
++    macdrv_view client_view )
++{
++    struct forgeplay_framegen_view *view;
++
++    for (view = framegen_views; view; view = view->next)
++        if (view->client_view == client_view) return view;
++    return NULL;
++}
++
++static void framegen_reserve_view(
++    struct forgeplay_framegen_view *view, macdrv_view client_view )
++{
++    view->client_view = client_view;
++    view->reference_count = 1;
++    view->initializing = TRUE;
++    view->next = framegen_views;
++    framegen_views = view;
++}
++
++static void framegen_complete_view(
++    struct forgeplay_framegen_view *view,
++    macdrv_metal_layer source_layer, void *session )
++{
++    view->source_layer = source_layer;
++    view->session = session;
++    view->initializing = FALSE;
++}
++
++static void framegen_remove_view( struct forgeplay_framegen_view *view )
++{
++    struct forgeplay_framegen_view **cursor;
++
++    for (cursor = &framegen_views; *cursor; cursor = &(*cursor)->next)
++    {
++        if (*cursor != view) continue;
++        *cursor = view->next;
++        return;
++    }
++}
++
++static macdrv_metal_view framegen_view_create_metal_view_on_main_thread(
++    macdrv_view client_view, macdrv_metal_device device )
++{
++    struct forgeplay_framegen_configuration_v1 configuration;
++    struct forgeplay_framegen_view *existing, *view;
++    macdrv_metal_view original_view;
++    const char *configuration_failure = NULL;
++    char failure_reason[64] = {0};
++    void *source_layer = NULL;
++    void *session;
++
++    /* The public wrapper executes this complete ownership transaction on
++     * Wine's main executor. Wine caches one unretained WineMetalView per
++     * client view, and both the native view API and proxy session API perform
++     * synchronous main-thread work. Main-executor ownership prevents a
++     * create/release race without a condition wait that could deadlock the
++     * very queue required to finish initialization or retirement. */
++    if ((existing = framegen_find_client_view( client_view )))
++    {
++        if (existing->initializing || existing->retiring) return NULL;
++        ++existing->reference_count;
++        return existing->original_view;
++    }
++
++    /* Disabled is an exact pass-through: no proxy load, allocation, child
++     * layer, display link, or observation is introduced. */
++    if (!framegen_requested_configuration(
++            &configuration, &configuration_failure ))
++        return macdrv_view_create_metal_view( client_view, device );
++    if (configuration_failure)
++    {
++        framegen_record_error(
++            configuration.target_frame_rate, configuration_failure );
++        return macdrv_view_create_metal_view( client_view, device );
++    }
++
++    if (!(view = calloc( 1, sizeof(*view) )))
++    {
++        framegen_record_error(
++            configuration.target_frame_rate, "proxy-view-allocation-failed" );
++        return macdrv_view_create_metal_view( client_view, device );
++    }
++    framegen_reserve_view( view, client_view );
++
++    if (!(original_view = macdrv_view_create_metal_view( client_view, device )))
++    {
++        framegen_remove_view( view );
++        free( view );
++        return NULL;
++    }
++    view->original_view = original_view;
++
++    pthread_once( &framegen_load_once, framegen_load_proxy );
++    if (!framegen_api)
++    {
++        framegen_complete_view( view, NULL, NULL );
++        framegen_record_error(
++            configuration.target_frame_rate, framegen_load_failure );
++        return original_view;
++    }
++    session = framegen_api->create_session(
++        original_view, device, &configuration, &source_layer,
++        failure_reason, sizeof(failure_reason) );
++    if (!session || !source_layer)
++    {
++        if (session) framegen_api->destroy_session( session );
++        framegen_complete_view( view, NULL, NULL );
++        framegen_record_error(
++            configuration.target_frame_rate,
++            failure_reason[0] ? failure_reason : "proxy-session-create-failed" );
++        return original_view;
++    }
++
++    framegen_complete_view(
++        view, (macdrv_metal_layer)source_layer, session );
++    return original_view;
++}
++
++static macdrv_metal_view framegen_view_create_metal_view(
++    macdrv_view client_view, macdrv_metal_device device )
++{
++    __block macdrv_metal_view result = NULL;
++
++    macdrv_on_main_thread( (void *)^{
++        result = framegen_view_create_metal_view_on_main_thread(
++            client_view, device );
++    } );
++    return result;
++}
++
++static macdrv_metal_layer framegen_view_get_metal_layer_on_main_thread(
++    macdrv_metal_view public_handle )
++{
++    struct forgeplay_framegen_view *view;
++
++    view = framegen_find_view( public_handle );
++    if (view && (view->initializing || view->retiring)) return NULL;
++    if (view && view->source_layer) return view->source_layer;
++    return macdrv_view_get_metal_layer( public_handle );
++}
++
++static macdrv_metal_layer framegen_view_get_metal_layer(
++    macdrv_metal_view public_handle )
++{
++    __block macdrv_metal_layer result = NULL;
++
++    macdrv_on_main_thread( (void *)^{
++        result = framegen_view_get_metal_layer_on_main_thread( public_handle );
++    } );
++    return result;
++}
++
++static void framegen_view_release_metal_view_on_main_thread(
++    macdrv_metal_view public_handle )
++{
++    struct forgeplay_framegen_view **cursor, *view = NULL;
++
++    for (cursor = &framegen_views; *cursor; cursor = &(*cursor)->next)
++    {
++        if ((*cursor)->original_view != public_handle) continue;
++        if ((*cursor)->initializing || (*cursor)->retiring) return;
++        if ((*cursor)->reference_count > 1)
++        {
++            --(*cursor)->reference_count;
++            return;
++        }
++        view = *cursor;
++        view->retiring = TRUE;
++        break;
++    }
++    if (!view)
++    {
++        macdrv_view_release_metal_view( public_handle );
++        return;
++    }
++    if (view->session) framegen_api->destroy_session( view->session );
++    macdrv_view_release_metal_view( view->original_view );
++    framegen_remove_view( view );
++    free( view );
++}
++
++static void framegen_view_release_metal_view(
++    macdrv_metal_view public_handle )
++{
++    macdrv_on_main_thread( (void *)^{
++        framegen_view_release_metal_view_on_main_thread( public_handle );
++    } );
++}
++
+ static void metal_surface_init_display_devices(BOOL force)
+ {
+     UINT32 path_count, mode_count;
+@@ -110,8 +508,8 @@ DECLSPEC_EXPORT const struct macdrv_metal_surface_functions macdrv_functions =
+     macdrv_get_cocoa_window,
+     macdrv_create_metal_device,
+     macdrv_release_metal_device,
+-    macdrv_view_create_metal_view,
+-    macdrv_view_get_metal_layer,
+-    macdrv_view_release_metal_view,
++    framegen_view_create_metal_view,
++    framegen_view_get_metal_layer,
++    framegen_view_release_metal_view,
+     macdrv_on_main_thread,
+ };

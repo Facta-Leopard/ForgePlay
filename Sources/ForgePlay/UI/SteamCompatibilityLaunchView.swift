@@ -240,6 +240,9 @@ struct SteamCompatibilityLaunchView: View {
     @State private var isAdvancedExpanded = false
     @State private var didLoadSelectedRecipe = false
     @State private var isPersistenceBlocked = false
+    @State private var blockedPersistenceRecoveryVersion:
+        CompatibilitySteamLaunchPreferenceRecoveryVersionV1?
+    @State private var isShowingCompatibilityPreferenceResetConfirmation = false
     @State private var mustReloadAfterConflict = false
     @State private var compatibilityDraftSaveFailed = false
     @State private var compatibilityStatus: CompatibilityStatusPresentation?
@@ -364,6 +367,23 @@ struct SteamCompatibilityLaunchView: View {
             allowsMultipleSelection: false,
             onCompletion: handleManifestRootSelection
         )
+        .confirmationDialog(
+            appState.localized("손상된 저장 값 초기화"),
+            isPresented:
+                $isShowingCompatibilityPreferenceResetConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(appState.localized("초기화"), role: .destructive) {
+                resetBlockedCompatibilityPreference()
+            }
+            Button(appState.localized("취소"), role: .cancel) {}
+        } message: {
+            Text(
+                appState.localized(
+                    "이 작업은 선택한 게임 프로필의 손상된 호환성 저장 값만 삭제합니다. Steam 라이브러리와 프리픽스는 변경하지 않습니다."
+                )
+            )
+        }
     }
 
     private func profileAndManifestSelectionCard(
@@ -487,9 +507,10 @@ struct SteamCompatibilityLaunchView: View {
 
     private func profileOptionsCard(palette: ForgePlayPalette) -> some View {
         let alwaysVisibleKinds: Set<CompatibilitySteamLaunchOptionKindV1> = [
+            .graphicsBackend,
+            .frameGeneration,
             .gameMode,
             .heapZeroMemory,
-            .graphicsBackend,
             .networkPolicy,
             .audioInputPolicy,
             .videoMemoryPolicy
@@ -591,6 +612,8 @@ struct SteamCompatibilityLaunchView: View {
             singleSupportedOptionRow(kind, palette: palette)
         } else {
             switch kind {
+            case .frameGeneration:
+                compatibilityFrameGenerationControl(palette: palette)
             case .gameMode:
                 toggleOption(
                     title: "Game Mode",
@@ -613,10 +636,9 @@ struct SteamCompatibilityLaunchView: View {
                 identifierPicker(
                     title: "렌더러",
                     kind: .graphicsBackend,
-                    selection: binding(\.graphicsBackend, kind: .graphicsBackend),
-                    values: optionsIncludingCurrent(
-                        selectedRecipe.supportedOptions.graphicsBackends,
-                        current: draftSelections.graphicsBackend
+                    selection: graphicsBackendBinding,
+                    values: selectedRecipe.supportedOptions.graphicsBackends.filter(
+                        \.isCurrentReleaseUserSelectable
                     ),
                     label: CompatibilitySteamLaunchOptionLabelPolicy.rendererLabelKey,
                     isRecommended: {
@@ -631,14 +653,7 @@ struct SteamCompatibilityLaunchView: View {
                                 .dxvkRuntimeUnavailableLocalizationKey
                         return appState.localized(messageKey)
                     },
-                    unavailableNotice: rendererIsSelectable(.dxvk)
-                        ? nil
-                        : appState.localized(
-                            rendererAvailability(for: .dxvk)?
-                                .userMessageLocalizationKey ??
-                                SteamRendererPolicyPreference
-                                    .dxvkRuntimeUnavailableLocalizationKey
-                        ),
+                    unavailableNotice: nil,
                     palette: palette
                 )
             case .networkPolicy:
@@ -1049,13 +1064,25 @@ struct SteamCompatibilityLaunchView: View {
 
                 if isPersistenceBlocked || mustReloadAfterConflict {
                     ThemedActionButton(
-                        title: "최신 저장 값 다시 불러오기",
-                        systemImage: "arrow.clockwise",
+                        title: isPersistenceBlocked &&
+                            blockedPersistenceRecoveryVersion != nil
+                            ? "손상된 저장 값 초기화"
+                            : "최신 저장 값 다시 불러오기",
+                        systemImage: isPersistenceBlocked &&
+                            blockedPersistenceRecoveryVersion != nil
+                            ? "arrow.counterclockwise"
+                            : "arrow.clockwise",
                         prominence: .secondary,
                         isDisabled: isPreparingSession,
                         controlSize: .small
                     ) {
-                        loadSelectedRecipeDraft()
+                        if isPersistenceBlocked,
+                           blockedPersistenceRecoveryVersion != nil {
+                            isShowingCompatibilityPreferenceResetConfirmation =
+                                true
+                        } else {
+                            loadSelectedRecipeDraft()
+                        }
                     }
                     .frame(minWidth: 180, idealWidth: 230, maxWidth: 280)
                 }
@@ -1169,6 +1196,203 @@ struct SteamCompatibilityLaunchView: View {
         )
     }
 
+    private var graphicsBackendBinding: Binding<SteamGraphicsBackendIdentifier> {
+        Binding(
+            get: { draftSelections.graphicsBackend },
+            set: { backend in
+                draftSelections.graphicsBackend = backend
+                markDraftChanged(.graphicsBackend)
+                if !backend.supportsCurrentReleaseFrameGeneration,
+                   draftSelections.frameGenerationConfiguration != .off {
+                    draftSelections.frameGenerationConfiguration = .off
+                    markDraftChanged(.frameGeneration)
+                }
+            }
+        )
+    }
+
+    private func compatibilityFrameGenerationControl(
+        palette: ForgePlayPalette
+    ) -> some View {
+        let rendererSupportsFrameGeneration =
+            draftSelections.graphicsBackend.supportsCurrentReleaseFrameGeneration
+        let configuration = draftSelections.frameGenerationConfiguration
+
+        return VStack(alignment: .leading, spacing: 9) {
+            HStack(spacing: 8) {
+                Text(appState.localized("Frame Generation (베타)"))
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(palette.text)
+                provenanceBadge(for: .frameGeneration, palette: palette)
+            }
+
+            Toggle(
+                isOn: Binding(
+                    get: {
+                        draftSelections.frameGenerationConfiguration.isEnabled
+                    },
+                    set: { enabled in
+                        draftSelections.frameGenerationConfiguration
+                            .setEnabled(enabled)
+                        markDraftChanged(.frameGeneration)
+                    }
+                )
+            ) {
+                Text(appState.localized(
+                    "D3DMetal - NVIDIA에서 원본 프레임 사이에 보간 프레임을 생성해 선택한 표시 목표에 맞춥니다. 현재 베타 기능이며 게임과 입력 방식에 따라 입력 지연이 늘어날 수 있습니다."
+                ))
+                .font(.caption)
+                .foregroundStyle(palette.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+            }
+            .toggleStyle(.switch)
+            .tint(palette.primary)
+            .disabled(draftControlsAreDisabled || !rendererSupportsFrameGeneration)
+
+            if !rendererSupportsFrameGeneration {
+                Text(appState.localized(
+                    "Frame Generation (베타)은 현재 D3DMetal - NVIDIA에서만 켤 수 있습니다."
+                ))
+                .font(.caption)
+                .foregroundStyle(palette.warning)
+                .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Text(appState.localized("목표 표시 FPS"))
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(palette.text)
+
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 6) {
+                    compatibilityFrameGenerationTargetButtons(
+                        configuration: configuration,
+                        palette: palette
+                    )
+                }
+                VStack(alignment: .leading, spacing: 6) {
+                    compatibilityFrameGenerationTargetButtons(
+                        configuration: configuration,
+                        palette: palette
+                    )
+                }
+            }
+
+            Toggle(
+                isOn: Binding(
+                    get: {
+                        draftSelections.frameGenerationConfiguration
+                            .isFrameCheckEnabled
+                    },
+                    set: { enabled in
+                        guard draftSelections.frameGenerationConfiguration
+                            .isEnabled else {
+                            draftSelections.frameGenerationConfiguration
+                                .isFrameCheckEnabled = false
+                            return
+                        }
+                        draftSelections.frameGenerationConfiguration
+                            .isFrameCheckEnabled = enabled
+                        markDraftChanged(.frameGeneration)
+                    }
+                )
+            ) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(appState.localized("Frame Check (베타)"))
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(palette.text)
+                    Text(appState.localized(
+                        "프레임 생성 출력의 실제 최종 표시 cadence(원본과 보간 프레임 포함)를 게임 화면 오른쪽 상단에 표시합니다."
+                    ))
+                    .font(.caption)
+                    .foregroundStyle(palette.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .toggleStyle(.switch)
+            .tint(palette.primary)
+            .disabled(
+                draftControlsAreDisabled ||
+                    !rendererSupportsFrameGeneration ||
+                    !configuration.isEnabled
+            )
+
+            Text(appState.localized(
+                "입력 지연 가능성이 있습니다. ForgePlay 스케줄러의 보간 프레임 추가 지연 예산: 120 FPS → 약 10.42ms, 144 FPS → 약 8.68ms, 240 FPS → 약 5.21ms. 실제 지연은 macOS 합성기 및 디스플레이 상태에 따라 더 커질 수 있습니다."
+            ))
+            .font(.caption2)
+            .foregroundStyle(palette.secondaryText)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(palette.control)
+        .clipShape(RoundedRectangle(cornerRadius: ForgePlayLayout.controlCornerRadius))
+    }
+
+    @ViewBuilder
+    private func compatibilityFrameGenerationTargetButtons(
+        configuration: FrameGenerationConfiguration,
+        palette: ForgePlayPalette
+    ) -> some View {
+        ForEach(FrameGenerationPolicy.visibleTargetFrameRates) { targetFrameRate in
+            let isSelected = configuration.targetFrameRate == targetFrameRate
+            let isSelectable = targetFrameRate.isSelectableInCurrentRelease &&
+                selectedRecipe.supportedOptions.frameGenerationTargetFrameRates
+                    .contains(targetFrameRate)
+            Button {
+                draftSelections.frameGenerationConfiguration.targetFrameRate =
+                    targetFrameRate
+                markDraftChanged(.frameGeneration)
+            } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    Text("\(targetFrameRate.rawValue) FPS")
+                    if !isSelectable {
+                        Text(appState.localized("준비 중"))
+                            .font(.caption2)
+                    }
+                }
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(
+                    isSelectable ? palette.text : palette.secondaryText
+                )
+                .padding(.horizontal, 8)
+                .padding(.vertical, 6)
+                .background(isSelected ? palette.primary.opacity(0.10) : palette.control)
+                .overlay {
+                    RoundedRectangle(cornerRadius: ForgePlayLayout.controlCornerRadius)
+                        .stroke(
+                            isSelected ? palette.primary : palette.border,
+                            lineWidth: isSelected ? 2 : 1
+                        )
+                }
+                .clipShape(
+                    RoundedRectangle(cornerRadius: ForgePlayLayout.controlCornerRadius)
+                )
+            }
+            .buttonStyle(.plain)
+            .disabled(
+                draftControlsAreDisabled ||
+                    !configuration.isEnabled ||
+                    !isSelectable
+            )
+            .help(
+                appState.localized(
+                    isSelectable
+                        ? "이번 Steam 실행의 Frame Generation 목표 표시 FPS입니다."
+                        : "현재 Release에서는 선택할 수 없습니다."
+                )
+            )
+            .accessibilityValue(
+                appState.localized(
+                    !isSelectable
+                        ? "사용할 수 없음"
+                        : (isSelected ? "선택됨" : "선택되지 않음")
+                )
+            )
+        }
+    }
+
     private func optionsIncludingCurrent<Value: Hashable>(
         _ options: [Value],
         current: Value
@@ -1202,6 +1426,7 @@ struct SteamCompatibilityLaunchView: View {
     private func rendererIsSelectable(
         _ backend: SteamGraphicsBackendIdentifier
     ) -> Bool {
+        guard backend.isCurrentReleaseUserSelectable else { return false }
         guard backend == .dxvk else { return true }
         return rendererAvailability(for: backend)?.isAvailable == true
     }
@@ -1240,9 +1465,9 @@ struct SteamCompatibilityLaunchView: View {
               taskID == rendererAvailabilityTaskID else {
             return
         }
-        let values = selectedRecipe.supportedOptions.graphicsBackends + [
-            SteamGraphicsBackendIdentifier.dxvk
-        ]
+        let values = selectedRecipe.supportedOptions.graphicsBackends.filter(
+            \.isCurrentReleaseUserSelectable
+        )
         rendererAvailabilityByBackend = Dictionary(
             values.map { backend in
                 let availability = rendererPreference(for: backend)?
@@ -1339,6 +1564,7 @@ struct SteamCompatibilityLaunchView: View {
 
     private func optionTitle(_ kind: CompatibilitySteamLaunchOptionKindV1) -> String {
         switch kind {
+        case .frameGeneration: "Frame Generation (베타)"
         case .gameMode: "Game Mode"
         case .heapZeroMemory: "Heap zero memory"
         case .automaticProcessPolicies: "자동 렌더러 제외 정책"
@@ -1361,6 +1587,19 @@ struct SteamCompatibilityLaunchView: View {
 
     private func optionValue(_ kind: CompatibilitySteamLaunchOptionKindV1) -> String {
         switch kind {
+        case .frameGeneration:
+            if !draftSelections.frameGenerationConfiguration.isEnabled {
+                "끔"
+            } else {
+                appState.localizedFormat(
+                    "%d FPS 목표 · Frame Check %@",
+                    draftSelections.frameGenerationConfiguration.targetFrameRate.rawValue,
+                    appState.localized(
+                        draftSelections.frameGenerationConfiguration
+                            .isFrameCheckEnabled ? "켬" : "끔"
+                    )
+                )
+            }
         case .gameMode:
             draftSelections.gameModeEnabled ? "켬" : "끔"
         case .heapZeroMemory:
@@ -1401,10 +1640,18 @@ struct SteamCompatibilityLaunchView: View {
         switch kind {
         case .gameMode, .heapZeroMemory, .automaticProcessPolicies:
             true
+        case .frameGeneration:
+            selectedRecipe.supportedOptions.frameGenerationTargetFrameRates.contains(
+                draftSelections.frameGenerationConfiguration.targetFrameRate
+            ) && (try? draftSelections.frameGenerationConfiguration.validate(
+                isSupportedRenderer:
+                    draftSelections.graphicsBackend
+                        .supportsCurrentReleaseFrameGeneration
+            )) != nil
         case .graphicsBackend:
             selectedRecipe.supportedOptions.graphicsBackends.contains(
                 draftSelections.graphicsBackend
-            )
+            ) && draftSelections.graphicsBackend.isCurrentReleaseUserSelectable
         case .networkPolicy:
             selectedRecipe.supportedOptions.networkPolicies.contains(
                 draftSelections.networkPolicy
@@ -1436,8 +1683,7 @@ struct SteamCompatibilityLaunchView: View {
     }
 
     private var draftControlsAreDisabled: Bool {
-        isPersistenceBlocked || mustReloadAfterConflict ||
-            isPreparingSession || hasActiveSession ||
+        isPreparingSession || hasActiveSession ||
             appState.isSteamLaunchInProgress ||
             sessionCoordinator.isStandardSteamLaunchReserved
     }
@@ -1501,11 +1747,7 @@ struct SteamCompatibilityLaunchView: View {
     }
 
     private var saveIsDisabled: Bool {
-        draftControlsAreDisabled ||
-            selectedRendererRuntimeBlocker != nil ||
-            selectedRecipe.orderedOptionDescriptors.contains {
-                !isSupportedBySelectedRecipe($0.kind)
-            }
+        draftControlsAreDisabled
     }
 
     private var exactApprovedManifestRecords: [SteamGameRecord] {
@@ -1567,20 +1809,6 @@ struct SteamCompatibilityLaunchView: View {
                 reason: appState.localized("Steam 실행이 이미 진행 중입니다.")
             )
         }
-        if isPersistenceBlocked {
-            return .unavailable(
-                reason: appState.localized(
-                    "저장된 호환성 환경설정을 안전하게 다시 불러온 뒤 Steam을 실행하세요."
-                )
-            )
-        }
-        if mustReloadAfterConflict {
-            return .unavailable(
-                reason: appState.localized(
-                    "다른 편집기의 최신 저장 값을 다시 불러온 뒤 Steam을 실행하세요."
-                )
-            )
-        }
         if isPreparingSession {
             return .unavailable(
                 reason: appState.localized("Steam 호환성 세션을 준비하는 중입니다.")
@@ -1593,10 +1821,6 @@ struct SteamCompatibilityLaunchView: View {
                 )
             )
         }
-        if let blockerKey = gameInputProtectionAuthorizationBlockerKey {
-            return .unavailable(reason: appState.localized(blockerKey))
-        }
-
         var reasons: [String] = []
         if let unsupported = selectedRecipe.orderedOptionDescriptors.first(where: {
             !isSupportedBySelectedRecipe($0.kind)
@@ -1611,13 +1835,6 @@ struct SteamCompatibilityLaunchView: View {
         if let selectedRendererRuntimeBlocker {
             reasons.append(selectedRendererRuntimeBlocker)
         }
-        if !compatibilityDraftIsPersisted {
-            reasons.append(
-                appState.localized(
-                    "변경한 호환성 설정을 저장한 뒤 Steam을 실행하세요."
-                )
-            )
-        }
         if manifestRootReadiness != .ready || unresolvedManifestRootBookmark == nil {
             reasons.append(missingManifestRequirementReason)
         }
@@ -1630,7 +1847,7 @@ struct SteamCompatibilityLaunchView: View {
 
         return .available(
             message: appState.localized(
-                "저장된 프로필과 필수 실행 입력이 확인되어 Steam을 실행할 수 있습니다."
+                "현재 프로필과 필수 실행 입력이 확인되어 Steam을 실행할 수 있습니다."
             )
         )
     }
@@ -1651,19 +1868,68 @@ struct SteamCompatibilityLaunchView: View {
         (error as? ForgePlayDiagnosticLogProvidingError)?.forgePlayDiagnosticLogURL
     }
 
+    private func compatibilityPreferenceErrorIsRecoverableCorruption(
+        _ error: Error
+    ) -> Bool {
+        if let persistenceError =
+            error as? SteamLaunchConfigurationPersistenceError {
+            switch persistenceError {
+            case .unexpectedMode,
+                 .recordIdentityMismatch,
+                 .schemaVersionMismatch,
+                 .digestMismatch,
+                 .invalidPersistenceRevision:
+                return true
+            case .contextHasPendingChanges,
+                 .duplicateRecord,
+                 .writeConflict,
+                 .incompleteLaunchRecordProjection,
+                 .requestedTransactionCannotBeRecorded,
+                 .transactionConfigurationMismatch:
+                return false
+            }
+        }
+        if error is SteamLaunchConfigurationError { return true }
+        if let profileError = error as? SteamCompatibilityLaunchProfileErrorV1 {
+            switch profileError {
+            case .identityMismatch,
+                 .invalidPreference,
+                 .invalidCanonicalPayload,
+                 .migrationRejected:
+                return true
+            case .unsupportedContractVersion,
+                 .unsupportedRecipeSchemaVersion,
+                 .invalidRecipe,
+                 .invalidManifestRootAuthorization,
+                 .attemptedAutomaticPolicyRemoval,
+                 .unsupportedCapability,
+                 .invalidReceipt:
+                return false
+            }
+        }
+        return false
+    }
+
+    @discardableResult
     private func presentCompatibilityFailure(
         _ error: Error,
         message: String
-    ) {
+    ) -> AppNotice {
         compatibilityStatus = CompatibilityStatusPresentation(
             .failure,
             message: message,
             logURL: diagnosticLogURL(for: error)
         )
-        appState.setError(
+        let errorNotice = appState.setError(
             error,
             operationIdentifier: "steamCompatibilityLaunch",
             surfaceIdentifier: "steamCompatibilityLaunch"
+        )
+        return appState.setNotice(
+            message,
+            kind: .failure,
+            logURL: errorNotice.logURL,
+            captureFailureEvidence: false
         )
     }
 
@@ -1679,6 +1945,7 @@ struct SteamCompatibilityLaunchView: View {
         savedEnvelope = presentation.savedPreference
         compatibilityDraftSaveFailed = false
         isPersistenceBlocked = false
+        blockedPersistenceRecoveryVersion = nil
         mustReloadAfterConflict = false
         return true
     }
@@ -1697,24 +1964,96 @@ struct SteamCompatibilityLaunchView: View {
                 draftSelections = selectedRecipe.recommendations.selections
                 setAllUserProvenance(.recipe)
             }
+            let rendererWasNormalized =
+                normalizeRendererDraftForCurrentReleaseIfNeeded()
+            var normalizationOverride:
+                CompatibilitySteamLaunchOneLaunchOverrideV1?
+            if rendererWasNormalized {
+                var oneLaunchOverride = CompatibilitySteamLaunchOneLaunchOverrideV1(
+                    identity: selectedRecipe.identity
+                )
+                oneLaunchOverride.graphicsBackend =
+                    draftSelections.graphicsBackend
+                normalizationOverride = oneLaunchOverride
+            } else {
+                normalizationOverride = nil
+            }
             _ = try SteamCompatibilityLaunchResolverV1.resolveDraft(
                 recipe: selectedRecipe,
-                savedPreference: savedEnvelope
+                savedPreference: savedEnvelope,
+                oneLaunchOverride: normalizationOverride
             )
             isPersistenceBlocked = false
+            blockedPersistenceRecoveryVersion = nil
             mustReloadAfterConflict = false
             compatibilityDraftSaveFailed = false
-            compatibilityStatus = nil
+            compatibilityStatus = rendererWasNormalized
+                ? CompatibilityStatusPresentation(
+                    .warning,
+                    message: appState.localized(
+                        "이전에 저장한 숨겨진 그래픽 백엔드를 현재 선택 가능한 D3DMetal - NVIDIA로 바꾼 저장되지 않은 초안입니다. 저장하기 전에는 기존 저장값을 덮어쓰지 않습니다."
+                    )
+                )
+                : nil
         } catch {
-            isPersistenceBlocked = true
-            mustReloadAfterConflict = false
-            presentCompatibilityFailure(
+            savedEnvelope = nil
+            draftSelections = selectedRecipe.recommendations.selections
+            setAllUserProvenance(.recipe)
+            _ = normalizeRendererDraftForCurrentReleaseIfNeeded()
+            blockedPersistenceRecoveryVersion =
+                compatibilityPreferenceErrorIsRecoverableCorruption(error)
+                ? (try? repository.recoveryVersion(
+                    identity: selectedRecipe.identity
+                ))
+                : nil
+            isPersistenceBlocked = blockedPersistenceRecoveryVersion != nil
+            mustReloadAfterConflict = !isPersistenceBlocked
+            compatibilityDraftSaveFailed = true
+            compatibilityStatus = CompatibilityStatusPresentation(
+                .warning,
+                message: appState.localizedFormat(
+                    "저장된 호환성 환경설정을 불러오지 못해 프로필 권장값으로 계속합니다. 현재 선택은 저장하지 않아도 이번 실행에 사용할 수 있습니다: %@",
+                    appState.localizedError(error)
+                ),
+                logURL: diagnosticLogURL(for: error)
+            )
+        }
+    }
+
+    private func resetBlockedCompatibilityPreference() {
+        guard !isPreparingSession,
+              let expectedVersion = blockedPersistenceRecoveryVersion else {
+            return
+        }
+        let repository = CompatibilitySteamLaunchPreferenceRepositoryV1(
+            container: modelContext.container
+        )
+        do {
+            try repository.resetForRecovery(
+                identity: selectedRecipe.identity,
+                expectedVersion: expectedVersion
+            )
+            blockedPersistenceRecoveryVersion = nil
+            isPersistenceBlocked = false
+            loadSelectedRecipeDraft()
+            let message = appState.localized(
+                "손상된 호환성 환경설정 저장 값을 초기화했습니다."
+            )
+            compatibilityStatus = CompatibilityStatusPresentation(
+                .success,
+                message: message
+            )
+            let notice = appState.setNotice(message, kind: .success)
+            clearTaskLater(notice.id)
+        } catch {
+            let notice = presentCompatibilityFailure(
                 error,
                 message: appState.localizedFormat(
-                    "저장된 호환성 환경설정을 안전하게 불러오지 못했습니다: %@",
+                    "손상된 호환성 환경설정 저장 값을 초기화하지 못했습니다: %@",
                     appState.localizedError(error)
                 )
             )
+            clearTaskLater(notice.id)
         }
     }
 
@@ -1723,7 +2062,9 @@ struct SteamCompatibilityLaunchView: View {
             restoreProfileRecommendation(for: descriptor.kind)
             fieldProvenance[descriptor.kind] = .recipe
         }
+        _ = normalizeRendererDraftForCurrentReleaseIfNeeded()
         isPersistenceBlocked = false
+        blockedPersistenceRecoveryVersion = nil
         compatibilityDraftSaveFailed = false
         sessionCoordinator.clearCompletedSession()
         compatibilityStatus = CompatibilityStatusPresentation(
@@ -1739,6 +2080,9 @@ struct SteamCompatibilityLaunchView: View {
     ) {
         let recommended = selectedRecipe.recommendations.selections
         switch kind {
+        case .frameGeneration:
+            draftSelections.frameGenerationConfiguration =
+                recommended.frameGenerationConfiguration
         case .gameMode:
             draftSelections.gameModeEnabled = recommended.gameModeEnabled
         case .heapZeroMemory:
@@ -1762,6 +2106,20 @@ struct SteamCompatibilityLaunchView: View {
         case .automaticProcessPolicies:
             break
         }
+    }
+
+    @discardableResult
+    private func normalizeRendererDraftForCurrentReleaseIfNeeded() -> Bool {
+        let normalized = draftSelections.graphicsBackend.normalizedForCurrentRelease
+        guard normalized != draftSelections.graphicsBackend else { return false }
+        draftSelections.graphicsBackend = normalized
+        fieldProvenance[.graphicsBackend] = .oneLaunchOverride
+        if !normalized.supportsCurrentReleaseFrameGeneration,
+           draftSelections.frameGenerationConfiguration != .off {
+            draftSelections.frameGenerationConfiguration = .off
+            fieldProvenance[.frameGeneration] = .oneLaunchOverride
+        }
+        return true
     }
 
     private func markDraftChanged(_ kind: CompatibilitySteamLaunchOptionKindV1) {
@@ -1812,34 +2170,64 @@ struct SteamCompatibilityLaunchView: View {
 
     private func saveDraftFromAction() {
         guard !draftControlsAreDisabled else { return }
+        if isPersistenceBlocked {
+            let message = appState.localized(
+                "저장된 호환성 환경설정을 초기화한 뒤 다시 저장하세요."
+            )
+            compatibilityStatus = CompatibilityStatusPresentation(
+                .warning,
+                message: message
+            )
+            let notice = appState.setNotice(message, kind: .warning)
+            clearTaskLater(notice.id)
+            return
+        }
         if let selectedRendererRuntimeBlocker {
             compatibilityStatus = CompatibilityStatusPresentation(
                 .warning,
                 message: selectedRendererRuntimeBlocker
             )
+            let notice = appState.setNotice(
+                selectedRendererRuntimeBlocker,
+                kind: .warning
+            )
+            clearTaskLater(notice.id)
             return
         }
         if let unsupported = selectedRecipe.orderedOptionDescriptors.first(where: {
             !isSupportedBySelectedRecipe($0.kind)
         }) {
+            let message = appState.localizedFormat(
+                "지원되지 않는 프로필 옵션이 있습니다: %@. 프로필 권장값을 복원한 뒤 저장하세요.",
+                appState.localized(optionTitle(unsupported.kind))
+            )
             compatibilityStatus = CompatibilityStatusPresentation(
                 .warning,
-                message: appState.localizedFormat(
-                    "지원되지 않는 프로필 옵션이 있습니다: %@. 프로필 권장값을 복원한 뒤 저장하세요.",
-                    appState.localized(optionTitle(unsupported.kind))
-                )
+                message: message
             )
+            let notice = appState.setNotice(message, kind: .warning)
+            clearTaskLater(notice.id)
             return
         }
+        appState.setNotice(
+            appState.localized("호환성 환경설정을 저장하는 중입니다."),
+            kind: .progress
+        )
         do {
             let stored = try persistCurrentDraft()
+            let successMessage = appState.localizedFormat(
+                "호환성 환경설정을 저장했습니다. 세대: %lld",
+                stored.generation
+            )
             compatibilityStatus = CompatibilityStatusPresentation(
                 .success,
-                message: appState.localizedFormat(
-                    "호환성 환경설정을 저장했습니다. 세대: %lld",
-                    stored.generation
-                )
+                message: successMessage
             )
+            let notice = appState.setNotice(
+                successMessage,
+                kind: .success
+            )
+            clearTaskLater(notice.id)
         } catch {
             presentPersistenceError(error)
         }
@@ -1856,15 +2244,11 @@ struct SteamCompatibilityLaunchView: View {
         }
         guard manifestRootReadiness == .ready,
               let unresolvedManifestRootBookmark,
-              let runtimeExecutableBookmark,
-              compatibilityDraftIsPersisted,
-              let savedEnvelope,
-              let persistedDraftDigest = try? currentPreferencePayload().canonicalDigest,
-              persistedDraftDigest == savedEnvelope.payloadDigest else {
+              let runtimeExecutableBookmark else {
             compatibilityStatus = CompatibilityStatusPresentation(
                 .failure,
                 message: appState.localized(
-                    "저장된 프로필과 현재 초안이 정확히 일치하지 않아 Steam 실행을 시작하지 않았습니다. 설정을 다시 저장하세요."
+                    "Steam 실행에 필요한 매니페스트 루트 또는 관리 Runtime 권한이 준비되지 않았습니다."
                 )
             )
             return
@@ -1877,9 +2261,9 @@ struct SteamCompatibilityLaunchView: View {
             )
         )
         let recipe = selectedRecipe
-        let oneLaunchOverride = CompatibilitySteamLaunchOneLaunchOverrideV1(
-            identity: selectedRecipe.identity
-        )
+        let oneLaunchOverride = currentOneLaunchOverride()
+        let currentSavedPreference = savedEnvelope
+        let currentDraftIsPersisted = compatibilityDraftIsPersisted
         let displaySelections = draftSelections
         let displayFieldProvenance = fieldProvenance
         let authorizationProvider = manifestRootAuthorizationProvider
@@ -1894,7 +2278,7 @@ struct SteamCompatibilityLaunchView: View {
                 let preparation = try await navigationSessionCoordinator.prepareSteamSession(
                     recipe: recipe,
                     unresolvedManifestRootBookmark: unresolvedManifestRootBookmark,
-                    savedPreference: savedEnvelope,
+                    savedPreference: currentSavedPreference,
                     oneLaunchOverride: oneLaunchOverride,
                     displaySelections: displaySelections,
                     displayFieldProvenance: displayFieldProvenance,
@@ -1902,14 +2286,24 @@ struct SteamCompatibilityLaunchView: View {
                     manifestRootAuthorizationProvider: authorizationProvider,
                     runtimeProviderFactory: providerFactory
                 )
-                navigationSessionCoordinator.recordPersistedPreference(savedEnvelope)
+                if currentDraftIsPersisted, let currentSavedPreference {
+                    navigationSessionCoordinator.recordPersistedPreference(
+                        currentSavedPreference
+                    )
+                }
                 compatibilityStatus = CompatibilityStatusPresentation(
                     .success,
-                    message: appState.localizedFormat(
-                        "Steam 세션 적용 영수증 %@을 확인했습니다. 저장된 환경설정 세대: %lld",
-                        preparation.receipt.receiptID,
-                        savedEnvelope.generation
-                    )
+                    message: currentDraftIsPersisted &&
+                        currentSavedPreference != nil
+                        ? appState.localizedFormat(
+                            "Steam 세션 적용 영수증 %@을 확인했습니다. 저장된 환경설정 세대: %lld",
+                            preparation.receipt.receiptID,
+                            currentSavedPreference?.generation ?? 0
+                        )
+                        : appState.localizedFormat(
+                            "Steam 세션 적용 영수증 %@을 확인했습니다. 저장되지 않은 현재 초안을 이번 실행에 적용했습니다.",
+                            preparation.receipt.receiptID
+                        )
                 )
             } catch {
                 // The draft and the previously persisted envelope remain intact.
@@ -1968,36 +2362,18 @@ struct SteamCompatibilityLaunchView: View {
         var override = CompatibilitySteamLaunchOneLaunchOverrideV1(
             identity: selectedRecipe.identity
         )
-        if fieldProvenance[.graphicsBackend] == .oneLaunchOverride {
-            override.graphicsBackend = draftSelections.graphicsBackend
-        }
-        if fieldProvenance[.networkPolicy] == .oneLaunchOverride {
-            override.networkPolicy = draftSelections.networkPolicy
-        }
-        if fieldProvenance[.audioInputPolicy] == .oneLaunchOverride {
-            override.audioInputPolicy = draftSelections.audioInputPolicy
-        }
-        if fieldProvenance[.synchronizationPolicy] == .oneLaunchOverride {
-            override.synchronizationPolicy = draftSelections.synchronizationPolicy
-        }
-        if fieldProvenance[.videoMemoryPolicy] == .oneLaunchOverride {
-            override.videoMemoryPolicy = draftSelections.videoMemoryPolicy
-        }
-        if fieldProvenance[.gameMode] == .oneLaunchOverride {
-            override.gameModeEnabled = draftSelections.gameModeEnabled
-        }
-        if fieldProvenance[.heapZeroMemory] == .oneLaunchOverride {
-            override.heapZeroMemoryEnabled = draftSelections.heapZeroMemoryEnabled
-        }
-        if fieldProvenance[.fpsCursorPolicy] == .oneLaunchOverride {
-            override.fpsCursorPolicy = draftSelections.fpsCursorPolicy
-        }
-        if fieldProvenance[.controllerPolicy] == .oneLaunchOverride {
-            override.controllerPolicy = draftSelections.controllerPolicy
-        }
-        if fieldProvenance[.keyboardMapping] == .oneLaunchOverride {
-            override.keyboardMapping = draftSelections.keyboardMapping
-        }
+        override.graphicsBackend = draftSelections.graphicsBackend
+        override.networkPolicy = draftSelections.networkPolicy
+        override.audioInputPolicy = draftSelections.audioInputPolicy
+        override.synchronizationPolicy = draftSelections.synchronizationPolicy
+        override.videoMemoryPolicy = draftSelections.videoMemoryPolicy
+        override.frameGenerationConfiguration =
+            draftSelections.frameGenerationConfiguration
+        override.gameModeEnabled = draftSelections.gameModeEnabled
+        override.heapZeroMemoryEnabled = draftSelections.heapZeroMemoryEnabled
+        override.fpsCursorPolicy = draftSelections.fpsCursorPolicy
+        override.controllerPolicy = draftSelections.controllerPolicy
+        override.keyboardMapping = draftSelections.keyboardMapping
         return override
     }
 
@@ -2009,15 +2385,18 @@ struct SteamCompatibilityLaunchView: View {
            case .writeConflict = persistenceError {
             mustReloadAfterConflict = true
         }
+        let message = appState.localizedFormat(
+            "Steam 세션은 영수증 %@으로 적용됐지만 환경설정 저장에는 실패했습니다. 현재 초안과 이전 저장 값은 유지됩니다: %@",
+            receiptID,
+            appState.localizedError(error)
+        )
         compatibilityStatus = CompatibilityStatusPresentation(
             .warning,
-            message: appState.localizedFormat(
-                "Steam 세션은 영수증 %@으로 적용됐지만 환경설정 저장에는 실패했습니다. 현재 초안과 이전 저장 값은 유지됩니다: %@",
-                receiptID,
-                appState.localizedError(error)
-            ),
+            message: message,
             logURL: diagnosticLogURL(for: error)
         )
+        let notice = appState.setNotice(message, kind: .warning)
+        clearTaskLater(notice.id)
     }
 
     private func presentPersistenceError(_ error: Error) {
@@ -2025,22 +2404,26 @@ struct SteamCompatibilityLaunchView: View {
         if let persistenceError = error as? SteamLaunchConfigurationPersistenceError,
            case .writeConflict = persistenceError {
             mustReloadAfterConflict = true
+            let message = appState.localized(
+                "다른 편집기가 이 프로필을 먼저 저장했습니다. 현재 초안은 유지됩니다. 최신 저장 값을 다시 불러온 뒤 다시 시도하세요."
+            )
             compatibilityStatus = CompatibilityStatusPresentation(
                 .warning,
-                message: appState.localized(
-                    "다른 편집기가 이 프로필을 먼저 저장했습니다. 현재 초안은 유지됩니다. 최신 저장 값을 다시 불러온 뒤 다시 시도하세요."
-                ),
+                message: message,
                 logURL: diagnosticLogURL(for: error)
             )
+            let notice = appState.setNotice(message, kind: .warning)
+            clearTaskLater(notice.id)
             return
         }
-        presentCompatibilityFailure(
+        let notice = presentCompatibilityFailure(
             error,
             message: appState.localizedFormat(
                 "호환성 환경설정을 저장하지 못했습니다: %@",
                 appState.localizedError(error)
             )
         )
+        clearTaskLater(notice.id)
     }
 
     private func handleManifestRootSelection(
@@ -2236,6 +2619,13 @@ struct SteamCompatibilityLaunchView: View {
                 error,
                 message: message
             )
+        }
+    }
+
+    private func clearTaskLater(_ noticeID: UUID) {
+        Task {
+            try? await Task.sleep(for: .seconds(5))
+            appState.clearNotice(id: noticeID)
         }
     }
 }

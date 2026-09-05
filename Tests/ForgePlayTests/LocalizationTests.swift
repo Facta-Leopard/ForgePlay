@@ -1,5 +1,7 @@
 import Darwin
+import AppKit
 import SwiftData
+import SwiftUI
 import XCTest
 @testable import ForgePlay
 
@@ -683,7 +685,7 @@ final class LocalizationTests: XCTestCase {
         )
         XCTAssertEqual(
             SteamRendererPolicySelection.d3dMetalNVIDIA.labelKey,
-            "D3DMetal - NVIDIA (베타)"
+            "D3DMetal - NVIDIA"
         )
         XCTAssertEqual(
             SteamNetworkCompatibilitySelection.allCases,
@@ -721,32 +723,10 @@ final class LocalizationTests: XCTestCase {
                 )
             }
 
-            let expectedNVIDIALabel: String
-            switch language {
-            case .system:
-                XCTFail("System language must not enter the explicit locale loop")
-                continue
-            case .english:
-                expectedNVIDIALabel = "D3DMetal - NVIDIA (Beta)"
-            case .korean:
-                expectedNVIDIALabel = "D3DMetal - NVIDIA (베타)"
-            case .spanish:
-                expectedNVIDIALabel = "D3DMetal - NVIDIA (beta)"
-            case .german:
-                expectedNVIDIALabel = "D3DMetal - NVIDIA (Beta)"
-            case .japanese:
-                expectedNVIDIALabel = "D3DMetal - NVIDIA (ベータ)"
-            case .simplifiedChinese:
-                expectedNVIDIALabel = "D3DMetal - NVIDIA (测试版)"
-            case .traditionalChinese:
-                expectedNVIDIALabel = "D3DMetal - NVIDIA (測試版)"
-            case .french:
-                expectedNVIDIALabel = "D3DMetal - NVIDIA (bêta)"
-            }
             XCTAssertEqual(
                 table[SteamRendererPolicySelection.d3dMetalNVIDIA.labelKey],
-                expectedNVIDIALabel,
-                "Incorrect D3DMetal NVIDIA beta label in \(language.rawValue)"
+                "D3DMetal - NVIDIA",
+                "Incorrect D3DMetal NVIDIA label in \(language.rawValue)"
             )
         }
     }
@@ -1363,7 +1343,7 @@ final class LocalizationTests: XCTestCase {
         XCTAssertTrue(appState.contains("func beginSteamStorageConnectionOperation("))
         XCTAssertEqual(
             steamLaunchView.components(
-                separatedBy: "appState.restorePersistedSteamStorageAccess("
+                separatedBy: "restorePersistedSteamStorageAccess("
             ).count - 1,
             2
         )
@@ -1629,11 +1609,11 @@ final class LocalizationTests: XCTestCase {
             "앱 시작 화면",
             "저장된 구성이 Windows용 Steam을 실행할 수 있으면 앱을 열 때 Steam 실행 화면으로 이동합니다. 준비가 막혀 있으면 설정 화면이 열리며, 로그나 알림이 있다는 이유만으로 대시보드가 자동으로 열리지는 않습니다.",
             "아래 순서는 현재 구현된 실행 경로와 기능을 기준으로 합니다.",
-            "D3DMetal - NVIDIA (베타)는 지원되는 NVIDIA DLSS/NGX 요청을 Apple MetalFX 업스케일링으로 연결합니다.",
+            "D3DMetal - NVIDIA는 지원되는 NVIDIA DLSS/NGX 요청을 Apple MetalFX 업스케일링으로 연결합니다.",
             "Apple WWDC25에서 MetalFX 업스케일링 보기",
             "사이드바의 업데이트 확인 (베타) 버튼은 ForgePlay 홈페이지의 공개 릴리스 정보를 확인합니다. 업데이트가 있으면 버튼을 다시 눌러 공식 릴리스 페이지를 엽니다.",
             "호환성 프로필의 필수 자동 정책은 일부 게임 보조 프로세스에 렌더러 설정이 전달되지 않도록 제한할 수 있습니다. 프로세스를 종료하거나 게임 파일·보안 모듈을 변경하거나 검증을 우회하지 않습니다.",
-            "Steam 실행은 모든 게임에 공통으로 사용하는 표준 경로입니다. 그래픽 백엔드와 호환성 설정을 직접 선택해 저장하고, Windows용 Steam이 열리면 라이브러리에서 게임을 실행합니다.",
+            "Steam 실행은 모든 게임에 공통으로 사용하는 표준 경로입니다. 그래픽 백엔드와 호환성 설정을 선택하고, 다음 실행에도 재사용하려면 저장하세요. Windows용 Steam이 열리면 라이브러리에서 게임을 실행합니다.",
             "AI 진단은 설정에서 켠 경우에만 Apple Foundation Models를 사용합니다. 외부 AI 서버로 로그를 보내는 구조가 아닙니다.",
             "지원되지 않음 또는 업데이트 권장은 현재 ForgePlay Runtime, macOS, 게임 상태에서 바로 실행하기 어렵다는 의미입니다. 로그를 보관하고 앱/런타임 업데이트를 확인하세요.",
             "호환성 DB 업데이트는 신뢰된 공개키와 HTTPS 피드가 있어야 동작합니다. 잘못된 URL이나 개인 네트워크 주소는 거부됩니다."
@@ -2267,10 +2247,10 @@ final class LocalizationTests: XCTestCase {
         XCTAssertTrue(steamLaunchView.contains("Text(appState.localized(\"Game Mode\"))"))
         XCTAssertFalse(steamLaunchView.contains("Game Mode (베타)"))
         XCTAssertTrue(steamLaunchView.contains(
-            "GridItem(.adaptive(minimum: 118, maximum: 180), spacing: 6)"
+            "repeating: GridItem(.flexible(), spacing: 8)"
         ))
         XCTAssertTrue(steamLaunchView.contains(
-            ".frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)"
+            ".frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)"
         ))
         XCTAssertFalse(steamLaunchView.contains(
             ".frame(maxWidth: .infinity, minHeight: 76"
@@ -2280,7 +2260,7 @@ final class LocalizationTests: XCTestCase {
         )
         let primaryActionsDefinitionRange = try XCTUnwrap(
             steamLaunchView.range(
-                of: "private var steamLaunchPrimaryActions",
+                of: "private func steamLaunchPrimaryActions(",
                 range: launchPanelRange.upperBound..<steamLaunchView.endIndex
             )
         )
@@ -2303,10 +2283,8 @@ final class LocalizationTests: XCTestCase {
                 of: "selectedRendererForNextSteamLaunch?.detailKey"
             )
         )
-        let rendererWarningRange = try XCTUnwrap(
-            launchPanelSource.range(
-                of: "let messageKey = dxvkAvailability.userMessageLocalizationKey"
-            )
+        XCTAssertTrue(
+            launchPanelSource.contains("cachedSelectedRendererLaunchBlocker")
         )
         let gameModeRange = try XCTUnwrap(
             launchPanelSource.range(
@@ -2319,22 +2297,48 @@ final class LocalizationTests: XCTestCase {
             )
         )
         XCTAssertLessThan(rendererRange.lowerBound, rendererDetailRange.lowerBound)
-        XCTAssertLessThan(rendererDetailRange.lowerBound, rendererWarningRange.lowerBound)
-        XCTAssertLessThan(rendererWarningRange.lowerBound, gameModeRange.lowerBound)
+        XCTAssertLessThan(rendererDetailRange.lowerBound, gameModeRange.lowerBound)
         XCTAssertLessThan(gameModeRange.lowerBound, compatibilityControlsRange.lowerBound)
-        XCTAssertNotNil(
-            launchPanelSource.range(
-                of: #"\}\s*experimentalGameModeControl\(palette: palette\)\s*steamCompatibilitySelectionControls\(palette: palette\)"#,
-                options: .regularExpression
+        XCTAssertTrue(
+            launchPanelSource.contains(
+                "ForEach(StandardSteamLaunchPanelSection.ordered, id: \\.self)"
             )
         )
+        let orderedSectionsStart = try XCTUnwrap(
+            steamLaunchView.range(of: "static let ordered: [Self] = [")
+        )
+        let orderedSectionsEnd = try XCTUnwrap(
+            steamLaunchView[orderedSectionsStart.upperBound...].range(of: "]")
+        )
+        let orderedSectionsSource = String(
+            steamLaunchView[
+                orderedSectionsStart.lowerBound..<orderedSectionsEnd.upperBound
+            ]
+        )
+        let orderedSectionTokens = [
+            ".renderer",
+            ".frameGeneration",
+            ".gameMode",
+            ".compatibility",
+            ".keyboard",
+            ".controller",
+            ".configurationState"
+        ]
+        for (earlier, later) in zip(
+            orderedSectionTokens,
+            orderedSectionTokens.dropFirst()
+        ) {
+            let earlierRange = try XCTUnwrap(orderedSectionsSource.range(of: earlier))
+            let laterRange = try XCTUnwrap(orderedSectionsSource.range(of: later))
+            XCTAssertLessThan(earlierRange.lowerBound, laterRange.lowerBound)
+        }
         let primaryActionsSource = String(
             steamLaunchView[primaryActionsDefinitionRange.lowerBound...]
         )
         XCTAssertTrue(primaryActionsSource.contains("title: \"Steam 실행\""))
         XCTAssertTrue(primaryActionsSource.contains("title: \"설정 저장\""))
         XCTAssertTrue(primaryActionsSource.contains("let availability = standardLaunchAvailability"))
-        XCTAssertTrue(primaryActionsSource.contains("guard standardLaunchDraftIsSaved else"))
+        XCTAssertFalse(primaryActionsSource.contains("guard standardLaunchDraftIsSaved else"))
         XCTAssertFalse(steamLaunchView.contains("standardSteamLaunchActionTitle"))
         XCTAssertFalse(steamLaunchView.contains("저장된 구성으로 Steam 실행"))
         XCTAssertFalse(steamLaunchView.contains("저장하고 Steam 실행"))
@@ -2409,7 +2413,7 @@ final class LocalizationTests: XCTestCase {
             compatibilityOptions.lowerBound
         )
         XCTAssertTrue(compatibilityView.contains("title: \"Steam 실행\""))
-        XCTAssertTrue(compatibilityView.contains("!compatibilityDraftIsPersisted"))
+        XCTAssertFalse(compatibilityView.contains("!compatibilityDraftIsPersisted"))
         XCTAssertFalse(compatibilityView.contains("호환성 Steam 실행 및 설정 저장"))
         XCTAssertFalse(compatibilityView.contains("설정 저장 후 호환성 Steam 실행"))
 
@@ -2454,7 +2458,7 @@ final class LocalizationTests: XCTestCase {
         )
     }
 
-    func testSteamLaunchPrimaryActionsRequireAnExactPersistedDraft() throws {
+    func testSteamLaunchPrimaryActionsUseValidatedInMemoryDraftsWithoutPersistenceGate() throws {
         let projectRoot = try projectRoot()
         let standardView = try String(
             contentsOf: projectRoot.appending(path: "Sources/ForgePlay/UI/SteamLaunchView.swift"),
@@ -2469,9 +2473,14 @@ final class LocalizationTests: XCTestCase {
 
         let standardLaunchStart = try XCTUnwrap(standardView.range(of: "private func launchSteam()"))
         let standardLaunchSource = String(standardView[standardLaunchStart.lowerBound...])
-        XCTAssertTrue(standardLaunchSource.contains("guard standardLaunchDraftIsSaved else"))
+        XCTAssertFalse(standardLaunchSource.contains("guard standardLaunchDraftIsSaved else"))
         XCTAssertFalse(standardLaunchSource.contains("persistCurrentStandardLaunchConfiguration()"))
-        XCTAssertTrue(standardLaunchSource.contains("snapshot.canonicalDigest == savedDigest"))
+        XCTAssertFalse(standardLaunchSource.contains("snapshot.canonicalDigest == savedDigest"))
+        XCTAssertTrue(
+            standardLaunchSource.contains(
+                "let selection = try currentStandardLaunchProductSelection()"
+            )
+        )
 
         let compatibilityLaunchStart = try XCTUnwrap(
             compatibilityView.range(of: "private func saveAndPrepareSteamSession()")
@@ -2484,9 +2493,140 @@ final class LocalizationTests: XCTestCase {
         let compatibilityLaunchSource = String(
             compatibilityView[compatibilityLaunchStart.lowerBound..<compatibilityLaunchEnd.lowerBound]
         )
-        XCTAssertTrue(compatibilityLaunchSource.contains("compatibilityDraftIsPersisted"))
+        XCTAssertFalse(
+            compatibilityLaunchSource.contains(
+                "compatibilityDraftIsPersisted,"
+            )
+        )
         XCTAssertFalse(compatibilityLaunchSource.contains("persistCurrentDraft()"))
-        XCTAssertTrue(compatibilityLaunchSource.contains("recordPersistedPreference(savedEnvelope)"))
+        XCTAssertTrue(
+            compatibilityLaunchSource.contains(
+                "let oneLaunchOverride = currentOneLaunchOverride()"
+            )
+        )
+        XCTAssertTrue(
+            compatibilityLaunchSource.contains("if currentDraftIsPersisted")
+        )
+    }
+
+    func testSteamRendererExposureAndSaveConfirmationStayInTheProductUI() throws {
+        let projectRoot = try projectRoot()
+        let standardView = try String(
+            contentsOf: projectRoot.appending(
+                path: "Sources/ForgePlay/UI/SteamLaunchView.swift"
+            ),
+            encoding: .utf8
+        )
+        let compatibilityView = try String(
+            contentsOf: projectRoot.appending(
+                path: "Sources/ForgePlay/UI/SteamCompatibilityLaunchView.swift"
+            ),
+            encoding: .utf8
+        )
+        let rootView = try String(
+            contentsOf: projectRoot.appending(
+                path: "Sources/ForgePlay/UI/RootView.swift"
+            ),
+            encoding: .utf8
+        )
+
+        XCTAssertTrue(
+            standardView.contains(
+                "SteamRendererPolicySelection.currentReleaseSelectableCases"
+            )
+        )
+        XCTAssertTrue(
+            standardView.contains(
+                "repeating: GridItem(.flexible(), spacing: 8)"
+            )
+        )
+        XCTAssertTrue(standardView.contains("count: 3"))
+        XCTAssertTrue(
+            compatibilityView.contains("\\.isCurrentReleaseUserSelectable")
+        )
+        XCTAssertFalse(standardView.contains("standardLaunchSaveConfirmation"))
+        XCTAssertTrue(rootView.contains("TaskBanner(notice: notice)"))
+        XCTAssertTrue(
+            rootView.contains("if let notice = appState.currentNotice")
+        )
+        XCTAssertFalse(rootView.contains("notice: appState.currentNotice"))
+        XCTAssertTrue(
+            standardView.contains("clearStandardLaunchSaveNoticeLater(notice.id)")
+        )
+        XCTAssertTrue(standardView.contains("Task.sleep(for: .seconds(5))"))
+        XCTAssertTrue(
+            standardView.contains(
+                "appState.setNotice(\n                message,\n                kind: .success"
+            )
+        )
+    }
+
+    @MainActor
+    func testCurrentNoticeBannerHostObservesIdleNoticeChanges() {
+        let appState = AppState()
+        let hostingView = NSHostingView(
+            rootView: CurrentNoticeBannerHost().environment(appState)
+        )
+        hostingView.frame = NSRect(x: 0, y: 0, width: 900, height: 180)
+        hostingView.layoutSubtreeIfNeeded()
+        let emptyHeight = hostingView.fittingSize.height
+
+        let firstNotice = appState.setNotice("Saved", kind: .success)
+        for _ in 0..<8 {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.01))
+            hostingView.layoutSubtreeIfNeeded()
+        }
+        let visibleHeight = hostingView.fittingSize.height
+        XCTAssertGreaterThan(visibleHeight, emptyHeight + 1)
+
+        _ = appState.setNotice("Newer", kind: .progress)
+        appState.clearNotice(id: firstNotice.id)
+        for _ in 0..<4 {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.01))
+            hostingView.layoutSubtreeIfNeeded()
+        }
+        XCTAssertGreaterThan(hostingView.fittingSize.height, emptyHeight + 1)
+
+        appState.clearNotice()
+        for _ in 0..<8 {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.01))
+            hostingView.layoutSubtreeIfNeeded()
+        }
+        XCTAssertLessThanOrEqual(
+            hostingView.fittingSize.height,
+            emptyHeight + 1
+        )
+    }
+
+    func testFrameGenerationBetaAndNVIDIACopyHasEightLocaleParity() {
+        let keys = [
+            "Frame Generation (베타)",
+            "D3DMetal - NVIDIA에서 원본 프레임 사이에 보간 프레임을 생성해 선택한 표시 목표에 맞춥니다. 현재 베타 기능이며 게임과 입력 방식에 따라 입력 지연이 늘어날 수 있습니다.",
+            "Frame Generation (베타)은 현재 D3DMetal - NVIDIA에서만 켤 수 있습니다.",
+            "Frame Generation (베타) 설정을 확인하세요. 이 기능은 현재 D3DMetal - NVIDIA에서만 사용할 수 있고 Frame Check는 Frame Generation을 켠 경우에만 사용할 수 있습니다.",
+            "그래픽 %@ · Frame Generation (베타) %@ · Frame Check %@ · 네트워크 %@ · 오디오 입력 %@ · 동기화 %@ · 게임 비디오 메모리 %@ · Game Mode %@ · FPS 커서 %@ · 컨트롤러 %@ · 키보드 %@",
+            "이전에 저장한 숨겨진 그래픽 백엔드를 현재 선택 가능한 D3DMetal - NVIDIA로 바꾼 저장되지 않은 초안입니다. 저장하기 전에는 기존 저장값을 덮어쓰지 않습니다."
+        ]
+
+        for language in ForgePlayLanguageMode.allCases where language != .system {
+            for key in keys {
+                let localized = ForgePlayLocalization.localized(
+                    key,
+                    language: language
+                )
+                XCTAssertFalse(localized.isEmpty)
+                XCTAssertEqual(placeholders(in: key), placeholders(in: localized))
+                if language != .korean {
+                    XCTAssertNotEqual(localized, key)
+                    XCTAssertNil(
+                        localized.range(
+                            of: "[가-힣]",
+                            options: .regularExpression
+                        )
+                    )
+                }
+            }
+        }
     }
 
     func testLaunchAvailabilityCarriesOnePrimaryActionMessage() {
@@ -2798,7 +2938,7 @@ final class LocalizationTests: XCTestCase {
         }
     }
 
-    func testSteamLaunchSavedDraftChecksAvoidBodyDigestWorkAndYieldBeforeLoading() throws {
+    func testSteamLaunchSavedDraftChecksRestoreStandardBeforeYielding() throws {
         let projectRoot = try projectRoot()
         let standardView = try String(
             contentsOf: projectRoot.appending(path: "Sources/ForgePlay/UI/SteamLaunchView.swift"),
@@ -2811,7 +2951,11 @@ final class LocalizationTests: XCTestCase {
             encoding: .utf8
         )
 
-        XCTAssertTrue(standardView.contains(".task {\n            await Task.yield()"))
+        XCTAssertFalse(standardView.contains(".task {\n            await Task.yield()"))
+        XCTAssertTrue(standardView.contains("restoreStandardLaunchConfigurationOnce()"))
+        XCTAssertTrue(standardView.contains(
+            "if standardLaunchConfigurationRestoreState == .pending"
+        ))
         XCTAssertTrue(compatibilityView.contains(".task {\n            await Task.yield()"))
         XCTAssertFalse(standardView.contains("currentStandardLaunchConfigurationDigest"))
 
@@ -2829,7 +2973,12 @@ final class LocalizationTests: XCTestCase {
             ]
         )
         XCTAssertFalse(compatibilityPersistedSource.contains("canonicalDigest"))
-        XCTAssertTrue(compatibilityView.contains("persistedDraftDigest == savedEnvelope.payloadDigest"))
+        XCTAssertFalse(compatibilityView.contains("persistedDraftDigest"))
+        XCTAssertTrue(
+            compatibilityPersistedSource.contains(
+                "currentPayload == savedEnvelope.payload"
+            )
+        )
     }
 
     func testSteamLaunchReadinessProjectionTracksOnlyCurrentEnvironmentRecords() {
@@ -2903,7 +3052,7 @@ final class LocalizationTests: XCTestCase {
         XCTAssertFalse(before.records.contains { $0.id == unrelatedCommand.id })
     }
 
-    func testSteamPersistenceRecoveryAlwaysKeepsASafeReloadPath() throws {
+    func testSteamPersistenceRecoveryKeepsReloadForConflictsAndUsesRecommendationsAfterReadFailure() throws {
         let projectRoot = try projectRoot()
         let standardView = try String(
             contentsOf: projectRoot.appending(path: "Sources/ForgePlay/UI/SteamLaunchView.swift"),
@@ -2971,8 +3120,20 @@ final class LocalizationTests: XCTestCase {
             ]
         )
         XCTAssertTrue(compatibilityLoadSource.contains("isPersistenceBlocked = false"))
-        XCTAssertTrue(compatibilityLoadSource.contains("isPersistenceBlocked = true"))
+        XCTAssertFalse(compatibilityLoadSource.contains("isPersistenceBlocked = true"))
         XCTAssertTrue(compatibilityLoadSource.contains("} catch {"))
+        XCTAssertTrue(compatibilityLoadSource.contains("savedEnvelope = nil"))
+        XCTAssertTrue(
+            compatibilityLoadSource.contains(
+                "draftSelections = selectedRecipe.recommendations.selections"
+            )
+        )
+        XCTAssertTrue(
+            compatibilityLoadSource.contains("setAllUserProvenance(.recipe)")
+        )
+        XCTAssertTrue(
+            compatibilityLoadSource.contains("compatibilityDraftSaveFailed = true")
+        )
         let validationRange = try XCTUnwrap(
             compatibilityLoadSource.range(of: "SteamCompatibilityLaunchResolverV1.resolveDraft(")
         )
@@ -3165,7 +3326,7 @@ final class LocalizationTests: XCTestCase {
                 separatedBy: "steamClientLanguageOwnershipPolicy.reaffirm("
             ).count - 1,
             2,
-            "First-launch preparation and the single user launch path must retain language ownership."
+            "First-launch preparation and normal Steam launch must retain language ownership after Wine-backed mutations."
         )
     }
 
@@ -3213,10 +3374,10 @@ final class LocalizationTests: XCTestCase {
 
         XCTAssertTrue(launchBody.contains("requireSteamSharedPrefixRuntimeCompatibility"))
         XCTAssertTrue(launchBody.contains("let context = try prepareLaunch()"))
-        XCTAssertTrue(launchBody.contains("let processResult = try await steamManager.launchSteam("))
+        XCTAssertTrue(launchBody.contains("var processResult = try await steamManager.launchSteam("))
         XCTAssertLessThan(
             try XCTUnwrap(launchBody.range(of: "let context = try prepareLaunch()")?.lowerBound),
-            try XCTUnwrap(launchBody.range(of: "let processResult = try await steamManager.launchSteam(")?.lowerBound)
+            try XCTUnwrap(launchBody.range(of: "var processResult = try await steamManager.launchSteam(")?.lowerBound)
         )
         XCTAssertFalse(launchBody.contains("migrateSteamSharedPrefixRuntime"))
         XCTAssertFalse(launchBody.contains("prepareSteamSharedPrefix"))
@@ -3332,7 +3493,7 @@ final class LocalizationTests: XCTestCase {
         XCTAssertFalse(steamManager.lowercased().contains("applaunch"))
         XCTAssertFalse(steamManager.lowercased().contains("rungameid"))
         XCTAssertFalse(steamManager.lowercased().contains("steam://"))
-        XCTAssertFalse(uiSource.contains("게임 화면"))
+        XCTAssertFalse(uiSource.contains(#""게임 화면""#))
         XCTAssertFalse(uiSource.contains("게임 다시 찾기"))
         XCTAssertFalse(uiSource.contains("게임 목록"))
         XCTAssertFalse(uiSource.contains("게임 폴더 복사"))
@@ -3785,6 +3946,10 @@ final class LocalizationTests: XCTestCase {
                 displacedEnvironment: URL(fileURLWithPath: "/tmp/Prefixes/.SteamShared.reset-staging"),
                 originalError: CocoaError(.fileWriteUnknown),
                 rollbackError: CocoaError(.fileWriteNoPermission)
+            ),
+            PrefixResetError.steamLibraryPreservationFailed(
+                URL(fileURLWithPath: "/tmp/Prefixes/SteamShared/drive_c/Program Files (x86)/Steam/steamapps"),
+                "identity changed"
             ),
             WindowsRuntimeServiceError.invalidSelection("runner missing"),
             WindowsRuntimeServiceError.probeFailed(sampleProcessRunResult()),

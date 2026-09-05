@@ -69,6 +69,36 @@ struct AppTerminationSteamShutdownPlan: Sendable, Hashable {
 
 typealias AppTerminationPrefixRestoration =
     @MainActor @Sendable (URL) async throws -> Void
+typealias ForceWineProcessTerminator = @Sendable () async ->
+    StartupWineProcessCleanupResult
+typealias ForgePlayWineProcessInspector = @Sendable () ->
+    StartupWineProcessCleanupPlan
+typealias ManagedWindowsSteamActivityInspector = @Sendable (URL) async throws ->
+    Bool
+
+struct AppTerminationIntentGate: Equatable, Sendable {
+    private(set) var generation: UInt64 = 0
+    private(set) var isApplicationTerminationRequested = false
+
+    mutating func beginApplicationTermination() {
+        generation &+= 1
+        isApplicationTerminationRequested = true
+    }
+
+    mutating func cancelApplicationTermination() {
+        generation &+= 1
+        isApplicationTerminationRequested = false
+    }
+
+    func temporaryForceStopResetTicket() -> UInt64? {
+        isApplicationTerminationRequested ? nil : generation
+    }
+
+    func permitsTemporaryForceStopReset(ticket: UInt64?) -> Bool {
+        guard let ticket else { return false }
+        return !isApplicationTerminationRequested && ticket == generation
+    }
+}
 
 struct ManagedStorageStartupRequest: Equatable {
     var destination: URL
@@ -292,6 +322,10 @@ final class SetupWorkflowRefreshWaiterRegistry<Value> {
 @MainActor
 @Observable
 final class AppServices {
+    private struct ForceTerminatedWineQuiescenceProof: Sendable, Equatable {
+        let lifecycleOperationGeneration: UInt64
+    }
+
     private struct SetupWorkflowRefreshAttempt {
         let ticket: SetupWorkflowRequestTicket
         let key: SetupReadinessObservationKey
@@ -323,6 +357,11 @@ final class AppServices {
         Task<Void, Never>?
     @ObservationIgnored private var containmentDrainResetTask:
         Task<Void, Never>?
+    @ObservationIgnored private var appTerminationIntentGate =
+        AppTerminationIntentGate()
+    @ObservationIgnored private var forceTerminatedWineQuiescenceProof:
+        ForceTerminatedWineQuiescenceProof?
+    @ObservationIgnored private var isForceWineTerminationInProgress = false
     let appSessionID: String
     let pathManager: PathManager
     let systemCheckService: SystemCheckService
@@ -618,7 +657,7 @@ final class AppServices {
     func resolveSetupReadiness(
         hasSteamReferences: Bool,
         runtimeExecutable: URL? = nil,
-        rendererPolicySelection: SteamRendererPolicySelection = .d3dMetal,
+        rendererPolicySelection: SteamRendererPolicySelection = .d3dMetalNVIDIA,
         videoMemorySelection: SteamVideoMemorySelection = .automatic
     ) -> SetupReadiness {
         steamPrefixReadinessResolver.resolve(
@@ -631,6 +670,259 @@ final class AppServices {
 
     func steamSharedPrefixURL() throws -> URL {
         try pathManager.url(for: .steamSharedPrefix)
+    }
+
+    /// Capture the exact Wine processes that predate this startup before the
+    /// root UI becomes launchable. Later Wine processes are never admitted to
+    /// this immutable cleanup plan.
+    func captureStartupWineProcessCleanupPlan()
+        -> StartupWineProcessCleanupPlan {
+        safeProcessRunner.captureStartupWineProcessCleanupPlan()
+    }
+
+    /// ForgePlay is the sole owner of its embedded Wine runtime. The root view
+    /// is already visible while this lifecycle cleanup runs, and the blocking
+    /// TERM/KILL wait is detached from the shared SafeProcessRunner actor.
+    func forceTerminateWineProcessesAfterStartup(
+        _ plan: StartupWineProcessCleanupPlan
+    ) async -> String? {
+        let runner = safeProcessRunner
+        let result = await Task.detached(priority: .userInitiated) {
+            runner.forceTerminateWineProcessesAfterStartup(plan)
+        }.value
+        guard !result.succeeded else { return nil }
+        var details: [String] = []
+        if !result.remainingProcessIDs.isEmpty {
+            details.append(
+                "remaining Wine PIDs: " + result.remainingProcessIDs
+                    .map(String.init).joined(separator: ", ")
+            )
+        }
+        details.append(contentsOf: result.inspectionFailures)
+        details.append(contentsOf: result.signalFailures)
+        return Array(Set(details)).sorted().joined(separator: " | ")
+    }
+
+    /// User-requested emergency stop. Capture every currently running
+    /// ForgePlay-bundled Wine loader, wineserver, Game Mode host and PE child,
+    /// cancel any synchronous launcher still capable of creating a child, and
+    /// re-enumerate while applying identity-checked SIGKILL until the process
+    /// set remains empty. This deliberately does not wait for compatibility
+    /// baseline restoration or a prefix/session validation gate.
+    func forceTerminateAllForgePlayWineProcesses(
+        forceTerminator: ForceWineProcessTerminator? = nil,
+        initialDrainTimeout: TimeInterval = 0.25,
+        finalDrainTimeout: TimeInterval = 3
+    )
+        async -> StartupWineProcessCleanupResult {
+        let runner = safeProcessRunner
+        forceTerminatedWineQuiescenceProof = nil
+        isForceWineTerminationInProgress = true
+        defer { isForceWineTerminationInProgress = false }
+        applicationTerminationResetTask?.cancel()
+        applicationTerminationResetTask = nil
+        containmentDrainResetTask?.cancel()
+        containmentDrainResetTask = nil
+        let boundedInitialDrainTimeout = min(
+            max(initialDrainTimeout.isFinite ? initialDrainTimeout : 0.25, 0),
+            1
+        )
+        let boundedFinalDrainTimeout = min(
+            max(finalDrainTimeout.isFinite ? finalDrainTimeout : 3, 0),
+            10
+        )
+        let resetTicket = appTerminationIntentGate
+            .temporaryForceStopResetTicket()
+        // Close launch admission and cancel the current owner, but do not wait
+        // for UI state to disappear. Every task which can launch, retry, or
+        // restore through Wine receives cancellation before the first global
+        // sweep and must reach its bounded completion state before this method
+        // can issue a no-spawn proof.
+        steamPrefixLifecycleCoordinator.reserveApplicationTermination()
+        steamManager.beginApplicationTerminationInputContainmentDrain()
+        let compatibilityBackgroundTasks = steamPrefixService
+            .cancelCompatibilityBackgroundWork()
+        steamPrefixLifecycleCoordinator.requestCancellationOfActiveOperation()
+        _ = runner.requestCancellationOfActiveSynchronousProcess()
+        let initiallyDrainedOperation = await steamPrefixLifecycleCoordinator
+            .beginApplicationTerminationAndWaitForIdle(
+                timeout: boundedInitialDrainTimeout,
+                cancellationRequester: { [safeProcessRunner] in
+                    self.steamPrefixLifecycleCoordinator
+                        .requestCancellationOfActiveOperation()
+                    _ = safeProcessRunner
+                        .requestCancellationOfActiveSynchronousProcess()
+                }
+            )
+        let initiallyDrainedMonitors = await steamManager
+            .waitForApplicationTerminationInputContainmentDrain(
+                timeout: boundedInitialDrainTimeout
+            )
+        let initiallyDrainedBackgroundWork = await
+            waitForCompatibilityBackgroundWorkDrain(
+                compatibilityBackgroundTasks,
+                timeout: boundedInitialDrainTimeout
+            )
+
+        let firstSweep: StartupWineProcessCleanupResult
+        if let forceTerminator {
+            firstSweep = await forceTerminator()
+        } else {
+            firstSweep = await Task.detached(priority: .userInitiated) {
+                runner.forceTerminateAllForgePlayWineProcesses()
+            }.value
+        }
+
+        steamPrefixLifecycleCoordinator.requestCancellationOfActiveOperation()
+        _ = runner.requestCancellationOfActiveSynchronousProcess()
+        let operationDrained: Bool
+        if initiallyDrainedOperation {
+            operationDrained = true
+        } else {
+            operationDrained = await steamPrefixLifecycleCoordinator
+                .beginApplicationTerminationAndWaitForIdle(
+                    timeout: boundedFinalDrainTimeout,
+                    cancellationRequester: { [safeProcessRunner] in
+                        self.steamPrefixLifecycleCoordinator
+                            .requestCancellationOfActiveOperation()
+                        _ = safeProcessRunner
+                            .requestCancellationOfActiveSynchronousProcess()
+                    }
+                )
+        }
+        let monitorDrainSucceeded: Bool
+        if initiallyDrainedMonitors {
+            monitorDrainSucceeded = true
+        } else {
+            monitorDrainSucceeded = await steamManager
+                .waitForApplicationTerminationInputContainmentDrain(
+                timeout: boundedFinalDrainTimeout
+            )
+        }
+        let backgroundWorkDrained: Bool
+        if initiallyDrainedBackgroundWork {
+            backgroundWorkDrained = true
+        } else {
+            backgroundWorkDrained = await
+                waitForCompatibilityBackgroundWorkDrain(
+                compatibilityBackgroundTasks,
+                timeout: boundedFinalDrainTimeout
+            )
+        }
+
+        // A cancelled operation can cross its last runner boundary while the
+        // first global sweep is in progress. Sweep once more only after every
+        // bounded drain attempt, closing any completed task's final spawn race
+        // before launch admission can reopen. An incomplete drain remains a
+        // truthful force-stop failure and does not receive a no-spawn proof.
+        let finalSweep: StartupWineProcessCleanupResult
+        if let forceTerminator {
+            finalSweep = await forceTerminator()
+        } else {
+            finalSweep = await Task.detached(priority: .userInitiated) {
+                runner.forceTerminateAllForgePlayWineProcesses()
+            }.value
+        }
+        let capturedResult = Self.mergingForceTerminationSweeps(
+            firstSweep,
+            finalSweep: finalSweep
+        )
+        var lifecycleFailures: [String] = []
+        if !operationDrained {
+            lifecycleFailures.append(
+                "the active Steam prefix operation did not drain before the force stop"
+            )
+        }
+        if !monitorDrainSucceeded {
+            lifecycleFailures.append(
+                "Steam launch/restoration monitors did not drain before the force stop"
+            )
+        }
+        if !backgroundWorkDrained {
+            lifecycleFailures.append(
+                "Steam compatibility background work did not drain after cancellation"
+            )
+        }
+        var compatibilityDeferralWarnings: [String] = []
+        if capturedResult.succeeded, lifecycleFailures.isEmpty {
+            let deferral = steamManager
+                .deferRetainedCompatibilityRestorationAfterForcedWineTermination()
+            lifecycleFailures.append(contentsOf: deferral.blockingErrors)
+            compatibilityDeferralWarnings = deferral.diagnosticWarnings
+        }
+        if !compatibilityDeferralWarnings.isEmpty {
+            NSLog(
+                "ForgePlay force-stop host compatibility restoration warning: %@",
+                compatibilityDeferralWarnings.joined(separator: " | ")
+            )
+        }
+        let result = StartupWineProcessCleanupResult(
+            initiallyTargetedProcessIDs:
+                capturedResult.initiallyTargetedProcessIDs,
+            remainingProcessIDs: capturedResult.remainingProcessIDs,
+            inspectionFailures: Array(Set(
+                capturedResult.inspectionFailures + lifecycleFailures
+            )).sorted(),
+            signalFailures: capturedResult.signalFailures
+        )
+        if result.succeeded {
+            forceTerminatedWineQuiescenceProof =
+                ForceTerminatedWineQuiescenceProof(
+                    lifecycleOperationGeneration:
+                        steamPrefixLifecycleCoordinator.operationGeneration
+                )
+        }
+        // Reopen admission only when no real application-termination intent
+        // arrived while the force stop was awaiting its process postcondition.
+        if operationDrained,
+           monitorDrainSucceeded,
+           backgroundWorkDrained,
+           appTerminationIntentGate.permitsTemporaryForceStopReset(
+                ticket: resetTicket
+           ) {
+            steamPrefixLifecycleCoordinator.cancelApplicationTermination()
+            steamManager.cancelApplicationTerminationContainmentDrain(
+                rearmRestorationMonitors: false
+            )
+        }
+        notifySteamEnvironmentChanged()
+        return result
+    }
+
+    private func waitForCompatibilityBackgroundWorkDrain(
+        _ states: [SteamCompatibilityBackgroundWorkCompletionState],
+        timeout: TimeInterval
+    ) async -> Bool {
+        guard states.contains(where: { !$0.isCompleted }) else { return true }
+        let deadline = Date().addingTimeInterval(max(timeout, 0))
+        while Date() < deadline {
+            if states.allSatisfy(\.isCompleted) { return true }
+            do {
+                try await Task.sleep(for: .milliseconds(25))
+            } catch {
+                return false
+            }
+        }
+        return states.allSatisfy(\.isCompleted)
+    }
+
+    private nonisolated static func mergingForceTerminationSweeps(
+        _ first: StartupWineProcessCleanupResult,
+        finalSweep: StartupWineProcessCleanupResult
+    ) -> StartupWineProcessCleanupResult {
+        StartupWineProcessCleanupResult(
+            initiallyTargetedProcessIDs: Array(Set(
+                first.initiallyTargetedProcessIDs +
+                    finalSweep.initiallyTargetedProcessIDs
+            )).sorted(),
+            remainingProcessIDs: finalSweep.remainingProcessIDs,
+            inspectionFailures: Array(Set(
+                first.inspectionFailures + finalSweep.inspectionFailures
+            )).sorted(),
+            signalFailures: Array(Set(
+                first.signalFailures + finalSweep.signalFailures
+            )).sorted()
+        )
     }
 
     func currentSteamEnvironmentGenerationID() throws -> String {
@@ -1580,17 +1872,22 @@ final class AppServices {
         selectedRootURL: URL? = nil,
         additionalManagedRoots: [URL] = [],
         includeDefaultApplicationSupportRoot: Bool = false,
-        fileManager: FileManager = .default
+        fileManager: FileManager = .default,
+        wineProcessInspector: ForgePlayWineProcessInspector? = nil
     ) async -> AppTerminationSteamShutdownSummary {
+        appTerminationIntentGate.beginApplicationTermination()
         applicationTerminationResetTask?.cancel()
         applicationTerminationResetTask = nil
         containmentDrainResetTask?.cancel()
         containmentDrainResetTask = nil
         steamPrefixLifecycleCoordinator.reserveApplicationTermination()
         steamManager.beginApplicationTerminationInputContainmentDrain()
+        let compatibilityBackgroundTasks = steamPrefixService
+            .cancelCompatibilityBackgroundWork()
         steamPrefixLifecycleCoordinator.requestCancellationOfActiveOperation()
         _ = safeProcessRunner
             .requestCancellationOfActiveSynchronousProcess()
+        let forceStopDrained = await waitForForceWineTerminationToFinish()
         let operationDrained = await steamPrefixLifecycleCoordinator
             .beginApplicationTerminationAndWaitForIdle(
                 cancellationRequester: { [safeProcessRunner] in
@@ -1602,7 +1899,15 @@ final class AppServices {
             )
         let containmentDrained = await steamManager
             .waitForApplicationTerminationInputContainmentDrain()
-        guard operationDrained, containmentDrained else {
+        let backgroundWorkDrained = await
+            waitForCompatibilityBackgroundWorkDrain(
+                compatibilityBackgroundTasks,
+                timeout: 10
+            )
+        guard forceStopDrained,
+              operationDrained,
+              containmentDrained,
+              backgroundWorkDrained else {
             return AppTerminationSteamShutdownSummary(
                 prefix: nil,
                 prefixes: steamPrefixLifecycleCoordinator
@@ -1610,7 +1915,8 @@ final class AppServices {
                 attemptedRuntimePath: runtimeExecutable?.path,
                 results: [],
                 errors: [
-                    "active Steam prefix operation or input-containment " +
+                    "active force stop, Steam prefix operation, launch monitor, " +
+                    "compatibility background work, or input-containment " +
                     "owner did not stop after its owned process group was " +
                     "cancelled: " +
                     (steamPrefixLifecycleCoordinator.activeOperation?
@@ -1618,6 +1924,16 @@ final class AppServices {
                 ],
                 skippedReason: nil
             )
+        }
+        if let summary = verifiedForceTerminationShutdownSummary(
+            selectedRootURL: selectedRootURL,
+            additionalManagedRoots: additionalManagedRoots,
+            includeDefaultApplicationSupportRoot:
+                includeDefaultApplicationSupportRoot,
+            fileManager: fileManager,
+            wineProcessInspector: wineProcessInspector
+        ) {
+            return summary
         }
         do {
             try await steamPrefixService
@@ -1674,6 +1990,11 @@ final class AppServices {
     }
 
     func cancelApplicationTermination() {
+        appTerminationIntentGate.cancelApplicationTermination()
+        scheduleApplicationTerminationResetWhenQuiescent()
+    }
+
+    private func scheduleApplicationTerminationResetWhenQuiescent() {
         containmentDrainResetTask?.cancel()
         containmentDrainResetTask = nil
         applicationTerminationResetTask?.cancel()
@@ -1698,6 +2019,67 @@ final class AppServices {
                 }
             }
         }
+    }
+
+    private func waitForForceWineTerminationToFinish(
+        timeout: TimeInterval = 15
+    ) async -> Bool {
+        let deadline = Date().addingTimeInterval(max(timeout, 0))
+        while isForceWineTerminationInProgress {
+            guard Date() < deadline else { return false }
+            do {
+                try await Task.sleep(for: .milliseconds(25))
+            } catch {
+                return false
+            }
+        }
+        return true
+    }
+
+    /// The force-stop loop already performed repeated identity-checked global
+    /// enumeration and quiet snapshots. Reuse that proof only if no coordinated
+    /// prefix operation has begun since it was captured and a fresh read-only
+    /// process inspection still observes no ForgePlay Wine process. This avoids
+    /// starting wineserver, Wine registry helpers, or `steam.exe -shutdown`
+    /// merely to stop a prefix which is already known to be inactive.
+    private func verifiedForceTerminationShutdownSummary(
+        selectedRootURL: URL?,
+        additionalManagedRoots: [URL],
+        includeDefaultApplicationSupportRoot: Bool,
+        fileManager: FileManager,
+        wineProcessInspector: ForgePlayWineProcessInspector?
+    ) -> AppTerminationSteamShutdownSummary? {
+        guard let proof = forceTerminatedWineQuiescenceProof,
+              proof.lifecycleOperationGeneration ==
+                steamPrefixLifecycleCoordinator.operationGeneration,
+              steamPrefixLifecycleCoordinator.activeOperation == nil else {
+            return nil
+        }
+        let inspection = wineProcessInspector?() ??
+            safeProcessRunner.captureStartupWineProcessCleanupPlan()
+        guard inspection.targets.isEmpty,
+              inspection.inspectionFailures.isEmpty else {
+            forceTerminatedWineQuiescenceProof = nil
+            return nil
+        }
+        forceTerminatedWineQuiescenceProof = nil
+        let prefixes = appTerminationSteamSharedPrefixes(
+            selectedRootURL: selectedRootURL,
+            additionalManagedRoots: additionalManagedRoots,
+            includeDefaultApplicationSupportRoot:
+                includeDefaultApplicationSupportRoot,
+            fileManager: fileManager
+        )
+        return AppTerminationSteamShutdownSummary(
+            prefix: prefixes.first,
+            prefixes: prefixes,
+            attemptedRuntimePath: nil,
+            results: [],
+            errors: [],
+            warnings: [],
+            skippedReason:
+                "successful force stop and fresh process inspection verified no ForgePlay Wine processes"
+        )
     }
 
     func shutdownSteamProcessesBeforeRootChange(
@@ -1931,6 +2313,7 @@ final class AppServices {
         includeDefaultApplicationSupportRoot: Bool = false,
         fileManager: FileManager = .default
     ) -> AppTerminationSteamShutdownPlan {
+        appTerminationIntentGate.beginApplicationTermination()
         applicationTerminationResetTask?.cancel()
         applicationTerminationResetTask = nil
         containmentDrainResetTask?.cancel()
@@ -1940,6 +2323,22 @@ final class AppServices {
         steamPrefixLifecycleCoordinator.requestCancellationOfActiveOperation()
         _ = safeProcessRunner
             .requestCancellationOfActiveSynchronousProcess()
+        if let summary = verifiedForceTerminationShutdownSummary(
+            selectedRootURL: selectedRootURL,
+            additionalManagedRoots: additionalManagedRoots,
+            includeDefaultApplicationSupportRoot:
+                includeDefaultApplicationSupportRoot,
+            fileManager: fileManager,
+            wineProcessInspector: nil
+        ) {
+            return AppTerminationSteamShutdownPlan(
+                prefixes: [],
+                runtimeExecutable: nil,
+                initialErrors: [],
+                initialWarnings: summary.warnings,
+                skippedReason: summary.skippedReason
+            )
+        }
         let prefixes = appTerminationSteamSharedPrefixes(
             selectedRootURL: selectedRootURL,
             additionalManagedRoots: additionalManagedRoots,
@@ -1972,6 +2371,8 @@ final class AppServices {
     nonisolated static func executeAppTerminationSteamShutdown(
         _ plan: AppTerminationSteamShutdownPlan,
         safeProcessRunner: SafeProcessRunner,
+        managedSteamActivityInspector:
+            ManagedWindowsSteamActivityInspector? = nil,
         restoreRetainedCompatibilitySessions:
             AppTerminationPrefixRestoration? = nil,
         completeRetainedWindowsExecutableLeases:
@@ -2049,11 +2450,19 @@ final class AppServices {
             var shouldRequestGracefulShutdown = false
             if FileSystemItemPolicy.isRegularNonSymlinkFile(steamExecutable, fileManager: fileManager) {
                 do {
-                    shouldRequestGracefulShutdown = try await safeProcessRunner
-                        .hasManagedPrefixActivity(prefix)
+                    if let managedSteamActivityInspector {
+                        shouldRequestGracefulShutdown = try await
+                            managedSteamActivityInspector(prefix)
+                    } else {
+                        shouldRequestGracefulShutdown = try await
+                            safeProcessRunner
+                                .hasVerifiedManagedWindowsSteamActivity(
+                                    under: prefix
+                                )
+                    }
                 } catch {
                     warnings.append(
-                        "\(prefix.path) active process inspection before graceful shutdown: " +
+                        "\(prefix.path) managed Windows Steam activity inspection before graceful shutdown: " +
                             forgePlayTechnicalErrorSummary(error)
                     )
                 }

@@ -292,7 +292,7 @@ final class SteamLaunchProfileAVXBoundaryTests: XCTestCase {
         }
     }
 
-    func testStandardAndGameModeSpecsRejectDifferentExpectedAVXPolicy() throws {
+    func testStandardAndGameModeSpecsKeepAVXProjectionMismatchDiagnostic() throws {
         for gameModePolicy in [
             SteamGameModeLaunchPolicy.standard,
             .experimentalRequiredHost
@@ -312,7 +312,7 @@ final class SteamLaunchProfileAVXBoundaryTests: XCTestCase {
                     from: pair.spec.environment
                 )
 
-            XCTAssertThrowsError(
+            XCTAssertNoThrow(
                 try SteamManagerCompatibilityLaunchRuntimeProviderV1
                     .requireLaunchEnvironmentProjection(
                         projection,
@@ -320,14 +320,7 @@ final class SteamLaunchProfileAVXBoundaryTests: XCTestCase {
                         policy: pair.childPolicy,
                         expectedRequestProjection: pair.requestProjection
                     )
-            ) { error in
-                XCTAssertEqual(
-                    error as? SteamCompatibilityLaunchProfileErrorV1,
-                    .invalidReceipt(
-                        "managed-wine-launch-environment-projection"
-                    )
-                )
-            }
+            )
         }
     }
 
@@ -344,7 +337,7 @@ final class SteamLaunchProfileAVXBoundaryTests: XCTestCase {
             let snapshots = AVXSnapshotCounter(result: .managedDefault)
             let runner = makeAVXBoundaryRunner(
                 snapshots: snapshots,
-                applicationGroupContainer: fixture.root
+                gameModeGroupContainer: fixture.gameModeGroupContainer
             )
             let spec = try await runner.commandSpec(
                 for: normalSteamLaunchAction(
@@ -412,7 +405,7 @@ final class SteamLaunchProfileAVXBoundaryTests: XCTestCase {
             let snapshots = AVXSnapshotCounter(result: item.avxPolicy)
             let runner = makeAVXBoundaryRunner(
                 snapshots: snapshots,
-                applicationGroupContainer: fixture.root
+                gameModeGroupContainer: fixture.gameModeGroupContainer
             )
 
             let result = try await runner.run(
@@ -446,7 +439,7 @@ final class SteamLaunchProfileAVXBoundaryTests: XCTestCase {
         }
     }
 
-    func testInvalidAVXBlocksOnlyNewLaunchAdmissionNotRecoverySpecs()
+    func testInvalidAVXFallsBackForNewLaunchAndDoesNotAffectRecoverySpecs()
         async throws
     {
         let fixture = try makeNormalSteamLaunchFixture()
@@ -456,22 +449,30 @@ final class SteamLaunchProfileAVXBoundaryTests: XCTestCase {
         )
         let runner = makeAVXBoundaryRunner(
             snapshots: snapshots,
-            applicationGroupContainer: fixture.root
+            gameModeGroupContainer: fixture.gameModeGroupContainer
         )
 
-        do {
-            _ = try await runner.commandSpec(
-                for: normalSteamLaunchAction(
-                    fixture: fixture,
-                    gameModePolicy: .standard
-                )
+        let launch = try await runner.commandSpec(
+            for: normalSteamLaunchAction(
+                fixture: fixture,
+                gameModePolicy: .standard
             )
-            XCTFail("Invalid ambient AVX must reject new launch admission")
-        } catch let error as SafeProcessRunnerError {
-            guard case .invalidRosettaAVXHostOverride("invalid") = error else {
-                return XCTFail("Unexpected launch error: \(error)")
-            }
-        }
+        )
+        XCTAssertEqual(
+            launch.runtimeCompatibility["rosettaAVXPolicyStatus"],
+            "invalid-override-fallback-default"
+        )
+        XCTAssertEqual(
+            launch.environment[
+                ManagedWineRosettaAVXPolicyV1.childEnvironmentKey
+            ],
+            ManagedWineRosettaAVXPolicyV1.managedDefault.childEnvironmentValue
+        )
+        XCTAssertTrue(
+            launch.preparationDiagnosticWarning?.contains(
+                "Invalid Rosetta AVX override was ignored"
+            ) == true
+        )
         XCTAssertEqual(snapshots.captureCount, 1)
 
         let shutdown = try await runner.commandSpec(
@@ -512,7 +513,7 @@ final class SteamLaunchProfileAVXBoundaryTests: XCTestCase {
         }
     }
 
-    func testProviderRejectsEachUntruthfulFullRequestProjectionField() throws {
+    func testProviderKeepsStandardCompatibilityProjectionDiagnostic() throws {
         let pair = try commandSpecAndPolicy(
             policy: .managedDefault,
             gameModePolicy: .standard
@@ -522,7 +523,48 @@ final class SteamLaunchProfileAVXBoundaryTests: XCTestCase {
             ("FORGEPLAY_NETWORK_PROFILE_REQUESTED", "wifi-identity"),
             ("FORGEPLAY_AUDIO_INPUT_MODE", "enabled"),
             ("FORGEPLAY_SYNCHRONIZATION_SELECTION", "msync"),
-            ("FORGEPLAY_SYNCHRONIZATION_BACKEND", "msync")
+            ("FORGEPLAY_SYNCHRONIZATION_BACKEND", "msync"),
+            (GameModeHostEnvironment.requestedKey, "1"),
+            (GameModeHostEnvironment.availabilityKey, "ready"),
+            (GameModeHostEnvironment.enabledKey, "1")
+        ]
+
+        for (key, value) in mismatches {
+            var environment = pair.spec.environment
+            environment[key] = value
+            let projection = SafeProcessRunner
+                .managedWineLaunchEnvironmentProjection(from: environment)
+
+            XCTAssertNoThrow(
+                try SteamManagerCompatibilityLaunchRuntimeProviderV1
+                    .requireLaunchEnvironmentProjection(
+                        projection,
+                        expectedRosettaAVXPolicy:
+                            pair.spec.managedWineRosettaAVXPolicy,
+                        policy: pair.childPolicy,
+                        expectedRequestProjection: pair.requestProjection
+                    ),
+                "Diagnostic mismatch must not terminate standard Wine/Steam: \(key)"
+            )
+        }
+    }
+
+    func testProviderRejectsGameModeReceiptUnlessRequiredHostIsReady() throws {
+        let pair = try commandSpecAndPolicy(
+            policy: .managedDefault,
+            gameModePolicy: .experimentalRequiredHost
+        )
+        let mismatches: [(String, String?)] = [
+            (GameModeHostEnvironment.enabledKey, nil),
+            (GameModeHostEnvironment.requestedKey, "0"),
+            (
+                GameModeHostEnvironment.availabilityKey,
+                GameModeHostEnvironment.notRequestedAvailability
+            ),
+            (
+                GameModeHostEnvironment.disabledReasonKey,
+                "coordination-storage-unavailable"
+            )
         ]
 
         for (key, value) in mismatches {
@@ -546,7 +588,7 @@ final class SteamLaunchProfileAVXBoundaryTests: XCTestCase {
                     .invalidReceipt(
                         "managed-wine-launch-environment-projection"
                     ),
-                    "Expected mismatch for \(key)"
+                    "Expected Game Mode mismatch for \(key)"
                 )
             }
         }
@@ -784,7 +826,33 @@ final class SteamLaunchProfileAVXBoundaryTests: XCTestCase {
                 to: environment
             )
         case .experimentalRequiredHost:
-            environment[GameModeHostEnvironment.enabledKey] = "1"
+            environment = GameModeHostEnvironment.applying(
+                GameModeSteamChildHostSelection(
+                    host: GameModeHostCapability(
+                        appURL: URL(fileURLWithPath: "/runtime/GameModeProcessHost.app"),
+                        executableURL: URL(
+                            fileURLWithPath:
+                                "/runtime/GameModeProcessHost.app/Contents/MacOS/GameModeProcessHost"
+                        ),
+                        bundleIdentifier: "com.forgeplay.tests.game-mode-host",
+                        executableSHA256: String(repeating: "c", count: 64),
+                        supportsGameMode: true,
+                        isRosettaRuntimeComponent: true
+                    ),
+                    runtimeNtdllURL: URL(
+                        fileURLWithPath: "/runtime/lib/wine/x86_64-unix/ntdll.so"
+                    ),
+                    prefixExecutionLockURL: URL(
+                        fileURLWithPath: "/prefix/.forgeplay-prefix-execution.lock"
+                    ),
+                    evidenceLogURL: URL(
+                        fileURLWithPath: "/logs/game-mode-host.jsonl"
+                    ),
+                    runIdentifier:
+                        "00000000-0000-0000-0000-000000000001"
+                ),
+                to: environment
+            )
         }
 
         var spec = CommandSpec(
@@ -807,6 +875,7 @@ final class SteamLaunchProfileAVXBoundaryTests: XCTestCase {
         let prefix: URL
         let steamExecutable: URL
         let logs: URL
+        let gameModeGroupContainer: URL
     }
 
     private final class AVXSnapshotCounter: @unchecked Sendable {
@@ -840,21 +909,17 @@ final class SteamLaunchProfileAVXBoundaryTests: XCTestCase {
 
     private func makeAVXBoundaryRunner(
         snapshots: AVXSnapshotCounter,
-        applicationGroupContainer: URL
+        gameModeGroupContainer: URL
     ) -> SafeProcessRunner {
-        let applicationGroupIdentifier =
-            "group.com.forgeplay.tests.avx-boundary"
+        let gameModeGroupIdentifier = "group.com.forgeplay.tests"
         return SafeProcessRunner(
             sandboxEnabled: false,
             managedWineProcessJournalEnabled: false,
             managedWineProcessEvidenceSandboxEnabled: false,
-            gameModeHostApplicationGroupIdentifier:
-                applicationGroupIdentifier,
+            gameModeHostApplicationGroupIdentifier: gameModeGroupIdentifier,
             gameModeHostApplicationGroupContainerResolver: { identifier in
-                guard identifier == applicationGroupIdentifier else {
-                    return nil
-                }
-                return applicationGroupContainer
+                guard identifier == gameModeGroupIdentifier else { return nil }
+                return gameModeGroupContainer
             },
             gameModeSteamChildSelectionResolver: {
                 runtimeExecutable,
@@ -938,6 +1003,10 @@ final class SteamLaunchProfileAVXBoundaryTests: XCTestCase {
             path: "drive_c/Program Files (x86)/Steam/steam.exe"
         )
         let logs = root.appending(path: "Logs", directoryHint: .isDirectory)
+        let gameModeGroupContainer = root.appending(
+            path: "GameModeApplicationGroup",
+            directoryHint: .isDirectory
+        )
         let renderer = runtimeRoot.appending(
             path: "Frameworks/renderer/d3dmetal",
             directoryHint: .isDirectory
@@ -946,7 +1015,8 @@ final class SteamLaunchProfileAVXBoundaryTests: XCTestCase {
         for directory in [
             runtimeExecutable.deletingLastPathComponent(),
             steamExecutable.deletingLastPathComponent(),
-            logs
+            logs,
+            gameModeGroupContainer
         ] {
             try FileManager.default.createDirectory(
                 at: directory,
@@ -979,7 +1049,8 @@ final class SteamLaunchProfileAVXBoundaryTests: XCTestCase {
             runtimeExecutable: runtimeExecutable,
             prefix: prefix,
             steamExecutable: steamExecutable,
-            logs: logs
+            logs: logs,
+            gameModeGroupContainer: gameModeGroupContainer
         )
     }
 

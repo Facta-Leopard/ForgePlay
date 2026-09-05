@@ -136,7 +136,7 @@ def enumerate_release_set(directory_descriptor: int) -> tuple[str, list[str], bo
     if actual == local:
         return dmg_name, names, False
     raise TransactionError(
-        "release set membership must be exactly the official six-file or local three-file set: "
+        "release set membership must be exactly the commercial six-file or local three-file set: "
         f"actual={names}"
     )
 
@@ -183,7 +183,7 @@ def release_kind_from_manifest(raw: bytes, commercial: bool) -> None:
         value = json.loads(raw.decode("utf-8"))
     except (UnicodeError, json.JSONDecodeError) as error:
         raise TransactionError(f"release manifest is invalid UTF-8 JSON: {error}") from error
-    expected = "official-notarized-dmg" if commercial else "local-unnotarized-dmg"
+    expected = "commercial-notarized-dmg" if commercial else "local-unnotarized-dmg"
     if not isinstance(value, dict) or value.get("schemaVersion") != 3 or value.get("releaseKind") != expected:
         raise TransactionError(f"release manifest must use schemaVersion 3 and releaseKind {expected}")
     attestation_binding = value.get("publicRuntimeReleaseAttestation")
@@ -202,13 +202,13 @@ def release_kind_from_manifest(raw: bytes, commercial: bool) -> None:
         ]
         additional_entries = project_binding["value"]["additionalEntries"]
     except (KeyError, TypeError) as error:
-        raise TransactionError("official release manifest source/Runtime binding is incomplete") from error
+        raise TransactionError("commercial release manifest source/Runtime binding is incomplete") from error
     if (
         not isinstance(host_support, str)
         or SHA256_PATTERN.fullmatch(host_support) is None
         or copyleft_host_support != host_support
     ):
-        raise TransactionError("official release copyleft host support binding is invalid")
+        raise TransactionError("commercial release copyleft host support binding is invalid")
     if (
         not isinstance(additional_entries, list)
         or len(additional_entries) != 1
@@ -217,7 +217,7 @@ def release_kind_from_manifest(raw: bytes, commercial: bool) -> None:
         or not isinstance(additional_entries[0].get("sha256"), str)
         or SHA256_PATTERN.fullmatch(additional_entries[0]["sha256"]) is None
     ):
-        raise TransactionError("official release Wine source binding is invalid")
+        raise TransactionError("commercial release Wine source binding is invalid")
 
 
 def inode_bound_unlink(directory_descriptor: int, name: str, expected: tuple[int, int]) -> bool:

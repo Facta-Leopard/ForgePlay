@@ -24,6 +24,7 @@ final class SteamSessionStateTests: XCTestCase {
         XCTAssertFalse(inspection.hasLocalAccountData)
     }
 
+    // Deliberately synthetic account identifiers and names, not a real Steam account.
     func testRememberedAccountAndUserDataAreReportedWithoutAccountIdentity() throws {
         let prefix = temporaryRoot()
         defer { try? FileManager.default.removeItem(at: prefix) }
@@ -33,10 +34,10 @@ final class SteamSessionStateTests: XCTestCase {
         try """
         "users"
         {
-            "76561198000000001"
+            "76561190000000001"
             {
-                "AccountName" "private-account-name"
-                "PersonaName" "private-persona-name"
+                "AccountName" "forgeplay-fixture-account"
+                "PersonaName" "ForgePlay Fixture Persona"
                 "RememberPassword" "1"
                 "MostRecent" "1"
             }
@@ -47,7 +48,7 @@ final class SteamSessionStateTests: XCTestCase {
             encoding: .utf8
         )
         try FileManager.default.createDirectory(
-            at: steam.appending(path: "userdata/12345678", directoryHint: .isDirectory),
+            at: steam.appending(path: "userdata/1", directoryHint: .isDirectory),
             withIntermediateDirectories: true
         )
 
@@ -58,8 +59,8 @@ final class SteamSessionStateTests: XCTestCase {
         XCTAssertEqual(inspection.userDataDirectoryCount, 1)
         XCTAssertTrue(inspection.hasLocalAccountData)
         XCTAssertNil(inspection.issue)
-        XCTAssertFalse(String(describing: inspection).contains("private-account-name"))
-        XCTAssertFalse(String(describing: inspection).contains("private-persona-name"))
+        XCTAssertFalse(String(describing: inspection).contains("forgeplay-fixture-account"))
+        XCTAssertFalse(String(describing: inspection).contains("ForgePlay Fixture Persona"))
     }
 
     func testMalformedLoginUsersIsInvalidInsteadOfSignedIn() throws {
@@ -68,7 +69,7 @@ final class SteamSessionStateTests: XCTestCase {
         let steam = try makeSteamDirectory(in: prefix)
         let config = steam.appending(path: "config", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: config, withIntermediateDirectories: true)
-        try "\"users\" { \"76561198000000001\" {".write(
+        try "\"users\" { \"76561190000000001\" {".write(
             to: config.appending(path: "loginusers.vdf"),
             atomically: true,
             encoding: .utf8

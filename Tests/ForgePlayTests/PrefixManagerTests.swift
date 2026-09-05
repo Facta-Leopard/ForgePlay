@@ -1,3 +1,4 @@
+import Darwin
 import SwiftData
 import XCTest
 @testable import ForgePlay
@@ -60,6 +61,24 @@ private final class PrefixSwapFailureInjector: PrefixDirectorySwapping {
     }
 }
 
+private final class PrefixNthSwapFailureInjector: PrefixDirectorySwapping {
+    private let failingSwapNumber: Int
+    private let swapper = AtomicPrefixDirectorySwapper()
+    private var swapCount = 0
+
+    init(failingSwapNumber: Int) {
+        self.failingSwapNumber = failingSwapNumber
+    }
+
+    func swap(_ first: URL, _ second: URL) throws {
+        swapCount += 1
+        if swapCount == failingSwapNumber {
+            throw CocoaError(.fileWriteUnknown)
+        }
+        try swapper.swap(first, second)
+    }
+}
+
 private final class PrefixQuiescenceCheckRecorder {
     private(set) var paths: [String] = []
 
@@ -104,8 +123,37 @@ private final class PrefixRollbackFailureInjector: PrefixDirectorySwapping {
     }
 }
 
+private struct InternalSteamLibraryPreservationFixture {
+    let steamApps: URL
+    let gameContent: URL
+    let primaryLibraryFolders: URL
+    let configLibraryFolders: URL
+    let expectedGameContent: Data
+    let expectedPrimaryLibraryFolders: Data
+    let expectedConfigLibraryFolders: Data
+    let steamAppsDevice: UInt64
+    let steamAppsInode: UInt64
+    let gameDevice: UInt64
+    let gameInode: UInt64
+}
+
 @MainActor
 final class PrefixManagerTests: XCTestCase {
+    func testPrefixCompatibilityIgnoresBuildProvenanceButKeepsABIInputs() {
+        let original = makeRuntimeManifest(seed: "a")
+        var rebuilt = original
+        rebuilt.runnerBuildFingerprint = String(repeating: "f", count: 64)
+        rebuilt.prefixCompatibilityFingerprint =
+            String(repeating: "d", count: 64)
+        let binding = PrefixRuntimeBinding(manifest: original)
+
+        XCTAssertFalse(binding.matches(rebuilt))
+        XCTAssertTrue(binding.matchesPrefixCompatibility(rebuilt))
+
+        rebuilt.wineInfSHA256 = String(repeating: "e", count: 64)
+        XCTAssertFalse(binding.matchesPrefixCompatibility(rebuilt))
+    }
+
     func testPrefixRecordUpsertMirrorsMetadataListsOnCreateAndUpdate() throws {
         let schema = Schema([PrefixRecord.self])
         let container = try ModelContainer(
@@ -148,6 +196,110 @@ final class PrefixManagerTests: XCTestCase {
             updated.prefixCompatibilityFingerprint,
             metadata.runtimeBinding?.prefixCompatibilityFingerprint
         )
+    }
+
+    func testLoadMetadataAcceptsPublishedSchema2RuntimeBindingEpoch() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appending(
+                path: "ForgePlayPrefixManagerTests-\(UUID().uuidString)",
+                directoryHint: .isDirectory
+            )
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let pathManager = PathManager()
+        try pathManager.configureRoot(root)
+        let prefixManager = PrefixManager(
+            pathManager: pathManager,
+            runner: SafeProcessRunner()
+        )
+        var metadata = try prefixManager.createSteamSharedPrefix()
+        let prefixURL = URL(fileURLWithPath: metadata.path)
+        metadata.runtimeBinding = PrefixRuntimeBinding(
+            manifest: makeRuntimeManifest(seed: "c"),
+            appliedAt: Date(timeIntervalSince1970: 1)
+        )
+        try prefixManager.save(metadata, at: prefixURL)
+
+        let loaded = try prefixManager.loadMetadata(at: prefixURL)
+
+        XCTAssertEqual(
+            loaded.runtimeBinding?.schemaVersion,
+            PrefixRuntimeBinding.currentSchemaVersion
+        )
+        XCTAssertEqual(
+            loaded.runtimeBinding?.prefixCompatibilityEpoch,
+            PrefixRuntimeBinding.currentPrefixCompatibilityEpoch
+        )
+    }
+
+    func testLoadMetadataAcceptsLegacyRuntimeBindingForMigration() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appending(
+                path: "ForgePlayPrefixManagerTests-\(UUID().uuidString)",
+                directoryHint: .isDirectory
+            )
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let pathManager = PathManager()
+        try pathManager.configureRoot(root)
+        let prefixManager = PrefixManager(
+            pathManager: pathManager,
+            runner: SafeProcessRunner()
+        )
+        var metadata = try prefixManager.createSteamSharedPrefix()
+        let prefixURL = URL(fileURLWithPath: metadata.path)
+        var legacyBinding = PrefixRuntimeBinding(
+            manifest: makeRuntimeManifest(seed: "d"),
+            appliedAt: Date(timeIntervalSince1970: 1)
+        )
+        legacyBinding.schemaVersion = 1
+        legacyBinding.prefixCompatibilityEpoch = nil
+        metadata.runtimeBinding = legacyBinding
+        try prefixManager.save(metadata, at: prefixURL)
+
+        let loaded = try prefixManager.loadMetadata(at: prefixURL)
+
+        XCTAssertEqual(loaded.runtimeBinding?.schemaVersion, 1)
+        XCTAssertNil(loaded.runtimeBinding?.prefixCompatibilityEpoch)
+    }
+
+    func testLoadMetadataRejectsUnknownSchema2RuntimeBindingEpoch() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appending(
+                path: "ForgePlayPrefixManagerTests-\(UUID().uuidString)",
+                directoryHint: .isDirectory
+            )
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let pathManager = PathManager()
+        try pathManager.configureRoot(root)
+        let prefixManager = PrefixManager(
+            pathManager: pathManager,
+            runner: SafeProcessRunner()
+        )
+        var metadata = try prefixManager.createSteamSharedPrefix()
+        let prefixURL = URL(fileURLWithPath: metadata.path)
+        let metadataURL = prefixURL.appending(path: "prefix.json")
+        var binding = PrefixRuntimeBinding(
+            manifest: makeRuntimeManifest(seed: "e"),
+            appliedAt: Date(timeIntervalSince1970: 1)
+        )
+        binding.prefixCompatibilityEpoch =
+            PrefixRuntimeBinding.currentPrefixCompatibilityEpoch + 1
+        metadata.runtimeBinding = binding
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        encoder.dateEncodingStrategy = .iso8601
+        try encoder.encode(metadata).write(to: metadataURL, options: [.atomic])
+
+        do {
+            _ = try prefixManager.loadMetadata(at: prefixURL)
+            XCTFail("Expected an unknown prefix compatibility epoch to fail")
+        } catch PrefixMetadataError.invalidMetadata(let url) {
+            XCTAssertEqual(url.standardizedFileURL, metadataURL.standardizedFileURL)
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
 
     func testLoadMetadataRejectsSymlinkPrefixJSON() throws {
@@ -539,6 +691,10 @@ final class PrefixManagerTests: XCTestCase {
         let prefixManager = PrefixManager(pathManager: pathManager, runner: makeCuratedRuntimeRunner())
         let metadata = try prefixManager.createSteamSharedPrefix()
         let prefixURL = URL(fileURLWithPath: metadata.path)
+        let internalSteamLibrary = try createInternalSteamLibraryFixture(
+            in: prefixURL,
+            label: "architecture-reset"
+        )
         let marker = prefixURL.appending(path: "win32-marker.txt")
         try Data("replace mismatch without backup".utf8).write(to: marker)
         try FileManager.default.createDirectory(
@@ -570,6 +726,7 @@ final class PrefixManagerTests: XCTestCase {
         XCTAssertTrue(result.metadata.snapshots.isEmpty)
         XCTAssertNil(result.residualPreviousEnvironmentURL)
         XCTAssertFalse(FileManager.default.fileExists(atPath: marker.path))
+        try assertInternalSteamLibraryPreserved(internalSteamLibrary)
     }
 
     func testPrepareSteamSharedPrefixPreservesExistingPrefixWhenArchitectureResetInitializationFails() async throws {
@@ -696,6 +853,24 @@ final class PrefixManagerTests: XCTestCase {
             atomically: true,
             encoding: .utf8
         )
+        let steamRoot = prefixURL.appending(
+            path: "drive_c/Program Files (x86)/Steam",
+            directoryHint: .isDirectory
+        )
+        let preservedGame = steamRoot.appending(
+            path: "steamapps/common/Preserved Game/game-content.bin"
+        )
+        let preservedLibraryRegistration = steamRoot.appending(
+            path: "steamapps/libraryfolders.vdf"
+        )
+        try FileManager.default.createDirectory(
+            at: preservedGame.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try Data("installed-game-content".utf8).write(to: preservedGame)
+        try Data("library-registration".utf8).write(
+            to: preservedLibraryRegistration
+        )
         let legacyGeneration = try XCTUnwrap(metadata.environmentGenerationID)
         metadata.schemaVersion = 1
         metadata.runtimeBinding = nil
@@ -719,6 +894,19 @@ final class PrefixManagerTests: XCTestCase {
             migratedMetadata.runtimeBinding?.prefixCompatibilityFingerprint,
             expectedManifest.prefixCompatibilityFingerprint
         )
+        XCTAssertEqual(
+            try String(contentsOf: preservedGame, encoding: .utf8),
+            "installed-game-content",
+            "Runtime migration must preserve games installed in the existing prefix Steam library."
+        )
+        XCTAssertEqual(
+            try String(
+                contentsOf: preservedLibraryRegistration,
+                encoding: .utf8
+            ),
+            "library-registration",
+            "Runtime migration must preserve the existing prefix Steam library registration."
+        )
         XCTAssertNotEqual(migratedMetadata.environmentGenerationID, legacyGeneration)
         XCTAssertEqual(
             try String(contentsOf: prefixURL.appending(path: ".update-timestamp"), encoding: .utf8),
@@ -733,6 +921,87 @@ final class PrefixManagerTests: XCTestCase {
             "A matching runtime binding must not rerun wineboot or wineserver during preparation."
         )
         XCTAssertNoThrow(try prefixManager.requireSteamSharedPrefixRuntimeCompatibility(runtimeExecutable: launcher))
+    }
+
+    func testPrepareMigratesPublishedSchema2BindingFromPreviousRuntime() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appending(
+                path: "ForgePlayPrefixManagerTests-\(UUID().uuidString)",
+                directoryHint: .isDirectory
+            )
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let pathManager = PathManager()
+        try pathManager.configureRoot(root)
+        let prefixManager = PrefixManager(
+            pathManager: pathManager,
+            runner: makeCuratedRuntimeRunner()
+        )
+        var metadata = try prefixManager.createSteamSharedPrefix()
+        let prefixURL = URL(fileURLWithPath: metadata.path)
+        try createUsablePrefixContents(at: prefixURL, architecture: "win64")
+        let internalSteamLibrary = try createInternalSteamLibraryFixture(
+            in: prefixURL,
+            label: "schema-2-runtime-migration"
+        )
+        let previousBinding = PrefixRuntimeBinding(
+            manifest: makeRuntimeManifest(seed: "a"),
+            appliedAt: Date(timeIntervalSince1970: 1)
+        )
+        metadata.runtimeBinding = previousBinding
+        try prefixManager.save(metadata, at: prefixURL)
+
+        let lifecycleMarker = root.appending(
+            path: "schema-2-runtime-migration-lifecycle.log"
+        )
+        let launcher = try makeRegistryFlushRuntime(
+            in: root,
+            marker: lifecycleMarker
+        )
+        let expectedManifest = try RuntimeManifestResolver().manifest(
+            for: launcher
+        )
+        XCTAssertNotEqual(
+            previousBinding.runnerBuildFingerprint,
+            expectedManifest.runnerBuildFingerprint
+        )
+
+        let migrated = try await prefixManager.prepareSteamSharedPrefix(
+            runtimeExecutable: launcher
+        )
+        let migratedMetadata = try prefixManager.loadMetadata(at: prefixURL)
+
+        XCTAssertEqual(migrated.processResult?.actionName, "migratePrefixRuntime")
+        XCTAssertEqual(migrated.processResult?.succeeded, true)
+        XCTAssertEqual(
+            migratedMetadata.runtimeBinding?.schemaVersion,
+            PrefixRuntimeBinding.currentSchemaVersion
+        )
+        XCTAssertEqual(
+            migratedMetadata.runtimeBinding?.prefixCompatibilityEpoch,
+            PrefixRuntimeBinding.currentPrefixCompatibilityEpoch
+        )
+        XCTAssertEqual(
+            migratedMetadata.runtimeBinding?.runnerBuildFingerprint,
+            expectedManifest.runnerBuildFingerprint
+        )
+        XCTAssertEqual(
+            try Data(contentsOf: internalSteamLibrary.gameContent),
+            internalSteamLibrary.expectedGameContent
+        )
+        XCTAssertEqual(
+            try Data(contentsOf: internalSteamLibrary.primaryLibraryFolders),
+            internalSteamLibrary.expectedPrimaryLibraryFolders
+        )
+        XCTAssertEqual(
+            try Data(contentsOf: internalSteamLibrary.configLibraryFolders),
+            internalSteamLibrary.expectedConfigLibraryFolders
+        )
+        XCTAssertNoThrow(
+            try prefixManager.requireSteamSharedPrefixRuntimeCompatibility(
+                runtimeExecutable: launcher
+            )
+        )
     }
 
     func testFailedRuntimeMigrationDoesNotPublishBindingOrRotateGeneration() async throws {
@@ -860,6 +1129,51 @@ final class PrefixManagerTests: XCTestCase {
             swapURLs.map { $0.standardizedFileURL.path },
             "The staging and destination prefixes must both pass the final quiescence gate immediately before the atomic swap."
         )
+    }
+
+    func testPrepareSteamSharedPrefixPreservesInternalSteamLibraryWhenRequiredItemIsMissing() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appending(
+                path: "ForgePlayPrefixManagerTests-\(UUID().uuidString)",
+                directoryHint: .isDirectory
+            )
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let pathManager = PathManager()
+        try pathManager.configureRoot(root)
+        let prefixManager = PrefixManager(
+            pathManager: pathManager,
+            runner: makeCuratedRuntimeRunner()
+        )
+        let metadata = try prefixManager.createSteamSharedPrefix()
+        let prefixURL = URL(fileURLWithPath: metadata.path)
+        try createUsablePrefixContents(at: prefixURL, architecture: "win64")
+        let internalSteamLibrary = try createInternalSteamLibraryFixture(
+            in: prefixURL,
+            label: "missing-required-item"
+        )
+        try FileManager.default.removeItem(
+            at: prefixURL.appending(path: "user.reg")
+        )
+        let discardedPrefixState = prefixURL.appending(
+            path: "drive_c/Program Files (x86)/Steam/config/loginusers.vdf"
+        )
+        try Data("login-not-required".utf8).write(to: discardedPrefixState)
+        let launcher = try makePrefixInitializerLauncher(in: root)
+
+        let result = try await prefixManager.prepareSteamSharedPrefix(
+            runtimeExecutable: launcher
+        )
+
+        XCTAssertTrue(result.isInitialized)
+        XCTAssertEqual(result.processResult?.succeeded, true)
+        XCTAssertTrue(prefixManager.isUsablePrefix(at: prefixURL))
+        XCTAssertNil(result.residualPreviousEnvironmentURL)
+        XCTAssertFalse(
+            FileManager.default.fileExists(atPath: discardedPrefixState.path),
+            "Automatic initialization should preserve games without retaining login state."
+        )
+        try assertInternalSteamLibraryPreserved(internalSteamLibrary)
     }
 
     func testPrepareSteamSharedPrefixRetriesFromCleanStagingAfterFailedBootstrap() async throws {
@@ -1195,6 +1509,58 @@ final class PrefixManagerTests: XCTestCase {
         )
         let liveMarker = prefixURL.appending(path: "live-prefix-marker.txt")
         try "snapshot me".write(to: liveMarker, atomically: true, encoding: .utf8)
+        let steamRoot = prefixURL.appending(
+            path: "drive_c/Program Files (x86)/Steam",
+            directoryHint: .isDirectory
+        )
+        let steamApps = steamRoot.appending(
+            path: "steamapps",
+            directoryHint: .isDirectory
+        )
+        let gameContent = steamApps.appending(
+            path: "common/Preserved Game/game-content.bin"
+        )
+        let primaryLibraryFolders = steamApps.appending(
+            path: "libraryfolders.vdf"
+        )
+        let configLibraryFolders = steamRoot.appending(
+            path: "config/libraryfolders.vdf"
+        )
+        let loginState = steamRoot.appending(path: "config/loginusers.vdf")
+        let userdata = steamRoot.appending(path: "userdata/100/remote/user.dat")
+        try FileManager.default.createDirectory(
+            at: gameContent.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.createDirectory(
+            at: configLibraryFolders.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.createDirectory(
+            at: userdata.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try Data("installed-game-content".utf8).write(to: gameContent)
+        try Data("primary-library-visibility".utf8).write(
+            to: primaryLibraryFolders
+        )
+        try Data("compatibility-library-visibility".utf8).write(
+            to: configLibraryFolders
+        )
+        try Data("login-state".utf8).write(to: loginState)
+        try Data("userdata".utf8).write(to: userdata)
+        var steamAppsIdentityBefore = stat()
+        var gameIdentityBefore = stat()
+        XCTAssertEqual(Darwin.lstat(steamApps.path, &steamAppsIdentityBefore), 0)
+        XCTAssertEqual(Darwin.lstat(gameContent.path, &gameIdentityBefore), 0)
+        let externalLibrary = root.appending(
+            path: "ExternalSteamLibrary/steamapps/common/External Game/game.bin"
+        )
+        try FileManager.default.createDirectory(
+            at: externalLibrary.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try Data("external-game".utf8).write(to: externalLibrary)
         let marker = root.appending(path: "rebuild-lifecycle.log")
         let launcher = try makeRebuildLifecycleRuntime(in: root, marker: marker)
 
@@ -1229,6 +1595,32 @@ final class PrefixManagerTests: XCTestCase {
         XCTAssertGreaterThan(result.metadata.createdAt, metadata.createdAt)
         XCTAssertEqual(result.metadata.runner, WinePrefixDefaults.runner)
         XCTAssertTrue(prefixManager.isUsablePrefix(at: prefixURL))
+        XCTAssertEqual(
+            try Data(contentsOf: gameContent),
+            Data("installed-game-content".utf8)
+        )
+        XCTAssertEqual(
+            try Data(contentsOf: primaryLibraryFolders),
+            Data("primary-library-visibility".utf8)
+        )
+        XCTAssertEqual(
+            try Data(contentsOf: configLibraryFolders),
+            Data("compatibility-library-visibility".utf8)
+        )
+        var steamAppsIdentityAfter = stat()
+        var gameIdentityAfter = stat()
+        XCTAssertEqual(Darwin.lstat(steamApps.path, &steamAppsIdentityAfter), 0)
+        XCTAssertEqual(Darwin.lstat(gameContent.path, &gameIdentityAfter), 0)
+        XCTAssertEqual(steamAppsIdentityAfter.st_dev, steamAppsIdentityBefore.st_dev)
+        XCTAssertEqual(steamAppsIdentityAfter.st_ino, steamAppsIdentityBefore.st_ino)
+        XCTAssertEqual(gameIdentityAfter.st_dev, gameIdentityBefore.st_dev)
+        XCTAssertEqual(gameIdentityAfter.st_ino, gameIdentityBefore.st_ino)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: loginState.path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: userdata.path))
+        XCTAssertEqual(
+            try Data(contentsOf: externalLibrary),
+            Data("external-game".utf8)
+        )
     }
 
     func testRebuildSteamSharedPrefixRestoresExistingEnvironmentWhenFinalMoveFails() async throws {
@@ -1296,6 +1688,177 @@ final class PrefixManagerTests: XCTestCase {
         XCTAssertFalse(siblings.contains { $0.lastPathComponent.contains(".rebuild-staging-") })
     }
 
+    func testRebuildSteamSharedPrefixRollsBackWhenSteamAppsExchangeFails() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appending(
+                path: "ForgePlayPrefixManagerTests-\(UUID().uuidString)",
+                directoryHint: .isDirectory
+            )
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let pathManager = PathManager()
+        try pathManager.configureRoot(root)
+        let swapper = PrefixNthSwapFailureInjector(failingSwapNumber: 2)
+        let prefixManager = PrefixManager(
+            pathManager: pathManager,
+            runner: makeCuratedRuntimeRunner(),
+            directorySwapper: swapper
+        )
+        let metadata = try prefixManager.createSteamSharedPrefix()
+        let prefixURL = URL(fileURLWithPath: metadata.path)
+        try createUsablePrefixContents(at: prefixURL, architecture: "win64")
+        let steamRoot = prefixURL.appending(
+            path: "drive_c/Program Files (x86)/Steam",
+            directoryHint: .isDirectory
+        )
+        let game = steamRoot.appending(
+            path: "steamapps/common/Rollback Game/game.bin"
+        )
+        let primaryLibraryFolders = steamRoot.appending(
+            path: "steamapps/libraryfolders.vdf"
+        )
+        let configLibraryFolders = steamRoot.appending(
+            path: "config/libraryfolders.vdf"
+        )
+        try FileManager.default.createDirectory(
+            at: game.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.createDirectory(
+            at: configLibraryFolders.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try Data("rollback-game".utf8).write(to: game)
+        try Data("rollback-primary-vdf".utf8).write(
+            to: primaryLibraryFolders
+        )
+        try Data("rollback-config-vdf".utf8).write(
+            to: configLibraryFolders
+        )
+        var gameIdentityBefore = stat()
+        XCTAssertEqual(Darwin.lstat(game.path, &gameIdentityBefore), 0)
+        let launcher = try makeRebuildLifecycleRuntime(
+            in: root,
+            marker: root.appending(path: "steamapps-rollback-lifecycle.log")
+        )
+
+        do {
+            _ = try await prefixManager.rebuildSteamSharedPrefix(
+                runtimeExecutable: launcher
+            )
+            XCTFail("Expected the injected steamapps exchange failure")
+        } catch {
+            XCTAssertTrue(error is CocoaError)
+        }
+
+        XCTAssertTrue(prefixManager.isUsablePrefix(at: prefixURL))
+        XCTAssertEqual(try Data(contentsOf: game), Data("rollback-game".utf8))
+        XCTAssertEqual(
+            try Data(contentsOf: primaryLibraryFolders),
+            Data("rollback-primary-vdf".utf8)
+        )
+        XCTAssertEqual(
+            try Data(contentsOf: configLibraryFolders),
+            Data("rollback-config-vdf".utf8)
+        )
+        var gameIdentityAfter = stat()
+        XCTAssertEqual(Darwin.lstat(game.path, &gameIdentityAfter), 0)
+        XCTAssertEqual(gameIdentityAfter.st_dev, gameIdentityBefore.st_dev)
+        XCTAssertEqual(gameIdentityAfter.st_ino, gameIdentityBefore.st_ino)
+        XCTAssertFalse(
+            FileManager.default.fileExists(
+                atPath: prefixURL.appending(
+                    path: ".forgeplay-preserve-recovery"
+                ).path
+            )
+        )
+        let siblings = try FileManager.default.contentsOfDirectory(
+            at: prefixURL.deletingLastPathComponent(),
+            includingPropertiesForKeys: nil
+        )
+        XCTAssertFalse(
+            siblings.contains { $0.lastPathComponent.contains(".rebuild-staging-") }
+        )
+    }
+
+    func testRebuildSteamSharedPrefixRejectsSymlinkedSteamAppsWithoutTouchingTarget() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appending(
+                path: "ForgePlayPrefixManagerTests-\(UUID().uuidString)",
+                directoryHint: .isDirectory
+            )
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let pathManager = PathManager()
+        try pathManager.configureRoot(root)
+        let prefixManager = PrefixManager(
+            pathManager: pathManager,
+            runner: makeCuratedRuntimeRunner()
+        )
+        let metadata = try prefixManager.createSteamSharedPrefix()
+        let prefixURL = URL(fileURLWithPath: metadata.path)
+        try createUsablePrefixContents(at: prefixURL, architecture: "win64")
+        let steamRoot = prefixURL.appending(
+            path: "drive_c/Program Files (x86)/Steam",
+            directoryHint: .isDirectory
+        )
+        try FileManager.default.createDirectory(
+            at: steamRoot,
+            withIntermediateDirectories: true
+        )
+        let externalGame = root.appending(
+            path: "ExternalLibrary/steamapps/common/External Game/game.bin"
+        )
+        try FileManager.default.createDirectory(
+            at: externalGame.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try Data("external-game".utf8).write(to: externalGame)
+        let steamApps = steamRoot.appending(
+            path: "steamapps",
+            directoryHint: .isDirectory
+        )
+        try FileManager.default.createSymbolicLink(
+            at: steamApps,
+            withDestinationURL: externalGame
+                .deletingLastPathComponent()
+                .deletingLastPathComponent()
+                .deletingLastPathComponent()
+        )
+        let launcher = try makeRebuildLifecycleRuntime(
+            in: root,
+            marker: root.appending(path: "symlinked-steamapps-lifecycle.log")
+        )
+
+        do {
+            _ = try await prefixManager.rebuildSteamSharedPrefix(
+                runtimeExecutable: launcher
+            )
+            XCTFail("Expected symlinked steamapps to be rejected")
+        } catch PrefixResetError.steamLibraryPreservationFailed(_, _) {
+            // Expected before the canonical prefix is replaced.
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+
+        XCTAssertEqual(
+            try Data(contentsOf: externalGame),
+            Data("external-game".utf8)
+        )
+        XCTAssertNotNil(
+            try? FileManager.default.destinationOfSymbolicLink(
+                atPath: steamApps.path
+            )
+        )
+        let siblings = try FileManager.default.contentsOfDirectory(
+            at: prefixURL.deletingLastPathComponent(),
+            includingPropertiesForKeys: nil
+        )
+        XCTAssertFalse(
+            siblings.contains { $0.lastPathComponent.contains(".rebuild-staging-") }
+        )
+    }
+
     func testRebuildSteamSharedPrefixRepairsCorruptMetadataWithoutSnapshot() async throws {
         let root = FileManager.default.temporaryDirectory
             .appending(path: "ForgePlayPrefixManagerTests-\(UUID().uuidString)", directoryHint: .isDirectory)
@@ -1313,6 +1876,18 @@ final class PrefixManagerTests: XCTestCase {
         )
         let oldMarker = prefixURL.appending(path: "corrupt-environment-marker.txt")
         try "replace me".write(to: oldMarker, atomically: true, encoding: .utf8)
+        let preservedGame = prefixURL.appending(
+            path:
+                "drive_c/Program Files (x86)/Steam/steamapps/" +
+                "common/Corrupt Metadata Game/game.bin"
+        )
+        try FileManager.default.createDirectory(
+            at: preservedGame.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try Data("preserved-despite-corrupt-metadata".utf8).write(
+            to: preservedGame
+        )
         let launcher = try makeRebuildLifecycleRuntime(
             in: root,
             marker: root.appending(path: "corrupt-rebuild-lifecycle.log")
@@ -1327,6 +1902,10 @@ final class PrefixManagerTests: XCTestCase {
         XCTAssertEqual(result.metadata.architecture, WinePrefixDefaults.architecture)
         XCTAssertEqual(result.metadata.windowsVersion, WinePrefixDefaults.windowsVersion)
         XCTAssertTrue(prefixManager.isUsablePrefix(at: prefixURL))
+        XCTAssertEqual(
+            try Data(contentsOf: preservedGame),
+            Data("preserved-despite-corrupt-metadata".utf8)
+        )
     }
 
     func testRebuildSteamSharedPrefixPreservesDisplacedEnvironmentWhenRollbackFails() async throws {
@@ -1403,6 +1982,110 @@ final class PrefixManagerTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: recoveryURL.path))
         XCTAssertTrue(
             FileManager.default.fileExists(atPath: recoveryURL.appending(path: oldMarkerName).path)
+        )
+    }
+
+    func testCleanupInterruptedReplacementRecoversSteamLibraryAfterCrashBetweenSwaps() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appending(
+                path: "ForgePlayPrefixManagerTests-\(UUID().uuidString)",
+                directoryHint: .isDirectory
+            )
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let pathManager = PathManager()
+        try pathManager.configureRoot(root)
+        let prefixManager = PrefixManager(
+            pathManager: pathManager,
+            runner: makeCuratedRuntimeRunner()
+        )
+        let metadata = try prefixManager.createSteamSharedPrefix()
+        let prefixURL = URL(fileURLWithPath: metadata.path)
+        try createUsablePrefixContents(at: prefixURL, architecture: "win64")
+        let internalSteamLibrary = try createInternalSteamLibraryFixture(
+            in: prefixURL,
+            label: "interrupted-transplant"
+        )
+
+        let displacedPrefix = prefixURL.deletingLastPathComponent().appending(
+            path: ".SteamShared.rebuild-staging-crash-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        try FileManager.default.createDirectory(
+            at: displacedPrefix,
+            withIntermediateDirectories: false
+        )
+        try FileManager.default.copyItem(
+            at: prefixURL.appending(path: "prefix.json"),
+            to: displacedPrefix.appending(path: "prefix.json")
+        )
+        try createUsablePrefixContents(
+            at: displacedPrefix,
+            architecture: "win64"
+        )
+
+        let preservationMarker = prefixURL.appending(
+            path: ".forgeplay-preserve-recovery"
+        )
+        try Data("preserve\n".utf8).write(
+            to: preservationMarker,
+            options: [.atomic]
+        )
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o600],
+            ofItemAtPath: preservationMarker.path
+        )
+        let transplantJournal = prefixURL.appending(
+            path: ".forgeplay-steam-library-transplant-v1.json"
+        )
+        let journalData = try JSONSerialization.data(
+            withJSONObject: [
+                "schemaVersion": 1,
+                "canonicalPrefixPath": prefixURL.standardizedFileURL.path,
+                "replacementStagingPath": displacedPrefix.standardizedFileURL.path,
+                "steamAppsDevice": internalSteamLibrary.steamAppsDevice,
+                "steamAppsInode": internalSteamLibrary.steamAppsInode,
+                "preservesConfigLibraryFolders": true
+            ],
+            options: [.sortedKeys]
+        )
+        try journalData.write(to: transplantJournal, options: [.atomic])
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o600],
+            ofItemAtPath: transplantJournal.path
+        )
+
+        try AtomicPrefixDirectorySwapper().swap(displacedPrefix, prefixURL)
+        XCTAssertFalse(
+            FileManager.default.fileExists(
+                atPath: internalSteamLibrary.gameContent.path
+            ),
+            "The fixture must represent the crash window after prefix swap and before steamapps swap."
+        )
+        XCTAssertTrue(
+            FileManager.default.fileExists(
+                atPath: displacedPrefix.appending(
+                    path: "drive_c/Program Files (x86)/Steam/steamapps"
+                ).path
+            )
+        )
+
+        let nextLaunchPrefixManager = PrefixManager(
+            pathManager: pathManager,
+            runner: makeCuratedRuntimeRunner()
+        )
+        try nextLaunchPrefixManager.cleanupInterruptedReplacementArtifacts(
+            at: prefixURL
+        )
+
+        try assertInternalSteamLibraryPreserved(internalSteamLibrary)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: displacedPrefix.path))
+        XCTAssertFalse(
+            FileManager.default.fileExists(
+                atPath: prefixURL.appending(
+                    path: ".forgeplay-steam-library-transplant-v1.json"
+                ).path
+            )
         )
     }
 
@@ -1877,6 +2560,130 @@ final class PrefixManagerTests: XCTestCase {
                     $0.hasSuffix(":--kill=\(SIGTERM)")
             },
             "Post-Wine failure must run verified staging cleanup before deletion: \(lifecycle)"
+        )
+    }
+
+    private func createInternalSteamLibraryFixture(
+        in prefixURL: URL,
+        label: String
+    ) throws -> InternalSteamLibraryPreservationFixture {
+        let steamRoot = prefixURL.appending(
+            path: "drive_c/Program Files (x86)/Steam",
+            directoryHint: .isDirectory
+        )
+        let steamApps = steamRoot.appending(
+            path: "steamapps",
+            directoryHint: .isDirectory
+        )
+        let gameContent = steamApps.appending(
+            path: "common/Preserved \(label)/game-content.bin"
+        )
+        let primaryLibraryFolders = steamApps.appending(
+            path: "libraryfolders.vdf"
+        )
+        let configLibraryFolders = steamRoot.appending(
+            path: "config/libraryfolders.vdf"
+        )
+        try FileManager.default.createDirectory(
+            at: gameContent.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.createDirectory(
+            at: configLibraryFolders.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+
+        let expectedGameContent = Data("game-\(label)".utf8)
+        let expectedPrimaryLibraryFolders = Data("primary-vdf-\(label)".utf8)
+        let expectedConfigLibraryFolders = Data("config-vdf-\(label)".utf8)
+        try expectedGameContent.write(to: gameContent)
+        try expectedPrimaryLibraryFolders.write(to: primaryLibraryFolders)
+        try expectedConfigLibraryFolders.write(to: configLibraryFolders)
+
+        var steamAppsStatus = stat()
+        var gameStatus = stat()
+        guard Darwin.lstat(steamApps.path, &steamAppsStatus) == 0 else {
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+        }
+        guard Darwin.lstat(gameContent.path, &gameStatus) == 0 else {
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+        }
+        return InternalSteamLibraryPreservationFixture(
+            steamApps: steamApps,
+            gameContent: gameContent,
+            primaryLibraryFolders: primaryLibraryFolders,
+            configLibraryFolders: configLibraryFolders,
+            expectedGameContent: expectedGameContent,
+            expectedPrimaryLibraryFolders: expectedPrimaryLibraryFolders,
+            expectedConfigLibraryFolders: expectedConfigLibraryFolders,
+            steamAppsDevice: UInt64(steamAppsStatus.st_dev),
+            steamAppsInode: UInt64(steamAppsStatus.st_ino),
+            gameDevice: UInt64(gameStatus.st_dev),
+            gameInode: UInt64(gameStatus.st_ino)
+        )
+    }
+
+    private func assertInternalSteamLibraryPreserved(
+        _ fixture: InternalSteamLibraryPreservationFixture,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) throws {
+        XCTAssertEqual(
+            try Data(contentsOf: fixture.gameContent),
+            fixture.expectedGameContent,
+            file: file,
+            line: line
+        )
+        XCTAssertEqual(
+            try Data(contentsOf: fixture.primaryLibraryFolders),
+            fixture.expectedPrimaryLibraryFolders,
+            file: file,
+            line: line
+        )
+        XCTAssertEqual(
+            try Data(contentsOf: fixture.configLibraryFolders),
+            fixture.expectedConfigLibraryFolders,
+            file: file,
+            line: line
+        )
+
+        var steamAppsStatus = stat()
+        var gameStatus = stat()
+        XCTAssertEqual(
+            Darwin.lstat(fixture.steamApps.path, &steamAppsStatus),
+            0,
+            file: file,
+            line: line
+        )
+        XCTAssertEqual(
+            Darwin.lstat(fixture.gameContent.path, &gameStatus),
+            0,
+            file: file,
+            line: line
+        )
+        XCTAssertEqual(
+            UInt64(steamAppsStatus.st_dev),
+            fixture.steamAppsDevice,
+            file: file,
+            line: line
+        )
+        XCTAssertEqual(
+            UInt64(steamAppsStatus.st_ino),
+            fixture.steamAppsInode,
+            file: file,
+            line: line
+        )
+        XCTAssertEqual(
+            UInt64(gameStatus.st_dev),
+            fixture.gameDevice,
+            file: file,
+            line: line
+        )
+        XCTAssertEqual(
+            UInt64(gameStatus.st_ino),
+            fixture.gameInode,
+            file: file,
+            line: line
         )
     }
 

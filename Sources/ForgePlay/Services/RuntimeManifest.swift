@@ -124,9 +124,11 @@ struct RuntimeManifest: Codable, Hashable, Sendable {
 }
 
 struct PrefixRuntimeBinding: Codable, Hashable, Sendable {
-    static let currentSchemaVersion = 1
+    static let currentSchemaVersion = 2
+    static let currentPrefixCompatibilityEpoch = 1
 
     var schemaVersion: Int
+    var prefixCompatibilityEpoch: Int? = nil
     var runtimeIdentifier: String
     var runnerBuildFingerprint: String
     var prefixCompatibilityFingerprint: String
@@ -135,6 +137,7 @@ struct PrefixRuntimeBinding: Codable, Hashable, Sendable {
 
     init(manifest: RuntimeManifest, appliedAt: Date = Date()) {
         schemaVersion = Self.currentSchemaVersion
+        prefixCompatibilityEpoch = Self.currentPrefixCompatibilityEpoch
         runtimeIdentifier = manifest.runtimeIdentifier
         runnerBuildFingerprint = manifest.runnerBuildFingerprint
         prefixCompatibilityFingerprint = manifest.prefixCompatibilityFingerprint
@@ -143,10 +146,20 @@ struct PrefixRuntimeBinding: Codable, Hashable, Sendable {
     }
 
     func matches(_ manifest: RuntimeManifest) -> Bool {
-        schemaVersion == Self.currentSchemaVersion &&
+        matchesPrefixCompatibility(manifest) &&
             runtimeIdentifier == manifest.runtimeIdentifier &&
-            runnerBuildFingerprint == manifest.runnerBuildFingerprint &&
-            prefixCompatibilityFingerprint == manifest.prefixCompatibilityFingerprint &&
+            runnerBuildFingerprint == manifest.runnerBuildFingerprint
+    }
+
+    /// Prefix execution compatibility is an ABI/data-format contract, not a
+    /// build-provenance identity. The epoch is the deliberate migration
+    /// contract; wine.inf is the data input applied to the prefix. Rebuilt
+    /// wineboot bytes and the aggregate compatibility fingerprint remain
+    /// provenance/diagnostics and must not force migration on their own.
+    func matchesPrefixCompatibility(_ manifest: RuntimeManifest) -> Bool {
+        schemaVersion == Self.currentSchemaVersion &&
+            prefixCompatibilityEpoch == Self.currentPrefixCompatibilityEpoch &&
+            runtimeIdentifier == manifest.runtimeIdentifier &&
             wineInfSHA256 == manifest.wineInfSHA256
     }
 }

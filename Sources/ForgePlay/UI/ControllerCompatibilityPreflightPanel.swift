@@ -73,7 +73,7 @@ struct ControllerCompatibilityPreflightPanel: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             Text(appState.localized(
-                "이 결과는 macOS 발견만 확인합니다. 자동 모드는 번들 Wine의 macOS IOHID passthrough와 winebus 기본값(0)을 그대로 사용하며 별도 브리지나 레지스트리를 변경하지 않습니다. Wine 자식의 실제 슬롯 열거·중복 입력은 실기기 QA 항목이지만, 컨트롤러가 연결됐다는 이유만으로 Steam 실행을 차단하지 않습니다."
+                "이 결과는 macOS 발견만 확인합니다. 자동 모드는 번들 Wine의 macOS IOHID 경로를 사용합니다. ForgePlay는 기존 프리픽스에도 DisableHidraw=0, DisableInput=1, Enable SDL=0, Map Controllers=0을 적용해 일반 게임패드를 raw IOHID로 전달합니다. 이 화면은 Wine 자식의 실제 장치·XInput·Steam Input 열거를 확인하지 않으며, 컨트롤러 연결 여부나 열거 미확인을 이유로 Steam 실행을 차단하지 않습니다. 모델별 최종 인식은 실기기에서 확인합니다."
             ))
                 .font(.caption)
                 .foregroundStyle(palette.secondaryText)

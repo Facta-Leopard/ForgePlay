@@ -1,0 +1,29 @@
+ForgePlay Frame Generation
+Copyright (C) 2026 Facta-Leopard
+Original source: https://github.com/Facta-Leopard/ForgePlay
+
+SPDX-License-Identifier: GPL-3.0-only
+
+This notice applies to the ForgePlay-authored code identified in
+FRAME_GENERATION_LICENSE_SCOPE.md, FRAME_GENERATION_FILE_LICENSES.json, and
+FRAME_GENERATION_SYMBOL_MANIFEST.md at 1.2_Release base commit
+72a2598c99f0b649d1384ed0763a00037f5d1d2e. It is carried externally to preserve
+the exact source, native, Swift, configuration, test, and Wine patch bytes.
+
+Compliant use, modification, commercial use, and redistribution require no
+separate permission from Facta-Leopard. Preserve the attribution, license
+and copyright notices, and upstream provenance. Modified versions must be
+marked as modified and must not claim to be official ForgePlay releases or
+imply endorsement by Facta-Leopard. No ForgePlay trademark rights are granted.
+The scope records the applicable GPLv3 section 7 terms.
+
+The Wine-derived metal-window-surface and Steam session compatibility patch
+copies, including Frame Generation loading and environment glue, remain
+separately identified under LGPL-2.1-or-later. They are not converted by this
+Frame Generation assignment. Existing Game Mode conversion notices remain
+separate and unchanged.
+
+D3DMetal, MetalFX, and other Apple or third-party binaries retain their own
+terms and are not relicensed here. This notice grants no compatibility or
+linking exception and does not narrow GPL obligations for a conveyed combined
+work. This is source-only license preparation, not a new binary release claim.

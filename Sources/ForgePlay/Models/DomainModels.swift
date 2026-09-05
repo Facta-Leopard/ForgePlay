@@ -243,6 +243,32 @@ enum SteamRendererPolicyPreference: String, Codable, CaseIterable, Identifiable,
     }
 }
 
+enum SteamRendererCurrentReleasePolicy {
+    static let selectableRawValues = [
+        "d3dMetalNVIDIA",
+        "dxmt",
+        "d9vk"
+    ]
+    static let defaultRawValue = "d3dMetalNVIDIA"
+
+    static func isUserSelectable(_ rawValue: String) -> Bool {
+        selectableRawValues.contains(rawValue)
+    }
+
+    static func normalizedRawValue(_ rawValue: String) -> String {
+        switch rawValue {
+        case "d3dMetal", "vulkan", "dxvk":
+            defaultRawValue
+        default:
+            rawValue
+        }
+    }
+
+    static func supportsFrameGeneration(_ rawValue: String) -> Bool {
+        rawValue == defaultRawValue
+    }
+}
+
 enum SteamRendererPolicySelection: String, Codable, CaseIterable, Identifiable, Sendable {
     case d3dMetal
     case d3dMetalNVIDIA
@@ -255,7 +281,7 @@ enum SteamRendererPolicySelection: String, Codable, CaseIterable, Identifiable, 
     var labelKey: String {
         switch self {
         case .d3dMetal: "D3DMetal · 표준"
-        case .d3dMetalNVIDIA: "D3DMetal - NVIDIA (베타)"
+        case .d3dMetalNVIDIA: "D3DMetal - NVIDIA"
         case .dxmt: "DXMT"
         case .d9vk: "D9VK"
         case .vulkan: "DXVK"
@@ -294,6 +320,26 @@ enum SteamRendererPolicySelection: String, Codable, CaseIterable, Identifiable, 
         self == .d3dMetalNVIDIA
     }
 
+    var supportsD3DMetalFrameGeneration: Bool {
+        SteamRendererCurrentReleasePolicy.supportsFrameGeneration(rawValue)
+    }
+
+    static var currentReleaseSelectableCases: [Self] {
+        SteamRendererCurrentReleasePolicy.selectableRawValues.compactMap {
+            Self(rawValue: $0)
+        }
+    }
+
+    var isCurrentReleaseUserSelectable: Bool {
+        SteamRendererCurrentReleasePolicy.isUserSelectable(rawValue)
+    }
+
+    var normalizedForCurrentRelease: Self {
+        Self(
+            rawValue: SteamRendererCurrentReleasePolicy.normalizedRawValue(rawValue)
+        ) ?? .d3dMetalNVIDIA
+    }
+
     static func persistedValue(_ rawValue: String?) -> SteamRendererPolicySelection {
         switch rawValue {
         case SteamRendererPolicySelection.d3dMetal.rawValue:
@@ -307,9 +353,9 @@ enum SteamRendererPolicySelection: String, Codable, CaseIterable, Identifiable, 
         case SteamRendererPolicySelection.vulkan.rawValue, "dxvk":
             .vulkan
         case "automatic", nil:
-            .d3dMetal
+            .d3dMetalNVIDIA
         default:
-            .d3dMetal
+            .d3dMetalNVIDIA
         }
     }
 }
@@ -364,35 +410,71 @@ enum SteamAudioInputSelection: String, Codable, CaseIterable, Identifiable, Send
     }
 }
 
+enum SteamWineChildPOSIXLocalePolicy: String, Hashable, Sendable {
+    case inherited
+    case englishUTF8FontFallback
+
+    var localeIdentifier: String? {
+        switch self {
+        case .inherited:
+            nil
+        case .englishUTF8FontFallback:
+            "en_US.UTF-8"
+        }
+    }
+}
+
 struct SteamPrelaunchCompatibilitySelection: Hashable, Sendable {
     let rendererSelection: SteamRendererPolicySelection
+    let frameGenerationConfiguration: FrameGenerationConfiguration
     let networkSelection: SteamNetworkCompatibilitySelection
     let audioInputSelection: SteamAudioInputSelection
     let fpsCursorPolicy: FPSCursorCapturePolicy
     let controllerPolicy: ControllerCompatibilityPolicy
     let keyboardMapping: KeyboardMappingPreference
     let managedWineChildPolicy: SteamManagedWineChildCompatibilityPolicy?
+    let wineChildPOSIXLocalePolicy: SteamWineChildPOSIXLocalePolicy
 
     init(
         rendererSelection: SteamRendererPolicySelection,
+        frameGenerationConfiguration: FrameGenerationConfiguration = .off,
         networkSelection: SteamNetworkCompatibilitySelection,
         audioInputSelection: SteamAudioInputSelection,
         fpsCursorPolicy: FPSCursorCapturePolicy = .off,
         controllerPolicy: ControllerCompatibilityPolicy = .automatic,
         keyboardMapping: KeyboardMappingPreference = .systemDefault,
-        managedWineChildPolicy: SteamManagedWineChildCompatibilityPolicy? = nil
+        managedWineChildPolicy: SteamManagedWineChildCompatibilityPolicy? = nil,
+        wineChildPOSIXLocalePolicy: SteamWineChildPOSIXLocalePolicy = .inherited
     ) {
         self.rendererSelection = rendererSelection
+        self.frameGenerationConfiguration = frameGenerationConfiguration
         self.networkSelection = networkSelection
         self.audioInputSelection = audioInputSelection
         self.fpsCursorPolicy = fpsCursorPolicy
         self.controllerPolicy = controllerPolicy
         self.keyboardMapping = keyboardMapping
         self.managedWineChildPolicy = managedWineChildPolicy
+        self.wineChildPOSIXLocalePolicy = wineChildPOSIXLocalePolicy
     }
 
     var rendererPreference: SteamRendererPolicyPreference? {
         rendererSelection.forcedPreference
+    }
+
+    func withWineChildPOSIXLocalePolicy(
+        _ policy: SteamWineChildPOSIXLocalePolicy
+    ) -> Self {
+        Self(
+            rendererSelection: rendererSelection,
+            frameGenerationConfiguration: frameGenerationConfiguration,
+            networkSelection: networkSelection,
+            audioInputSelection: audioInputSelection,
+            fpsCursorPolicy: fpsCursorPolicy,
+            controllerPolicy: controllerPolicy,
+            keyboardMapping: keyboardMapping,
+            managedWineChildPolicy: managedWineChildPolicy,
+            wineChildPOSIXLocalePolicy: policy
+        )
     }
 }
 

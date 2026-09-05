@@ -14,7 +14,6 @@ func forgePlayTechnicalErrorSummary(_ error: Error) -> String {
             return description
         }
     }
-
     let nsError = error as NSError
     return "\(nsError.domain) \(nsError.code)"
 }

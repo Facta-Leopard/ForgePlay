@@ -27,7 +27,7 @@ class ReleaseSetTransactionTests(unittest.TestCase):
 
     def populate(self, directory: Path, *, commercial: bool) -> None:
         directory.mkdir(parents=True, exist_ok=True)
-        kind = "official-notarized-dmg" if commercial else "local-unnotarized-dmg"
+        kind = "commercial-notarized-dmg" if commercial else "local-unnotarized-dmg"
         names = TOOL.expected_names(self.dmg_name, commercial)
         for name in names:
             path = directory / name

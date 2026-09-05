@@ -6,10 +6,6 @@ PROJECT="$ROOT_DIR/ForgePlay.xcodeproj"
 SCHEME="${FORGEPLAY_SCHEME:-ForgePlayDMG}"
 TEST_SCHEME="${FORGEPLAY_TEST_SCHEME:-ForgePlay}"
 CONFIGURATION="${FORGEPLAY_CONFIGURATION:-Distribution}"
-CANONICAL_BUNDLE_IDENTIFIER="com.forgeplay.client"
-CANONICAL_MARKETING_VERSION="1.1"
-CANONICAL_BUILD_NUMBER="2"
-RELEASE_DEVELOPMENT_TEAM="${FORGEPLAY_RELEASE_DEVELOPMENT_TEAM:-}"
 DEFAULT_TEMP_ROOT="$(cd "${TMPDIR:-/tmp}" && pwd -P)"
 BUILD_ROOT="${FORGEPLAY_RELEASE_BUILD_ROOT:-$DEFAULT_TEMP_ROOT/ForgePlayCommercialRelease}"
 ARCHIVE_PATH="$BUILD_ROOT/ForgePlay.xcarchive"
@@ -21,6 +17,8 @@ BUILD_INTERMEDIATES="$BUILD_ROOT/BuildIntermediates"
 EXPORT_OPTIONS="$BUILD_ROOT/ExportOptions.plist"
 DMG_ROOT="$BUILD_ROOT/DmgRoot"
 CODE_SIGN_IDENTITY="${FORGEPLAY_CODE_SIGN_IDENTITY:-}"
+MARKETING_VERSION_VALUE="${FORGEPLAY_RELEASE_MARKETING_VERSION:-1.2}"
+BUILD_NUMBER_VALUE="${FORGEPLAY_RELEASE_BUILD_NUMBER:-3}"
 CODE_SIGN_STYLE="${FORGEPLAY_RELEASE_CODE_SIGN_STYLE:-Automatic}"
 EXPORT_SIGNING_STYLE=""
 DMG_SIGNING_IDENTITY=""
@@ -115,20 +113,17 @@ fail() {
 print_release_prerequisites_help() {
   cat >&2 <<'EOF'
 
-Official notarized release prerequisites:
-  1. Provide the exact Apple development team without copying the user-owned
-     Config/ForgePlay.local.xcconfig into the public build workspace:
-       export FORGEPLAY_RELEASE_DEVELOPMENT_TEAM=TEAMID1234
-  2. Xcode signing must be configured for the ForgePlay target. This script
+Commercial release prerequisites:
+  1. Xcode signing must be configured for the ForgePlay target. This script
      does not inspect local signing identities; Xcode archive/export is the
      app signing authority. The matching Developer ID private key must remain
      available in the local Keychain so the exported app identity can also
      sign the outer DMG. Leave signing environment variables unset for the
      default Automatic signing path.
-  3. If Xcode needs a non-default Developer ID signing identity, use manual signing:
+  2. If Xcode needs a non-default Developer ID signing identity, use manual signing:
        export FORGEPLAY_RELEASE_CODE_SIGN_STYLE=Manual
-       export FORGEPLAY_CODE_SIGN_IDENTITY="Developer ID Application: Example Developer (TEAMID1234)"
-  4. Provide notarization credentials. App Store Connect API key files avoid
+       export FORGEPLAY_CODE_SIGN_IDENTITY="Developer ID Application: Example Developer (TEAMID)"
+  3. Provide notarization credentials. App Store Connect API key files avoid
      any release-script credential lookup:
        export FORGEPLAY_NOTARY_KEY_PATH="/secure/path/AuthKey_EXAMPLE.p8"
        export FORGEPLAY_NOTARY_KEY_ID="<KEY_ID>"
@@ -136,10 +131,10 @@ Official notarized release prerequisites:
      Or pass an existing notarytool saved profile that you manage outside
      this script:
        export FORGEPLAY_NOTARY_PROFILE=ForgePlayNotary
-  5. Re-run:
+  4. Re-run:
        Scripts/build-commercial-release.sh
 
-Unsigned local DMG structure checks belong in Scripts/audit-commercial-readiness.sh and are not official release artifacts.
+Unsigned local DMG structure checks belong in Scripts/audit-commercial-readiness.sh and are not commercial release artifacts.
 EOF
 }
 
@@ -252,43 +247,13 @@ normalize_export_signing_style() {
 }
 
 configure_archive_signing_args() {
-  ARCHIVE_SIGNING_ARGS=(
-    "FORGEPLAY_APP_BUNDLE_ID=$CANONICAL_BUNDLE_IDENTIFIER"
-    "FORGEPLAY_DISTRIBUTION_BUNDLE_ID=$CANONICAL_BUNDLE_IDENTIFIER"
-    "FORGEPLAY_MARKETING_VERSION=$CANONICAL_MARKETING_VERSION"
-    "FORGEPLAY_CURRENT_PROJECT_VERSION=$CANONICAL_BUILD_NUMBER"
-    "MARKETING_VERSION=$CANONICAL_MARKETING_VERSION"
-    "CURRENT_PROJECT_VERSION=$CANONICAL_BUILD_NUMBER"
-    "FORGEPLAY_CODE_SIGN_STYLE=$CODE_SIGN_STYLE"
-    "CODE_SIGN_STYLE=$CODE_SIGN_STYLE"
-  )
-  if [[ -n "$RELEASE_DEVELOPMENT_TEAM" ]]; then
-    ARCHIVE_SIGNING_ARGS+=(
-      "FORGEPLAY_DEVELOPMENT_TEAM=$RELEASE_DEVELOPMENT_TEAM"
-      "DEVELOPMENT_TEAM=$RELEASE_DEVELOPMENT_TEAM"
-    )
-  fi
+  ARCHIVE_SIGNING_ARGS=("CODE_SIGN_STYLE=$CODE_SIGN_STYLE")
   if [[ "$EXPORT_SIGNING_STYLE" == "manual" ]]; then
     [[ -n "$CODE_SIGN_IDENTITY" ]] ||
       fail "FORGEPLAY_CODE_SIGN_IDENTITY is required when FORGEPLAY_RELEASE_CODE_SIGN_STYLE=Manual."
     ARCHIVE_SIGNING_ARGS+=("CODE_SIGN_IDENTITY=$CODE_SIGN_IDENTITY")
   elif [[ -n "$CODE_SIGN_IDENTITY" ]]; then
     fail "FORGEPLAY_CODE_SIGN_IDENTITY requires FORGEPLAY_RELEASE_CODE_SIGN_STYLE=Manual. Leave it unset for Xcode Automatic signing."
-  fi
-}
-
-validate_release_signing_inputs() {
-  if [[ -n "$RELEASE_DEVELOPMENT_TEAM" ]]; then
-    [[ "$RELEASE_DEVELOPMENT_TEAM" =~ ^[A-Z0-9]{10}$ ]] ||
-      fail "FORGEPLAY_RELEASE_DEVELOPMENT_TEAM must be a 10-character Apple team identifier."
-  fi
-  if [[ "$EXPORT_SIGNING_STYLE" == "manual" ]]; then
-    [[ -n "$CODE_SIGN_IDENTITY" ]] ||
-      fail "FORGEPLAY_CODE_SIGN_IDENTITY is required when FORGEPLAY_RELEASE_CODE_SIGN_STYLE=Manual."
-    [[ -n "$RELEASE_DEVELOPMENT_TEAM" ]] ||
-      fail "manual signing requires FORGEPLAY_RELEASE_DEVELOPMENT_TEAM."
-    [[ "$CODE_SIGN_IDENTITY" == "Developer ID Application: "*" ($RELEASE_DEVELOPMENT_TEAM)" ]] ||
-      fail "FORGEPLAY_CODE_SIGN_IDENTITY must be an exact Developer ID Application identity for $RELEASE_DEVELOPMENT_TEAM."
   fi
 }
 
@@ -407,7 +372,7 @@ check_remote_compatibility_db_key() {
   elif [[ "$ALLOW_UNNOTARIZED_DMG" == "1" ]]; then
     printf 'warning: remote compatibility DB updates will stay disabled until a trusted public key is shipped.\n' >&2
   else
-    fail "official release requires a trusted remote compatibility DB public key. Add Resources/CompatibilityDBPublicKey.base64 or ForgePlayCompatibilityDBPublicKeyBase64 in Info.plist. Use FORGEPLAY_ALLOW_UNNOTARIZED_DMG=1 only for local packaging checks without the key."
+    fail "commercial release requires a trusted remote compatibility DB public key. Add Resources/CompatibilityDBPublicKey.base64 or ForgePlayCompatibilityDBPublicKeyBase64 in Info.plist. Use FORGEPLAY_ALLOW_UNNOTARIZED_DMG=1 only for local packaging checks without the key."
   fi
 }
 
@@ -534,7 +499,7 @@ release_kind = os.environ["FORGEPLAY_RELEASE_MANIFEST_KIND"]
 attestation_binding = None
 project_source_binding = None
 copyleft_source_binding = None
-if release_kind == "official-notarized-dmg":
+if release_kind == "commercial-notarized-dmg":
     attestation_raw = attestation_path.read_bytes()
     attestation = json.loads(attestation_raw)
     canonical_attestation = (
@@ -733,24 +698,24 @@ xcrun swiftc -parse "$COMPAT_FEED_SIGNER" >/dev/null 2>&1 || fail "compatibility
 
 EXPORT_SIGNING_STYLE="$(normalize_export_signing_style "$CODE_SIGN_STYLE")"
 validate_release_scheme
-validate_release_signing_inputs
 configure_archive_signing_args
 configure_notary_auth_args
 validate_release_mode
 check_remote_compatibility_db_key
 
+[[ "$MARKETING_VERSION_VALUE" =~ ^[0-9]+(\.[0-9]+){1,2}$ ]] ||
+  fail "FORGEPLAY_RELEASE_MARKETING_VERSION must contain two or three numeric components."
+[[ "$BUILD_NUMBER_VALUE" =~ ^[1-9][0-9]*$ ]] ||
+  fail "FORGEPLAY_RELEASE_BUILD_NUMBER must be a positive integer."
+
 if [[ "$ALLOW_UNNOTARIZED_DMG" != "1" ]]; then
   [[ "$CONFIGURATION" == "Distribution" ]] || fail "DMG release must use Distribution configuration. Use FORGEPLAY_ALLOW_UNNOTARIZED_DMG=1 for local packaging experiments."
-  [[ "$SKIP_TESTS" != "1" ]] || fail "official release cannot skip tests. FORGEPLAY_SKIP_TESTS=1 is only allowed with FORGEPLAY_ALLOW_UNNOTARIZED_DMG=1 for local packaging."
+  [[ "$SKIP_TESTS" != "1" ]] || fail "commercial release cannot skip tests. FORGEPLAY_SKIP_TESTS=1 is only allowed with FORGEPLAY_ALLOW_UNNOTARIZED_DMG=1 for local packaging."
 fi
 
 if [[ "${#NOTARY_AUTH_ARGS[@]}" -eq 0 && "$ALLOW_UNNOTARIZED_DMG" != "1" ]]; then
   print_release_prerequisites_help
   fail "notarization credentials are required. Set FORGEPLAY_NOTARY_PROFILE or FORGEPLAY_NOTARY_KEY_PATH/FORGEPLAY_NOTARY_KEY_ID, or use FORGEPLAY_ALLOW_UNNOTARIZED_DMG=1 for local packaging only."
-fi
-if [[ "$ALLOW_UNNOTARIZED_DMG" != "1" && -z "$RELEASE_DEVELOPMENT_TEAM" ]]; then
-  print_release_prerequisites_help
-  fail "FORGEPLAY_RELEASE_DEVELOPMENT_TEAM is required for an official notarized release."
 fi
 if [[ "${#NOTARY_AUTH_ARGS[@]}" -gt 0 || "$ALLOW_UNNOTARIZED_DMG" != "1" ]]; then
   require_xcrun_tool notarytool
@@ -808,8 +773,15 @@ if [[ "$ALLOW_UNNOTARIZED_DMG" != "1" ]]; then
     --scheme "$SCHEME"
     --configuration "$CONFIGURATION"
     --signing-style "$CODE_SIGN_STYLE"
-    --development-team "$RELEASE_DEVELOPMENT_TEAM"
+    --marketing-version "$MARKETING_VERSION_VALUE"
+    --build-number "$BUILD_NUMBER_VALUE"
   )
+  if [[ -f "$ROOT_DIR/Config/ForgePlay.local.xcconfig" &&
+        ! -L "$ROOT_DIR/Config/ForgePlay.local.xcconfig" ]]; then
+    PUBLIC_ARCHIVE_ARGS+=(
+      --local-xcconfig "$ROOT_DIR/Config/ForgePlay.local.xcconfig"
+    )
+  fi
   if [[ -n "$CODE_SIGN_IDENTITY" ]]; then
     PUBLIC_ARCHIVE_ARGS+=(--code-sign-identity "$CODE_SIGN_IDENTITY")
   fi
@@ -825,6 +797,10 @@ else
     FORGEPLAY_ALLOW_UNNOTARIZED_DMG="$ALLOW_UNNOTARIZED_DMG" \
     -destination 'generic/platform=macOS' \
     -archivePath "$ARCHIVE_PATH" \
+    FORGEPLAY_MARKETING_VERSION="$MARKETING_VERSION_VALUE" \
+    FORGEPLAY_CURRENT_PROJECT_VERSION="$BUILD_NUMBER_VALUE" \
+    MARKETING_VERSION="$MARKETING_VERSION_VALUE" \
+    CURRENT_PROJECT_VERSION="$BUILD_NUMBER_VALUE" \
     "${ARCHIVE_SIGNING_ARGS[@]}" \
     OTHER_CODE_SIGN_FLAGS="--timestamp" \
     -derivedDataPath "$DERIVED_DATA_PATH" > "$ARCHIVE_LOG" 2>&1 || {
@@ -839,9 +815,6 @@ require_no_project_warnings "$ARCHIVE_LOG" "Release archive"
 /usr/libexec/PlistBuddy -c 'Add :destination string export' "$EXPORT_OPTIONS"
 /usr/libexec/PlistBuddy -c "Add :signingStyle string $EXPORT_SIGNING_STYLE" "$EXPORT_OPTIONS"
 /usr/libexec/PlistBuddy -c 'Add :stripSwiftSymbols bool true' "$EXPORT_OPTIONS"
-if [[ -n "$RELEASE_DEVELOPMENT_TEAM" ]]; then
-  /usr/libexec/PlistBuddy -c "Add :teamID string $RELEASE_DEVELOPMENT_TEAM" "$EXPORT_OPTIONS"
-fi
 if [[ "$EXPORT_SIGNING_STYLE" == "manual" ]]; then
   /usr/libexec/PlistBuddy -c "Add :signingCertificate string $CODE_SIGN_IDENTITY" "$EXPORT_OPTIONS"
 fi
@@ -934,18 +907,12 @@ APP_TEAM_IDENTIFIER="$(
 )"
 [[ -n "$APP_TEAM_IDENTIFIER" ]] ||
   fail "exported app TeamIdentifier could not be resolved for DMG signing."
-if [[ -n "$RELEASE_DEVELOPMENT_TEAM" && "$APP_TEAM_IDENTIFIER" != "$RELEASE_DEVELOPMENT_TEAM" ]]; then
-  fail "exported app TeamIdentifier does not match FORGEPLAY_RELEASE_DEVELOPMENT_TEAM."
-fi
-if [[ "$EXPORT_SIGNING_STYLE" == "manual" && "$DMG_SIGNING_IDENTITY" != "$CODE_SIGN_IDENTITY" ]]; then
-  fail "exported app is not signed by the requested Developer ID Application identity."
-fi
 
 codesign -d --entitlements :- "$APP_PATH" > "$ENTITLEMENTS_PLIST" 2>/dev/null || {
   fail "exported app entitlements could not be read."
 }
 if [[ "$(/usr/libexec/PlistBuddy -c 'Print :com.apple.security.get-task-allow' "$ENTITLEMENTS_PLIST" 2>/dev/null || true)" == "true" ]]; then
-  fail "exported app contains com.apple.security.get-task-allow; this is not allowed for an official release."
+  fail "exported app contains com.apple.security.get-task-allow; this is not allowed for commercial release."
 fi
 require_true_entitlement "$ENTITLEMENTS_PLIST" "com.apple.security.app-sandbox"
 require_true_entitlement "$ENTITLEMENTS_PLIST" "com.apple.security.files.user-selected.read-write"
@@ -967,12 +934,10 @@ bash "$BUNDLE_PRIVACY_VERIFIER" --project-root "$ROOT_DIR" "$APP_PATH" >/dev/nul
 VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP_PATH/Contents/Info.plist")"
 BUILD="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP_PATH/Contents/Info.plist")"
 BUNDLE_IDENTIFIER="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP_PATH/Contents/Info.plist")"
-[[ "$VERSION" == "$CANONICAL_MARKETING_VERSION" ]] ||
-  fail "exported app version is $VERSION; expected $CANONICAL_MARKETING_VERSION."
-[[ "$BUILD" == "$CANONICAL_BUILD_NUMBER" ]] ||
-  fail "exported app build is $BUILD; expected $CANONICAL_BUILD_NUMBER."
-[[ "$BUNDLE_IDENTIFIER" == "$CANONICAL_BUNDLE_IDENTIFIER" ]] ||
-  fail "exported app bundle identifier is $BUNDLE_IDENTIFIER; expected $CANONICAL_BUNDLE_IDENTIFIER."
+[[ "$VERSION" == "$MARKETING_VERSION_VALUE" ]] ||
+  fail "exported app marketing version is $VERSION; expected $MARKETING_VERSION_VALUE."
+[[ "$BUILD" == "$BUILD_NUMBER_VALUE" ]] ||
+  fail "exported app build number is $BUILD; expected $BUILD_NUMBER_VALUE."
 if [[ "$ALLOW_UNNOTARIZED_DMG" != "1" ]]; then
   python3 "$PUBLIC_RUNTIME_RELEASE_ATTESTATION_TOOL" create \
     --app "$APP_PATH" \
@@ -1126,15 +1091,15 @@ if [[ "${#NOTARY_AUTH_ARGS[@]}" -gt 0 ]]; then
   xcrun stapler validate "$DMG_PATH"
   verify_dmg_artifact "$DMG_PATH" "stapled DMG"
   spctl --assess --type open --context context:primary-signature --verbose "$DMG_PATH"
-  write_release_evidence "official-notarized-dmg" "true" "true" "true" "$BUNDLE_IDENTIFIER" "Accepted" "$NOTARY_SUBMISSION_ID" "true"
+  write_release_evidence "commercial-notarized-dmg" "true" "true" "true" "$BUNDLE_IDENTIFIER" "Accepted" "$NOTARY_SUBMISSION_ID" "true"
   bash "$PUBLIC_RELEASE_ASSET_VERIFIER" "$DMG_PATH" >/dev/null
   python3 "$RELEASE_SET_TRANSACTION" publish \
     --stage-dir "$RELEASE_STAGE_DIR" \
     --destination-dmg "$FINAL_DMG_PATH" ||
-    fail "verified official release set could not be transactionally published."
+    fail "verified commercial release set could not be transactionally published."
   RELEASE_STAGE_DIR=""
   DMG_PATH="$FINAL_DMG_PATH"
-  printf 'Official notarized release artifact: %s\n' "$DMG_PATH"
+  printf 'Commercial release artifact: %s\n' "$DMG_PATH"
 else
   printf 'warning: notarization was skipped because FORGEPLAY_ALLOW_UNNOTARIZED_DMG=1. This artifact is for local packaging checks only.\n' >&2
   write_release_evidence "local-unnotarized-dmg" "false" "false" "false" "$BUNDLE_IDENTIFIER" "not-run" "" "false"

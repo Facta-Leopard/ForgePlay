@@ -2,6 +2,18 @@
 
 ForgePlay includes its Wine-based ForgePlay Runtime as the only execution engine. The current Developer ID DMG configuration includes an Apple GPTK/D3DMetal evaluation renderer payload as a separate third-party component; the matching Apple `License.rtf`, acknowledgements, framework license, and original Apple code signatures remain with that payload. The App Store candidate excludes that optional Apple payload. This paragraph records the configured package contents and does not make a licensing determination. No ForgePlay build bundles Steam, Microsoft Runtime installers, DirectX installers, .NET installers, NVIDIA PhysX installers, OpenAL installers, XNA installers, or Windows game files. Builds that include ForgePlay Runtime must keep the applicable Wine license notices and source-availability obligations.
 
+## ForgePlay Frame Generation and License Boundaries
+
+The ForgePlay-authored Frame Generation implementation identified in the bundled `LICENSES/ForgePlayFrameGeneration/FRAME_GENERATION_LICENSE_SCOPE.md` is licensed under GNU General Public License version 3 only (`GPL-3.0-only`). The accompanying notice and file and symbol manifests in that directory identify the exact scope, source identity, and additional terms. The unmodified GPL text is included as `LICENSES/GPL-3.0-only.txt`.
+
+```text
+ForgePlay Frame Generation
+Copyright (C) 2026 Facta-Leopard
+Original source: https://github.com/Facta-Leopard/ForgePlay
+```
+
+The Wine-derived metal-window-surface and Steam session compatibility patch copies, including Frame Generation loading and environment glue, remain separately identified under `LGPL-2.1-or-later`; this Frame Generation GPL assignment does not convert them. Existing ForgePlay Game Mode license assignments remain unchanged. These source-copy boundaries do not remove GPL obligations for a conveyed combined work. D3DMetal, MetalFX, and other Apple or third-party components retain their own terms, and this notice grants no compatibility or linking exception. The fonts listed below remain under the SIL Open Font License 1.1, not this GPL assignment.
+
 ## Apple Technologies
 
 ForgePlay may use Apple platform frameworks, Apple Foundation Models, security-scoped bookmarks, SwiftData, and macOS app distribution technologies such as Developer ID signing, Hardened Runtime, notarization, and stapling.
@@ -28,6 +40,8 @@ The ForgePlay macOS app bundles unmodified regular and bold files from Noto Sans
 
 `NotoSansCJK-OFL.txt` applies to the bundled Noto Sans CJK files: © 2014-2021 Adobe (http://www.adobe.com/).
 
+Open the complete, unmodified license texts using the `Noto Sans OFL 1.1` and `Noto Sans CJK OFL 1.1` buttons in the app’s Legal section.
+
 ## Wine and Runtime Components
 
 Wine and the renderer/runtime components bundled with ForgePlay are separate open-source projects or vendor technologies with their own licenses and terms. ForgePlay does not claim ownership of those upstream components.
@@ -39,5 +53,7 @@ ForgePlay's Wine modifications are implemented as project-owned patches against 
 Bundled ForgePlay Runtime candidates may also include libsdl-org sdl2-compat 2.32.70 for Windows Steam client compatibility. ForgePlay uses this zlib-licensed SDL3-backed compatibility pair to satisfy the 32-bit `Steam/bin/gldriverquery.exe` `SDL2.dll` ABI import. The included `SDL2.dll` file name is an ABI compatibility requirement and is not a renamed Steam `SDL3.dll`.
 
 Bundled ForgePlay Runtime candidates include the regular and bold faces of Nanum Gothic as a Korean glyph fallback for Windows applications running through Wine. Nanum Gothic is copyright (c) 2010, NHN Corporation and is distributed under the SIL Open Font License, Version 1.1. The bundled files are unmodified bytes from the Google Fonts repository at commit `16680f8688ffcd467d2eb2146a9ce0343404581d`: Regular SHA-256 `76f45ef4a6bcff344c837c95a7dcc26e017e38b5846d5ae0cdcb5b86be2e2d31`, Bold SHA-256 `21f9d3a7f1ca82ca1dc9a288e30138b4f1feb6e71fc89b5a9181fed174b6bbe2`, and OFL SHA-256 `eeacf16032901d0ed0456876ec77b8f0fda6b3fecec7d972f8543eb602e6c30f`. The machine-readable source identity, copyright notice, Reserved Font Names, and complete license text are included under `Contents/Resources/Runners/ForgePlayRuntime/Legal/NanumGothic/`.
+
+Open the complete, unmodified Nanum Gothic license, including its copyright notice and Reserved Font Names, using the `Nanum Gothic OFL 1.1` button in the app’s Legal section.
 
 The ForgePlay macOS app targets Apple Silicon (`arm64`) hosts only. Inside that arm64 app, the current bundled Wine compatibility-runtime candidates use `x86_64` Wine Unix binaries and therefore require Rosetta. Those internal binaries exist only to run Windows game workloads. They must be treated as transitional until an arm64 Wine Unix runtime or other review-safe long-term architecture is available.

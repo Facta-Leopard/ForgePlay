@@ -1041,16 +1041,16 @@ final class AppLaunchTests: XCTestCase {
 
     func testSidebarShowsBundleVersionAndManualHomepageUpdateCheck() throws {
         XCTAssertEqual(
-            AppBuildInfo.displayVersion(version: "1.1", build: "2"),
-            "ForgePlay 1.1 (2)"
+            AppBuildInfo.displayVersion(version: "1.2", build: "3"),
+            "ForgePlay 1.2 (3)"
         )
         XCTAssertEqual(
-            AppBuildInfo.displayVersion(version: " 1.1 ", build: " 2 "),
-            "ForgePlay 1.1 (2)"
+            AppBuildInfo.displayVersion(version: " 1.2 ", build: " 3 "),
+            "ForgePlay 1.2 (3)"
         )
         XCTAssertEqual(
-            AppBuildInfo.displayVersion(version: "1.1", build: nil),
-            "ForgePlay 1.1"
+            AppBuildInfo.displayVersion(version: "1.2", build: nil),
+            "ForgePlay 1.2"
         )
 
         let rootSource = try String(
@@ -1076,8 +1076,8 @@ final class AppLaunchTests: XCTestCase {
             ),
             encoding: .utf8
         )
-        XCTAssertTrue(versionConfiguration.contains("FORGEPLAY_MARKETING_VERSION = 1.1"))
-        XCTAssertTrue(versionConfiguration.contains("FORGEPLAY_CURRENT_PROJECT_VERSION = 2"))
+        XCTAssertTrue(versionConfiguration.contains("FORGEPLAY_MARKETING_VERSION = 1.2"))
+        XCTAssertTrue(versionConfiguration.contains("FORGEPLAY_CURRENT_PROJECT_VERSION = 3"))
     }
 
     func testCompatibilityCatalogReusesOneFilteredProjectionPerContentRender() throws {

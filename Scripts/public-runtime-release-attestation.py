@@ -105,7 +105,7 @@ def signed_app_metadata(app: Path) -> dict:
     if not app.is_absolute() or app.suffix != ".app" or app.is_symlink() or not app.is_dir():
         raise AttestationError("app must be an absolute non-symlink .app directory")
     require_command((CODESIGN, "--verify", "--strict", "--deep", "--verbose=4", os.fspath(app)), "strict deep codesign verification")
-    details = require_command((CODESIGN, "-d", "--verbose=4", os.fspath(app)), "codesign metadata inspection")
+    details = require_command((CODESIGN, "-dvv", os.fspath(app)), "codesign metadata inspection")
     requirement = require_command((CODESIGN, "-d", "-r-", os.fspath(app)), "designated requirement inspection")
     metadata = details.stdout + "\n" + details.stderr
     authorities = re.findall(r"^Authority=(.+)$", metadata, flags=re.MULTILINE)

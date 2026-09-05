@@ -11,6 +11,76 @@ private struct FailureEvidenceSensitivePathError: LocalizedError, ForgePlayTechn
     var forgePlayTechnicalDescription: String { detail }
 }
 
+private actor CancellationAwarePrefixExitProbe {
+    private var entered = false
+    private var entryCount = 0
+
+    func waitUntilCancelled() async throws -> Bool {
+        entered = true
+        entryCount += 1
+        while true {
+            try Task.checkCancellation()
+            try await Task.sleep(for: .seconds(60))
+        }
+    }
+
+    func hasEntered() -> Bool { entered }
+    func observedEntryCount() -> Int { entryCount }
+}
+
+private actor RelaunchPrefixExitProbe {
+    private var inactive: Bool?
+
+    func setInactive(_ value: Bool?) { inactive = value }
+
+    func wait() async throws -> Bool {
+        if let inactive { return inactive }
+        while true {
+            try Task.checkCancellation()
+            try await Task.sleep(for: .seconds(60))
+        }
+    }
+}
+
+@MainActor
+private final class NonDrainingCompatibilityBackgroundOwner:
+    SteamCompatibilityFailedCleanupOwner,
+    SteamCompatibilityBackgroundWorkOwner
+{
+    let cleanupReceiptID = "non-draining-background-owner"
+    let prefixBinding = SteamCompatibilityPrefixBinding(
+        canonicalPrefixURL: URL(
+            fileURLWithPath: "/tmp/forgeplay-non-draining-prefix"
+        ),
+        device: 91,
+        inode: 92
+    )
+    let capturedBaselineDigest = String(repeating: "a", count: 64)
+    private let completionState =
+        SteamCompatibilityBackgroundWorkCompletionState()
+    private(set) var completionAttempts = 0
+
+    func cancelCompatibilityBackgroundWork()
+        -> [SteamCompatibilityBackgroundWorkCompletionState]
+    {
+        [completionState]
+    }
+
+    func markBackgroundWorkCompleted() {
+        completionState.markCompleted()
+    }
+
+    func completeFailedPostLaunchCleanup(
+        using _: SteamPrefixService,
+        reason _: SteamCompatibilityFailedCleanupCompletionReason
+    ) async throws -> SteamCompatibilityFailedCleanupCompletionProof {
+        completionAttempts += 1
+        throw FailureEvidenceSensitivePathError(
+            detail: "fixture retained cleanup reached"
+        )
+    }
+}
+
 @MainActor
 final class AppServicesTests: XCTestCase {
     func testDefaultEmergencyDiagnosticsUsesStableProductNamespace() {
@@ -366,6 +436,298 @@ final class AppServicesTests: XCTestCase {
         let retryToken = try coordinator.begin(.maintenance)
         coordinator.end(retryToken)
     }
+
+    func testApplicationTerminationIntentInvalidatesEarlierForceStopResetTicket() {
+        var gate = AppTerminationIntentGate()
+        let forceStopResetTicket = gate.temporaryForceStopResetTicket()
+
+        gate.beginApplicationTermination()
+
+        XCTAssertTrue(gate.isApplicationTerminationRequested)
+        XCTAssertFalse(
+            gate.permitsTemporaryForceStopReset(ticket: forceStopResetTicket)
+        )
+
+        gate.cancelApplicationTermination()
+        XCTAssertFalse(gate.isApplicationTerminationRequested)
+        XCTAssertFalse(
+            gate.permitsTemporaryForceStopReset(ticket: forceStopResetTicket),
+            "A cancelled quit must still invalidate the older force-stop reset"
+        )
+        XCTAssertNotNil(gate.temporaryForceStopResetTicket())
+    }
+
+#if DEBUG
+    func testStoppedNVIDIASessionCanRelaunchRepeatedlyInSameManager()
+        async throws
+    {
+        let root = FileManager.default.temporaryDirectory.appending(
+            path: "ForgePlay-Relaunch-Lease-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        defer { try? FileManager.default.removeItem(at: root) }
+        let prefix = root.appending(path: "SteamShared", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(
+            at: prefix.appending(path: "drive_c/windows/system32"),
+            withIntermediateDirectories: true
+        )
+        let probe = RelaunchPrefixExitProbe()
+        let manager = SteamManager(
+            pathManager: PathManager(),
+            runner: SafeProcessRunner(
+                sandboxEnabled: false,
+                managedWineProcessJournalEnabled: false
+            ),
+            compatibilityPrefixExitWaiter: { _, _, _ in
+                try await probe.wait()
+            }
+        )
+        let runtime = root.appending(path: "absent-wine-runtime")
+        let logs = root.appending(path: "Logs", directoryHint: .isDirectory)
+        let rendererBackups = prefix.appending(
+            path: "drive_c/ForgePlay/RendererBackups",
+            directoryHint: .isDirectory
+        )
+        try FileManager.default.createDirectory(
+            at: rendererBackups,
+            withIntermediateDirectories: true
+        )
+        let marker = rendererBackups.appending(
+            path: SteamRendererPolicyManager.nvidiaMetalFXRegistrySessionMarkerName
+        )
+        var restorationTransitions = 0
+        var releases = 0
+        var launchLease = try await manager.acquirePrefixMutationLeaseForLaunch(
+            prefix: prefix
+        )
+        let lockURL = launchLease.lockURL
+        defer {
+            launchLease.release()
+            try? FileManager.default.removeItem(at: lockURL)
+        }
+
+        // FG-enabled and disabled NVIDIA launches share this owner. Exercise
+        // repeated stopped-session handoffs in one manager without dispatching
+        // a Steam/Wine process; rendering itself is outside this test's scope.
+        for completedLaunch in 1...3 {
+            let markerData: Data
+            if completedLaunch == 2 {
+                markerData = Data("malformed optional NVIDIA marker".utf8)
+            } else {
+                markerData = try JSONSerialization.data(withJSONObject: [
+                    "schemaVersion": 2,
+                    "projections": [[
+                        "registryPath": SteamRendererPolicyManager
+                            .nvidiaMetalFXNGXCoreRegistryPath,
+                        "valueName": SteamRendererPolicyManager
+                            .nvidiaMetalFXNGXCoreFullPathValueName,
+                        "stagedValue": SteamRendererPolicyManager
+                            .nvidiaMetalFXNGXCoreSystem32Path
+                    ]]
+                ])
+            }
+            try markerData.write(to: marker, options: .atomic)
+            let previousLease = launchLease
+            try previousLease.transitionToSharedExecution()
+            let restorationLease = SteamCompatibilityRestorationPrefixLease(
+                prepareForMutation: {
+                    try previousLease.transitionToExclusiveMutation()
+                    restorationTransitions += 1
+                },
+                release: {
+                    previousLease.release()
+                    releases += 1
+                }
+            )
+            manager.debugInstallNVIDIACompatibilityRestorationSession(
+                prefix: prefix,
+                runtimeExecutable: runtime,
+                logDirectory: logs,
+                restorationLease: restorationLease
+            )
+            manager.beginApplicationTerminationInputContainmentDrain()
+            let drained = await manager
+                .waitForApplicationTerminationInputContainmentDrain(timeout: 1)
+            XCTAssertTrue(drained)
+            await probe.setInactive(true)
+            let deferral = manager
+                .deferRetainedCompatibilityRestorationAfterForcedWineTermination()
+            XCTAssertTrue(deferral.blockingErrors.isEmpty)
+            manager.cancelApplicationTerminationContainmentDrain(
+                rearmRestorationMonitors: false
+            )
+            XCTAssertEqual(releases, completedLaunch - 1)
+            XCTAssertEqual(restorationTransitions, completedLaunch - 1)
+            XCTAssertEqual(try Data(contentsOf: marker), markerData)
+            XCTAssertThrowsError(
+                try PrefixExecutionLease.acquireExclusiveMutation(forPrefix: prefix)
+            ) { error in
+                guard case .conflictingOperation(_, .exclusiveMutation) =
+                        error as? PrefixExecutionLeaseError else {
+                    return XCTFail("Unexpected lock failure: \(error)")
+                }
+            }
+
+            if completedLaunch == 1 {
+                await probe.setInactive(false)
+                do {
+                    _ = try await manager.acquirePrefixMutationLeaseForLaunch(
+                        prefix: prefix
+                    )
+                    XCTFail("A live prefix must keep its session owner")
+                } catch {
+                    XCTAssertEqual(
+                        error as? SteamCompatibilityLaunchProfileErrorV1,
+                        .invalidReceipt("renderer-restoration-managed-prefix-still-active")
+                    )
+                }
+                XCTAssertEqual(releases, 0)
+                XCTAssertEqual(restorationTransitions, 0)
+                XCTAssertEqual(try Data(contentsOf: marker), markerData)
+                await probe.setInactive(true)
+
+                let otherExecutionLease = try PrefixExecutionLease
+                    .acquireSharedExecution(forPrefix: prefix)
+                do {
+                    _ = try await manager.acquirePrefixMutationLeaseForLaunch(
+                        prefix: prefix
+                    )
+                    XCTFail("Another execution lease must prevent owner detachment")
+                } catch {
+                    guard case .conflictingOperation(_, .exclusiveMutation) =
+                            error as? PrefixExecutionLeaseError else {
+                        otherExecutionLease.release()
+                        return XCTFail("Unexpected lease upgrade failure: \(error)")
+                    }
+                }
+                XCTAssertEqual(releases, 0)
+                XCTAssertEqual(restorationTransitions, 0)
+                XCTAssertEqual(try Data(contentsOf: marker), markerData)
+                otherExecutionLease.release()
+            }
+
+            launchLease = try await manager.acquirePrefixMutationLeaseForLaunch(
+                prefix: prefix
+            )
+            XCTAssertEqual(launchLease.mode, .exclusiveMutation)
+            XCTAssertEqual(restorationTransitions, completedLaunch)
+            XCTAssertEqual(releases, completedLaunch)
+            XCTAssertEqual(
+                try Data(contentsOf: marker), markerData,
+                "Even malformed optional NVIDIA state belongs to existing preflight, not lease acquisition"
+            )
+            XCTAssertFalse(FileManager.default.fileExists(atPath: logs.path))
+            await probe.setInactive(nil)
+        }
+    }
+
+    func testApplicationTerminationDrainsRestorationMonitorWithoutWineThenDefersRendererWork()
+        async throws
+    {
+        let probe = CancellationAwarePrefixExitProbe()
+        let runner = SafeProcessRunner(
+            sandboxEnabled: false,
+            managedWineProcessJournalEnabled: false
+        )
+        let manager = SteamManager(
+            pathManager: PathManager(),
+            runner: runner,
+            compatibilityPrefixExitWaiter: { _, _, _ in
+                try await probe.waitUntilCancelled()
+            }
+        )
+        let session = try SteamInputCompatibilitySession(
+            cursorPolicy: .off,
+            keyboardMapping: .systemDefault
+        )
+        try session.captureBeforeLaunch()
+        let prefix = FileManager.default.temporaryDirectory.appending(
+            path: "ForgePlay-Termination-Monitor-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        manager.debugInstallInputOnlyCompatibilityRestorationMonitor(
+            session: session,
+            prefix: prefix
+        )
+        var didEnter = await probe.hasEntered()
+        for _ in 0..<1_000 where !didEnter {
+            await Task.yield()
+            didEnter = await probe.hasEntered()
+        }
+        XCTAssertTrue(didEnter)
+
+        manager.beginApplicationTerminationInputContainmentDrain()
+        let drained = await manager
+            .waitForApplicationTerminationInputContainmentDrain(timeout: 1)
+
+        XCTAssertTrue(drained)
+        XCTAssertFalse(
+            session.isRestored,
+            "Cancellation must win before the monitor's restoration callback"
+        )
+        let deferral = manager
+            .deferRetainedCompatibilityRestorationAfterForcedWineTermination()
+        XCTAssertTrue(deferral.blockingErrors.isEmpty)
+        XCTAssertTrue(deferral.diagnosticWarnings.isEmpty)
+        XCTAssertTrue(session.isRestored)
+    }
+
+    func testForceStopContainmentResetDoesNotRearmRestorationMonitor()
+        async throws
+    {
+        let probe = CancellationAwarePrefixExitProbe()
+        let runner = SafeProcessRunner(
+            sandboxEnabled: false,
+            managedWineProcessJournalEnabled: false
+        )
+        let manager = SteamManager(
+            pathManager: PathManager(),
+            runner: runner,
+            compatibilityPrefixExitWaiter: { _, _, _ in
+                try await probe.waitUntilCancelled()
+            }
+        )
+        let session = try SteamInputCompatibilitySession(
+            cursorPolicy: .off,
+            keyboardMapping: .systemDefault
+        )
+        try session.captureBeforeLaunch()
+        manager.debugInstallInputOnlyCompatibilityRestorationMonitor(
+            session: session,
+            prefix: URL(
+                fileURLWithPath: "/tmp/ForgePlay-ForceStop-No-Rearm",
+                isDirectory: true
+            )
+        )
+        var observedEntryCount = await probe.observedEntryCount()
+        for _ in 0..<1_000 where observedEntryCount == 0 {
+            await Task.yield()
+            observedEntryCount = await probe.observedEntryCount()
+        }
+        XCTAssertEqual(observedEntryCount, 1)
+
+        manager.beginApplicationTerminationInputContainmentDrain()
+        let drainSucceeded = await manager
+            .waitForApplicationTerminationInputContainmentDrain(
+                timeout: 1
+            )
+        XCTAssertTrue(
+            drainSucceeded
+        )
+        manager.cancelApplicationTerminationContainmentDrain(
+            rearmRestorationMonitors: false
+        )
+        for _ in 0..<100 { await Task.yield() }
+
+        let finalEntryCount = await probe.observedEntryCount()
+        XCTAssertEqual(
+            finalEntryCount,
+            1,
+            "Force-stop admission reset must not automatically restart a Wine-capable restoration monitor"
+        )
+        XCTAssertFalse(session.isRestored)
+    }
+#endif
 
     func testTerminationCancellationDrainsActiveLifecycleOperation() async throws {
         let coordinator = SteamPrefixLifecycleCoordinator()
@@ -1337,7 +1699,9 @@ final class AppServicesTests: XCTestCase {
         ))
     }
 
-    func testAppTerminationRequestsSteamShutdownBeforeKillingWinePrefix() async throws {
+    func testAppTerminationDoesNotStartSteamForNonSteamManagedActivity()
+        async throws
+    {
         try XCTSkipUnless(
             FileManager.default.isExecutableFile(atPath: "/usr/sbin/lsof"),
             "Prefix cleanup verification requires lsof on macOS."
@@ -1377,6 +1741,13 @@ final class AppServicesTests: XCTestCase {
             wineserverScript: """
             #!/bin/sh
             printf 'wineserver:%s:%s\\n' "$WINEPREFIX" "$*" >> "\(marker.path)"
+            case "$*" in
+              *--kill*)
+                if [ -f "\(activeProcessIDFile.path)" ]; then
+                  kill "$(cat "\(activeProcessIDFile.path)")" 2>/dev/null || true
+                fi
+                ;;
+            esac
             exit 0
             """
         )
@@ -1430,25 +1801,143 @@ final class AppServicesTests: XCTestCase {
         }
 
         XCTAssertTrue(summary.succeeded, summary.diagnosticDescription)
-        XCTAssertEqual(summary.results.map(\.actionName), [
-            "requestSteamClientShutdown",
-            "shutdownWinePrefix"
-        ])
+        XCTAssertEqual(
+            summary.results.map(\.actionName),
+            ["shutdownWinePrefix"]
+        )
         XCTAssertTrue(summary.warnings.isEmpty, summary.diagnosticDescription)
 
         let markerLines = try String(contentsOf: marker, encoding: .utf8)
             .split(separator: "\n")
             .map(String.init)
-        guard markerLines.count == 3 else {
+        guard markerLines.count == 2 else {
             return XCTFail("Unexpected shutdown sequence:\n\(markerLines.joined(separator: "\n"))")
         }
-        XCTAssertTrue(markerLines[0].hasPrefix("steam:\(prefix.path):"), markerLines[0])
-        XCTAssertTrue(markerLines[0].contains("steam.exe -shutdown"), markerLines[0])
         XCTAssertEqual(
-            markerLines[1],
+            markerLines[0],
             "wineserver:\(prefix.path):--kill=\(SIGTERM)"
         )
-        XCTAssertEqual(markerLines[2], "wineserver:\(prefix.path):-w")
+        XCTAssertEqual(markerLines[1], "wineserver:\(prefix.path):-w")
+    }
+
+    func testAppTerminationRequestsGracefulShutdownOnlyForVerifiedSteamActivity()
+        async throws
+    {
+        let root = FileManager.default.temporaryDirectory.appending(
+            path: "ForgePlayVerifiedSteamTermination-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        defer { try? FileManager.default.removeItem(at: root) }
+        let prefix = root.appending(
+            path: "Prefixes/SteamShared",
+            directoryHint: .isDirectory
+        )
+        let steamExecutable = WindowsSteamInstallationLayout.executable(
+            in: prefix
+        )
+        try FileManager.default.createDirectory(
+            at: steamExecutable.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try Data("fake-steam".utf8).write(to: steamExecutable)
+        let marker = root.appending(path: "verified-steam-shutdown.txt")
+        let runner = try makeWineRunner(
+            in: root,
+            launcherScript: """
+            #!/bin/sh
+            printf 'steam:%s:%s\n' "$WINEPREFIX" "$*" >> "\(marker.path)"
+            exit 0
+            """,
+            wineserverScript: """
+            #!/bin/sh
+            printf 'wineserver:%s:%s\n' "$WINEPREFIX" "$*" >> "\(marker.path)"
+            exit 0
+            """
+        )
+
+        let summary = await AppServices.executeAppTerminationSteamShutdown(
+            AppTerminationSteamShutdownPlan(
+                prefixes: [prefix],
+                runtimeExecutable: runner,
+                initialErrors: [],
+                skippedReason: nil
+            ),
+            safeProcessRunner: makeCuratedRuntimeRunner(),
+            managedSteamActivityInspector: { _ in true }
+        )
+
+        XCTAssertTrue(summary.succeeded, summary.diagnosticDescription)
+        XCTAssertEqual(summary.results.map(\.actionName), [
+            "requestSteamClientShutdown",
+            "shutdownWinePrefix"
+        ])
+        let text = try String(contentsOf: marker, encoding: .utf8)
+        XCTAssertTrue(text.contains("steam.exe -shutdown"), text)
+    }
+
+    func testAppTerminationSteamActivityInspectionFailureNeverStartsSteam()
+        async throws
+    {
+        let root = FileManager.default.temporaryDirectory.appending(
+            path: "ForgePlayUncertainSteamTermination-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        defer { try? FileManager.default.removeItem(at: root) }
+        let prefix = root.appending(
+            path: "Prefixes/SteamShared",
+            directoryHint: .isDirectory
+        )
+        let steamExecutable = WindowsSteamInstallationLayout.executable(
+            in: prefix
+        )
+        try FileManager.default.createDirectory(
+            at: steamExecutable.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try Data("fake-steam".utf8).write(to: steamExecutable)
+        let marker = root.appending(path: "uncertain-steam-shutdown.txt")
+        let runner = try makeWineRunner(
+            in: root,
+            launcherScript: """
+            #!/bin/sh
+            printf 'unexpected-steam\n' >> "\(marker.path)"
+            exit 0
+            """,
+            wineserverScript: """
+            #!/bin/sh
+            printf 'wineserver:%s\n' "$*" >> "\(marker.path)"
+            exit 0
+            """
+        )
+
+        let summary = await AppServices.executeAppTerminationSteamShutdown(
+            AppTerminationSteamShutdownPlan(
+                prefixes: [prefix],
+                runtimeExecutable: runner,
+                initialErrors: [],
+                skippedReason: nil
+            ),
+            safeProcessRunner: makeCuratedRuntimeRunner(),
+            managedSteamActivityInspector: { _ in
+                throw FailureEvidenceSensitivePathError(
+                    detail: "fixture inspection unavailable"
+                )
+            }
+        )
+
+        XCTAssertTrue(summary.succeeded, summary.diagnosticDescription)
+        XCTAssertEqual(
+            summary.results.map(\.actionName),
+            ["shutdownWinePrefix"]
+        )
+        XCTAssertTrue(
+            summary.warnings.joined(separator: " ").contains(
+                "fixture inspection unavailable"
+            ),
+            summary.diagnosticDescription
+        )
+        let text = try String(contentsOf: marker, encoding: .utf8)
+        XCTAssertFalse(text.contains("unexpected-steam"), text)
     }
 
     func testAppTerminationDoesNotLaunchSteamShutdownForInactivePrefix() async throws {
@@ -1500,6 +1989,155 @@ final class AppServicesTests: XCTestCase {
             wineserver:\(prefix.path):--kill=\(SIGTERM)
             wineserver:\(prefix.path):-w
             """
+        )
+    }
+
+    func testSuccessfulForceStopThenImmediateTerminationRunsNoWineAction()
+        async throws
+    {
+        let root = FileManager.default.temporaryDirectory.appending(
+            path: "ForgePlayForceStopTermination-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let services = AppServices()
+        try services.pathManager.configureRoot(root)
+        let prefix = try services.steamSharedPrefixURL()
+        try FileManager.default.createDirectory(
+            at: prefix,
+            withIntermediateDirectories: true
+        )
+        let rendererBackupDirectory = prefix.appending(
+            path: "drive_c/ForgePlay/RendererBackups",
+            directoryHint: .isDirectory
+        )
+        try FileManager.default.createDirectory(
+            at: rendererBackupDirectory,
+            withIntermediateDirectories: true
+        )
+        let rendererMarker = rendererBackupDirectory.appending(
+            path: SteamRendererPolicyManager
+                .nvidiaMetalFXRegistrySessionMarkerName
+        )
+        let markerData = try JSONSerialization.data(
+            withJSONObject: [
+                "schemaVersion": 2,
+                "projections": [[
+                    "registryPath": SteamRendererPolicyManager
+                        .nvidiaMetalFXNGXCoreRegistryPath,
+                    "valueName": SteamRendererPolicyManager
+                        .nvidiaMetalFXNGXCoreFullPathValueName,
+                    "stagedValue": SteamRendererPolicyManager
+                        .nvidiaMetalFXNGXCoreSystem32Path
+                ]]
+            ],
+            options: [.sortedKeys]
+        )
+        try markerData.write(to: rendererMarker, options: .atomic)
+
+        let forceResult = await services
+            .forceTerminateAllForgePlayWineProcesses(forceTerminator: {
+                StartupWineProcessCleanupResult(
+                    initiallyTargetedProcessIDs: [41, 42],
+                    remainingProcessIDs: [],
+                    inspectionFailures: [],
+                    signalFailures: []
+                )
+            })
+        XCTAssertTrue(forceResult.succeeded)
+
+        let summary = await services.shutdownSteamProcessesForAppTermination(
+            runtimeExecutable: nil,
+            selectedRootURL: root,
+            wineProcessInspector: {
+                StartupWineProcessCleanupPlan(
+                    targets: [],
+                    inspectionFailures: []
+                )
+            }
+        )
+
+        XCTAssertTrue(summary.succeeded, summary.diagnosticDescription)
+        XCTAssertTrue(summary.results.isEmpty, summary.diagnosticDescription)
+        XCTAssertNil(summary.attemptedRuntimePath)
+        XCTAssertEqual(summary.prefix, prefix)
+        XCTAssertTrue(
+            summary.skippedReason?.contains(
+                "verified no ForgePlay Wine processes"
+            ) == true,
+            summary.diagnosticDescription
+        )
+        XCTAssertTrue(
+            services.steamPrefixLifecycleCoordinator.isTerminating,
+            "The earlier force-stop reset must not reopen launch admission after quit begins"
+        )
+        XCTAssertEqual(try Data(contentsOf: rendererMarker), markerData)
+        let rendererPolicyManager = SteamRendererPolicyManager()
+        XCTAssertTrue(
+            rendererPolicyManager.hasRecoverableNVIDIAMetalFXRegistrySession(
+                in: prefix
+            )
+        )
+        XCTAssertTrue(
+            SteamManager.requiresPriorNVIDIARestoration(
+                requestedSelection: .d3dMetalNVIDIA,
+                hasRecoverableModuleResidue: false,
+                hasRecoverableRegistryResidue: true,
+                hasActiveSession: false
+            ),
+            "The next explicit prelaunch must consume the durable NVIDIA restoration marker"
+        )
+    }
+
+    func testForceStopBoundsNonCooperativeBackgroundDrainAndIssuesNoProof()
+        async throws
+    {
+        let services = AppServices()
+        let owner = NonDrainingCompatibilityBackgroundOwner()
+        try services.steamPrefixService
+            .retainFailedCompatibilityCleanupOwner(owner)
+        let startedAt = Date()
+
+        let result = await services.forceTerminateAllForgePlayWineProcesses(
+            forceTerminator: {
+                StartupWineProcessCleanupResult(
+                    initiallyTargetedProcessIDs: [71],
+                    remainingProcessIDs: [],
+                    inspectionFailures: [],
+                    signalFailures: []
+                )
+            },
+            initialDrainTimeout: 0.01,
+            finalDrainTimeout: 0.02
+        )
+
+        XCTAssertLessThan(Date().timeIntervalSince(startedAt), 1)
+        XCTAssertFalse(result.succeeded)
+        XCTAssertTrue(
+            result.inspectionFailures.contains {
+                $0.contains("background work did not drain")
+            },
+            String(describing: result.inspectionFailures)
+        )
+
+        owner.markBackgroundWorkCompleted()
+        let summary = await services.shutdownSteamProcessesForAppTermination(
+            runtimeExecutable: nil,
+            wineProcessInspector: {
+                StartupWineProcessCleanupPlan(
+                    targets: [],
+                    inspectionFailures: []
+                )
+            }
+        )
+        XCTAssertFalse(summary.succeeded)
+        XCTAssertEqual(owner.completionAttempts, 1)
+        XCTAssertTrue(
+            summary.errors.joined(separator: " ").contains(
+                "fixture retained cleanup reached"
+            ),
+            summary.diagnosticDescription
         )
     }
 
@@ -1672,13 +2310,17 @@ final class AppServicesTests: XCTestCase {
             steamExecutableURL: URL(fileURLWithPath: "/tmp/ForgePlay/Prefixes/SteamShared/drive_c/Steam/steam.exe"),
             runtimeCompatibilityInspection: .migrationRequired("legacy binding")
         ))
-        XCTAssertEqual(appState.setupStage, .prepareSteamEnvironment)
+        XCTAssertEqual(appState.setupStage, .authenticateSteam)
     }
 
-    func testSetupStageRoutesRuntimeProbeAndCompatibilityErrorsToEnginePreparation() {
+    func testSetupStageTreatsRuntimeDiagnosticsAsAdvisory() {
         let prefix = URL(fileURLWithPath: "/tmp/ForgePlay/Prefixes/SteamShared")
         let steam = prefix.appending(path: "drive_c/Program Files (x86)/Steam/steam.exe")
-        let scenarios: [(technicalDetail: String, readiness: SetupReadiness)] = [
+        let scenarios: [(
+            technicalDetail: String,
+            readiness: SetupReadiness,
+            expectedStage: SetupStage
+        )] = [
             (
                 "/tmp/runtime_probe-stderr.log",
                 SetupReadiness(
@@ -1687,7 +2329,8 @@ final class AppServicesTests: XCTestCase {
                     hasSteamReferences: false,
                     steamPrefixURL: prefix,
                     steamExecutableURL: nil
-                )
+                ),
+                .prepareSteamEnvironment
             ),
             (
                 "limitations: missing-wine-gnutls-runtime. executable: /tmp/ForgePlayRuntime/wine/bin/wine",
@@ -1698,7 +2341,8 @@ final class AppServicesTests: XCTestCase {
                     steamPrefixURL: prefix,
                     steamExecutableURL: steam,
                     runtimeCompatibilityInspection: .runtimeUnavailable("runtime manifest unavailable")
-                )
+                ),
+                .authenticateSteam
             )
         ]
 
@@ -1714,8 +2358,8 @@ final class AppServicesTests: XCTestCase {
 
             XCTAssertEqual(
                 appState.setupStage,
-                .prepareEngine,
-                "Expected Runtime failure to route to engine preparation: \(scenario.technicalDetail)"
+                scenario.expectedStage,
+                "Runtime diagnostics must not replace the concrete setup stage: \(scenario.technicalDetail)"
             )
         }
     }
@@ -1775,7 +2419,7 @@ final class AppServicesTests: XCTestCase {
 
         appState.updateSetupStage(readiness: readiness)
 
-        XCTAssertEqual(appState.setupStage, .prepareEngine)
+        XCTAssertEqual(appState.setupStage, .prepareSteamEnvironment)
     }
 
     func testSteamPrefixStateSeparatesOperationalReadinessFromLaunchEvidence() {
@@ -1791,7 +2435,7 @@ final class AppServicesTests: XCTestCase {
 
         XCTAssertEqual(unverified.steamPrefixState, .rendererUnverified)
         XCTAssertFalse(unverified.hasVerifiedWindowsSteamUI)
-        XCTAssertFalse(unverified.canAttemptWindowsSteamLaunch)
+        XCTAssertTrue(unverified.canAttemptWindowsSteamLaunch)
 
         let runtimeMigrationRequired = SetupReadiness(
             hasSteamPrefix: true,
@@ -1803,7 +2447,7 @@ final class AppServicesTests: XCTestCase {
         )
 
         XCTAssertEqual(runtimeMigrationRequired.steamPrefixState, .runtimeMigrationRequired)
-        XCTAssertFalse(runtimeMigrationRequired.canAttemptWindowsSteamLaunch)
+        XCTAssertTrue(runtimeMigrationRequired.canAttemptWindowsSteamLaunch)
 
         let needsApply = SetupReadiness(
             hasSteamPrefix: true,
@@ -1848,7 +2492,7 @@ final class AppServicesTests: XCTestCase {
 
         XCTAssertEqual(needsRepair.steamPrefixState, .rendererNeedsRepair)
         XCTAssertFalse(needsRepair.hasVerifiedWindowsSteamUI)
-        XCTAssertFalse(needsRepair.canAttemptWindowsSteamLaunch)
+        XCTAssertTrue(needsRepair.canAttemptWindowsSteamLaunch)
         XCTAssertEqual(needsRepair.rendererInspection?.recoveryStatusLabelKey, "Steam 실행 경로 정비 필요")
         XCTAssertEqual(needsRepair.rendererInspection?.recoveryActionTitleKey, "실행 경로 정비/검증")
         XCTAssertEqual(needsRepair.rendererInspection?.setupRecoveryActionTitleKey, "Steam 실행 경로 정비")
@@ -1874,7 +2518,7 @@ final class AppServicesTests: XCTestCase {
 
         XCTAssertEqual(runtimeUnavailable.steamPrefixState, .runtimeUnavailable)
         XCTAssertFalse(runtimeUnavailable.hasVerifiedWindowsSteamUI)
-        XCTAssertFalse(runtimeUnavailable.canAttemptWindowsSteamLaunch)
+        XCTAssertTrue(runtimeUnavailable.canAttemptWindowsSteamLaunch)
         XCTAssertEqual(runtimeUnavailable.rendererInspection?.recoveryStatusLabelKey, "ForgePlay Runtime 교체 필요")
         XCTAssertEqual(runtimeUnavailable.rendererInspection?.recoveryActionTitleKey, "Runtime 확인")
         XCTAssertEqual(runtimeUnavailable.rendererInspection?.setupRecoveryActionTitleKey, "Runtime 확인")
@@ -1921,7 +2565,7 @@ final class AppServicesTests: XCTestCase {
         XCTAssertTrue(visuallyVerified.canAttemptWindowsSteamLaunch)
     }
 
-    func testSetupStageUsesSteamPrefixStateForRendererGate() {
+    func testSetupStageTreatsUnverifiedRendererAsAdvisory() {
         let appState = AppState()
         appState.selectedRootURL = URL(fileURLWithPath: "/tmp/ForgePlay")
         appState.latestChecks = [
@@ -1942,10 +2586,10 @@ final class AppServicesTests: XCTestCase {
             steamExecutableURL: URL(fileURLWithPath: "/tmp/ForgePlay/Prefixes/SteamShared/drive_c/Program Files (x86)/Steam/steam.exe")
         ))
 
-        XCTAssertEqual(appState.setupStage, .configureRenderer)
+        XCTAssertEqual(appState.setupStage, .authenticateSteam)
     }
 
-    func testSetupStageKeepsRendererApplyAndRepairStatesInRendererStep() {
+    func testSetupStageKeepsRendererApplyAndRepairStatesLaunchable() {
         let appState = readyAppStateForSetupStageTests()
         let prefix = URL(fileURLWithPath: "/tmp/ForgePlay/Prefixes/SteamShared")
         let steam = prefix.appending(path: "drive_c/Program Files (x86)/Steam/steam.exe")
@@ -1978,7 +2622,7 @@ final class AppServicesTests: XCTestCase {
                 steamExecutableURL: steam,
                 rendererInspection: inspection
             ))
-            XCTAssertEqual(appState.setupStage, .configureRenderer)
+            XCTAssertEqual(appState.setupStage, .authenticateSteam)
         }
     }
 
@@ -3107,113 +3751,210 @@ final class AppServicesTests: XCTestCase {
     }
 
     func testSteamManagerRepairsMissingSteamClientServiceAndThenUsesFastPath() async throws {
-        let root = FileManager.default.temporaryDirectory
-            .appending(
-                path: "ForgePlaySteamClientServiceRepair-\(UUID().uuidString)",
-                directoryHint: .isDirectory
+        let fixture = try makeSteamClientServiceMutationFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+
+        try await fixture.manager.prepareSteamClientServiceForLaunch(
+            runtimeExecutable: fixture.runtime,
+            prefix: fixture.prefix,
+            logDirectory: fixture.logs
+        )
+        let repaired = SteamClientServiceContract.inspect(
+            prefix: fixture.prefix
+        )
+        XCTAssertTrue(repaired.isReady, repaired.failureDetail)
+        let actionsAfterRepair = try steamClientServiceMutationActions(
+            fixture
+        )
+        XCTAssertEqual(
+            actionsAfterRepair,
+            [
+                "runtime:/install",
+                "runtime:query",
+                "wineserver:-w",
+                "wineserver:--kill=\(SIGTERM)",
+                "wineserver:-w"
+            ]
+        )
+        try assertSteamClientServiceMutationOwnershipRetired(fixture)
+
+        try await fixture.manager.prepareSteamClientServiceForLaunch(
+            runtimeExecutable: fixture.runtime,
+            prefix: fixture.prefix,
+            logDirectory: fixture.logs
+        )
+        XCTAssertEqual(
+            try steamClientServiceMutationActions(fixture),
+            actionsAfterRepair,
+            "A verified service must not spawn Wine maintenance commands again"
+        )
+    }
+
+    func testSteamClientServiceInstallFailureStillVerifiesShutdown() async throws {
+        let fixture = try makeSteamClientServiceMutationFixture(
+            installExitCode: 27
+        )
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+
+        do {
+            try await fixture.manager.prepareSteamClientServiceForLaunch(
+                runtimeExecutable: fixture.runtime,
+                prefix: fixture.prefix,
+                logDirectory: fixture.logs
             )
+            XCTFail("The failed service installation must escape")
+        } catch let error as SteamPrefixLifecycleCleanupError {
+            XCTAssertEqual(
+                error.originalProcessResult?.actionName,
+                "installSteamClientService"
+            )
+            XCTAssertEqual(error.originalProcessResult?.processExitCode, 27)
+            XCTAssertNil(error.cleanupError)
+            let shutdown = try XCTUnwrap(error.cleanupProcessResults.last)
+            XCTAssertEqual(shutdown.actionName, "shutdownWinePrefix")
+            XCTAssertTrue(shutdown.succeeded)
+            XCTAssertEqual(shutdown.postconditionSatisfied, true)
+        }
+        XCTAssertEqual(
+            try steamClientServiceMutationActions(fixture),
+            [
+                "runtime:/install",
+                "wineserver:--kill=\(SIGTERM)",
+                "wineserver:-w"
+            ]
+        )
+        try assertSteamClientServiceMutationOwnershipRetired(fixture)
+    }
+
+    func testSteamClientServiceQueryFailureStillVerifiesShutdown() async throws {
+        let fixture = try makeSteamClientServiceMutationFixture(
+            queryExitCode: 28
+        )
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+
+        do {
+            try await fixture.manager.prepareSteamClientServiceForLaunch(
+                runtimeExecutable: fixture.runtime,
+                prefix: fixture.prefix,
+                logDirectory: fixture.logs
+            )
+            XCTFail("The failed service query must escape")
+        } catch let error as SteamPrefixLifecycleCleanupError {
+            XCTAssertEqual(
+                error.originalProcessResult?.actionName,
+                "querySteamClientService"
+            )
+            XCTAssertEqual(error.originalProcessResult?.processExitCode, 28)
+            XCTAssertNil(error.cleanupError)
+            XCTAssertEqual(
+                error.cleanupProcessResults.last?.postconditionSatisfied,
+                true
+            )
+        }
+        XCTAssertEqual(
+            try steamClientServiceMutationActions(fixture),
+            [
+                "runtime:/install",
+                "runtime:query",
+                "wineserver:--kill=\(SIGTERM)",
+                "wineserver:-w"
+            ]
+        )
+        try assertSteamClientServiceMutationOwnershipRetired(fixture)
+    }
+
+    func testSteamClientServiceWaitAndInitialCleanupFailuresStillEndClean() async throws {
+        let fixture = try makeSteamClientServiceMutationFixture(
+            wineserverExitCodes: [29, 30, 0]
+        )
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+
+        do {
+            try await fixture.manager.prepareSteamClientServiceForLaunch(
+                runtimeExecutable: fixture.runtime,
+                prefix: fixture.prefix,
+                logDirectory: fixture.logs
+            )
+            XCTFail("The failed Wine wait must escape")
+        } catch let error as SteamPrefixLifecycleCleanupError {
+            XCTAssertEqual(
+                error.originalProcessResult?.actionName,
+                "waitForWinePrefix"
+            )
+            XCTAssertEqual(error.originalProcessResult?.processExitCode, 29)
+            XCTAssertNil(error.cleanupError)
+            let shutdown = try XCTUnwrap(error.cleanupProcessResults.last)
+            XCTAssertEqual(shutdown.actionName, "shutdownWinePrefix")
+            XCTAssertEqual(shutdown.processExitCode, 30)
+            XCTAssertTrue(shutdown.succeeded)
+            XCTAssertEqual(shutdown.postconditionSatisfied, true)
+        }
+        XCTAssertEqual(
+            try steamClientServiceMutationActions(fixture),
+            [
+                "runtime:/install",
+                "runtime:query",
+                "wineserver:-w",
+                "wineserver:--kill=\(SIGTERM)",
+                "wineserver:-w"
+            ]
+        )
+        try assertSteamClientServiceMutationOwnershipRetired(fixture)
+    }
+
+    func testFirstLaunchPreparationFailureStillCompletesVerifiedShutdown() async throws {
+        enum PreparationFailure: Error { case injected }
+
+        let root = FileManager.default.temporaryDirectory.appending(
+            path: "ForgePlayFirstLaunchCleanup-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
         defer { try? FileManager.default.removeItem(at: root) }
         let pathManager = PathManager()
         try pathManager.configureRoot(root)
         let prefix = try pathManager.url(for: .steamSharedPrefix)
-        let logs = try pathManager.url(for: .launchLogs)
-        let source = SteamClientServiceContract.sourceExecutable(in: prefix)
-        let serviceControl = SteamClientServiceContract.serviceControlExecutable(
-            in: prefix
+        try FileManager.default.createDirectory(
+            at: prefix,
+            withIntermediateDirectories: true
         )
-        for directory in [
-            prefix,
-            logs,
-            source.deletingLastPathComponent(),
-            serviceControl.deletingLastPathComponent()
-        ] {
-            try FileManager.default.createDirectory(
-                at: directory,
-                withIntermediateDirectories: true
-            )
-        }
-        try Data("current-service".utf8).write(to: source)
-        try Data("service-control".utf8).write(to: serviceControl)
-        let runtime = root.appending(path: "wine")
-        let wineserver = root.appending(path: "wineserver")
-        try #"""
-        #!/bin/sh
-        case "$2" in
-          /install)
-            printf '%s\n' "$2" >> "$WINEPREFIX/service-actions.txt"
-            /bin/mkdir -p "$WINEPREFIX/drive_c/Program Files (x86)/Common Files/Steam"
-            /bin/cp "$1" "$WINEPREFIX/drive_c/Program Files (x86)/Common Files/Steam/SteamService.exe"
-            /bin/cat > "$WINEPREFIX/system.reg" <<'REGISTRY'
-        WINE REGISTRY Version 2
-
-        [Software\\Wow6432Node\\Valve\\SteamService]
-        "installpath_default"="C:\\Program Files (x86)\\Steam"
-
-        [System\\ControlSet001\\Services\\Steam Client Service]
-        "DisplayName"="Steam Client Service"
-        "ImagePath"=str(2):"\"C:\\Program Files (x86)\\Common Files\\Steam\\SteamService.exe\" /RunAsService"
-        "ObjectName"="LocalSystem"
-        "Start"=dword:00000003
-        "Type"=dword:00000010
-        "WOW64"=dword:00000001
-        REGISTRY
-            ;;
-          query)
-            printf '%s\n' "$2" >> "$WINEPREFIX/service-actions.txt"
-            /usr/bin/grep -q 'Steam Client Service' "$WINEPREFIX/system.reg"
-            ;;
-          -w)
+        let actionLog = prefix.appending(path: "first-launch-shutdowns.txt")
+        let runtime = try makeWineRunner(
+            in: root,
+            wineserverScript: """
+            #!/bin/sh
+            printf '%s\n' "$1" >> "\(actionLog.path)"
             exit 0
-            ;;
-          *)
-            exit 64
-            ;;
-        esac
-        """#.write(to: runtime, atomically: true, encoding: .utf8)
-        try "#!/bin/sh\nexit 0\n".write(
-            to: wineserver,
-            atomically: true,
-            encoding: .utf8
+            """
         )
-        for executable in [runtime, wineserver] {
-            try FileManager.default.setAttributes(
-                [.posixPermissions: 0o755],
-                ofItemAtPath: executable.path
-            )
-        }
         let manager = SteamManager(
             pathManager: pathManager,
-            runner: makeCuratedRuntimeRunner()
+            runner: makeCuratedRuntimeRunner(),
+            steamClientServicePreparer: { _, _, _ in
+                throw PreparationFailure.injected
+            }
         )
 
-        try await manager.prepareSteamClientServiceForLaunch(
-            runtimeExecutable: runtime,
-            prefix: prefix,
-            logDirectory: logs
-        )
-        let repaired = SteamClientServiceContract.inspect(prefix: prefix)
-        XCTAssertTrue(repaired.isReady, repaired.failureDetail)
-        let actionsAfterRepair = try String(
-            contentsOf: prefix.appending(path: "service-actions.txt"),
+        do {
+            _ = try await manager.prepareInstalledSteamForFirstLaunch(
+                runtimeExecutable: runtime,
+                language: nil
+            )
+            XCTFail("The injected preparation failure must escape")
+        } catch let error as SteamPrefixLifecycleCleanupError {
+            XCTAssertNil(error.cleanupError)
+            XCTAssertTrue(error.originalError is PreparationFailure)
+            let shutdown = try XCTUnwrap(error.cleanupProcessResults.last)
+            XCTAssertTrue(shutdown.succeeded)
+            XCTAssertEqual(shutdown.postconditionSatisfied, true)
+        }
+        let shutdownActions = try String(
+            contentsOf: actionLog,
             encoding: .utf8
-        )
+        ).split(whereSeparator: \.isNewline)
         XCTAssertEqual(
-            actionsAfterRepair.split(whereSeparator: \.isNewline).map(String.init),
-            ["/install", "query"]
-        )
-
-        try await manager.prepareSteamClientServiceForLaunch(
-            runtimeExecutable: runtime,
-            prefix: prefix,
-            logDirectory: logs
-        )
-        XCTAssertEqual(
-            try String(
-                contentsOf: prefix.appending(path: "service-actions.txt"),
-                encoding: .utf8
-            ),
-            actionsAfterRepair,
-            "A verified service must not spawn Wine maintenance commands again"
+            shutdownActions,
+            ["--kill=15", "-w", "--kill=15", "-w"],
+            "Both the opening barrier and failure cleanup must verify inactivity"
         )
     }
 
@@ -4085,7 +4826,7 @@ final class AppServicesTests: XCTestCase {
         try Data("{".utf8).write(to: metadataURL)
 
         let readiness = services.resolveSetupReadiness(hasSteamReferences: false)
-        XCTAssertFalse(readiness.hasSteamPrefix)
+        XCTAssertTrue(readiness.hasSteamPrefix)
         XCTAssertFalse(readiness.hasSteamExecutable)
         guard case .invalidMetadata(let url, _)? = readiness.steamPrefixIssue else {
             return XCTFail("Expected invalidMetadata issue, got \(String(describing: readiness.steamPrefixIssue))")
@@ -4630,6 +5371,195 @@ final class AppServicesTests: XCTestCase {
         SteamWebHelperLanguageReadback(
             state: .matched,
             observedLocaleIdentifiers: [language.webHelperLocaleIdentifier]
+        )
+    }
+
+    private struct SteamClientServiceMutationFixture {
+        let root: URL
+        let prefix: URL
+        let logs: URL
+        let runtime: URL
+        let actionLog: URL
+        let registry: ManagedWineSessionRegistry
+        let manager: SteamManager
+    }
+
+    private func makeSteamClientServiceMutationFixture(
+        installExitCode: Int32 = 0,
+        queryExitCode: Int32 = 0,
+        wineserverExitCodes: [Int32] = [0]
+    ) throws -> SteamClientServiceMutationFixture {
+        let root = FileManager.default.temporaryDirectory.appending(
+            path: "ForgePlaySteamClientServiceMutation-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        let pathManager = PathManager()
+        try pathManager.configureRoot(root)
+        let prefix = try pathManager.url(for: .steamSharedPrefix)
+        let logs = try pathManager.url(for: .launchLogs)
+        let source = SteamClientServiceContract.sourceExecutable(in: prefix)
+        let serviceControl = SteamClientServiceContract
+            .serviceControlExecutable(in: prefix)
+        let runtimeBin = root.appending(
+            path: "FakeRuntime/wine/bin",
+            directoryHint: .isDirectory
+        )
+        let runtime = runtimeBin.appending(path: "wine")
+        let wineLoader = runtimeBin.appending(path: "wine.bin")
+        let wineserver = runtimeBin.appending(path: "wineserver")
+        for directory in [
+            prefix,
+            logs,
+            source.deletingLastPathComponent(),
+            serviceControl.deletingLastPathComponent(),
+            runtimeBin
+        ] {
+            try FileManager.default.createDirectory(
+                at: directory,
+                withIntermediateDirectories: true
+            )
+        }
+        try Data("current-service".utf8).write(to: source)
+        try Data("service-control".utf8).write(to: serviceControl)
+        try #"""
+        #!/bin/sh
+        printf 'runtime:%s\n' "$2" >> "$WINEPREFIX/service-transaction-actions.txt"
+        if [ -n "$FORGEPLAY_MANAGED_WINE_PROCESS_EVIDENCE_FILE" ]; then
+          recorded_seconds=$(/bin/date +%s)
+          recorded_milliseconds=$((recorded_seconds * 1000))
+          started_microseconds=$((recorded_seconds * 1000000))
+          printf '{"schema_version":1,"producer":"forgeplay-wine-runtime","event_code":"darwin_process_started","role":"wine-loader","run_identifier":"%s","prefix_scope":"%s","runtime_fingerprint":"%s","darwin_pid":2147483647,"recorded_at_unix_milliseconds":%s,"process_started_at_unix_microseconds":%s}\n' \
+            "$FORGEPLAY_MANAGED_WINE_PROCESS_RUN_ID" \
+            "$FORGEPLAY_MANAGED_WINE_PREFIX_SCOPE" \
+            "$FORGEPLAY_MANAGED_WINE_RUNTIME_FINGERPRINT" \
+            "$recorded_milliseconds" \
+            "$started_microseconds" \
+            >> "$FORGEPLAY_MANAGED_WINE_PROCESS_EVIDENCE_FILE"
+        fi
+        case "$2" in
+          /install)
+            if [ \#(installExitCode) -ne 0 ]; then
+              exit \#(installExitCode)
+            fi
+            /bin/mkdir -p "$WINEPREFIX/drive_c/Program Files (x86)/Common Files/Steam"
+            /bin/cp "$1" "$WINEPREFIX/drive_c/Program Files (x86)/Common Files/Steam/SteamService.exe"
+            /bin/cat > "$WINEPREFIX/system.reg" <<'REGISTRY'
+        WINE REGISTRY Version 2
+
+        [Software\\Wow6432Node\\Valve\\SteamService]
+        "installpath_default"="C:\\Program Files (x86)\\Steam"
+
+        [System\\ControlSet001\\Services\\Steam Client Service]
+        "DisplayName"="Steam Client Service"
+        "ImagePath"=str(2):"\"C:\\Program Files (x86)\\Common Files\\Steam\\SteamService.exe\" /RunAsService"
+        "ObjectName"="LocalSystem"
+        "Start"=dword:00000003
+        "Type"=dword:00000010
+        "WOW64"=dword:00000001
+        REGISTRY
+            ;;
+          query)
+            if [ \#(queryExitCode) -ne 0 ]; then
+              exit \#(queryExitCode)
+            fi
+            /usr/bin/grep -q 'Steam Client Service' "$WINEPREFIX/system.reg"
+            ;;
+          *)
+            exit 64
+            ;;
+        esac
+        """#.write(to: runtime, atomically: true, encoding: .utf8)
+        try "#!/bin/sh\nexit 0\n".write(
+            to: wineLoader,
+            atomically: true,
+            encoding: .utf8
+        )
+        let exitCases = wineserverExitCodes.enumerated().map {
+            "  \($0.offset + 1)) exit \($0.element) ;;"
+        }.joined(separator: "\n")
+        try """
+        #!/bin/sh
+        printf 'wineserver:%s\n' "$1" >> "$WINEPREFIX/service-transaction-actions.txt"
+        counter="$WINEPREFIX/service-transaction-wineserver-count.txt"
+        count=0
+        if [ -f "$counter" ]; then
+          count=$(/bin/cat "$counter")
+        fi
+        count=$((count + 1))
+        printf '%s\n' "$count" > "$counter"
+        case "$count" in
+        \(exitCases)
+          *) exit 0 ;;
+        esac
+        """.write(to: wineserver, atomically: true, encoding: .utf8)
+        for executable in [runtime, wineLoader, wineserver] {
+            try FileManager.default.setAttributes(
+                [.posixPermissions: 0o755],
+                ofItemAtPath: executable.path
+            )
+        }
+
+        let registry = ManagedWineSessionRegistry()
+        let runner = SafeProcessRunner(
+            sandboxEnabled: false,
+            managedWineProcessJournalEnabled: true,
+            managedWineProcessEvidenceSandboxEnabled: false,
+            managedWineSessionRegistry: registry,
+            gameModeHostApplicationGroupIdentifier: nil,
+            managedWineRuntimeFingerprintResolver: {
+                _ in String(repeating: "a", count: 64)
+            },
+            runtimeLaunchObjectIdentityProvider: { _ in nil },
+            windowsRuntimeValidator: { _, _ in }
+        )
+        return SteamClientServiceMutationFixture(
+            root: root,
+            prefix: prefix,
+            logs: logs,
+            runtime: runtime,
+            actionLog: prefix.appending(
+                path: "service-transaction-actions.txt"
+            ),
+            registry: registry,
+            manager: SteamManager(pathManager: pathManager, runner: runner)
+        )
+    }
+
+    private func steamClientServiceMutationActions(
+        _ fixture: SteamClientServiceMutationFixture
+    ) throws -> [String] {
+        try String(contentsOf: fixture.actionLog, encoding: .utf8)
+            .split(whereSeparator: \.isNewline)
+            .map(String.init)
+    }
+
+    private func assertSteamClientServiceMutationOwnershipRetired(
+        _ fixture: SteamClientServiceMutationFixture,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) throws {
+        XCTAssertTrue(
+            fixture.registry.launchSessions(for: fixture.prefix).isEmpty,
+            "The service transaction left a registered Wine session",
+            file: file,
+            line: line
+        )
+        let enumerator = FileManager.default.enumerator(
+            at: fixture.root,
+            includingPropertiesForKeys: nil
+        )
+        let activeDescriptors = (enumerator?.allObjects as? [URL] ?? [])
+            .filter {
+                $0.lastPathComponent.hasSuffix(
+                    ManagedWineProcessJournal.activeSessionDescriptorSuffix
+                )
+            }
+        XCTAssertTrue(
+            activeDescriptors.isEmpty,
+            "The service transaction left active descriptor(s): " +
+                activeDescriptors.map(\.path).joined(separator: ", "),
+            file: file,
+            line: line
         )
     }
 

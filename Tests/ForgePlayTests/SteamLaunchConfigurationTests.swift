@@ -268,7 +268,7 @@ final class SteamLaunchConfigurationTests: XCTestCase {
         XCTAssertEqual(standard.identity.configurationIdentity, "standard-default")
         XCTAssertTrue(standard.gameModeEnabled)
         XCTAssertTrue(compatibility.gameModeEnabled)
-        XCTAssertEqual(standard.graphicsBackend, .d3dMetal)
+        XCTAssertEqual(standard.graphicsBackend, .d3dMetalNVIDIA)
         XCTAssertEqual(compatibility.graphicsBackend, .d3dMetal)
         XCTAssertEqual(standard.keyboardMapping.preset, .systemDefault)
         XCTAssertEqual(compatibility.keyboardMapping.preset, .systemDefault)
@@ -413,12 +413,61 @@ final class SteamLaunchConfigurationTests: XCTestCase {
         let payload = try snapshot.canonicalPayload()
         let text = try XCTUnwrap(String(data: payload, encoding: .utf8))
 
-        XCTAssertTrue(text.hasPrefix("forgeplay-steam-launch-configuration-v1\n"))
-        XCTAssertTrue(text.contains("schemaVersion=1:1\nmode=13:compatibility\n"))
+        XCTAssertTrue(text.hasPrefix("forgeplay-steam-launch-configuration-v5\n"))
+        XCTAssertTrue(text.contains("schemaVersion=1:5\nmode=13:compatibility\n"))
+        XCTAssertTrue(text.contains("frameGenerationEnabled=1:0\n"))
+        XCTAssertTrue(text.contains("frameGenerationTargetFPS=3:120\n"))
+        XCTAssertTrue(text.contains("frameCheckEnabled=1:0\n"))
         XCTAssertEqual(try SteamLaunchConfigurationSnapshot(canonicalPayload: payload), snapshot)
         XCTAssertEqual(
             try SteamLaunchConfigurationSnapshot(canonicalPayload: payload).canonicalPayload(),
             payload
+        )
+    }
+
+    func testStandardFrameGenerationAndFrameCheckRoundTrip() throws {
+        let snapshot = try SteamLaunchConfigurationSnapshot(
+            identity: .standard,
+            graphicsBackend: .d3dMetalNVIDIA,
+            frameGenerationConfiguration: FrameGenerationConfiguration(
+                isEnabled: true,
+                targetFrameRate: .fps120,
+                isFrameCheckEnabled: true
+            )
+        )
+
+        let payload = try snapshot.canonicalPayload()
+        let restored = try SteamLaunchConfigurationSnapshot(
+            canonicalPayload: payload
+        )
+        XCTAssertEqual(restored, snapshot)
+        XCTAssertTrue(restored.frameGenerationConfiguration.isEnabled)
+        XCTAssertTrue(
+            restored.frameGenerationConfiguration.isFrameCheckEnabled
+        )
+        XCTAssertEqual(
+            restored.frameGenerationConfiguration.targetFrameRate,
+            .fps120
+        )
+
+        let explicitFrameCheckOffSnapshot = try SteamLaunchConfigurationSnapshot(
+            identity: .standard,
+            graphicsBackend: .d3dMetalNVIDIA,
+            frameGenerationConfiguration: FrameGenerationConfiguration(
+                isEnabled: true,
+                targetFrameRate: .fps120,
+                isFrameCheckEnabled: false
+            )
+        )
+        let explicitFrameCheckOffRestored = try SteamLaunchConfigurationSnapshot(
+            canonicalPayload: explicitFrameCheckOffSnapshot.canonicalPayload()
+        )
+        XCTAssertTrue(
+            explicitFrameCheckOffRestored.frameGenerationConfiguration.isEnabled
+        )
+        XCTAssertFalse(
+            explicitFrameCheckOffRestored.frameGenerationConfiguration
+                .isFrameCheckEnabled
         )
     }
 
@@ -438,8 +487,8 @@ final class SteamLaunchConfigurationTests: XCTestCase {
 
         let nonminimal = try replacing(
             in: payload,
-            target: Data("schemaVersion=1:1".utf8),
-            replacement: Data("schemaVersion=01:1".utf8)
+            target: Data("schemaVersion=1:5".utf8),
+            replacement: Data("schemaVersion=01:5".utf8)
         )
         XCTAssertThrowsError(try SteamLaunchConfigurationSnapshot(canonicalPayload: nonminimal))
 
@@ -469,6 +518,177 @@ final class SteamLaunchConfigurationTests: XCTestCase {
         )
         invalidUTF8[profileFieldPrefixRange.upperBound] = 0xff
         XCTAssertThrowsError(try SteamLaunchConfigurationSnapshot(canonicalPayload: invalidUTF8))
+    }
+
+    func testLegacyCanonicalPayloadMigratesWithFrameGenerationOff() throws {
+        let legacyPayload = canonicalPayload(
+            header: "forgeplay-steam-launch-configuration-v1",
+            fields: [
+                ("schemaVersion", "1"),
+                ("mode", SteamLaunchMode.standard.rawValue),
+                (
+                    "configurationIdentity",
+                    SteamLaunchConfigurationIdentity.standard
+                        .configurationIdentity
+                ),
+                ("steamAppID", ""),
+                ("profileID", ""),
+                ("recipeRevision", ""),
+                ("graphicsBackend", SteamGraphicsBackendIdentifier.d3dMetal.rawValue),
+                ("networkPolicy", SteamNetworkPolicyIdentifier.standard.rawValue),
+                ("audioInputPolicy", SteamAudioInputPolicyIdentifier.disabled.rawValue),
+                (
+                    "synchronizationPolicy",
+                    SteamSynchronizationPolicyIdentifier.automatic.rawValue
+                ),
+                ("videoMemoryPolicy", SteamVideoMemoryPolicyIdentifier.automatic.rawValue),
+                ("gameModeEnabled", "1"),
+                ("fpsCursorPolicy", FPSCursorCapturePolicy.off.rawValue),
+                ("controllerPolicy", ControllerCompatibilityPolicy.automatic.rawValue),
+                ("keyboardPreset", KeyboardMappingPreset.systemDefault.rawValue),
+                ("hasCustomPermutation", "0"),
+                ("customCommandRole", "-"),
+                ("customOptionRole", "-"),
+                ("customControlRole", "-")
+            ]
+        )
+
+        let migrated = try SteamLaunchConfigurationSnapshot(
+            canonicalPayload: legacyPayload
+        )
+        XCTAssertEqual(
+            migrated.schemaVersion,
+            SteamLaunchConfigurationSnapshot.currentSchemaVersion
+        )
+        XCTAssertEqual(migrated.frameGenerationConfiguration, .off)
+        XCTAssertTrue(
+            try migrated.canonicalPayload().starts(
+                with: Data("forgeplay-steam-launch-configuration-v5\n".utf8)
+            )
+        )
+    }
+
+    func testDeployedFrameGenerationSchemasAndInterimSchema2MigrateToSchema5()
+        throws
+    {
+        let commonPrefix: [(String, String)] = [
+            ("mode", SteamLaunchMode.standard.rawValue),
+            (
+                "configurationIdentity",
+                SteamLaunchConfigurationIdentity.standard.configurationIdentity
+            ),
+            ("steamAppID", ""),
+            ("profileID", ""),
+            ("recipeRevision", ""),
+            ("graphicsBackend", "d3dMetalNVIDIA")
+        ]
+        let commonSuffix: [(String, String)] = [
+            ("networkPolicy", "standard"),
+            ("audioInputPolicy", "disabled"),
+            ("synchronizationPolicy", "automatic"),
+            ("videoMemoryPolicy", "automatic"),
+            ("gameModeEnabled", "1"),
+            ("fpsCursorPolicy", "off"),
+            ("controllerPolicy", "automatic"),
+            ("keyboardPreset", "systemDefault"),
+            ("hasCustomPermutation", "0"),
+            ("customCommandRole", "-"),
+            ("customOptionRole", "-"),
+            ("customControlRole", "-")
+        ]
+        let deployedV2 = canonicalPayload(
+            header: "forgeplay-steam-launch-configuration-v2",
+            fields: [("schemaVersion", "2")] + commonPrefix + [
+                ("d3dMetalFrameGenerationMode", "off"),
+                ("d3dMetalNVIDIAFrameGenerationMode", "midpoint"),
+                ("dxmtFrameGenerationMode", "off"),
+                ("d9vkFrameGenerationMode", "off"),
+                ("vulkanFrameGenerationMode", "off")
+            ] + commonSuffix
+        )
+        let deployedV3 = canonicalPayload(
+            header: "forgeplay-steam-launch-configuration-v3",
+            fields: [("schemaVersion", "3")] + commonPrefix + [
+                ("frameGenerationEnabled", "1")
+            ] + commonSuffix
+        )
+        let deployedV4 = canonicalPayload(
+            header: "forgeplay-steam-launch-configuration-v4",
+            fields: [("schemaVersion", "4")] + commonPrefix + [
+                ("frameGenerationTargetFPS", "120")
+            ] + commonSuffix
+        )
+        let interimV2 = canonicalPayload(
+            header: "forgeplay-steam-launch-configuration-v2",
+            fields: [("schemaVersion", "2")] + commonPrefix + [
+                ("networkPolicy", "standard"),
+                ("audioInputPolicy", "disabled"),
+                ("synchronizationPolicy", "automatic"),
+                ("videoMemoryPolicy", "automatic"),
+                ("frameGenerationEnabled", "1"),
+                ("frameGenerationTargetFPS", "120"),
+                ("frameCheckEnabled", "0"),
+                ("gameModeEnabled", "1"),
+                ("fpsCursorPolicy", "off"),
+                ("controllerPolicy", "automatic"),
+                ("keyboardPreset", "systemDefault"),
+                ("hasCustomPermutation", "0"),
+                ("customCommandRole", "-"),
+                ("customOptionRole", "-"),
+                ("customControlRole", "-")
+            ]
+        )
+
+        for payload in [deployedV2, deployedV3, deployedV4] {
+            let migrated = try SteamLaunchConfigurationSnapshot(
+                canonicalPayload: payload
+            )
+            XCTAssertEqual(migrated.schemaVersion, 5)
+            XCTAssertTrue(migrated.frameGenerationConfiguration.isEnabled)
+            XCTAssertTrue(
+                migrated.frameGenerationConfiguration.isFrameCheckEnabled
+            )
+            XCTAssertTrue(
+                try migrated.canonicalPayload().starts(
+                    with: Data(
+                        "forgeplay-steam-launch-configuration-v5\n".utf8
+                    )
+                )
+            )
+        }
+
+        let interimMigrated = try SteamLaunchConfigurationSnapshot(
+            canonicalPayload: interimV2
+        )
+        XCTAssertTrue(interimMigrated.frameGenerationConfiguration.isEnabled)
+        XCTAssertFalse(
+            interimMigrated.frameGenerationConfiguration.isFrameCheckEnabled
+        )
+
+        let invalidRendererMode = try replacing(
+            in: deployedV2,
+            target: Data(
+                "d3dMetalNVIDIAFrameGenerationMode=8:midpoint".utf8
+            ),
+            replacement: Data(
+                "d3dMetalNVIDIAFrameGenerationMode=8:garbage!".utf8
+            )
+        )
+        XCTAssertThrowsError(
+            try SteamLaunchConfigurationSnapshot(
+                canonicalPayload: invalidRendererMode
+            )
+        )
+        let invalidTarget = try replacing(
+            in: deployedV4,
+            target: Data("frameGenerationTargetFPS=3:120".utf8),
+            replacement: Data("frameGenerationTargetFPS=3:999".utf8)
+        )
+        XCTAssertThrowsError(
+            try SteamLaunchConfigurationSnapshot(
+                canonicalPayload: invalidTarget
+            )
+        )
     }
 
     func testUnsupportedSchemaVersionIsRejectedWithoutFallback() {
@@ -551,6 +771,19 @@ final class SteamLaunchConfigurationTests: XCTestCase {
         var result = data
         result.replaceSubrange(range, with: replacement)
         return result
+    }
+
+    private func canonicalPayload(
+        header: String,
+        fields: [(String, String)]
+    ) -> Data {
+        var data = Data((header + "\n").utf8)
+        for (name, value) in fields {
+            data.append(contentsOf: "\(name)=\(value.utf8.count):".utf8)
+            data.append(contentsOf: value.utf8)
+            data.append(10)
+        }
+        return data
     }
 
     private func makeProviderReceipt(

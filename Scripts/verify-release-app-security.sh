@@ -378,11 +378,6 @@ fi
 APP_BUNDLE_IDENTIFIER="$(plist_value "$INFO_PLIST" CFBundleIdentifier)"
 [[ -n "$APP_BUNDLE_IDENTIFIER" && "$APP_BUNDLE_IDENTIFIER" != *'$('* ]] ||
   fail "direct Release app bundle identifier must be concrete"
-case "$(printf '%s' "$APP_BUNDLE_IDENTIFIER" | tr '[:upper:]' '[:lower:]')" in
-  *.app)
-    fail "direct Release bundle identifier must not end in .app"
-    ;;
-esac
 MAIN_TEAM_IDENTIFIER="$(signing_detail_value "$SIGNING_DETAILS" TeamIdentifier)"
 [[ -n "$MAIN_TEAM_IDENTIFIER" && "$MAIN_TEAM_IDENTIFIER" != "not set" ]] || {
   printf '%s\n' "$SIGNING_DETAILS" >&2

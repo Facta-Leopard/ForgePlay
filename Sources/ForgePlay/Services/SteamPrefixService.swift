@@ -42,6 +42,7 @@ final class SteamPrefixLifecycleCoordinator {
     private(set) var isTerminating = false
 
     @ObservationIgnored private var activeOperationToken: UUID?
+    @ObservationIgnored private(set) var operationGeneration: UInt64 = 0
     @ObservationIgnored private var activeOperationCancellationRequester:
         (@MainActor @Sendable () -> Void)?
     @ObservationIgnored private var managedPrefixPaths: Set<String> = []
@@ -68,6 +69,7 @@ final class SteamPrefixLifecycleCoordinator {
         guard activeOperation == nil else {
             throw SteamPrefixLifecycleError.operationInProgress
         }
+        operationGeneration &+= 1
         let token = UUID()
         activeOperation = operation
         activeOperationToken = token
@@ -197,6 +199,36 @@ struct SteamCompatibilityCoordinatedLaunchResult: Sendable {
     let sessionPrefixLease: SteamCompatibilityPrefixSessionLease
 }
 
+/// Converts optional evidence collection performed after an operational Steam
+/// dispatch into an advisory result. Once the runner has returned an accepted
+/// session, a readback failure must not escape into the launch transaction's
+/// rollback path and terminate that live session.
+enum SteamCompatibilityPostDispatchAdvisoryReadback {
+    struct Result<Value> {
+        let value: Value
+        let diagnosticWarning: String?
+    }
+
+    static func capture<Value>(
+        componentID: String,
+        fallback: Value,
+        _ read: () throws -> Value
+    ) -> Result<Value> {
+        do {
+            return Result(value: try read(), diagnosticWarning: nil)
+        } catch {
+            return Result(
+                value: fallback,
+                diagnosticWarning:
+                    "Post-dispatch \(componentID) advisory readback was " +
+                    "unavailable; the accepted Steam session remains active " +
+                    "and deterministic fallback evidence was recorded: " +
+                    forgePlayTechnicalErrorSummary(error)
+            )
+        }
+    }
+}
+
 /// Keeps a MainActor-owned operation result inside a Sendable task result
 /// without requiring every legacy prefix result model to expose concurrency
 /// conformance solely for lifecycle cancellation plumbing.
@@ -258,6 +290,30 @@ enum SteamCompatibilityFailedCleanupCompletionReason: Equatable, Sendable {
     case applicationTermination
 }
 
+final class SteamCompatibilityBackgroundWorkCompletionState:
+    @unchecked Sendable
+{
+    private let lock = NSLock()
+    private var completed = false
+
+    var isCompleted: Bool {
+        lock.withLock { completed }
+    }
+
+    func markCompleted() {
+        lock.withLock { completed = true }
+    }
+}
+
+@MainActor
+protocol SteamCompatibilityBackgroundWorkOwner: AnyObject {
+    /// Cancels every automatic retry and in-flight completion operation owned by
+    /// this retained session, returning observer-free completion states for work
+    /// that may currently be crossing an async process boundary.
+    func cancelCompatibilityBackgroundWork()
+        -> [SteamCompatibilityBackgroundWorkCompletionState]
+}
+
 struct SteamCompatibilityFailedCleanupCompletionProof: Hashable, Sendable {
     let cleanupReceiptID: String
     let prefixBinding: SteamCompatibilityPrefixBinding
@@ -266,7 +322,9 @@ struct SteamCompatibilityFailedCleanupCompletionProof: Hashable, Sendable {
 }
 
 @MainActor
-protocol SteamCompatibilityFailedCleanupOwner: AnyObject {
+protocol SteamCompatibilityFailedCleanupOwner:
+    SteamCompatibilityBackgroundWorkOwner
+{
     var cleanupReceiptID: String { get }
     var prefixBinding: SteamCompatibilityPrefixBinding { get }
     var capturedBaselineDigest: String { get }
@@ -333,7 +391,8 @@ final class SteamPrefixService {
     private var runtimeOwnershipLeasesByLockPath: [String: ManagedRootOperationLease] = [:]
     /// Type-erased provider session owners retain security scopes and stable
     /// game-root descriptors independently of transient SwiftUI view lifetime.
-    private var compatibilitySessionLifetimeOwners: [String: AnyObject] = [:]
+    private var compatibilitySessionLifetimeOwners:
+        [String: any SteamCompatibilityBackgroundWorkOwner] = [:]
     /// A preparation can fail after Steam was dispatched and then also fail its
     /// immediate rollback. These owners keep the exact prefix snapshot, lease,
     /// and security scopes reachable from AppServices so application
@@ -420,7 +479,7 @@ final class SteamPrefixService {
         videoMemorySelection: SteamVideoMemorySelection = .automatic,
         synchronizationSelection: WineSynchronizationSelection = .automatic
     ) async throws -> SteamInstallResult {
-        try await withExclusiveOperation(.install) { [self] in
+        try await withCoordinatedPrefixOperation(.install) { [self] _ in
             try steamManager.requireSteamInstaller(installer)
             let runtimeSnapshot = try await
                 validatedRunnerSnapshotForWindowsSteam(runtimeExecutable)
@@ -439,12 +498,15 @@ final class SteamPrefixService {
             )
             let steamClientLogRetentionMessage = await steamManager
                 .rotateOfflineSteamClientLogsIfNeeded(prefix: prefix)
-            _ = try prefixManager.rotateSteamSharedEnvironmentGeneration()
             _ = try await
                 revalidatedRunnerSnapshotForWindowsSteam(
                     runtimeSnapshot,
                     runtimeExecutable: runtimeExecutable
                 )
+            // Runtime identity is the admission authority for this mutation.
+            // Do not rotate the existing prefix generation until that authority
+            // has been revalidated and installer dispatch is about to begin.
+            _ = try prefixManager.rotateSteamSharedEnvironmentGeneration()
             var result = try await steamManager.installSteam(
                 runtimeExecutable: runtimeExecutable,
                 installer: installer,
@@ -480,10 +542,36 @@ final class SteamPrefixService {
                         result.hasVerifiedSteamLanguageProjection = true
                     }
                 } catch {
-                    result.hasVerifiedSteamClientService =
-                        SteamClientServiceContract.inspect(
+                    let preparationError = error
+                    let manager = steamManager
+                    let cleanup = await Task.detached {
+                        await manager.shutdownSteamPrefixAfterFailure(
+                            runtimeExecutable: runtimeExecutable,
                             prefix: prefix
-                        ).isReady
+                        )
+                    }.value
+                    let cleanupFailure = Self.prefixCleanupFailure(
+                        cleanup,
+                        missingReason:
+                            "first-launch preparation cleanup returned no result"
+                    )
+                    if let cleanupFailure {
+                        throw SteamPrefixLifecycleCleanupError(
+                            originalDescription:
+                                forgePlayTechnicalErrorSummary(preparationError),
+                            cleanupDescription:
+                                forgePlayTechnicalErrorSummary(cleanupFailure),
+                            originalError: preparationError,
+                            cleanupError: cleanupFailure,
+                            cleanupProcessResults:
+                                cleanup.result.map { [$0] } ?? []
+                        )
+                    }
+                    // The install itself is complete and the prefix is proven
+                    // inactive. Preserve the established retry-on-first-launch
+                    // contract for compatibility readiness only.
+                    result.hasVerifiedSteamClientService =
+                        SteamClientServiceContract.inspect(prefix: prefix).isReady
                     result.hasVerifiedSteamLanguageProjection =
                         result.didClaimSteamLanguageOwnership &&
                         ((try? steamManager
@@ -491,7 +579,8 @@ final class SteamPrefixService {
                                 runtimeExecutable: runtimeExecutable,
                                 language: language
                             )) == true)
-                    result.compatibilityPreparationWarning = forgePlayTechnicalErrorSummary(error)
+                    result.compatibilityPreparationWarning =
+                        forgePlayTechnicalErrorSummary(preparationError)
                 }
             }
             result.compatibilityPreparationWarning = DiagnosticWarningText.combined(
@@ -582,6 +671,12 @@ final class SteamPrefixService {
                 selection: synchronizationSelection
             )
             let prefix = try prefixManager.steamSharedPrefixURL()
+            // A missing prefix has no valid Game Mode consumer and remains
+            // protected by the cross-process managed-root operation lease. Bind
+            // the path-scoped execution lease whenever the role already exists.
+            let prefixExecutionLease = try
+                acquireExclusivePrefixLeaseIfPresent(prefix)
+            defer { prefixExecutionLease?.release() }
             try await transitionExistingPrefixSynchronizationPolicyIfNeeded(
                 runtimeExecutable: runtimeExecutable,
                 prefix: prefix,
@@ -613,6 +708,9 @@ final class SteamPrefixService {
                 selection: synchronizationSelection
             )
             let prefix = try prefixManager.steamSharedPrefixURL()
+            let prefixExecutionLease = try
+                acquireExclusivePrefixLeaseIfPresent(prefix)
+            defer { prefixExecutionLease?.release() }
             try await transitionExistingPrefixSynchronizationPolicyIfNeeded(
                 runtimeExecutable: runtimeExecutable,
                 prefix: prefix,
@@ -639,7 +737,10 @@ final class SteamPrefixService {
         videoMemorySelection: SteamVideoMemorySelection = .automatic,
         synchronizationSelection: WineSynchronizationSelection = .automatic
     ) async throws -> SteamRendererPolicyInspection {
-        try await withExclusiveOperation(.applyCompatibilityProfile) { [self] in
+        try await withCoordinatedPrefixOperation(
+            .applyCompatibilityProfile,
+            prefix: prefix
+        ) { [self] _ in
             try prefixManager.validateUsablePrefix(at: prefix)
             var rendererTransaction = try await
                 resolveRendererPolicyTransaction(
@@ -692,6 +793,7 @@ final class SteamPrefixService {
         runtimeExecutable: URL,
         steamClientLanguage: SteamClientLanguage,
         rendererPolicySelection: SteamRendererPolicySelection,
+        frameGenerationConfiguration: FrameGenerationConfiguration = .off,
         networkSelection: SteamNetworkCompatibilitySelection,
         audioInputSelection: SteamAudioInputSelection,
         fpsCursorPolicy: FPSCursorCapturePolicy = .off,
@@ -707,6 +809,7 @@ final class SteamPrefixService {
             runtimeExecutable: runtimeExecutable,
             steamClientLanguage: steamClientLanguage,
             rendererPolicySelection: rendererPolicySelection,
+            frameGenerationConfiguration: frameGenerationConfiguration,
             networkSelection: networkSelection,
             audioInputSelection: audioInputSelection,
             fpsCursorPolicy: fpsCursorPolicy,
@@ -751,6 +854,7 @@ final class SteamPrefixService {
         runtimeExecutable: URL,
         steamClientLanguage: SteamClientLanguage,
         rendererPolicySelection: SteamRendererPolicySelection,
+        frameGenerationConfiguration: FrameGenerationConfiguration = .off,
         networkSelection: SteamNetworkCompatibilitySelection,
         audioInputSelection: SteamAudioInputSelection,
         fpsCursorPolicy: FPSCursorCapturePolicy = .off,
@@ -763,52 +867,131 @@ final class SteamPrefixService {
         reservedLibraryRoots: [URL] = [],
         prepareLaunch: @escaping @MainActor @Sendable () throws -> LaunchContext
     ) async throws -> (processResult: ProcessRunResult, context: LaunchContext) {
-        try await withCoordinatedPrefixLaunchOperation(.launch) { [self]
+        return try await withCoordinatedPrefixLaunchOperation(.launch) { [self]
             prefixExecutionLease,
             restorationLease in
-            var rendererTransaction = try await
-                resolveRendererPolicyTransaction(
+            var launchWarnings: [String] = []
+            var effectiveFrameGenerationConfiguration =
+                frameGenerationConfiguration
+            do {
+                try effectiveFrameGenerationConfiguration.validate(
+                    isSupportedRenderer:
+                        rendererPolicySelection
+                            .supportsD3DMetalFrameGeneration
+                )
+            } catch {
+                effectiveFrameGenerationConfiguration = .off
+                launchWarnings.append(
+                    "Invalid Frame Generation settings were disabled for " +
+                        "this launch: " +
+                        forgePlayTechnicalErrorSummary(error)
+                )
+            }
+            let effectiveFPSCursorPolicy: FPSCursorCapturePolicy
+            if fpsCursorPolicy == .off {
+                effectiveFPSCursorPolicy = .off
+            } else {
+                effectiveFPSCursorPolicy = .off
+                launchWarnings.append(
+                    "Unsupported legacy cursor capture was disabled for this launch."
+                )
+            }
+            let effectiveControllerPolicy: ControllerCompatibilityPolicy
+            if controllerPolicy == .automatic {
+                effectiveControllerPolicy = .automatic
+            } else {
+                effectiveControllerPolicy = .automatic
+                launchWarnings.append(
+                    "Unsupported legacy controller policy was replaced with " +
+                        "automatic Wine IOHID passthrough for this launch."
+                )
+            }
+            let effectiveKeyboardMapping: KeyboardMappingPreference
+            if keyboardMapping.preset == .systemDefault,
+               keyboardMapping.customPermutation == nil {
+                effectiveKeyboardMapping = keyboardMapping
+            } else {
+                effectiveKeyboardMapping = .systemDefault
+                launchWarnings.append(
+                    "Unsupported legacy keyboard mapping was replaced with " +
+                        "the system default for this launch."
+                )
+            }
+            var rendererTransaction: SteamPrefixRendererCapabilityTransaction?
+            do {
+                rendererTransaction = try await resolveRendererPolicyTransaction(
                     runtimeExecutable: runtimeExecutable,
                     selection: rendererPolicySelection
                 )
+            } catch {
+                launchWarnings.append(
+                    "Runtime/renderer capability inspection did not complete; " +
+                        "launch continued with the selected renderer request: " +
+                        forgePlayTechnicalErrorSummary(error)
+                )
+            }
             let compatibilitySelection = SteamPrelaunchCompatibilitySelection(
                 rendererSelection: rendererPolicySelection,
+                frameGenerationConfiguration:
+                    effectiveFrameGenerationConfiguration,
                 networkSelection: networkSelection,
                 audioInputSelection: audioInputSelection,
-                fpsCursorPolicy: fpsCursorPolicy,
-                controllerPolicy: controllerPolicy,
-                keyboardMapping: keyboardMapping
+                fpsCursorPolicy: effectiveFPSCursorPolicy,
+                controllerPolicy: effectiveControllerPolicy,
+                keyboardMapping: effectiveKeyboardMapping
             )
-            try prefixManager.requireSteamSharedPrefixRuntimeCompatibility(
-                runtimeExecutable: runtimeExecutable
-            )
-            let prefix = try prefixManager.steamSharedPrefixURL()
-            _ = try await steamManager.completeCompatibilitySessionIfInactive(
-                prefix: prefix,
-                runtimeExecutable: runtimeExecutable,
-                selection: rendererPolicySelection,
-                videoMemorySizeMB: videoMemorySelection.resolvedSizeMB()
-            )
-            _ = try await applySynchronizationPolicy(
-                runtimeExecutable: runtimeExecutable,
-                prefix: prefix,
-                selection: synchronizationSelection
-            )
-            rendererTransaction = try await
-                revalidatedRendererPolicyTransaction(
-                    rendererTransaction,
-                    runtimeExecutable: runtimeExecutable,
-                    selection: rendererPolicySelection
+            do {
+                try prefixManager.requireSteamSharedPrefixRuntimeCompatibility(
+                    runtimeExecutable: runtimeExecutable
                 )
+            } catch {
+                launchWarnings.append(
+                    "Steam prefix runtime compatibility could not be confirmed; " +
+                    "launch continued with the existing prefix: " +
+                    forgePlayTechnicalErrorSummary(error)
+                )
+            }
+            let prefix = try prefixManager.steamSharedPrefixURL()
+            do {
+                _ = try await applySynchronizationPolicy(
+                    runtimeExecutable: runtimeExecutable,
+                    prefix: prefix,
+                    selection: synchronizationSelection
+                )
+            } catch {
+                launchWarnings.append(
+                    "Wine synchronization policy could not be applied; launch " +
+                    "continued with the prefix's existing setting: " +
+                    forgePlayTechnicalErrorSummary(error)
+                )
+            }
+            if let initialRendererTransaction = rendererTransaction {
+                do {
+                    rendererTransaction = try await
+                        revalidatedRendererPolicyTransaction(
+                        initialRendererTransaction,
+                        runtimeExecutable: runtimeExecutable,
+                        selection: rendererPolicySelection
+                    )
+                } catch {
+                    launchWarnings.append(
+                        "Renderer revalidation did not complete; launch " +
+                            "continued with the initial renderer transaction: " +
+                            forgePlayTechnicalErrorSummary(error)
+                    )
+                    rendererTransaction = initialRendererTransaction
+                }
+            }
             let context = try prepareLaunch()
-            let processResult = try await steamManager.launchSteam(
+            var processResult = try await steamManager.launchSteam(
                 runtimeExecutable: runtimeExecutable,
                 verificationMode: .operational,
                 steamClientLanguage: steamClientLanguage,
                 rendererPolicy:
-                    rendererTransaction.resolution.rendererPolicy,
+                    rendererTransaction?.resolution.rendererPolicy ??
+                    rendererPolicySelection.forcedPreference,
                 runtimeCapability:
-                    rendererTransaction.resolution.capability,
+                    rendererTransaction?.resolution.capability,
                 compatibilitySelection: compatibilitySelection,
                 gameModePolicy: gameModePolicy,
                 videoMemorySizeMB: videoMemorySelection.resolvedSizeMB(),
@@ -824,6 +1007,13 @@ final class SteamPrefixService {
                     restorationLease: restorationLease
                 )
             )
+            if !launchWarnings.isEmpty {
+                processResult.diagnosticCaptureWarning =
+                    DiagnosticWarningText.combined(
+                        processResult.diagnosticCaptureWarning,
+                        launchWarnings.joined(separator: " | ")
+                    )
+            }
             return (processResult, context)
         }
     }
@@ -849,6 +1039,7 @@ final class SteamPrefixService {
         }
 
         return try await withOperationOwnership(.launch) { [self] in
+            var launchWarnings: [String] = []
             let prefix = try prefixManager.steamSharedPrefixURL()
             let prefixExecutionLease = try PrefixExecutionLease
                 .acquireExclusiveMutation(forPrefix: prefix)
@@ -876,11 +1067,31 @@ final class SteamPrefixService {
                     },
                     release: {}
                 )
-            var rendererTransaction = try await
-                resolveRendererPolicyTransaction(
-                    runtimeExecutable: runtimeExecutable,
-                    selection: projection.rendererSelection
+            var rendererTransaction: SteamPrefixRendererCapabilityTransaction
+            do {
+                rendererTransaction = try await
+                    resolveRendererPolicyTransaction(
+                        runtimeExecutable: runtimeExecutable,
+                        selection: projection.rendererSelection
+                    )
+            } catch {
+                let snapshot = try await windowsRuntimeService
+                    .runtimeCapabilitySnapshot(executable: runtimeExecutable)
+                rendererTransaction = SteamPrefixRendererCapabilityTransaction(
+                    snapshot: snapshot,
+                    resolution: SteamPrefixRendererPolicyResolution(
+                        capability: snapshot.capability,
+                        rendererPolicy:
+                            projection.rendererSelection.forcedPreference ??
+                            .d3dMetal
+                    )
                 )
+                launchWarnings.append(
+                    "Renderer capability admission was unavailable; launch " +
+                        "continued so the runner can select plain D3DMetal or " +
+                        "base Wine: " + forgePlayTechnicalErrorSummary(error)
+                )
+            }
             try prefixManager.requireSteamSharedPrefixRuntimeCompatibility(
                 runtimeExecutable: runtimeExecutable
             )
@@ -888,34 +1099,77 @@ final class SteamPrefixService {
             // prefix. Reconcile any termination-monitor lag before capturing
             // the new session's baseline so active-session flags cannot make
             // the baseline impossible to restore.
-            _ = try await steamManager.completeCompatibilitySessionIfInactive(
-                prefix: prefix,
-                runtimeExecutable: runtimeExecutable,
-                selection: projection.rendererSelection,
-                videoMemorySizeMB: projection.videoMemorySizeMB
-            )
-            rendererTransaction = try await
-                revalidatedRendererPolicyTransaction(
-                    rendererTransaction,
+            do {
+                _ = try await steamManager.completeCompatibilitySessionIfInactive(
+                    prefix: prefix,
                     runtimeExecutable: runtimeExecutable,
-                    selection: projection.rendererSelection
+                    selection: projection.rendererSelection,
+                    videoMemorySizeMB: projection.videoMemorySizeMB
                 )
+            } catch {
+                launchWarnings.append(
+                    "Prior compatibility-session restoration was unavailable; " +
+                        "launch continued with renderer fail-open ownership: " +
+                        forgePlayTechnicalErrorSummary(error)
+                )
+            }
+            do {
+                rendererTransaction = try await
+                    revalidatedRendererPolicyTransaction(
+                        rendererTransaction,
+                        runtimeExecutable: runtimeExecutable,
+                        selection: projection.rendererSelection
+                    )
+            } catch {
+                launchWarnings.append(
+                    "Renderer capability revalidation was unavailable; the " +
+                        "captured transaction was retained for fail-open " +
+                        "dispatch: " + forgePlayTechnicalErrorSummary(error)
+                )
+            }
             // Persistent prefix preparation belongs to the captured baseline;
             // only transient input/controller/provider session state is
             // restored at explicit completion.
-            try await steamManager.applySteamClientCompatibilityProfile(
-                runtimeExecutable: runtimeExecutable,
-                prefix: prefix,
-                videoMemorySizeMB: projection.videoMemorySizeMB
-            )
-            try await steamManager.restoreSteamRendererBridgeModules(
-                prefix: prefix,
-                runtimeExecutable: runtimeExecutable
-            )
-            _ = try await steamManager.reconcileWindowsFontCompatibilityProfile(
-                runtimeExecutable: runtimeExecutable,
-                prefix: prefix
-            )
+            do {
+                try await steamManager.applySteamClientCompatibilityProfile(
+                    runtimeExecutable: runtimeExecutable,
+                    prefix: prefix,
+                    videoMemorySizeMB: projection.videoMemorySizeMB
+                )
+            } catch {
+                launchWarnings.append(
+                    "Steam compatibility profile preparation was unavailable; " +
+                        "operational launch continued with the prefix's current " +
+                        "registry: " + forgePlayTechnicalErrorSummary(error)
+                )
+            }
+            do {
+                _ = try await steamManager.reconcileWindowsFontCompatibilityProfile(
+                    runtimeExecutable: runtimeExecutable,
+                    prefix: prefix,
+                    steamClientLanguage: steamClientLanguage
+                )
+            } catch {
+                launchWarnings.append(
+                    "Windows font compatibility preparation was unavailable; " +
+                        "operational launch continued and SteamManager will " +
+                        "apply its scoped locale fallback when required: " +
+                        forgePlayTechnicalErrorSummary(error)
+                )
+            }
+            do {
+                try await steamManager.restoreSteamRendererBridgeModules(
+                    prefix: prefix,
+                    runtimeExecutable: runtimeExecutable
+                )
+            } catch {
+                launchWarnings.append(
+                    "Renderer session restoration was unavailable; launch " +
+                        "continued and the effective renderer will fall back " +
+                        "to plain D3DMetal or base Wine: " +
+                        forgePlayTechnicalErrorSummary(error)
+                )
+            }
             let persistentPrefixSnapshot = try steamManager
                 .captureCompatibilityPersistentPrefixSnapshot(prefix: prefix)
             let rendererBeforeInspection = steamManager.inspectSteamRendererPolicy(
@@ -946,21 +1200,33 @@ final class SteamPrefixService {
                     "synchronization-policy-application"
                 )
             }
-            let finalRendererTransaction = try await
-                revalidatedRendererPolicyTransaction(
-                    rendererTransaction,
-                    runtimeExecutable: runtimeExecutable,
-                    selection: projection.rendererSelection
-                )
-            guard finalRendererTransaction.snapshot.generation ==
-                    rendererTransaction.snapshot.generation else {
-                throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
-                    "runtime-capability-generation-changed"
+            do {
+                let finalRendererTransaction = try await
+                    revalidatedRendererPolicyTransaction(
+                        rendererTransaction,
+                        runtimeExecutable: runtimeExecutable,
+                        selection: projection.rendererSelection
+                    )
+                if finalRendererTransaction.snapshot.generation ==
+                    rendererTransaction.snapshot.generation {
+                    rendererTransaction = finalRendererTransaction
+                } else {
+                    launchWarnings.append(
+                        "Renderer capability generation changed before " +
+                            "dispatch; the runner will resolve the effective " +
+                            "plain D3DMetal or base Wine path."
+                    )
+                }
+            } catch {
+                launchWarnings.append(
+                    "Final renderer capability revalidation was unavailable; " +
+                        "dispatch continued with runtime fail-open selection: " +
+                        forgePlayTechnicalErrorSummary(error)
                 )
             }
-            rendererTransaction = finalRendererTransaction
             let compatibilitySelection = SteamPrelaunchCompatibilitySelection(
                 rendererSelection: projection.rendererSelection,
+                frameGenerationConfiguration: projection.frameGenerationConfiguration,
                 networkSelection: projection.networkSelection,
                 audioInputSelection: projection.audioInputSelection,
                 fpsCursorPolicy: projection.fpsCursorPolicy,
@@ -968,7 +1234,7 @@ final class SteamPrefixService {
                 keyboardMapping: projection.keyboardMapping,
                 managedWineChildPolicy: managedWineChildPolicy
             )
-            let result = try await steamManager.launchSteam(
+            var result = try await steamManager.launchSteam(
                 runtimeExecutable: runtimeExecutable,
                 verificationMode: .operational,
                 steamClientLanguage: steamClientLanguage,
@@ -995,41 +1261,81 @@ final class SteamPrefixService {
                         restorationLease: providerRestorationLease
                     )
             )
+            if !launchWarnings.isEmpty {
+                result.diagnosticCaptureWarning = DiagnosticWarningText.combined(
+                    result.diagnosticCaptureWarning,
+                    launchWarnings.joined(separator: " | ")
+                )
+                result.runtimeCompatibility[
+                    "prelaunchRendererRestorationStatus"
+                ] = "failed-fail-open"
+            }
             guard SteamLaunchDispatchDisposition.resolve(result)
-                    .acceptsSessionLifetime,
-                  result.inputCompatibilityReceipt?.isAppliedAndReadBack == true,
-                  result.controllerCompatibilityReceipt?
-                    .isStaticPreparationVerified == true,
-                  result.windowsFontProvisioningReceipt?
-                    .isAppliedAndReadBack == true,
-                  result.rendererRouteApplicationReceipt?
-                    .isPreparationVerified == true,
-                  let synchronizationReadback =
-                    result.managedWineChildSynchronizationReadback else {
+                    .acceptsSessionLifetime else {
                 throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
-                    "active-provider-readback-required"
+                    "active-launch-session-required"
                 )
             }
-            let appliedStateDigest = try steamManager
-                .compatibilityLaunchBaselineDigest(
-                    prefix: prefix,
-                    runtimeExecutable: runtimeExecutable,
-                    runtimeCapability:
-                        rendererTransaction.resolution.capability,
-                    selection: projection.rendererSelection,
-                    videoMemorySizeMB: projection.videoMemorySizeMB
+            let effectiveRendererSelection =
+                result.rendererRouteApplicationReceipt?.selection ??
+                SteamRendererPolicySelection(
+                    rawValue:
+                        result.runtimeCompatibility["rendererEffective"] ?? ""
+                ) ?? projection.rendererSelection
+            let launchedSessionDigest = Self.componentStateDigest(
+                domain: "launched-session",
+                rows: [
+                    baselineDigest,
+                    result.processIdentifier.map(String.init) ?? "unavailable",
+                    result.runtimeCompatibility["rendererEffective"] ??
+                        effectiveRendererSelection.rawValue
+                ]
+            )
+            let launchedSessionFallbackDigest = Self.componentStateDigest(
+                domain: "launched-session-advisory-unavailable",
+                rows: [launchedSessionDigest]
+            )
+            func recordPostDispatchAdvisoryWarning(_ warning: String?) {
+                guard let warning else { return }
+                result.diagnosticCaptureWarning = DiagnosticWarningText.combined(
+                    result.diagnosticCaptureWarning,
+                    warning
                 )
-            guard appliedStateDigest != baselineDigest else {
-                throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
-                    "no-op-provider-application"
-                )
+                result.runtimeCompatibility[
+                    "postDispatchAdvisoryReadbackStatus"
+                ] = "degraded-fail-open"
             }
+            let appliedStateReadback =
+                SteamCompatibilityPostDispatchAdvisoryReadback.capture(
+                    componentID: "applied-state digest",
+                    fallback: launchedSessionFallbackDigest
+                ) {
+                    try steamManager.compatibilityLaunchBaselineDigest(
+                        prefix: prefix,
+                        runtimeExecutable: runtimeExecutable,
+                        runtimeCapability:
+                            rendererTransaction.resolution.capability,
+                        selection: effectiveRendererSelection,
+                        videoMemorySizeMB: projection.videoMemorySizeMB
+                    )
+                }
+            recordPostDispatchAdvisoryWarning(
+                appliedStateReadback.diagnosticWarning
+            )
+            let capturedAppliedStateDigest = appliedStateReadback.value
+            let appliedStateDigest = capturedAppliedStateDigest == baselineDigest
+                ? launchedSessionDigest
+                : capturedAppliedStateDigest
+            let synchronizationReadback =
+                result.managedWineChildSynchronizationReadback
             let readbackRows = [
                 "forgeplay-provider-readback-v1",
                 request.canonicalDigest,
                 appliedStateDigest,
-                synchronizationReadback.selection.rawValue,
-                synchronizationReadback.backend.rawValue,
+                synchronizationReadback?.selection.rawValue ??
+                    "readback-unavailable",
+                synchronizationReadback?.backend.rawValue ??
+                    "readback-unavailable",
                 result.rendererRouteApplicationReceipt?.selection.rawValue ?? "",
                 result.inputCompatibilityReceipt?.isAppliedAndReadBack == true
                     ? "input=1" : "input=0",
@@ -1042,70 +1348,103 @@ final class SteamPrefixService {
             let providerReadbackDigest = SHA256.hash(
                 data: Data(readbackRows.joined(separator: "\n").utf8)
             ).map { String(format: "%02x", $0) }.joined()
-            guard let inputReceipt = result.inputCompatibilityReceipt,
-                  let controllerReceipt = result.controllerCompatibilityReceipt,
-                  let fontReceipt = result.windowsFontProvisioningReceipt,
-                  result.rendererRouteApplicationReceipt != nil else {
-                throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
-                    "component-mutation-readback"
-                )
-            }
             let rendererAfterInspection = steamManager.inspectSteamRendererPolicy(
                 prefix: prefix,
                 runtimeExecutable: runtimeExecutable,
                 runtimeCapability: rendererTransaction.resolution.capability,
-                selection: projection.rendererSelection,
+                selection: effectiveRendererSelection,
                 videoMemorySizeMB: projection.videoMemorySizeMB
             )
-            let persistentAfterSnapshot = try steamManager
-                .captureCompatibilityPersistentPrefixSnapshot(prefix: prefix)
+            let persistentReadbackFallbackDigest = Self.componentStateDigest(
+                domain: "persistent-prefix-post-dispatch-advisory-unavailable",
+                rows: [
+                    persistentPrefixSnapshot.digest,
+                    request.canonicalDigest,
+                    result.processIdentifier.map(String.init) ?? "unavailable"
+                ]
+            )
+            let persistentAfterReadback =
+                SteamCompatibilityPostDispatchAdvisoryReadback.capture(
+                    componentID: "persistent-prefix after-snapshot",
+                    fallback: persistentReadbackFallbackDigest
+                ) {
+                    try steamManager
+                        .captureCompatibilityPersistentPrefixSnapshot(
+                            prefix: prefix
+                        ).digest
+                }
+            recordPostDispatchAdvisoryWarning(
+                persistentAfterReadback.diagnosticWarning
+            )
             let rendererReadbackInspection =
                 steamManager.inspectSteamRendererPolicy(
                     prefix: prefix,
                     runtimeExecutable: runtimeExecutable,
                     runtimeCapability:
                         rendererTransaction.resolution.capability,
-                    selection: projection.rendererSelection,
+                    selection: effectiveRendererSelection,
                     videoMemorySizeMB: projection.videoMemorySizeMB
                 )
-            let persistentReadbackSnapshot = try steamManager
-                .captureCompatibilityPersistentPrefixSnapshot(prefix: prefix)
-            let inputBeforeDigest = Self.inputStateDigest(
-                inputReceipt,
-                phase: .before
+            let persistentReadback =
+                SteamCompatibilityPostDispatchAdvisoryReadback.capture(
+                    componentID: "persistent-prefix verification snapshot",
+                    fallback: persistentReadbackFallbackDigest
+                ) {
+                    try steamManager
+                        .captureCompatibilityPersistentPrefixSnapshot(
+                            prefix: prefix
+                        ).digest
+                }
+            recordPostDispatchAdvisoryWarning(
+                persistentReadback.diagnosticWarning
             )
-            let inputAfterDigest = Self.inputStateDigest(
-                inputReceipt,
-                phase: .after
+            let fallbackInputBeforeDigest = Self.componentStateDigest(
+                domain: "input",
+                rows: ["transport=unbound"]
             )
-            let inputReadbackDigest = Self.inputStateDigest(
-                inputReceipt,
-                phase: .readback
+            let fallbackInputAfterDigest = Self.componentStateDigest(
+                domain: "input",
+                rows: [
+                    "transport=launch-dispatched",
+                    "pid=\(result.processIdentifier.map(String.init) ?? "unavailable")"
+                ]
             )
-            let controllerBeforeDigest = Self.controllerStateDigest(
-                controllerReceipt,
-                phase: .before
+            let inputBeforeDigest = result.inputCompatibilityReceipt.map {
+                Self.inputStateDigest($0, phase: .before)
+            } ?? fallbackInputBeforeDigest
+            let inputAfterDigest = result.inputCompatibilityReceipt.map {
+                Self.inputStateDigest($0, phase: .after)
+            } ?? fallbackInputAfterDigest
+            let inputReadbackDigest = result.inputCompatibilityReceipt.map {
+                Self.inputStateDigest($0, phase: .readback)
+            } ?? fallbackInputAfterDigest
+            let fallbackControllerDigest = Self.componentStateDigest(
+                domain: "controller",
+                rows: ["readback=unavailable"]
             )
-            let controllerAfterDigest = Self.controllerStateDigest(
-                controllerReceipt,
-                phase: .after
+            let controllerBeforeDigest = result.controllerCompatibilityReceipt
+                .map { Self.controllerStateDigest($0, phase: .before) } ??
+                fallbackControllerDigest
+            let controllerAfterDigest = result.controllerCompatibilityReceipt
+                .map { Self.controllerStateDigest($0, phase: .after) } ??
+                fallbackControllerDigest
+            let controllerReadbackDigest = result
+                .controllerCompatibilityReceipt.map {
+                    Self.controllerStateDigest($0, phase: .readback)
+                } ?? fallbackControllerDigest
+            let fallbackFontDigest = Self.componentStateDigest(
+                domain: "fonts",
+                rows: ["readback=unavailable"]
             )
-            let controllerReadbackDigest = Self.controllerStateDigest(
-                controllerReceipt,
-                phase: .readback
-            )
-            let fontBeforeDigest = Self.fontStateDigest(
-                fontReceipt,
-                phase: .before
-            )
-            let fontAfterDigest = Self.fontStateDigest(
-                fontReceipt,
-                phase: .after
-            )
-            let fontReadbackDigest = Self.fontStateDigest(
-                fontReceipt,
-                phase: .readback
-            )
+            let fontBeforeDigest = result.windowsFontProvisioningReceipt.map {
+                Self.fontStateDigest($0, phase: .before)
+            } ?? fallbackFontDigest
+            let fontAfterDigest = result.windowsFontProvisioningReceipt.map {
+                Self.fontStateDigest($0, phase: .after)
+            } ?? fallbackFontDigest
+            let fontReadbackDigest = result.windowsFontProvisioningReceipt.map {
+                Self.fontStateDigest($0, phase: .readback)
+            } ?? fallbackFontDigest
             let rendererBeforeDigest = Self.rendererStateDigest(
                 rendererBeforeInspection
             )
@@ -1129,57 +1468,88 @@ final class SteamPrefixService {
                     synchronizationResolution.resolvedBackend.rawValue
                 ]
             )
-            let synchronizationReadbackDigest = Self.componentStateDigest(
-                domain: "synchronization",
-                rows: [
-                    synchronizationReadback.selection.rawValue,
-                    synchronizationReadback.backend.rawValue
-                ]
-            )
-            let componentMutationEvidence = [
-                CompatibilityRuntimeComponentMutationEvidenceV1(
-                    componentID: "controller",
-                    beforeDigest: controllerBeforeDigest,
-                    afterDigest: controllerAfterDigest,
-                    readbackDigest: controllerReadbackDigest
-                ),
-                CompatibilityRuntimeComponentMutationEvidenceV1(
-                    componentID: "fonts",
-                    beforeDigest: fontBeforeDigest,
-                    afterDigest: fontAfterDigest,
-                    readbackDigest: fontReadbackDigest
-                ),
-                CompatibilityRuntimeComponentMutationEvidenceV1(
-                    componentID: "input",
-                    beforeDigest: inputBeforeDigest,
-                    afterDigest: inputAfterDigest,
-                    readbackDigest: inputReadbackDigest
-                ),
-                CompatibilityRuntimeComponentMutationEvidenceV1(
-                    componentID: "persistent-prefix",
-                    beforeDigest: persistentPrefixSnapshot.digest,
-                    afterDigest: persistentAfterSnapshot.digest,
-                    readbackDigest: persistentReadbackSnapshot.digest
-                ),
-                CompatibilityRuntimeComponentMutationEvidenceV1(
-                    componentID: "renderer",
-                    beforeDigest: rendererBeforeDigest,
-                    afterDigest: rendererAfterDigest,
-                    readbackDigest: rendererReadbackDigest
-                ),
-                CompatibilityRuntimeComponentMutationEvidenceV1(
-                    componentID: "synchronization",
-                    beforeDigest: synchronizationBeforeDigest,
-                    afterDigest: synchronizationAfterDigest,
-                    readbackDigest: synchronizationReadbackDigest
+            let synchronizationReadbackDigest = synchronizationReadback.map {
+                Self.componentStateDigest(
+                    domain: "synchronization",
+                    rows: [$0.selection.rawValue, $0.backend.rawValue]
                 )
-            ]
-            try componentMutationEvidence.forEach { try $0.validate() }
-            guard componentMutationEvidence.contains(where: \.didMutate) else {
-                throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
-                    "no-observed-component-mutation"
+            } ?? synchronizationAfterDigest
+            func advisoryEvidence(
+                componentID: String,
+                before: String,
+                after: String,
+                readback: String
+            ) -> CompatibilityRuntimeComponentMutationEvidenceV1 {
+                guard after == readback else {
+                    let unavailable = Self.componentStateDigest(
+                        domain: "\(componentID)-readback-mismatch",
+                        rows: [after, readback]
+                    )
+                    return CompatibilityRuntimeComponentMutationEvidenceV1(
+                        componentID: componentID,
+                        beforeDigest: unavailable,
+                        afterDigest: unavailable,
+                        readbackDigest: unavailable
+                    )
+                }
+                return CompatibilityRuntimeComponentMutationEvidenceV1(
+                    componentID: componentID,
+                    beforeDigest: before,
+                    afterDigest: after,
+                    readbackDigest: readback
                 )
             }
+            var componentMutationEvidence = [
+                advisoryEvidence(
+                    componentID: "controller",
+                    before: controllerBeforeDigest,
+                    after: controllerAfterDigest,
+                    readback: controllerReadbackDigest
+                ),
+                advisoryEvidence(
+                    componentID: "fonts",
+                    before: fontBeforeDigest,
+                    after: fontAfterDigest,
+                    readback: fontReadbackDigest
+                ),
+                advisoryEvidence(
+                    componentID: "input",
+                    before: inputBeforeDigest,
+                    after: inputAfterDigest,
+                    readback: inputReadbackDigest
+                ),
+                advisoryEvidence(
+                    componentID: "persistent-prefix",
+                    before: persistentPrefixSnapshot.digest,
+                    after: persistentAfterReadback.value,
+                    readback: persistentReadback.value
+                ),
+                advisoryEvidence(
+                    componentID: "renderer",
+                    before: rendererBeforeDigest,
+                    after: rendererAfterDigest,
+                    readback: rendererReadbackDigest
+                ),
+                advisoryEvidence(
+                    componentID: "synchronization",
+                    before: synchronizationBeforeDigest,
+                    after: synchronizationAfterDigest,
+                    readback: synchronizationReadbackDigest
+                )
+            ]
+            if !componentMutationEvidence.contains(where: \.didMutate),
+               let inputIndex = componentMutationEvidence.firstIndex(
+                    where: { $0.componentID == "input" }
+               ) {
+                componentMutationEvidence[inputIndex] =
+                    CompatibilityRuntimeComponentMutationEvidenceV1(
+                        componentID: "input",
+                        beforeDigest: fallbackInputBeforeDigest,
+                        afterDigest: fallbackInputAfterDigest,
+                        readbackDigest: fallbackInputAfterDigest
+                    )
+            }
+            try componentMutationEvidence.forEach { try $0.validate() }
             let retainedPrefixLease = SteamCompatibilityPrefixSessionLease(
                 adopting: prefixExecutionLease
             )
@@ -1473,7 +1843,7 @@ final class SteamPrefixService {
 
     func retainCompatibilitySessionLifetime(
         receiptID: String,
-        owner: AnyObject
+        owner: any SteamCompatibilityBackgroundWorkOwner
     ) throws {
         guard compatibilitySessionLifetimeOwners[receiptID] == nil else {
             throw SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
@@ -1485,7 +1855,7 @@ final class SteamPrefixService {
 
     func compatibilitySessionLifetimeOwner(
         receiptID: String
-    ) -> AnyObject? {
+    ) -> (any SteamCompatibilityBackgroundWorkOwner)? {
         compatibilitySessionLifetimeOwners[receiptID]
     }
 
@@ -1566,6 +1936,27 @@ final class SteamPrefixService {
                 )
             }
         }
+    }
+
+    func cancelCompatibilityBackgroundWork()
+        -> [SteamCompatibilityBackgroundWorkCompletionState]
+    {
+        var owners: [any SteamCompatibilityBackgroundWorkOwner] = []
+        owners.append(contentsOf: compatibilitySessionLifetimeOwners.values)
+        for owner in failedCompatibilityCleanupOwners.values {
+            owners.append(owner)
+        }
+
+        var seen = Set<ObjectIdentifier>()
+        var completionStates:
+            [SteamCompatibilityBackgroundWorkCompletionState] = []
+        for owner in owners
+        where seen.insert(ObjectIdentifier(owner)).inserted {
+            completionStates.append(
+                contentsOf: owner.cancelCompatibilityBackgroundWork()
+            )
+        }
+        return completionStates
     }
 
     private static func validateFailedCompatibilityCleanupProof(
@@ -1815,18 +2206,37 @@ final class SteamPrefixService {
 
     private func withCoordinatedPrefixOperation<T>(
         _ operation: SteamPrefixLifecycleOperation,
+        prefix explicitPrefix: URL? = nil,
         perform body: @escaping @MainActor @Sendable (
             PrefixExecutionLease
         ) async throws -> T
     ) async throws -> T {
         try await withOperationOwnership(operation) { [self] in
-            let prefix = try prefixManager.steamSharedPrefixURL()
+            let prefix = try explicitPrefix ??
+                prefixManager.steamSharedPrefixURL()
             let prefixExecutionLease = try PrefixExecutionLease.acquireExclusiveMutation(
                 forPrefix: prefix
             )
             defer { prefixExecutionLease.release() }
             return try await body(prefixExecutionLease)
         }
+    }
+
+    private nonisolated static func prefixCleanupFailure(
+        _ cleanup: (result: ProcessRunResult?, error: Error?),
+        missingReason: String
+    ) -> Error? {
+        if let error = cleanup.error { return error }
+        guard let result = cleanup.result else {
+            return SteamCompatibilityLaunchProfileErrorV1.invalidReceipt(
+                missingReason
+            )
+        }
+        guard result.succeeded,
+              result.postconditionSatisfied == true else {
+            return SteamLaunchError.prefixShutdownFailed(result)
+        }
+        return nil
     }
 
     private func withCoordinatedPrefixLaunchOperation<T>(
@@ -1838,8 +2248,8 @@ final class SteamPrefixService {
     ) async throws -> T {
         try await withOperationOwnership(operation) { [self] in
             let prefix = try prefixManager.steamSharedPrefixURL()
-            let prefixExecutionLease = try PrefixExecutionLease
-                .acquireExclusiveMutation(forPrefix: prefix)
+            let prefixExecutionLease = try await steamManager
+                .acquirePrefixMutationLeaseForLaunch(prefix: prefix)
             let restorationLease = SteamCompatibilityRestorationPrefixLease(
                 prepareForMutation: {
                     try prefixExecutionLease.transitionToExclusiveMutation()

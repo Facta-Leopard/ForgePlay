@@ -41,7 +41,7 @@ index 377b35f363df196501f3ad1e66139b7af703eff3..e41f066bef923d1377d7ae713fdc2c34
  #include <sys/types.h>
  #include <sys/stat.h>
  #include <sys/mman.h>
-@@ -465,12 +466,159 @@ static void preloader_exec( char **argv )
+@@ -465,12 +466,164 @@ static void preloader_exec( char **argv )
      execv( argv[1], argv + 1 );
  }
 
@@ -147,7 +147,12 @@ index 377b35f363df196501f3ad1e66139b7af703eff3..e41f066bef923d1377d7ae713fdc2c34
 +    if (!forgeplay_environment_flag_enabled( "FORGEPLAY_STEAM_GAME_PROCESS" ))
 +        return STATUS_SUCCESS;
 +    if (!forgeplay_environment_flag_enabled( "FORGEPLAY_GAME_MODE_HOST_ENABLED" ))
-+        return STATUS_NOT_SUPPORTED;
++    {
++        forgeplay_record_game_mode_loader_event(
++            "loader_route_skipped_game_mode_not_requested", 0 );
++        unsetenv( "FORGEPLAY_GAME_MODE_DIRECT_TARGET" );
++        return STATUS_SUCCESS;
++    }
 +
 +    mode = getenv( "FORGEPLAY_GAME_MODE_HOST_MODE" );
 +    host = getenv( "FORGEPLAY_GAME_MODE_HOST_EXECUTABLE" );

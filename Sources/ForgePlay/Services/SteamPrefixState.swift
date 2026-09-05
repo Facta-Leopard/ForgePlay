@@ -118,20 +118,30 @@ struct SetupReadiness: Hashable {
     }
 
     var canAttemptWindowsSteamLaunch: Bool {
-        switch steamPrefixState {
-        case .launchReady, .rendererNeedsApply:
-            true
-        case .rootNotConfigured,
-             .rootUnavailable,
-             .prefixMissing,
-             .prefixInvalid,
-             .steamMissing,
-             .runtimeMigrationRequired,
-             .rendererUnverified,
-             .rendererNeedsRepair,
-             .runtimeUnavailable:
-            false
+        guard rootIssue == nil,
+              steamPrefixURL != nil,
+              hasSteamPrefix,
+              hasSteamExecutable else {
+            return false
         }
+        if let steamPrefixIssue {
+            switch steamPrefixIssue {
+            case .invalidMetadata, .architectureMismatch:
+                // Metadata and migration diagnostics describe repair work, not
+                // whether the existing Wine prefix and steam.exe can be
+                // attempted. The launch path records the warning and lets the
+                // runtime report the real execution result.
+                break
+            case .missingRequiredItem,
+                 .unsafeRequiredItem,
+                 .unreadableRequiredItem:
+                return false
+            }
+        }
+        // Runtime/renderer inspections are advisory. A stale or incomplete
+        // readback must not prevent a user from attempting Windows Steam when
+        // the concrete runtime, prefix and steam.exe launch inputs exist.
+        return true
     }
 
     var hasDetectedSteamAccountSession: Bool {
@@ -967,7 +977,7 @@ final class SteamPrefixReadinessResolver {
         runtimeExecutable: URL? = nil,
         runtimeManifest: RuntimeManifest? = nil,
         runtimeCapability: WindowsRuntimeCapability? = nil,
-        rendererPolicySelection: SteamRendererPolicySelection = .d3dMetal,
+        rendererPolicySelection: SteamRendererPolicySelection = .d3dMetalNVIDIA,
         videoMemorySelection: SteamVideoMemorySelection = .automatic
     ) -> SetupReadiness {
         let root: URL
@@ -1011,15 +1021,32 @@ final class SteamPrefixReadinessResolver {
         // to the explicitly coordinated managed-storage maintenance phase; a
         // SwiftUI refresh must never acquire mutation leases or delete files.
         let prefixStatus = resolvedSteamPrefixStatus(prefix)
-        let hasSteamExecutable = prefixStatus.isUsable
-            ? FileSystemItemPolicy.isRegularNonSymlinkFile(steamExecutable, fileManager: fileManager)
-            : false
-        let prefixMetadata = prefixStatus.isUsable ? try? prefixManager.loadMetadata(at: prefix) : nil
-        let steamSessionInspection = prefixStatus.isUsable
+        // Concrete launch inputs are intentionally projected independently of
+        // metadata/architecture diagnostics. Otherwise a stale prefix.json can
+        // hide a perfectly safe existing Steam installation and turn a repair
+        // recommendation into an execution gate.
+        let hasSteamPrefixDirectory = FileSystemItemPolicy.isNonSymlinkDirectory(
+            prefix,
+            fileManager: fileManager
+        )
+        // An empty managed placeholder is not an installed Wine prefix. Keep a
+        // concrete but diagnostically damaged prefix visible, however, so its
+        // existing steam.exe can still take the operational launch path.
+        let hasSteamPrefix = hasSteamPrefixDirectory &&
+            (prefixStatus.isUsable || prefixStatus.issue != nil)
+        let hasSteamExecutable = hasSteamPrefix &&
+            FileSystemItemPolicy.isRegularNonSymlinkFile(
+                steamExecutable,
+                fileManager: fileManager
+            )
+        let prefixMetadata = hasSteamPrefix
+            ? try? prefixManager.loadMetadata(at: prefix)
+            : nil
+        let steamSessionInspection = hasSteamPrefix
             ? steamSessionStateInspector.inspect(prefix: prefix)
             : .unavailable
         let rendererInspection: SteamRendererPolicyInspection?
-        if let runtimeExecutable, let runtimeCapability {
+        if hasSteamPrefix, let runtimeExecutable, let runtimeCapability {
             rendererInspection = steamManager.inspectSteamRendererPolicyForReadiness(
                 prefix: prefix,
                 runtimeExecutable: runtimeExecutable,
@@ -1031,7 +1058,7 @@ final class SteamPrefixReadinessResolver {
             rendererInspection = nil
         }
         let runtimeCompatibilityInspection: PrefixRuntimeCompatibilityInspection?
-        if let runtimeManifest, prefixStatus.isUsable {
+        if let runtimeManifest, hasSteamPrefix {
             runtimeCompatibilityInspection = prefixManager
                 .inspectSteamSharedPrefixRuntimeCompatibility(
                     manifest: runtimeManifest
@@ -1041,7 +1068,7 @@ final class SteamPrefixReadinessResolver {
         }
 
         return SetupReadiness(
-            hasSteamPrefix: prefixStatus.isUsable,
+            hasSteamPrefix: hasSteamPrefix,
             hasSteamExecutable: hasSteamExecutable,
             hasSteamReferences: hasSteamReferences,
             steamPrefixURL: prefix,

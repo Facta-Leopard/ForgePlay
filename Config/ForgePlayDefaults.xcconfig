@@ -1,8 +1,8 @@
 // Project-owned defaults. User-specific Xcode metadata belongs in
 // ForgePlay.local.xcconfig so project regeneration does not erase it.
 
-FORGEPLAY_MARKETING_VERSION = 1.1
-FORGEPLAY_CURRENT_PROJECT_VERSION = 2
+FORGEPLAY_MARKETING_VERSION = 1.2
+FORGEPLAY_CURRENT_PROJECT_VERSION = 3
 FORGEPLAY_DEVELOPMENT_TEAM =
 FORGEPLAY_CODE_SIGN_STYLE = Automatic
 FORGEPLAY_ENABLE_HARDENED_RUNTIME = YES

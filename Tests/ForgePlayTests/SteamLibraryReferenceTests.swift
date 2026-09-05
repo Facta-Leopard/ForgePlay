@@ -116,6 +116,7 @@ private final class WindowsFontFreshBaselineRegistryStore {
     let prefix: URL
     private var entriesByKey: [String: WindowsFontRegistryRequirement]
     private let replacementTargetIDs: Set<String>
+    private var journalProfileIdentifier: String
     private(set) var writeAheadReplacementIDs: [String] = []
     var failAfterFirstReplacementTargetSet = false
     var corruptLegacyMarkerAfterFirstReplacementRestore = false
@@ -124,9 +125,12 @@ private final class WindowsFontFreshBaselineRegistryStore {
 
     init(
         prefix: URL,
-        entries: [WindowsFontRegistryRequirement]
+        entries: [WindowsFontRegistryRequirement],
+        journalProfileIdentifier: String =
+            WindowsFontCompatibilityProfileContract.profileIdentifier
     ) throws {
         self.prefix = prefix.standardizedFileURL
+        self.journalProfileIdentifier = journalProfileIdentifier
         entriesByKey = Dictionary(uniqueKeysWithValues: entries.map {
             (Self.key(path: $0.registryPath, name: $0.valueName), $0)
         })
@@ -135,6 +139,10 @@ private final class WindowsFontFreshBaselineRegistryStore {
                 .map { $0.target.descriptorID }
         )
         try persist()
+    }
+
+    func useJournalProfileIdentifier(_ profileIdentifier: String) {
+        journalProfileIdentifier = profileIdentifier
     }
 
     func values(for requirement: WindowsFontRegistryRequirement) -> [String]? {
@@ -193,7 +201,8 @@ private final class WindowsFontFreshBaselineRegistryStore {
             if operation.operationKind == .registrySet {
                 let journal = try JSONSerialization.jsonObject(
                     with: Data(contentsOf: prefix.appending(
-                        path: "drive_c/.forgeplay-windows-font-compatibility-v5.transaction.json"
+                        path: "drive_c/.\(journalProfileIdentifier)." +
+                            "transaction.json"
                     ))
                 ) as? [String: Any]
                 let ownershipKey = journal?["operation"] as? String == "reconcile"
@@ -237,6 +246,17 @@ private final class WindowsFontFreshBaselineRegistryStore {
                     .processThrownError
                 )
             }
+        case .deleteRegistryValue(
+            _, let actionPrefix, let path, let name, let registryView, _
+        ):
+            guard actionPrefix.standardizedFileURL == prefix else {
+                throw WindowsFontV13FixtureError.prefixMismatch
+            }
+            guard registryView == nil else {
+                throw WindowsFontV13FixtureError.unexpectedRunnerAction
+            }
+            entriesByKey.removeValue(forKey: Self.key(path: path, name: name))
+            try persist()
         case .deleteRegistryValueIfPresent(
             _, let actionPrefix, let path, let name, _
         ):
@@ -729,6 +749,730 @@ final class SteamLibraryReferenceTests: XCTestCase {
                 "NotoSans-Regular.ttf"
             )
         )
+    }
+
+    func testWindowsFontV6UsesCJKVariantsAndWesternFallbackForEveryOtherLanguage()
+        throws {
+        let scriptSpecific: [String: WindowsFontLocaleVariant] = [
+            "ja-JP": .japanese,
+            "ko-KR": .korean,
+            "zh-Hans-CN": .simplifiedChinese,
+            "zh-CN": .simplifiedChinese,
+            "zh-Hant-TW": .traditionalChinese,
+            "zh-TW": .traditionalChinese
+        ]
+        for (locale, expected) in scriptSpecific {
+            XCTAssertEqual(
+                WindowsFontCompatibilityProfileV6Contract.supportedVariant(
+                    localeIdentifier: locale
+                ),
+                expected
+            )
+        }
+        for locale in [
+            "en-US", "fr-CA", "es-ES", "de-DE", "ar-SA", "he-IL",
+            "hi-IN", "th-TH", "pt-BR", "ru-RU", "enochian"
+        ] {
+            XCTAssertEqual(
+                WindowsFontCompatibilityProfileV6Contract.supportedVariant(
+                    localeIdentifier: locale
+                ),
+                .western,
+                locale
+            )
+        }
+        XCTAssertNil(
+            WindowsFontCompatibilityProfileV6Contract.supportedVariant(
+                localeIdentifier: ""
+            )
+        )
+        XCTAssertNil(
+            WindowsFontCompatibilityProfileV6Contract.supportedVariant(
+                localeIdentifier: "   "
+            )
+        )
+        XCTAssertNil(
+            WindowsFontCompatibilityProfileV6Contract.supportedVariant(
+                localeIdentifier: "zh"
+            )
+        )
+
+        let substitutesPath =
+            "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\" +
+            "FontSubstitutes"
+        let expectedShellFamilies: [WindowsFontLocaleVariant: String] = [
+            .western: "Tahoma",
+            .japanese: "Noto Sans CJK JP",
+            .simplifiedChinese: "Noto Sans CJK SC",
+            .traditionalChinese: "Noto Sans CJK TC",
+            .korean: "Noto Sans CJK KR"
+        ]
+        var descriptorDigests = Set<String>()
+        for variant in WindowsFontLocaleVariant.allCases {
+            let definition = WindowsFontCompatibilityProfileV6Contract
+                .definition(for: variant)
+            XCTAssertTrue(
+                descriptorDigests.insert(definition.descriptorDigest).inserted
+            )
+            XCTAssertEqual(
+                WindowsFontCompatibilityProfileV6Contract.variant(
+                    forDescriptorDigest: definition.descriptorDigest
+                ),
+                variant
+            )
+            XCTAssertEqual(
+                try XCTUnwrap(definition.registryRequirements.first {
+                    $0.registryPath == substitutesPath &&
+                        $0.valueName == "MS Shell Dlg"
+                }).orderedValues,
+                [try XCTUnwrap(expectedShellFamilies[variant])]
+            )
+            XCTAssertTrue(definition.registryRequirements.filter {
+                $0.registryPath ==
+                    "HKCU\\Software\\Wine\\Fonts\\Replacements"
+            }.allSatisfy { $0.orderedValues == ["Noto Sans CJK KR"] })
+        }
+        XCTAssertEqual(
+            descriptorDigests.count,
+            WindowsFontLocaleVariant.allCases.count
+        )
+        XCTAssertGreaterThan(
+            WindowsFontCompatibilityProfileV6Contract.expectedAppliedItemCount,
+            0
+        )
+    }
+
+    func testWindowsFontProductionCoordinatorUsesSelectedSteamLanguageAndTransitionsExactBundledProfile()
+        async throws {
+        let fixture = try fontV13MakeLifecycleFixture(
+            "production-selected-language-transitions"
+        )
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let localeRequirements = [
+            WindowsFontRegistryRequirement(
+                registryPath: "HKCU\\Control Panel\\International",
+                valueName: "LocaleName",
+                valueType: "REG_SZ",
+                orderedValues: ["en-US"]
+            ),
+            WindowsFontRegistryRequirement(
+                registryPath: "HKCU\\Software\\Wine\\Fonts",
+                valueName: "Codepages",
+                valueType: "REG_SZ",
+                orderedValues: ["1252,437"]
+            )
+        ]
+        let westernDefinition = WindowsFontCompatibilityProfileV6Contract
+            .definition(for: .western)
+        let adoptedPayload = try XCTUnwrap(
+            westernDefinition.payloads.first {
+                $0.sourceRole == .appNotoPack &&
+                    $0.fileName == "NotoSans-Regular.ttf"
+            }
+        )
+        let adoptedRegistration = try XCTUnwrap(
+            westernDefinition.registryRequirements.first {
+                $0.valueName == adoptedPayload.registryDisplayName
+            }
+        )
+        _ = try WindowsFontFreshBaselineRegistryStore(
+            prefix: fixture.prefix,
+            entries: WindowsFontCompatibilityProfileContract
+                .freshWineRegistryReplacements.map(\.baseline) +
+                WindowsFontCompatibilityProfileContract
+                    .freshWineAlreadyTargetRequirements +
+                localeRequirements + [adoptedRegistration],
+            journalProfileIdentifier:
+                WindowsFontCompatibilityProfileV6Contract.profileIdentifier
+        )
+
+        let wineRoot = fixture.root.appending(
+            path: "ForgePlayRuntime/wine",
+            directoryHint: .isDirectory
+        )
+        let launcher = wineRoot.appending(path: "bin/wine")
+        let runtimeFonts = wineRoot.appending(
+            path: "share/wine/fonts",
+            directoryHint: .isDirectory
+        )
+        try writeSteamRuntimeDependencies(wineRoot: wineRoot)
+        try FileManager.default.createDirectory(
+            at: runtimeFonts,
+            withIntermediateDirectories: true
+        )
+        try fontV13InstallProductionPayloadSources(at: runtimeFonts)
+        let installedFonts = fixture.prefix.appending(
+            path: "drive_c/windows/Fonts",
+            directoryHint: .isDirectory
+        )
+        try FileManager.default.createDirectory(
+            at: installedFonts,
+            withIntermediateDirectories: true
+        )
+        let adoptedDestination = installedFonts.appending(
+            path: adoptedPayload.fileName
+        )
+        try FileManager.default.copyItem(
+            at: runtimeFonts.appending(path: adoptedPayload.fileName),
+            to: adoptedDestination
+        )
+        var adoptedIdentityBefore = stat()
+        XCTAssertEqual(
+            Darwin.lstat(adoptedDestination.path, &adoptedIdentityBefore),
+            0
+        )
+        try """
+        #!/bin/sh
+        \(steamRegistryRecordingShellPreamble())
+        exit 0
+        """.write(to: launcher, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o755],
+            ofItemAtPath: launcher.path
+        )
+
+        let scenarios: [(
+            language: SteamClientLanguage,
+            variant: WindowsFontLocaleVariant
+        )] = [
+            (.english, .western),
+            (.japanese, .japanese),
+            (.french, .western),
+            (.schinese, .simplifiedChinese),
+            (.german, .western),
+            (.tchinese, .traditionalChinese),
+            (.spanish, .western),
+            (.koreana, .korean)
+        ]
+        XCTAssertEqual(
+            Set(scenarios.map { $0.language }),
+            Set(SteamClientLanguage.allCases)
+        )
+        let profile = WindowsFontCompatibilityProfile(
+            runner: makeCuratedRuntimeRunner()
+        )
+        let markerURL = fixture.prefix.appending(
+            path: "drive_c/ForgePlay/FontCompatibility/" +
+                "forgeplay-windows-font-compatibility-v6.txt"
+        )
+
+        for scenario in scenarios {
+            let definition = WindowsFontCompatibilityProfileV6Contract
+                .definition(for: scenario.variant)
+            let receipt = try await profile.provisionForLaunch(
+                runtimeExecutable: launcher,
+                prefix: fixture.prefix,
+                logDirectory: fixture.logs,
+                preferredLocaleIdentifier:
+                    scenario.language.webHelperLocaleIdentifier
+            )
+
+            XCTAssertEqual(
+                receipt.state,
+                .provisionedAndVerified,
+                scenario.language.rawValue
+            )
+            XCTAssertTrue(
+                receipt.isAppliedAndReadBack,
+                scenario.language.rawValue
+            )
+            XCTAssertFalse(
+                receipt.requiresScopedWineChildPOSIXLocaleFallback,
+                scenario.language.rawValue
+            )
+            let marker = try XCTUnwrap(
+                JSONSerialization.jsonObject(
+                    with: Data(contentsOf: markerURL)
+                ) as? [String: Any]
+            )
+            XCTAssertEqual(
+                marker["descriptorDigest"] as? String,
+                definition.descriptorDigest,
+                scenario.language.rawValue
+            )
+
+            let userSnapshot = try WindowsFontRegistrySnapshotState.load(
+                url: fixture.prefix.appending(path: "user.reg"),
+                fileManager: .default
+            )
+            let systemSnapshot = try WindowsFontRegistrySnapshotState.load(
+                url: fixture.prefix.appending(path: "system.reg"),
+                fileManager: .default
+            )
+            for requirement in definition.registryRequirements {
+                let snapshot = requirement.registryPath.hasPrefix("HKCU\\")
+                    ? userSnapshot
+                    : systemSnapshot
+                XCTAssertEqual(
+                    snapshot.orderedValues(for: requirement),
+                    requirement.orderedValues,
+                    "\(scenario.language.rawValue): \(requirement.label)"
+                )
+            }
+
+            for payload in definition.payloads {
+                let installed = installedFonts.appending(path: payload.fileName)
+                let digest = SHA256.hash(
+                    data: try Data(contentsOf: installed)
+                ).map { String(format: "%02x", $0) }.joined()
+                XCTAssertEqual(
+                    digest,
+                    payload.sha256,
+                    "\(scenario.language.rawValue): \(payload.fileName)"
+                )
+            }
+        }
+
+        var adoptedIdentityAfter = stat()
+        XCTAssertEqual(
+            Darwin.lstat(adoptedDestination.path, &adoptedIdentityAfter),
+            0
+        )
+        XCTAssertEqual(adoptedIdentityAfter.st_dev, adoptedIdentityBefore.st_dev)
+        XCTAssertEqual(adoptedIdentityAfter.st_ino, adoptedIdentityBefore.st_ino)
+
+        XCTAssertEqual(
+            try WindowsFontRegistrySnapshotState.load(
+                url: fixture.prefix.appending(path: "user.reg"),
+                fileManager: .default
+            ).orderedValues(for: localeRequirements[0]),
+            ["en-US"],
+            "Selected Steam language must not rewrite the Windows locale."
+        )
+    }
+
+    func testWindowsFontLocaleCollisionFallbackCoversWesternAndEveryCJKVariant()
+        throws {
+        let localeVariants: [
+            (String, WindowsFontLocaleVariant, String, SteamClientLanguage?)
+        ] = [
+            ("en-US", .western, "Tahoma", .english),
+            ("fr-FR", .western, "Tahoma", .french),
+            ("de-DE", .western, "Tahoma", .german),
+            ("es-ES", .western, "Tahoma", .spanish),
+            ("ar-SA", .western, "Tahoma", nil),
+            ("ja-JP", .japanese, "Noto Sans CJK JP", .japanese),
+            ("zh-Hans-CN", .simplifiedChinese, "Noto Sans CJK SC", .schinese),
+            ("zh-Hant-TW", .traditionalChinese, "Noto Sans CJK TC", .tchinese),
+            ("ko-KR", .korean, "Noto Sans CJK KR", .koreana)
+        ]
+        let substitutesPath =
+            "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\" +
+            "FontSubstitutes"
+
+        for (locale, expectedVariant, expectedShellFamily, steamLanguage)
+            in localeVariants {
+            let variant = try XCTUnwrap(
+                WindowsFontCompatibilityProfileV6Contract.supportedVariant(
+                    localeIdentifier: locale
+                )
+            )
+            XCTAssertEqual(variant, expectedVariant, locale)
+            let definition = WindowsFontCompatibilityProfileV6Contract
+                .definition(for: variant)
+            XCTAssertEqual(
+                definition.registryRequirements.first {
+                    $0.registryPath == substitutesPath &&
+                        $0.valueName == "MS Shell Dlg"
+                }?.orderedValues,
+                [expectedShellFamily],
+                locale
+            )
+            XCTAssertTrue(
+                SteamManager.isWindowsFontLocaleBaselineCollision(
+                    WindowsFontCompatibilityProfileError.collision(
+                        "fixture-\(locale)"
+                    )
+                ),
+                locale
+            )
+            let digest = String(repeating: "a", count: 64)
+            let collisionReceipt = WindowsFontProvisioningApplicationReceipt(
+                profileIdentifier:
+                    WindowsFontCompatibilityProfileV6Contract.profileIdentifier,
+                state: .verifiedCollisionPassthrough,
+                baselineDigest: digest,
+                appliedDigest: digest,
+                appliedItemCount: 0,
+                missingItemCount: 0
+            )
+            XCTAssertTrue(
+                collisionReceipt.requiresScopedWineChildPOSIXLocaleFallback,
+                locale
+            )
+            let fallbackLocale = try XCTUnwrap(
+                SteamWineChildPOSIXLocalePolicy.englishUTF8FontFallback
+                    .localeIdentifier
+            )
+            let environment = SafeProcessRunner.processEnvironment(
+                overrides: [
+                    SafeProcessRunner
+                        .wineChildPOSIXLocaleFallbackEnvironmentKey:
+                        fallbackLocale,
+                    "LANG": fallbackLocale,
+                    "LC_ALL": fallbackLocale
+                ],
+                inherited: [
+                    "LANG": locale,
+                    "LC_MESSAGES": locale
+                ]
+            )
+            XCTAssertEqual(environment["LANG"], "en_US.UTF-8", locale)
+            XCTAssertEqual(environment["LC_ALL"], "en_US.UTF-8", locale)
+            XCTAssertNil(environment["LC_MESSAGES"], locale)
+            if let steamLanguage {
+                let arguments = SteamClientLanguageOwnershipPolicy
+                    .launchArguments(
+                        baseArguments: [
+                            "-no-cef-sandbox",
+                            "-language",
+                            steamLanguage.rawValue
+                        ],
+                        lease: nil
+                    )
+                XCTAssertEqual(
+                    Array(arguments.suffix(2)),
+                    ["-language", steamLanguage.rawValue],
+                    locale
+                )
+            }
+        }
+        XCTAssertFalse(
+            SteamManager.isWindowsFontLocaleBaselineCollision(
+                WindowsFontCompatibilityProfileError.bundledPayloadMissing
+            )
+        )
+    }
+
+    func testWindowsFontV6AndExternalPassthroughReceiptsAreLaunchAdmissible() {
+        let digest = String(repeating: "a", count: 64)
+        for state in [
+            WindowsFontProvisioningApplicationReceipt.ProvisioningState
+                .verifiedUnsupportedLocalePassthrough,
+            .verifiedCollisionPassthrough,
+            .verifiedExternalFontPassthrough
+        ] {
+            let receipt = WindowsFontProvisioningApplicationReceipt(
+                profileIdentifier:
+                    WindowsFontCompatibilityProfileV6Contract.profileIdentifier,
+                state: state,
+                baselineDigest: digest,
+                appliedDigest: digest,
+                appliedItemCount: 0,
+                missingItemCount: 0
+            )
+            XCTAssertTrue(receipt.isAppliedAndReadBack)
+            XCTAssertEqual(
+                receipt.requiresScopedWineChildPOSIXLocaleFallback,
+                state != .verifiedExternalFontPassthrough
+            )
+        }
+        let unverified = WindowsFontProvisioningApplicationReceipt(
+            profileIdentifier:
+                WindowsFontCompatibilityProfileV6Contract.profileIdentifier,
+            state: .unverifiedOperationalPassthrough,
+            baselineDigest: digest,
+            appliedDigest: digest,
+            appliedItemCount: 0,
+            missingItemCount: 1
+        )
+        XCTAssertFalse(unverified.isAppliedAndReadBack)
+        XCTAssertFalse(
+            unverified.requiresScopedWineChildPOSIXLocaleFallback
+        )
+    }
+
+    func testWindowsFontV6WesternPolicyRoundTripsArabicWineBaseline()
+        async throws {
+        let fixture = try fontV13MakeLifecycleFixture(
+            "v6-arabic-western-roundtrip"
+        )
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let arabic = WindowsFontCompatibilityProfileContract
+            .arabicFreshWineRegistryReplacements
+        let anchors = WindowsFontCompatibilityProfileContract
+            .freshWineAlreadyTargetRequirements
+        let store = try WindowsFontFreshBaselineRegistryStore(
+            prefix: fixture.prefix,
+            entries: arabic.map(\.baseline) + anchors,
+            journalProfileIdentifier:
+                WindowsFontCompatibilityProfileV6Contract.profileIdentifier
+        )
+        let baseline = try store.serializedSystemRegistry()
+        let definition = fontV13LocaleTransitionDefinition(.western)
+        let profile = fontV13LocaleProfile(
+            definition: definition,
+            localeVariant: .western,
+            sourceRoot: fixture.sourceRoot,
+            store: store
+        )
+
+        let applyResult = try await profile.apply(
+            runtimeExecutable: fixture.runtime,
+            prefix: fixture.prefix,
+            logDirectory: fixture.logs
+        )
+        XCTAssertNil(applyResult)
+        for requirement in definition.registryRequirements {
+            XCTAssertEqual(store.values(for: requirement), requirement.orderedValues)
+        }
+        let uninstallResult = try await profile.uninstall(
+            runtimeExecutable: fixture.runtime,
+            prefix: fixture.prefix,
+            logDirectory: fixture.logs
+        )
+        XCTAssertNil(uninstallResult)
+        XCTAssertEqual(try store.serializedSystemRegistry(), baseline)
+        for requirement in arabic.map(\.baseline) + anchors {
+            XCTAssertEqual(store.values(for: requirement), requirement.orderedValues)
+        }
+        XCTAssertFalse(FileManager.default.fileExists(atPath:
+            fixture.prefix.appending(
+                path: "drive_c/ForgePlay/FontCompatibility/" +
+                    "forgeplay-windows-font-compatibility-v6.txt"
+            ).path
+        ))
+    }
+
+    func testWindowsFontProductionCoordinatorPreservesCustomNotoOwnershipWithScopedFallback()
+        async throws {
+        let fixture = try fontV13MakeLifecycleFixture(
+            "production-foreign-passthrough"
+        )
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let userRegistry = #"""
+        WINE REGISTRY Version 2
+
+        [Control Panel\\International]
+        "LocaleName"="ko-KR"
+
+        [Software\\Wine\\Fonts]
+        "Codepages"="949,949"
+        """# + "\n"
+        try Data(userRegistry.utf8).write(
+            to: fixture.prefix.appending(path: "user.reg")
+        )
+        let externalNotoPayload = try XCTUnwrap(
+            WindowsFontCompatibilityProfileV6Contract
+                .definition(for: .korean).payloads.first {
+                    $0.sourceRole == .appNotoPack
+                }
+        )
+        let externalNotoURL = fixture.prefix.appending(
+            path: "drive_c/windows/Fonts/\(externalNotoPayload.fileName)"
+        )
+        let externalNotoData = Data("user-owned-noto-payload".utf8)
+        try FileManager.default.createDirectory(
+            at: externalNotoURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try externalNotoData.write(to: externalNotoURL)
+        let userBefore = try Data(contentsOf:
+            fixture.prefix.appending(path: "user.reg"))
+        let systemBefore = try Data(contentsOf:
+            fixture.prefix.appending(path: "system.reg"))
+
+        let receipt = try await WindowsFontCompatibilityProfile(
+            runner: SafeProcessRunner()
+        ).provisionForLaunch(
+            runtimeExecutable: fixture.runtime,
+            prefix: fixture.prefix,
+            logDirectory: fixture.logs
+        )
+
+        XCTAssertEqual(receipt.state, .verifiedCollisionPassthrough)
+        XCTAssertTrue(receipt.isAppliedAndReadBack)
+        XCTAssertTrue(receipt.requiresScopedWineChildPOSIXLocaleFallback)
+        XCTAssertEqual(try Data(contentsOf: externalNotoURL), externalNotoData)
+        XCTAssertEqual(
+            try Data(contentsOf: fixture.prefix.appending(path: "user.reg")),
+            userBefore
+        )
+        XCTAssertEqual(
+            try Data(contentsOf: fixture.prefix.appending(path: "system.reg")),
+            systemBefore
+        )
+        XCTAssertFalse(FileManager.default.fileExists(atPath:
+            fixture.prefix.appending(
+                path: "drive_c/ForgePlay/FontCompatibility/" +
+                    "forgeplay-windows-font-compatibility-v6.txt"
+            ).path
+        ))
+        XCTAssertFalse(FileManager.default.fileExists(atPath:
+            fixture.prefix.appending(
+                path: "drive_c/.forgeplay-windows-font-compatibility-v6." +
+                    "transaction.json"
+            ).path
+        ))
+    }
+
+    func testWindowsFontProductionCoordinatorKeepsVerifiedKoreanProfileWhenExternalNotoAppears()
+        async throws {
+        struct Marker: Codable {
+            let schemaVersion: Int
+            let profileIdentifier: String
+            let descriptorDigest: String
+            let ownedFileIDs: [String]
+            let ownedRegistryIDs: [String]
+            let createdDirectoryRelativePaths: [String]
+        }
+
+        let fixture = try fontV13MakeLifecycleFixture(
+            "production-korean-v6-reuse"
+        )
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let definition = WindowsFontCompatibilityProfileV6Contract.definition(
+            for: .korean
+        )
+        let localeRequirements = [
+            WindowsFontRegistryRequirement(
+                registryPath: "HKCU\\Control Panel\\International",
+                valueName: "LocaleName",
+                valueType: "REG_SZ",
+                orderedValues: ["ko-KR"]
+            ),
+            WindowsFontRegistryRequirement(
+                registryPath: "HKCU\\Software\\Wine\\Fonts",
+                valueName: "Codepages",
+                valueType: "REG_SZ",
+                orderedValues: ["949,949"]
+            )
+        ]
+        let store = try WindowsFontFreshBaselineRegistryStore(
+            prefix: fixture.prefix,
+            entries: definition.registryRequirements + localeRequirements
+        )
+
+        try fontV13InstallProductionPayloadSources(at: fixture.sourceRoot)
+        let fontsDirectory = fixture.prefix.appending(
+            path: "drive_c/windows/Fonts",
+            directoryHint: .isDirectory
+        )
+        try FileManager.default.createDirectory(
+            at: fontsDirectory,
+            withIntermediateDirectories: true
+        )
+        for payload in definition.payloads {
+            try FileManager.default.copyItem(
+                at: fixture.sourceRoot.appending(path: payload.fileName),
+                to: fontsDirectory.appending(path: payload.fileName)
+            )
+        }
+
+        let markerURL = fixture.prefix.appending(
+            path: "drive_c/ForgePlay/FontCompatibility/" +
+                "forgeplay-windows-font-compatibility-v6.txt"
+        )
+        try FileManager.default.createDirectory(
+            at: markerURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        let marker = Marker(
+            schemaVersion: 2,
+            profileIdentifier:
+                WindowsFontCompatibilityProfileV6Contract.profileIdentifier,
+            descriptorDigest: definition.descriptorDigest,
+            ownedFileIDs: definition.payloads.map(\.descriptorID).sorted(),
+            ownedRegistryIDs: definition.registryRequirements
+                .map(\.descriptorID).sorted(),
+            createdDirectoryRelativePaths: [
+                "ForgePlay", "ForgePlay/FontCompatibility", "windows/Fonts"
+            ]
+        )
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        var markerData = try encoder.encode(marker)
+        markerData.append(0x0a)
+        try markerData.write(to: markerURL)
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o600],
+            ofItemAtPath: markerURL.path
+        )
+        try store.replaceFixtureValue(
+            with: WindowsFontRegistryRequirement(
+                registryPath: "HKCU\\Software\\Wine\\Fonts\\External Fonts",
+                valueName: "Noto Sans",
+                valueType: "REG_SZ",
+                orderedValues: [
+                    "Z:\\Library\\Fonts\\NotoSans-Regular.ttf"
+                ]
+            )
+        )
+
+        let userBefore = try Data(contentsOf:
+            fixture.prefix.appending(path: "user.reg"))
+        let systemBefore = try Data(contentsOf:
+            fixture.prefix.appending(path: "system.reg"))
+        let markerBefore = try Data(contentsOf: markerURL)
+        let receipt = try await WindowsFontCompatibilityProfile(
+            runner: SafeProcessRunner()
+        ).provisionForLaunch(
+            runtimeExecutable: fixture.runtime,
+            prefix: fixture.prefix,
+            logDirectory: fixture.logs,
+            preferredLocaleIdentifier:
+                SteamClientLanguage.koreana.webHelperLocaleIdentifier
+        )
+
+        XCTAssertEqual(receipt.state, .reusedVerifiedProfile)
+        XCTAssertEqual(
+            receipt.profileIdentifier,
+            WindowsFontCompatibilityProfileV6Contract.profileIdentifier
+        )
+        XCTAssertTrue(receipt.isAppliedAndReadBack)
+        XCTAssertEqual(
+            receipt.appliedItemCount,
+            WindowsFontCompatibilityProfileV6Contract.expectedAppliedItemCount
+        )
+        XCTAssertEqual(
+            try Data(contentsOf: fixture.prefix.appending(path: "user.reg")),
+            userBefore
+        )
+        XCTAssertEqual(
+            try Data(contentsOf: fixture.prefix.appending(path: "system.reg")),
+            systemBefore
+        )
+        XCTAssertEqual(try Data(contentsOf: markerURL), markerBefore)
+
+        let changedLanguageReceipt = try await WindowsFontCompatibilityProfile(
+            runner: SafeProcessRunner()
+        ).provisionForLaunch(
+            runtimeExecutable: fixture.runtime,
+            prefix: fixture.prefix,
+            logDirectory: fixture.logs,
+            preferredLocaleIdentifier:
+                SteamClientLanguage.japanese.webHelperLocaleIdentifier
+        )
+        XCTAssertEqual(
+            changedLanguageReceipt.state,
+            .verifiedCollisionPassthrough
+        )
+        XCTAssertTrue(changedLanguageReceipt.isAppliedAndReadBack)
+        XCTAssertTrue(
+            changedLanguageReceipt.requiresScopedWineChildPOSIXLocaleFallback
+        )
+        XCTAssertEqual(
+            try Data(contentsOf: fixture.prefix.appending(path: "user.reg")),
+            userBefore
+        )
+        XCTAssertEqual(
+            try Data(contentsOf: fixture.prefix.appending(path: "system.reg")),
+            systemBefore
+        )
+        XCTAssertEqual(try Data(contentsOf: markerURL), markerBefore)
+        for payload in definition.payloads {
+            let installed = fontsDirectory.appending(path: payload.fileName)
+            let digest = SHA256.hash(
+                data: try Data(contentsOf: installed)
+            ).map { String(format: "%02x", $0) }.joined()
+            XCTAssertEqual(digest, payload.sha256, payload.fileName)
+        }
+        XCTAssertFalse(FileManager.default.fileExists(atPath:
+            fixture.prefix.appending(
+                path: "drive_c/.forgeplay-windows-font-compatibility-v6." +
+                    "transaction.json"
+            ).path
+        ))
     }
 
     func testWindowsFontCompatibilityV5PreservesV4StateButRequiresAdditiveProfile() throws {
@@ -3504,6 +4248,55 @@ final class SteamLibraryReferenceTests: XCTestCase {
         )
     }
 
+    private func fontV13LocaleProfile(
+        definition: WindowsFontLifecycleDefinition,
+        localeVariant: WindowsFontLocaleVariant,
+        sourceRoot: URL,
+        store: WindowsFontFreshBaselineRegistryStore
+    ) -> WindowsFontCompatibilityProfile {
+        let hooks = WindowsFontLifecycleExecutionHooks(
+            filesystemOperationExecutor: { _, body in try body() },
+            runnerActionExecutor: { operation, action in
+                try store.perform(operation: operation, action: action)
+                return self.fontV13ProcessResult(exitCode: 0)
+            },
+            completionObserver: { _ in }
+        )
+        return WindowsFontCompatibilityProfile(
+            localeVariant: localeVariant,
+            definition: definition,
+            sourceRootResolver: { _, _ in [
+                .runtimeNanum: sourceRoot,
+                .appNotoPack: sourceRoot
+            ] },
+            hooks: hooks,
+            transactionIDProvider: {
+                UUID(uuidString: "00000000-0000-4000-8000-000000000014")!
+            }
+        )
+    }
+
+    private func fontV13LocaleTransitionDefinition(
+        _ variant: WindowsFontLocaleVariant
+    ) -> WindowsFontLifecycleDefinition {
+        let production = WindowsFontCompatibilityProfileV6Contract.definition(
+            for: variant
+        )
+        let transitionNames = Set([
+            "Microsoft Sans Serif", "Tahoma", "MS Shell Dlg", "MS Shell Dlg 2"
+        ])
+        return WindowsFontLifecycleDefinition(
+            profileIdentifier:
+                WindowsFontCompatibilityProfileV6Contract.profileIdentifier,
+            payloads: [],
+            registryRequirements: production.registryRequirements.filter {
+                transitionNames.contains($0.valueName) &&
+                    ($0.registryPath.contains("FontLink\\SystemLink") ||
+                        $0.registryPath.contains("FontSubstitutes"))
+            }
+        )
+    }
+
     private func fontV13JournalURL(_ prefix: URL) -> URL {
         prefix.appending(
             path: "drive_c/.forgeplay-windows-font-compatibility-v5.transaction.json"
@@ -4689,7 +5482,7 @@ final class SteamLibraryReferenceTests: XCTestCase {
         XCTAssertTrue(result.issues.isEmpty)
     }
 
-    func testSessionCompatibilityObservationParserPreservesBaseHelperAndNVAPIBootstrap() throws {
+    func testSessionCompatibilityObservationParserPreservesBaseHelperAndRejectsRemovedNVAPIBootstrapRecord() throws {
         let helper =
             #"G:\SteamLibrary\steamapps\common\BlueArchive\BlueArchive_Data\Plugins\x86_64\grap\NGService.exe"#
         let data = Data((
@@ -4706,10 +5499,6 @@ final class SteamLibraryReferenceTests: XCTestCase {
         let helperObservation = try XCTUnwrap(
             result.gameRendererBaseHelpers.first
         )
-        let bootstrap = try XCTUnwrap(
-            result.d3dMetalNVAPIBootstraps.first
-        )
-
         XCTAssertEqual(helperObservation.processID, 72_015)
         XCTAssertEqual(helperObservation.route, "base-runtime")
         XCTAssertEqual(
@@ -4717,28 +5506,6 @@ final class SteamLibraryReferenceTests: XCTestCase {
             "host-owned-exact-suffix-rule"
         )
         XCTAssertEqual(helperObservation.executable, helper)
-        XCTAssertEqual(bootstrap.processID, 72_016)
-        XCTAssertEqual(bootstrap.state, .initialized)
-        XCTAssertEqual(bootstrap.module, "nvapi64.dll")
-        XCTAssertEqual(bootstrap.loadStatus, 0)
-        XCTAssertEqual(bootstrap.procedureStatus, 0)
-        XCTAssertEqual(bootstrap.exceptionStatus, 0)
-        XCTAssertEqual(bootstrap.initializeResult, 0)
-        XCTAssertEqual(result.state, .complete)
-        XCTAssertTrue(result.issues.isEmpty)
-    }
-
-    func testSessionCompatibilityObservationParserRejectsInconsistentNVAPIState() {
-        let data = Data((
-            "FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP_V1\t72017\t" +
-                "state=initialized | module=nvapi64.dll | " +
-                "load-status=0xC0000135 | procedure-status=0x00000000 | " +
-                "exception-status=0x00000000 | initialize-result=0\n"
-        ).utf8)
-
-        let result = SteamProcessCreationObservationLog.parseResult(data)
-
-        XCTAssertTrue(result.d3dMetalNVAPIBootstraps.isEmpty)
         XCTAssertEqual(result.state, .recovered)
         XCTAssertTrue(
             result.issues.contains {
@@ -5283,6 +6050,25 @@ final class SteamLibraryReferenceTests: XCTestCase {
         XCTAssertEqual(diagnostic.rendererLoadedModules, ["d3d11.dll"])
         XCTAssertEqual(diagnostic.rendererLoadedModulePaths, [actualPath])
         XCTAssertNil(diagnostic.rendererModuleLoadFailures)
+    }
+
+    func testRendererLoadV3AcceptsVerifiedNVIDIAUnderscoreAlias() throws {
+        let executable =
+            #"G:\SteamLibrary\steamapps\common\ProviderGame\game.exe"#
+        let actualPath = #"C:\windows\system32\_nvngx.dll"#
+        let observation = SteamProcessCreationObservationLog.parseResult(Data((
+            "FORGEPLAY_GAME_RENDERER_LOAD_V3\t72105\tstate=loaded | " +
+                "module=_nvngx.dll | actual-path=\(actualPath) | " +
+                "path-owner=verified | profile=d3dMetal | owner=d3dMetal | " +
+                "status=0x00000000 | correlation=provider-alias | " +
+                "executable=\(executable)\n"
+        ).utf8))
+
+        let load = try XCTUnwrap(observation.gameRendererModuleLoads.first)
+        XCTAssertEqual(observation.gameRendererModuleLoads.count, 1)
+        XCTAssertEqual(load.module, "_nvngx.dll")
+        XCTAssertEqual(load.actualPath, actualPath)
+        XCTAssertEqual(load.pathOwnership, .verified)
     }
 
     func testRendererLoadV3UnverifiedPathOwnershipNeverEntersSuccessfulModuleArrays() throws {
@@ -6912,7 +7698,7 @@ final class SteamLibraryReferenceTests: XCTestCase {
         XCTAssertTrue(evidence.message.contains("verification is unavailable"), evidence.message)
     }
 
-    func testSteamUIConformanceMarkerBlocksWindowsSteamLaunches() throws {
+    func testSteamUIConformanceMarkerIsAdvisoryEvidenceOnly() throws {
         let temporaryRoot = FileManager.default.temporaryDirectory
             .appending(path: "ForgePlaySteamConformanceMarker-\(UUID().uuidString)", directoryHint: .isDirectory)
         defer { try? FileManager.default.removeItem(at: temporaryRoot) }
@@ -6946,15 +7732,21 @@ final class SteamLibraryReferenceTests: XCTestCase {
         let capability = WindowsRuntimeService.inspectRuntimeCapability(for: launcher)
         let verification = SteamClientCompatibilityVerifier.verify(capability: capability)
 
-        XCTAssertTrue(capability.hasKnownBadSteamUIConformance)
-        XCTAssertTrue(capability.limitations.contains("steam-ui-failed-known-bad"))
+        XCTAssertFalse(capability.hasKnownBadSteamUIConformance)
+        XCTAssertFalse(capability.limitations.contains("steam-ui-failed-known-bad"))
         XCTAssertTrue(capability.evidence.contains("STEAM-UI-CONFORMANCE.json: steam_ui_status=failed_known_bad"))
-        XCTAssertFalse(verification.canLaunchWindowsSteam)
-        XCTAssertTrue(verification.launchBlockers.contains(.knownBadSteamUIConformance))
-        XCTAssertTrue(WindowsRuntimeDisplayName.statusSummary(for: capability).contains("failed_known_bad"))
+        XCTAssertTrue(
+            capability.evidence.contains(
+                "Steam UI conformance diagnostic: steam-ui-failed-known-bad"
+            )
+        )
+        XCTAssertTrue(verification.canLaunchWindowsSteam)
+        XCTAssertFalse(
+            verification.launchBlockers.contains(.knownBadSteamUIConformance)
+        )
     }
 
-    func testLaunchSteamBlocksKnownBadSteamUIConformanceBeforeStartingProcess() async throws {
+    func testLaunchSteamDoesNotLetConformanceMarkerPreventProcessStart() async throws {
         let temporaryRoot = FileManager.default.temporaryDirectory
             .appending(path: "ForgePlaySteamKnownBadRunner-\(UUID().uuidString)", directoryHint: .isDirectory)
         defer { try? FileManager.default.removeItem(at: temporaryRoot) }
@@ -6973,16 +7765,25 @@ final class SteamLibraryReferenceTests: XCTestCase {
         try FileManager.default.createDirectory(at: steamDirectory, withIntermediateDirectories: true)
         try FileManager.default.createDirectory(at: launcherDirectory, withIntermediateDirectories: true)
         try FileManager.default.createDirectory(at: renderer, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: prefix.appending(path: "dosdevices", directoryHint: .isDirectory),
+            withIntermediateDirectories: true
+        )
         try createSteamWindowsSystemDirectories(in: prefix)
         try writeSteamRuntimeDependencies(wineRoot: wineRoot)
         try writeD3DMetalRenderer(at: renderer)
         try Data("steam".utf8).write(to: steamDirectory.appending(path: "steam.exe"))
         try """
         #!/bin/sh
+        \(steamRegistryRecordingShellPreamble())
         printf '%s\\n' "$*" >> "\(invocationLog.path)"
         exit 0
         """.write(to: launcher, atomically: true, encoding: .utf8)
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: launcher.path)
+        _ = try await steamManager.applySteamClientCompatibilityProfile(
+            runtimeExecutable: launcher,
+            prefix: prefix
+        )
         try """
         {
           "steam_ui_support": false,
@@ -7001,15 +7802,20 @@ final class SteamLibraryReferenceTests: XCTestCase {
             rendererPolicy: .d3dMetal
         )
 
-        XCTAssertFalse(result.succeeded)
-        XCTAssertNil(result.processExitCode)
-        XCTAssertEqual(result.forgePlayStatusCode, SteamManager.steamLaunchBlockedExitCode)
-        let diagnosticLog = try XCTUnwrap(result.diagnosticLog)
-        let diagnostics = try String(contentsOf: diagnosticLog, encoding: .utf8)
-        XCTAssertTrue(diagnostics.contains("STATUS: BLOCKED"), diagnostics)
-        XCTAssertTrue(diagnostics.contains("blocked-runner-preflight-failed"), diagnostics)
-        XCTAssertTrue(diagnostics.contains("failed_known_bad"), diagnostics)
-        XCTAssertFalse(FileManager.default.fileExists(atPath: invocationLog.path))
+        XCTAssertTrue(
+            FileManager.default.fileExists(atPath: invocationLog.path),
+            "A diagnostic conformance marker must not prevent process spawn."
+        )
+        if let diagnosticLog = result.diagnosticLog,
+           let diagnostics = try? String(
+                contentsOf: diagnosticLog,
+                encoding: .utf8
+           ) {
+            XCTAssertFalse(
+                diagnostics.contains("blocked-runner-preflight-failed"),
+                diagnostics
+            )
+        }
     }
 
     func testSteamLaunchArgumentsUseMinimalSteamClientProfileForD3DMetalPolicy() {
@@ -10811,60 +11617,6 @@ final class SteamLibraryReferenceTests: XCTestCase {
         )
     }
 
-    func testExperimentalGameModeAdmissionPrecedesPrefixMutationTransition() async throws {
-        let temporaryRoot = FileManager.default.temporaryDirectory
-            .appending(
-                path: "ForgePlayGameModeAdmission-\(UUID().uuidString)",
-                directoryHint: .isDirectory
-            )
-        defer { try? FileManager.default.removeItem(at: temporaryRoot) }
-
-        let pathManager = PathManager()
-        try pathManager.configureRoot(temporaryRoot)
-        let prefix = try pathManager.url(for: .steamSharedPrefix)
-        let systemRegistry = prefix.appending(path: "system.reg")
-        let originalRegistry = Data("WINE REGISTRY Version 2\n".utf8)
-        try originalRegistry.write(to: systemRegistry)
-        var admissionCount = 0
-        var mutationTransitionCount = 0
-        var executionTransitionCount = 0
-        let steamManager = SteamManager(
-            pathManager: pathManager,
-            runner: makeCuratedRuntimeRunner(),
-            gameModeHostLaunchAdmission: {
-                admissionCount += 1
-                throw GameModeHostCapabilityError.applicationGroupRequired
-            }
-        )
-        let leaseTransition = SteamPrefixExecutionLeaseTransition(
-            prepareForMutation: { mutationTransitionCount += 1 },
-            prepareForExecution: { executionTransitionCount += 1 }
-        )
-
-        do {
-            _ = try await steamManager.launchSteam(
-                runtimeExecutable: temporaryRoot.appending(
-                    path: "missing-runtime/bin/wine"
-                ),
-                verificationMode: .conformance,
-                rendererPolicy: .d3dMetal,
-                gameModePolicy: .experimentalRequiredHost,
-                prefixExecutionLeaseTransition: leaseTransition
-            )
-            XCTFail("expected static Game Mode host admission failure")
-        } catch {
-            XCTAssertEqual(
-                error as? GameModeHostCapabilityError,
-                .applicationGroupRequired
-            )
-        }
-
-        XCTAssertEqual(admissionCount, 1)
-        XCTAssertEqual(mutationTransitionCount, 0)
-        XCTAssertEqual(executionTransitionCount, 0)
-        XCTAssertEqual(try Data(contentsOf: systemRegistry), originalRegistry)
-    }
-
     func testLaunchSteamStartsWindowsSteamInVirtualDesktopAndLinksLibraryRoot() async throws {
         let temporaryRoot = FileManager.default.temporaryDirectory
             .appending(path: "ForgePlaySteamLaunchRoot-\(UUID().uuidString)", directoryHint: .isDirectory)
@@ -10955,7 +11707,7 @@ final class SteamLibraryReferenceTests: XCTestCase {
 
         XCTAssertFalse(result.succeeded)
         XCTAssertEqual(result.processExitCode, 0)
-        XCTAssertEqual(result.forgePlayStatusCode, SteamManager.steamUIStartupFailureExitCode)
+        XCTAssertEqual(result.forgePlayStatusCode, SteamManager.hardGateEvidenceIncompleteExitCode)
         XCTAssertNotNil(result.diagnosticLog)
         XCTAssertTrue(invocations.contains("--version"), invocations.joined(separator: "\n"))
         XCTAssertTrue(
@@ -11112,7 +11864,7 @@ final class SteamLibraryReferenceTests: XCTestCase {
 
         XCTAssertFalse(result.succeeded)
         XCTAssertEqual(result.processExitCode, 0)
-        XCTAssertEqual(result.forgePlayStatusCode, SteamManager.steamUIStartupFailureExitCode)
+        XCTAssertEqual(result.forgePlayStatusCode, SteamManager.hardGateEvidenceIncompleteExitCode)
         XCTAssertNotNil(result.diagnosticLog)
         let didReleasePrefixAfterInitialLaunch = try await steamManager
             .waitForCompatibilityPrefixToBecomeInactive(prefix)
@@ -11122,7 +11874,12 @@ final class SteamLibraryReferenceTests: XCTestCase {
         )
         let invocations = try String(contentsOf: invocationLog, encoding: .utf8)
         XCTAssertTrue(invocations.contains("wineserver --kill=\(SIGTERM)"), invocations)
-        XCTAssertTrue(invocations.contains("reg add HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\AeDebug"), invocations)
+        XCTAssertTrue(
+            invocations.split(whereSeparator: \.isNewline).contains {
+                $0.hasPrefix("reg import Z:")
+            },
+            invocations
+        )
         XCTAssertFalse(
             invocations.contains("reg delete \"HKCU\\Software\\Wine\\AppDefaults\\steamwebhelper.exe\\DllOverrides\""),
             "Preflight must not issue delete commands for absent per-application overrides:\n\(invocations)"
@@ -11302,6 +12059,369 @@ final class SteamLibraryReferenceTests: XCTestCase {
             1,
             "session deinitialization performs a resource-free restore even when preparation never started"
         )
+    }
+
+    func testOperationalLaunchContinuesWhenCompatibilityProfileReadbackFails()
+        async throws {
+        let temporaryRoot = FileManager.default.temporaryDirectory.appending(
+            path: "ForgePlayOperationalProfileWarning-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        defer { try? FileManager.default.removeItem(at: temporaryRoot) }
+
+        let pathManager = PathManager()
+        try pathManager.configureRoot(temporaryRoot)
+        let steamManager = makeSteamManager(
+            pathManager: pathManager,
+            steamClientServicePreparer: { _, _, _ in }
+        )
+        let prefix = try pathManager.url(for: .steamSharedPrefix)
+        let steamDirectory = prefix.appending(
+            path: "drive_c/Program Files (x86)/Steam",
+            directoryHint: .isDirectory
+        )
+        let runtimeRoot = temporaryRoot.appending(
+            path: "BundledResources/Runners/ForgePlayRuntime",
+            directoryHint: .isDirectory
+        )
+        let wineRoot = runtimeRoot.appending(
+            path: "wine",
+            directoryHint: .isDirectory
+        )
+        let launcher = wineRoot.appending(path: "bin/wine")
+        let renderer = runtimeRoot.appending(
+            path: "Frameworks/renderer/d3dmetal",
+            directoryHint: .isDirectory
+        )
+        let launchMarker = temporaryRoot.appending(path: "steam-launched")
+        let invocationLog = temporaryRoot.appending(path: "invocations.log")
+        try FileManager.default.createDirectory(
+            at: prefix.appending(path: "dosdevices", directoryHint: .isDirectory),
+            withIntermediateDirectories: true
+        )
+        try createSteamWindowsSystemDirectories(in: prefix)
+        try FileManager.default.createDirectory(
+            at: steamDirectory,
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.createDirectory(
+            at: launcher.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.createDirectory(
+            at: renderer,
+            withIntermediateDirectories: true
+        )
+        try writeD3DMetalRenderer(at: renderer)
+        try writeSteamRuntimeDependencies(wineRoot: wineRoot)
+        try Data("steam".utf8).write(
+            to: steamDirectory.appending(path: "steam.exe")
+        )
+        try """
+        #!/bin/sh
+        printf '%s\n' "$*" >> "\(invocationLog.path)"
+        if [ "$1" = "wineserver" ]; then exit 0; fi
+        if [ "$1" = "reg" ]; then exit 1; fi
+        case "$*" in
+          *steam.exe*) printf 'launched\n' > "\(launchMarker.path)" ;;
+        esac
+        exit 0
+        """.write(to: launcher, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o755],
+            ofItemAtPath: launcher.path
+        )
+
+        let result = try await steamManager.launchSteam(
+            runtimeExecutable: launcher,
+            verificationMode: .operational,
+            rendererPolicy: .d3dMetal
+        )
+        let invocations = try String(
+            contentsOf: invocationLog,
+            encoding: .utf8
+        )
+
+        XCTAssertTrue(result.succeeded)
+        XCTAssertTrue(
+            FileManager.default.fileExists(atPath: launchMarker.path),
+            invocations
+        )
+        XCTAssertTrue(
+            result.diagnosticCaptureWarning?.contains(
+                "compatibility profile application/readback failed"
+            ) == true
+        )
+    }
+
+    func testOperationalLaunchContinuesWithScopedEnglishLocaleAcrossSupportedSteamLanguagesWhenWindowsFontPreparationCollides()
+        async throws {
+        struct Scenario {
+            let name: String
+            let language: SteamClientLanguage
+            let windowsLocale: String
+            let codepages: String
+        }
+
+        let unsupportedSystemFallback = ForgePlayLanguageMode.system
+            .resolvedSteamClientLanguage(
+                preferredLanguageIdentifiers: ["pt-BR"]
+            )
+        let scenarios = [
+            Scenario(
+                name: "english",
+                language: .english,
+                windowsLocale: "en-US",
+                codepages: "1252,437"
+            ),
+            Scenario(
+                name: "korean",
+                language: .koreana,
+                windowsLocale: "ko-KR",
+                codepages: "949,949"
+            ),
+            Scenario(
+                name: "japanese",
+                language: .japanese,
+                windowsLocale: "ja-JP",
+                codepages: "932,932"
+            ),
+            Scenario(
+                name: "simplified-chinese",
+                language: .schinese,
+                windowsLocale: "zh-Hans-CN",
+                codepages: "936,936"
+            ),
+            Scenario(
+                name: "traditional-chinese",
+                language: .tchinese,
+                windowsLocale: "zh-Hant-TW",
+                codepages: "950,950"
+            ),
+            Scenario(
+                name: "french",
+                language: .french,
+                windowsLocale: "fr-FR",
+                codepages: "1252,437"
+            ),
+            Scenario(
+                name: "german",
+                language: .german,
+                windowsLocale: "de-DE",
+                codepages: "1252,437"
+            ),
+            Scenario(
+                name: "spanish",
+                language: .spanish,
+                windowsLocale: "es-ES",
+                codepages: "1252,437"
+            ),
+            Scenario(
+                name: "unsupported-system-language",
+                language: unsupportedSystemFallback,
+                windowsLocale: "pt-BR",
+                codepages: "1252,437"
+            )
+        ]
+        XCTAssertEqual(
+            Set(scenarios.dropLast().map { $0.language }),
+            Set(SteamClientLanguage.allCases)
+        )
+        XCTAssertEqual(unsupportedSystemFallback, .english)
+
+        for scenario in scenarios {
+            let temporaryRoot = FileManager.default.temporaryDirectory.appending(
+                path: "ForgePlayOperationalFontWarning-\(scenario.name)-\(UUID().uuidString)",
+                directoryHint: .isDirectory
+            )
+            do {
+                defer { try? FileManager.default.removeItem(at: temporaryRoot) }
+
+                let pathManager = PathManager()
+                try pathManager.configureRoot(temporaryRoot)
+                let steamManager = makeSteamManager(
+                    pathManager: pathManager,
+                    steamClientServicePreparer: { _, _, _ in }
+                )
+                let prefix = try pathManager.url(for: .steamSharedPrefix)
+                let steamDirectory = prefix.appending(
+                    path: "drive_c/Program Files (x86)/Steam",
+                    directoryHint: .isDirectory
+                )
+                let runtimeRoot = temporaryRoot.appending(
+                    path: "BundledResources/Runners/ForgePlayRuntime",
+                    directoryHint: .isDirectory
+                )
+                let wineRoot = runtimeRoot.appending(
+                    path: "wine",
+                    directoryHint: .isDirectory
+                )
+                let launcher = wineRoot.appending(path: "bin/wine")
+                let renderer = runtimeRoot.appending(
+                    path: "Frameworks/renderer/d3dmetal",
+                    directoryHint: .isDirectory
+                )
+                let launchMarker = temporaryRoot.appending(path: "steam-launched")
+                let invocationLog = temporaryRoot.appending(path: "invocations.log")
+                try FileManager.default.createDirectory(
+                    at: prefix.appending(
+                        path: "dosdevices",
+                        directoryHint: .isDirectory
+                    ),
+                    withIntermediateDirectories: true
+                )
+                try createSteamWindowsSystemDirectories(in: prefix)
+                try FileManager.default.createDirectory(
+                    at: steamDirectory,
+                    withIntermediateDirectories: true
+                )
+                try FileManager.default.createDirectory(
+                    at: launcher.deletingLastPathComponent(),
+                    withIntermediateDirectories: true
+                )
+                try FileManager.default.createDirectory(
+                    at: renderer,
+                    withIntermediateDirectories: true
+                )
+                try writeD3DMetalRenderer(at: renderer)
+                try writeSteamRuntimeDependencies(wineRoot: wineRoot)
+                try Data("steam".utf8).write(
+                    to: steamDirectory.appending(path: "steam.exe")
+                )
+                try #"""
+                WINE REGISTRY Version 2
+
+                [Control Panel\\International]
+                "LocaleName"="\#(scenario.windowsLocale)"
+
+                [Software\\Wine\\Fonts]
+                "Codepages"="\#(scenario.codepages)"
+                """#.write(
+                    to: prefix.appending(path: "user.reg"),
+                    atomically: true,
+                    encoding: .utf8
+                )
+                try #"""
+                WINE REGISTRY Version 2
+
+                [Software\\Microsoft\\Windows NT\\CurrentVersion\\FontLink\\SystemLink]
+                "Tahoma"=str(7):"first.ttf\0"
+                "Tahoma"=str(7):"second.ttf\0"
+                """#.write(
+                    to: prefix.appending(path: "system.reg"),
+                    atomically: true,
+                    encoding: .utf8
+                )
+                try """
+                #!/bin/sh
+                printf '%s\\n' "$*" >> "\(invocationLog.path)"
+                \(steamRegistryRecordingShellPreamble())
+                if [ "$1" = "wineserver" ]; then exit 0; fi
+                printf 'LANG=%s\\n' "$LANG" >> "\(invocationLog.path)"
+                printf 'LC_ALL=%s\\n' "$LC_ALL" >> "\(invocationLog.path)"
+                printf 'LC_CTYPE=%s\\n' "${LC_CTYPE-<unset>}" >> "\(invocationLog.path)"
+                printf 'LC_MESSAGES=%s\\n' "${LC_MESSAGES-<unset>}" >> "\(invocationLog.path)"
+                printf 'font_locale_fallback=%s\\n' \
+                  "$FORGEPLAY_WINE_CHILD_POSIX_LOCALE_FALLBACK" >> "\(invocationLog.path)"
+                case "$*" in
+                  *steam.exe*) printf 'launched\\n' > "\(launchMarker.path)" ;;
+                esac
+                exit 0
+                """.write(to: launcher, atomically: true, encoding: .utf8)
+                try FileManager.default.setAttributes(
+                    [.posixPermissions: 0o755],
+                    ofItemAtPath: launcher.path
+                )
+
+                let result = try await steamManager.launchSteam(
+                    runtimeExecutable: launcher,
+                    verificationMode: .operational,
+                    steamClientLanguage: scenario.language,
+                    rendererPolicy: .d3dMetal,
+                    steamArguments: [
+                        "-no-cef-sandbox",
+                        "-language",
+                        scenario.language.rawValue
+                    ]
+                )
+                let invocations = try String(
+                    contentsOf: invocationLog,
+                    encoding: .utf8
+                )
+                let invocationLines = invocations
+                    .split(whereSeparator: \.isNewline)
+                    .map(String.init)
+
+                XCTAssertTrue(result.succeeded, scenario.name)
+                XCTAssertTrue(
+                    FileManager.default.fileExists(atPath: launchMarker.path),
+                    "\(scenario.name): \(invocations)"
+                )
+                XCTAssertTrue(
+                    result.diagnosticCaptureWarning?.contains(
+                        SteamManager.operationalFontLocaleFallbackWarning
+                    ) == true,
+                    scenario.name
+                )
+                XCTAssertTrue(
+                    result.diagnosticCaptureWarning?.contains(
+                        "requestedSteamLanguage=\(scenario.language.rawValue)"
+                    ) == true,
+                    scenario.name
+                )
+                XCTAssertEqual(
+                    result.runtimeCompatibility["wineChildPOSIXLocale"],
+                    "en_US.UTF-8",
+                    scenario.name
+                )
+                XCTAssertTrue(
+                    invocations.contains(
+                        "-language \(scenario.language.rawValue)"
+                    ),
+                    "\(scenario.name): \(invocations)"
+                )
+                XCTAssertTrue(
+                    invocations.contains("LANG=en_US.UTF-8"),
+                    "\(scenario.name): \(invocations)"
+                )
+                XCTAssertTrue(
+                    invocations.contains("LC_ALL=en_US.UTF-8"),
+                    "\(scenario.name): \(invocations)"
+                )
+                XCTAssertTrue(
+                    invocations.contains("LC_CTYPE=<unset>"),
+                    "\(scenario.name): \(invocations)"
+                )
+                XCTAssertTrue(
+                    invocations.contains("LC_MESSAGES=<unset>"),
+                    "\(scenario.name): \(invocations)"
+                )
+                XCTAssertTrue(
+                    invocations.contains(
+                        "font_locale_fallback=en_US.UTF-8"
+                    ),
+                    "\(scenario.name): \(invocations)"
+                )
+                let steamLaunchIndex = try XCTUnwrap(
+                    invocationLines.lastIndex {
+                        $0.contains(
+                            "C:\\Program Files (x86)\\Steam\\steam.exe"
+                        ) && !$0.contains("-shutdown")
+                    },
+                    scenario.name
+                )
+                let postLaunchInvocations = invocationLines.dropFirst(
+                    steamLaunchIndex + 1
+                )
+                XCTAssertFalse(
+                    postLaunchInvocations.contains {
+                        $0.contains("-shutdown") ||
+                            $0 == "wineserver --kill=\(SIGTERM)"
+                    },
+                    "\(scenario.name): \(invocations)"
+                )
+            }
+        }
     }
 
     func testConformanceLaunchBlocksWithoutTerminatingHostSteam() async throws {
@@ -11541,7 +12661,7 @@ final class SteamLibraryReferenceTests: XCTestCase {
         XCTAssertEqual(result.processExitCode, 0)
         XCTAssertEqual(
             result.forgePlayStatusCode,
-            SteamManager.steamUIStartupFailureExitCode,
+            SteamManager.hardGateEvidenceIncompleteExitCode,
             errorOutput
         )
         XCTAssertNotNil(result.diagnosticLog)
@@ -11859,7 +12979,7 @@ final class SteamLibraryReferenceTests: XCTestCase {
                 prefix: prefix,
                 runtimeExecutable: launcher
             ),
-            ["nvapi.dll", "nvapi64.dll", "nvngx.dll"]
+            D3DMetalNVIDIAProviderContract.system32ModuleNames.sorted()
         )
         try await manager.stageNVIDIAMetalFXRegistrySession(
             prefix: prefix,
@@ -11880,6 +13000,7 @@ final class SteamLibraryReferenceTests: XCTestCase {
         let stagedNVAPIAlias = system32.appending(path: "nvapi.dll")
         let stagedNVAPI = system32.appending(path: "nvapi64.dll")
         let stagedNGX = system32.appending(path: "nvngx.dll")
+        let stagedNGXAlias = system32.appending(path: "_nvngx.dll")
         let backupDirectory = prefix.appending(
             path: "drive_c/ForgePlay/RendererBackups/system32",
             directoryHint: .isDirectory
@@ -11901,6 +13022,10 @@ final class SteamLibraryReferenceTests: XCTestCase {
             try Data(contentsOf: sourceNGX)
         )
         XCTAssertEqual(
+            try Data(contentsOf: stagedNGXAlias),
+            try Data(contentsOf: sourceNGX)
+        )
+        XCTAssertEqual(
             try Data(
                 contentsOf: moduleSessionDirectory.appending(
                     path: "destination-nvapi64.dll.original"
@@ -11908,7 +13033,8 @@ final class SteamLibraryReferenceTests: XCTestCase {
             ),
             originalNVAPI
         )
-        for moduleName in ["nvapi.dll", "nvapi64.dll", "nvngx.dll"] {
+        for moduleName in
+            D3DMetalNVIDIAProviderContract.system32ModuleNames {
             XCTAssertTrue(
                 FileSystemItemPolicy.isRegularNonSymlinkFile(
                     moduleSessionDirectory.appending(
@@ -12447,9 +13573,10 @@ final class SteamLibraryReferenceTests: XCTestCase {
                 prefix: prefix,
                 runtimeExecutable: launcher
             ),
-            ["nvapi.dll", "nvapi64.dll", "nvngx.dll"]
+            D3DMetalNVIDIAProviderContract.system32ModuleNames.sorted()
         )
-        let stagedModules = ["nvapi.dll", "nvapi64.dll", "nvngx.dll"].map {
+        let stagedModules = D3DMetalNVIDIAProviderContract
+            .system32ModuleNames.map {
             system32.appending(path: $0)
         }
         let moduleSessionDirectory = prefix.appending(
@@ -12609,7 +13736,8 @@ final class SteamLibraryReferenceTests: XCTestCase {
 
         XCTAssertTrue(fileManager.didInjectStageFailure)
         XCTAssertTrue(FileManager.default.fileExists(atPath: registryMarker.path))
-        for moduleName in ["nvapi.dll", "nvapi64.dll", "nvngx.dll"] {
+        for moduleName in
+            D3DMetalNVIDIAProviderContract.system32ModuleNames {
             XCTAssertFalse(
                 FileManager.default.fileExists(
                     atPath: system32.appending(path: moduleName).path
@@ -12773,7 +13901,8 @@ final class SteamLibraryReferenceTests: XCTestCase {
             prefix: prefix,
             runtimeExecutable: launcher
         )
-        let stagedModules = ["nvapi.dll", "nvapi64.dll", "nvngx.dll"].map {
+        let stagedModules = D3DMetalNVIDIAProviderContract
+            .system32ModuleNames.map {
             system32.appending(path: $0)
         }
         let sessionDirectory = prefix.appending(
@@ -12789,8 +13918,12 @@ final class SteamLibraryReferenceTests: XCTestCase {
                 )
             ) as? [String: Any]
         )
-        XCTAssertEqual(markerObject["schemaVersion"] as? Int, 2)
-        for moduleName in ["nvapi.dll", "nvapi64.dll", "nvngx.dll"] {
+        XCTAssertEqual(
+            markerObject["schemaVersion"] as? Int,
+            D3DMetalNVIDIAProviderContract.moduleSessionSchemaVersion
+        )
+        for moduleName in
+            D3DMetalNVIDIAProviderContract.system32ModuleNames {
             XCTAssertTrue(
                 FileSystemItemPolicy.isRegularNonSymlinkFile(
                     sessionDirectory.appending(path: "staged-\(moduleName)")
@@ -12845,6 +13978,469 @@ final class SteamLibraryReferenceTests: XCTestCase {
                 FileManager.default.fileExists(atPath: stagedModule.path)
             )
         }
+    }
+
+    func testNVIDIAMetalFXRestoresLegacySchema1ThreeModuleSession() throws {
+        let root = FileManager.default.temporaryDirectory.appending(
+            path: "ForgePlayMetalFXSchema1Compatibility-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        defer { try? FileManager.default.removeItem(at: root) }
+        let runtimeRoot = root.appending(
+            path: "Runtime",
+            directoryHint: .isDirectory
+        )
+        let runtime = runtimeRoot.appending(path: "wine/bin/wine")
+        let renderer = runtimeRoot.appending(
+            path: "Frameworks/renderer/d3dmetal",
+            directoryHint: .isDirectory
+        )
+        let prefix = root.appending(path: "Prefix", directoryHint: .isDirectory)
+        let system32 = prefix.appending(
+            path: "drive_c/windows/system32",
+            directoryHint: .isDirectory
+        )
+        let sessionDirectory = prefix.appending(
+            path:
+                "drive_c/ForgePlay/RendererBackups/system32/" +
+                ".forgeplay-nvidia-metalfx-session",
+            directoryHint: .isDirectory
+        )
+        for directory in [
+            runtime.deletingLastPathComponent(),
+            system32,
+            sessionDirectory
+        ] {
+            try FileManager.default.createDirectory(
+                at: directory,
+                withIntermediateDirectories: true
+            )
+        }
+        try Data("runtime".utf8).write(to: runtime)
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o755],
+            ofItemAtPath: runtime.path
+        )
+        try writeD3DMetalRenderer(at: renderer)
+
+        let sources = [
+            "nvapi.dll": renderer.appending(
+                path: D3DMetalNVAPIAliasContract.windowsAliasRelativePath
+            ),
+            "nvapi64.dll": renderer.appending(
+                path: D3DMetalNVAPIAliasContract.sourceWindowsModuleRelativePath
+            ),
+            "nvngx.dll": renderer.appending(
+                path: D3DMetalNGXBridgeContract.sourceWindowsModuleRelativePath
+            )
+        ]
+        var entries: [[String: Any]] = []
+        for moduleName in sources.keys.sorted() {
+            let source = try XCTUnwrap(sources[moduleName])
+            let payload = try Data(contentsOf: source)
+            try payload.write(to: system32.appending(path: moduleName))
+            entries.append([
+                "moduleName": moduleName,
+                "stagedIdentity": [
+                    "byteCount": payload.count,
+                    "sha256": SHA256.hash(data: payload).map {
+                        String(format: "%02x", $0)
+                    }.joined()
+                ],
+                "destinationWasPresent": false,
+                "backupWasPresent": false
+            ])
+        }
+        try JSONSerialization.data(
+            withJSONObject: ["schemaVersion": 1, "entries": entries],
+            options: [.prettyPrinted, .sortedKeys]
+        ).write(
+            to: sessionDirectory.appending(path: "session.json"),
+            options: .atomic
+        )
+
+        try SteamRendererPolicyManager().restoreNVIDIAMetalFXSessionModules(
+            prefix: prefix,
+            runtimeExecutable: runtime
+        )
+
+        XCTAssertFalse(FileManager.default.fileExists(atPath: sessionDirectory.path))
+        for moduleName in sources.keys {
+            XCTAssertFalse(
+                FileManager.default.fileExists(
+                    atPath: system32.appending(path: moduleName).path
+                )
+            )
+        }
+    }
+
+    @MainActor
+    func testNVIDIAMetalFXRestoresShippedSchema3FourModuleSession() async throws {
+        let root = FileManager.default.temporaryDirectory.appending(
+            path: "ForgePlayMetalFXSchema3Compatibility-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        defer { try? FileManager.default.removeItem(at: root) }
+        let pathManager = PathManager()
+        try pathManager.configureRoot(root)
+        let prefix = try pathManager.url(for: .steamSharedPrefix)
+        let system32 = prefix.appending(
+            path: "drive_c/windows/system32",
+            directoryHint: .isDirectory
+        )
+        let sessionDirectory = prefix.appending(
+            path:
+                "drive_c/ForgePlay/RendererBackups/system32/" +
+                ".forgeplay-nvidia-metalfx-session",
+            directoryHint: .isDirectory
+        )
+        let runtime = root.appending(path: "Runtime/wine/bin/wine")
+        for directory in [
+            system32,
+            sessionDirectory,
+            runtime.deletingLastPathComponent()
+        ] {
+            try FileManager.default.createDirectory(
+                at: directory,
+                withIntermediateDirectories: true
+            )
+        }
+        try Data("runtime".utf8).write(to: runtime)
+
+        let payloads: [String: Data] = [
+            "_nvngx.dll": Data("schema3-ngx".utf8),
+            "nvapi.dll": Data("schema3-nvapi".utf8),
+            "nvapi64.dll": Data("schema3-nvapi".utf8),
+            "nvngx.dll": Data("schema3-ngx".utf8)
+        ]
+        var entries: [[String: Any]] = []
+        for moduleName in payloads.keys.sorted() {
+            let payload = try XCTUnwrap(payloads[moduleName])
+            let destination = system32.appending(path: moduleName)
+            let stagedName = "staged-\(moduleName)"
+            try payload.write(to: destination)
+            try payload.write(
+                to: sessionDirectory.appending(path: stagedName)
+            )
+            let digest = SHA256.hash(data: payload).map {
+                String(format: "%02x", $0)
+            }.joined()
+            entries.append([
+                "moduleName": moduleName,
+                "stagedIdentity": [
+                    "byteCount": payload.count,
+                    "sha256": digest
+                ],
+                "stagedSnapshotName": stagedName,
+                "destinationWasPresent": false,
+                "backupWasPresent": false
+            ])
+        }
+        let markerData = try JSONSerialization.data(
+            withJSONObject: [
+                "schemaVersion": 3,
+                "entries": entries
+            ],
+            options: [.prettyPrinted, .sortedKeys]
+        )
+        try markerData.write(
+            to: sessionDirectory.appending(path: "session.json"),
+            options: .atomic
+        )
+
+        let manager = SteamRendererPolicyManager()
+        let inspection = SteamRendererPolicyInspection(
+            selection: .d3dMetalNVIDIA,
+            resolvedPolicy: .d3dMetal,
+            status: .error,
+            userMessage: "schema-3 fixture",
+            appliedModules: [],
+            missingModules: [],
+            mixedModules: payloads.keys.sorted().map {
+                "system32/\($0)"
+            }
+        )
+        XCTAssertTrue(
+            manager.isRecoverableNVIDIAMetalFXSessionResidue(
+                inspection,
+                prefix: prefix,
+                runtimeExecutable: runtime
+            )
+        )
+
+        let steamManager = SteamManager(
+            pathManager: pathManager,
+            runner: makeCuratedRuntimeRunner(),
+            steamClientServicePreparer: { _, _, _ in }
+        )
+        try await steamManager.restoreSteamRendererBridgeModules(
+            prefix: prefix,
+            runtimeExecutable: runtime
+        )
+
+        XCTAssertFalse(
+            FileManager.default.fileExists(atPath: sessionDirectory.path)
+        )
+        for moduleName in payloads.keys {
+            XCTAssertFalse(
+                FileManager.default.fileExists(
+                    atPath: system32.appending(path: moduleName).path
+                )
+            )
+        }
+    }
+
+    func testNVIDIAMetalFXRestorationResumesAfterOriginalWasAlreadyRestored() throws {
+        let root = FileManager.default.temporaryDirectory.appending(
+            path: "ForgePlayMetalFXIdempotentRestore-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        defer { try? FileManager.default.removeItem(at: root) }
+        let prefix = root.appending(path: "Prefix", directoryHint: .isDirectory)
+        let system32 = prefix.appending(
+            path: "drive_c/windows/system32",
+            directoryHint: .isDirectory
+        )
+        let sessionDirectory = prefix.appending(
+            path:
+                "drive_c/ForgePlay/RendererBackups/system32/" +
+                ".forgeplay-nvidia-metalfx-session",
+            directoryHint: .isDirectory
+        )
+        let runtime = root.appending(path: "Runtime/wine/bin/wine")
+        for directory in [
+            system32,
+            sessionDirectory,
+            runtime.deletingLastPathComponent()
+        ] {
+            try FileManager.default.createDirectory(
+                at: directory,
+                withIntermediateDirectories: true
+            )
+        }
+        try Data("runtime".utf8).write(to: runtime)
+
+        func identity(_ data: Data) -> [String: Any] {
+            [
+                "byteCount": data.count,
+                "sha256": SHA256.hash(data: data).map {
+                    String(format: "%02x", $0)
+                }.joined()
+            ]
+        }
+
+        var entries: [[String: Any]] = []
+        for moduleName in ["nvapi.dll", "nvapi64.dll", "nvngx.dll"] {
+            let staged = Data("staged-\(moduleName)".utf8)
+            let stagedName = "staged-\(moduleName)"
+            try staged.write(
+                to: sessionDirectory.appending(path: stagedName)
+            )
+            var entry: [String: Any] = [
+                "moduleName": moduleName,
+                "stagedIdentity": identity(staged),
+                "stagedSnapshotName": stagedName,
+                "destinationWasPresent": moduleName == "nvapi64.dll",
+                "backupWasPresent": false
+            ]
+            if moduleName == "nvapi64.dll" {
+                let original = Data("original-nvapi64".utf8)
+                let snapshotName = "destination-nvapi64.dll.original"
+                try original.write(to: system32.appending(path: moduleName))
+                try original.write(
+                    to: sessionDirectory.appending(path: snapshotName)
+                )
+                entry["destinationIdentity"] = identity(original)
+                entry["destinationSnapshotName"] = snapshotName
+            } else {
+                try staged.write(to: system32.appending(path: moduleName))
+            }
+            entries.append(entry)
+        }
+        try JSONSerialization.data(
+            withJSONObject: ["schemaVersion": 2, "entries": entries],
+            options: [.prettyPrinted, .sortedKeys]
+        ).write(
+            to: sessionDirectory.appending(path: "session.json"),
+            options: .atomic
+        )
+
+        let manager = SteamRendererPolicyManager()
+        let inspection = SteamRendererPolicyInspection(
+            selection: .d3dMetalNVIDIA,
+            resolvedPolicy: .d3dMetal,
+            status: .error,
+            userMessage: "partially restored fixture",
+            appliedModules: [],
+            missingModules: [],
+            mixedModules: [
+                "system32/nvapi.dll",
+                "system32/nvapi64.dll",
+                "system32/nvngx.dll"
+            ]
+        )
+        XCTAssertTrue(
+            manager.isRecoverableNVIDIAMetalFXSessionResidue(
+                inspection,
+                prefix: prefix,
+                runtimeExecutable: runtime
+            )
+        )
+        try manager.restoreNVIDIAMetalFXSessionModules(
+            prefix: prefix,
+            runtimeExecutable: runtime
+        )
+
+        XCTAssertEqual(
+            try Data(contentsOf: system32.appending(path: "nvapi64.dll")),
+            Data("original-nvapi64".utf8)
+        )
+        XCTAssertFalse(
+            FileManager.default.fileExists(
+                atPath: system32.appending(path: "nvapi.dll").path
+            )
+        )
+        XCTAssertFalse(
+            FileManager.default.fileExists(
+                atPath: system32.appending(path: "nvngx.dll").path
+            )
+        )
+        XCTAssertFalse(
+            FileManager.default.fileExists(atPath: sessionDirectory.path)
+        )
+    }
+
+    func testNVIDIAMetalFXMarkerlessPrepublicationDirectoryDoesNotGateStaging() throws {
+        let root = FileManager.default.temporaryDirectory.appending(
+            path: "ForgePlayMetalFXMarkerless-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        defer { try? FileManager.default.removeItem(at: root) }
+        let prefix = root.appending(path: "Prefix", directoryHint: .isDirectory)
+        let runtimeRoot = root.appending(
+            path: "Runtime",
+            directoryHint: .isDirectory
+        )
+        let runtime = runtimeRoot.appending(path: "wine/bin/wine")
+        let renderer = runtimeRoot.appending(
+            path: "Frameworks/renderer/d3dmetal",
+            directoryHint: .isDirectory
+        )
+        _ = try createSteamWindowsSystemDirectories(in: prefix)
+        try FileManager.default.createDirectory(
+            at: runtime.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try Data("runtime".utf8).write(to: runtime)
+        try writeD3DMetalRenderer(at: renderer)
+        let sessionDirectory = prefix.appending(
+            path:
+                "drive_c/ForgePlay/RendererBackups/system32/" +
+                ".forgeplay-nvidia-metalfx-session",
+            directoryHint: .isDirectory
+        )
+        try FileManager.default.createDirectory(
+            at: sessionDirectory,
+            withIntermediateDirectories: true
+        )
+        let prepublicationSnapshot = sessionDirectory.appending(
+            path: "staged-interrupted.tmp"
+        )
+        try Data("snapshot-only".utf8).write(to: prepublicationSnapshot)
+
+        let manager = SteamRendererPolicyManager()
+        XCTAssertEqual(
+            try manager.stageNVIDIAMetalFXBridgeModules(
+                prefix: prefix,
+                runtimeExecutable: runtime
+            ),
+            D3DMetalNVIDIAProviderContract.system32ModuleNames.sorted()
+        )
+        XCTAssertFalse(
+            FileManager.default.fileExists(atPath: prepublicationSnapshot.path)
+        )
+        let marker = sessionDirectory.appending(path: "session.json")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: marker.path))
+        let markerObject = try XCTUnwrap(
+            try JSONSerialization.jsonObject(
+                with: Data(contentsOf: marker)
+            ) as? [String: Any]
+        )
+        XCTAssertEqual(
+            markerObject["schemaVersion"] as? Int,
+            D3DMetalNVIDIAProviderContract.moduleSessionSchemaVersion
+        )
+    }
+
+    func testNVIDIAMetalFXDestinationDriftRemainsFailClosed() throws {
+        let root = FileManager.default.temporaryDirectory.appending(
+            path: "ForgePlayMetalFXDestinationDrift-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        defer { try? FileManager.default.removeItem(at: root) }
+        let prefix = root.appending(path: "Prefix", directoryHint: .isDirectory)
+        let runtimeRoot = root.appending(path: "Runtime", directoryHint: .isDirectory)
+        let runtime = runtimeRoot.appending(path: "wine/bin/wine")
+        let renderer = runtimeRoot.appending(
+            path: "Frameworks/renderer/d3dmetal",
+            directoryHint: .isDirectory
+        )
+        let (system32, _) = try createSteamWindowsSystemDirectories(in: prefix)
+        try FileManager.default.createDirectory(
+            at: runtime.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try Data("runtime".utf8).write(to: runtime)
+        try writeD3DMetalRenderer(at: renderer)
+        let manager = SteamRendererPolicyManager()
+        _ = try manager.stageNVIDIAMetalFXBridgeModules(
+            prefix: prefix,
+            runtimeExecutable: runtime
+        )
+        let driftedDestination = system32.appending(path: "nvapi.dll")
+        try Data("foreign-drift".utf8).write(
+            to: driftedDestination,
+            options: .atomic
+        )
+        let inspection = SteamRendererPolicyInspection(
+            selection: .d3dMetalNVIDIA,
+            resolvedPolicy: .d3dMetal,
+            status: .error,
+            userMessage: "drift fixture",
+            appliedModules: [],
+            missingModules: [],
+            mixedModules: [
+                "system32/nvapi.dll",
+                "system32/nvapi64.dll",
+                "system32/nvngx.dll"
+            ]
+        )
+        XCTAssertFalse(
+            manager.isRecoverableNVIDIAMetalFXSessionResidue(
+                inspection,
+                prefix: prefix,
+                runtimeExecutable: runtime
+            )
+        )
+        XCTAssertThrowsError(
+            try manager.restoreNVIDIAMetalFXSessionModules(
+                prefix: prefix,
+                runtimeExecutable: runtime
+            )
+        )
+        XCTAssertEqual(
+            try Data(contentsOf: driftedDestination),
+            Data("foreign-drift".utf8)
+        )
+        XCTAssertTrue(
+            FileManager.default.fileExists(
+                atPath: prefix.appending(
+                    path:
+                        "drive_c/ForgePlay/RendererBackups/system32/" +
+                        ".forgeplay-nvidia-metalfx-session/session.json"
+                ).path
+            )
+        )
     }
 
     @MainActor
@@ -12934,7 +14530,8 @@ final class SteamLibraryReferenceTests: XCTestCase {
         XCTAssertFalse(
             FileManager.default.fileExists(atPath: sessionDirectory.path)
         )
-        for moduleName in ["nvapi.dll", "nvapi64.dll", "nvngx.dll"] {
+        for moduleName in
+            D3DMetalNVIDIAProviderContract.system32ModuleNames {
             XCTAssertFalse(
                 FileManager.default.fileExists(
                     atPath: system32.appending(path: moduleName).path
@@ -13060,6 +14657,12 @@ final class SteamLibraryReferenceTests: XCTestCase {
         let dxmtRenderer = frameworks.appending(path: "renderer/dxmt", directoryHint: .isDirectory)
         let launcher = launcherDirectory.appending(path: "wine")
         let invocationLog = temporaryRoot.appending(path: "steam-launch-dxmt-renderer-invocations.log")
+        let unrelatedNVIDIAMarker = prefix.appending(
+            path:
+                "drive_c/ForgePlay/RendererBackups/" +
+                SteamRendererPolicyManager
+                    .nvidiaMetalFXRegistrySessionMarkerName
+        )
 
         try FileManager.default.createDirectory(at: dosdevices, withIntermediateDirectories: true)
         try FileManager.default.createDirectory(at: steamDirectory, withIntermediateDirectories: true)
@@ -13106,6 +14709,9 @@ final class SteamLibraryReferenceTests: XCTestCase {
             launcher: launcher,
             rendererPolicy: .dxmt
         )
+        try Data("not-a-forgeplay-nvidia-session".utf8).write(
+            to: unrelatedNVIDIAMarker
+        )
 
         let result = try await steamManager.launchSteam(
             runtimeExecutable: launcher,
@@ -13116,7 +14722,7 @@ final class SteamLibraryReferenceTests: XCTestCase {
 
         XCTAssertFalse(result.succeeded)
         XCTAssertEqual(result.processExitCode, 0)
-        XCTAssertEqual(result.forgePlayStatusCode, SteamManager.steamUIStartupFailureExitCode)
+        XCTAssertEqual(result.forgePlayStatusCode, SteamManager.hardGateEvidenceIncompleteExitCode)
         XCTAssertNotNil(result.diagnosticLog)
         XCTAssertEqual(
             try String(contentsOf: system32.appending(path: "d3d11.dll"), encoding: .utf8),
@@ -13139,6 +14745,109 @@ final class SteamLibraryReferenceTests: XCTestCase {
         XCTAssertFalse(invocations.contains("launch-steam.bat"), invocations)
         XCTAssertFalse(invocations.contains("-cef-force-32bit"), invocations)
         XCTAssertTrue(invocations.contains("-no-cef-sandbox"), invocations)
+        XCTAssertTrue(
+            FileSystemItemPolicy.isRegularNonSymlinkFile(
+                unrelatedNVIDIAMarker
+            ),
+            "DXMT launch must not consume or own an unrelated NVIDIA marker"
+        )
+    }
+
+    func testDXMTAndD9VKAcquireNVIDIARestorationOwnershipOnlyForVerifiedResidue() throws {
+        let temporaryRoot = FileManager.default.temporaryDirectory
+            .appending(
+                path:
+                    "ForgePlayNonNVIDIARestorationOwnership-" +
+                    UUID().uuidString,
+                directoryHint: .isDirectory
+            )
+        defer { try? FileManager.default.removeItem(at: temporaryRoot) }
+
+        let prefix = temporaryRoot.appending(
+            path: "Prefix",
+            directoryHint: .isDirectory
+        )
+        let marker = prefix.appending(
+            path:
+                "drive_c/ForgePlay/RendererBackups/" +
+                SteamRendererPolicyManager
+                    .nvidiaMetalFXRegistrySessionMarkerName
+        )
+        try FileManager.default.createDirectory(
+            at: marker.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try Data("malformed-unrelated-state".utf8).write(to: marker)
+
+        let rendererPolicyManager = SteamRendererPolicyManager()
+
+        XCTAssertFalse(
+            rendererPolicyManager
+                .hasRecoverableNVIDIAMetalFXRegistrySession(in: prefix)
+        )
+        for selection in [
+            SteamRendererPolicySelection.dxmt,
+            .d9vk
+        ] {
+            XCTAssertFalse(
+                SteamManager.requiresPriorNVIDIARestoration(
+                    requestedSelection: selection,
+                    hasRecoverableModuleResidue: false,
+                    hasRecoverableRegistryResidue:
+                        rendererPolicyManager
+                            .hasRecoverableNVIDIAMetalFXRegistrySession(
+                                in: prefix
+                            ),
+                    hasActiveSession: false
+                ),
+                "\(selection.rawValue) must not acquire NVIDIA cleanup " +
+                    "ownership from an unrelated restoration failure"
+            )
+        }
+
+        let validMarker: [String: Any] = [
+            "schemaVersion": 2,
+            "projections": [[
+                "registryPath": SteamRendererPolicyManager
+                    .nvidiaMetalFXNGXCoreRegistryPath,
+                "valueName": SteamRendererPolicyManager
+                    .nvidiaMetalFXNGXCoreFullPathValueName,
+                "stagedValue": SteamRendererPolicyManager
+                    .nvidiaMetalFXNGXCoreSystem32Path
+            ]]
+        ]
+        try JSONSerialization.data(
+            withJSONObject: validMarker,
+            options: [.sortedKeys]
+        ).write(to: marker, options: .atomic)
+
+        XCTAssertTrue(
+            rendererPolicyManager
+                .hasRecoverableNVIDIAMetalFXRegistrySession(in: prefix)
+        )
+        for selection in [
+            SteamRendererPolicySelection.dxmt,
+            .d9vk
+        ] {
+            XCTAssertTrue(
+                SteamManager.requiresPriorNVIDIARestoration(
+                    requestedSelection: selection,
+                    hasRecoverableModuleResidue: false,
+                    hasRecoverableRegistryResidue: true,
+                    hasActiveSession: false
+                ),
+                "\(selection.rawValue) must retain cleanup for verified " +
+                    "stale ForgePlay-owned NVIDIA state"
+            )
+        }
+        XCTAssertTrue(
+            SteamManager.requiresPriorNVIDIARestoration(
+                requestedSelection: .d3dMetalNVIDIA,
+                hasRecoverableModuleResidue: false,
+                hasRecoverableRegistryResidue: false,
+                hasActiveSession: false
+            )
+        )
     }
 
     func testSteamPrefixServiceRepairsMixedRendererPolicyAndReinspectPasses() async throws {
@@ -13294,7 +15003,9 @@ final class SteamLibraryReferenceTests: XCTestCase {
             policyActionInvocations.firstIndex { $0.contains("wineserver --kill=\(SIGTERM)") }
         )
         let firstRegistryMutationIndex = try XCTUnwrap(
-            policyActionInvocations.firstIndex { $0.contains("reg add") }
+            policyActionInvocations.firstIndex {
+                $0.hasPrefix("reg import Z:")
+            }
         )
         XCTAssertLessThan(wineServerShutdownIndex, firstRegistryMutationIndex)
 
@@ -13444,25 +15155,38 @@ final class SteamLibraryReferenceTests: XCTestCase {
         XCTAssertFalse(staleClientFiles.userMessage.localizedCaseInsensitiveContains("gldriverquery"))
     }
 
-    func testSteamClientProfileWineBusRequirementsEnableMacOSIOHID() {
+    func testSteamClientProfileWineBusRequirementsPreferMacOSIOHIDForGenericGamepads() {
         let wineBusRequirements = SteamClientCompatibilityProfileContract.requiredSystemRegistryOverrides
             .filter { $0.registryPath == "HKLM\\System\\CurrentControlSet\\Services\\winebus" }
         let requirementsByName = Dictionary(
             uniqueKeysWithValues: wineBusRequirements.map { ($0.valueName, $0) }
         )
+        let expectedValues = [
+            "DisableHidraw": "0",
+            "DisableInput": "1",
+            "Enable SDL": "0",
+            "Map Controllers": "0"
+        ]
 
         XCTAssertEqual(
             Set(requirementsByName.keys),
-            ["DisableHidraw", "DisableInput", "Enable SDL", "Map Controllers"]
+            Set(expectedValues.keys)
         )
-        for requirement in requirementsByName.values {
+        for (valueName, expectedValue) in expectedValues {
+            guard let requirement = requirementsByName[valueName] else {
+                XCTFail("Missing winebus requirement for \(valueName)")
+                continue
+            }
             XCTAssertEqual(requirement.valueType, "REG_DWORD")
-            XCTAssertEqual(requirement.valueData, "0")
-            XCTAssertEqual(requirement.expectedValue, "dword:00000000")
+            XCTAssertEqual(requirement.valueData, expectedValue)
+            XCTAssertEqual(
+                requirement.expectedValue,
+                expectedValue == "1" ? "dword:00000001" : "dword:00000000"
+            )
         }
     }
 
-    func testSteamClientProfileMigratesWineBusToMacOSIOHIDAndRemovesRendererIsolationOverrides() async throws {
+    func testSteamClientProfileMigratesShippedWineBusPolicyToGenericIOHIDAndRemovesRendererIsolationOverrides() async throws {
         let temporaryRoot = FileManager.default.temporaryDirectory
             .appending(path: "ForgePlaySteamClientProfileRoot-\(UUID().uuidString)", directoryHint: .isDirectory)
         defer { try? FileManager.default.removeItem(at: temporaryRoot) }
@@ -13496,23 +15220,21 @@ final class SteamLibraryReferenceTests: XCTestCase {
         """.write(to: prefix.appending(path: "user.reg"), atomically: true, encoding: .utf8)
         try """
         [System\\ControlSet001\\Services\\winebus]
-        "DisableHidraw"=dword:00000001
-        "DisableInput"=dword:00000001
-        "Enable SDL"=dword:00000001
-        "Map Controllers"=dword:00000001
+        "DisableHidraw"=dword:00000000
+        "DisableInput"=dword:00000000
+        "Enable SDL"=dword:00000000
+        "Map Controllers"=dword:00000000
         """.write(to: prefix.appending(path: "system.reg"), atomically: true, encoding: .utf8)
 
         let contaminatedProfile = SteamClientCompatibilityProfileContract.inspect(prefix: prefix)
         XCTAssertFalse(contaminatedProfile.isSatisfied)
         XCTAssertFalse(contaminatedProfile.staleOverrides.isEmpty)
-        for valueName in ["DisableHidraw", "DisableInput", "Enable SDL", "Map Controllers"] {
-            XCTAssertTrue(
-                contaminatedProfile.missingOverrides.contains {
-                    $0.contains("winebus\\\(valueName)=dword:00000000")
-                },
-                contaminatedProfile.missingOverrides.joined(separator: "\n")
-            )
-        }
+        XCTAssertTrue(
+            contaminatedProfile.missingOverrides.contains {
+                $0.contains("winebus\\DisableInput=dword:00000001")
+            },
+            contaminatedProfile.missingOverrides.joined(separator: "\n")
+        )
         XCTAssertTrue(
             contaminatedProfile.staleOverrides.contains {
                 $0.contains("steam.exe") && $0.contains("d3d11=<removed>")
@@ -13527,11 +15249,20 @@ final class SteamLibraryReferenceTests: XCTestCase {
         )
 
         let steamClientProfile = SteamClientCompatibilityProfile(runner: makeCuratedRuntimeRunner())
-        let firstApplyFailure = try await steamClientProfile.apply(
-            runtimeExecutable: launcher,
-            prefix: prefix,
-            logDirectory: launchLogs
-        )
+        let firstApplyFailure: ProcessRunResult?
+        do {
+            firstApplyFailure = try await steamClientProfile.apply(
+                runtimeExecutable: launcher,
+                prefix: prefix,
+                logDirectory: launchLogs
+            )
+        } catch let cleanupError as SteamPrefixLifecycleCleanupError {
+            let cleanupLogs = cleanupError.cleanupProcessResults.compactMap {
+                try? String(contentsOf: $0.stderrLog, encoding: .utf8)
+            }.joined(separator: "\n---\n")
+            XCTFail("Unexpected cleanup failure: \(cleanupError)\n\(cleanupLogs)")
+            return
+        }
         XCTAssertNil(firstApplyFailure)
 
         let cleanedProfile = SteamClientCompatibilityProfileContract.inspect(prefix: prefix)
@@ -13540,7 +15271,16 @@ final class SteamLibraryReferenceTests: XCTestCase {
             invocations.split(whereSeparator: \.isNewline).contains("wineserver -w"),
             "Registry profile changes must wait for a natural wineserver exit so they are persisted.\n\(invocations)"
         )
-        XCTAssertFalse(invocations.contains("--kill="), invocations)
+        XCTAssertTrue(
+            invocations.split(whereSeparator: \.isNewline).contains {
+                $0.hasPrefix("reg import Z:")
+            },
+            "Registry profile changes must use one batch import.\n\(invocations)"
+        )
+        XCTAssertTrue(
+            invocations.contains("wineserver --kill=15"),
+            "Every mutation transaction must retire its Wine session.\n\(invocations)"
+        )
         XCTAssertTrue(
             cleanedProfile.isSatisfied,
             "\(cleanedProfile.missingOverrides.joined(separator: "\n"))\n\(invocations)"
@@ -13550,19 +15290,20 @@ final class SteamLibraryReferenceTests: XCTestCase {
         XCTAssertTrue(cleanedProfile.appliedOverrides.contains { $0.contains("*vulkandriverquery.exe=<empty>") })
         XCTAssertTrue(cleanedProfile.appliedOverrides.contains { $0.contains("*vulkandriverquery64.exe=<empty>") })
         XCTAssertTrue(cleanedProfile.appliedOverrides.contains { $0.contains("AeDebug\\Debugger=false") })
-        for valueName in ["DisableHidraw", "DisableInput", "Enable SDL", "Map Controllers"] {
+        let expectedWineBusValues = [
+            "DisableHidraw": "dword:00000000",
+            "DisableInput": "dword:00000001",
+            "Enable SDL": "dword:00000000",
+            "Map Controllers": "dword:00000000"
+        ]
+        for (valueName, expectedValue) in expectedWineBusValues {
             XCTAssertTrue(
                 cleanedProfile.appliedOverrides.contains {
-                    $0.contains("winebus\\\(valueName)=dword:00000000")
+                    $0.contains("winebus\\\(valueName)=\(expectedValue)")
                 },
                 cleanedProfile.appliedOverrides.joined(separator: "\n")
             )
-            XCTAssertTrue(
-                invocations.split(whereSeparator: \.isNewline).contains {
-                    $0.contains(valueName) && $0.contains("/d 0")
-                },
-                invocations
-            )
+            XCTAssertFalse(invocations.contains("/v \(valueName)"), invocations)
         }
         XCTAssertTrue(cleanedProfile.missingOverrides.isEmpty, cleanedProfile.missingOverrides.joined(separator: "\n"))
         XCTAssertTrue(cleanedProfile.staleOverrides.isEmpty)
@@ -13585,6 +15326,86 @@ final class SteamLibraryReferenceTests: XCTestCase {
             try String(contentsOf: invocationLog, encoding: .utf8),
             invocationTextAfterRepair,
             "A satisfied Steam compatibility profile must not launch Wine or flush the prefix again"
+        )
+    }
+
+    func testSteamClientProfileBatchFailureRollsBackAndAlwaysCleansWineSession() async throws {
+        let temporaryRoot = FileManager.default.temporaryDirectory.appending(
+            path: "ForgePlaySteamClientProfileFailure-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        defer { try? FileManager.default.removeItem(at: temporaryRoot) }
+
+        let prefix = temporaryRoot.appending(
+            path: "Prefix",
+            directoryHint: .isDirectory
+        )
+        let logs = temporaryRoot.appending(
+            path: "Logs",
+            directoryHint: .isDirectory
+        )
+        let launcher = temporaryRoot.appending(path: "wine")
+        let invocationLog = temporaryRoot.appending(path: "invocations.log")
+        try FileManager.default.createDirectory(
+            at: prefix,
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.createDirectory(
+            at: logs,
+            withIntermediateDirectories: true
+        )
+        let originalUserRegistry = Data(
+            "WINE REGISTRY Version 2\n[Software\\\\Baseline]\n\"Value\"=\"user\"\n".utf8
+        )
+        let originalSystemRegistry = Data(
+            "WINE REGISTRY Version 2\n[System\\\\Baseline]\n\"Value\"=\"system\"\n".utf8
+        )
+        try originalUserRegistry.write(to: prefix.appending(path: "user.reg"))
+        try originalSystemRegistry.write(to: prefix.appending(path: "system.reg"))
+        try """
+        #!/bin/sh
+        printf '%s\\n' "$*" >> "\(invocationLog.path)"
+        if [ "${1:-}" = "reg" ] && [ "${2:-}" = "import" ]; then
+          exit 42
+        fi
+        exit 0
+        """.write(to: launcher, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o755],
+            ofItemAtPath: launcher.path
+        )
+        let profile = SteamClientCompatibilityProfile(
+            runner: makeCuratedRuntimeRunner()
+        )
+
+        let failure = try await profile.apply(
+            runtimeExecutable: launcher,
+            prefix: prefix,
+            logDirectory: logs
+        )
+        let result = try XCTUnwrap(failure)
+        let invocations = try String(
+            contentsOf: invocationLog,
+            encoding: .utf8
+        )
+
+        XCTAssertEqual(result.processExitCode, 42)
+        XCTAssertTrue(invocations.contains("reg import Z:"), invocations)
+        XCTAssertTrue(invocations.contains("wineserver --kill=15"), invocations)
+        XCTAssertTrue(invocations.contains("wineserver -w"), invocations)
+        XCTAssertEqual(
+            try Data(contentsOf: prefix.appending(path: "user.reg")),
+            originalUserRegistry
+        )
+        XCTAssertEqual(
+            try Data(contentsOf: prefix.appending(path: "system.reg")),
+            originalSystemRegistry
+        )
+        XCTAssertTrue(
+            try FileManager.default.contentsOfDirectory(
+                at: logs,
+                includingPropertiesForKeys: nil
+            ).filter { $0.pathExtension.lowercased() == "reg" }.isEmpty
         )
     }
 
@@ -13814,6 +15635,175 @@ final class SteamLibraryReferenceTests: XCTestCase {
         XCTAssertTrue(appliedProfile.staleFiles.isEmpty)
     }
 
+    func testSteamClientProfileCleansOwnedHostResidueWithoutLaunchingWine() async throws {
+        let temporaryRoot = FileManager.default.temporaryDirectory
+            .appending(
+                path: "ForgePlaySteamHostCleanup-\(UUID().uuidString)",
+                directoryHint: .isDirectory
+            )
+        defer { try? FileManager.default.removeItem(at: temporaryRoot) }
+
+        let prefix = temporaryRoot.appending(
+            path: "Prefix",
+            directoryHint: .isDirectory
+        )
+        let steamDirectory = SteamClientCompatibilityProfileContract
+            .steamDirectory(in: prefix)
+        let steamBin = SteamClientCompatibilityProfileContract
+            .steamBinDirectory(in: prefix)
+        let steamCEF = steamBin.appending(
+            path: "cef/cef.win64",
+            directoryHint: .isDirectory
+        )
+        let steamApps = steamDirectory.appending(
+            path: "steamapps",
+            directoryHint: .isDirectory
+        )
+        let backups = SteamClientCompatibilityProfileContract
+            .obsoleteSteamCompatibilityBackupsDirectory(in: prefix)
+        let unrelatedBackup = backups.appending(
+            path: "third-party-retained",
+            directoryHint: .isDirectory
+        )
+        let launcher = temporaryRoot.appending(path: "wine")
+        let invocationLog = temporaryRoot.appending(path: "wine-invocations.log")
+        let videoMemorySizeMB = 8_192
+
+        try FileManager.default.createDirectory(
+            at: steamCEF,
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.createDirectory(
+            at: steamApps,
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.createDirectory(
+            at: unrelatedBackup,
+            withIntermediateDirectories: true
+        )
+        try Data("driver-query".utf8).write(
+            to: steamBin.appending(path: "gldriverquery.exe")
+        )
+        try Data("valve webhelper".utf8).write(
+            to: steamCEF.appending(path: "steamwebhelper.exe")
+        )
+        let sdl2CompatResources = try XCTUnwrap(
+            SteamClientCompatibilityProfileContract.sdl2CompatResourceDirectory()
+        )
+        for fileName in ["SDL2.dll", "SDL3.dll"] {
+            try FileManager.default.copyItem(
+                at: sdl2CompatResources.appending(path: fileName),
+                to: steamBin.appending(path: fileName)
+            )
+        }
+
+        let libraryFolders = Data("preserved Steam library reference".utf8)
+        let libraryFoldersURL = steamApps.appending(path: "libraryfolders.vdf")
+        try libraryFolders.write(to: libraryFoldersURL)
+        let unrelatedBackupContents = Data("preserve unrelated backup residue".utf8)
+        let unrelatedBackupURL = unrelatedBackup.appending(path: "keep.dat")
+        try unrelatedBackupContents.write(to: unrelatedBackupURL)
+        try SteamClientCompatibilityProfileContract.obsoleteSteamBootstrapPinContents.write(
+            to: steamDirectory.appending(path: "steam.cfg"),
+            atomically: true,
+            encoding: .utf8
+        )
+        for backupDirectory in SteamClientCompatibilityProfileContract
+            .obsoleteSteamCompatibilityBackupDirectories(in: prefix) {
+            try FileManager.default.createDirectory(
+                at: backupDirectory,
+                withIntermediateDirectories: true
+            )
+            try Data("obsolete ForgePlay backup".utf8).write(
+                to: backupDirectory.appending(path: "owned-backup.bin")
+            )
+        }
+
+        func registryContents(
+            _ requirements: [SteamClientCompatibilityRegistryRequirement]
+        ) -> String {
+            (["WINE REGISTRY Version 2"] + requirements.map { requirement in
+                let value = requirement.valueType == "REG_DWORD"
+                    ? requirement.expectedValue
+                    : "\"\(requirement.expectedValue)\""
+                return """
+
+                [\(requirement.registryPath)]
+                "\(requirement.valueName)"=\(value)
+                """
+            }).joined(separator: "\n") + "\n"
+        }
+        try registryContents(
+            SteamClientCompatibilityProfileContract.requiredRegistryOverrides(
+                videoMemorySizeMB: videoMemorySizeMB
+            )
+        ).write(
+            to: prefix.appending(path: "user.reg"),
+            atomically: true,
+            encoding: .utf8
+        )
+        try registryContents(
+            SteamClientCompatibilityProfileContract.requiredSystemRegistryOverrides
+        ).write(
+            to: prefix.appending(path: "system.reg"),
+            atomically: true,
+            encoding: .utf8
+        )
+        try """
+        #!/bin/sh
+        printf '%s\\n' "$*" >> "\(invocationLog.path)"
+        exit 99
+        """.write(to: launcher, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o755],
+            ofItemAtPath: launcher.path
+        )
+
+        let staleInspection = SteamClientCompatibilityProfileContract.inspect(
+            prefix: prefix,
+            videoMemorySizeMB: videoMemorySizeMB
+        )
+        XCTAssertTrue(staleInspection.missingOverrides.isEmpty)
+        XCTAssertTrue(staleInspection.staleOverrides.isEmpty)
+        XCTAssertTrue(staleInspection.webHelperFiles.isSatisfied)
+        XCTAssertTrue(staleInspection.driverQueryCompatibilityFiles.isSatisfied)
+        XCTAssertFalse(staleInspection.obsoleteHostFiles.isSatisfied)
+        XCTAssertFalse(staleInspection.isSatisfied)
+
+        let profile = SteamClientCompatibilityProfile(
+            runner: makeCuratedRuntimeRunner()
+        )
+        let result = try await profile.apply(
+            runtimeExecutable: launcher,
+            prefix: prefix,
+            logDirectory: temporaryRoot.appending(path: "Logs"),
+            videoMemorySizeMB: videoMemorySizeMB
+        )
+
+        XCTAssertNil(result)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: invocationLog.path))
+        XCTAssertFalse(
+            FileManager.default.fileExists(
+                atPath: steamDirectory.appending(path: "steam.cfg").path
+            )
+        )
+        for backupDirectory in SteamClientCompatibilityProfileContract
+            .obsoleteSteamCompatibilityBackupDirectories(in: prefix) {
+            XCTAssertFalse(
+                FileManager.default.fileExists(atPath: backupDirectory.path),
+                backupDirectory.path
+            )
+        }
+        XCTAssertEqual(try Data(contentsOf: unrelatedBackupURL), unrelatedBackupContents)
+        XCTAssertEqual(try Data(contentsOf: libraryFoldersURL), libraryFolders)
+        XCTAssertTrue(
+            SteamClientCompatibilityProfileContract.inspect(
+                prefix: prefix,
+                videoMemorySizeMB: videoMemorySizeMB
+            ).isSatisfied
+        )
+    }
+
     func testOperationalLaunchDefersEvidenceGateAndKeepsSteamRunningDuringBootstrapUpdate() async throws {
         let temporaryRoot = FileManager.default.temporaryDirectory
             .appending(path: "ForgePlaySteamBootstrapUpdateLaunchRoot-\(UUID().uuidString)", directoryHint: .isDirectory)
@@ -13918,10 +15908,15 @@ final class SteamLibraryReferenceTests: XCTestCase {
         let diagnosticLog = try XCTUnwrap(result.diagnosticLog)
         let diagnostics = try String(contentsOf: diagnosticLog, encoding: .utf8)
 
-        XCTAssertFalse(result.succeeded)
+        XCTAssertTrue(result.succeeded)
         XCTAssertFalse(result.waitedForExit)
         XCTAssertNil(result.processExitCode)
-        XCTAssertEqual(result.forgePlayStatusCode, SteamManager.steamBootstrapUpdateInProgressExitCode)
+        XCTAssertNil(result.forgePlayStatusCode)
+        XCTAssertTrue(
+            result.diagnosticCaptureWarning?.contains(
+                "bootstrap update is still in progress"
+            ) == true
+        )
         XCTAssertEqual(SteamUIVerificationState.inferred(from: result), .launchedButUnverified)
         XCTAssertTrue(diagnostics.contains("Status: DEFERRED"), diagnostics)
         XCTAssertTrue(diagnostics.contains("steam-bootstrap-update-in-progress"), diagnostics)
@@ -13993,9 +15988,14 @@ final class SteamLibraryReferenceTests: XCTestCase {
             .split(whereSeparator: \.isNewline)
             .map(String.init)
 
-        XCTAssertFalse(result.succeeded)
+        XCTAssertTrue(result.succeeded)
         XCTAssertEqual(result.processExitCode, 0)
-        XCTAssertEqual(result.forgePlayStatusCode, SteamManager.steamLaunchProcessVerificationUnavailableExitCode)
+        XCTAssertNil(result.forgePlayStatusCode)
+        XCTAssertTrue(
+            result.diagnosticCaptureWarning?.contains(
+                "process verification was unavailable"
+            ) == true
+        )
         XCTAssertEqual(SteamUIVerificationState.inferred(from: result), .launchedButUnverified)
         XCTAssertNotNil(result.diagnosticLog)
         let diagnostics = try String(contentsOf: try XCTUnwrap(result.diagnosticLog), encoding: .utf8)
@@ -15387,7 +17387,7 @@ final class SteamLibraryReferenceTests: XCTestCase {
 
         XCTAssertFalse(result.succeeded)
         XCTAssertEqual(result.processExitCode, 0)
-        XCTAssertEqual(result.forgePlayStatusCode, SteamManager.steamUIStartupFailureExitCode)
+        XCTAssertEqual(result.forgePlayStatusCode, SteamManager.hardGateEvidenceIncompleteExitCode)
         XCTAssertEqual(SteamUIVerificationState.inferred(from: result), .failed)
         XCTAssertTrue(result.diagnosticCaptureWarning?.contains("shader_log.txt") == true)
         XCTAssertTrue(result.diagnosticCaptureWarning?.contains("unsafe") == true)
@@ -18332,7 +20332,7 @@ final class SteamLibraryReferenceTests: XCTestCase {
 
         XCTAssertFalse(result.succeeded)
         XCTAssertEqual(result.processExitCode, 0)
-        XCTAssertEqual(result.forgePlayStatusCode, SteamManager.steamUIStartupFailureExitCode)
+        XCTAssertEqual(result.forgePlayStatusCode, SteamManager.hardGateEvidenceIncompleteExitCode)
         XCTAssertNotNil(result.diagnosticLog)
     }
 
@@ -18374,6 +20374,75 @@ final class SteamLibraryReferenceTests: XCTestCase {
         if [ "$1" = "$WINEPREFIX" ]; then
           shift
         fi
+        if [ "$1" = "reg" ] && [ "$2" = "import" ]; then
+          registry_import="$(printf '%s' "$3" | sed 's|^Z:\\|/|; s|\\|/|g')"
+          /usr/bin/python3 - "$WINEPREFIX" "$registry_import" <<'PY'
+        import re
+        import sys
+        from pathlib import Path
+
+        prefix = Path(sys.argv[1])
+        source = Path(sys.argv[2])
+        raw = source.read_bytes()
+        if raw.startswith(b"\xff\xfe"):
+            text = raw[2:].decode("utf-16le")
+        else:
+            text = raw.decode("utf-8-sig")
+
+        entries = []
+        section = None
+        for raw_line in text.splitlines():
+            line = raw_line.strip()
+            if line.startswith("[") and line.endswith("]"):
+                section = line[1:-1]
+                continue
+            match = re.match(r'^"((?:\\.|[^"])*)"=(.*)$', line)
+            if section and match:
+                name = match.group(1).replace(r'\"', '"').replace(r'\\', '\\')
+                entries.append((section, name, match.group(2)))
+
+        def normalize(value):
+            while "\\\\" in value:
+                value = value.replace("\\\\", "\\")
+            return value.lower()
+
+        for hive, registry_name in (
+            ("HKEY_CURRENT_USER\\", "user.reg"),
+            ("HKEY_LOCAL_MACHINE\\", "system.reg"),
+        ):
+            mutations = [
+                (section[len(hive):], name, rhs)
+                for section, name, rhs in entries
+                if section.startswith(hive)
+            ]
+            if not mutations:
+                continue
+            registry = prefix / registry_name
+            lines = registry.read_text(encoding="utf-8").splitlines()
+            targets = {(normalize(section), name) for section, name, _ in mutations}
+            current = None
+            filtered = []
+            for line in lines:
+                if line.startswith("["):
+                    current = normalize(line[1:].split("]", 1)[0])
+                value_match = re.match(r'^"((?:\\.|[^"])*)"=', line)
+                if value_match:
+                    name = value_match.group(1).replace(r'\"', '"').replace(r'\\', '\\')
+                    if (current, name) in targets:
+                        continue
+                filtered.append(line)
+            for section, name, rhs in mutations:
+                if rhs == "-":
+                    continue
+                filtered.extend([
+                    "",
+                    "[" + section.replace("\\", "\\\\") + "]",
+                    '"' + name.replace("\\", "\\\\").replace('"', r'\"') + '"=' + rhs,
+                ])
+            registry.write_text("\n".join(filtered) + "\n", encoding="utf-8")
+        PY
+          exit $?
+        fi
         if [ "$1" = "cmd" ] && [ "$2" = "/c" ]; then
           shift 2
           command="$*"
@@ -18398,8 +20467,21 @@ final class SteamLibraryReferenceTests: XCTestCase {
                 ;;
             esac
             if [ -n "$section" ] && [ -n "$value" ] && [ -f "$registry_file" ]; then
+              FORGEPLAY_REGISTRY_TARGET="$section" \
               awk -v value="\"$value\"=" '
-                index($0, value) == 1 { next }
+                BEGIN { target = ENVIRON["FORGEPLAY_REGISTRY_TARGET"] }
+                function normalized(input) {
+                  gsub(/\\\\/, "\\", input)
+                  return input
+                }
+                /^\[/ {
+                  registry_section = $0
+                  sub(/^\[/, "", registry_section)
+                  sub(/\][[:space:]].*$/, "", registry_section)
+                  sub(/\]$/, "", registry_section)
+                  in_target = normalized(registry_section) == normalized(target)
+                }
+                in_target && index($0, value) == 1 { next }
                 { print }
               ' "$registry_file" > "$registry_file.tmp" &&
                 mv "$registry_file.tmp" "$registry_file"
@@ -18494,6 +20576,26 @@ final class SteamLibraryReferenceTests: XCTestCase {
             section="$(printf '%s' "$section" | sed 's/^HKLM\\//')"
           elif printf '%s' "$section" | grep -q '^HKCU\\'; then
             section="$(printf '%s' "$section" | sed 's/^HKCU\\//')"
+          fi
+          if [ -f "$registry_file" ]; then
+            FORGEPLAY_REGISTRY_TARGET="$section" \
+            awk -v value="\"$value\"=" '
+              BEGIN { target = ENVIRON["FORGEPLAY_REGISTRY_TARGET"] }
+              function normalized(input) {
+                gsub(/\\\\/, "\\", input)
+                return input
+              }
+              /^\[/ {
+                registry_section = $0
+                sub(/^\[/, "", registry_section)
+                sub(/\][[:space:]].*$/, "", registry_section)
+                sub(/\]$/, "", registry_section)
+                in_target = normalized(registry_section) == normalized(target)
+              }
+              in_target && index($0, value) == 1 { next }
+              { print }
+            ' "$registry_file" > "$registry_file.tmp" &&
+              mv "$registry_file.tmp" "$registry_file" || exit $?
           fi
           if [ "$type" = "REG_DWORD" ]; then
             if [ "$data" = "1" ]; then

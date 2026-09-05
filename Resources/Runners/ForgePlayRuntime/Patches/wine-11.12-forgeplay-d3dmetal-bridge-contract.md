@@ -99,7 +99,8 @@ ForgePlay does not rename or modify the signed, manifest-locked renderer tree.
 Before a D3DMetal session, the host derives a prefix-owned bridge under
 `.forgeplay/renderer-bridges/d3dmetal/<content-identity>/`. It copies the exact
 verified `nvngx-on-metalfx.dll` bytes to
-`wine/x86_64-windows/nvngx.dll`, copies the exact verified
+`wine/x86_64-windows/nvngx.dll` and the byte-identical compatibility name
+`wine/x86_64-windows/_nvngx.dll`, copies the exact verified
 `libd3dshared.dylib` bytes to `external/libd3dshared.dylib`, and creates only
 the relative Unix-module link
 `wine/x86_64-unix/nvngx.so -> ../../external/libd3dshared.dylib`.
@@ -116,6 +117,20 @@ variables. Wine removes or restores them for Steam infrastructure and installs
 them only in routed D3DMetal game environments. Exact D9VK, DXMT, and DXVK
 routes publish the unset sentinel for both variables and cannot inherit them
 from a previous launch.
+
+For a host-selected NVIDIA D3DMetal session, one central provider contract
+stages four exact modules into the managed prefix's System32 directory:
+`nvapi64.dll`, its byte-identical `nvapi.dll` compatibility name, `nvngx.dll`,
+and its byte-identical `_nvngx.dll` compatibility name. New sessions use marker
+schema 3 and record all four files; schema 1 and 2 three-file markers remain
+recognized only so an interrupted older session can be restored safely. The
+host publishes only the exact System32 `nvngx.dll` and `_nvngx.dll` paths in
+`FORGEPLAY_GAME_RENDERER_PROVIDER_ALIAS_PATHS_X64`. Wine accepts an explicit
+`nvapi.dll` request resolving to the allowed `nvapi64.dll` provider and the two
+exact NGX aliases, without treating arbitrary System32 modules as renderer
+owned. NVAPI staging, NGX staging, child-environment projection, loader
+ownership evidence, and restoration therefore consume the same four-module
+identity instead of maintaining independent filename policies.
 
 ## Non-native image registration contract
 
@@ -244,15 +259,18 @@ and four-pointer window prefix from accidental layout drift.
    dynamic TLS owned by the actual TEB, uses reentrant Apple time conversions,
    restores every saved Darwin slot before pthread exit, and introduces no
    text-patching or new host-private-API reference.
-7. Verify the prefix-derived NGX bridge is byte-identical to the locked Apple
-   payload, repairs a replaced derived file, uses only the fixed relative Unix
-   link, is present in the x86_64 component/DLL allowlists, and never exposes
-   either MetalFX variable to Steam or to a non-D3DMetal route.
+7. Verify the prefix-derived `nvngx.dll`/`_nvngx.dll` pair is byte-identical to
+   the locked Apple payload, repairs a replaced derived file, uses only the
+   fixed relative Unix link, and never exposes either MetalFX variable to Steam
+   or to a non-D3DMetal route. Verify schema 3 stages all four central provider
+   names, legacy schema 1/2 restoration remains lossless, and every staged file
+   is restored or removed at session retirement.
 8. Create a real Win32 window through the selected D3DMetal route, then verify
    D3D11 device creation, DXGI swapchain creation, and `Present` complete
    without an access violation and with the selected renderer modules recorded.
-9. Through a D3D12 device, load `nvngx.dll`, resolve the public NGX entry
+9. Through a D3D12 device, load both `nvngx.dll` and `_nvngx.dll`, resolve the
+   public NGX entry
    points, and verify initialization, capability-parameter acquisition,
    parameter destruction, and shutdown complete successfully while Wine's load
-   evidence attributes both the PE module and its Unix companion to the exact
-   allowed derived bridge root.
+   evidence attributes `nvapi64.dll`, the `nvapi.dll` request, both NGX names,
+   and the Unix companion to their exact allowed providers.

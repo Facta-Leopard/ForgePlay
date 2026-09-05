@@ -6,27 +6,6 @@ PATH="$FORGEPLAY_SYSTEM_TOOL_PATH"
 export PATH
 unset CDPATH
 
-fail() {
-  printf 'error: open-source export failed: %s\n' "$*" >&2
-  exit 1
-}
-
-require_explicit_xcodegen() {
-  local candidate="${FORGEPLAY_XCODEGEN_PATH:-}"
-  local parent basename
-  [[ -n "$candidate" ]] ||
-    fail "FORGEPLAY_XCODEGEN_PATH is required under the sanitized release PATH"
-  parent="$(/usr/bin/dirname "$candidate")"
-  basename="$(/usr/bin/basename "$candidate")"
-  [[ "$candidate" = /* && -f "$candidate" && -x "$candidate" &&
-     ! -L "$candidate" && -d "$parent" && ! -L "$parent" &&
-     "$(cd "$parent" 2>/dev/null && /bin/pwd -P)/$basename" == "$candidate" ]] ||
-    fail "FORGEPLAY_XCODEGEN_PATH must be an exact absolute non-symlink executable: $candidate"
-  export FORGEPLAY_XCODEGEN_PATH="$candidate"
-}
-
-require_explicit_xcodegen
-
 ROOT_DIR="$(cd "$(/usr/bin/dirname "${BASH_SOURCE[0]}")/.." && /bin/pwd -P)"
 DESTINATION="$ROOT_DIR/OpenSource"
 DESTINATION_PARENT="$(cd "$(/usr/bin/dirname "$DESTINATION")" && /bin/pwd -P)"
@@ -40,6 +19,11 @@ ORIGIN_RECORDS="$STAGED_EXPORT/.forgeplay-export-origins.jsonl"
 TRANSACTION_SNAPSHOT="$WORK_ROOT/open-source-export-transaction.py"
 QUARANTINE_SNAPSHOT="$WORK_ROOT/quarantine-owned-directory.py"
 PUBLISHED=0
+
+fail() {
+  printf 'error: open-source export failed: %s\n' "$*" >&2
+  exit 1
+}
 
 quarantine_cleanup() {
   local owned_path="$1"
@@ -77,6 +61,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 command -v git >/dev/null 2>&1 || fail "git is required"
+command -v xcodegen >/dev/null 2>&1 || fail "xcodegen is required"
 
 RELEASE_COMMIT="$(git -C "$ROOT_DIR" rev-parse --verify 'HEAD^{commit}')" ||
   fail "release commit identity is unavailable"
@@ -174,6 +159,8 @@ materialize_tree() {
 
 materialize_tree "Sources/ForgePlay"
 materialize_tree "Tests/ForgePlayTests"
+materialize_tree "Tests/ForgePlayD3DMetalFrameGenerationProxyTests"
+materialize_tree "Native/D3DMetalFrameGenerationProxy"
 materialize_tree "Native/ExternalStorageAccessBridge"
 materialize_tree "Native/GameModeProcessHost"
 materialize_tree "Native/NetworkControlHelper"
@@ -185,6 +172,7 @@ for config_file in \
   ForgePlayDefaults.xcconfig \
   ForgePlayDirectRelease.xcconfig \
   ForgePlayDistribution.xcconfig \
+  ForgePlayD3DMetalFrameGenerationProxy.xcconfig \
   ForgePlayExternalStorageAccessBridge.xcconfig \
   ForgePlayGameModeProcessHost.xcconfig \
   ForgePlayGameModeProcessHostAppStore.xcconfig \
@@ -203,8 +191,8 @@ for config_file in \
   materialize_file "Config/$config_file"
 done
 
-materialize_tree "Resources/AppIcon.icon"
 materialize_tree "Resources/Assets.xcassets"
+materialize_tree "Resources/AppIcon.icon"
 materialize_tree "Resources/CompatibilityDB"
 materialize_tree "Resources/Documents"
 materialize_tree "Resources/Fonts"
@@ -261,7 +249,7 @@ for script_file in \
   sign-app-store-runtime-code.sh \
   sign-compatibility-db-feed.swift \
   test-wine-session-compatibility.sh \
-  validate-d3dmetal-ngx-bridge.sh \
+  test-wine-game-renderer-d3dmetal.sh \
   validate-compatibility-db-public-key.swift \
   validate-product-identity.sh \
   verify-clean-wine-runtime-markers.py \
@@ -292,10 +280,13 @@ for script_file in \
 done
 
 materialize_tree "Scripts/Fixtures/WineSessionCompatibility"
+for renderer_fixture in base_desktop_initializer.c d3dmetal_probe.c launcher.c; do
+  materialize_file "Scripts/Fixtures/WineGameRendererPolicy/$renderer_fixture"
+done
 for test_file in \
   test-copyleft-source-packages.py \
+  test-d3dmetal-frame-generation-production-contract.sh \
   test-freeze-public-source-export.py \
-  test-generate-xcode-project.sh \
   test-open-source-export-transaction.py \
   test-packaging-license-release-contracts.py \
   test-public-distribution-archive-graph.py \
@@ -334,8 +325,11 @@ done
   cd "$STAGED_EXPORT"
   /bin/bash Scripts/generate-xcode-project.sh
 )
-XCODEGEN_VERSION="$("$FORGEPLAY_XCODEGEN_PATH" --version | /usr/bin/tr -d '\r\n')"
+XCODEGEN_VERSION="$(xcodegen --version | /usr/bin/tr -d '\r\n')"
 [[ -n "$XCODEGEN_VERSION" ]] || fail "xcodegen version identity is unavailable"
+
+# Normalize directory permissions for recipients without changing source bytes.
+/usr/bin/find "$STAGED_EXPORT" -mindepth 1 -type d -exec /bin/chmod 755 {} +
 
 /usr/bin/python3 - \
   "$STAGED_EXPORT" \

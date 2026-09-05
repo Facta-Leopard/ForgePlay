@@ -15,7 +15,7 @@ index 795940c..38ea9c1 100644
   * inherited handles, server socket, and the Darwin PID are preserved by exec. */
  static NTSTATUS forgeplay_exec_required_game_mode_host( char **argv )
  {
-@@ -565,10 +565,24 @@ static NTSTATUS forgeplay_exec_required_game_mode_host( char **argv )
+@@ -565,15 +565,24 @@ static NTSTATUS forgeplay_exec_required_game_mode_host( char **argv )
      char *host_argument;
      int saved_error;
  
@@ -23,13 +23,12 @@ index 795940c..38ea9c1 100644
      if (!forgeplay_environment_flag_enabled( "FORGEPLAY_STEAM_GAME_PROCESS" ))
          return STATUS_SUCCESS;
      if (!forgeplay_environment_flag_enabled( "FORGEPLAY_GAME_MODE_HOST_ENABLED" ))
--        return STATUS_NOT_SUPPORTED;
-+    {
-+        forgeplay_record_game_mode_loader_event(
-+            "loader_route_skipped_game_mode_not_requested", 0 );
-+        unsetenv( "FORGEPLAY_GAME_MODE_DIRECT_TARGET" );
-+        return STATUS_SUCCESS;
-+    }
+     {
+         forgeplay_record_game_mode_loader_event(
+             "loader_route_skipped_game_mode_not_requested", 0 );
+         unsetenv( "FORGEPLAY_GAME_MODE_DIRECT_TARGET" );
+         return STATUS_SUCCESS;
+     }
 +    if (!forgeplay_environment_flag_enabled( "FORGEPLAY_GAME_MODE_DIRECT_TARGET" ))
 +    {
 +        forgeplay_record_game_mode_loader_event(

@@ -962,7 +962,7 @@ private struct AppleSupplementalRendererImportView: View {
                             badge: "격리",
                             systemImage: "square.stack.3d.up.fill",
                             title: "Steam UI와 게임 렌더러 분리",
-                            detail: "Windows용 Steam UI는 렌더러 주입 없이 기본 Wine 경로로 엽니다. 다음 실행 초안에는 그래픽 백엔드, 네트워크 표시, 오디오 입력, 동기화, 비디오 메모리, Game Mode 값이 함께 표시됩니다. 구성을 저장하거나 Steam을 실행하면 다음에도 다시 사용하며, 새 구성의 Game Mode 호스트 기본값은 켬입니다. 게임에는 선택한 백엔드 하나만 적용되고 D3DMetal NVIDIA는 GPU 공급자와 Apple MetalFX용 NGX 브리지를 함께 준비하는 실험 기능입니다."
+                            detail: "Windows용 Steam UI는 렌더러 주입 없이 기본 Wine 경로로 엽니다. 다음 실행 초안에는 그래픽 백엔드, 네트워크 표시, 오디오 입력, 동기화, 비디오 메모리, Game Mode 값이 함께 표시됩니다. 구성을 저장하면 다음 실행에도 다시 사용하고, 저장하지 않고 Steam을 실행하면 현재 초안은 이번 세션에만 적용됩니다. 새 구성의 Game Mode 호스트 기본값은 켬입니다. 게임에는 선택한 백엔드 하나만 적용되고 D3DMetal - NVIDIA는 GPU 공급자와 Apple MetalFX용 NGX 브리지를 함께 준비합니다."
                         )
                     }
 

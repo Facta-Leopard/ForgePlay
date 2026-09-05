@@ -2,46 +2,27 @@ import XCTest
 @testable import ForgePlay
 
 final class DeveloperAppCatalogTests: XCTestCase {
-    func testInDevelopmentCatalogContainsRequestedProjectIdentityAndKind() {
+    func testUpcomingCatalogContainsMajorDexAndForgeKit() {
+        XCTAssertEqual(
+            DeveloperAppCatalog.upcomingListings.map(\.name),
+            ["MajorDex", "ForgeKit"]
+        )
+        XCTAssertTrue(
+            DeveloperAppCatalog.upcomingListings.allSatisfy {
+                $0.summaryKey?.isEmpty == false
+            }
+        )
+    }
+
+    func testInDevelopmentCatalogContainsOnlyRequestedProjectIdentity() {
         XCTAssertEqual(
             DeveloperAppCatalog.inDevelopmentListings.map(\.name),
-            [
-                "MajorDex",
-                "ForgeKit",
-                "HareWatch",
-                "WarrenNet",
-                "Hazel&Peanut",
-                "GrayLine",
-                "Leporis Ascendant"
-            ]
+            ["HareWatch", "WarrenNet"]
         )
-        XCTAssertEqual(
-            DeveloperAppCatalog.inDevelopmentListings.map(\.summaryKey),
-            [
-                "선택한 프로젝트를 실행하지 않고 읽기 전용으로 분석해 구조와 실행 흐름을 시각적으로 살펴볼 수 있는 macOS 앱입니다.",
-                "Apple 플랫폼 전용 게임 엔진으로, Apple Intelligence 기반 AI를 활용해 2D·3D 게임을 제작할 수 있습니다.",
-                "유틸리티",
-                "유틸리티",
-                "게임",
-                "게임",
-                "게임"
-            ]
-        )
-        XCTAssertEqual(
-            DeveloperAppCatalog.inDevelopmentListings.map(\.platform),
-            [.mac, .mac, .mac, .mac, .iPhone, .iPhone, .iPad]
-        )
-        XCTAssertEqual(
-            DeveloperAppCatalog.inDevelopmentListings(for: .mac).map(\.name),
-            ["MajorDex", "ForgeKit", "HareWatch", "WarrenNet"]
-        )
-        XCTAssertEqual(
-            DeveloperAppCatalog.inDevelopmentListings(for: .iPhone).map(\.name),
-            ["Hazel&Peanut", "GrayLine"]
-        )
-        XCTAssertEqual(
-            DeveloperAppCatalog.inDevelopmentListings(for: .iPad).map(\.name),
-            ["Leporis Ascendant"]
+        XCTAssertTrue(
+            DeveloperAppCatalog.inDevelopmentListings.allSatisfy {
+                $0.summaryKey == nil
+            }
         )
     }
 
@@ -54,12 +35,10 @@ final class DeveloperAppCatalogTests: XCTestCase {
             "DeveloperAppMajorDex": "MajorDex.png",
             "DeveloperAppForgeKit": "ForgeKit.png",
             "DeveloperAppHareWatch": "HareWatch.png",
-            "DeveloperAppWarrenNet": "WarrenNet.png",
-            "DeveloperAppHazelAndPeanut": "HazelAndPeanut.png",
-            "DeveloperAppGrayLine": "GrayLine.png",
-            "DeveloperAppLeporisAscendant": "LeporisAscendant.png"
+            "DeveloperAppWarrenNet": "WarrenNet.png"
         ]
-        let allProjects = DeveloperAppCatalog.inDevelopmentListings
+        let allProjects = DeveloperAppCatalog.upcomingListings +
+            DeveloperAppCatalog.inDevelopmentListings
 
         XCTAssertEqual(
             Set(allProjects.map(\.artworkAssetName)),
@@ -99,18 +78,9 @@ final class DeveloperAppCatalogTests: XCTestCase {
         XCTAssertTrue(source.contains("private enum DeveloperAppsTab"))
         XCTAssertTrue(source.contains("case appCatalog"))
         XCTAssertTrue(source.contains("case inDevelopment"))
-        XCTAssertFalse(source.contains("DeveloperAppCatalog.upcomingListings"))
-        XCTAssertFalse(source.contains("DeveloperUpcomingProjectCard"))
-        XCTAssertFalse(source.contains("upcomingProjectsSection"))
+        XCTAssertTrue(source.contains("DeveloperAppCatalog.upcomingListings"))
+        XCTAssertTrue(source.contains("DeveloperUpcomingProjectCard(listing: listing)"))
         XCTAssertTrue(source.contains("DeveloperAppCatalog.inDevelopmentListings"))
-        XCTAssertTrue(
-            source.contains("DeveloperAppCatalog.inDevelopmentListings(for: selectedPlatform)")
-        )
-        XCTAssertTrue(source.contains("private var developmentControls"))
-        XCTAssertTrue(source.contains("%d개의 프로젝트"))
-        XCTAssertTrue(source.contains("if let artworkAssetName = listing.artworkAssetName"))
-        XCTAssertTrue(source.contains("else if let homepageURL = listing.homepageURL"))
-        XCTAssertTrue(source.contains("title: \"홈페이지 열기\""))
 
         let tileStart = try XCTUnwrap(
             source.range(of: "private struct DeveloperInDevelopmentProjectTile")
@@ -124,16 +94,15 @@ final class DeveloperAppCatalogTests: XCTestCase {
         let tileSource = source[tileStart.lowerBound..<tileEnd.lowerBound]
         XCTAssertTrue(tileSource.contains("artworkAssetName: listing.artworkAssetName"))
         XCTAssertTrue(tileSource.contains("Text(listing.name)"))
-        XCTAssertTrue(tileSource.contains("if let summaryKey = listing.summaryKey"))
-        XCTAssertTrue(tileSource.contains("Text(appState.localized(summaryKey))"))
+        XCTAssertFalse(tileSource.contains("summaryKey"))
         XCTAssertFalse(tileSource.contains("DeveloperAppBadge"))
     }
 
-    func testMacCatalogContainsForgePlayAndProvidedAppStoreListings() {
+    func testMacCatalogContainsProvidedAppStoreListings() {
         let listings = DeveloperAppCatalog.listings(for: .mac)
 
         XCTAssertEqual(
-            Set(listings.compactMap(\.appStoreID)),
+            Set(listings.map(\.appStoreID)),
             Set([
                 "6782226580",
                 "6785348274",
@@ -142,52 +111,16 @@ final class DeveloperAppCatalogTests: XCTestCase {
                 "6765845295"
             ])
         )
-        XCTAssertEqual(listings.count, 6)
-        XCTAssertEqual(listings.first?.name, "ForgePlay")
+        XCTAssertEqual(listings.count, 5)
         XCTAssertTrue(listings.allSatisfy { $0.platform == .mac })
         XCTAssertTrue(listings.allSatisfy { $0.kind == .app })
-    }
-
-    func testForgePlayCatalogListingUsesBundledArtworkAndOfficialHomepage() throws {
-        let listing = try XCTUnwrap(
-            DeveloperAppCatalog.listings.first { $0.name == "ForgePlay" }
-        )
-        XCTAssertNil(listing.appStoreID)
-        XCTAssertNil(listing.appStoreSlug)
-        XCTAssertNil(listing.appStoreURL)
-        XCTAssertNil(listing.artworkURL)
-        XCTAssertEqual(
-            listing.summaryKey,
-            "세계최초, Apple Silicon Mac에서 Windows 게임을 맥 네이티브 게임모드로 실행하는 앱입니다."
-        )
-        XCTAssertEqual(listing.artworkAssetName, "DeveloperAppForgePlay")
-        XCTAssertEqual(listing.homepageURL, ExternalLinkPolicy.forgePlayHomepageURL)
-
-        let projectRoot = URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-        let imageset = projectRoot.appending(
-            path: "Resources/Assets.xcassets/DeveloperAppForgePlay.imageset"
-        )
-        let contents = try String(
-            contentsOf: imageset.appending(path: "Contents.json"),
-            encoding: .utf8
-        )
-        XCTAssertTrue(contents.contains(#""filename" : "ForgePlay.png""#))
-        XCTAssertGreaterThan(
-            try imageset.appending(path: "ForgePlay.png")
-                .resourceValues(forKeys: [.fileSizeKey])
-                .fileSize ?? 0,
-            0
-        )
     }
 
     func testIPadCatalogContainsProvidedAppleSiliconCompatibleListings() {
         let listings = DeveloperAppCatalog.listings(for: .iPad)
 
         XCTAssertEqual(
-            Set(listings.compactMap(\.appStoreID)),
+            Set(listings.map(\.appStoreID)),
             Set([
                 "6763970447",
                 "6761378169",
@@ -207,7 +140,7 @@ final class DeveloperAppCatalogTests: XCTestCase {
         let listings = DeveloperAppCatalog.listings(for: .iPhone)
 
         XCTAssertEqual(
-            Set(listings.compactMap(\.appStoreID)),
+            Set(listings.map(\.appStoreID)),
             Set([
                 "6770305364",
                 "6767978392"
@@ -219,18 +152,15 @@ final class DeveloperAppCatalogTests: XCTestCase {
     }
 
     func testCatalogUsesSecureOfficialAppStoreAndArtworkURLs() throws {
-        for listing in DeveloperAppCatalog.listings where listing.appStoreID != nil {
-            let appStoreID = try XCTUnwrap(listing.appStoreID)
+        for listing in DeveloperAppCatalog.listings {
             let appStoreURL = try XCTUnwrap(listing.appStoreURL)
             XCTAssertEqual(appStoreURL.scheme, "https")
             XCTAssertEqual(appStoreURL.host, "apps.apple.com")
-            XCTAssertTrue(appStoreURL.path.hasSuffix("/id\(appStoreID)"))
+            XCTAssertTrue(appStoreURL.path.hasSuffix("/id\(listing.appStoreID)"))
 
             let artworkURL = try XCTUnwrap(listing.artworkURL)
             XCTAssertEqual(artworkURL.scheme, "https")
             XCTAssertTrue(artworkURL.host?.hasSuffix(".mzstatic.com") == true)
-            XCTAssertNil(listing.artworkAssetName)
-            XCTAssertNil(listing.homepageURL)
         }
     }
 
@@ -273,7 +203,6 @@ final class DeveloperAppCatalogTests: XCTestCase {
         let sixWithoutChinese = allEight.subtracting([.simplifiedChinese, .traditionalChinese])
 
         XCTAssertEqual(try XCTUnwrap(byName["HopDisk"]), allEight)
-        XCTAssertEqual(try XCTUnwrap(byName["ForgePlay"]), allEight)
         XCTAssertEqual(try XCTUnwrap(byName["BunMixer"]), allEight)
         XCTAssertEqual(try XCTUnwrap(byName["LatchCast"]), allEight)
         XCTAssertEqual(try XCTUnwrap(byName["LoRAbit"]), sixWithoutChinese)
@@ -322,8 +251,7 @@ final class DeveloperAppCatalogTests: XCTestCase {
     }
 
     func testEveryUnreleasedProjectSummaryIsLocalizedForForgePlayLanguages() throws {
-        let unreleasedListings = DeveloperAppCatalog.inDevelopmentListings
-        for listing in unreleasedListings {
+        for listing in DeveloperAppCatalog.upcomingListings {
             let summaryKey = try XCTUnwrap(listing.summaryKey)
             for language in ForgePlayLanguageMode.allCases where language != .system {
                 let localized = ForgePlayLocalization.localized(
@@ -344,19 +272,17 @@ final class DeveloperAppCatalogTests: XCTestCase {
     func testDeveloperProjectTabsAndCompatibilityTitleHaveEightLocaleParity() {
         let keys = [
             "게임 호환성 DB",
-            "출시된 앱과 개발 중인 프로젝트를 살펴보세요.",
+            "출시된 앱과 곧 출시될 프로젝트, 개발 중인 프로젝트를 살펴보세요.",
             "제작자의 다른 앱 보기",
             "개발 중",
-            "제작자의 다른 앱 화면은 앱 카탈로그에서 출시된 앱을 소개하고, 별도의 개발 중 탭에서 기기별 진행 프로젝트를 보여줍니다.",
-            "앱 카탈로그",
-            "각 앱 카드에는 실제 지원 언어가 표시됩니다. App Store 앱은 App Store에서 보기를 누르면 공식 제품 페이지가 열립니다.",
+            "출시 예정",
+            "조만간 출시 예정",
+            "제작자의 다른 앱 화면은 출시된 앱과 출시 예정 프로젝트를 앱 카탈로그에서 소개하고, 별도의 개발 중 탭에서 진행 중인 프로젝트를 보여줍니다.",
+            "앱 카탈로그와 출시 예정",
+            "앱 카탈로그 탭 상단에는 MajorDex와 ForgeKit이 출시 예정 프로젝트로 표시됩니다.",
+            "각 출시된 앱 카드에는 실제 지원 언어가 표시됩니다. App Store에서 보기를 누르면 공식 제품 페이지가 열립니다.",
             "개발 중 프로젝트",
-            "%d개의 프로젝트",
-            "이 디바이스에서 개발 중인 프로젝트가 아직 없습니다.",
-            "다른 디바이스를 선택해 보세요.",
-            "개발 중 탭에서도 Mac, iPad, iPhone을 선택해 해당 디바이스용 프로젝트만 볼 수 있습니다.",
-            "Mac에는 MajorDex, ForgeKit, HareWatch, WarrenNet이, iPad에는 Leporis Ascendant가, iPhone에는 Hazel&Peanut과 GrayLine이 표시됩니다.",
-            "개발 중 탭에서 HareWatch와 WarrenNet은 유틸리티로, Hazel&Peanut, GrayLine, Leporis Ascendant는 게임으로 표시됩니다.",
+            "개발 중 탭에는 HareWatch와 WarrenNet의 아이콘과 프로젝트 이름만 표시됩니다.",
             "개발 중 표시는 출시 일정이나 배포 준비 완료를 의미하지 않습니다."
         ]
 

@@ -384,23 +384,23 @@ extension GameInputProtectionTerminalFailure:
         switch self {
         case .timeoutReenableReadbackFailed:
             appState.localized(
-                "macOS 게임 입력 필터가 시간 초과 후 다시 활성화되지 않아 보호된 Steam 실행을 중단합니다."
+                "macOS 게임 입력 필터가 시간 초과 후 다시 활성화되지 않아 입력 보호를 비활성화합니다. Wine과 Steam 실행은 유지됩니다."
             )
         case .repeatedTapTimeout:
             appState.localized(
-                "macOS 게임 입력 필터가 반복해서 시간 초과되어 보호된 Steam 실행을 중단합니다."
+                "macOS 게임 입력 필터가 반복해서 시간 초과되어 입력 보호를 비활성화합니다. Wine과 Steam 실행은 유지됩니다."
             )
         case .disabledByUserInput:
             appState.localized(
-                "macOS가 게임 입력 필터를 비활성화하여 보호된 Steam 실행을 중단합니다."
+                "macOS가 게임 입력 필터를 비활성화하여 입력 보호를 종료합니다. Wine과 Steam 실행은 유지됩니다."
             )
         case .pointerVisibilityRestoreFailed:
             appState.localized(
-                "macOS 포인터를 다시 표시하지 못해 관리되는 Steam 실행을 중단하고 포인터 복원을 다시 시도합니다."
+                "macOS 포인터를 다시 표시하지 못해 입력 보호를 비활성화하고 포인터 복원을 다시 시도합니다. Wine과 Steam 실행은 유지됩니다."
             )
         case .modifierReleaseEmissionFailed(let processIdentifier):
             appState.localizedFormat(
-                "변환된 보조키를 해제하지 못해 관리되는 Steam 실행을 중단하고 입력 상태 복원을 다시 시도합니다. (프로세스 %lld)",
+                "변환된 보조키를 해제하지 못해 입력 보호를 비활성화하고 입력 상태 복원을 다시 시도합니다. Wine과 Steam 실행은 유지됩니다. (프로세스 %lld)",
                 Int64(processIdentifier)
             )
         }
@@ -915,6 +915,12 @@ extension PrefixResetError: ForgePlayUserFacingLocalizedError {
                 displacedEnvironment.path,
                 forgePlayTechnicalErrorSummary(originalError),
                 forgePlayTechnicalErrorSummary(rollbackError)
+            )
+        case .steamLibraryPreservationFailed(let url, let reason):
+            return appState.localizedFormat(
+                "Steam 프리픽스 내부 라이브러리를 보존하지 못해 기존 프리픽스로 되돌렸습니다: %@. %@",
+                url.path,
+                reason
             )
         }
     }
@@ -1955,7 +1961,7 @@ extension SafeProcessRunnerError: ForgePlayUserFacingLocalizedError {
         case .prefixProcessVerificationFailed(let url, let message):
             return appState.localizedFormat("ForgePlay Runtime 프로세스 정리 상태를 확인하지 못했습니다: %@. %@", url.path, message)
         case .manualRendererSelectionRequired:
-            return appState.localized("Steam을 실행하기 전에 D3DMetal 표준, D3DMetal NVIDIA, DXMT, D9VK 또는 DXVK 중 하나를 직접 선택해야 합니다.")
+            return appState.localized("Steam을 실행하기 전에 D3DMetal - NVIDIA, DXMT 또는 D9VK 중 하나를 직접 선택해야 합니다.")
         case .invalidSteamCompatibilitySelection:
             return appState.localized("선택한 그래픽 백엔드와 Steam 실행 호환성 설정이 일치하지 않습니다.")
         case .gameRendererPayloadMissing(let url, let architecture):

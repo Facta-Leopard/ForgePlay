@@ -43,10 +43,31 @@ final class GameModeHostCapabilityTests: XCTestCase {
         XCTAssertTrue(capability.isRosettaRuntimeComponent)
         XCTAssertEqual(capability.bundleIdentifier, "com.forgeplay.client.game-mode-host")
         XCTAssertEqual(capability.executableSHA256.count, 64)
-        let environment = GameModeHostEnvironment.applying(capability, to: ["BASE": "1"])
+        let frameGenerationEnvironment = [
+            "BASE": "1",
+            ("FORGEPLAY_GAME_RENDERER_ENV_" +
+                FrameGenerationEnvironmentContract.enabledKey): "1",
+            ("FORGEPLAY_GAME_RENDERER_ENV_" +
+                FrameGenerationEnvironmentContract.targetFrameRateKey): "120",
+            ("FORGEPLAY_GAME_RENDERER_ENV_" +
+                FrameGenerationEnvironmentContract.frameCheckEnabledKey): "1",
+            ("FORGEPLAY_GAME_RENDERER_ENV_" +
+                FrameGenerationEnvironmentContract.proxyPathKey):
+                "/Applications/ForgePlay.app/Contents/Frameworks/ForgePlayD3DMetalFrameGenerationProxy.dylib",
+            ("FORGEPLAY_GAME_RENDERER_ENV_" +
+                FrameGenerationEnvironmentContract.observationFileKey):
+                "/tmp/forgeplay-frame-generation-observation.log"
+        ]
+        let environment = GameModeHostEnvironment.applying(
+            capability,
+            to: frameGenerationEnvironment
+        )
         XCTAssertEqual(environment[GameModeHostEnvironment.enabledKey], "1")
         XCTAssertEqual(environment[GameModeHostEnvironment.executableKey], fixture.executable.path)
         XCTAssertEqual(environment["BASE"], "1")
+        for (key, value) in frameGenerationEnvironment {
+            XCTAssertEqual(environment[key], value)
+        }
     }
 
     func testSteamLaunchAdmissionRequiresApplicationGroupForBothProfiles() throws {

@@ -7,15 +7,15 @@ with the Runtime.
 
 ## Exact modification snapshot
 
-- Modification snapshot date: 2026-08-20
+- Modification snapshot date: 2026-09-05
 - Upstream release: Wine 11.12
 - Upstream archive SHA-256:
   `d3bc091192d985846c9f20065cc81f21331f01e22b736b131e3449e1306671bc`
 - Ordered patch count: 25
 - Patch-set SHA-256:
-  `11af77aa6a1ce172505faa641c9ef5783ad10878ed552e0b55ab234a6dac1a07`
+  `b7939311ece8dcf37d6228e239932bec9c2f81ab2663b6f15017be51ec6f2493`
 - Patched source-tree SHA-256:
-  `2d0c24a9f9ebdb84b7703204d1a72071b06ac48800e2314a9635f851200a1f66`
+  `5f5d93000e059d4ab388bc4ecfcd7dbdd19ada0a5da1400d28ea58f46ba95038`
 
 The complete preferred form of the ForgePlay changes is the ordered patch set
 shipped under `Patches/`. `SOURCE-AVAILABILITY.md` gives the reconstruction
@@ -50,4 +50,3 @@ All upstream Wine copyrights and attribution remain intact. This notice does
 not relicense Apple D3DMetal, the bundled renderer payloads, GStreamer, fonts,
 or any other separately identified third-party component; each retains its
 own terms.
-

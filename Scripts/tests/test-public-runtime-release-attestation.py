@@ -81,7 +81,7 @@ class PublicRuntimeReleaseAttestationTests(unittest.TestCase):
     def mocked_command(self, argv: tuple[str, ...]) -> object:
         if argv[0] == TOOL.CODESIGN and argv[1:5] == ("--verify", "--strict", "--deep", "--verbose=4"):
             return TOOL.CommandOutput(0, "", "")
-        if argv[0] == TOOL.CODESIGN and argv[1:3] == ("-d", "--verbose=4"):
+        if argv[0] == TOOL.CODESIGN and argv[1] == "-dvv":
             lines = [
                 f"Identifier={self.metadata['bundle']}",
                 *(f"Authority={value}" for value in self.metadata["authorities"]),

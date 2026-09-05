@@ -8,7 +8,7 @@
     "archiveURL": "https://dl.winehq.org/wine/source/11.x/wine-11.12.tar.xz",
     "archiveSHA256": "d3bc091192d985846c9f20065cc81f21331f01e22b736b131e3449e1306671bc",
     "releaseKeyFingerprint": "DA23579A74D4AD9AF9D3F945CEFAC8EAAF17519D",
-    "patchedSourceTreeSHA256": "2d0c24a9f9ebdb84b7703204d1a72071b06ac48800e2314a9635f851200a1f66"
+    "patchedSourceTreeSHA256": "5f5d93000e059d4ab388bc4ecfcd7dbdd19ada0a5da1400d28ea58f46ba95038"
   },
   "approvedInputClasses": [
     "official-upstream-source",
@@ -44,8 +44,8 @@
     },
     {
       "path": "wine-11.12-forgeplay-metal-window-surface-contract.patch",
-      "sha256": "c8f6e4abd715aac59c1be6edf03c0b927438ac9b86a027d6fd49d5bc1469d263",
-      "responsibility": "Expose the project-owned, renderer-neutral macOS display-state, window-surface, Metal-view, and main-thread callback interface required by managed Metal renderers.",
+      "sha256": "5bd899aba26eb2ac64ce0943eb7c1ea2ce2510c0242d70c40dac6967e158087e",
+      "responsibility": "Expose the project-owned, renderer-neutral macOS display-state, window-surface, Metal-view, and main-thread callback interface required by managed Metal renderers, and attach the opt-in D3DMetal frame-generation proxy at that owning Metal-view boundary.",
       "implementationOwnership": "ForgePlay project",
       "approvedInputs": [
         "official-upstream-source",
@@ -134,7 +134,7 @@
     },
     {
       "path": "wine-11.12-steam-game-renderer-process-policy.patch",
-      "sha256": "5129ade053c232fc6ac3afe5e62ffbcf9aeb63124f740e5bde6bbda8b129063b",
+      "sha256": "e987b24d8b06b6e3f03ae94eb280f73cff96102c01ed1dadb67605c12d8d6130",
       "responsibility": "Provide process-scoped Steam game renderer environments, architecture-specific module ownership, D3DMetal and MetalFX/NGX bridge scoping, and planned-route, environment-failure, fallback, and allowlist-owned module-load evidence; the later manual-selection patch replaces its generation selector.",
       "implementationOwnership": "ForgePlay project",
       "approvedInputs": [
@@ -171,8 +171,8 @@
     },
     {
       "path": "wine-11.12-game-mode-process-host-routing.patch",
-      "sha256": "18ec28ed12f13c9c5b834f4e75e59d51f3ef2eb434bd6041124b5475ba65ae40",
-      "responsibility": "Mark a Steam game child independently from renderer activation, synchronize its process-scoped environment, and implement the fixed signed Game Mode process-host entry while preserving process identity and Wine server context; the later direct-target scope patch limits this fail-closed entry to explicitly requested beta sessions.",
+      "sha256": "977c445aae295206ebf7d24c1250f84d47a65a0b9d0320c35313b799e9be193b",
+      "responsibility": "Mark a Steam game child independently from renderer activation, synchronize its process-scoped environment, and enter the fixed signed Game Mode process host while preserving process identity and Wine server context; when Game Mode is requested, rejected host contracts, allocation failure, or host exec failure stop that game launch instead of continuing through the standard Wine loader.",
       "implementationOwnership": "ForgePlay project",
       "approvedInputs": [
         "official-upstream-source",
@@ -183,7 +183,7 @@
     },
     {
       "path": "wine-11.12-game-mode-direct-target-scope.patch",
-      "sha256": "592ad576ffd31b78846a107a899ce7a96acd0c0f9b65a0b28541db2c2b7a72c1",
+      "sha256": "b09e09eebb6ac91e287ebdff1314fa8302644942c6ce0a8f3f8107ea6ee656e6",
       "responsibility": "Keep standard Steam sessions on the normal Wine loader; when the host is explicitly requested, derive a trusted Unix-only target identity independently for each resolved executable in a structural Steam library game tree so launcher-created game children enter the same fixed host, exclude shared redistributable infrastructure, and preserve the fixed Game Mode host process identity and icon.",
       "implementationOwnership": "ForgePlay project",
       "approvedInputs": [
@@ -206,7 +206,7 @@
     },
     {
       "path": "wine-11.12-manual-steam-renderer-selection.patch",
-      "sha256": "f7af05903edb1ec303d3d5a8a68fe5f112bf578d0f13b786114b57d0fd45f2e3",
+      "sha256": "a578b144e4ca77068d745224a472e86ddd786b4afaaa01b57caddaf69c287d0d",
       "responsibility": "Replace automatic Direct3D generation and loader-stage routing with one exact renderer selected explicitly for each Steam session; preserve the host-requested D3DMetal NVIDIA compatibility variant while applying the shared D3DMetal backend; remove mixed/profile environment propagation and reject process creation when selection is missing, invalid, or cannot be materialized.",
       "implementationOwnership": "ForgePlay project",
       "approvedInputs": [
@@ -228,8 +228,8 @@
     },
     {
       "path": "wine-11.12-managed-darwin-process-journal.patch",
-      "sha256": "188bad1fd8de9751c84cb6e510a063cf203b530ce31ba94cc1c31440c24d41d6",
-      "responsibility": "Publish owner-private, launch-scoped Darwin PID and process-start identities from Wine loader and wineserver entry points; keep that trusted Unix launch identity immutable across child-supplied Windows environments; and bind wineserver to the exact launching ForgePlay PID and kernel start time so force-quit or crash terminates the managed prefix even when AppKit cleanup cannot run.",
+      "sha256": "011799aa3aba31a6f7059e3bfff737ad544ff7413251b4da6fe9422201a48e7b",
+      "responsibility": "Publish owner-private, launch-scoped Darwin PID and process-start identities after the Wine loader completes Unix process initialization and from the wineserver entry point; keep that trusted Unix launch identity immutable across child-supplied Windows environments; and bind every managed Wine loader and wineserver to the exact launching ForgePlay PID and kernel start time so each process gracefully self-terminates, then hard-stops after a bounded watchdog delay, when that owner exits while leaving unmanaged Wine unchanged.",
       "implementationOwnership": "ForgePlay project",
       "approvedInputs": [
         "official-upstream-source",
@@ -263,8 +263,8 @@
     },
     {
       "path": "wine-11.12-steam-session-compatibility-controls.patch",
-      "sha256": "c13592df15c779eef89b40be58eb1de718b5e8afa7ecaacbf4e195b2fab9898f",
-      "responsibility": "Carry the user-selected D3DMetal vendor identity and scoped NVAPI bootstrap only into game descendants, route host-declared architecture-incompatible service helpers through base Wine, preserve transparent observations, normalize the selected network adapter presentation, translate Darwin IP_RECVTOS ancillary data into the Windows IP_TOS control-message contract for every Wine process, and expose or hide CoreAudio capture endpoints without changing socket transport or audio output.",
+      "sha256": "969247505447baba41f002262462dc19d48c2851ec2eaf6f8fd6f94673453a44",
+      "responsibility": "Carry one complete host-selected NVIDIA identity tuple into the Steam session control plane and routed game descendants so D3DMetal NVAPI/NGX selection and the owning Wine primary-GPU, SetupAPI, Display Class, and DirectX writers agree without overriding the public DXGI CheckInterfaceSupport IID contract; carry the opt-in frame-generation controls; route host-declared architecture-incompatible service helpers through base Wine; preserve transparent observations; normalize network presentation; translate Darwin IP_RECVTOS ancillary data into the Windows IP_TOS control-message contract; and expose or hide CoreAudio capture endpoints without changing socket transport or audio output.",
       "implementationOwnership": "ForgePlay project",
       "approvedInputs": [
         "official-upstream-source",
@@ -327,7 +327,7 @@
   "behaviorContracts": [
     {
       "path": "wine-11.12-forgeplay-d3dmetal-bridge-contract.md",
-      "sha256": "c95f02bc3bf2573aa80074cd3d42b68ae6759e595442496ff6e66c0bf1093ce8",
+      "sha256": "7e922ae2e9326fdae3bbf8fb0a306ac8370b11fe66d3580de5f022b07e933fc1",
       "responsibility": "Document the public behavior boundary used by the independent ForgePlay D3DMetal bridge, its prefix-owned MetalFX/NGX filename bridge, its scoped Darwin pthread/Windows TEB transition implementation, and its renderer-neutral macOS window-surface callback contract.",
       "implementationOwnership": "ForgePlay project",
       "approvedInputs": [

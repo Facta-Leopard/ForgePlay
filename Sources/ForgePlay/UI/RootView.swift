@@ -87,6 +87,7 @@ struct RootView: View {
     @State private var isStartupInProgress = false
     @State private var automaticLogCleanupTask: Task<Void, Never>?
     @State private var startupResumeTask: Task<Void, Never>?
+    @State private var startupWineCleanupWarning: String?
     @State private var startupPresentation: ForgePlayRootStartupPresentation = .loading
     @State private var ownsAutomaticSetupDestination = false
 
@@ -178,9 +179,7 @@ struct RootView: View {
                     )
                         .navigationSplitViewColumnWidth(min: 216, ideal: 242, max: 268)
                 } detail: {
-                    RootDetailColumn(
-                        notice: appState.currentNotice
-                    ) {
+                    RootDetailColumn {
                         content
                     }
                 }
@@ -261,6 +260,25 @@ struct RootView: View {
         isStartupInProgress = true
         defer { isStartupInProgress = false }
 
+        // The branded root view is already visible. Capture exactly the Wine
+        // processes that predate this startup, then finish the requested
+        // lifecycle cleanup before any prefix mutation or new Wine launch can
+        // overlap them. This is not a validation/test gate: an empty snapshot
+        // completes immediately, and cleanup never admits later processes.
+        let cleanupPlan = services.captureStartupWineProcessCleanupPlan()
+        startupWineCleanupWarning = await services
+            .forceTerminateWineProcessesAfterStartup(cleanupPlan)
+        if let startupWineCleanupWarning {
+            appState.setNotice(
+                appState.localizedFormat(
+                    "앱 시작 시 남아 있던 Wine 프로세스를 완전히 종료하지 못했습니다: %@",
+                    startupWineCleanupWarning
+                ),
+                kind: .warning
+            )
+        }
+        guard !Task.isCancelled else { return }
+
         while true {
             do {
                 try Task.checkCancellation()
@@ -339,14 +357,23 @@ struct RootView: View {
                     appState.localizedByteCount(workflow.storageActivation.copiedBytes)
                 )
                 : nil
+            let startupProcessWarning = startupWineCleanupWarning.map {
+                appState.localizedFormat(
+                    "앱 시작 시 남아 있던 Wine 프로세스를 완전히 종료하지 못했습니다: %@",
+                    $0
+                )
+            }
             if let message = DiagnosticWarningText.combined(
                 migrationMessage,
                 cleanupWarning,
-                postCommitWarning
+                postCommitWarning,
+                startupProcessWarning
             ) {
                 appState.setNotice(
                     message,
-                    kind: cleanupWarning == nil && postCommitWarning == nil ? .success : .warning
+                    kind: cleanupWarning == nil &&
+                        postCommitWarning == nil &&
+                        startupProcessWarning == nil ? .success : .warning
                 )
             }
         }
@@ -502,7 +529,6 @@ struct RootView: View {
 }
 
 private struct RootDetailColumn<Content: View>: View {
-    var notice: AppNotice?
     @ViewBuilder var content: () -> Content
     @Environment(AppState.self) private var appState
     @Environment(\.colorScheme) private var colorScheme
@@ -511,12 +537,7 @@ private struct RootDetailColumn<Content: View>: View {
         let palette = ForgePlayTheme.palette(mode: appState.themeMode, colorScheme: colorScheme)
 
         VStack(alignment: .leading, spacing: 0) {
-            if let notice {
-                TaskBanner(notice: notice)
-                    .padding(.horizontal, RootChromeMetrics.detailHorizontalPadding)
-                    .padding(.vertical, RootChromeMetrics.detailNoticeVerticalPadding)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
+            CurrentNoticeBannerHost()
             GeometryReader { geometry in
                 let contentWidth = max(
                     geometry.size.width - (RootChromeMetrics.detailHorizontalPadding * 2),
@@ -537,6 +558,23 @@ private struct RootDetailColumn<Content: View>: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(palette.background.ignoresSafeArea())
+    }
+}
+
+struct CurrentNoticeBannerHost: View {
+    @Environment(AppState.self) private var appState
+
+    var body: some View {
+        /* This child owns the observation read. Passing a plain notice snapshot
+         * through NavigationSplitView's escaping detail closure can leave an
+         * otherwise-idle save action without a render invalidation. */
+        if let notice = appState.currentNotice {
+            TaskBanner(notice: notice)
+                .accessibilityIdentifier("forgeplay-current-notice-banner")
+                .padding(.horizontal, RootChromeMetrics.detailHorizontalPadding)
+                .padding(.vertical, RootChromeMetrics.detailNoticeVerticalPadding)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 }
 

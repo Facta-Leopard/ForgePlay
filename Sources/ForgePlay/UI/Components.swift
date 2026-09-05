@@ -1485,11 +1485,11 @@ enum SteamLaunchGameInputProtectionAdmissionPolicy {
         case .authorized:
             nil
         case .accessibilityRequired:
-            "선택한 보호 기능에는 macOS 손쉬운 사용 권한이 필요합니다. 권한이 없으면 해당 설정으로 Steam을 실행하지 않습니다."
+            "선택한 보호 기능에는 macOS 손쉬운 사용 권한이 필요합니다. 권한이 없으면 입력 보호만 비활성화하고 Steam 실행은 계속합니다."
         case .inputMonitoringRequired:
-            "선택한 보호 기능에는 macOS 입력 모니터링 권한이 필요합니다. 권한이 없으면 해당 설정으로 Steam을 실행하지 않습니다."
+            "선택한 보호 기능에는 macOS 입력 모니터링 권한이 필요합니다. 권한이 없으면 입력 보호만 비활성화하고 Steam 실행은 계속합니다."
         case .accessibilityAndInputMonitoringRequired:
-            "선택한 보호 기능에는 macOS 손쉬운 사용 및 입력 모니터링 권한이 필요합니다. 권한이 없으면 해당 설정으로 Steam을 실행하지 않습니다."
+            "선택한 보호 기능에는 macOS 손쉬운 사용 및 입력 모니터링 권한이 필요합니다. 권한이 없으면 입력 보호만 비활성화하고 Steam 실행은 계속합니다."
         }
     }
 

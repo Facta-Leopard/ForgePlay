@@ -195,7 +195,9 @@ extension AppSettingsRecord {
     }
 }
 
-enum SteamLaunchConfigurationPersistenceError: LocalizedError, Equatable {
+enum SteamLaunchConfigurationPersistenceError:
+    LocalizedError, Equatable, ForgePlayTechnicalDescribingError
+{
     case contextHasPendingChanges
     case unexpectedMode(expected: SteamLaunchMode, actual: SteamLaunchMode)
     case recordIdentityMismatch(String)
@@ -233,6 +235,10 @@ enum SteamLaunchConfigurationPersistenceError: LocalizedError, Equatable {
         case .transactionConfigurationMismatch:
             "Steam 실행 구성과 트랜잭션 저널의 해결 결과가 일치하지 않습니다."
         }
+    }
+
+    var forgePlayTechnicalDescription: String {
+        "SteamLaunchConfigurationPersistenceError \(String(describing: self))"
     }
 }
 
@@ -286,6 +292,21 @@ final class StandardSteamLaunchConfigurationRecord {
                 persistenceRevision
             )
         }
+        guard configurationDigest == SteamLaunchIdentifierValidation.lowercaseSHA256(
+            canonicalConfigurationPayload
+        ) else {
+            throw SteamLaunchConfigurationPersistenceError.digestMismatch
+        }
+        guard let payloadSchemaVersion = SteamLaunchConfigurationSnapshot
+            .canonicalPayloadSchemaVersion(canonicalConfigurationPayload),
+              schemaVersion == payloadSchemaVersion else {
+            throw SteamLaunchConfigurationPersistenceError.schemaVersionMismatch(
+                stored: schemaVersion,
+                decoded: SteamLaunchConfigurationSnapshot.canonicalPayloadSchemaVersion(
+                    canonicalConfigurationPayload
+                ) ?? -1
+            )
+        }
         let snapshot = try SteamLaunchConfigurationSnapshot(
             canonicalPayload: canonicalConfigurationPayload
         )
@@ -299,15 +320,6 @@ final class StandardSteamLaunchConfigurationRecord {
             throw SteamLaunchConfigurationPersistenceError.recordIdentityMismatch(
                 "standard-configuration-identity"
             )
-        }
-        guard schemaVersion == snapshot.schemaVersion else {
-            throw SteamLaunchConfigurationPersistenceError.schemaVersionMismatch(
-                stored: schemaVersion,
-                decoded: snapshot.schemaVersion
-            )
-        }
-        guard configurationDigest == (try snapshot.canonicalDigest) else {
-            throw SteamLaunchConfigurationPersistenceError.digestMismatch
         }
         return snapshot
     }
@@ -399,6 +411,21 @@ final class CompatibilitySteamLaunchPreferenceRecord {
                 persistenceRevision
             )
         }
+        guard preferenceDigest == SteamLaunchIdentifierValidation.lowercaseSHA256(
+            canonicalPreferencePayload
+        ) else {
+            throw SteamLaunchConfigurationPersistenceError.digestMismatch
+        }
+        guard let payloadSchemaVersion = SteamLaunchConfigurationSnapshot
+            .canonicalPayloadSchemaVersion(canonicalPreferencePayload),
+              schemaVersion == payloadSchemaVersion else {
+            throw SteamLaunchConfigurationPersistenceError.schemaVersionMismatch(
+                stored: schemaVersion,
+                decoded: SteamLaunchConfigurationSnapshot.canonicalPayloadSchemaVersion(
+                    canonicalPreferencePayload
+                ) ?? -1
+            )
+        }
         let snapshot = try SteamLaunchConfigurationSnapshot(
             canonicalPayload: canonicalPreferencePayload
         )
@@ -419,15 +446,6 @@ final class CompatibilitySteamLaunchPreferenceRecord {
             throw SteamLaunchConfigurationPersistenceError.recordIdentityMismatch(
                 "compatibility-identity-columns"
             )
-        }
-        guard schemaVersion == snapshot.schemaVersion else {
-            throw SteamLaunchConfigurationPersistenceError.schemaVersionMismatch(
-                stored: schemaVersion,
-                decoded: snapshot.schemaVersion
-            )
-        }
-        guard preferenceDigest == (try snapshot.canonicalDigest) else {
-            throw SteamLaunchConfigurationPersistenceError.digestMismatch
         }
         return snapshot
     }
@@ -611,9 +629,13 @@ struct SteamLaunchConfigurationRepository {
 
     func loadStandard() throws -> SteamLaunchConfigurationStoredSnapshot? {
         let context = makeContext()
-        return try fetchStandard(in: context).map {
-            try standardStoredSnapshot(from: $0)
+        guard let record = try fetchStandard(in: context) else { return nil }
+        let decoded = try record.decodedSnapshot()
+        if record.schemaVersion != SteamLaunchConfigurationSnapshot.currentSchemaVersion {
+            try record.replace(with: decoded, now: Date())
+            try context.saveOrRollback()
         }
+        return try standardStoredSnapshot(from: record)
     }
 
     /// Returns the exact persisted CAS token without decoding or validating the payload.
@@ -650,7 +672,10 @@ struct SteamLaunchConfigurationRepository {
             type: "standard",
             id: StandardSteamLaunchConfigurationRecord.recordID
         )
-        let record = try context.upsertStandardSteamLaunchConfiguration(snapshot, now: now)
+        let record = try context.upsertStandardSteamLaunchConfiguration(
+            snapshot,
+            now: now
+        )
         return try standardStoredSnapshot(from: record)
     }
 
@@ -677,10 +702,20 @@ struct SteamLaunchConfigurationRepository {
         identity: SteamCompatibilityProfileIdentity
     ) throws -> SteamLaunchConfigurationStoredSnapshot? {
         let context = makeContext()
-        return try fetchCompatibility(identity: identity, in: context)
-            .map {
-                try compatibilityStoredSnapshot(from: $0, expectedIdentity: identity)
-            }
+        guard let record = try fetchCompatibility(identity: identity, in: context) else {
+            return nil
+        }
+        let decoded = try record.decodedSnapshot()
+        guard decoded.identity.compatibilityProfile == identity else {
+            throw SteamLaunchConfigurationPersistenceError.recordIdentityMismatch(
+                "compatibility-repository-identity"
+            )
+        }
+        if record.schemaVersion != SteamLaunchConfigurationSnapshot.currentSchemaVersion {
+            try record.replace(with: decoded, now: Date())
+            try context.saveOrRollback()
+        }
+        return try compatibilityStoredSnapshot(from: record, expectedIdentity: identity)
     }
 
     @discardableResult
@@ -708,8 +743,14 @@ struct SteamLaunchConfigurationRepository {
             type: "compatibility",
             id: identity.deterministicRecordID
         )
-        let record = try context.upsertCompatibilitySteamLaunchPreference(snapshot, now: now)
-        return try compatibilityStoredSnapshot(from: record, expectedIdentity: identity)
+        let record = try context.upsertCompatibilitySteamLaunchPreference(
+            snapshot,
+            now: now
+        )
+        return try compatibilityStoredSnapshot(
+            from: record,
+            expectedIdentity: identity
+        )
     }
 
     func resetCompatibility(

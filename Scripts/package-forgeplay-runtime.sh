@@ -20,7 +20,6 @@ GSTREAMER_PAYLOAD_LOCK="$REPO_ROOT/Config/ForgePlayGStreamerPayload.lock.json"
 GSTREAMER_PAYLOAD_MATERIALIZER="$SCRIPT_DIR/materialize-locked-gstreamer-runtime.py"
 RUNTIME_SBOM_TOOL="$SCRIPT_DIR/runtime-sbom.py"
 RUNTIME_CORE_IDENTITY_TOOL="$SCRIPT_DIR/runtime-core-payload-identity.py"
-RUNTIME_FILE_INVENTORY_TOOL="$SCRIPT_DIR/verify-bundled-runtime-capability.sh"
 MACHO_RUNTIME_CLOSURE_VERIFIER="$SCRIPT_DIR/verify-macho-runtime-closure.py"
 D3DMETAL_NGX_BRIDGE_VALIDATOR="$SCRIPT_DIR/validate-d3dmetal-ngx-bridge.sh"
 COMPILER_CAPSULE_TOOL="$SCRIPT_DIR/build-forgeplay-wine-runtime.sh"
@@ -43,11 +42,6 @@ TRUSTED_GIT_REPOSITORY_INPUT="${FORGEPLAY_TRUSTED_GIT_REPOSITORY:-}"
 PUBLIC_RUNTIME_BUILD_RECEIPT_INPUT="${FORGEPLAY_PUBLIC_RUNTIME_BUILD_RECEIPT:-}"
 PUBLIC_COMPILER_CAPSULE_MANIFEST_INPUT="${FORGEPLAY_PUBLIC_COMPILER_CAPSULE_MANIFEST:-}"
 PUBLIC_BUILD_TOOL_CAPSULE_MANIFEST_INPUT="${FORGEPLAY_PUBLIC_BUILD_TOOL_CAPSULE_MANIFEST:-}"
-# These snapshot bounds mirror the producer-side verification limits in
-# build-forgeplay-wine-runtime.sh. They cap serialized manifests, not the
-# compiler or build-tool capsule payloads described by those manifests.
-readonly PUBLIC_COMPILER_CAPSULE_MANIFEST_MAX_BYTES=67108864
-readonly PUBLIC_BUILD_TOOL_CAPSULE_MANIFEST_MAX_BYTES=67108864
 
 case "${1:-}" in
   --validate-wine-source|--validate-wine-source-fixture|--validate-wine-runtime-payload)
@@ -87,12 +81,12 @@ PY
 # Canonical runtime source payload: ordered Wine patches plus the reviewed
 # behavior contract. License sidecars are shipped and verified separately;
 # they are not inputs to the patched-source identity.
-EXPECTED_WINE_PATCH_SET_SHA256="11af77aa6a1ce172505faa641c9ef5783ad10878ed552e0b55ab234a6dac1a07"
+EXPECTED_WINE_PATCH_SET_SHA256="b7939311ece8dcf37d6228e239932bec9c2f81ab2663b6f15017be51ec6f2493"
 NANUM_GOTHIC_REGULAR_SHA256="76f45ef4a6bcff344c837c95a7dcc26e017e38b5846d5ae0cdcb5b86be2e2d31"
 NANUM_GOTHIC_BOLD_SHA256="21f9d3a7f1ca82ca1dc9a288e30138b4f1feb6e71fc89b5a9181fed174b6bbe2"
 NANUM_GOTHIC_OFL_SHA256="eeacf16032901d0ed0456876ec77b8f0fda6b3fecec7d972f8543eb602e6c30f"
 NANUM_GOTHIC_SOURCE_IDENTITY_SHA256="c1fbfce859af7446bde6e2f88877cafc92535fde63f7cce9ae0003d29399926c"
-FORGEPLAY_WINE_MODIFICATIONS_SHA256="613ab79178fece6ea534589d64c1e9716b7a8a5c8730eebb4ea067fdd46ff081"
+FORGEPLAY_WINE_MODIFICATIONS_SHA256="153cc183ac50e991e937591236b77e084ca63df0cc24140f60c4bbca495be7a9"
 LGPL_2_1_LICENSE_SHA256="e237fa56668030e928551ddd60f05df5fe957f75eab874bbd017e085ed722e7c"
 APPLE_GPTK_LICENSE_SHA256="5abb2d059be217663b00e8fd37e14411d374e11d17e3b744eebd49b8d17118c8"
 APPLE_GPTK_ACKNOWLEDGEMENTS_SHA256="6f3aa835f6d0d06f89997d0a346a209e39a8105521fd939e096c5b24dc0cb0a6"
@@ -753,10 +747,7 @@ def safe_file_identity(value):
     )
 
 def bound_digest(path):
-    descriptor = os.open(
-        path,
-        os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW | os.O_NONBLOCK,
-    )
+    descriptor = os.open(path, os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW)
     try:
         before = os.fstat(descriptor)
         if not stat.S_ISREG(before.st_mode) or before.st_nlink != 1:
@@ -1165,9 +1156,9 @@ snapshot_runtime_consumption_inputs() {
     PUBLIC_RUNTIME_BUILD_RECEIPT_TOOL="$root/public-runtime-build-receipt.py"
     snapshot_regular_input "$PUBLIC_RUNTIME_BUILD_RECEIPT_INPUT" "$root/public-runtime-prepackage-receipt.json" "public Runtime pre-package receipt" 4194304
     PUBLIC_RUNTIME_BUILD_RECEIPT="$root/public-runtime-prepackage-receipt.json"
-    snapshot_regular_input "$PUBLIC_COMPILER_CAPSULE_MANIFEST_INPUT" "$root/public-compiler-capsule.json" "public Runtime compiler capsule manifest" "$PUBLIC_COMPILER_CAPSULE_MANIFEST_MAX_BYTES"
+    snapshot_regular_input "$PUBLIC_COMPILER_CAPSULE_MANIFEST_INPUT" "$root/public-compiler-capsule.json" "public Runtime compiler capsule manifest" 4194304
     PUBLIC_COMPILER_CAPSULE_MANIFEST="$root/public-compiler-capsule.json"
-    snapshot_regular_input "$PUBLIC_BUILD_TOOL_CAPSULE_MANIFEST_INPUT" "$root/public-build-tool-capsule.json" "public Runtime build-tool capsule manifest" "$PUBLIC_BUILD_TOOL_CAPSULE_MANIFEST_MAX_BYTES"
+    snapshot_regular_input "$PUBLIC_BUILD_TOOL_CAPSULE_MANIFEST_INPUT" "$root/public-build-tool-capsule.json" "public Runtime build-tool capsule manifest" 4194304
     PUBLIC_BUILD_TOOL_CAPSULE_MANIFEST="$root/public-build-tool-capsule.json"
   fi
   snapshot_regular_input "$CLEAN_WINE_MARKER_VERIFIER" "$root/clean-wine-markers.py" "clean Wine marker verifier" 4194304
@@ -1184,12 +1175,8 @@ snapshot_runtime_consumption_inputs() {
   RUNTIME_SBOM_TOOL="$root/runtime-sbom.py"
   snapshot_regular_input "$RUNTIME_CORE_IDENTITY_TOOL" "$root/runtime-core-payload-identity.py" "runtime core identity tool" 8388608
   RUNTIME_CORE_IDENTITY_TOOL="$root/runtime-core-payload-identity.py"
-  snapshot_regular_input "$RUNTIME_FILE_INVENTORY_TOOL" "$root/runtime-file-inventory-tool.sh" "runtime file inventory tool" 8388608
-  RUNTIME_FILE_INVENTORY_TOOL="$root/runtime-file-inventory-tool.sh"
   snapshot_regular_input "$MACHO_RUNTIME_CLOSURE_VERIFIER" "$root/macho-closure.py" "Mach-O closure verifier" 8388608
   MACHO_RUNTIME_CLOSURE_VERIFIER="$root/macho-closure.py"
-  snapshot_regular_input "$D3DMETAL_NGX_BRIDGE_VALIDATOR" "$root/d3dmetal-ngx-bridge-validator.sh" "D3DMetal NGX bridge validator" 4194304
-  D3DMETAL_NGX_BRIDGE_VALIDATOR="$root/d3dmetal-ngx-bridge-validator.sh"
   snapshot_regular_input "$COMPILER_CAPSULE_TOOL" "$root/compiler-capsule-tool.sh" "compiler capsule tool" 4194304
   COMPILER_CAPSULE_TOOL="$root/compiler-capsule-tool.sh"
   snapshot_regular_input "$RUNTIME_DEPENDENCY_LOCK" "$root/runtime-dependencies.lock.json" "runtime dependency lock" 4194304
@@ -1528,6 +1515,158 @@ print(digest.hexdigest())
 PY
 }
 
+verify_frame_generation_source_contract() {
+  local source_root="$1"
+  local kernelbase_source="$source_root/dlls/kernelbase/process.c"
+  local ntdll_source="$source_root/dlls/ntdll/unix/process.c"
+  local winemac_source="$source_root/dlls/winemac.drv/metal_surface_contract.c"
+
+  require_source_file "$kernelbase_source" "Wine kernelbase frame-generation environment source"
+  require_source_file "$ntdll_source" "Wine ntdll frame-generation Unix environment source"
+  require_source_file "$winemac_source" "Wine mac driver frame-generation source"
+  /usr/bin/python3 - \
+    "$kernelbase_source" \
+    "$ntdll_source" \
+    "$winemac_source" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+kernelbase, ntdll, winemac = (
+    Path(path).read_text(encoding="utf-8") for path in sys.argv[1:]
+)
+
+
+def require(condition: bool, message: str) -> None:
+    if not condition:
+        raise SystemExit(message)
+
+
+def bounded(source: str, start: str, end: str, label: str) -> str:
+    lower = source.find(start)
+    upper = source.find(end, lower + len(start))
+    require(lower >= 0 and upper > lower, f"{label} boundary is unavailable")
+    return source[lower:upper]
+
+
+keys = (
+    "FORGEPLAY_D3DMETAL_FRAME_GENERATION",
+    "FORGEPLAY_D3DMETAL_FRAME_GENERATION_TARGET_HZ",
+    "FORGEPLAY_D3DMETAL_FRAME_CHECK",
+    "FORGEPLAY_D3DMETAL_FRAME_GENERATION_PROXY",
+    "FORGEPLAY_D3DMETAL_FRAME_GENERATION_OBSERVATION_FILE",
+)
+base = bounded(
+    kernelbase,
+    "static NTSTATUS create_forgeplay_base_renderer_environment(",
+    "static NTSTATUS create_forgeplay_game_renderer_environment(",
+    "kernelbase base renderer environment",
+)
+selected = bounded(
+    kernelbase,
+    "static NTSTATUS create_forgeplay_game_renderer_environment(",
+    "static void record_forgeplay_game_renderer_fallback(",
+    "kernelbase selected renderer environment",
+)
+unix_projection = bounded(
+    ntdll,
+    "static BOOL apply_forgeplay_steam_game_process_unix_environment(",
+    "static NTSTATUS spawn_process(",
+    "ntdll Unix game environment",
+)
+for key in keys:
+    require(
+        f'{{ L"FORGEPLAY_GAME_RENDERER_BASE_ENV_{key}", L"{key}" }}' in base,
+        f"kernelbase base renderer environment drops frame-generation key: {key}",
+    )
+    require(
+        f'{{ L"FORGEPLAY_GAME_RENDERER_ENV_{key}", L"{key}" }}' in selected,
+        f"kernelbase selected renderer environment drops frame-generation key: {key}",
+    )
+    require(
+        f'        "{key}",' in unix_projection,
+        f"ntdll Unix game environment drops frame-generation key: {key}",
+    )
+
+requested = bounded(
+    winemac,
+    "static BOOL framegen_requested_configuration(",
+    "static BOOL framegen_proxy_path_is_valid(",
+    "winemac frame-generation configuration",
+)
+loader = bounded(
+    winemac,
+    "static void framegen_load_proxy(",
+    "static void framegen_record_error(",
+    "winemac frame-generation proxy loader",
+)
+error_writer = bounded(
+    winemac,
+    "static void framegen_record_error(",
+    "static struct forgeplay_framegen_view *framegen_find_view(",
+    "winemac frame-generation error writer",
+)
+for key in keys[:3]:
+    require(f'getenv( "{key}" )' in requested,
+            f"winemac configuration does not consume frame-generation key: {key}")
+require(f'getenv( "{keys[3]}" )' in loader,
+        "winemac proxy loader does not consume the frame-generation proxy path")
+dedicated = f'getenv( "{keys[4]}" )'
+legacy = 'getenv( "FORGEPLAY_PROCESS_OBSERVATION_FILE" )'
+require(
+    dedicated in error_writer
+    and legacy in error_writer
+    and error_writer.index(dedicated) < error_writer.index(legacy)
+    and error_writer.count("framegen_observation_path_is_valid") >= 2,
+    "winemac errors do not prefer and validate the dedicated Unix observation path",
+)
+format_start = error_writer.find("length = snprintf(")
+format_end = error_writer.find("(long)getpid()", format_start)
+require(format_start >= 0 and format_end > format_start,
+        "winemac error telemetry format boundary is unavailable")
+format_source = error_writer[format_start:format_end]
+wire = "".join(
+    bytes(literal, "utf-8").decode("unicode_escape")
+    for literal in re.findall(r'"((?:[^"\\]|\\.)*)"', format_source)
+)
+expected_fields = (
+    "FORGEPLAY_D3DMETAL_FRAMEGEN_V1", "%ld", "state=error",
+    "target_hz=%u", "epoch=0", "source_present_seen=0",
+    "capture_ready=0", "generated_submitted=0", "generated_completed=0",
+    "generated_presented=0", "midpoint=0", "output_active=0",
+    "display_updates=0", "cadence_hz=0.0", "reason=%s",
+)
+require(
+    tuple(wire.rstrip("\n").split("\t")) == expected_fields
+    and wire.endswith("\n") and "\\t" not in wire and "\\n" not in wire,
+    "winemac error telemetry is not a parser-compatible 15-field record",
+)
+PY
+}
+
+verify_nvidia_provider_source_contract() {
+  local source_root="$1"
+  local kernelbase_source="$source_root/dlls/kernelbase/process.c"
+
+  require_source_file "$kernelbase_source" "Wine kernelbase NVIDIA provider environment source"
+  /usr/bin/python3 - "$kernelbase_source" <<'PY'
+import sys
+from pathlib import Path
+
+source = Path(sys.argv[1]).read_text(encoding="utf-8")
+start = source.find("selected_control_variables[] =")
+end = source.find("global_control_variables[] =", start)
+if start < 0 or end <= start:
+    raise SystemExit("kernelbase selected renderer control boundary is unavailable")
+selected = source[start:end]
+key = "FORGEPLAY_GAME_RENDERER_PROVIDER_ALIAS_PATHS_X64"
+if selected.count(key) != 1:
+    raise SystemExit(
+        "kernelbase selected renderer controls do not carry exactly one NVIDIA provider alias path key"
+    )
+PY
+}
+
 validate_wine_source_root() {
   local enforce_corresponding_source="${1:-1}"
   local required_directory version
@@ -1559,6 +1698,12 @@ validate_wine_source_root() {
     fail "Wine source tree fingerprint is invalid"
   if [[ "$enforce_corresponding_source" == "1" && "$WINE_SOURCE_TREE_SHA256" != "$EXPECTED_WINE_SOURCE_TREE_SHA256" ]]; then
     fail "FORGEPLAY_WINE_SOURCE does not match the canonical Wine 11.12 plus ForgePlay patch-set fingerprint"
+  fi
+  if [[ "$enforce_corresponding_source" == "1" ]]; then
+    verify_frame_generation_source_contract "$WINE_SOURCE_ROOT" ||
+      fail "Wine source does not preserve the complete frame-generation environment path"
+    verify_nvidia_provider_source_contract "$WINE_SOURCE_ROOT" ||
+      fail "Wine source does not preserve the exact NVIDIA provider alias control"
   fi
 }
 
@@ -1760,7 +1905,64 @@ verify_wine_kernelbase_process_policy() {
       binary_contains_text "$kernelbase" "$marker" ||
         fail "$label kernelbase lacks the executable-scoped argument/observation marker: $kernelbase: $marker"
     done
+    for marker in \
+      FORGEPLAY_D3DMETAL_FRAME_GENERATION \
+      FORGEPLAY_D3DMETAL_FRAME_GENERATION_TARGET_HZ \
+      FORGEPLAY_D3DMETAL_FRAME_CHECK \
+      FORGEPLAY_D3DMETAL_FRAME_GENERATION_PROXY \
+      FORGEPLAY_D3DMETAL_FRAME_GENERATION_OBSERVATION_FILE; do
+      binary_contains_text \
+        "$kernelbase" \
+        "FORGEPLAY_GAME_RENDERER_BASE_ENV_$marker" ||
+        fail "$label kernelbase lacks a base frame-generation mapping: $kernelbase: $marker"
+      binary_contains_text \
+        "$kernelbase" \
+        "FORGEPLAY_GAME_RENDERER_ENV_$marker" ||
+        fail "$label kernelbase lacks a selected frame-generation mapping: $kernelbase: $marker"
+    done
   done
+}
+
+verify_frame_generation_runtime_modules() {
+  local wine_root="$1"
+  local label="$2"
+  local ntdll="$wine_root/lib/wine/x86_64-unix/ntdll.so"
+  local winemac="$wine_root/lib/wine/x86_64-unix/winemac.so"
+  local marker
+
+  require_source_file "$ntdll" "$label frame-generation Unix environment module"
+  require_source_file "$winemac" "$label frame-generation mac driver"
+  for marker in \
+    FORGEPLAY_D3DMETAL_FRAME_GENERATION \
+    FORGEPLAY_D3DMETAL_FRAME_GENERATION_TARGET_HZ \
+    FORGEPLAY_D3DMETAL_FRAME_CHECK \
+    FORGEPLAY_D3DMETAL_FRAME_GENERATION_PROXY \
+    FORGEPLAY_D3DMETAL_FRAME_GENERATION_OBSERVATION_FILE; do
+    binary_contains_text "$ntdll" "$marker" ||
+      fail "$label ntdll drops a frame-generation Unix environment key: $marker"
+    binary_contains_text "$winemac" "$marker" ||
+      fail "$label mac driver does not consume a frame-generation environment key: $marker"
+  done
+}
+
+verify_nvidia_provider_runtime_modules() {
+  local wine_root="$1"
+  local label="$2"
+  local kernelbase ntdll="$wine_root/lib/wine/x86_64-windows/ntdll.dll"
+  local alias_key=FORGEPLAY_GAME_RENDERER_PROVIDER_ALIAS_PATHS_X64
+
+  for kernelbase in \
+    "$wine_root/lib/wine/i386-windows/kernelbase.dll" \
+    "$wine_root/lib/wine/x86_64-windows/kernelbase.dll"; do
+    require_source_file "$kernelbase" "$label NVIDIA provider child-environment module"
+    binary_contains_text "$kernelbase" "$alias_key" ||
+      fail "$label kernelbase drops the exact NVIDIA provider alias control: $kernelbase"
+  done
+  require_source_file "$ntdll" "$label NVIDIA provider ownership module"
+  binary_contains_text "$ntdll" "$alias_key" ||
+    fail "$label Windows ntdll drops the exact NVIDIA provider alias control"
+  binary_contains_text "$ntdll" '_nvngx.dll' ||
+    fail "$label Windows ntdll omits the _nvngx compatibility provider alias"
 }
 
 verify_runtime_patch_provenance() {
@@ -2030,6 +2232,8 @@ require_source_file "$BUILD_PATH_VERIFIER" "Wine Runtime build-path verifier"
 /usr/bin/python3 "$CLEAN_WINE_MARKER_VERIFIER" "$WINE_NTDLL_UNIX" "$WINE_SERVER_BINARY" ||
   fail "Wine runtime retains a removed contract; rebuild clean Wine 11.12 before packaging"
 verify_wine_kernelbase_process_policy "$INSTALL_ROOT" "Wine install root"
+verify_frame_generation_runtime_modules "$INSTALL_ROOT" "Wine install root"
+verify_nvidia_provider_runtime_modules "$INSTALL_ROOT" "Wine install root"
 for d3dmetal_marker in \
   FORGEPLAY_D3DMETAL_BRIDGE \
   FORGEPLAY_D3DMETAL_TARGET \
@@ -2093,8 +2297,45 @@ for install_bound_path in "${INSTALL_BOUND_PATHS[@]}"; do
 done
 [[ -f "$REPO_ROOT/Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-cef-other-process-opengl-surface.patch" ]] ||
   fail "ForgePlay Steam CEF Wine patch source is missing from the repository"
-[[ -f "$REPO_ROOT/Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forgeplay-metal-window-surface-contract.patch" ]] ||
-  fail "independent ForgePlay Metal renderer window-surface contract patch is missing from the repository"
+METAL_WINDOW_SURFACE_PATCH="$REPO_ROOT/Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forgeplay-metal-window-surface-contract.patch"
+require_source_file "$METAL_WINDOW_SURFACE_PATCH" "independent ForgePlay Metal renderer window-surface contract patch"
+for metal_surface_source_marker in \
+  'view->original_view == public_handle' \
+  'framegen_find_client_view( client_view )' \
+  'return original_view;' \
+  '++existing->reference_count' \
+  '--(*cursor)->reference_count' \
+  'framegen_view_create_metal_view_on_main_thread' \
+  'framegen_view_get_metal_layer_on_main_thread' \
+  'framegen_view_release_metal_view_on_main_thread' \
+  'macdrv_on_main_thread( (void *)^{' \
+  'if ([NSThread isMainThread])' \
+  'BOOL initializing;' \
+  'BOOL retiring;' \
+  'framegen_reserve_view( view, client_view )' \
+  'framegen_complete_view(' \
+  'if (existing->initializing || existing->retiring) return NULL;' \
+  'if (view && (view->initializing || view->retiring)) return NULL;' \
+  'if ((*cursor)->initializing || (*cursor)->retiring) return;' \
+  FORGEPLAY_D3DMETAL_FRAME_GENERATION_OBSERVATION_FILE; do
+  /usr/bin/grep -Fq -- "$metal_surface_source_marker" "$METAL_WINDOW_SURFACE_PATCH" ||
+    fail "ForgePlay Metal surface patch is missing its original-view/telemetry contract: $metal_surface_source_marker"
+done
+if /usr/bin/grep -Fq '(macdrv_metal_view)view' "$METAL_WINDOW_SURFACE_PATCH"; then
+  fail "ForgePlay Metal surface patch exposes C bookkeeping memory as an Objective-C Metal view"
+fi
+if /usr/bin/grep -Eq 'pthread_cond_|framegen_views_mutex' "$METAL_WINDOW_SURFACE_PATCH"; then
+  fail "ForgePlay Metal surface patch can block its main-owned lifecycle on a condition wait"
+fi
+GAME_RENDERER_PROCESS_PATCH="$REPO_ROOT/Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-game-renderer-process-policy.patch"
+require_source_file "$GAME_RENDERER_PROCESS_PATCH" "ForgePlay Steam game renderer process-policy patch"
+for provider_owner_source_marker in \
+  FORGEPLAY_GAME_RENDERER_PROVIDER_ALIAS_PATHS_X64 \
+  forgeplay_renderer_path_matches_provider_alias \
+  'L"nvapi64.dll"'; do
+  /usr/bin/grep -Fq "$provider_owner_source_marker" "$GAME_RENDERER_PROCESS_PATCH" ||
+    fail "ForgePlay renderer process policy is missing exact NVIDIA provider alias ownership: $provider_owner_source_marker"
+done
 [[ -f "$REPO_ROOT/Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forgeplay-d3dmetal-bridge.patch" ]] ||
   fail "independent ForgePlay D3DMetal bridge patch is missing from the repository"
 [[ -f "$REPO_ROOT/Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forgeplay-d3dmetal-bridge-contract.md" ]] ||
@@ -2162,9 +2403,21 @@ for manual_renderer_source_marker in \
   'manual-session-d9vk' \
   'manual-session-dxvk' \
   'host-policy;manual-selection' \
-  'process-creation-rejected'; do
+  '+                if (game_renderer_environment)' \
+  '+                    RtlDestroyEnvironment( game_renderer_environment );' \
+  '+                game_renderer_environment = NULL;' \
+  '+                    L"selected-renderer-environment", app_name, renderer_status,' \
+  '+                    L"original-environment" );'; do
   /usr/bin/grep -Fq "$manual_renderer_source_marker" "$MANUAL_RENDERER_SELECTION_PATCH" ||
     fail "ForgePlay manual renderer patch is missing its source marker: $manual_renderer_source_marker"
+done
+for forbidden_manual_renderer_patch_marker in \
+  '+                L"process-creation-rejected" );' \
+  '+            status = STATUS_NOT_SUPPORTED;' \
+  '+            status = renderer_status;'; do
+  if /usr/bin/grep -Fq "$forbidden_manual_renderer_patch_marker" "$MANUAL_RENDERER_SELECTION_PATCH"; then
+    fail "ForgePlay manual renderer patch retains process-rejection behavior: $forbidden_manual_renderer_patch_marker"
+  fi
 done
 
 STEAM_RENDERER_CONTROL_PLANE_PATCH="$REPO_ROOT/Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-renderer-control-plane-persistence.patch"
@@ -2187,10 +2440,14 @@ for compatibility_source_marker in \
   'FORGEPLAY_GAME_RENDERER_BASE_HELPER_SUFFIX_RULES_V1' \
   'FORGEPLAY_NETWORK_PROFILE_REQUESTED' \
   'dlls/ntdll/loader.c' \
-  'FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP_V1' \
-  'nvapi_QueryInterface' \
   'dlls/ntdll/unix/process.c' \
   'FORGEPLAY_AUDIO_INPUT_MODE' \
+  'FORGEPLAY_NVIDIA_IDENTITY_DISPLAY_DRIVER_VERSION' \
+  'FORGEPLAY_D3DMETAL_FRAME_GENERATION_PROXY' \
+  'FORGEPLAY_D3DMETAL_FRAME_GENERATION_OBSERVATION_FILE' \
+  'dlls/win32u/sysparams.c' \
+  'forgeplay_get_nvidia_identity' \
+  'write_gpu_to_registry' \
   'dlls/nsi/nsi.c' \
   'wifi-identity' \
   'ethernet-identity' \
@@ -2202,6 +2459,53 @@ for compatibility_source_marker in \
   /usr/bin/grep -Fq "$compatibility_source_marker" "$STEAM_SESSION_COMPATIBILITY_PATCH" ||
     fail "ForgePlay Steam session compatibility patch is missing its source marker: $compatibility_source_marker"
 done
+/usr/bin/python3 - \
+  "$STEAM_SESSION_COMPATIBILITY_PATCH" \
+  "$METAL_WINDOW_SURFACE_PATCH" <<'PY'
+import sys
+from pathlib import Path
+
+compatibility, metal_surface = (
+    Path(path).read_text(encoding="utf-8") for path in sys.argv[1:]
+)
+
+
+def require(condition: bool, message: str) -> None:
+    if not condition:
+        raise SystemExit(message)
+
+
+keys = (
+    "FORGEPLAY_D3DMETAL_FRAME_GENERATION",
+    "FORGEPLAY_D3DMETAL_FRAME_GENERATION_TARGET_HZ",
+    "FORGEPLAY_D3DMETAL_FRAME_CHECK",
+    "FORGEPLAY_D3DMETAL_FRAME_GENERATION_PROXY",
+    "FORGEPLAY_D3DMETAL_FRAME_GENERATION_OBSERVATION_FILE",
+)
+for key in keys:
+    require(
+        f'+        {{ L"FORGEPLAY_GAME_RENDERER_BASE_ENV_{key}", L"{key}" }},' in compatibility,
+        f"Steam compatibility patch lacks exact base frame-generation mapping: {key}",
+    )
+    require(
+        f'+        {{ L"FORGEPLAY_GAME_RENDERER_ENV_{key}", L"{key}" }},' in compatibility,
+        f"Steam compatibility patch lacks exact selected frame-generation mapping: {key}",
+    )
+    require(
+        f'+        "{key}",' in compatibility,
+        f"Steam compatibility patch lacks exact ntdll Unix frame-generation entry: {key}",
+    )
+
+dedicated = '+    path = getenv( "FORGEPLAY_D3DMETAL_FRAME_GENERATION_OBSERVATION_FILE" );'
+legacy = '+        path = getenv( "FORGEPLAY_PROCESS_OBSERVATION_FILE" );'
+require(
+    dedicated in metal_surface
+    and legacy in metal_surface
+    and metal_surface.index(dedicated) < metal_surface.index(legacy)
+    and metal_surface.count("framegen_observation_path_is_valid") >= 3,
+    "Metal surface patch does not prefer and validate the dedicated Unix observation path",
+)
+PY
 
 MANAGED_PROCESS_JOURNAL_PATCH="$REPO_ROOT/Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-managed-darwin-process-journal.patch"
 require_source_file "$MANAGED_PROCESS_JOURNAL_PATCH" "ForgePlay managed Darwin process journal patch"
@@ -2213,6 +2517,12 @@ for managed_process_source_marker in \
   'FORGEPLAY_MANAGED_APPLICATION_OWNER_START_US' \
   'FORGEPLAY_MANAGED_WINE_OWNER_V1' \
   forgeplay_start_application_owner_monitor \
+  forgeplay_terminate_managed_wine_process \
+  'ForgePlay managed application owner monitor failed' \
+  'pthread_sigmask( SIG_BLOCK, &blocked_signals, NULL )' \
+  'fcntl( queue, F_SETFD, descriptor_flags | FD_CLOEXEC )' \
+  '!(descriptor_flags & FD_CLOEXEC)' \
+  'if (!process_id_value && !started_at_value) return 1;' \
   'EVFILT_PROC' \
   'NOTE_EXIT' \
   'The managed-process identity belongs to the trusted Unix launch' \
@@ -2280,12 +2590,18 @@ for manual_renderer_source_marker in \
   'manual-session-dxmt' \
   'manual-session-d9vk' \
   'manual-session-dxvk' \
-  'L"process-creation-rejected"' \
-  'status = STATUS_NOT_SUPPORTED;'; do
+  'L"selected-renderer-environment", app_name, renderer_status,' \
+  'if (game_renderer_environment)' \
+  'RtlDestroyEnvironment( game_renderer_environment );' \
+  'game_renderer_environment = NULL;' \
+  'L"original-environment"'; do
   /usr/bin/grep -Fq "$manual_renderer_source_marker" "$MANUAL_RENDERER_SOURCE" ||
-    fail "corresponding Wine source is missing the manual fail-closed renderer contract: $manual_renderer_source_marker"
+    fail "corresponding Wine source is missing the manual fail-open renderer contract: $manual_renderer_source_marker"
 done
 for forbidden_manual_renderer_source_marker in \
+  'L"process-creation-rejected"' \
+  'status = STATUS_NOT_SUPPORTED;' \
+  'status = renderer_status;' \
   'automatic-loader-stage' \
   'L"LOADER_X64"' \
   'L"LOADER_X86"' \
@@ -2295,7 +2611,7 @@ for forbidden_manual_renderer_source_marker in \
   'FORGEPLAY_GAME_RENDERER_AVAILABLE_PROFILES' \
   'FORGEPLAY_GAME_RENDERER_UNAVAILABLE_PROFILES'; do
   if /usr/bin/grep -Fq "$forbidden_manual_renderer_source_marker" "$MANUAL_RENDERER_SOURCE"; then
-    fail "corresponding Wine source retains removed automatic/mixed renderer routing: $forbidden_manual_renderer_source_marker"
+    fail "corresponding Wine source retains removed automatic/mixed renderer routing or process-rejection behavior: $forbidden_manual_renderer_source_marker"
   fi
 done
 for steam_renderer_control_source_marker in \
@@ -2318,7 +2634,10 @@ for preserved_manual_control in \
 done
 for compatibility_source_marker in \
   'FORGEPLAY_GAME_RENDERER_ENV_D3DM_VENDOR_ID' \
-  'FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP' \
+  'FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_PROFILE' \
+  'FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_DISPLAY_DRIVER_VERSION' \
+  'FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_D3DMETAL_FRAME_GENERATION' \
+  'FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_D3DMETAL_FRAME_GENERATION_PROXY' \
   'forgeplay_renderer_path_separator' \
   'FORGEPLAY_GAME_RENDERER_BASE_HELPER_SUFFIX_RULES_V1' \
   'FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NETWORK_PROFILE' \
@@ -2331,23 +2650,57 @@ for compatibility_source in \
   "$WINE_SOURCE_ROOT/dlls/ntdll/loader.c" \
   "$WINE_SOURCE_ROOT/dlls/ntdll/unix/process.c" \
   "$WINE_SOURCE_ROOT/dlls/nsi/nsi.c" \
-  "$WINE_SOURCE_ROOT/dlls/winecoreaudio.drv/coreaudio.c"; do
+  "$WINE_SOURCE_ROOT/dlls/winecoreaudio.drv/coreaudio.c" \
+  "$WINE_SOURCE_ROOT/dlls/win32u/sysparams.c" \
+  "$WINE_SOURCE_ROOT/dlls/dxgi/adapter.c"; do
   require_source_file "$compatibility_source" "Steam session compatibility source"
 done
-for compatibility_source_marker in \
+for forbidden_compatibility_source_marker in \
   FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP_V1 \
-  nvapi_QueryInterface \
+  forgeplay_initialize_nvapi_before_game_entry \
   forgeplay_thread_init_func; do
-  /usr/bin/grep -Fq "$compatibility_source_marker" "$WINE_SOURCE_ROOT/dlls/ntdll/loader.c" ||
-    fail "corresponding Wine ntdll loader source is missing an NVAPI bootstrap control: $compatibility_source_marker"
+  if /usr/bin/grep -Fq "$forbidden_compatibility_source_marker" "$WINE_SOURCE_ROOT/dlls/ntdll/loader.c"; then
+    fail "corresponding Wine ntdll loader retains removed pre-entry NVAPI bootstrap code: $forbidden_compatibility_source_marker"
+  fi
+done
+for provider_owner_source_marker in \
+  FORGEPLAY_GAME_RENDERER_PROVIDER_ALIAS_PATHS_X64 \
+  forgeplay_renderer_path_matches_provider_alias \
+  'L"_nvngx.dll"' \
+  'L"nvapi64.dll"'; do
+  /usr/bin/grep -Fq "$provider_owner_source_marker" "$WINE_SOURCE_ROOT/dlls/ntdll/loader.c" ||
+    fail "corresponding Wine ntdll loader is missing exact NVIDIA provider ownership: $provider_owner_source_marker"
+done
+for forbidden_dxgi_source_marker in \
+  forgeplay_dxgi_nvidia_umd_version \
+  forgeplay_iid_id3d11_device \
+  'Returning host-selected ForgePlay NVIDIA UMD version'; do
+  if /usr/bin/grep -Fq "$forbidden_dxgi_source_marker" "$WINE_SOURCE_ROOT/dlls/dxgi/adapter.c"; then
+    fail "corresponding Wine DXGI source retains a non-conforming ID3D11Device version override: $forbidden_dxgi_source_marker"
+  fi
 done
 for compatibility_source_marker in \
   D3DM_VENDOR_ID \
-  FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP \
   FORGEPLAY_NETWORK_PROFILE \
-  FORGEPLAY_AUDIO_INPUT_MODE; do
+  FORGEPLAY_AUDIO_INPUT_MODE \
+  FORGEPLAY_NVIDIA_IDENTITY_PROFILE \
+  FORGEPLAY_NVIDIA_IDENTITY_DISPLAY_DRIVER_VERSION \
+  FORGEPLAY_D3DMETAL_FRAME_GENERATION \
+  FORGEPLAY_D3DMETAL_FRAME_GENERATION_PROXY \
+  FORGEPLAY_D3DMETAL_FRAME_GENERATION_OBSERVATION_FILE; do
   /usr/bin/grep -Fq "$compatibility_source_marker" "$WINE_SOURCE_ROOT/dlls/ntdll/unix/process.c" ||
     fail "corresponding Wine ntdll source is missing a child compatibility environment control: $compatibility_source_marker"
+done
+for compatibility_source_marker in \
+  forgeplay_get_nvidia_identity \
+  FORGEPLAY_GAME_RENDERER_REQUESTED \
+  FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_PROFILE \
+  FORGEPLAY_NVIDIA_IDENTITY_DISPLAY_DRIVER_VERSION \
+  'write_gpu_to_registry( gpu, pci_id, memory, active_identity )' \
+  'identity->packed_display_driver_version' \
+  'set_reg_ascii_value( hkey, "DriverVersion", driver_version )'; do
+  /usr/bin/grep -Fq "$compatibility_source_marker" "$WINE_SOURCE_ROOT/dlls/win32u/sysparams.c" ||
+    fail "corresponding Wine display writer is missing the centralized NVIDIA identity contract: $compatibility_source_marker"
 done
 for compatibility_source_marker in \
   FORGEPLAY_NETWORK_PROFILE \
@@ -2566,166 +2919,17 @@ copy_font_compatibility_payload() {
 copy_steam_compat_payload() {
   local source="$RUNTIME_POLICY_SOURCE/SteamCompat/sdl2-compat"
   local target="$STAGING/SteamCompat/sdl2-compat"
-  [[ -d "$source" && ! -L "$source" ]] ||
-    fail "sdl2-compat payload source is missing or unsafe: $source"
-  [[ ! -e "$target" && ! -L "$target" ]] ||
-    fail "sdl2-compat payload target is already occupied: $target"
+  [[ -d "$source" ]] || fail "sdl2-compat payload source is missing: $source"
 
   /bin/mkdir -p "$(/usr/bin/dirname "$target")"
-  /usr/bin/python3 - "$source" "$target" <<'PY' ||
-import hashlib
-import os
-import stat
-import sys
+  /usr/bin/ditto "$source" "$target"
 
-source, target = map(os.path.abspath, sys.argv[1:])
-expected_directories = {
-    "2.32.70",
-    "2.32.70/win32-x86",
-}
-expected_files = {
-    "2.32.70/win32-x86/INSTALL.md": "c4c1440031fdaed80290fa069e753d589c68a51c760e09357bf7eac45a22a5c5",
-    "2.32.70/win32-x86/LICENSE.txt": "0164aec3168ca9606c1f6066e879b4e8c7f2e46a838391f284348ab0aa1eabf2",
-    "2.32.70/win32-x86/README.md": "c22f8bd62edef57356f4b18efa2c38a4594242b1f6197d03aebf97a9724df110",
-    "2.32.70/win32-x86/SDL2.dll": "4745d609ce00c47fba2d9790ea08f943c4bfaf33bc6b749f21313f592b566cd0",
-    "2.32.70/win32-x86/SDL3.dll": "7f85f7c0fb1189050405acd39bd1e36a8f94fff5952c513497a9dcafcb86a9b0",
-    "2.32.70/win32-x86/git-hash.txt": "4a1fdf15a33c44057d36eab2c40d1331526ede0fc8f3d5a8a424a6ab84a162e9",
-}
-maximum_file_bytes = 128 * 1024 * 1024
-maximum_total_bytes = 256 * 1024 * 1024
-
-
-def identity(metadata):
-    return (
-        metadata.st_dev,
-        metadata.st_ino,
-        metadata.st_mode,
-        metadata.st_nlink,
-        metadata.st_size,
-        metadata.st_mtime_ns,
-        metadata.st_ctime_ns,
-        metadata.st_uid,
-    )
-
-
-def stable_file(path, relative):
-    descriptor = os.open(
-        path,
-        os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW | os.O_NONBLOCK,
-    )
-    try:
-        before = os.fstat(descriptor)
-        if (
-            not stat.S_ISREG(before.st_mode)
-            or before.st_nlink != 1
-            or before.st_uid != os.geteuid()
-            or before.st_mode & (stat.S_IWGRP | stat.S_IWOTH | stat.S_ISUID | stat.S_ISGID)
-            or before.st_size < 0
-            or before.st_size > maximum_file_bytes
-        ):
-            raise SystemExit(f"sdl2-compat source file is unsafe: {relative}")
-        payload = bytearray()
-        offset = 0
-        while offset < before.st_size:
-            chunk = os.pread(descriptor, min(1024 * 1024, before.st_size - offset), offset)
-            if not chunk:
-                raise SystemExit(f"sdl2-compat source file became incomplete: {relative}")
-            payload.extend(chunk)
-            offset += len(chunk)
-        after = os.fstat(descriptor)
-        if identity(before) != identity(after):
-            raise SystemExit(f"sdl2-compat source file changed while being read: {relative}")
-        data = bytes(payload)
-        if hashlib.sha256(data).hexdigest() != expected_files[relative]:
-            raise SystemExit(f"sdl2-compat source file content is not reviewed: {relative}")
-        return identity(before), data
-    finally:
-        os.close(descriptor)
-
-
-def scan_source():
-    root_metadata = os.lstat(source)
-    if not stat.S_ISDIR(root_metadata.st_mode) or stat.S_ISLNK(root_metadata.st_mode):
-        raise SystemExit("sdl2-compat source root must be a non-symlink directory")
-    observed_directories = {}
-    observed_files = {}
-    for current_root, directory_names, file_names in os.walk(source, followlinks=False):
-        directory_names.sort()
-        file_names.sort()
-        for name in directory_names:
-            path = os.path.join(current_root, name)
-            relative = os.path.relpath(path, source).replace(os.sep, "/")
-            metadata = os.lstat(path)
-            if not stat.S_ISDIR(metadata.st_mode) or stat.S_ISLNK(metadata.st_mode):
-                raise SystemExit(f"sdl2-compat source contains an unsafe directory entry: {relative}")
-            observed_directories[relative] = identity(metadata)
-        for name in file_names:
-            path = os.path.join(current_root, name)
-            relative = os.path.relpath(path, source).replace(os.sep, "/")
-            observed_files[relative] = path
-    if set(observed_directories) != expected_directories:
-        raise SystemExit("sdl2-compat source directory inventory is not the reviewed allowlist")
-    if set(observed_files) != set(expected_files):
-        raise SystemExit("sdl2-compat source file inventory is not the reviewed allowlist")
-
-    total_bytes = 0
-    payloads = {}
-    file_identities = {}
-    for relative in sorted(expected_files):
-        file_identity, payload = stable_file(observed_files[relative], relative)
-        total_bytes += len(payload)
-        if total_bytes > maximum_total_bytes:
-            raise SystemExit("sdl2-compat source payload exceeds its reviewed size bound")
-        file_identities[relative] = file_identity
-        payloads[relative] = payload
-    if identity(os.lstat(source)) != identity(root_metadata):
-        raise SystemExit("sdl2-compat source root changed while being read")
-    return {
-        "directories": observed_directories,
-        "files": file_identities,
-        "root": identity(root_metadata),
-    }, payloads
-
-
-source_snapshot, payloads = scan_source()
-parent = os.path.dirname(target)
-parent_metadata = os.lstat(parent)
-if not stat.S_ISDIR(parent_metadata.st_mode) or stat.S_ISLNK(parent_metadata.st_mode):
-    raise SystemExit("sdl2-compat target parent must be a non-symlink directory")
-try:
-    os.lstat(target)
-except FileNotFoundError:
-    pass
-else:
-    raise SystemExit("sdl2-compat target became occupied")
-os.mkdir(target, 0o755)
-for relative in sorted(expected_directories, key=lambda value: (value.count("/"), value)):
-    os.mkdir(os.path.join(target, *relative.split("/")), 0o755)
-for relative in sorted(expected_files):
-    destination = os.path.join(target, *relative.split("/"))
-    descriptor = os.open(
-        destination,
-        os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_CLOEXEC | os.O_NOFOLLOW,
-        0o644,
-    )
-    try:
-        payload = payloads[relative]
-        offset = 0
-        while offset < len(payload):
-            written = os.write(descriptor, payload[offset:])
-            if written <= 0:
-                raise SystemExit(f"sdl2-compat target write made no progress: {relative}")
-            offset += written
-        os.fchmod(descriptor, 0o644)
-        os.fsync(descriptor)
-    finally:
-        os.close(descriptor)
-
-verified_snapshot, _ = scan_source()
-if verified_snapshot != source_snapshot:
-    raise SystemExit("sdl2-compat source changed while the reviewed payload was copied")
-PY
-    fail "sdl2-compat payload does not exactly match the reviewed file allowlist"
+  /usr/bin/find "$target" -type f -name SDL2.dll -print -quit | /usr/bin/grep -q . ||
+    fail "sdl2-compat payload does not contain SDL2.dll: $target"
+  /usr/bin/find "$target" -type f -name SDL3.dll -print -quit | /usr/bin/grep -q . ||
+    fail "sdl2-compat payload does not contain SDL3.dll: $target"
+  /usr/bin/find "$target" -type f -iname 'LICENSE*' -print -quit | /usr/bin/grep -q . ||
+    fail "sdl2-compat payload does not contain license material: $target"
 }
 
 copy_wine_patch_files() {
@@ -3046,110 +3250,6 @@ normalize_winegstreamer_runtime_search_path() {
   add_rpath_if_needed "$winegstreamer" "@loader_path/../../../gstreamer/lib"
 }
 
-sanitize_gstreamer_private_build_paths() {
-  local root="$STAGING/wine/gstreamer"
-  [[ -d "$root" && ! -L "$root" ]] ||
-    fail "staged GStreamer root is missing or unsafe before build-path sanitization: $root"
-  /usr/bin/python3 - "$root" <<'PY' ||
-import os
-import re
-import stat
-import struct
-import sys
-
-root = os.path.realpath(sys.argv[1])
-maximum_file_bytes = 1024 * 1024 * 1024
-mh_magic_64 = 0xFEEDFACF
-patterns = (
-    re.compile(rb"/Users/([^/\x00-\x1f\x7f]{1,255})/"),
-    re.compile(rb"/Volumes/([^/\x00-\x1f\x7f]{1,255})/"),
-)
-private_prefixes = (b"/Users/", b"/Volumes/")
-
-
-def neutral_prefix(match):
-    # `/opt/` is a non-account, non-volume build prefix. Fill the remaining
-    # component deterministically while preserving every byte offset.
-    token_length = len(match.group(0)) - len(b"/opt//")
-    seed = b"forgeplay-sdk-"
-    token = (seed * ((token_length + len(seed) - 1) // len(seed)))[:token_length]
-    replacement = b"/opt/" + token + b"/"
-    if len(replacement) != len(match.group(0)):
-        raise SystemExit("GStreamer private build-path replacement changed length")
-    return replacement
-
-
-def stable_identity(value):
-    return (
-        value.st_dev,
-        value.st_ino,
-        value.st_mode,
-        value.st_nlink,
-        value.st_size,
-        value.st_uid,
-    )
-
-
-for current_root, directory_names, file_names in os.walk(root, followlinks=False):
-    directory_names.sort()
-    file_names.sort()
-    for name in directory_names:
-        path = os.path.join(current_root, name)
-        metadata = os.lstat(path)
-        if not stat.S_ISDIR(metadata.st_mode) or stat.S_ISLNK(metadata.st_mode):
-            raise SystemExit("GStreamer build-path sanitization encountered an unsafe directory")
-    for name in file_names:
-        path = os.path.join(current_root, name)
-        descriptor = os.open(
-            path,
-            os.O_RDWR | os.O_CLOEXEC | os.O_NOFOLLOW | os.O_NONBLOCK,
-        )
-        try:
-            before = os.fstat(descriptor)
-            if (
-                not stat.S_ISREG(before.st_mode)
-                or before.st_nlink != 1
-                or before.st_uid != os.geteuid()
-                or before.st_size < 0
-                or before.st_size > maximum_file_bytes
-            ):
-                raise SystemExit("GStreamer build-path sanitization encountered an unsafe file")
-            data = bytearray()
-            offset = 0
-            while offset < before.st_size:
-                chunk = os.pread(descriptor, min(1024 * 1024, before.st_size - offset), offset)
-                if not chunk:
-                    raise SystemExit("GStreamer file became incomplete during build-path sanitization")
-                data.extend(chunk)
-                offset += len(chunk)
-            original = bytes(data)
-            if not any(prefix in original for prefix in private_prefixes):
-                continue
-            if len(original) < 4 or struct.unpack_from("<I", original, 0)[0] != mh_magic_64:
-                raise SystemExit("private GStreamer build path occurs outside a supported Mach-O payload")
-            sanitized = original
-            for pattern in patterns:
-                sanitized = pattern.sub(neutral_prefix, sanitized)
-            if len(sanitized) != len(original) or any(
-                prefix in sanitized for prefix in private_prefixes
-            ):
-                raise SystemExit("GStreamer private build path was not sanitized completely")
-            offset = 0
-            while offset < len(sanitized):
-                written = os.pwrite(descriptor, sanitized[offset:offset + 1024 * 1024], offset)
-                if written <= 0:
-                    raise SystemExit("GStreamer build-path sanitization write made no progress")
-                offset += written
-            os.fsync(descriptor)
-            after = os.fstat(descriptor)
-            if stable_identity(before) != stable_identity(after):
-                raise SystemExit("GStreamer file identity changed during build-path sanitization")
-        finally:
-            os.close(descriptor)
-PY
-    fail "staged GStreamer private build paths could not be sanitized safely"
-}
-
 adhoc_sign_wine_macho_files() {
   local phase="$1"
   while IFS= read -r -d '' macho; do
@@ -3397,87 +3497,6 @@ ENTRYPOINT
   done
 }
 
-require_exact_staged_d3dmetal_framework_alias() {
-  local path="$1"
-  local expected_target="$2"
-  local expected_path="$3"
-  local label="$4"
-  local actual_target
-
-  [[ -L "$path" ]] || fail "$label must be a symbolic link: $path"
-  actual_target="$(/usr/bin/readlink "$path")" ||
-    fail "$label target could not be read: $path"
-  [[ "$actual_target" == "$expected_target" ]] ||
-    fail "$label has an incorrect target: $path -> $actual_target"
-  [[ "$path" -ef "$expected_path" ]] ||
-    fail "$label does not resolve to the canonical D3DMetal framework payload: $path"
-}
-
-materialize_d3dmetal_framework_aliases() {
-  local framework="$STAGING/Frameworks/renderer/d3dmetal/external/D3DMetal.framework"
-  local versions="$framework/Versions"
-  local canonical_version="$versions/A"
-  local canonical_executable="$canonical_version/D3DMetal"
-  local canonical_resources="$canonical_version/Resources"
-  local current_version="$versions/Current"
-  local alias_executable="$framework/D3DMetal"
-  local alias_resources="$framework/Resources"
-
-  [[ -d "$framework" && ! -L "$framework" ]] ||
-    fail "staged D3DMetal framework is missing or unsafe: $framework"
-  [[ -d "$versions" && ! -L "$versions" ]] ||
-    fail "staged D3DMetal Versions directory is missing or unsafe: $versions"
-  [[ -d "$canonical_version" && ! -L "$canonical_version" ]] ||
-    fail "staged D3DMetal canonical version is missing or unsafe: $canonical_version"
-  require_staged_renderer_file \
-    "$canonical_executable" \
-    "staged D3DMetal canonical executable"
-  [[ -x "$canonical_executable" ]] ||
-    fail "staged D3DMetal canonical executable is not executable: $canonical_executable"
-  [[ -d "$canonical_resources" && ! -L "$canonical_resources" ]] ||
-    fail "staged D3DMetal canonical Resources are missing or unsafe: $canonical_resources"
-
-  if [[ -L "$alias_executable" || -L "$alias_resources" || -L "$current_version" ]]; then
-    require_exact_staged_d3dmetal_framework_alias \
-      "$current_version" \
-      "A" \
-      "$canonical_version" \
-      "D3DMetal current-version alias"
-    require_exact_staged_d3dmetal_framework_alias \
-      "$alias_executable" \
-      "Versions/Current/D3DMetal" \
-      "$canonical_executable" \
-      "D3DMetal executable alias"
-    require_exact_staged_d3dmetal_framework_alias \
-      "$alias_resources" \
-      "Versions/Current/Resources" \
-      "$canonical_resources" \
-      "D3DMetal Resources alias"
-
-    # The unsigned Runtime uses the established portable layout: the public
-    # aliases are exact materialized copies and Versions/Current is absent.
-    # Developer ID signing later restores Apple's canonical three-link graph.
-    /bin/rm -f "$alias_executable" "$alias_resources" "$current_version"
-    /bin/cp -p "$canonical_executable" "$alias_executable"
-    /bin/mkdir -m 755 "$alias_resources"
-    /usr/bin/ditto "$canonical_resources" "$alias_resources"
-  fi
-
-  [[ ! -e "$current_version" && ! -L "$current_version" ]] ||
-    fail "materialized D3DMetal framework must not contain Versions/Current: $current_version"
-  require_staged_renderer_file \
-    "$alias_executable" \
-    "materialized D3DMetal executable alias"
-  [[ -x "$alias_executable" ]] ||
-    fail "materialized D3DMetal executable alias is not executable: $alias_executable"
-  [[ -d "$alias_resources" && ! -L "$alias_resources" ]] ||
-    fail "materialized D3DMetal Resources alias is missing or unsafe: $alias_resources"
-  /usr/bin/cmp -s "$alias_executable" "$canonical_executable" ||
-    fail "materialized D3DMetal executable alias does not match Versions/A"
-  /usr/bin/diff -qr "$alias_resources" "$canonical_resources" >/dev/null ||
-    fail "materialized D3DMetal Resources alias does not match Versions/A"
-}
-
 materialize_symlinks() {
   while IFS= read -r -d '' link_path; do
     if is_staged_d3dmetal_shared_unix_module_link_path "$link_path"; then
@@ -3546,7 +3565,6 @@ copy_steam_compat_payload
 materialize_locked_renderer_payload
 materialize_d3dmetal_nvapi_aliases
 normalize_d3dmetal_shared_unix_module_links
-materialize_d3dmetal_framework_aliases
 materialize_symlinks
 install_wine_loader_entrypoint
 verify_locked_renderer_payload
@@ -3556,6 +3574,8 @@ require_source_file "$D3DMETAL_NGX_BRIDGE_VALIDATOR" "D3DMetal NGX bridge valida
 verify_staged_winebus_iohid_backend
 verify_staged_forced_font_replacements
 verify_wine_kernelbase_process_policy "$STAGING/wine" "staged Wine Runtime"
+verify_frame_generation_runtime_modules "$STAGING/wine" "staged Wine Runtime"
+verify_nvidia_provider_runtime_modules "$STAGING/wine" "staged Wine Runtime"
 prune_active_wine_renderer_overlay_artifacts
 verify_active_wine_modules_do_not_embed_renderer_overlay
 build_forgeplay_steam_launcher
@@ -3617,7 +3637,6 @@ gstreamer_file_manifest \
   "$STAGED_GSTREAMER_PRE_TRANSFORM_MANIFEST" ||
   fail "staged pre-transform GStreamer file identities could not be captured"
 
-sanitize_gstreamer_private_build_paths
 adhoc_sign_wine_macho_files "pre-rewrite code-signature reservation"
 rewrite_macho_references
 adhoc_sign_wine_macho_files "post-rewrite validation"
@@ -3937,6 +3956,11 @@ Path(output).write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", e
 PY
 
 if [[ "$MODE" == "public-source-package" ]]; then
+  write_public_runtime_build_claim "$STAGING/RuntimeManifest.json" ||
+    fail "unsigned public Runtime build claim could not be published"
+fi
+
+if [[ "$MODE" == "public-source-package" ]]; then
   PUBLIC_SOURCE_AUTHORITY_METADATA="- Packaging source claim: public-source-release-export-v1
 - Release attestation status: unsigned build claim awaiting release attestation
 - Public source release commit: $PUBLIC_SOURCE_RELEASE_COMMIT
@@ -3962,23 +3986,23 @@ $PUBLIC_SOURCE_AUTHORITY_METADATA
 - Build-path hygiene: the canonical builder uses a logical `/forgeplay-runtime` prefix, staged `DESTDIR`, and compiler file-prefix mapping; `/Users/` and `/Volumes/` developer paths are rejected from the compiled Wine payload before packaging
 - Wine payload policy: the canonical builder performs the complete upstream install so both i386/x86_64 `dmsynth.dll` and `icu.dll` plus all Wine 11.12 `wineboot.exe` language resources are retained; packaging then removes only the explicit development-tool denylist and rejects undeclared `wine/bin` entries
 $WINE_PATCH_METADATA
-- Runtime identity: deterministic \`RuntimeManifest.json\` records the Wine source, patch set, launcher, \`wine.inf\`, \`wineboot\`, routing-critical Wine modules, host-support SBOM, complete Runtime file inventory, build, and prefix-compatibility SHA-256 values. \`RuntimeFileInventory.json\` enumerates every non-claim path, type, executable bit, symlink target, and code-signature-normalized file-content hash; its three self-referential claim files are bound through the inventory-to-manifest-to-public-build-claim chain. The raw pre-sign tree is exact. Its \`signedReleasePathTransforms\` authority permits only \`apple-d3dmetal-framework-canonical-alias-v1\`, which replaces the reviewed flat D3DMetal aliases with Apple's exact three canonical framework symlinks while preserving the same \`Versions/A\` payload. Mach-O identities exclude only normalized code-signature metadata and the replaceable signature blob so packaging and final distribution signing verify the same executable payload. \`RuntimeSBOM.json\` records every bundled host-support file or approved internal symlink with its content hash, source, version, and license paths. Packaging time and filesystem mtimes are excluded.
+- Runtime identity: deterministic \`RuntimeManifest.json\` records the Wine source, patch set, launcher, \`wine.inf\`, \`wineboot\`, routing-critical Wine modules, host-support SBOM, build, and prefix-compatibility SHA-256 values. Mach-O core-module identities exclude only the replaceable code-signature blob and signature-size metadata so packaging and final distribution signing verify the same executable payload. \`RuntimeSBOM.json\` records every bundled host-support file or approved internal symlink with its content hash, source, version, and license paths. Packaging time and filesystem mtimes are excluded.
 - Wine attribution and modification licensing: source validation requires Wine's \`LICENSE\`, \`COPYING.LIB\`, and \`AUTHORS\` files, and packaging copies all three into \`Legal/Wine\`. The tracked \`Legal/Wine/FORGEPLAY-MODIFICATIONS.md\` records the exact 25-patch identity and the current LGPL/GPL boundary; the Game Mode legal directory carries both unmodified license texts and the exact conversion scope.
 - App Sandbox IPC: Wine client and wineserver honor \`WINE_SERVER_ROOT\` and \`WINE_MACH_SERVICE_NAME\`; sandbox builds use the app container and App Group IPC namespace, peer processes reopen the held server lock without truncating it, and Wine unlinks temporary executable-mapping backing files before probing or sharing them.
 - Wine synchronization: upstream Wine 11.12 standard wineserver synchronization path only; no out-of-tree synchronization backend is applied
 - D3DMetal Wine contract: the project-owned \`forgeplay_d3dmetal.c\` bridge activates only for a Steam game child in a manually selected exact D3DMetal session, loads the explicitly bundled shared library, registers PE image ranges through the public non-native-code-region ABI, and preserves Wine 11.12's upstream Unix-call table. That D3DMetal route enables ForgePlay's scoped macOS/x86_64 native pthread context, synchronizes the mutable Windows static-TLS pointer through Darwin's Win64-reserved slot, uses reentrant Apple time conversion interfaces so libc cannot overwrite the adjacent mirrored PEB slot, and restores overwritten native slots before exit; other manually selected renderers keep upstream GS switching.
 - Wine host dependencies: 15 locked x86_64 Wine host dependency artifacts provide the reviewed TLS, font, Vulkan loader, and MoltenVK closure under \`wine/lib\` and \`wine/etc/vulkan/icd.d\`; every source version and SHA-256 is verified before staging
-- Media Foundation: Wine's \`winegstreamer\` Unix module is built against GStreamer 1.28.5. The exact locked x86_64 core, MP4, H.264/AAC parser and decoder, Apple VideoToolbox, conversion, and libav fallback closure is isolated under \`wine/gstreamer\`; developer account and volume build prefixes embedded by the official SDK are deterministically replaced in place with equal-length neutral prefixes inside the authenticated pre/post transformation ledger; system plug-ins are disabled and the installed app has no host GStreamer dependency
+- Media Foundation: Wine's \`winegstreamer\` Unix module is built against GStreamer 1.28.5. The exact locked x86_64 core, MP4, H.264/AAC parser and decoder, Apple VideoToolbox, conversion, and libav fallback closure is isolated under \`wine/gstreamer\`; system plug-ins are disabled and the installed app has no host GStreamer dependency
 - Graphics: Vulkan loader and MoltenVK runtime included with bundled Vulkan ICD JSON
 - ForgePlay Steam launcher: \`wine/lib/wine/x86_64-windows/forgeplay-steam-launcher.exe\`, built from the project-owned \`Sources/forgeplay_steam_launcher.c\`; it directly invokes Win32 \`CreateProcessW\` through ForgePlay's complete \`--detach -- <Windows command...>\` interface
 - Executable-scoped compatibility seam: patched i386/x86_64 \`kernelbase.dll\` can append one bounded host-selected argument string only to the matching executable basename. The optional \`FORGEPLAY_PROCESS_ARGUMENT_ROOT_ONLY=1\` scope skips Chromium \`--type=\` subprocess arguments while a separately selected observation role still records every matching launch's Windows PID and final command line. The runtime hardcodes no Steam flag set and makes no claim that any particular combination fixes a current Steam build; updater-owned executables remain unchanged.
-- Steam game renderer policy: before every Steam launch the caller must select exactly one of D3DMetal Standard, D3DMetal NVIDIA/DLSS Compatibility, DXMT, D9VK, or DXVK. Both D3DMetal choices use the same exact D3DMetal renderer; the experimental NVIDIA choice additionally reports vendor ID \`0x10de\` only to routed game descendants, exposes verified \`nvapi.dll\`/Unix-module aliases derived from the locked Apple payload, and initializes NVAPI before the game entry point. It does not spoof a device ID, force DirectX 11/12, or guarantee that a game will expose DLSS. Patched i386/x86_64 \`kernelbase.dll\` applies only the selected renderer to Steam game children for the session. Missing or invalid selection is rejected; Direct3D import classification, loader-stage profiles, and mixed renderer compositions are disabled. Patched Unix and Windows \`ntdll\` expose only the selected architecture-specific renderer root, Route V2 records the plan, and Load V3 counts as proof only for an allowlist-owned path with \`path-owner=verified\`.
+- Steam game renderer policy: the current app exposes exactly D3DMetal-NVIDIA, DXMT, and D9VK; the plain D3DMetal and DXVK selector values remain readable only for legacy configuration compatibility. Both D3DMetal selectors address the same D3DMetal renderer payload. The NVIDIA selector projects one complete RTX 4090 / 561.09 identity tuple only to the Steam session control plane and routed game descendants; D3DMetal, normal in-game NVAPI/NGX calls, and Wine's primary-GPU and SetupAPI/Display Class/DirectX writers consume that same tuple, including Windows Display/UMD version \`32.0.15.6109\`. DXGI user-mode driver version checks follow the public contract: \`CheckInterfaceSupport(IDXGIDevice)\` is the version query, while Direct3D 11-or-later interface IIDs remain unsupported. Neither selector forces DirectX 11/12 or guarantees that a game exposes DLSS. Patched i386/x86_64 \`kernelbase.dll\` applies only the selected renderer to Steam game children for the session. Direct3D import classification, loader-stage profiles, and mixed renderer compositions are disabled. Patched Unix and Windows \`ntdll\` expose only the selected architecture-specific renderer root, Route V2 records the plan, and Load V3 counts as proof only for an allowlist-owned path with \`path-owner=verified\`. If Wine cannot construct the selected renderer DLL search path, it records the loader error and continues on Wine's default DLL path instead of terminating the game process; the host keeps that degradation diagnostic and never reports it as successful NVIDIA/frame-generation activation.
 - Steam session network presentation: the caller must explicitly select Standard, Wi-Fi Identity, or Ethernet Identity for every Steam launch. Patched \`nsi.dll\` changes only the reported media/type fields of active non-loopback game adapters for the two compatibility identities; it does not convert TCP to UDP, UDP to TCP, alter addresses, or change the host transport.
 - Steam session audio input: the caller must explicitly select input disabled or enabled for every Steam launch. Patched \`winecoreaudio.drv\` returns a successful empty capture-endpoint set before CoreAudio access when disabled, while render endpoints and audio output remain unchanged; enabled preserves the upstream capture path.
 - Steam game CEF browser policy: the explicit host gate \`FORGEPLAY_STEAM_GAME_CEF_BROWSER_POLICY_ENABLED=1\` adds \`--in-process-gpu\` only to a root PE under a structural \`steamapps/common\` game path when that executable contains the generic \`libcef.dll\` runtime marker. Existing CEF \`--type=\` subprocesses, non-CEF executables, Steam infrastructure, and already-correct command lines are unchanged.
-- Game Mode process-host routing: this experimental path is off by default, so ordinary Steam sessions use the standard Wine loader. When explicitly requested, a Unix-only target identity is derived independently for each child from Wine's resolved `ImagePathName`, not a mutable command line or inherited Windows variable. Every resolved executable in a structural `steamapps/common` game tree may enter the same fixed bundled ForgePlay host before PE mapping, including a long-lived game child started by a launcher; `_CommonRedist` and targets outside that tree use the standard Wine loader. Each accepted target with a rejected contract or failed host exec is logged and fails instead of silently continuing without the requested Game Mode host. Routed processes retain the fixed host process identity and icon rather than a game-derived name or PE icon.
+- Game Mode process-host routing: Game Mode off uses the standard Wine loader. When explicitly requested, a Unix-only target identity is derived independently for each child from Wine's resolved `ImagePathName`, not a mutable command line or inherited Windows variable. Every resolved executable in a structural `steamapps/common` game tree may enter the same fixed bundled ForgePlay host before PE mapping, including a long-lived game child started by a launcher; `_CommonRedist` and targets outside that tree use the standard Wine loader. Once Game Mode is requested for an eligible game target, a rejected host contract, allocation failure, failed host exec, or native host bootstrap/handshake failure records a bounded error and stops that game launch; it never continues through the standard Wine loader. A successfully entered host preserves the inherited renderer, NVIDIA, and frame-generation policy and retains its fixed process identity and icon rather than a game-derived name or PE icon.
 - External-storage grants: the Unix \`ntdll\` loader and \`wineserver\` explicitly activate the project-owned grant bridge before Wine initialization. All-absent grant environment values are a normal no-op. When an external grant is requested, a partial or rejected grant emits a path-free failure record and stops Wine before Windows Steam can start. Successful activation emits a path-free \`FORGEPLAY_EXTERNAL_STORAGE_GRANT_V1\` record from each process.
-- Managed Darwin process lifecycle: every launch-scoped Wine loader and wineserver appends its Darwin PID and kernel process-start time to an owner-private, bounded, path-free journal. ForgePlay accepts a record only for the matching run UUID, prefix scope, runtime fingerprint, exact bundled executable path, and unchanged process-start identity before termination; wineserver exit alone is not treated as proof that all game processes stopped. Wineserver additionally binds the launching ForgePlay PID and kernel start time and terminates itself when that exact owner exits, including force-quit and crash paths.
+- Managed Darwin process lifecycle: every launch-scoped Wine loader and wineserver appends its Darwin PID and kernel process-start time to an owner-private, bounded, path-free journal. ForgePlay accepts a record only for the matching run UUID, prefix scope, runtime fingerprint, exact bundled executable path, and unchanged process-start identity before termination; wineserver exit alone is not treated as proof that all game processes stopped. Every managed Wine loader and wineserver additionally binds the launching ForgePlay PID and kernel start time, requests graceful self-termination when that exact owner exits, and hard-stops itself after the bounded watchdog delay if necessary; unmanaged Wine without the owner identity remains unchanged.
 - DXMT macOS window bridge: patched \`winemac.so\` exports the 192-byte \`macdrv_functions\` ABI expected by DXMT and maps Wine 11.12 client/content views to Metal-backed DXGI window swapchains
 - Steam SDL compatibility payload: versioned \`SteamCompat/sdl2-compat\` binaries and license material are copied from the ForgePlay runtime source tree
 - Windows Korean font compatibility: exact Nanum Gothic Regular/Bold payloads are bundled under \`wine/share/wine/fonts\`; Wine GDI and DirectWrite expose an opt-in forced-family replacement for installed or private Tahoma faces; the SIL Open Font License text and exact upstream source identity are bundled under \`Legal/NanumGothic/\`
@@ -4108,18 +4132,24 @@ non-CEF executables, Steam infrastructure roles, and command lines that already 
 remain unchanged. The executable itself is never replaced or modified.
 
 ForgePlay's Steam game renderer process patch leaves Steam and Steam WebHelper on the base Wine
-renderer environment. Before every Steam launch the user must select exactly one of D3DMetal
-Standard, D3DMetal NVIDIA/DLSS Compatibility, DXMT, D9VK, or DXVK. Both D3DMetal choices route the
-same exact D3DMetal modules. The experimental NVIDIA choice additionally passes
-\`D3DM_VENDOR_ID=0x10de\` only through the routed game environment, provides the exact verified
-\`nvapi.dll\` and Unix-module aliases required by the bundled Apple NVAPI implementation, and invokes
-\`NvAPI_Initialize\` before the game entry point. It does not change the reported device ID, force
-DirectX 11 or DirectX 12, or claim that a game's DLSS path will work. That single renderer is applied
-to Steam game children for the whole session.
+renderer environment. The current app exposes exactly D3DMetal-NVIDIA, DXMT, and D9VK; plain
+D3DMetal and DXVK remain recognized only as hidden legacy selector values. Both D3DMetal selectors
+route the same exact D3DMetal modules. The NVIDIA selector projects one complete RTX 4090 / 561.09
+identity through the Steam session control plane and routed game environment. Wine's primary GPU,
+SetupAPI/Display Class, and volatile DirectX writers consume the corresponding vendor/device/name and
+\`32.0.15.6109\` version so later base-Wine enumeration cannot restore the Apple host identity. The
+same route passes \`D3DM_VENDOR_ID=0x10de\` and the exact verified NVAPI/NGX aliases to normal in-game
+provider calls. DXGI UMD version validation uses the public
+\`CheckInterfaceSupport(IID_IDXGIDevice)\` contract; Direct3D 11-or-later interface IIDs correctly
+remain unsupported and are never forced to succeed. The selection does not force DirectX 11 or
+DirectX 12 or claim that a game's DLSS path will work. That single renderer is applied to Steam game
+children for the whole session.
 Automatic Direct3D import classification, loader-stage profiles, and mixed renderer compositions
-are not used. A missing or invalid manual selection is rejected instead of falling back to another
-renderer. The Unix loader places only the selected renderer root ahead of Wine's compiled DLL
-directory, while the Windows loader prepends only its matching i386 or x86_64 directories. Route V2
+are not used. The Unix loader places only the selected renderer root ahead of Wine's compiled DLL
+directory, while the Windows loader prepends only its matching i386 or x86_64 directories. If that
+selected search path cannot be constructed, Wine records the loader error and continues with its
+default DLL path instead of terminating the game; ForgePlay retains the degradation diagnostic and
+does not report NVIDIA or frame generation as active. Route V2
 records use \`manual-session-d3dmetal\`, \`manual-session-dxmt\`, \`manual-session-d9vk\`, or
   \`manual-session-dxvk\` as the exact selection reason and describe the selected plan. A Load V3
   record proves an actual renderer load only when its
@@ -4153,9 +4183,12 @@ targets outside that tree clear the Game Mode target identity and continue throu
 Wine loader. When the beta host is requested, each accepted target enters the fixed pre-signed
 \`Contents/Helpers/GameModeProcessHost.app\` before PE mapping. Its argv, current directory,
 inherited handles, Wine server context, and Darwin PID remain on the original Steam-created process
-path. A host contract or exec failure for an accepted target remains fail-closed. The helper
-retains its fixed executable, process identity, and icon; ForgePlay does not replace them with a
-per-game display name or PE icon.
+path. Game Mode off is the only standard Wine route for eligible game targets. When Game Mode is
+requested, a host contract rejection, allocation failure, failed host exec, or native bootstrap or
+handshake failure records a bounded error and stops that game launch instead of continuing through
+the standard Wine loader. A successfully entered helper preserves the inherited renderer, NVIDIA,
+and frame-generation controls and retains its fixed executable, process identity, and icon;
+ForgePlay does not replace them with a per-game display name or PE icon.
 
 ForgePlay's external-storage grant activation patch runs explicitly at the start of both the Unix
 \`ntdll\` loader and \`wineserver\`. If all four grant environment values are absent, Wine continues
@@ -4289,85 +4322,6 @@ for output_path in (build_metadata_path, source_availability_path):
     path.write_text(content, encoding="utf-8")
 PY
 
-require_source_file "$RUNTIME_FILE_INVENTORY_TOOL" "runtime complete file inventory tool"
-/bin/bash "$RUNTIME_FILE_INVENTORY_TOOL" \
-  --write-runtime-file-inventory \
-  "$STAGING" \
-  "$STAGING/RuntimeFileInventory.json" ||
-  fail "complete Runtime file inventory could not be generated"
-RUNTIME_FILE_INVENTORY_SHA256="$(
-  /usr/bin/shasum -a 256 "$STAGING/RuntimeFileInventory.json" | /usr/bin/awk '{print $1}'
-)" || fail "complete Runtime file inventory digest could not be computed"
-RUNTIME_FILE_INVENTORY_FINGERPRINT="$(/usr/bin/python3 - "$STAGING/RuntimeFileInventory.json" <<'PY'
-import json
-import re
-import sys
-from pathlib import Path
-
-value = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
-fingerprint = value.get("payloadFingerprint")
-if re.fullmatch(r"[0-9a-f]{64}", fingerprint or "") is None:
-    raise SystemExit("complete Runtime file inventory fingerprint is invalid")
-print(fingerprint)
-PY
-)" || fail "complete Runtime file inventory fingerprint could not be read"
-/usr/bin/python3 - \
-  "$STAGING/RuntimeManifest.json" \
-  "$RUNTIME_FILE_INVENTORY_SHA256" \
-  "$RUNTIME_FILE_INVENTORY_FINGERPRINT" <<'PY' ||
-import json
-import re
-import sys
-from pathlib import Path
-
-manifest_path = Path(sys.argv[1])
-inventory_sha256, inventory_fingerprint = sys.argv[2:]
-manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-required_schema_3 = {
-    "architecture",
-    "corePayloadFingerprint",
-    "corePayloadHashAlgorithm",
-    "corePayloadSHA256",
-    "hostSupportPayloadFingerprint",
-    "hostSupportSBOMPath",
-    "hostSupportSBOMSHA256",
-    "patchApplicationOrder",
-    "patchSetSHA256",
-    "prefixCompatibilityFingerprint",
-    "runnerBuildFingerprint",
-    "runnerLauncherSHA256",
-    "runtimeIdentifier",
-    "schemaVersion",
-    "sourceTreeSHA256",
-    "wineInfSHA256",
-    "wineVersion",
-    "winebootSHA256",
-}
-if set(manifest) != required_schema_3 or manifest.get("schemaVersion") != 3:
-    raise SystemExit("provisional Runtime manifest schema is invalid")
-if any(re.fullmatch(r"[0-9a-f]{64}", value) is None for value in (
-    inventory_sha256,
-    inventory_fingerprint,
-)):
-    raise SystemExit("complete Runtime inventory binding is invalid")
-manifest.update({
-    "runtimeFileInventoryFingerprint": inventory_fingerprint,
-    "runtimeFileInventoryHashAlgorithm": "sha256-macho-code-signature-normalized-v1",
-    "runtimeFileInventoryPath": "RuntimeFileInventory.json",
-    "runtimeFileInventorySHA256": inventory_sha256,
-})
-manifest_path.write_text(
-    json.dumps(manifest, indent=2, sort_keys=True) + "\n",
-    encoding="utf-8",
-)
-PY
-  fail "complete Runtime file inventory could not be bound into the Runtime manifest"
-
-if [[ "$MODE" == "public-source-package" ]]; then
-  write_public_runtime_build_claim "$STAGING/RuntimeManifest.json" ||
-    fail "unsigned public Runtime build claim could not bind the final Runtime manifest"
-fi
-
 unexpected_staged_symlink=""
 while IFS= read -r -d '' staged_symlink; do
   if is_staged_d3dmetal_shared_unix_module_link_path "$staged_symlink"; then
@@ -4413,11 +4367,6 @@ gstreamer_file_manifest \
   "$STAGING/wine/gstreamer" \
   "$STAGED_GSTREAMER_POST_TRANSFORM_MANIFEST" ||
   fail "staged GStreamer file identity changed before publication"
-/bin/bash "$RUNTIME_FILE_INVENTORY_TOOL" \
-  --verify-runtime-file-inventory \
-  "$STAGING" \
-  "$STAGING/RuntimeFileInventory.json" ||
-  fail "staged Runtime paths, types, or content differ from the complete file inventory"
 [[ "$(/usr/bin/shasum -a 256 "$STAGING/RuntimeSBOM.json" | /usr/bin/awk '{print $1}')" == "$HOST_SUPPORT_SBOM_SHA256" ]] ||
   fail "runtime SBOM changed after its manifest identity was captured"
 atomic_publish_runtime_directory \

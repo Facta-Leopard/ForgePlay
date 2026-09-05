@@ -238,11 +238,14 @@ enum PrefixRestoreError: LocalizedError {
 
 enum PrefixResetError: LocalizedError {
     case rollbackFailed(destination: URL, displacedEnvironment: URL, originalError: Error, rollbackError: Error)
+    case steamLibraryPreservationFailed(URL, String)
 
     var errorDescription: String? {
         switch self {
         case .rollbackFailed(let destination, let displacedEnvironment, let originalError, let rollbackError):
             "Steam 프리픽스 재설정에 실패했고 기존 프리픽스를 되돌리지 못했습니다: \(destination.path). 기존 환경 임시 위치: \(displacedEnvironment.path). 원인: \(forgePlayTechnicalErrorSummary(originalError)). 복구 오류: \(forgePlayTechnicalErrorSummary(rollbackError))"
+        case .steamLibraryPreservationFailed(let url, let reason):
+            "Steam 프리픽스 내부 라이브러리를 보존하지 못해 기존 프리픽스로 되돌렸습니다: \(url.path). \(reason)"
         }
     }
 }
@@ -296,12 +299,45 @@ final class PrefixManager {
         let inode: UInt64
     }
 
+    private struct InternalSteamAppsIdentity: Sendable {
+        let device: UInt64
+        let inode: UInt64
+    }
+
+    private struct InternalSteamVisibilitySnapshot: Sendable {
+        let data: Data
+        let permissions: mode_t
+    }
+
+    private struct InternalSteamLibraryPreservationPlan: Sendable {
+        let steamAppsIdentity: InternalSteamAppsIdentity?
+        let configLibraryFolders: InternalSteamVisibilitySnapshot?
+
+        var requiresPreservation: Bool {
+            steamAppsIdentity != nil || configLibraryFolders != nil
+        }
+    }
+
+    private struct InternalSteamLibraryTransplantJournal: Codable, Equatable, Sendable {
+        let schemaVersion: Int
+        let canonicalPrefixPath: String
+        let replacementStagingPath: String
+        let steamAppsDevice: UInt64?
+        let steamAppsInode: UInt64?
+        let preservesConfigLibraryFolders: Bool
+    }
+
     nonisolated static let maxMetadataBytes = 256 * 1024
     private static let maxMetadataListItems = 128
     private static let maxMetadataStringLength = 512
+    private static let maxSteamLibraryVisibilityMetadataBytes = 8 * 1_024 * 1_024
+    private static let maxSteamLibraryTransplantJournalBytes = 16 * 1_024
+    private static let maxSteamLibraryTransplantRecoveryCandidates = 8
     private static let wineFontFileExtensions: Set<String> = ["fon", "otf", "ttc", "ttf"]
     private static let recoveryPreservationMarkerName = ".forgeplay-preserve-recovery"
     private static let deferredDeletionMarkerName = ".forgeplay-delete-on-next-launch"
+    private static let steamLibraryTransplantJournalName =
+        ".forgeplay-steam-library-transplant-v1.json"
 
     private let pathManager: PathManager
     private let runner: SafeProcessRunner
@@ -412,6 +448,12 @@ final class PrefixManager {
         runtimeExecutable: URL,
         synchronizationPolicy: WineSynchronizationPolicy? = nil
     ) async throws -> PrefixPreparationResult {
+        let configuredPrefixURL = try pathManager.url(for: .steamSharedPrefix)
+        if fileManager.fileExists(atPath: configuredPrefixURL.path) {
+            try recoverInterruptedInternalSteamLibraryTransplant(
+                at: configuredPrefixURL
+            )
+        }
         let manifest = try runtimeManifestProvider.manifest(for: runtimeExecutable)
         var metadata = try createSteamSharedPrefix(synchronizationPolicy: synchronizationPolicy)
         let prefixURL = URL(fileURLWithPath: metadata.path)
@@ -553,7 +595,10 @@ final class PrefixManager {
                     )
                 }
             }
-            preserveStagingOnExit = operationError is PrefixResetError
+            if let resetError = operationError as? PrefixResetError,
+               case .rollbackFailed = resetError {
+                preserveStagingOnExit = true
+            }
             throw operationError
         }
     }
@@ -685,7 +730,6 @@ final class PrefixManager {
             prefixURL: prefixURL,
             logDirectory: logDirectory
         )
-
         let destinationParent = prefixURL.deletingLastPathComponent()
         try requirePrefixDirectory(destinationParent)
         let staging = destinationParent.appending(
@@ -835,6 +879,9 @@ final class PrefixManager {
     ) async throws -> PrefixRebuildResult {
         let manifest = try runtimeManifestProvider.manifest(for: runtimeExecutable)
         let prefixURL = try pathManager.url(for: .steamSharedPrefix)
+        if fileManager.fileExists(atPath: prefixURL.path) {
+            try recoverInterruptedInternalSteamLibraryTransplant(at: prefixURL)
+        }
         if let requestedSynchronizationPolicy {
             try requireConsistentSynchronizationPolicy(
                 requestedSynchronizationPolicy,
@@ -893,6 +940,8 @@ final class PrefixManager {
             prefixURL: prefixURL,
             logDirectory: logDirectory
         )
+        let internalSteamLibraryPlan = try
+            captureInternalSteamLibraryPreservationPlan(in: prefixURL)
 
         let destinationParent = prefixURL.deletingLastPathComponent()
         try requirePrefixDirectory(destinationParent)
@@ -955,12 +1004,14 @@ final class PrefixManager {
         var finalMetadata = boundStagingMetadata
         finalMetadata.path = prefixURL.path
         finalMetadata.updatedAt = Date()
-        let residualPreviousEnvironmentURL = try await replacePrefixAtomically(
-            at: prefixURL,
-            with: staging,
-            metadata: finalMetadata,
-            stagingLifecycleState: stagingLifecycle
-        )
+        let residualPreviousEnvironmentURL = try await
+            replacePrefixAtomicallyPreservingInternalSteamLibrary(
+                at: prefixURL,
+                with: staging,
+                metadata: finalMetadata,
+                stagingLifecycleState: stagingLifecycle,
+                preservationPlan: internalSteamLibraryPlan
+            )
         return (
             value: PrefixRebuildResult(
                 metadata: finalMetadata,
@@ -984,6 +1035,8 @@ final class PrefixManager {
             prefixURL: prefixURL,
             logDirectory: logDirectory
         )
+        let internalSteamLibraryPlan = try
+            captureInternalSteamLibraryPreservationPlan(in: prefixURL)
 
         let destinationParent = prefixURL.deletingLastPathComponent()
         try requirePrefixDirectory(destinationParent)
@@ -1047,12 +1100,14 @@ final class PrefixManager {
         var finalMetadata = boundStagingMetadata
         finalMetadata.path = prefixURL.path
         finalMetadata.updatedAt = Date()
-        let residualPreviousEnvironmentURL = try await replacePrefixAtomically(
-            at: prefixURL,
-            with: staging,
-            metadata: finalMetadata,
-            stagingLifecycleState: stagingLifecycle
-        )
+        let residualPreviousEnvironmentURL = try await
+            replacePrefixAtomicallyPreservingInternalSteamLibrary(
+                at: prefixURL,
+                with: staging,
+                metadata: finalMetadata,
+                stagingLifecycleState: stagingLifecycle,
+                preservationPlan: internalSteamLibraryPlan
+            )
         return (
             value: PrefixArchitectureResetResult(
                 metadata: finalMetadata,
@@ -1242,11 +1297,837 @@ final class PrefixManager {
         )
     }
 
+    /// Preserve only Steam's game-library payload and the small compatibility
+    /// copy that makes registered libraries visible. Login state, userdata and
+    /// the rest of the old Steam installation remain part of the fresh-prefix
+    /// replacement contract.
+    private func captureInternalSteamLibraryPreservationPlan(
+        in prefix: URL
+    ) throws -> InternalSteamLibraryPreservationPlan {
+        let steamRoot = prefix.appending(
+            path: "drive_c/Program Files (x86)/Steam",
+            directoryHint: .isDirectory
+        )
+        let steamApps = steamRoot.appending(
+            path: "steamapps",
+            directoryHint: .isDirectory
+        )
+        let configDirectory = steamRoot.appending(
+            path: "config",
+            directoryHint: .isDirectory
+        )
+        let configLibraryFolders = configDirectory.appending(
+            path: "libraryfolders.vdf",
+            directoryHint: .notDirectory
+        )
+
+        let steamAppsIdentity: InternalSteamAppsIdentity?
+        if let status = try optionalInternalSteamItemStatus(at: steamApps) {
+            try requireInternalSteamDirectoryChain(
+                ["drive_c", "Program Files (x86)", "Steam", "steamapps"],
+                in: prefix
+            )
+            guard (status.st_mode & S_IFMT) == S_IFDIR else {
+                throw PrefixResetError.steamLibraryPreservationFailed(
+                    steamApps,
+                    "steamapps가 symlink가 아닌 일반 폴더가 아닙니다."
+                )
+            }
+            steamAppsIdentity = InternalSteamAppsIdentity(
+                device: UInt64(status.st_dev),
+                inode: UInt64(status.st_ino)
+            )
+        } else {
+            steamAppsIdentity = nil
+        }
+
+        let visibilitySnapshot: InternalSteamVisibilitySnapshot?
+        if let initialStatus = try optionalInternalSteamItemStatus(
+            at: configLibraryFolders
+        ) {
+            try requireInternalSteamDirectoryChain(
+                ["drive_c", "Program Files (x86)", "Steam", "config"],
+                in: prefix
+            )
+            guard (initialStatus.st_mode & S_IFMT) == S_IFREG,
+                  initialStatus.st_nlink == 1,
+                  initialStatus.st_size >= 0,
+                  initialStatus.st_size <=
+                    off_t(Self.maxSteamLibraryVisibilityMetadataBytes) else {
+                throw PrefixResetError.steamLibraryPreservationFailed(
+                    configLibraryFolders,
+                    "libraryfolders.vdf가 안전한 크기의 일반 파일이 아닙니다."
+                )
+            }
+            let data = try Data(
+                contentsOf: configLibraryFolders,
+                options: .mappedIfSafe
+            )
+            guard data.count == Int(initialStatus.st_size),
+                  let finalStatus = try optionalInternalSteamItemStatus(
+                    at: configLibraryFolders
+                  ),
+                  internalSteamItemIdentityIsUnchanged(
+                    initialStatus,
+                    finalStatus
+                  ) else {
+                throw PrefixResetError.steamLibraryPreservationFailed(
+                    configLibraryFolders,
+                    "libraryfolders.vdf가 보존 정보를 읽는 동안 변경됐습니다."
+                )
+            }
+            visibilitySnapshot = InternalSteamVisibilitySnapshot(
+                data: data,
+                permissions: mode_t(initialStatus.st_mode & 0o777)
+            )
+        } else {
+            visibilitySnapshot = nil
+        }
+
+        return InternalSteamLibraryPreservationPlan(
+            steamAppsIdentity: steamAppsIdentity,
+            configLibraryFolders: visibilitySnapshot
+        )
+    }
+
+    private func writeInternalSteamLibraryTransplantJournal(
+        _ plan: InternalSteamLibraryPreservationPlan,
+        canonicalPrefix: URL,
+        replacementStaging: URL
+    ) throws {
+        guard plan.requiresPreservation,
+              isManagedFreshReplacementStaging(
+                replacementStaging,
+                for: canonicalPrefix
+              ) else {
+            throw PrefixResetError.steamLibraryPreservationFailed(
+                canonicalPrefix,
+                "Steam 라이브러리 이식 journal 대상이 올바르지 않습니다."
+            )
+        }
+        let journal = InternalSteamLibraryTransplantJournal(
+            schemaVersion: 1,
+            canonicalPrefixPath: canonicalPrefix.standardizedFileURL.path,
+            replacementStagingPath: replacementStaging.standardizedFileURL.path,
+            steamAppsDevice: plan.steamAppsIdentity?.device,
+            steamAppsInode: plan.steamAppsIdentity?.inode,
+            preservesConfigLibraryFolders: plan.configLibraryFolders != nil
+        )
+        let journalURL = canonicalPrefix.appending(
+            path: Self.steamLibraryTransplantJournalName,
+            directoryHint: .notDirectory
+        )
+        if let status = try optionalInternalSteamItemStatus(at: journalURL) {
+            guard (status.st_mode & S_IFMT) == S_IFREG,
+                  status.st_nlink == 1 else {
+                throw PrefixResetError.steamLibraryPreservationFailed(
+                    journalURL,
+                    "Steam 라이브러리 이식 journal이 안전한 일반 파일이 아닙니다."
+                )
+            }
+        }
+        let data = try encoder.encode(journal)
+        guard data.count <= Self.maxSteamLibraryTransplantJournalBytes else {
+            throw PrefixResetError.steamLibraryPreservationFailed(
+                journalURL,
+                "Steam 라이브러리 이식 journal이 허용 크기를 초과했습니다."
+            )
+        }
+        try data.write(to: journalURL, options: [.atomic])
+        try fileManager.setAttributes(
+            [.posixPermissions: 0o600],
+            ofItemAtPath: journalURL.path
+        )
+        guard try loadInternalSteamLibraryTransplantJournal(
+                from: canonicalPrefix,
+                canonicalPrefix: canonicalPrefix
+              ) == journal else {
+            throw PrefixResetError.steamLibraryPreservationFailed(
+                journalURL,
+                "Steam 라이브러리 이식 journal readback이 일치하지 않습니다."
+            )
+        }
+    }
+
+    private func loadInternalSteamLibraryTransplantJournal(
+        from physicalPrefix: URL,
+        canonicalPrefix: URL
+    ) throws -> InternalSteamLibraryTransplantJournal? {
+        let journalURL = physicalPrefix.appending(
+            path: Self.steamLibraryTransplantJournalName,
+            directoryHint: .notDirectory
+        )
+        guard let initialStatus = try optionalInternalSteamItemStatus(
+            at: journalURL
+        ) else {
+            return nil
+        }
+        guard (initialStatus.st_mode & S_IFMT) == S_IFREG,
+              initialStatus.st_nlink == 1,
+              initialStatus.st_size >= 0,
+              initialStatus.st_size <=
+                off_t(Self.maxSteamLibraryTransplantJournalBytes) else {
+            throw PrefixResetError.steamLibraryPreservationFailed(
+                journalURL,
+                "Steam 라이브러리 이식 journal이 안전한 크기의 일반 파일이 아닙니다."
+            )
+        }
+        let data = try Data(contentsOf: journalURL, options: .mappedIfSafe)
+        guard data.count == Int(initialStatus.st_size),
+              let finalStatus = try optionalInternalSteamItemStatus(
+                at: journalURL
+              ),
+              internalSteamItemIdentityIsUnchanged(
+                initialStatus,
+                finalStatus
+              ) else {
+            throw PrefixResetError.steamLibraryPreservationFailed(
+                journalURL,
+                "Steam 라이브러리 이식 journal이 읽는 동안 변경됐습니다."
+            )
+        }
+        let journal: InternalSteamLibraryTransplantJournal
+        do {
+            journal = try decoder.decode(
+                InternalSteamLibraryTransplantJournal.self,
+                from: data
+            )
+        } catch {
+            throw PrefixResetError.steamLibraryPreservationFailed(
+                journalURL,
+                "Steam 라이브러리 이식 journal을 해석하지 못했습니다."
+            )
+        }
+        let hasCompleteSteamAppsIdentity =
+            (journal.steamAppsDevice == nil) ==
+                (journal.steamAppsInode == nil)
+        let staging = URL(
+            fileURLWithPath: journal.replacementStagingPath
+        ).standardizedFileURL
+        guard journal.schemaVersion == 1,
+              URL(fileURLWithPath: journal.canonicalPrefixPath)
+                .standardizedFileURL.path ==
+                canonicalPrefix.standardizedFileURL.path,
+              hasCompleteSteamAppsIdentity,
+              journal.steamAppsDevice != nil ||
+                journal.preservesConfigLibraryFolders,
+              isManagedFreshReplacementStaging(
+                staging,
+                for: canonicalPrefix
+              ) else {
+            throw PrefixResetError.steamLibraryPreservationFailed(
+                journalURL,
+                "Steam 라이브러리 이식 journal 계약이 올바르지 않습니다."
+            )
+        }
+        return journal
+    }
+
+    private func removeInternalSteamLibraryTransplantJournal(
+        from prefix: URL
+    ) throws {
+        let journalURL = prefix.appending(
+            path: Self.steamLibraryTransplantJournalName,
+            directoryHint: .notDirectory
+        )
+        guard let status = try optionalInternalSteamItemStatus(
+            at: journalURL
+        ) else {
+            return
+        }
+        guard (status.st_mode & S_IFMT) == S_IFREG,
+              status.st_nlink == 1 else {
+            throw PrefixResetError.steamLibraryPreservationFailed(
+                journalURL,
+                "Steam 라이브러리 이식 journal을 안전하게 제거할 수 없습니다."
+            )
+        }
+        try fileManager.removeItem(at: journalURL)
+    }
+
+    /// The marker is the cross-restart authority that allows a surviving
+    /// transplant journal to be recovered. Never remove that authority until
+    /// journal removal has succeeded and its absence has been read back.
+    private func removeInternalSteamLibraryTransplantJournalAndMarker(
+        from prefix: URL
+    ) throws {
+        try removeInternalSteamLibraryTransplantJournal(from: prefix)
+        let journalURL = prefix.appending(
+            path: Self.steamLibraryTransplantJournalName,
+            directoryHint: .notDirectory
+        )
+        guard try optionalInternalSteamItemStatus(at: journalURL) == nil else {
+            throw PrefixResetError.steamLibraryPreservationFailed(
+                journalURL,
+                "Steam 라이브러리 이식 journal 제거를 확인하지 못했습니다."
+            )
+        }
+        try removeRecoveryPreservationMarker(from: prefix)
+    }
+
+    private func isManagedFreshReplacementStaging(
+        _ staging: URL,
+        for canonicalPrefix: URL
+    ) -> Bool {
+        let normalizedStaging = staging.standardizedFileURL
+        let normalizedCanonical = canonicalPrefix.standardizedFileURL
+        guard normalizedStaging.deletingLastPathComponent().path ==
+                normalizedCanonical.deletingLastPathComponent().path else {
+            return false
+        }
+        let name = normalizedStaging.lastPathComponent
+        return [
+            ".\(normalizedCanonical.lastPathComponent).initialize-staging-",
+            ".\(normalizedCanonical.lastPathComponent).rebuild-staging-",
+            ".\(normalizedCanonical.lastPathComponent).reset-staging-"
+        ].contains { name.hasPrefix($0) }
+    }
+
+    private func internalSteamLibraryTransplantJournalMatches(
+        _ journal: InternalSteamLibraryTransplantJournal,
+        plan: InternalSteamLibraryPreservationPlan
+    ) -> Bool {
+        let identityMatches: Bool
+        switch (
+            journal.steamAppsDevice,
+            journal.steamAppsInode,
+            plan.steamAppsIdentity
+        ) {
+        case (nil, nil, nil):
+            identityMatches = true
+        case let (device?, inode?, identity?):
+            identityMatches = device == identity.device &&
+                inode == identity.inode
+        default:
+            identityMatches = false
+        }
+        return identityMatches &&
+            journal.preservesConfigLibraryFolders ==
+                (plan.configLibraryFolders != nil)
+    }
+
+    private func requireInternalSteamLibraryRecoveryMarker(
+        at prefix: URL
+    ) throws {
+        let marker = prefix.appending(
+            path: Self.recoveryPreservationMarkerName,
+            directoryHint: .notDirectory
+        )
+        guard let status = try optionalInternalSteamItemStatus(at: marker),
+              (status.st_mode & S_IFMT) == S_IFREG,
+              status.st_nlink == 1 else {
+            throw PrefixResetError.steamLibraryPreservationFailed(
+                marker,
+                "중단된 Steam 라이브러리 이식의 보존 marker가 없습니다."
+            )
+        }
+    }
+
+    private func recoverInterruptedInternalSteamLibraryTransplant(
+        at canonicalPrefix: URL
+    ) throws {
+        try validatePrefixDirectory(canonicalPrefix)
+
+        if let journal = try loadInternalSteamLibraryTransplantJournal(
+            from: canonicalPrefix,
+            canonicalPrefix: canonicalPrefix
+        ) {
+            try requireInternalSteamLibraryRecoveryMarker(at: canonicalPrefix)
+            let canonicalPlan = try captureInternalSteamLibraryPreservationPlan(
+                in: canonicalPrefix
+            )
+            guard internalSteamLibraryTransplantJournalMatches(
+                journal,
+                plan: canonicalPlan
+            ) else {
+                throw PrefixResetError.steamLibraryPreservationFailed(
+                    canonicalPrefix,
+                    "교체 전 Steam 라이브러리 identity가 journal과 일치하지 않습니다."
+                )
+            }
+            try removeInternalSteamLibraryTransplantJournalAndMarker(
+                from: canonicalPrefix
+            )
+        }
+
+        let candidates = try interruptedInternalSteamLibraryTransplantCandidates(
+            at: canonicalPrefix
+        )
+        for candidate in candidates {
+            try recoverInterruptedInternalSteamLibraryTransplant(
+                from: candidate,
+                to: canonicalPrefix
+            )
+        }
+    }
+
+    private func interruptedInternalSteamLibraryTransplantCandidates(
+        at canonicalPrefix: URL
+    ) throws -> [URL] {
+        let parent = canonicalPrefix.deletingLastPathComponent()
+        try requirePrefixDirectory(parent)
+        let candidates = try fileManager.contentsOfDirectory(
+            at: parent,
+            includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey],
+            options: []
+        ).filter { candidate in
+            isManagedFreshReplacementStaging(
+                candidate,
+                for: canonicalPrefix
+            ) &&
+                !activeReplacementArtifactPaths.contains(
+                    candidate.standardizedFileURL.path
+                ) &&
+                fileManager.fileExists(
+                    atPath: candidate.appending(
+                        path: Self.steamLibraryTransplantJournalName
+                    ).path
+                )
+        }.sorted { $0.path < $1.path }
+        guard candidates.count <=
+                Self.maxSteamLibraryTransplantRecoveryCandidates else {
+            throw PrefixResetError.steamLibraryPreservationFailed(
+                canonicalPrefix,
+                "중단된 Steam 라이브러리 이식 후보가 허용 개수를 초과했습니다."
+            )
+        }
+        return candidates
+    }
+
+    private func recoverInterruptedInternalSteamLibraryTransplant(
+        from displacedPrefix: URL,
+        to canonicalPrefix: URL
+    ) throws {
+        try validatePrefixDirectory(displacedPrefix)
+        let journal = try loadInternalSteamLibraryTransplantJournal(
+            from: displacedPrefix,
+            canonicalPrefix: canonicalPrefix
+        )
+        guard let journal,
+              URL(fileURLWithPath: journal.replacementStagingPath)
+                .standardizedFileURL.path ==
+                displacedPrefix.standardizedFileURL.path else {
+            throw PrefixResetError.steamLibraryPreservationFailed(
+                displacedPrefix,
+                "중단된 Steam 라이브러리 이식 후보가 journal과 일치하지 않습니다."
+            )
+        }
+        let deletionMarker = displacedPrefix.appending(
+            path: Self.deferredDeletionMarkerName,
+            directoryHint: .notDirectory
+        )
+        if FileSystemItemPolicy.isRegularNonSymlinkFile(
+            deletionMarker,
+            fileManager: fileManager
+        ) {
+            _ = retireDisplacedEnvironment(displacedPrefix)
+            return
+        }
+        try requireInternalSteamLibraryRecoveryMarker(at: displacedPrefix)
+
+        let canonicalPlan = try captureInternalSteamLibraryPreservationPlan(
+            in: canonicalPrefix
+        )
+        if journal.steamAppsDevice != nil,
+           internalSteamLibraryTransplantJournalMatches(
+            journal,
+            plan: canonicalPlan
+           ) {
+            _ = retireDisplacedEnvironment(displacedPrefix)
+            return
+        }
+
+        let displacedPlan = try captureInternalSteamLibraryPreservationPlan(
+            in: displacedPrefix
+        )
+        guard internalSteamLibraryTransplantJournalMatches(
+            journal,
+            plan: displacedPlan
+        ) else {
+            throw PrefixResetError.steamLibraryPreservationFailed(
+                displacedPrefix,
+                "보존된 Steam 라이브러리 identity가 journal과 일치하지 않습니다."
+            )
+        }
+        try requireInternalSteamLibraryRecoveryDestination(
+            canonicalPrefix,
+            for: displacedPlan
+        )
+        try transplantInternalSteamLibrary(
+            displacedPlan,
+            from: displacedPrefix,
+            to: canonicalPrefix
+        )
+        _ = retireDisplacedEnvironment(displacedPrefix)
+    }
+
+    private func requireInternalSteamLibraryRecoveryDestination(
+        _ canonicalPrefix: URL,
+        for plan: InternalSteamLibraryPreservationPlan
+    ) throws {
+        guard let expectedIdentity = plan.steamAppsIdentity else { return }
+        let destination = canonicalPrefix.appending(
+            path: "drive_c/Program Files (x86)/Steam/steamapps",
+            directoryHint: .isDirectory
+        )
+        if let status = try optionalInternalSteamItemStatus(at: destination) {
+            try requireInternalSteamDirectoryChain(
+                ["drive_c", "Program Files (x86)", "Steam", "steamapps"],
+                in: canonicalPrefix
+            )
+            guard (status.st_mode & S_IFMT) == S_IFDIR,
+                  UInt64(status.st_dev) == expectedIdentity.device,
+                  try fileManager.contentsOfDirectory(atPath: destination.path)
+                    .isEmpty else {
+                throw PrefixResetError.steamLibraryPreservationFailed(
+                    destination,
+                    "복구 대상 steamapps가 비어 있는 동일 볼륨의 일반 폴더가 아닙니다."
+                )
+            }
+            return
+        }
+
+        let driveC = canonicalPrefix.appending(
+            path: "drive_c",
+            directoryHint: .isDirectory
+        )
+        try requireInternalSteamDirectoryChain(["drive_c"], in: canonicalPrefix)
+        guard let driveCStatus = try optionalInternalSteamItemStatus(at: driveC),
+              UInt64(driveCStatus.st_dev) == expectedIdentity.device else {
+            throw PrefixResetError.steamLibraryPreservationFailed(
+                driveC,
+                "Steam 라이브러리를 복구할 동일 볼륨을 확인하지 못했습니다."
+            )
+        }
+    }
+
+    /// Commits a freshly initialized prefix while moving the existing internal
+    /// Steam game library inode into it. If the library exchange fails, the
+    /// complete displaced prefix is atomically restored before the error is
+    /// surfaced. This is shared by explicit rebuild and automatic fresh-prefix
+    /// replacement paths so neither can silently discard installed games.
+    private func replacePrefixAtomicallyPreservingInternalSteamLibrary(
+        at destination: URL,
+        with staging: URL,
+        metadata: PrefixMetadata,
+        stagingLifecycleState: ReplacementStagingLifecycleState,
+        preservationPlan: InternalSteamLibraryPreservationPlan
+    ) async throws -> URL? {
+        if preservationPlan.requiresPreservation {
+            try markReplacementStagingForRecovery(destination)
+            do {
+                try writeInternalSteamLibraryTransplantJournal(
+                    preservationPlan,
+                    canonicalPrefix: destination,
+                    replacementStaging: staging
+                )
+            } catch {
+                let journalWriteError = error
+                do {
+                    try removeInternalSteamLibraryTransplantJournalAndMarker(
+                        from: destination
+                    )
+                } catch let cleanupError {
+                    throw PrefixResetError.steamLibraryPreservationFailed(
+                        destination,
+                        "journal 작성 실패 후 복구 권한을 안전하게 정리하지 못했습니다: " +
+                            "\(forgePlayTechnicalErrorSummary(journalWriteError)); " +
+                            "cleanup: \(forgePlayTechnicalErrorSummary(cleanupError))"
+                    )
+                }
+                throw journalWriteError
+            }
+        }
+
+        var displacedEnvironment: URL?
+        do {
+            displacedEnvironment = try await replacePrefixAtomically(
+                at: destination,
+                with: staging,
+                metadata: metadata,
+                stagingLifecycleState: stagingLifecycleState,
+                retainDisplacedEnvironment:
+                    preservationPlan.requiresPreservation
+            )
+        } catch {
+            if preservationPlan.requiresPreservation {
+                try removeInternalSteamLibraryTransplantJournalAndMarker(
+                    from: destination
+                )
+            }
+            throw error
+        }
+
+        guard preservationPlan.requiresPreservation else {
+            return displacedEnvironment
+        }
+        guard let displacedEnvironment else {
+            throw PrefixResetError.steamLibraryPreservationFailed(
+                destination,
+                "기존 프리픽스의 보존 위치를 확인하지 못했습니다."
+            )
+        }
+
+        do {
+            try transplantInternalSteamLibrary(
+                preservationPlan,
+                from: displacedEnvironment,
+                to: destination
+            )
+        } catch {
+            let preservationError = error
+            do {
+                try directorySwapper.swap(displacedEnvironment, destination)
+                try removeInternalSteamLibraryTransplantJournalAndMarker(
+                    from: destination
+                )
+            } catch let rollbackError {
+                let preservedEnvironment = preserveDisplacedEnvironment(
+                    displacedEnvironment,
+                    canonicalDestination: destination
+                )
+                throw PrefixResetError.rollbackFailed(
+                    destination: destination,
+                    displacedEnvironment: preservedEnvironment,
+                    originalError: preservationError,
+                    rollbackError: rollbackError
+                )
+            }
+            throw preservationError
+        }
+
+        return retireDisplacedEnvironment(displacedEnvironment)
+    }
+
+    private func transplantInternalSteamLibrary(
+        _ plan: InternalSteamLibraryPreservationPlan,
+        from displacedPrefix: URL,
+        to replacementPrefix: URL
+    ) throws {
+        let replacementSteamRoot = try ensureInternalSteamDirectoryChain(
+            ["drive_c", "Program Files (x86)", "Steam"],
+            in: replacementPrefix
+        )
+
+        if let visibility = plan.configLibraryFolders {
+            let replacementConfig = try ensureInternalSteamDirectoryChain(
+                ["drive_c", "Program Files (x86)", "Steam", "config"],
+                in: replacementPrefix
+            )
+            let destination = replacementConfig.appending(
+                path: "libraryfolders.vdf",
+                directoryHint: .notDirectory
+            )
+            if let status = try optionalInternalSteamItemStatus(at: destination) {
+                guard (status.st_mode & S_IFMT) == S_IFREG,
+                      status.st_nlink == 1 else {
+                    throw PrefixResetError.steamLibraryPreservationFailed(
+                        destination,
+                        "새 프리픽스의 libraryfolders.vdf 대상이 안전한 일반 파일이 아닙니다."
+                    )
+                }
+            }
+            try visibility.data.write(to: destination, options: [.atomic])
+            try fileManager.setAttributes(
+                [.posixPermissions: visibility.permissions],
+                ofItemAtPath: destination.path
+            )
+            guard FileSystemItemPolicy.isRegularNonSymlinkFile(
+                    destination,
+                    fileManager: fileManager
+                  ),
+                  try Data(contentsOf: destination, options: .mappedIfSafe) ==
+                    visibility.data else {
+                throw PrefixResetError.steamLibraryPreservationFailed(
+                    destination,
+                    "새 프리픽스의 libraryfolders.vdf readback이 일치하지 않습니다."
+                )
+            }
+        }
+
+        guard let expectedIdentity = plan.steamAppsIdentity else { return }
+        let source = displacedPrefix.appending(
+            path: "drive_c/Program Files (x86)/Steam/steamapps",
+            directoryHint: .isDirectory
+        )
+        try requireInternalSteamDirectoryChain(
+            ["drive_c", "Program Files (x86)", "Steam", "steamapps"],
+            in: displacedPrefix
+        )
+        guard let sourceStatus = try optionalInternalSteamItemStatus(at: source),
+              (sourceStatus.st_mode & S_IFMT) == S_IFDIR,
+              UInt64(sourceStatus.st_dev) == expectedIdentity.device,
+              UInt64(sourceStatus.st_ino) == expectedIdentity.inode else {
+            throw PrefixResetError.steamLibraryPreservationFailed(
+                source,
+                "기존 steamapps 폴더 identity가 prefix 교체 중 변경됐습니다."
+            )
+        }
+
+        let destination = replacementSteamRoot.appending(
+            path: "steamapps",
+            directoryHint: .isDirectory
+        )
+        if let destinationStatus = try optionalInternalSteamItemStatus(
+            at: destination
+        ) {
+            guard (destinationStatus.st_mode & S_IFMT) == S_IFDIR,
+                  try fileManager.contentsOfDirectory(atPath: destination.path)
+                    .isEmpty else {
+                throw PrefixResetError.steamLibraryPreservationFailed(
+                    destination,
+                    "새 프리픽스에 비어 있지 않은 steamapps 폴더가 이미 있습니다."
+                )
+            }
+        } else {
+            try fileManager.createDirectory(
+                at: destination,
+                withIntermediateDirectories: false
+            )
+            try requireNonSymlinkDirectory(destination)
+        }
+        guard let destinationStatus = try optionalInternalSteamItemStatus(
+                at: destination
+              ),
+              UInt64(destinationStatus.st_dev) == expectedIdentity.device else {
+            throw PrefixResetError.steamLibraryPreservationFailed(
+                destination,
+                "steamapps를 복사 없이 교환할 수 있는 동일 볼륨이 아닙니다."
+            )
+        }
+
+        // This is RENAME_SWAP through the same primitive that commits the
+        // prefix itself. A successful call moves the original directory inode;
+        // no game file is copied and no second game-library payload is created.
+        try directorySwapper.swap(source, destination)
+    }
+
+    private func optionalInternalSteamItemStatus(
+        at url: URL
+    ) throws -> stat? {
+        var status = stat()
+        if Darwin.lstat(url.path, &status) == 0 { return status }
+        if errno == ENOENT { return nil }
+        throw PrefixResetError.steamLibraryPreservationFailed(
+            url,
+            "파일 identity를 확인하지 못했습니다: errno \(errno)."
+        )
+    }
+
+    private func requireInternalSteamDirectoryChain(
+        _ components: [String],
+        in prefix: URL
+    ) throws {
+        try requireInternalSteamPreservationDirectory(prefix)
+        var current = prefix
+        for component in components {
+            current = current.appending(
+                path: component,
+                directoryHint: .isDirectory
+            )
+            try requireInternalSteamPreservationDirectory(current)
+        }
+    }
+
+    @discardableResult
+    private func ensureInternalSteamDirectoryChain(
+        _ components: [String],
+        in prefix: URL
+    ) throws -> URL {
+        try requireInternalSteamPreservationDirectory(prefix)
+        var current = prefix
+        for component in components {
+            current = current.appending(
+                path: component,
+                directoryHint: .isDirectory
+            )
+            if try optionalInternalSteamItemStatus(at: current) == nil {
+                try fileManager.createDirectory(
+                    at: current,
+                    withIntermediateDirectories: false
+                )
+            }
+            try requireInternalSteamPreservationDirectory(current)
+        }
+        return current
+    }
+
+    private func requireInternalSteamPreservationDirectory(
+        _ directory: URL
+    ) throws {
+        do {
+            try requireNonSymlinkDirectory(directory)
+        } catch {
+            throw PrefixResetError.steamLibraryPreservationFailed(
+                directory,
+                "Steam 라이브러리 경로가 안전한 일반 폴더가 아닙니다."
+            )
+        }
+    }
+
+    private func internalSteamItemIdentityIsUnchanged(
+        _ first: stat,
+        _ second: stat
+    ) -> Bool {
+        first.st_dev == second.st_dev &&
+            first.st_ino == second.st_ino &&
+            first.st_size == second.st_size &&
+            first.st_mtimespec.tv_sec == second.st_mtimespec.tv_sec &&
+            first.st_mtimespec.tv_nsec == second.st_mtimespec.tv_nsec &&
+            first.st_ctimespec.tv_sec == second.st_ctimespec.tv_sec &&
+            first.st_ctimespec.tv_nsec == second.st_ctimespec.tv_nsec
+    }
+
+    private func removeRecoveryPreservationMarker(from prefix: URL) throws {
+        let marker = prefix.appending(path: Self.recoveryPreservationMarkerName)
+        guard let status = try optionalInternalSteamItemStatus(at: marker) else {
+            return
+        }
+        guard (status.st_mode & S_IFMT) == S_IFREG,
+              status.st_nlink == 1 else {
+            throw PrefixMetadataError.unsafeMetadataFile(marker)
+        }
+        try fileManager.removeItem(at: marker)
+    }
+
+    private func retireDisplacedEnvironment(_ displaced: URL) -> URL? {
+        do {
+            try fileManager.removeItem(at: displaced)
+            return nil
+        } catch {
+            let deletionMarker = displaced.appending(
+                path: Self.deferredDeletionMarkerName
+            )
+            do {
+                try Data("delete\n".utf8).write(
+                    to: deletionMarker,
+                    options: [.atomic]
+                )
+                guard FileSystemItemPolicy.isRegularNonSymlinkFile(
+                    deletionMarker,
+                    fileManager: fileManager
+                ) else {
+                    return displaced
+                }
+                try removeInternalSteamLibraryTransplantJournalAndMarker(
+                    from: displaced
+                )
+            } catch {
+                // Keep the recovery marker unless both the deletion marker and
+                // transplant-journal cleanup are durable. The next exclusive
+                // cleanup can then finish or recover the transplant instead of
+                // orphaning it.
+            }
+            return displaced
+        }
+    }
+
     private func replacePrefixAtomically(
         at destination: URL,
         with staging: URL,
         metadata: PrefixMetadata,
-        stagingLifecycleState: ReplacementStagingLifecycleState
+        stagingLifecycleState: ReplacementStagingLifecycleState,
+        retainDisplacedEnvironment: Bool = false
     ) async throws -> URL? {
         let destinationParent = destination.deletingLastPathComponent()
         try requirePrefixDirectory(destinationParent)
@@ -1291,14 +2172,8 @@ final class PrefixManager {
             throw error
         }
 
-        do {
-            try fileManager.removeItem(at: staging)
-            return nil
-        } catch {
-            let deletionMarker = staging.appending(path: Self.deferredDeletionMarkerName)
-            try? Data("delete\n".utf8).write(to: deletionMarker, options: [.atomic])
-            return staging
-        }
+        if retainDisplacedEnvironment { return staging }
+        return retireDisplacedEnvironment(staging)
     }
 
     func isUsablePrefix(at prefixURL: URL, expectedArchitecture explicitArchitecture: String? = nil) -> Bool {
@@ -1313,6 +2188,7 @@ final class PrefixManager {
     }
 
     func cleanupInterruptedReplacementArtifactsAssumingExclusiveAccess(at prefixURL: URL) throws {
+        try recoverInterruptedInternalSteamLibraryTransplant(at: prefixURL)
         let candidates = try replacementArtifactCleanupCandidates(
             at: prefixURL
         )
@@ -1327,6 +2203,7 @@ final class PrefixManager {
     func cleanupInterruptedReplacementArtifactsAssumingExclusiveAccess(
         at prefixURL: URL
     ) async throws {
+        try recoverInterruptedInternalSteamLibraryTransplant(at: prefixURL)
         let candidates = try replacementArtifactCleanupCandidates(
             at: prefixURL
         )
@@ -2055,6 +2932,8 @@ final class PrefixManager {
             prefixURL: prefixURL,
             logDirectory: logDirectory
         )
+        let internalSteamLibraryPlan = try
+            captureInternalSteamLibraryPreservationPlan(in: prefixURL)
 
         let destinationParent = prefixURL.deletingLastPathComponent()
         try requirePrefixDirectory(destinationParent)
@@ -2117,12 +2996,14 @@ final class PrefixManager {
         var finalMetadata = boundStagingMetadata
         finalMetadata.path = prefixURL.path
         finalMetadata.updatedAt = Date()
-        let residualPreviousEnvironmentURL = try await replacePrefixAtomically(
-            at: prefixURL,
-            with: staging,
-            metadata: finalMetadata,
-            stagingLifecycleState: stagingLifecycle
-        )
+        let residualPreviousEnvironmentURL = try await
+            replacePrefixAtomicallyPreservingInternalSteamLibrary(
+                at: prefixURL,
+                with: staging,
+                metadata: finalMetadata,
+                stagingLifecycleState: stagingLifecycle,
+                preservationPlan: internalSteamLibraryPlan
+            )
         return (
             value: PrefixArchitectureResetResult(
                 metadata: finalMetadata,
@@ -2185,12 +3066,26 @@ final class PrefixManager {
             throw PrefixMetadataError.invalidMetadata(metadataURL)
         }
         if let binding = metadata.runtimeBinding {
-            guard binding.schemaVersion == PrefixRuntimeBinding.currentSchemaVersion,
+            guard (1...PrefixRuntimeBinding.currentSchemaVersion)
+                    .contains(binding.schemaVersion),
                   !binding.runtimeIdentifier.isEmpty,
                   binding.runtimeIdentifier.count <= Self.maxMetadataStringLength,
                   isLowercaseSHA256(binding.runnerBuildFingerprint),
                   isLowercaseSHA256(binding.prefixCompatibilityFingerprint),
                   isLowercaseSHA256(binding.wineInfSHA256) else {
+                throw PrefixMetadataError.invalidMetadata(metadataURL)
+            }
+            switch binding.schemaVersion {
+            case 1:
+                guard binding.prefixCompatibilityEpoch == nil else {
+                    throw PrefixMetadataError.invalidMetadata(metadataURL)
+                }
+            case PrefixRuntimeBinding.currentSchemaVersion:
+                guard binding.prefixCompatibilityEpoch ==
+                        PrefixRuntimeBinding.currentPrefixCompatibilityEpoch else {
+                    throw PrefixMetadataError.invalidMetadata(metadataURL)
+                }
+            default:
                 throw PrefixMetadataError.invalidMetadata(metadataURL)
             }
         }
@@ -2249,8 +3144,10 @@ final class PrefixManager {
             guard let binding = metadata.runtimeBinding else {
                 return .migrationRequired("prefix runtime binding is missing")
             }
-            guard binding.matches(manifest) else {
-                return .migrationRequired("Prefix Runtime binding does not match the bundled ForgePlay Runtime")
+            guard binding.matchesPrefixCompatibility(manifest) else {
+                return .migrationRequired(
+                    "Prefix compatibility contract does not match the bundled ForgePlay Runtime"
+                )
             }
             guard automaticWinePrefixUpdatesAreDisabled(at: prefixURL) else {
                 return .migrationRequired("Wine automatic prefix update marker is not controlled by ForgePlay")

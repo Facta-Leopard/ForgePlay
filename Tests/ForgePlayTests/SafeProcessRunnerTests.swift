@@ -1,26 +1,7 @@
 import CryptoKit
 import Darwin
-import Security
 import XCTest
 @testable import ForgePlay
-
-private struct SafeProcessRunnerTestSupplementalRendererAuthenticator:
-    AppleSupplementalRendererAuthenticating {
-    typealias Handler = @Sendable (URL, FileManager) throws -> Void
-
-    private let handler: Handler
-
-    init(handler: @escaping Handler = { _, _ in }) {
-        self.handler = handler
-    }
-
-    func authenticate(
-        rendererRoot: URL,
-        fileManager: FileManager
-    ) throws {
-        try handler(rendererRoot, fileManager)
-    }
-}
 
 private final class ManagedWineReadbackTestState: @unchecked Sendable {
     private let lock = NSLock()
@@ -343,6 +324,55 @@ final class SafeProcessRunnerTests: XCTestCase {
                 "/tmp/ForgePlay-A/Prefixes/SteamShared",
                 "/tmp/ForgePlay-B/Prefixes/SteamShared"
             ]
+        )
+    }
+
+    func testHydrationCommitReplacesOnlyPriorDiskBackedSessionState() {
+        let prefix = URL(fileURLWithPath: "/tmp/ForgePlayHydrationPrefix")
+        let runtimeRoot = URL(
+            fileURLWithPath: "/tmp/ForgePlayHydrationRuntime/wine"
+        )
+        let currentSession = ManagedWineProcessLaunchSession(
+            prefixURL: prefix,
+            runIdentifier: UUID().uuidString.lowercased(),
+            evidenceURL: URL(fileURLWithPath: "/tmp/current.jsonl"),
+            runtimeRootURL: runtimeRoot,
+            runtimeFingerprint: String(repeating: "a", count: 64),
+            prefixScope: ManagedWineProcessJournal.prefixScope(for: prefix),
+            registeredAt: Date(),
+            origin: .currentProcess
+        )
+        let hydratedSession = ManagedWineProcessLaunchSession(
+            prefixURL: prefix,
+            runIdentifier: UUID().uuidString.lowercased(),
+            evidenceURL: URL(fileURLWithPath: "/tmp/hydrated.jsonl"),
+            runtimeRootURL: runtimeRoot,
+            runtimeFingerprint: String(repeating: "a", count: 64),
+            prefixScope: ManagedWineProcessJournal.prefixScope(for: prefix),
+            registeredAt: Date(),
+            origin: .hydratedEvidence
+        )
+        let registry = ManagedWineSessionRegistry()
+        registry.record(currentSession)
+        registry.commitHydratedSessions(
+            [hydratedSession],
+            staleArtifacts: [],
+            for: prefix
+        )
+        XCTAssertEqual(
+            Set(registry.launchSessions(for: prefix)),
+            [currentSession, hydratedSession]
+        )
+
+        registry.commitHydratedSessions(
+            [],
+            staleArtifacts: [],
+            for: prefix
+        )
+        XCTAssertEqual(
+            registry.launchSessions(for: prefix),
+            [currentSession],
+            "A complete rescan must retire vanished disk-backed sessions while preserving current-process ownership."
         )
     }
 
@@ -1124,6 +1154,113 @@ final class SafeProcessRunnerTests: XCTestCase {
         )
     }
 
+    func testHistoricalRuntimeObjectIdentityRejectsSamePathMutation() throws {
+        let root = FileManager.default.temporaryDirectory.appending(
+            path: "ForgePlayHistoricalRuntimeIdentity-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(
+            at: root,
+            withIntermediateDirectories: true
+        )
+        let executable = root.appending(path: "wine.bin")
+        try Data("first-generation".utf8).write(to: executable)
+        let identity = try ManagedWineHistoricalRuntimeObjectIdentity
+            .capture(executable)
+        XCTAssertTrue(identity.matchesCurrentObject())
+
+        try Data("other-generation".utf8).write(to: executable)
+        XCTAssertFalse(
+            identity.matchesCurrentObject(),
+            "A same-path Runtime mutation must invalidate historical signal authority."
+        )
+    }
+
+    func testStartupWineCleanupTargetsWineButNotNativeSteamOrForgePlay() {
+        XCTAssertTrue(SafeProcessRunner.isStartupWineExecutablePath(
+            "/Applications/Previous/ForgePlay.app/Contents/Resources/Runners/ForgePlayRuntime/wine/lib/wine/x86_64-unix/wine"
+        ))
+        XCTAssertTrue(SafeProcessRunner.isStartupWineExecutablePath(
+            "/Applications/Previous/ForgePlay.app/Contents/Resources/Runners/ForgePlayRuntime/wine/bin/wineserver.bin"
+        ))
+        XCTAssertTrue(SafeProcessRunner.isStartupWineExecutablePath(
+            "/Applications/Previous/ForgePlay.app/Contents/Helpers/GameModeProcessHost.app/Contents/MacOS/GameModeProcessHost"
+        ))
+        XCTAssertFalse(SafeProcessRunner.isStartupWineExecutablePath(
+            "/Applications/Steam.app/Contents/MacOS/steam_osx"
+        ))
+        XCTAssertFalse(SafeProcessRunner.isStartupWineExecutablePath(
+            "/Applications/ForgePlay.app/Contents/MacOS/ForgePlay"
+        ))
+        XCTAssertFalse(SafeProcessRunner.isStartupWineExecutablePath(
+            "/Applications/CrossOver.app/Contents/SharedSupport/CrossOver/bin/wineserver"
+        ))
+        XCTAssertFalse(SafeProcessRunner.isStartupWineExecutablePath(
+            "/tmp/wineserver-helper"
+        ))
+        XCTAssertFalse(SafeProcessRunner.isStartupWineExecutablePath(
+            "/Applications/ForgePlay.app/Contents/Resources/Runners/ForgePlayRuntime/wine/lib/wine/x86_64-unix/wine-helper"
+        ))
+    }
+
+    func testManagedWindowsSteamActivityRequiresExactWindowsExecutableArgument() {
+        let loader =
+            "/Applications/ForgePlay.app/Contents/Resources/Runners/" +
+            "ForgePlayRuntime/wine/bin/wine64"
+        for arguments in [
+            [#"C:\Program Files (x86)\Steam\steam.exe"#, "-silent"],
+            [loader, #"C:\Program Files (x86)\Steam\steam.exe"#],
+            ["wine64", "--", #"C:\Program Files (x86)\Steam\steamwebhelper.exe"#]
+        ] {
+            XCTAssertTrue(
+                SafeProcessRunner.isWindowsSteamProcessArguments(
+                    arguments,
+                    observedWineLoaderPath: loader
+                ),
+                "Expected exact Steam executable: \(arguments)"
+            )
+        }
+
+        for arguments in [
+            [#"C:\Games\KingdomCome.exe"#],
+            [#"C:\windows\system32\reg.exe"#, #"steam.exe"#],
+            [#"C:\Games\game.exe"#, #"--target=C:\Program Files (x86)\Steam\steam.exe"#],
+            [#"C:\Program Files (x86)\Steam\steam.exe.backup"#],
+            [#"C:\Games\steam.exe"#],
+            ["/Applications/Steam.app/Contents/MacOS/steam_osx"]
+        ] {
+            XCTAssertFalse(
+                SafeProcessRunner.isWindowsSteamProcessArguments(
+                    arguments,
+                    observedWineLoaderPath: loader
+                ),
+                "Non-Steam process must not authorize a Steam shutdown launch: \(arguments)"
+            )
+        }
+    }
+
+    func testStartupWineCleanupResultNeverHidesInspectionOrSignalFailures() {
+        XCTAssertTrue(StartupWineProcessCleanupResult(
+            initiallyTargetedProcessIDs: [101],
+            remainingProcessIDs: [],
+            inspectionFailures: [],
+            signalFailures: []
+        ).succeeded)
+        XCTAssertFalse(StartupWineProcessCleanupResult(
+            initiallyTargetedProcessIDs: [],
+            remainingProcessIDs: [],
+            inspectionFailures: ["enumeration unavailable"],
+            signalFailures: []
+        ).succeeded)
+        XCTAssertFalse(StartupWineProcessCleanupResult(
+            initiallyTargetedProcessIDs: [101],
+            remainingProcessIDs: [],
+            inspectionFailures: [],
+            signalFailures: ["SIGTERM denied"]
+        ).succeeded)
+    }
+
     func testLsofCollectionCannotBypassOneMicrosecondJournalTargetReuse() {
         let collectedStart: UInt64 = 1_800_000_000_123_456
         let executable = URL(fileURLWithPath: "/tmp/ForgePlayRuntime/wine")
@@ -1484,34 +1621,222 @@ final class SafeProcessRunnerTests: XCTestCase {
         )
     }
 
-    func testManagedWineSessionHydrationRejectsExactLiveForeignOwner() throws {
-        let foreignOwner = Darwin.getppid()
-        guard foreignOwner > 1,
-              let foreignOwnerStartedAt = ManagedWineProcessJournal
-                .processStartTimeUnixMicroseconds(for: foreignOwner) else {
-            throw XCTSkip("A live parent process identity is unavailable.")
+    func testManagedWineSessionHydrationDoesNotTreatLiveOwnerDescriptorAsProcessConflict() throws {
+        let foreignOwner = Process()
+        foreignOwner.executableURL = URL(fileURLWithPath: "/bin/sleep")
+        foreignOwner.arguments = ["30"]
+        try foreignOwner.run()
+        defer {
+            if foreignOwner.isRunning { foreignOwner.terminate() }
+            foreignOwner.waitUntilExit()
         }
+        let foreignOwnerProcessIdentifier = foreignOwner.processIdentifier
+        let foreignOwnerStartedAt = try XCTUnwrap(
+            ManagedWineProcessJournal.processStartTimeUnixMicroseconds(
+                for: foreignOwnerProcessIdentifier
+            )
+        )
         let fixture = try makeManagedWineDescriptorFixture(
-            ownerProcessIdentifier: foreignOwner,
+            ownerProcessIdentifier: foreignOwnerProcessIdentifier,
             ownerProcessStartedAt: foreignOwnerStartedAt
         )
         defer { try? FileManager.default.removeItem(at: fixture.root) }
         let registry = ManagedWineSessionRegistry()
 
-        XCTAssertThrowsError(try registry.hydrate(
+        var validatedSessionCount = 0
+        let hydrated = try registry.hydrate(
             from: fixture.evidenceDirectory,
             trustedAncestor: fixture.root,
             for: fixture.prefix,
             runtimeRootURL: fixture.runtimeRoot,
             runtimeFingerprint: fixture.runtimeFingerprint,
             validating: { _ in
-                XCTFail("A live foreign owner must fail before PID validation.")
+                validatedSessionCount += 1
             }
-        ))
-        XCTAssertTrue(registry.launchSessions(for: fixture.prefix).isEmpty)
+        )
+        XCTAssertEqual(validatedSessionCount, 1)
+        XCTAssertEqual(hydrated.count, 1)
+        XCTAssertEqual(registry.launchSessions(for: fixture.prefix), hydrated)
     }
 
-    func testManagedWineSessionHydrationRejectsLiveLegacyJournalWithoutOwnerDescriptor() throws {
+    func testManagedWineSessionHydrationSkipsDeadOwnerFromPreviousRuntime() throws {
+        let fixture = try makeManagedWineDescriptorFixture(
+            ownerProcessIdentifier: Int32.max - 1,
+            ownerProcessStartedAt: 1
+        )
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let selectedRuntime = fixture.root.appending(
+            path: "SelectedRuntime/wine",
+            directoryHint: .isDirectory
+        )
+        let selectedFingerprint = String(repeating: "a", count: 64)
+        let registry = ManagedWineSessionRegistry()
+
+        let hydrated = try registry.hydrate(
+            from: fixture.evidenceDirectory,
+            trustedAncestor: fixture.root,
+            for: fixture.prefix,
+            runtimeRootURL: selectedRuntime,
+            runtimeFingerprint: selectedFingerprint,
+            validating: { _ in
+                XCTFail("A dead-owner descriptor from another Runtime must not publish signal authority.")
+            }
+        )
+
+        XCTAssertTrue(hydrated.isEmpty)
+        XCTAssertTrue(registry.launchSessions(for: fixture.prefix).isEmpty)
+        XCTAssertEqual(
+            registry.staleSessionArtifacts(for: fixture.prefix).count,
+            1
+        )
+    }
+
+    func testManagedWineSessionHydrationTreatsDeadOwnerFromSameRuntimeAsStale() throws {
+        let fixture = try makeManagedWineDescriptorFixture(
+            ownerProcessIdentifier: Int32.max - 1,
+            ownerProcessStartedAt: 1
+        )
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let registry = ManagedWineSessionRegistry()
+
+        let hydrated = try registry.hydrate(
+            from: fixture.evidenceDirectory,
+            trustedAncestor: fixture.root,
+            for: fixture.prefix,
+            runtimeRootURL: fixture.runtimeRoot,
+            runtimeFingerprint: fixture.runtimeFingerprint,
+            validating: { _ in
+                XCTFail(
+                    "A dead owner must not publish signal authority even when Runtime identity still matches."
+                )
+            }
+        )
+
+        XCTAssertTrue(hydrated.isEmpty)
+        XCTAssertEqual(
+            registry.staleSessionArtifacts(for: fixture.prefix).count,
+            1
+        )
+    }
+
+    func testManagedWineSessionHydrationTreatsDeadOwnerDeviceGenerationMismatchAsStale() throws {
+        let fixture = try makeManagedWineDescriptorFixture(
+            ownerProcessIdentifier: Int32.max - 1,
+            ownerProcessStartedAt: 1
+        )
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        try rewriteManagedWineDescriptorWithDifferentDeviceIdentity(fixture)
+        let registry = ManagedWineSessionRegistry()
+
+        let hydrated = try registry.hydrate(
+            from: fixture.evidenceDirectory,
+            trustedAncestor: fixture.root,
+            for: fixture.prefix,
+            runtimeRootURL: fixture.runtimeRoot,
+            runtimeFingerprint: fixture.runtimeFingerprint,
+            validating: { _ in
+                XCTFail(
+                    "A dead-owner descriptor from another device generation must not publish signal authority."
+                )
+            }
+        )
+
+        XCTAssertTrue(hydrated.isEmpty)
+        XCTAssertTrue(registry.launchSessions(for: fixture.prefix).isEmpty)
+        XCTAssertEqual(
+            registry.staleSessionArtifacts(for: fixture.prefix).count,
+            1
+        )
+    }
+
+    func testManagedWineSessionHydrationTreatsReusedOwnerIdentityAsStaleWithoutSignalAuthority() throws {
+        let foreignOwner = Process()
+        foreignOwner.executableURL = URL(fileURLWithPath: "/bin/sleep")
+        foreignOwner.arguments = ["30"]
+        try foreignOwner.run()
+        defer {
+            if foreignOwner.isRunning { foreignOwner.terminate() }
+            foreignOwner.waitUntilExit()
+        }
+        let reusedProcessIdentifier = foreignOwner.processIdentifier
+        let liveStart = try XCTUnwrap(
+            ManagedWineProcessJournal.processStartTimeUnixMicroseconds(
+                for: reusedProcessIdentifier
+            )
+        )
+        XCTAssertGreaterThan(liveStart, 1)
+        let fixture = try makeManagedWineDescriptorFixture(
+            ownerProcessIdentifier: reusedProcessIdentifier,
+            ownerProcessStartedAt: liveStart - 1
+        )
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let registry = ManagedWineSessionRegistry()
+
+        let hydrated = try registry.hydrate(
+            from: fixture.evidenceDirectory,
+            trustedAncestor: fixture.root,
+            for: fixture.prefix,
+            runtimeRootURL: fixture.runtimeRoot,
+            runtimeFingerprint: fixture.runtimeFingerprint,
+            validating: { _ in
+                XCTFail("A reused owner PID must not publish signal authority.")
+            }
+        )
+
+        XCTAssertTrue(hydrated.isEmpty)
+        XCTAssertTrue(registry.launchSessions(for: fixture.prefix).isEmpty)
+        XCTAssertEqual(
+            registry.staleSessionArtifacts(for: fixture.prefix).count,
+            1
+        )
+    }
+
+    func testManagedWineSessionHydrationTreatsLiveOwnerRuntimeMismatchAsNonAuthoritativeStaleMetadata() throws {
+        let foreignOwner = Process()
+        foreignOwner.executableURL = URL(fileURLWithPath: "/bin/sleep")
+        foreignOwner.arguments = ["30"]
+        try foreignOwner.run()
+        defer {
+            if foreignOwner.isRunning { foreignOwner.terminate() }
+            foreignOwner.waitUntilExit()
+        }
+        let foreignOwnerProcessIdentifier = foreignOwner.processIdentifier
+        let foreignOwnerStartedAt = try XCTUnwrap(
+            ManagedWineProcessJournal.processStartTimeUnixMicroseconds(
+                for: foreignOwnerProcessIdentifier
+            )
+        )
+        let fixture = try makeManagedWineDescriptorFixture(
+            ownerProcessIdentifier: foreignOwnerProcessIdentifier,
+            ownerProcessStartedAt: foreignOwnerStartedAt
+        )
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let registry = ManagedWineSessionRegistry()
+
+        let hydrated = try registry.hydrate(
+            from: fixture.evidenceDirectory,
+            trustedAncestor: fixture.root,
+            for: fixture.prefix,
+            runtimeRootURL: fixture.root.appending(
+                path: "SelectedRuntime/wine",
+                directoryHint: .isDirectory
+            ),
+            runtimeFingerprint: String(repeating: "b", count: 64),
+            validating: { _ in
+                XCTFail(
+                    "A Runtime-mismatched descriptor must not publish signal authority."
+                )
+            }
+        )
+        XCTAssertTrue(hydrated.isEmpty)
+        XCTAssertTrue(registry.launchSessions(for: fixture.prefix).isEmpty)
+        XCTAssertEqual(
+            registry.staleSessionArtifacts(for: fixture.prefix).count,
+            1
+        )
+    }
+
+    func testManagedWineSessionHydrationIgnoresLegacyJournalWithoutOwnerDescriptor() throws {
         let fixture = try makeManagedWineDescriptorFixture()
         defer { try? FileManager.default.removeItem(at: fixture.root) }
         try FileManager.default.removeItem(at: fixture.descriptorURL)
@@ -1533,20 +1858,23 @@ final class SafeProcessRunnerTests: XCTestCase {
         try Data(record.utf8).write(to: fixture.evidenceURL)
         let registry = ManagedWineSessionRegistry()
 
-        XCTAssertThrowsError(try registry.hydrate(
+        let hydrated = try registry.hydrate(
             from: fixture.evidenceDirectory,
             trustedAncestor: fixture.root,
             for: fixture.prefix,
             runtimeRootURL: fixture.runtimeRoot,
             runtimeFingerprint: fixture.runtimeFingerprint,
             validating: { _ in
-                XCTFail("A descriptor-less live journal must never publish a session.")
+                XCTFail(
+                    "A descriptor-less journal must never publish signal authority."
+                )
             }
-        ))
+        )
+        XCTAssertTrue(hydrated.isEmpty)
         XCTAssertTrue(registry.launchSessions(for: fixture.prefix).isEmpty)
     }
 
-    func testManagedWineSessionHydrationRejectsHardlinkedDescriptor() throws {
+    func testManagedWineSessionHydrationIgnoresHardlinkedDescriptorWithoutBlockingOtherWork() throws {
         let fixture = try makeManagedWineDescriptorFixture()
         defer { try? FileManager.default.removeItem(at: fixture.root) }
         let hardlink = fixture.evidenceDirectory.appending(
@@ -1558,25 +1886,28 @@ final class SafeProcessRunnerTests: XCTestCase {
         )
         let registry = ManagedWineSessionRegistry()
 
-        XCTAssertThrowsError(try registry.hydrate(
+        let hydrated = try registry.hydrate(
             from: fixture.evidenceDirectory,
             trustedAncestor: fixture.root,
             for: fixture.prefix,
             runtimeRootURL: fixture.runtimeRoot,
             runtimeFingerprint: fixture.runtimeFingerprint,
             validating: { _ in
-                XCTFail("A hardlinked descriptor must fail before PID validation.")
+                XCTFail(
+                    "A hardlinked descriptor must not publish signal authority."
+                )
             }
-        ))
+        )
+        XCTAssertTrue(hydrated.isEmpty)
         XCTAssertTrue(registry.launchSessions(for: fixture.prefix).isEmpty)
     }
 
-    func testManagedWineSessionHydrationPublishesNoPartialPIDValidation() throws {
+    func testManagedWineSessionHydrationSkipsOnlyTheSessionWhosePIDValidationFails() throws {
         let fixture = try makeManagedWineDescriptorFixture()
         defer { try? FileManager.default.removeItem(at: fixture.root) }
         let registry = ManagedWineSessionRegistry()
 
-        XCTAssertThrowsError(try registry.hydrate(
+        let hydrated = try registry.hydrate(
             from: fixture.evidenceDirectory,
             trustedAncestor: fixture.root,
             for: fixture.prefix,
@@ -1588,9 +1919,42 @@ final class SafeProcessRunnerTests: XCTestCase {
                     "fixture PID/executable identity is ambiguous"
                 )
             }
-        ))
+        )
+        XCTAssertTrue(hydrated.isEmpty)
         XCTAssertTrue(registry.launchSessions(for: fixture.prefix).isEmpty)
         XCTAssertTrue(registry.prefixURLs.isEmpty)
+    }
+
+    func testManagedWineSessionHydrationPreservesValidSessionBesideMalformedDescriptor() throws {
+        let fixture = try makeManagedWineDescriptorFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let malformedRunIdentifier = UUID().uuidString.lowercased()
+        let malformedDescriptor = fixture.evidenceDirectory.appending(
+            path: ManagedWineProcessJournal.activeSessionDescriptorFileName(
+                runIdentifier: malformedRunIdentifier
+            )
+        )
+        try Data("not-json".utf8).write(to: malformedDescriptor)
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o600],
+            ofItemAtPath: malformedDescriptor.path
+        )
+        let registry = ManagedWineSessionRegistry()
+        var validatedRunIdentifiers: [String] = []
+
+        let hydrated = try registry.hydrate(
+            from: fixture.evidenceDirectory,
+            trustedAncestor: fixture.root,
+            for: fixture.prefix,
+            runtimeRootURL: fixture.runtimeRoot,
+            runtimeFingerprint: fixture.runtimeFingerprint,
+            validating: {
+                validatedRunIdentifiers.append($0.runIdentifier)
+            }
+        )
+
+        XCTAssertEqual(hydrated.map(\.runIdentifier), [fixture.runIdentifier])
+        XCTAssertEqual(validatedRunIdentifiers, [fixture.runIdentifier])
     }
 
     func testManagedWineRuntimePatchRecordsDaemonAndBoundsOwnerDeath() throws {
@@ -1614,6 +1978,50 @@ final class SafeProcessRunnerTests: XCTestCase {
         )
 
         XCTAssertLessThan(socketIndex, recordIndex)
+        let loaderServerSection = try XCTUnwrap(
+            patch.range(
+                of: "diff --git a/dlls/ntdll/unix/server.c b/dlls/ntdll/unix/server.c"
+            )
+        )
+        let loaderServerEnd = patch[loaderServerSection.upperBound...]
+            .range(of: "diff --git a/")?.lowerBound ?? patch.endIndex
+        let loaderSection = patch[
+            loaderServerSection.lowerBound..<loaderServerEnd
+        ]
+        let initDoneIndex = try XCTUnwrap(
+            loaderSection.range(of: "     SERVER_END_REQ;")?.lowerBound
+        )
+        let loaderRecordIndex = try XCTUnwrap(
+            loaderSection.range(
+                of: "+    forgeplay_record_managed_wine_process( \"wine-loader\" );"
+            )?.lowerBound
+        )
+        let loaderMonitorIndex = try XCTUnwrap(
+            loaderSection.range(
+                of: "+    if (!forgeplay_start_application_owner_monitor())",
+                range: loaderRecordIndex..<loaderSection.endIndex
+            )?.lowerBound
+        )
+        let windowsTransferIndex = try XCTUnwrap(
+            loaderSection.range(
+                of: "     signal_start_thread( main_image_info.TransferAddress, peb, data->teb );",
+                range: loaderMonitorIndex..<loaderSection.endIndex
+            )?.lowerBound
+        )
+        XCTAssertLessThan(initDoneIndex, loaderRecordIndex)
+        XCTAssertLessThan(loaderRecordIndex, loaderMonitorIndex)
+        XCTAssertLessThan(loaderMonitorIndex, windowsTransferIndex)
+        XCTAssertFalse(
+            patch.contains(
+                "diff --git a/dlls/ntdll/unix/loader.c b/dlls/ntdll/unix/loader.c"
+            )
+        )
+        XCTAssertTrue(
+            patch.contains(
+                "ForgePlay managed application owner monitor failed"
+            ),
+            patch
+        )
         XCTAssertTrue(patch.contains("kill( getpid(), SIGTERM )"), patch)
         XCTAssertTrue(patch.contains("struct timespec delay = {2, 0}"), patch)
         XCTAssertTrue(patch.contains("nanosleep( &delay, &remaining )"), patch)
@@ -2310,6 +2718,7 @@ final class SafeProcessRunnerTests: XCTestCase {
         let archive = URL(fileURLWithPath: "/tmp/ForgePlayRunnerTests/runtime.zip")
         let extractionDirectory = URL(fileURLWithPath: "/tmp/ForgePlayRunnerTests/Extracted", isDirectory: true)
         let logs = URL(fileURLWithPath: "/tmp/ForgePlayRunnerTests/Logs", isDirectory: true)
+        let registryFile = logs.appending(path: "steam-profile.reg")
         let supportZip = URL(fileURLWithPath: "/tmp/ForgePlayRunnerTests/support.zip")
 
         let runtimeActions: [(RunnerAction, String)] = [
@@ -2351,6 +2760,12 @@ final class SafeProcessRunnerTests: XCTestCase {
             ), "extractRuntimeArchive"),
             (.installRuntime(runtimeExecutable: executable, prefix: prefix, installer: installer, runtime: .vcrun2022, logDirectory: logs), "installRuntime"),
             (.setWindowsVersion(runtimeExecutable: executable, prefix: prefix, version: "win10", logDirectory: logs), "setWindowsVersion"),
+            (.importRegistryFile(
+                runtimeExecutable: executable,
+                prefix: prefix,
+                registryFile: registryFile,
+                logDirectory: logs
+            ), "importRegistryFile"),
             (.setRegistryValue(
                 runtimeExecutable: executable,
                 prefix: prefix,
@@ -2969,6 +3384,94 @@ final class SafeProcessRunnerTests: XCTestCase {
         if let ownedDescendant, ownedDescendant > 0 {
             _ = Darwin.kill(ownedDescendant, SIGKILL)
         }
+    }
+
+    func testManagedSteamReadbackFailureLeavesSpawnedProcessRunningWithWarning()
+        async throws {
+        let fixture = try makeRendererRoutingFixture(
+            "ManagedSteamReadbackAdvisory"
+        )
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let steamExecutable = fixture.prefix.appending(
+            path: "drive_c/Program Files (x86)/Steam/steam.exe"
+        )
+        let logs = fixture.root.appending(
+            path: "Logs",
+            directoryHint: .isDirectory
+        )
+        try FileManager.default.createDirectory(
+            at: steamExecutable.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.createDirectory(
+            at: logs,
+            withIntermediateDirectories: true
+        )
+        try Data("steam".utf8).write(to: steamExecutable)
+        try makeCompleteD3DMetalRenderer(
+            at: fixture.rendererRoot.appending(
+                path: "d3dmetal",
+                directoryHint: .isDirectory
+            )
+        )
+        try """
+        #!/bin/sh
+        trap '' TERM INT
+        while :; do sleep 1; done
+        """.write(
+            to: fixture.launcher,
+            atomically: true,
+            encoding: .utf8
+        )
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o755],
+            ofItemAtPath: fixture.launcher.path
+        )
+        let state = ManagedWineReadbackTestState()
+        let runner = makeCuratedRuntimeRunner(
+            managedWineProcessJournalEnabled: false,
+            managedWineChildSynchronizationReadbackProvider: {
+                processIdentifier in
+                state.recordReadback(processIdentifier: processIdentifier)
+                throw NSError(
+                    domain: "SafeProcessRunnerTests.AdvisoryReadback",
+                    code: 95
+                )
+            }
+        )
+        var ownedProcessGroup: pid_t?
+        defer {
+            if let ownedProcessGroup, ownedProcessGroup > 0 {
+                _ = Darwin.kill(-ownedProcessGroup, SIGKILL)
+                _ = Darwin.kill(ownedProcessGroup, SIGKILL)
+            }
+        }
+
+        let result = try await runner.run(.launchSteam(
+            runtimeExecutable: fixture.launcher,
+            prefix: fixture.prefix,
+            steamExecutable: steamExecutable,
+            steamArguments: [],
+            graphicsBackend: .d3dMetal,
+            compatibilitySelection: SteamPrelaunchCompatibilitySelection(
+                rendererSelection: .d3dMetalNVIDIA,
+                networkSelection: .standard,
+                audioInputSelection: .enabled
+            ),
+            logDirectory: logs
+        ))
+        let processIdentifier = try XCTUnwrap(result.processIdentifier)
+        ownedProcessGroup = processIdentifier
+
+        XCTAssertTrue(result.succeeded)
+        XCTAssertEqual(Darwin.kill(processIdentifier, 0), 0)
+        XCTAssertEqual(state.readbackProcessIdentifiers, [processIdentifier])
+        XCTAssertNil(result.managedWineChildSynchronizationReadback)
+        XCTAssertTrue(
+            result.diagnosticCaptureWarning?.contains(
+                "synchronization readback failed after spawn"
+            ) == true
+        )
     }
 
     func testManagedSteamReadbackUsesExactLiveLoaderAfterPrimaryExit() async throws {
@@ -3926,6 +4429,518 @@ final class SafeProcessRunnerTests: XCTestCase {
         XCTAssertTrue(stderr.contains("wineserver reported no active server"))
     }
 
+    func testShutdownWinePrefixRetiresDeadOwnerArtifactsFromPreviousRuntime() async throws {
+        let fixture = try makeManagedWineDescriptorFixture(
+            ownerProcessIdentifier: Int32.max - 1,
+            ownerProcessStartedAt: 1,
+            runtimeFingerprint: String(repeating: "b", count: 64)
+        )
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        try rewriteManagedWineDescriptorWithDifferentDeviceIdentity(fixture)
+        let logs = fixture.evidenceDirectory.deletingLastPathComponent()
+        let launcher = try makeWineRunner(
+            in: fixture.root,
+            wineserverScript: "#!/bin/sh\nexit 0\n"
+        )
+        let recordedAt = Int64(Date().timeIntervalSince1970 * 1_000)
+        let deadProcessStartedAt = Int64(
+            Date().timeIntervalSince1970 * 1_000_000
+        )
+        let deadEvidenceProcessIdentifier = Int32.max - 2
+        let record =
+            "{\"schema_version\":1," +
+            "\"producer\":\"forgeplay-wine-runtime\"," +
+            "\"event_code\":\"darwin_process_started\"," +
+            "\"role\":\"wine-loader\"," +
+            "\"run_identifier\":\"\(fixture.runIdentifier)\"," +
+            "\"prefix_scope\":\"\(ManagedWineProcessJournal.prefixScope(for: fixture.prefix))\"," +
+            "\"runtime_fingerprint\":\"\(fixture.runtimeFingerprint)\"," +
+            "\"darwin_pid\":\(deadEvidenceProcessIdentifier)," +
+            "\"recorded_at_unix_milliseconds\":\(recordedAt)," +
+            "\"process_started_at_unix_microseconds\":\(deadProcessStartedAt)}\n"
+        try Data(record.utf8).write(
+            to: fixture.evidenceURL,
+            options: [.atomic]
+        )
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o600],
+            ofItemAtPath: fixture.evidenceURL.path
+        )
+        let registry = ManagedWineSessionRegistry()
+        let runner = makeCuratedRuntimeRunner(
+            sandboxEnabled: true,
+            managedWineSessionRegistry: registry
+        )
+
+        let result = try await runner.run(.shutdownWinePrefix(
+            runtimeExecutable: launcher,
+            prefix: fixture.prefix,
+            logDirectory: logs
+        ))
+
+        XCTAssertTrue(result.succeeded)
+        XCTAssertFalse(
+            FileManager.default.fileExists(atPath: fixture.evidenceURL.path)
+        )
+        XCTAssertFalse(
+            FileManager.default.fileExists(atPath: fixture.descriptorURL.path)
+        )
+        XCTAssertTrue(registry.staleSessionArtifacts(for: fixture.prefix).isEmpty)
+    }
+
+    func testShutdownWinePrefixDoesNotFailOnEmptyStaleEvidence() async throws {
+        let fixture = try makeManagedWineDescriptorFixture(
+            ownerProcessIdentifier: Int32.max - 1,
+            ownerProcessStartedAt: 1,
+            runtimeFingerprint: String(repeating: "b", count: 64)
+        )
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let logs = fixture.evidenceDirectory.deletingLastPathComponent()
+        let launcher = try makeWineRunner(
+            in: fixture.root,
+            wineserverScript: "#!/bin/sh\nexit 0\n"
+        )
+        let runner = makeCuratedRuntimeRunner(sandboxEnabled: true)
+
+        let result = try await runner.run(.shutdownWinePrefix(
+            runtimeExecutable: launcher,
+            prefix: fixture.prefix,
+            logDirectory: logs
+        ))
+
+        XCTAssertTrue(result.succeeded)
+        XCTAssertEqual(result.postconditionSatisfied, true)
+        XCTAssertNotNil(result.diagnosticCaptureWarning)
+        XCTAssertTrue(
+            FileManager.default.fileExists(atPath: fixture.evidenceURL.path)
+        )
+        XCTAssertTrue(
+            FileManager.default.fileExists(atPath: fixture.descriptorURL.path)
+        )
+    }
+
+    func testShutdownWinePrefixDoesNotFailOnTemporallyImpossibleOrForeignStaleEvidence() async throws {
+        for scenario in ["future-timestamp", "foreign-run-identity"] {
+            let fixture = try makeManagedWineDescriptorFixture(
+                ownerProcessIdentifier: Int32.max - 1,
+                ownerProcessStartedAt: 1,
+                runtimeFingerprint: String(repeating: "b", count: 64)
+            )
+            defer { try? FileManager.default.removeItem(at: fixture.root) }
+            let logs = fixture.evidenceDirectory.deletingLastPathComponent()
+            let launcher = try makeWineRunner(
+                in: fixture.root,
+                wineserverScript: "#!/bin/sh\nexit 0\n"
+            )
+            let now = Date()
+            let recordedAt = Int64(now.timeIntervalSince1970 * 1_000)
+            let processStartedAt = Int64(
+                now.timeIntervalSince1970 * 1_000_000
+            )
+            let processIdentifier = Int32.max - 2
+            func row(recordedAt rowTime: Int64, startedAt: Int64) -> String {
+                "{\"schema_version\":1," +
+                "\"producer\":\"forgeplay-wine-runtime\"," +
+                "\"event_code\":\"darwin_process_started\"," +
+                "\"role\":\"wine-loader\"," +
+                "\"run_identifier\":\"\(fixture.runIdentifier)\"," +
+                "\"prefix_scope\":\"\(ManagedWineProcessJournal.prefixScope(for: fixture.prefix))\"," +
+                "\"runtime_fingerprint\":\"\(fixture.runtimeFingerprint)\"," +
+                "\"darwin_pid\":\(processIdentifier)," +
+                "\"recorded_at_unix_milliseconds\":\(rowTime)," +
+                "\"process_started_at_unix_microseconds\":\(startedAt)}\n"
+            }
+            let evidence = scenario == "future-timestamp"
+                ? row(
+                    recordedAt: recordedAt + 60_000,
+                    startedAt: processStartedAt
+                )
+                : row(
+                    recordedAt: recordedAt,
+                    startedAt: processStartedAt
+                ).replacingOccurrences(
+                    of: fixture.runIdentifier,
+                    with: "00000000-0000-0000-0000-000000000000"
+                )
+            try Data(evidence.utf8).write(
+                to: fixture.evidenceURL,
+                options: [.atomic]
+            )
+            try FileManager.default.setAttributes(
+                [.posixPermissions: 0o600],
+                ofItemAtPath: fixture.evidenceURL.path
+            )
+            let runner = makeCuratedRuntimeRunner(sandboxEnabled: true)
+
+            let result = try await runner.run(.shutdownWinePrefix(
+                runtimeExecutable: launcher,
+                prefix: fixture.prefix,
+                logDirectory: logs
+            ))
+
+            XCTAssertTrue(result.succeeded, scenario)
+            XCTAssertEqual(result.postconditionSatisfied, true, scenario)
+            XCTAssertNotNil(result.diagnosticCaptureWarning, scenario)
+            XCTAssertTrue(
+                FileManager.default.fileExists(atPath: fixture.evidenceURL.path),
+                scenario
+            )
+            XCTAssertTrue(
+                FileManager.default.fileExists(atPath: fixture.descriptorURL.path),
+                scenario
+            )
+        }
+    }
+
+    func testShutdownWinePrefixDoesNotUseStaleLiveEvidenceAsAProcessGate() async throws {
+        let fixture = try makeManagedWineDescriptorFixture(
+            ownerProcessIdentifier: Int32.max - 1,
+            ownerProcessStartedAt: 1,
+            runtimeFingerprint: String(repeating: "b", count: 64)
+        )
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let liveStart = try XCTUnwrap(
+            ManagedWineProcessJournal.processStartTimeUnixMicroseconds(
+                for: Darwin.getpid()
+            )
+        )
+        let recordedAt = Int64(Date().timeIntervalSince1970 * 1_000)
+        let record =
+            "{\"schema_version\":1," +
+            "\"producer\":\"forgeplay-wine-runtime\"," +
+            "\"event_code\":\"darwin_process_started\"," +
+            "\"role\":\"wine-loader\"," +
+            "\"run_identifier\":\"\(fixture.runIdentifier)\"," +
+            "\"prefix_scope\":\"\(ManagedWineProcessJournal.prefixScope(for: fixture.prefix))\"," +
+            "\"runtime_fingerprint\":\"\(fixture.runtimeFingerprint)\"," +
+            "\"darwin_pid\":\(Darwin.getpid())," +
+            "\"recorded_at_unix_milliseconds\":\(recordedAt)," +
+            "\"process_started_at_unix_microseconds\":\(liveStart)}\n"
+        try Data(record.utf8).write(
+            to: fixture.evidenceURL,
+            options: [.atomic]
+        )
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o600],
+            ofItemAtPath: fixture.evidenceURL.path
+        )
+        let logs = fixture.evidenceDirectory.deletingLastPathComponent()
+        let launcher = try makeWineRunner(
+            in: fixture.root,
+            wineserverScript: "#!/bin/sh\nexit 0\n"
+        )
+        let runner = makeCuratedRuntimeRunner(sandboxEnabled: true)
+
+        let result = try await runner.run(.shutdownWinePrefix(
+            runtimeExecutable: launcher,
+            prefix: fixture.prefix,
+            logDirectory: logs
+        ))
+        let stderr = try String(
+            contentsOf: result.stderrLog,
+            encoding: .utf8
+        )
+
+        XCTAssertTrue(result.succeeded)
+        XCTAssertEqual(result.postconditionSatisfied, true)
+        XCTAssertTrue(
+            stderr.contains(
+                "Ignored non-authoritative managed Wine ownership metadata"
+            ),
+            stderr
+        )
+        XCTAssertTrue(
+            FileManager.default.fileExists(atPath: fixture.evidenceURL.path)
+        )
+        XCTAssertTrue(
+            FileManager.default.fileExists(atPath: fixture.descriptorURL.path)
+        )
+    }
+
+    func testShutdownAdoptsAuthenticatedPriorRuntimeSessionFromLegacyLaunchEvidence() async throws {
+        try XCTSkipUnless(
+            FileManager.default.isExecutableFile(atPath: "/usr/sbin/lsof"),
+            "Prefix cleanup verification requires lsof on macOS."
+        )
+        try XCTSkipUnless(
+            FileManager.default.isExecutableFile(atPath: "/usr/bin/codesign"),
+            "The native historical Wine fixture requires codesign on macOS."
+        )
+        let priorFingerprint = String(repeating: "b", count: 64)
+        let currentFingerprint = String(repeating: "a", count: 64)
+        let fixture = try makeManagedWineDescriptorFixture(
+            ownerProcessIdentifier: Int32.max - 1,
+            ownerProcessStartedAt: 1,
+            runtimeFingerprint: priorFingerprint
+        )
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+
+        let logsRoot = fixture.root.appending(
+            path: "Logs",
+            directoryHint: .isDirectory
+        )
+        let legacyEvidenceDirectory = logsRoot
+            .appending(path: "Launch", directoryHint: .isDirectory)
+            .appending(
+                path: ManagedWineProcessJournal.evidenceDirectoryName,
+                directoryHint: .isDirectory
+            )
+        let installLogs = logsRoot.appending(
+            path: "Install",
+            directoryHint: .isDirectory
+        )
+        try FileManager.default.createDirectory(
+            at: legacyEvidenceDirectory,
+            withIntermediateDirectories: true,
+            attributes: [.posixPermissions: 0o700]
+        )
+        try FileManager.default.createDirectory(
+            at: installLogs,
+            withIntermediateDirectories: true
+        )
+        let legacyEvidenceURL = legacyEvidenceDirectory.appending(
+            path: fixture.evidenceURL.lastPathComponent
+        )
+        let legacyDescriptorURL = legacyEvidenceDirectory.appending(
+            path: fixture.descriptorURL.lastPathComponent
+        )
+        try FileManager.default.moveItem(
+            at: fixture.evidenceURL,
+            to: legacyEvidenceURL
+        )
+        try FileManager.default.moveItem(
+            at: fixture.descriptorURL,
+            to: legacyDescriptorURL
+        )
+
+        let priorBin = fixture.runtimeRoot.appending(
+            path: "bin",
+            directoryHint: .isDirectory
+        )
+        try FileManager.default.createDirectory(
+            at: priorBin,
+            withIntermediateDirectories: true
+        )
+        let priorLauncher = priorBin.appending(path: "wine")
+        try "#!/bin/sh\nexit 0\n".write(
+            to: priorLauncher,
+            atomically: true,
+            encoding: .utf8
+        )
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o755],
+            ofItemAtPath: priorLauncher.path
+        )
+        let historicalHolderExecutable = priorBin.appending(
+            path: "wine.bin"
+        )
+        try FileManager.default.copyItem(
+            at: URL(fileURLWithPath: "/bin/sleep"),
+            to: historicalHolderExecutable
+        )
+        try adHocSignExecutable(historicalHolderExecutable)
+
+        try writeBoundPrefixMetadata(
+            at: fixture.prefix,
+            runtimeFingerprint: priorFingerprint
+        )
+
+        let holder = Process()
+        holder.executableURL = historicalHolderExecutable
+        holder.arguments = ["60"]
+        holder.currentDirectoryURL = fixture.prefix
+        try holder.run()
+        defer {
+            if holder.isRunning { holder.terminate() }
+        }
+        let holderStart = try XCTUnwrap(
+            ManagedWineProcessJournal.processStartTimeUnixMicroseconds(
+                for: holder.processIdentifier
+            )
+        )
+        let recordedAt = Int64(Date().timeIntervalSince1970 * 1_000)
+        let record =
+            "{\"schema_version\":1," +
+            "\"producer\":\"forgeplay-wine-runtime\"," +
+            "\"event_code\":\"darwin_process_started\"," +
+            "\"role\":\"wine-loader\"," +
+            "\"run_identifier\":\"\(fixture.runIdentifier)\"," +
+            "\"prefix_scope\":\"\(ManagedWineProcessJournal.prefixScope(for: fixture.prefix))\"," +
+            "\"runtime_fingerprint\":\"\(priorFingerprint)\"," +
+            "\"darwin_pid\":\(holder.processIdentifier)," +
+            "\"recorded_at_unix_milliseconds\":\(recordedAt)," +
+            "\"process_started_at_unix_microseconds\":\(holderStart)}\n"
+        try Data(record.utf8).write(
+            to: legacyEvidenceURL,
+            options: [.atomic]
+        )
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o600],
+            ofItemAtPath: legacyEvidenceURL.path
+        )
+
+        let currentLauncher = try makeWineRunner(
+            in: fixture.root,
+            wineserverScript:
+                "#!/bin/sh\n[ \"${1:-}\" = \"-w\" ] && exit 0\nexit 1\n"
+        )
+        let runner = makeCuratedRuntimeRunner(
+            managedWineRuntimeFingerprintResolver: { executable in
+                executable.standardizedFileURL.path ==
+                    priorLauncher.standardizedFileURL.path
+                    ? priorFingerprint
+                    : currentFingerprint
+            }
+        )
+
+        let result = try await runner.run(.shutdownWinePrefix(
+            runtimeExecutable: currentLauncher,
+            prefix: fixture.prefix,
+            logDirectory: installLogs
+        ))
+        let stderr = try String(
+            contentsOf: result.stderrLog,
+            encoding: .utf8
+        )
+
+        XCTAssertTrue(result.succeeded, stderr)
+        let exitDeadline = Date().addingTimeInterval(2)
+        while holder.isRunning && Date() < exitDeadline {
+            try await Task.sleep(for: .milliseconds(25))
+        }
+        XCTAssertFalse(holder.isRunning, stderr)
+        XCTAssertFalse(
+            FileManager.default.fileExists(atPath: legacyEvidenceURL.path)
+        )
+        XCTAssertFalse(
+            FileManager.default.fileExists(atPath: legacyDescriptorURL.path)
+        )
+        XCTAssertFalse(
+            stderr.contains("lsof-only prefix holder"),
+            stderr
+        )
+    }
+
+    func testShutdownAuthenticatesHistoricalHolderWithoutUsingPersistedBindingAsAuthority() async throws {
+        try XCTSkipUnless(
+            FileManager.default.isExecutableFile(atPath: "/usr/sbin/lsof"),
+            "Prefix cleanup verification requires lsof on macOS."
+        )
+        try XCTSkipUnless(
+            FileManager.default.isExecutableFile(atPath: "/usr/bin/codesign"),
+            "The native historical Wine fixture requires codesign on macOS."
+        )
+        let priorFingerprint = String(repeating: "b", count: 64)
+        let unrelatedBinding = String(repeating: "c", count: 64)
+        let fixture = try makeManagedWineDescriptorFixture(
+            ownerProcessIdentifier: Int32.max - 1,
+            ownerProcessStartedAt: 1,
+            runtimeFingerprint: priorFingerprint
+        )
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+
+        let priorBin = fixture.runtimeRoot.appending(
+            path: "bin",
+            directoryHint: .isDirectory
+        )
+        try FileManager.default.createDirectory(
+            at: priorBin,
+            withIntermediateDirectories: true
+        )
+        let priorLauncher = priorBin.appending(path: "wine")
+        try "#!/bin/sh\nexit 0\n".write(
+            to: priorLauncher,
+            atomically: true,
+            encoding: .utf8
+        )
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o755],
+            ofItemAtPath: priorLauncher.path
+        )
+        let holderExecutable = priorBin.appending(path: "wine.bin")
+        try FileManager.default.copyItem(
+            at: URL(fileURLWithPath: "/bin/sleep"),
+            to: holderExecutable
+        )
+        try adHocSignExecutable(holderExecutable)
+        try writeBoundPrefixMetadata(
+            at: fixture.prefix,
+            runtimeFingerprint: unrelatedBinding
+        )
+
+        let holder = Process()
+        holder.executableURL = holderExecutable
+        holder.arguments = ["60"]
+        holder.currentDirectoryURL = fixture.prefix
+        try holder.run()
+        defer {
+            if holder.isRunning { holder.terminate() }
+        }
+        let holderStart = try XCTUnwrap(
+            ManagedWineProcessJournal.processStartTimeUnixMicroseconds(
+                for: holder.processIdentifier
+            )
+        )
+        let recordedAt = Int64(Date().timeIntervalSince1970 * 1_000)
+        let record =
+            "{\"schema_version\":1," +
+            "\"producer\":\"forgeplay-wine-runtime\"," +
+            "\"event_code\":\"darwin_process_started\"," +
+            "\"role\":\"wine-loader\"," +
+            "\"run_identifier\":\"\(fixture.runIdentifier)\"," +
+            "\"prefix_scope\":\"\(ManagedWineProcessJournal.prefixScope(for: fixture.prefix))\"," +
+            "\"runtime_fingerprint\":\"\(priorFingerprint)\"," +
+            "\"darwin_pid\":\(holder.processIdentifier)," +
+            "\"recorded_at_unix_milliseconds\":\(recordedAt)," +
+            "\"process_started_at_unix_microseconds\":\(holderStart)}\n"
+        try Data(record.utf8).write(
+            to: fixture.evidenceURL,
+            options: [.atomic]
+        )
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o600],
+            ofItemAtPath: fixture.evidenceURL.path
+        )
+        let currentLauncher = try makeWineRunner(
+            in: fixture.root,
+            wineserverScript: "#!/bin/sh\nexit 0\n"
+        )
+        let runner = makeCuratedRuntimeRunner(
+            managedWineRuntimeFingerprintResolver: { executable in
+                executable.standardizedFileURL.path ==
+                    priorLauncher.standardizedFileURL.path
+                    ? priorFingerprint
+                    : String(repeating: "a", count: 64)
+            }
+        )
+
+        let result = try await runner.run(.shutdownWinePrefix(
+            runtimeExecutable: currentLauncher,
+            prefix: fixture.prefix,
+            logDirectory:
+                fixture.evidenceDirectory.deletingLastPathComponent()
+        ))
+        let stderr = try String(
+            contentsOf: result.stderrLog,
+            encoding: .utf8
+        )
+
+        let exitDeadline = Date().addingTimeInterval(2)
+        while holder.isRunning && Date() < exitDeadline {
+            try await Task.sleep(for: .milliseconds(25))
+        }
+        XCTAssertTrue(result.succeeded, stderr)
+        XCTAssertFalse(holder.isRunning, stderr)
+        XCTAssertFalse(stderr.contains("persisted prior binding"), stderr)
+        XCTAssertFalse(stderr.contains("lsof-only prefix holder"), stderr)
+        XCTAssertFalse(
+            FileManager.default.fileExists(atPath: fixture.evidenceURL.path)
+        )
+        XCTAssertFalse(
+            FileManager.default.fileExists(atPath: fixture.descriptorURL.path)
+        )
+    }
+
     func testSandboxShutdownTreatsEmptyNoServerExitAsSuccessWithoutHostProcessInspection() async throws {
         let root = FileManager.default.temporaryDirectory
             .appending(path: "ForgePlaySandboxShutdown-\(UUID().uuidString)", directoryHint: .isDirectory)
@@ -4247,6 +5262,70 @@ final class SafeProcessRunnerTests: XCTestCase {
         XCTAssertFalse(hasActivityAfterPartialWindowsRecord)
     }
 
+    func testLaunchSteamDoesNotRequireGameRunsDiagnosticDirectory() async throws {
+        let root = FileManager.default.temporaryDirectory.appending(
+            path: "ForgePlayOptionalGameRuns-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let launcher = root.appending(path: "wine")
+        let prefix = root.appending(
+            path: "Prefixes/SteamShared",
+            directoryHint: .isDirectory
+        )
+        let steamDirectory = prefix.appending(
+            path: "drive_c/Program Files (x86)/Steam",
+            directoryHint: .isDirectory
+        )
+        let steamExecutable = steamDirectory.appending(path: "steam.exe")
+        let logs = root.appending(path: "Logs", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(
+            at: steamDirectory,
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.createDirectory(
+            at: logs,
+            withIntermediateDirectories: true
+        )
+        try Data().write(to: steamExecutable)
+        try makeManagedD3DMetalRenderer(for: prefix)
+        try "#!/bin/sh\nexit 0\n".write(
+            to: launcher,
+            atomically: true,
+            encoding: .utf8
+        )
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o755],
+            ofItemAtPath: launcher.path
+        )
+        try Data("diagnostic path unavailable".utf8).write(
+            to: logs.appending(path: "GameRuns")
+        )
+
+        let result = try await makeCuratedRuntimeRunner(
+            sandboxEnabled: true,
+            managedWineProcessJournalEnabled: false
+        ).run(.launchSteam(
+            runtimeExecutable: launcher,
+            prefix: prefix,
+            steamExecutable: steamExecutable,
+            steamArguments: [],
+            graphicsBackend: .d3dMetal,
+            logDirectory: logs
+        ))
+        let stderr = try String(
+            contentsOf: result.stderrLog,
+            encoding: .utf8
+        )
+
+        XCTAssertTrue(result.succeeded, stderr)
+        XCTAssertTrue(
+            stderr.contains("GameRuns diagnostics unavailable"),
+            stderr
+        )
+    }
+
     func testArmedGameModeRouteWithoutRoutedGameChildDoesNotObstructSteamLifecycle() async throws {
         let root = FileManager.default.temporaryDirectory.appending(
             path: "ForgePlayArmedGameModeRoute-\(UUID().uuidString)",
@@ -4380,6 +5459,20 @@ final class SafeProcessRunnerTests: XCTestCase {
         XCTAssertEqual(secondShutdown.postconditionSatisfied, true)
     }
 
+    func testGameModeLaunchFailsBeforeWineWhenApplicationGroupIsUnavailable() async throws {
+        try await assertGameModePreparationFailureDoesNotLaunchWine(
+            .applicationGroupUnavailable,
+            expectedDiagnosticCode: "coordination-storage-unavailable"
+        )
+    }
+
+    func testGameModeLaunchFailsBeforeWineWhenHostSelectionFails() async throws {
+        try await assertGameModePreparationFailureDoesNotLaunchWine(
+            .hostSelectionFailure,
+            expectedDiagnosticCode: "host-app-missing"
+        )
+    }
+
     func testSandboxManagedPrefixActivityDoesNotTreatWindowsPIDAsDarwinProcess() async throws {
         let root = FileManager.default.temporaryDirectory
             .appending(path: "ForgePlayObservedActivity-\(UUID().uuidString)", directoryHint: .isDirectory)
@@ -4483,7 +5576,7 @@ final class SafeProcessRunnerTests: XCTestCase {
         XCTAssertFalse(hasActivityAfterExit)
     }
 
-    func testLsofOnlyWineHolderIsNeverSignalledAndOnlyBecomesCleanAfterExitReobservation() async throws {
+    func testLsofOnlyForgePlayWineHolderIsAuthenticatedFromProcessTableAndTerminated() async throws {
         try XCTSkipUnless(
             FileManager.default.isExecutableFile(atPath: "/usr/sbin/lsof"),
             "Prefix cleanup verification requires lsof on macOS."
@@ -4505,7 +5598,9 @@ final class SafeProcessRunnerTests: XCTestCase {
         try FileManager.default.createDirectory(at: prefix, withIntermediateDirectories: true)
         try FileManager.default.createDirectory(at: logs, withIntermediateDirectories: true)
 
-        let holderExecutable = root.appending(path: "StaleRuntime/wine")
+        let holderExecutable = root.appending(
+            path: "Previous/ForgePlay.app/Contents/Resources/Runners/ForgePlayRuntime/wine/lib/wine/x86_64-unix/wine"
+        )
         try FileManager.default.createDirectory(
             at: holderExecutable.deletingLastPathComponent(),
             withIntermediateDirectories: true
@@ -4537,37 +5632,15 @@ final class SafeProcessRunnerTests: XCTestCase {
         ))
         let stderr = try String(contentsOf: result.stderrLog, encoding: .utf8)
 
-        XCTAssertFalse(result.succeeded)
-        XCTAssertTrue(holder.isRunning)
-        XCTAssertTrue(
-            stderr.contains("Could not verify Wine prefix process cleanup"),
-            stderr
-        )
-        XCTAssertTrue(
-            registry.prefixURLs.contains(prefix.standardizedFileURL),
-            "failed verification must preserve prefix ownership"
-        )
-
-        holder.terminate()
+        XCTAssertTrue(result.succeeded, stderr)
         let exitDeadline = Date().addingTimeInterval(2)
         while holder.isRunning && Date() < exitDeadline {
             try await Task.sleep(for: .milliseconds(25))
         }
         XCTAssertFalse(holder.isRunning)
-
-        let reobserved = try await runner.run(.shutdownWinePrefix(
-            runtimeExecutable: launcher,
-            prefix: prefix,
-            logDirectory: logs
-        ))
-        let reobservedStderr = try String(contentsOf: reobserved.stderrLog, encoding: .utf8)
-        XCTAssertTrue(
-            reobserved.succeeded,
-            reobservedStderr
-        )
         XCTAssertFalse(
             registry.prefixURLs.contains(prefix.standardizedFileURL),
-            "ownership may clear only after a later clean re-observation"
+            "process-table-authenticated ForgePlay Wine ownership must clear after cleanup"
         )
     }
 
@@ -4681,7 +5754,7 @@ final class SafeProcessRunnerTests: XCTestCase {
         XCTAssertTrue(siblingProcess.isRunning, stderr)
     }
 
-    func testUnrelatedLivePrefixHolderIsNotKilledAndObstructsCleanResult() async throws {
+    func testUnrelatedLivePrefixReaderIsNotKilledAndDoesNotObstructWineCleanup() async throws {
         try XCTSkipUnless(
             FileManager.default.isExecutableFile(atPath: "/usr/sbin/lsof"),
             "Prefix cleanup verification requires lsof on macOS."
@@ -4714,11 +5787,11 @@ final class SafeProcessRunnerTests: XCTestCase {
             logDirectory: logs
         ))
 
-        XCTAssertFalse(result.succeeded)
+        XCTAssertTrue(result.succeeded)
         XCTAssertTrue(unrelatedHolder.isRunning)
     }
 
-    func testMisleadingUntrustedHolderIsNotKilledAndObstructsCleanResult() async throws {
+    func testMisleadingForeignReaderIsNotKilledAndDoesNotObstructWineCleanup() async throws {
         try XCTSkipUnless(
             FileManager.default.isExecutableFile(atPath: "/usr/sbin/lsof"),
             "Prefix cleanup verification requires lsof on macOS."
@@ -4756,7 +5829,7 @@ final class SafeProcessRunnerTests: XCTestCase {
             logDirectory: logs
         ))
 
-        XCTAssertFalse(result.succeeded)
+        XCTAssertTrue(result.succeeded)
         XCTAssertTrue(unrelatedHolder.isRunning)
     }
 
@@ -4933,6 +6006,41 @@ final class SafeProcessRunnerTests: XCTestCase {
         XCTAssertNil(environment["FORGEPLAY_SECRET"])
         XCTAssertNil(environment["DYLD_LIBRARY_PATH"])
         XCTAssertNil(environment["SSH_AUTH_SOCK"])
+    }
+
+    func testProcessEnvironmentScopesFontLocaleFallbackAndDropsOtherLCValues()
+        throws {
+        let fallback = try XCTUnwrap(
+            SteamWineChildPOSIXLocalePolicy.englishUTF8FontFallback
+                .localeIdentifier
+        )
+        let environment = SafeProcessRunner.processEnvironment(
+            overrides: [
+                SafeProcessRunner.wineChildPOSIXLocaleFallbackEnvironmentKey:
+                    fallback,
+                "LANG": fallback,
+                "LC_ALL": fallback
+            ],
+            inherited: [
+                "LANG": "ja_JP.UTF-8",
+                "LC_ALL": "ja_JP.UTF-8",
+                "LC_CTYPE": "ko_KR.UTF-8",
+                "LC_MESSAGES": "zh_TW.UTF-8",
+                "LC_NUMERIC": "de_DE.UTF-8"
+            ]
+        )
+
+        XCTAssertEqual(environment["LANG"], "en_US.UTF-8")
+        XCTAssertEqual(environment["LC_ALL"], "en_US.UTF-8")
+        XCTAssertEqual(
+            environment[
+                SafeProcessRunner.wineChildPOSIXLocaleFallbackEnvironmentKey
+            ],
+            "en_US.UTF-8"
+        )
+        XCTAssertNil(environment["LC_CTYPE"])
+        XCTAssertNil(environment["LC_MESSAGES"])
+        XCTAssertNil(environment["LC_NUMERIC"])
     }
 
     func testBoundedProcessCaptureDrainsLargeOutputWithoutPipeDeadlock() throws {
@@ -5688,7 +6796,12 @@ final class SafeProcessRunnerTests: XCTestCase {
         printf 'D3DM_ENABLE_METALFX=%s\\n' "$D3DM_ENABLE_METALFX"
         printf 'D3DM_NVNGX_PATH=%s\\n' "$D3DM_NVNGX_PATH"
         printf 'D3DM_VENDOR_ID=%s\\n' "$D3DM_VENDOR_ID"
-        printf 'FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP=%s\\n' "$FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP"
+        printf 'FORGEPLAY_NVIDIA_IDENTITY_PROFILE=%s\\n' "$FORGEPLAY_NVIDIA_IDENTITY_PROFILE"
+        printf 'FORGEPLAY_NVIDIA_IDENTITY_VENDOR_ID=%s\\n' "$FORGEPLAY_NVIDIA_IDENTITY_VENDOR_ID"
+        printf 'FORGEPLAY_NVIDIA_IDENTITY_DEVICE_ID=%s\\n' "$FORGEPLAY_NVIDIA_IDENTITY_DEVICE_ID"
+        printf 'FORGEPLAY_NVIDIA_IDENTITY_DEVICE_NAME=%s\\n' "$FORGEPLAY_NVIDIA_IDENTITY_DEVICE_NAME"
+        printf 'FORGEPLAY_NVIDIA_IDENTITY_DRIVER_VERSION=%s\\n' "$FORGEPLAY_NVIDIA_IDENTITY_DRIVER_VERSION"
+        printf 'FORGEPLAY_NVIDIA_IDENTITY_DISPLAY_DRIVER_VERSION=%s\\n' "$FORGEPLAY_NVIDIA_IDENTITY_DISPLAY_DRIVER_VERSION"
         printf 'VK_ICD_FILENAMES=%s\\n' "$VK_ICD_FILENAMES"
         printf 'FORGEPLAY_PROCESS_OBSERVATION_TARGET=%s\\n' "$FORGEPLAY_PROCESS_OBSERVATION_TARGET"
         printf 'FORGEPLAY_PROCESS_ARGUMENT_TARGET=%s\\n' "$FORGEPLAY_PROCESS_ARGUMENT_TARGET"
@@ -5708,12 +6821,24 @@ final class SafeProcessRunnerTests: XCTestCase {
         printf 'FORGEPLAY_GAME_RENDERER_ENV_D3DM_ENABLE_METALFX=%s\\n' "$FORGEPLAY_GAME_RENDERER_ENV_D3DM_ENABLE_METALFX"
         printf 'FORGEPLAY_GAME_RENDERER_ENV_D3DM_NVNGX_PATH=%s\\n' "$FORGEPLAY_GAME_RENDERER_ENV_D3DM_NVNGX_PATH"
         printf 'FORGEPLAY_GAME_RENDERER_ENV_D3DM_VENDOR_ID=%s\\n' "$FORGEPLAY_GAME_RENDERER_ENV_D3DM_VENDOR_ID"
-        printf 'FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP=%s\\n' "$FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP"
+        printf 'FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_PROFILE=%s\\n' "$FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_PROFILE"
+        printf 'FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_VENDOR_ID=%s\\n' "$FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_VENDOR_ID"
+        printf 'FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_DEVICE_ID=%s\\n' "$FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_DEVICE_ID"
+        printf 'FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_DEVICE_NAME=%s\\n' "$FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_DEVICE_NAME"
+        printf 'FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_DRIVER_VERSION=%s\\n' "$FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_DRIVER_VERSION"
+        printf 'FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_DISPLAY_DRIVER_VERSION=%s\\n' "$FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_DISPLAY_DRIVER_VERSION"
         printf 'FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NETWORK_PROFILE=%s\\n' "$FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NETWORK_PROFILE"
+        printf 'FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_D3DMETAL_FRAME_GENERATION_OBSERVATION_FILE=%s\\n' "$FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_D3DMETAL_FRAME_GENERATION_OBSERVATION_FILE"
+        printf 'FORGEPLAY_PROCESS_OBSERVATION_FILE=%s\\n' "$FORGEPLAY_PROCESS_OBSERVATION_FILE"
         printf 'FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_ENABLE_METALFX=%s\\n' "$FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_ENABLE_METALFX"
         printf 'FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_NVNGX_PATH=%s\\n' "$FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_NVNGX_PATH"
         printf 'FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_VENDOR_ID=%s\\n' "$FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_VENDOR_ID"
-        printf 'FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP=%s\\n' "$FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP"
+        printf 'FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NVIDIA_IDENTITY_PROFILE=%s\\n' "$FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NVIDIA_IDENTITY_PROFILE"
+        printf 'FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NVIDIA_IDENTITY_VENDOR_ID=%s\\n' "$FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NVIDIA_IDENTITY_VENDOR_ID"
+        printf 'FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NVIDIA_IDENTITY_DEVICE_ID=%s\\n' "$FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NVIDIA_IDENTITY_DEVICE_ID"
+        printf 'FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NVIDIA_IDENTITY_DEVICE_NAME=%s\\n' "$FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NVIDIA_IDENTITY_DEVICE_NAME"
+        printf 'FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NVIDIA_IDENTITY_DRIVER_VERSION=%s\\n' "$FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NVIDIA_IDENTITY_DRIVER_VERSION"
+        printf 'FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NVIDIA_IDENTITY_DISPLAY_DRIVER_VERSION=%s\\n' "$FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NVIDIA_IDENTITY_DISPLAY_DRIVER_VERSION"
         printf 'FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NETWORK_PROFILE=%s\\n' "$FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NETWORK_PROFILE"
         printf 'FORGEPLAY_GAME_RENDERER_BASE_HELPER_SUFFIX_RULES_V1=%s\\n' "$FORGEPLAY_GAME_RENDERER_BASE_HELPER_SUFFIX_RULES_V1"
         printf 'FORGEPLAY_NETWORK_PROFILE=%s\\n' "$FORGEPLAY_NETWORK_PROFILE"
@@ -5739,6 +6864,11 @@ final class SafeProcessRunnerTests: XCTestCase {
             graphicsBackend: .d3dMetal,
             compatibilitySelection: SteamPrelaunchCompatibilitySelection(
                 rendererSelection: .d3dMetalNVIDIA,
+                frameGenerationConfiguration: FrameGenerationConfiguration(
+                    isEnabled: true,
+                    targetFrameRate: .fps120,
+                    isFrameCheckEnabled: true
+                ),
                 networkSelection: .wifiIdentity,
                 audioInputSelection: .disabled
             ),
@@ -5748,6 +6878,29 @@ final class SafeProcessRunnerTests: XCTestCase {
         let outputLines = output.split(whereSeparator: \.isNewline).map(String.init)
 
         XCTAssertTrue(result.succeeded)
+        let observationLog = try XCTUnwrap(result.processObservationLog)
+        XCTAssertTrue(observationLog.standardizedFileURL.path.hasPrefix("/"))
+        XCTAssertTrue(
+            outputLines.contains(
+                "FORGEPLAY_GAME_RENDERER_ENV_" +
+                "FORGEPLAY_D3DMETAL_FRAME_GENERATION_OBSERVATION_FILE=" +
+                observationLog.standardizedFileURL.path
+            ),
+            output
+        )
+        let windowsObservation = try XCTUnwrap(
+            outputLines.first {
+                $0.hasPrefix("FORGEPLAY_PROCESS_OBSERVATION_FILE=")
+            }
+        )
+        XCTAssertTrue(
+            windowsObservation.hasPrefix("FORGEPLAY_PROCESS_OBSERVATION_FILE=Z:"),
+            output
+        )
+        XCTAssertFalse(
+            windowsObservation.hasSuffix(observationLog.standardizedFileURL.path),
+            output
+        )
         let steamDLLOverrides = try XCTUnwrap(outputLines.first { $0.hasPrefix("WINEDLLOVERRIDES=") })
         XCTAssertFalse(steamDLLOverrides.contains("d3d11,dxgi"), output)
         XCTAssertFalse(steamDLLOverrides.contains("winemetal"), output)
@@ -5759,10 +6912,9 @@ final class SafeProcessRunnerTests: XCTestCase {
         XCTAssertTrue(outputLines.contains("D3DM_ENABLE_METALFX="), output)
         XCTAssertTrue(outputLines.contains("D3DM_NVNGX_PATH="), output)
         XCTAssertTrue(outputLines.contains("D3DM_VENDOR_ID="), output)
-        XCTAssertTrue(
-            outputLines.contains("FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP="),
-            output
-        )
+        for key in GraphicsIdentityPolicy.EnvironmentKey.all {
+            XCTAssertTrue(outputLines.contains("\(key)="), output)
+        }
         XCTAssertTrue(output.contains("VK_ICD_FILENAMES="), output)
         XCTAssertFalse(outputLines.contains("VK_ICD_FILENAMES=/dev/null"), output)
         XCTAssertTrue(output.contains("wine/etc/vulkan/icd.d/MoltenVK_icd.json"), output)
@@ -5827,12 +6979,16 @@ final class SafeProcessRunnerTests: XCTestCase {
             outputLines.contains("FORGEPLAY_GAME_RENDERER_ENV_D3DM_VENDOR_ID=0x10de"),
             output
         )
-        XCTAssertTrue(
-            outputLines.contains(
-                "FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP=1"
-            ),
-            output
-        )
+        let expectedIdentity =
+            GraphicsIdentityPolicy.nvidiaRTX4090Driver56109.childEnvironment
+        for (key, value) in expectedIdentity {
+            XCTAssertTrue(
+                outputLines.contains(
+                    "FORGEPLAY_GAME_RENDERER_ENV_\(key)=\(value)"
+                ),
+                output
+            )
+        }
         XCTAssertTrue(
             outputLines.contains(
                 "FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NETWORK_PROFILE=wifi-identity"
@@ -5857,12 +7013,14 @@ final class SafeProcessRunnerTests: XCTestCase {
             ),
             output
         )
-        XCTAssertTrue(
-            outputLines.contains(
-                "FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP=__FORGEPLAY_UNSET__"
-            ),
-            output
-        )
+        for key in GraphicsIdentityPolicy.EnvironmentKey.all {
+            XCTAssertTrue(
+                outputLines.contains(
+                    "FORGEPLAY_GAME_RENDERER_BASE_ENV_\(key)=__FORGEPLAY_UNSET__"
+                ),
+                output
+            )
+        }
         XCTAssertTrue(
             outputLines.contains(
                 "FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NETWORK_PROFILE=__FORGEPLAY_UNSET__"
@@ -6107,9 +7265,7 @@ final class SafeProcessRunnerTests: XCTestCase {
 
         let steamEnvironment = try SafeProcessRunner.runnerEnvironment(
             for: launcher,
-            base: ["WINEPREFIX": prefix.path],
-            supplementalRendererAuthenticator:
-                SafeProcessRunnerTestSupplementalRendererAuthenticator()
+            base: ["WINEPREFIX": prefix.path]
         )
         let steamEnvironmentPaths = [
             steamEnvironment["DYLD_LIBRARY_PATH"],
@@ -6123,9 +7279,7 @@ final class SafeProcessRunnerTests: XCTestCase {
         let gameEnvironment = try SafeProcessRunner.runnerEnvironment(
             for: launcher,
             base: ["WINEPREFIX": prefix.path],
-            graphicsBackend: .d3dMetal,
-            supplementalRendererAuthenticator:
-                SafeProcessRunnerTestSupplementalRendererAuthenticator()
+            graphicsBackend: .d3dMetal
         )
         let dynamicLibraryPaths = gameEnvironment["DYLD_LIBRARY_PATH"]?
             .split(separator: ":")
@@ -6162,9 +7316,7 @@ final class SafeProcessRunnerTests: XCTestCase {
         let modules = try SafeProcessRunner.rendererWindowsModuleFilesByWindowsDirectory(
             for: launcher,
             graphicsBackend: .d3dMetal,
-            prefix: prefix,
-            supplementalRendererAuthenticator:
-                SafeProcessRunnerTestSupplementalRendererAuthenticator()
+            prefix: prefix
         )
         XCTAssertEqual(
             modules["system32"]?
@@ -6173,104 +7325,6 @@ final class SafeProcessRunnerTests: XCTestCase {
             supplementalRenderer.appending(path: "wine/x86_64-windows/d3d11.dll")
                 .standardizedFileURL.path
         )
-    }
-
-    func testManagedSupplementalRendererIsReauthenticatedBeforeDYLDExposureAfterTamper()
-        throws {
-        let managedRoot = FileManager.default.temporaryDirectory.appending(
-            path: "ForgePlayManagedRendererTamper-\(UUID().uuidString)",
-            directoryHint: .isDirectory
-        )
-        defer { try? FileManager.default.removeItem(at: managedRoot) }
-
-        let prefix = managedRoot.appending(
-            path: "Prefixes/SteamShared",
-            directoryHint: .isDirectory
-        )
-        let launcher = managedRoot.appending(
-            path: "BundledResources/Runners/ForgePlayRuntime/wine/bin/wine"
-        )
-        let rendererRoot = ForgePlaySupplementalRendererPolicy.rendererRoot(
-            forManagedRoot: managedRoot
-        )
-        try FileManager.default.createDirectory(
-            at: prefix,
-            withIntermediateDirectories: true
-        )
-        try FileManager.default.createDirectory(
-            at: launcher.deletingLastPathComponent(),
-            withIntermediateDirectories: true
-        )
-        try "#!/bin/sh\nexit 0\n".write(
-            to: launcher,
-            atomically: true,
-            encoding: .utf8
-        )
-        try FileManager.default.setAttributes(
-            [.posixPermissions: 0o755],
-            ofItemAtPath: launcher.path
-        )
-        try makeCompleteD3DMetalRenderer(at: rendererRoot)
-
-        let sharedLibrary = rendererRoot.appending(
-            path: D3DMetalRendererPayloadContract.sharedLibraryRelativePath
-        )
-        let expectedSharedLibrary = try Data(contentsOf: sharedLibrary)
-        let authenticator =
-            SafeProcessRunnerTestSupplementalRendererAuthenticator {
-                candidateRoot,
-                _ in
-                let candidateSharedLibrary = candidateRoot.appending(
-                    path: D3DMetalRendererPayloadContract
-                        .sharedLibraryRelativePath
-                )
-                guard try Data(contentsOf: candidateSharedLibrary) ==
-                        expectedSharedLibrary else {
-                    throw AppleSupplementalRendererAuthenticationError
-                        .signatureRejected(
-                            candidateSharedLibrary,
-                            errSecCSReqFailed
-                        )
-                }
-            }
-
-        let validEnvironment = try SafeProcessRunner.runnerEnvironment(
-            for: launcher,
-            base: ["WINEPREFIX": prefix.path],
-            graphicsBackend: .d3dMetal,
-            supplementalRendererAuthenticator: authenticator
-        )
-        XCTAssertTrue(
-            validEnvironment["DYLD_LIBRARY_PATH"]?
-                .split(separator: ":")
-                .map(String.init)
-                .contains(rendererRoot.path) == true
-        )
-
-        try Data("post-import-replacement".utf8).write(
-            to: sharedLibrary,
-            options: .atomic
-        )
-        do {
-            _ = try SafeProcessRunner.runnerEnvironment(
-                for: launcher,
-                base: ["WINEPREFIX": prefix.path],
-                graphicsBackend: .d3dMetal,
-                supplementalRendererAuthenticator: authenticator
-            )
-            XCTFail("A replaced managed native library must not reach DYLD paths.")
-        } catch let error as
-            AppleSupplementalRendererAuthenticationError {
-            guard case .signatureRejected(let rejectedURL, _) = error else {
-                return XCTFail("Unexpected authentication error: \(error)")
-            }
-            XCTAssertEqual(
-                rejectedURL.standardizedFileURL,
-                sharedLibrary.standardizedFileURL
-            )
-        } catch {
-            XCTFail("Unexpected runner error: \(error)")
-        }
     }
 
     func testRunnerEnvironmentExposesWineExternalFrameworkDirectory() throws {
@@ -6701,6 +7755,155 @@ final class SafeProcessRunnerTests: XCTestCase {
         XCTAssertTrue(result.succeeded)
         XCTAssertEqual(result.actionName, "waitForWinePrefix")
         XCTAssertEqual(output, "WINEPREFIX=\(prefix.path)\n-w\n")
+    }
+
+    func testSuccessfulWinePrefixWaitRetiresEverySamePrefixSessionArtifact() async throws {
+        let root = FileManager.default.temporaryDirectory.appending(
+            path: "ForgePlayNaturalWaitRetirement-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let launcher = try makeWineRunner(
+            in: root,
+            wineserverScript: "#!/bin/sh\nexit 0\n"
+        )
+        let prefix = root.appending(
+            path: "Prefix",
+            directoryHint: .isDirectory
+        )
+        let logs = root.appending(
+            path: "Logs",
+            directoryHint: .isDirectory
+        )
+        let evidenceDirectory = root.appending(
+            path: "ManagedWineProcessEvidence",
+            directoryHint: .isDirectory
+        )
+        for directory in [prefix, logs, evidenceDirectory] {
+            try FileManager.default.createDirectory(
+                at: directory,
+                withIntermediateDirectories: true
+            )
+        }
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o700],
+            ofItemAtPath: evidenceDirectory.path
+        )
+
+        let registry = ManagedWineSessionRegistry()
+        let artifacts = try [Int32.max - 10, Int32.max - 11].map {
+            try recordDeadManagedWineSession(
+                processIdentifier: $0,
+                prefix: prefix,
+                runtimeRoot: root.appending(
+                    path: "FakeRuntime/wine",
+                    directoryHint: .isDirectory
+                ),
+                evidenceDirectory: evidenceDirectory,
+                registry: registry
+            )
+        }
+        XCTAssertEqual(registry.launchSessions(for: prefix).count, 2)
+
+        let result = try await makeCuratedRuntimeRunner(
+            managedWineSessionRegistry: registry
+        ).run(.waitForWinePrefix(
+            runtimeExecutable: launcher,
+            prefix: prefix,
+            logDirectory: logs
+        ))
+
+        XCTAssertTrue(result.succeeded)
+        XCTAssertEqual(result.postconditionSatisfied, true)
+        XCTAssertTrue(registry.launchSessions(for: prefix).isEmpty)
+        XCTAssertFalse(registry.prefixURLs.contains(prefix.standardizedFileURL))
+        for artifact in artifacts {
+            XCTAssertFalse(
+                FileManager.default.fileExists(
+                    atPath: artifact.evidenceURL.path
+                )
+            )
+            XCTAssertFalse(
+                FileManager.default.fileExists(
+                    atPath: artifact.descriptorURL.path
+                )
+            )
+        }
+    }
+
+    func testFailedWinePrefixWaitPreservesSamePrefixSessionsForCleanup() async throws {
+        let root = FileManager.default.temporaryDirectory.appending(
+            path: "ForgePlayFailedNaturalWait-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let launcher = try makeWineRunner(
+            in: root,
+            wineserverScript: "#!/bin/sh\nexit 7\n"
+        )
+        let prefix = root.appending(
+            path: "Prefix",
+            directoryHint: .isDirectory
+        )
+        let logs = root.appending(
+            path: "Logs",
+            directoryHint: .isDirectory
+        )
+        let evidenceDirectory = root.appending(
+            path: "ManagedWineProcessEvidence",
+            directoryHint: .isDirectory
+        )
+        for directory in [prefix, logs, evidenceDirectory] {
+            try FileManager.default.createDirectory(
+                at: directory,
+                withIntermediateDirectories: true
+            )
+        }
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o700],
+            ofItemAtPath: evidenceDirectory.path
+        )
+
+        let registry = ManagedWineSessionRegistry()
+        let artifacts = try [Int32.max - 20, Int32.max - 21].map {
+            try recordDeadManagedWineSession(
+                processIdentifier: $0,
+                prefix: prefix,
+                runtimeRoot: root.appending(
+                    path: "FakeRuntime/wine",
+                    directoryHint: .isDirectory
+                ),
+                evidenceDirectory: evidenceDirectory,
+                registry: registry
+            )
+        }
+
+        let result = try await makeCuratedRuntimeRunner(
+            managedWineSessionRegistry: registry
+        ).run(.waitForWinePrefix(
+            runtimeExecutable: launcher,
+            prefix: prefix,
+            logDirectory: logs
+        ))
+
+        XCTAssertFalse(result.succeeded)
+        XCTAssertNil(result.postconditionSatisfied)
+        XCTAssertEqual(registry.launchSessions(for: prefix).count, 2)
+        XCTAssertTrue(registry.prefixURLs.contains(prefix.standardizedFileURL))
+        for artifact in artifacts {
+            XCTAssertTrue(
+                FileManager.default.fileExists(
+                    atPath: artifact.evidenceURL.path
+                )
+            )
+            XCTAssertTrue(
+                FileManager.default.fileExists(
+                    atPath: artifact.descriptorURL.path
+                )
+            )
+        }
     }
 
     func testDescriptorBoundPrefixCommandsBindTheFinalSelectedExecutable() async throws {
@@ -7146,6 +8349,10 @@ final class SafeProcessRunnerTests: XCTestCase {
             fileURLWithPath: ngxWindowsDirectory,
             isDirectory: true
         ).appending(path: "nvngx.dll")
+        let derivedNGXAlias = URL(
+            fileURLWithPath: ngxWindowsDirectory,
+            isDirectory: true
+        ).appending(path: "_nvngx.dll")
         let sourceNGX = renderer.appending(
             path: D3DMetalNGXBridgeContract.sourceWindowsModuleRelativePath
         )
@@ -7153,9 +8360,21 @@ final class SafeProcessRunnerTests: XCTestCase {
             try Data(contentsOf: derivedNGX),
             try Data(contentsOf: sourceNGX)
         )
+        XCTAssertEqual(
+            try Data(contentsOf: derivedNGXAlias),
+            try Data(contentsOf: sourceNGX)
+        )
         XCTAssertTrue(
             environment["FORGEPLAY_GAME_RENDERER_ENV_WINEDLLOVERRIDES"]?
-                .contains("nvngx") == true
+                .contains("_nvngx") == true
+        )
+        XCTAssertEqual(
+            environment[
+                D3DMetalNVIDIAProviderContract
+                    .providerAliasPathsEnvironmentKey
+            ],
+            D3DMetalNVIDIAProviderContract.exactNGXAliasWindowsPaths
+                .joined(separator: ";")
         )
         XCTAssertTrue(
             environment["FORGEPLAY_GAME_RENDERER_DLL_PATH_X64"]?
@@ -7179,7 +8398,7 @@ final class SafeProcessRunnerTests: XCTestCase {
                 for: fixture.launcher,
                 prefix: fixture.prefix,
                 graphicsBackend: .d3dMetal,
-                rendererSelection: .d3dMetal,
+                rendererSelection: .d3dMetalNVIDIA,
                 networkSelection: .standard,
                 logDirectory: fixture.root
             )
@@ -7195,30 +8414,41 @@ final class SafeProcessRunnerTests: XCTestCase {
 
         XCTAssertEqual(
             standardEnvironment["FORGEPLAY_GAME_RENDERER_REQUESTED"],
-            SteamRendererPolicySelection.d3dMetal.rawValue
+            SteamRendererPolicySelection.d3dMetalNVIDIA.rawValue
         )
         XCTAssertEqual(
             standardEnvironment["FORGEPLAY_GAME_RENDERER_ENV_D3DM_VENDOR_ID"],
-            "__FORGEPLAY_UNSET__"
+            "0x10de"
         )
         XCTAssertEqual(
             standardEnvironment[
                 "FORGEPLAY_GAME_RENDERER_ENV_D3DM_ENABLE_METALFX"
             ],
-            "__FORGEPLAY_UNSET__"
+            "1"
         )
         XCTAssertEqual(
             standardEnvironment[
                 "FORGEPLAY_GAME_RENDERER_ENV_D3DM_NVNGX_PATH"
             ],
-            "__FORGEPLAY_UNSET__"
+            compatibilityEnvironment[
+                "FORGEPLAY_GAME_RENDERER_ENV_D3DM_NVNGX_PATH"
+            ]
         )
         XCTAssertEqual(
             standardEnvironment[
-                "FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP"
+                D3DMetalNVIDIAProviderContract
+                    .providerAliasPathsEnvironmentKey
             ],
-            "__FORGEPLAY_UNSET__"
+            D3DMetalNVIDIAProviderContract.exactNGXAliasWindowsPaths
+                .joined(separator: ";")
         )
+        let nvidiaIdentity = GraphicsIdentityPolicy.nvidiaRTX4090Driver56109
+        for key in GraphicsIdentityPolicy.EnvironmentKey.all {
+            XCTAssertEqual(
+                standardEnvironment["FORGEPLAY_GAME_RENDERER_ENV_\(key)"],
+                nvidiaIdentity.childEnvironment[key]
+            )
+        }
         XCTAssertEqual(
             standardEnvironment[
                 "FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NETWORK_PROFILE"
@@ -7230,15 +8460,30 @@ final class SafeProcessRunnerTests: XCTestCase {
             SteamRendererPolicySelection.d3dMetalNVIDIA.rawValue
         )
         XCTAssertEqual(
+            compatibilityEnvironment[
+                D3DMetalNVIDIAProviderContract
+                    .providerAliasPathsEnvironmentKey
+            ],
+            D3DMetalNVIDIAProviderContract.exactNGXAliasWindowsPaths
+                .joined(separator: ";")
+        )
+        XCTAssertEqual(
             compatibilityEnvironment["FORGEPLAY_GAME_RENDERER_ENV_D3DM_VENDOR_ID"],
             "0x10de"
         )
         XCTAssertEqual(
-            compatibilityEnvironment[
-                "FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP"
-            ],
-            "1"
+            nvidiaIdentity.profileIdentifier,
+            "rtx-4090-driver-561.09-v2"
         )
+        XCTAssertEqual(nvidiaIdentity.userModeDriverVersion, "561.09")
+        XCTAssertEqual(nvidiaIdentity.displayDriverVersion, "32.0.15.6109")
+        for (key, value) in
+            nvidiaIdentity.childEnvironment {
+            XCTAssertEqual(
+                compatibilityEnvironment["FORGEPLAY_GAME_RENDERER_ENV_\(key)"],
+                value
+            )
+        }
         XCTAssertEqual(
             compatibilityEnvironment[
                 "FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NETWORK_PROFILE"
@@ -7323,11 +8568,16 @@ final class SafeProcessRunnerTests: XCTestCase {
             isDirectory: true
         )
         let derivedNGX = ngxDirectory.appending(path: "nvngx.dll")
+        let derivedNGXAlias = ngxDirectory.appending(path: "_nvngx.dll")
         let sourceNGX = renderer.appending(
             path: D3DMetalNGXBridgeContract.sourceWindowsModuleRelativePath
         )
         let originalSource = try Data(contentsOf: sourceNGX)
         try Data("replaced bridge".utf8).write(to: derivedNGX, options: [.atomic])
+        try Data("replaced alias".utf8).write(
+            to: derivedNGXAlias,
+            options: [.atomic]
+        )
 
         let secondEnvironment = try SafeProcessRunner.steamGameRendererPolicyEnvironment(
             for: launcher,
@@ -7343,6 +8593,7 @@ final class SafeProcessRunnerTests: XCTestCase {
         )
         XCTAssertEqual(try Data(contentsOf: sourceNGX), originalSource)
         XCTAssertEqual(try Data(contentsOf: derivedNGX), originalSource)
+        XCTAssertEqual(try Data(contentsOf: derivedNGXAlias), originalSource)
         XCTAssertTrue(
             D3DMetalNGXBridgeContract.isUsable(
                 at: ngxDirectory
@@ -7582,9 +8833,7 @@ final class SafeProcessRunnerTests: XCTestCase {
             for: launcher,
             prefix: prefix,
             graphicsBackend: .d3dMetal,
-            logDirectory: managedRoot,
-            supplementalRendererAuthenticator:
-                SafeProcessRunnerTestSupplementalRendererAuthenticator()
+            logDirectory: managedRoot
         )
 
         XCTAssertEqual(environment["FORGEPLAY_GAME_RENDERER_POLICY"], "d3dMetal")
@@ -7756,6 +9005,283 @@ final class SafeProcessRunnerTests: XCTestCase {
             graphicsBackend: .d3dMetal
         )
         XCTAssertTrue(modules.values.allSatisfy(\.isEmpty))
+    }
+
+    func testFrameGenerationRequestUsesProductionProxyPathWithoutPrelaunchFileGate() throws {
+        let fixture = try makeRendererRoutingFixture(
+            "FrameGenerationNoPrelaunchGate"
+        )
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        try makeCompleteD3DMetalRenderer(
+            at: fixture.rendererRoot.appending(
+                path: "d3dmetal",
+                directoryHint: .isDirectory
+            )
+        )
+        let expectedProxy = fixture.root.appending(
+            path: "ForgePlayRuntime/Frameworks/ForgePlayD3DMetalFrameGenerationProxy.dylib"
+        ).standardizedFileURL
+        XCTAssertFalse(
+            FileManager.default.fileExists(atPath: expectedProxy.path),
+            "the fixture intentionally proves launch environment construction does not gate on the dylib"
+        )
+
+        let environment = try SafeProcessRunner
+            .steamGameRendererPolicyEnvironment(
+                for: fixture.launcher,
+                prefix: fixture.prefix,
+                graphicsBackend: .d3dMetal,
+                rendererSelection: .d3dMetalNVIDIA,
+                frameGenerationConfiguration: FrameGenerationConfiguration(
+                    isEnabled: true,
+                    targetFrameRate: .fps120,
+                    isFrameCheckEnabled: true
+                ),
+                logDirectory: fixture.root
+            )
+
+        XCTAssertEqual(
+            environment[
+                "FORGEPLAY_GAME_RENDERER_ENV_" +
+                    FrameGenerationEnvironmentContract.enabledKey
+            ],
+            "1"
+        )
+        XCTAssertEqual(
+            environment[
+                "FORGEPLAY_GAME_RENDERER_ENV_" +
+                    FrameGenerationEnvironmentContract.targetFrameRateKey
+            ],
+            "120"
+        )
+        XCTAssertEqual(
+            environment[
+                "FORGEPLAY_GAME_RENDERER_ENV_" +
+                    FrameGenerationEnvironmentContract.frameCheckEnabledKey
+            ],
+            "1"
+        )
+        XCTAssertEqual(
+            environment[
+                "FORGEPLAY_GAME_RENDERER_ENV_" +
+                    FrameGenerationEnvironmentContract.proxyPathKey
+            ],
+            expectedProxy.path
+        )
+    }
+
+    func testFrameGenerationWithFrameCheckOffProjectsExplicitZero() throws {
+        let fixture = try makeRendererRoutingFixture(
+            "FrameGenerationFrameCheckOff"
+        )
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        try makeCompleteD3DMetalRenderer(
+            at: fixture.rendererRoot.appending(
+                path: "d3dmetal",
+                directoryHint: .isDirectory
+            )
+        )
+
+        let environment = try SafeProcessRunner
+            .steamGameRendererPolicyEnvironment(
+                for: fixture.launcher,
+                prefix: fixture.prefix,
+                graphicsBackend: .d3dMetal,
+                rendererSelection: .d3dMetalNVIDIA,
+                frameGenerationConfiguration: FrameGenerationConfiguration(
+                    isEnabled: true,
+                    targetFrameRate: .fps120,
+                    isFrameCheckEnabled: false
+                ),
+                logDirectory: fixture.root
+            )
+
+        XCTAssertEqual(
+            environment[
+                "FORGEPLAY_GAME_RENDERER_ENV_" +
+                    FrameGenerationEnvironmentContract.enabledKey
+            ],
+            "1"
+        )
+        XCTAssertEqual(
+            environment[
+                "FORGEPLAY_GAME_RENDERER_ENV_" +
+                    FrameGenerationEnvironmentContract.frameCheckEnabledKey
+            ],
+            "0"
+        )
+    }
+
+    func testSteamCommandSpecFallsBackFromNVIDIAToPlainD3DMetalThenBaseWine()
+        async throws {
+        for keepsPlainD3DMetal in [true, false] {
+            let fixture = try makeRendererRoutingFixture(
+                keepsPlainD3DMetal
+                    ? "NVIDIAFallbackPlainD3DMetal"
+                    : "RendererFallbackBaseWine"
+            )
+            defer { try? FileManager.default.removeItem(at: fixture.root) }
+            let steamExecutable = fixture.prefix.appending(
+                path: "drive_c/Program Files (x86)/Steam/steam.exe"
+            )
+            let logs = fixture.root.appending(
+                path: "Logs",
+                directoryHint: .isDirectory
+            )
+            try FileManager.default.createDirectory(
+                at: steamExecutable.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            try FileManager.default.createDirectory(
+                at: logs,
+                withIntermediateDirectories: true
+            )
+            try Data("steam".utf8).write(to: steamExecutable)
+            if keepsPlainD3DMetal {
+                let renderer = fixture.rendererRoot.appending(
+                    path: "d3dmetal",
+                    directoryHint: .isDirectory
+                )
+                try makeCompleteD3DMetalRenderer(at: renderer)
+                for relativePath in
+                    D3DMetalRendererPayloadContract
+                        .nvidiaMetalFXClosureRelativePaths + [
+                            D3DMetalNVAPIAliasContract.windowsAliasRelativePath
+                        ] {
+                    try? FileManager.default.removeItem(
+                        at: renderer.appending(path: relativePath)
+                    )
+                }
+            }
+            let runner = makeCuratedRuntimeRunner(
+                managedWineProcessJournalEnabled: false
+            )
+            let spec = try await runner.commandSpec(
+                for: .launchSteam(
+                    runtimeExecutable: fixture.launcher,
+                    prefix: fixture.prefix,
+                    steamExecutable: steamExecutable,
+                    steamArguments: [],
+                    graphicsBackend: .d3dMetal,
+                    compatibilitySelection:
+                        SteamPrelaunchCompatibilitySelection(
+                            rendererSelection: .d3dMetalNVIDIA,
+                            frameGenerationConfiguration:
+                                FrameGenerationConfiguration(
+                                    isEnabled: true,
+                                    targetFrameRate: .fps120
+                                ),
+                            networkSelection: .standard,
+                            audioInputSelection: .enabled
+                        ),
+                    logDirectory: logs
+                )
+            )
+
+            XCTAssertEqual(
+                spec.runtimeCompatibility["rendererRequested"],
+                SteamRendererPolicySelection.d3dMetalNVIDIA.rawValue
+            )
+            XCTAssertEqual(
+                spec.runtimeCompatibility["rendererEffective"],
+                keepsPlainD3DMetal
+                    ? SteamRendererPolicySelection.d3dMetal.rawValue
+                    : "baseWine"
+            )
+            XCTAssertEqual(
+                spec.runtimeCompatibility["frameGenerationStatus"],
+                "disabled-nvidia-fallback"
+            )
+            XCTAssertEqual(
+                spec.runtimeCompatibility["wineChildPOSIXLocale"],
+                "inherited"
+            )
+            XCTAssertNotEqual(
+                spec.environment[
+                    "FORGEPLAY_GAME_RENDERER_ENV_" +
+                        FrameGenerationEnvironmentContract.enabledKey
+                ],
+                "1"
+            )
+            if keepsPlainD3DMetal {
+                XCTAssertEqual(
+                    spec.environment["FORGEPLAY_GAME_RENDERER_REQUESTED"],
+                    SteamRendererPolicySelection.d3dMetal.rawValue
+                )
+            } else {
+                XCTAssertNil(
+                    spec.environment["FORGEPLAY_GAME_RENDERER_POLICY_ENABLED"]
+                )
+            }
+        }
+    }
+
+    func testFrameGenerationRejectsHiddenStandardD3DMetalSelection() throws {
+        let fixture = try makeRendererRoutingFixture(
+            "FrameGenerationStandardD3DMetalRejected"
+        )
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        try makeCompleteD3DMetalRenderer(
+            at: fixture.rendererRoot.appending(
+                path: "d3dmetal",
+                directoryHint: .isDirectory
+            )
+        )
+
+        XCTAssertThrowsError(
+            try SafeProcessRunner.steamGameRendererPolicyEnvironment(
+                for: fixture.launcher,
+                prefix: fixture.prefix,
+                graphicsBackend: .d3dMetal,
+                rendererSelection: .d3dMetal,
+                frameGenerationConfiguration: FrameGenerationConfiguration(
+                    isEnabled: true,
+                    targetFrameRate: .fps120,
+                    isFrameCheckEnabled: true
+                ),
+                logDirectory: fixture.root
+            )
+        ) { error in
+            XCTAssertEqual(
+                error as? FrameGenerationConfigurationError,
+                .d3dMetalNVIDIARendererRequired
+            )
+        }
+    }
+
+    func testFrameGenerationOffLeavesOriginalD3DMetalPathWithoutProxyEnvironment() throws {
+        let fixture = try makeRendererRoutingFixture("FrameGenerationOff")
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        try makeCompleteD3DMetalRenderer(
+            at: fixture.rendererRoot.appending(
+                path: "d3dmetal",
+                directoryHint: .isDirectory
+            )
+        )
+
+        let environment = try SafeProcessRunner
+            .steamGameRendererPolicyEnvironment(
+                for: fixture.launcher,
+                prefix: fixture.prefix,
+                graphicsBackend: .d3dMetal,
+                rendererSelection: .d3dMetalNVIDIA,
+                frameGenerationConfiguration: .off,
+                logDirectory: fixture.root
+            )
+
+        for key in [
+            FrameGenerationEnvironmentContract.enabledKey,
+            FrameGenerationEnvironmentContract.targetFrameRateKey,
+            FrameGenerationEnvironmentContract.frameCheckEnabledKey,
+            FrameGenerationEnvironmentContract.proxyPathKey,
+            FrameGenerationEnvironmentContract.observationFileKey
+        ] {
+            XCTAssertNil(environment[key])
+            XCTAssertEqual(
+                environment["FORGEPLAY_GAME_RENDERER_ENV_" + key],
+                "__FORGEPLAY_UNSET__"
+            )
+        }
     }
 
     private func makeCompleteD3DMetalRenderer(at renderer: URL) throws {
@@ -8020,6 +9546,135 @@ final class SafeProcessRunnerTests: XCTestCase {
         return (root, launcher, prefix, rendererRoot)
     }
 
+    private enum GameModePreparationFailureFixture: Equatable, Sendable {
+        case applicationGroupUnavailable
+        case hostSelectionFailure
+    }
+
+    private func assertGameModePreparationFailureDoesNotLaunchWine(
+        _ failure: GameModePreparationFailureFixture,
+        expectedDiagnosticCode: String
+    ) async throws {
+        let fixture = try makeRendererRoutingFixture(
+            "GameModeFailClosed-\(expectedDiagnosticCode)"
+        )
+        defer { try? FileManager.default.removeItem(at: fixture.root) }
+        let steamExecutable = fixture.prefix.appending(
+            path: "drive_c/Program Files (x86)/Steam/steam.exe"
+        )
+        let logs = fixture.root.appending(
+            path: "Logs",
+            directoryHint: .isDirectory
+        )
+        let launchMarker = fixture.root.appending(path: "wine-launched")
+        let groupIdentifier = "group.com.forgeplay.tests"
+        let groupContainer = fixture.root.appending(
+            path: "GameModeApplicationGroup",
+            directoryHint: .isDirectory
+        )
+        try FileManager.default.createDirectory(
+            at: steamExecutable.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.createDirectory(
+            at: logs,
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.createDirectory(
+            at: groupContainer,
+            withIntermediateDirectories: true
+        )
+        try Data("steam".utf8).write(to: steamExecutable)
+        try makeCompleteD3DMetalRenderer(
+            at: fixture.rendererRoot.appending(
+                path: "d3dmetal",
+                directoryHint: .isDirectory
+            )
+        )
+        try "#!/bin/sh\ntouch \"\(launchMarker.path)\"\nexit 0\n".write(
+            to: fixture.launcher,
+            atomically: true,
+            encoding: .utf8
+        )
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o755],
+            ofItemAtPath: fixture.launcher.path
+        )
+
+        let groupResolver: SafeProcessRunner
+            .GameModeHostApplicationGroupContainerResolver = { identifier in
+                guard identifier == groupIdentifier else { return nil }
+                switch failure {
+                case .applicationGroupUnavailable:
+                    return nil
+                case .hostSelectionFailure:
+                    return groupContainer
+                }
+            }
+        let hostSelectionResolver: SafeProcessRunner
+            .GameModeSteamChildSelectionResolver?
+        switch failure {
+        case .applicationGroupUnavailable:
+            hostSelectionResolver = nil
+        case .hostSelectionFailure:
+            hostSelectionResolver = { _, _, _, _ in
+                throw GameModeHostCapabilityError.appMissing(
+                    fixture.root.appending(path: "MissingGameModeHost.app")
+                )
+            }
+        }
+        let runner = makeCuratedRuntimeRunner(
+            managedWineProcessJournalEnabled: false,
+            gameModeHostApplicationGroupIdentifier: groupIdentifier,
+            gameModeHostApplicationGroupContainerResolver: groupResolver,
+            gameModeSteamChildSelectionResolver: hostSelectionResolver
+        )
+        let compatibilitySelection = SteamPrelaunchCompatibilitySelection(
+            rendererSelection: .d3dMetalNVIDIA,
+            frameGenerationConfiguration: FrameGenerationConfiguration(
+                isEnabled: true,
+                targetFrameRate: .fps120,
+                isFrameCheckEnabled: true
+            ),
+            networkSelection: .standard,
+            audioInputSelection: .enabled
+        )
+
+        do {
+            _ = try await runner.run(.launchSteam(
+                runtimeExecutable: fixture.launcher,
+                prefix: fixture.prefix,
+                steamExecutable: steamExecutable,
+                steamArguments: [],
+                graphicsBackend: .d3dMetal,
+                compatibilitySelection: compatibilitySelection,
+                gameModePolicy: .experimentalRequiredHost,
+                logDirectory: logs
+            ))
+            XCTFail("Game Mode host preparation failure must abort the launch")
+        } catch let evidenceError as ProcessExecutionEvidenceError {
+            guard let capabilityError = evidenceError.underlyingError as?
+                    GameModeHostCapabilityError else {
+                return XCTFail(
+                    "Unexpected error: \(evidenceError.underlyingError)"
+                )
+            }
+            XCTAssertEqual(
+                capabilityError.diagnosticCode,
+                expectedDiagnosticCode
+            )
+            XCTAssertEqual(evidenceError.result.outcome, .preflightFailed)
+            XCTAssertFalse(evidenceError.result.hasProcessExitCode)
+            XCTAssertNotNil(evidenceError.result.runEvidenceLog)
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+        XCTAssertFalse(
+            FileManager.default.fileExists(atPath: launchMarker.path),
+            "Game Mode ON must not continue through the standard Wine launcher."
+        )
+    }
+
     private func writeRendererComponent(
         _ component: String,
         relativePaths: [String],
@@ -8172,8 +9827,12 @@ final class SafeProcessRunnerTests: XCTestCase {
         gameModeHostApplicationGroupContainerResolver:
             SafeProcessRunner
                 .GameModeHostApplicationGroupContainerResolver? = nil,
+        gameModeSteamChildSelectionResolver:
+            SafeProcessRunner.GameModeSteamChildSelectionResolver? = nil,
         managedWineSessionRegistry: ManagedWineSessionRegistry =
             ManagedWineSessionRegistry(),
+        managedWineRuntimeFingerprintResolver:
+            SafeProcessRunner.ManagedWineRuntimeFingerprintResolver? = nil,
         runtimeLaunchObjectIdentityProvider:
             @escaping SafeProcessRunner.RuntimeLaunchObjectIdentityProvider = {
                 _ in nil
@@ -8229,17 +9888,17 @@ final class SafeProcessRunnerTests: XCTestCase {
                 gameModeHostApplicationGroupContainerResolver:
                     gameModeHostApplicationGroupContainerResolver,
                 gameModeSteamChildSelectionResolver:
-                    gameModeSelectionResolver,
-                managedWineRuntimeFingerprintResolver: {
-                    _ in String(repeating: "a", count: 64)
-                },
+                    gameModeSteamChildSelectionResolver ??
+                        gameModeSelectionResolver,
+                managedWineRuntimeFingerprintResolver:
+                    managedWineRuntimeFingerprintResolver ?? {
+                        _ in String(repeating: "a", count: 64)
+                    },
                 runtimeLaunchObjectIdentityProvider:
                     runtimeLaunchObjectIdentityProvider,
                 managedWineChildSynchronizationReadbackProvider:
                     managedWineChildSynchronizationReadbackProvider,
-                windowsRuntimeValidator: { _, _ in },
-                supplementalRendererAuthenticator:
-                    SafeProcessRunnerTestSupplementalRendererAuthenticator()
+                windowsRuntimeValidator: { _, _ in }
             )
         }
         return SafeProcessRunner(
@@ -8254,17 +9913,17 @@ final class SafeProcessRunnerTests: XCTestCase {
             gameModeHostApplicationGroupContainerResolver:
                 gameModeHostApplicationGroupContainerResolver,
             gameModeSteamChildSelectionResolver:
-                gameModeSelectionResolver,
-            managedWineRuntimeFingerprintResolver: {
-                _ in String(repeating: "a", count: 64)
-            },
+                gameModeSteamChildSelectionResolver ??
+                    gameModeSelectionResolver,
+            managedWineRuntimeFingerprintResolver:
+                managedWineRuntimeFingerprintResolver ?? {
+                    _ in String(repeating: "a", count: 64)
+                },
             runtimeLaunchObjectIdentityProvider:
                 runtimeLaunchObjectIdentityProvider,
             managedWineChildSynchronizationReadbackProvider:
                 managedWineChildSynchronizationReadbackProvider,
-            windowsRuntimeValidator: { _, _ in },
-            supplementalRendererAuthenticator:
-                SafeProcessRunnerTestSupplementalRendererAuthenticator()
+            windowsRuntimeValidator: { _, _ in }
         )
     }
 
@@ -8281,7 +9940,8 @@ final class SafeProcessRunnerTests: XCTestCase {
 
     private func makeManagedWineDescriptorFixture(
         ownerProcessIdentifier: pid_t = Darwin.getpid(),
-        ownerProcessStartedAt: UInt64? = nil
+        ownerProcessStartedAt: UInt64? = nil,
+        runtimeFingerprint: String = String(repeating: "a", count: 64)
     ) throws -> ManagedWineDescriptorFixture {
         let root = FileManager.default.temporaryDirectory.appending(
             path: "ForgePlayManagedWineDescriptor-\(UUID().uuidString)",
@@ -8310,7 +9970,6 @@ final class SafeProcessRunnerTests: XCTestCase {
             ofItemAtPath: evidenceDirectory.path
         )
         let runIdentifier = UUID().uuidString.lowercased()
-        let runtimeFingerprint = String(repeating: "a", count: 64)
         let evidenceURL = evidenceDirectory.appending(
             path: ManagedWineProcessJournal.evidenceFileName(
                 runIdentifier: runIdentifier
@@ -8355,6 +10014,43 @@ final class SafeProcessRunnerTests: XCTestCase {
         )
     }
 
+    private func rewriteManagedWineDescriptorWithDifferentDeviceIdentity(
+        _ fixture: ManagedWineDescriptorFixture
+    ) throws {
+        let descriptor = try ManagedWineProcessJournal
+            .readActiveSessionDescriptor(at: fixture.descriptorURL)
+        let changedDevice = descriptor.prefixIdentity.deviceIdentifier == "1"
+            ? "2"
+            : "1"
+        let changed = ManagedWineActiveSessionDescriptor(
+            schemaVersion: descriptor.schemaVersion,
+            producer: descriptor.producer,
+            runIdentifier: descriptor.runIdentifier,
+            evidenceFileName: descriptor.evidenceFileName,
+            prefixScope: descriptor.prefixScope,
+            prefixIdentity: ManagedWineTrustedPrefixIdentity(
+                deviceIdentifier: changedDevice,
+                inodeIdentifier: descriptor.prefixIdentity.inodeIdentifier,
+                ownerUserIdentifier:
+                    descriptor.prefixIdentity.ownerUserIdentifier
+            ),
+            runtimeFingerprint: descriptor.runtimeFingerprint,
+            runtimeRootScope: descriptor.runtimeRootScope,
+            ownerProcessIdentifier: descriptor.ownerProcessIdentifier,
+            ownerProcessStartedAtUnixMicroseconds:
+                descriptor.ownerProcessStartedAtUnixMicroseconds,
+            registeredAtUnixMilliseconds:
+                descriptor.registeredAtUnixMilliseconds
+        )
+        try FileManager.default.removeItem(at: fixture.descriptorURL)
+        let rewrittenURL = try ManagedWineProcessJournal
+            .writeActiveSessionDescriptor(
+                changed,
+                in: fixture.evidenceDirectory
+            )
+        XCTAssertEqual(rewrittenURL, fixture.descriptorURL)
+    }
+
     private var managedProcessFixtureScript: String {
         """
         #!/bin/sh
@@ -8380,6 +10076,130 @@ final class SafeProcessRunnerTests: XCTestCase {
                 userInfo: [NSLocalizedDescriptionKey: "Could not ad-hoc sign process fixture: \(executable.path)"]
             )
         }
+    }
+
+    private func writeBoundPrefixMetadata(
+        at prefix: URL,
+        runtimeFingerprint: String
+    ) throws {
+        let now = ISO8601DateFormatter().string(from: Date())
+        let digest = String(repeating: "d", count: 64)
+        let document: [String: Any] = [
+            "schemaVersion": PrefixMetadata.currentSchemaVersion,
+            "id": "prefix-steam-shared",
+            "environmentGenerationID": UUID().uuidString,
+            "synchronizationSelection":
+                WineSynchronizationSelection.automatic.rawValue,
+            "synchronizationBackend":
+                WineSynchronizationBackend.server.rawValue,
+            "displayName": "Steam Prefix",
+            "path": prefix.standardizedFileURL.path,
+            "mode": PrefixMode.steamShared.rawValue,
+            "runner": WinePrefixDefaults.runner,
+            "runtimeBinding": [
+                "schemaVersion": PrefixRuntimeBinding
+                    .currentSchemaVersion,
+                "prefixCompatibilityEpoch": PrefixRuntimeBinding
+                    .currentPrefixCompatibilityEpoch,
+                "runtimeIdentifier": "forgeplay.tests.prior-runtime",
+                "runnerBuildFingerprint": runtimeFingerprint,
+                "prefixCompatibilityFingerprint": digest,
+                "wineInfSHA256": digest,
+                "appliedAt": now
+            ],
+            "architecture": WinePrefixDefaults.architecture,
+            "windowsVersion": WinePrefixDefaults.windowsVersion,
+            "createdAt": now,
+            "updatedAt": now,
+            "installedRuntimes": [],
+            "dllOverrides": [],
+            "environmentVariables": [:],
+            "launchOptions": [],
+            "snapshots": []
+        ]
+        let data = try JSONSerialization.data(
+            withJSONObject: document,
+            options: [.prettyPrinted, .sortedKeys]
+        )
+        try data.write(
+            to: prefix.appending(path: "prefix.json"),
+            options: [.atomic]
+        )
+    }
+
+    private func recordDeadManagedWineSession(
+        processIdentifier: pid_t,
+        prefix: URL,
+        runtimeRoot: URL,
+        evidenceDirectory: URL,
+        registry: ManagedWineSessionRegistry
+    ) throws -> (evidenceURL: URL, descriptorURL: URL) {
+        let runIdentifier = UUID().uuidString.lowercased()
+        let runtimeFingerprint = String(repeating: "a", count: 64)
+        let registeredAt = Date()
+        let startedAtUnixMicroseconds = Int64(
+            registeredAt.timeIntervalSince1970 * 1_000_000
+        )
+        let recordedAtUnixMilliseconds = Int64(
+            registeredAt.timeIntervalSince1970 * 1_000
+        )
+        let prefixScope = ManagedWineProcessJournal.prefixScope(for: prefix)
+        let evidenceURL = evidenceDirectory.appending(
+            path: ManagedWineProcessJournal.evidenceFileName(
+                runIdentifier: runIdentifier
+            )
+        )
+        let record =
+            "{\"schema_version\":1," +
+            "\"producer\":\"forgeplay-wine-runtime\"," +
+            "\"event_code\":\"darwin_process_started\"," +
+            "\"role\":\"wine-loader\"," +
+            "\"run_identifier\":\"\(runIdentifier)\"," +
+            "\"prefix_scope\":\"\(prefixScope)\"," +
+            "\"runtime_fingerprint\":\"\(runtimeFingerprint)\"," +
+            "\"darwin_pid\":\(processIdentifier)," +
+            "\"recorded_at_unix_milliseconds\":" +
+            "\(recordedAtUnixMilliseconds)," +
+            "\"process_started_at_unix_microseconds\":" +
+            "\(startedAtUnixMicroseconds)}\n"
+        try Data(record.utf8).write(to: evidenceURL, options: [.atomic])
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o600],
+            ofItemAtPath: evidenceURL.path
+        )
+
+        let ownerStartedAt = try XCTUnwrap(
+            ManagedWineProcessJournal.processStartTimeUnixMicroseconds(
+                for: Darwin.getpid()
+            )
+        )
+        let descriptor = try ManagedWineProcessJournal
+            .makeActiveSessionDescriptor(
+                runIdentifier: runIdentifier,
+                evidenceURL: evidenceURL,
+                prefix: prefix,
+                runtimeRootURL: runtimeRoot,
+                runtimeFingerprint: runtimeFingerprint,
+                ownerProcessIdentifier: Darwin.getpid(),
+                ownerProcessStartedAtUnixMicroseconds: ownerStartedAt,
+                registeredAt: registeredAt
+            )
+        let descriptorURL = try ManagedWineProcessJournal
+            .writeActiveSessionDescriptor(
+                descriptor,
+                in: evidenceDirectory
+            )
+        registry.record(ManagedWineProcessLaunchSession(
+            prefixURL: prefix,
+            runIdentifier: runIdentifier,
+            evidenceURL: evidenceURL,
+            descriptorURL: descriptorURL,
+            runtimeRootURL: runtimeRoot,
+            runtimeFingerprint: runtimeFingerprint,
+            prefixScope: prefixScope,
+            registeredAt: registeredAt
+        ))
+        return (evidenceURL, descriptorURL)
     }
 
     private func makeWineRunner(in root: URL, wineserverScript: String) throws -> URL {

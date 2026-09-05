@@ -49,7 +49,7 @@ index 99b50ec..9a068ec 100644
      {
          if (record[i] == '\r' || record[i] == '\n' || record[i] == '\t') record[i] = ' ';
      }
-@@ -234,6 +233,1454 @@ done:
+@@ -234,6 +233,1455 @@ done:
  }
  
  
@@ -1243,6 +1243,7 @@ index 99b50ec..9a068ec 100644
 +        { L"FORGEPLAY_GAME_RENDERER_COMPONENTS_X86", FALSE },
 +        { L"FORGEPLAY_GAME_RENDERER_DLL_PATH_X64", TRUE },
 +        { L"FORGEPLAY_GAME_RENDERER_DLL_PATH_X86", FALSE },
++        { L"FORGEPLAY_GAME_RENDERER_PROVIDER_ALIAS_PATHS_X64", FALSE },
 +    };
 +    static const WCHAR *global_control_variables[] =
 +    {
@@ -1504,7 +1505,7 @@ index 99b50ec..9a068ec 100644
  /***********************************************************************
   *           create_process_params
   */
-@@ -662,13 +2093,16 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
+@@ -662,13 +2094,16 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
  {
      const struct proc_thread_attr *handle_list = NULL, *job_list = NULL;
      WCHAR name[MAX_PATH];
@@ -1522,7 +1523,7 @@ index 99b50ec..9a068ec 100644
      BOOL observe_process_arguments = FALSE;
  
      /* Process the AppName and/or CmdLine to get module name and path */
-@@ -673,10 +2107,110 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
+@@ -673,10 +2108,110 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
      observe_process_arguments = process_argument_observation_target_matches( app_name );
      if ((policy_cmdline = append_process_arguments_from_environment( app_name, tidy_cmdline )))
      {
@@ -1633,7 +1634,7 @@ index 99b50ec..9a068ec 100644
      /* Warn if unsupported features are used */
  
      if (flags & (IDLE_PRIORITY_CLASS | HIGH_PRIORITY_CLASS | REALTIME_PRIORITY_CLASS |
-@@ -840,10 +2374,14 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
+@@ -840,10 +2375,14 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
          TRACE( "started process pid %04lx tid %04lx\n", info->dwProcessId, info->dwThreadId );
          if (observe_process_arguments)
              record_process_argument_observation( tidy_cmdline, info->dwProcessId );
@@ -1660,7 +1661,7 @@ index 443b984..a1524dc 100644
  #include <stdarg.h>
  #include <stdlib.h>
  
-@@ -3137,6 +3138,400 @@ static NTSTATUS get_env_var( const WCHAR *name, SIZE_T extra, UNICODE_STRING *re
+@@ -3137,6 +3138,473 @@ static NTSTATUS get_env_var( const WCHAR *name, SIZE_T extra, UNICODE_STRING *re
  }
  
  
@@ -1869,6 +1870,71 @@ index 443b984..a1524dc 100644
 +}
 +
 +
++static BOOL forgeplay_renderer_path_matches_exact( const WCHAR *actual,
++                                                    SIZE_T actual_length,
++                                                    const WCHAR *expected,
++                                                    SIZE_T expected_length )
++{
++    SIZE_T i;
++
++    forgeplay_renderer_strip_device_prefix( &actual, &actual_length );
++    while (expected_length && (expected[0] == L' ' || expected[0] == L'\t'))
++    {
++        ++expected;
++        --expected_length;
++    }
++    while (expected_length &&
++           (expected[expected_length - 1] == L' ' ||
++            expected[expected_length - 1] == L'\t')) --expected_length;
++    forgeplay_renderer_strip_device_prefix( &expected, &expected_length );
++    if (!expected_length || actual_length != expected_length) return FALSE;
++    for (i = 0; i < actual_length; ++i)
++        if (!forgeplay_renderer_path_character_equal( actual[i], expected[i] ))
++            return FALSE;
++    return TRUE;
++}
++
++
++static BOOL forgeplay_renderer_path_matches_provider_alias(
++    const WINE_MODREF *module )
++{
++#ifdef _WIN64
++    static const WCHAR alias_paths_name[] =
++        L"FORGEPLAY_GAME_RENDERER_PROVIDER_ALIAS_PATHS_X64";
++    const WCHAR *cursor, *end, *entry;
++    UNICODE_STRING alias_paths = { 0 };
++    SIZE_T actual_length, entry_length;
++    BOOL verified = FALSE;
++
++    if (!module || !module->ldr.FullDllName.Buffer ||
++        !module->ldr.FullDllName.Length ||
++        get_env_var( alias_paths_name, 0, &alias_paths )) return FALSE;
++    actual_length = module->ldr.FullDllName.Length / sizeof(WCHAR);
++    cursor = alias_paths.Buffer;
++    end = cursor + alias_paths.Length / sizeof(WCHAR);
++    while (cursor <= end)
++    {
++        entry = cursor;
++        while (cursor < end && *cursor != L';') ++cursor;
++        entry_length = cursor - entry;
++        if (entry_length && forgeplay_renderer_path_matches_exact(
++                module->ldr.FullDllName.Buffer, actual_length,
++                entry, entry_length ))
++        {
++            verified = TRUE;
++            break;
++        }
++        if (cursor == end) break;
++        ++cursor;
++    }
++    RtlFreeHeap( GetProcessHeap(), 0, alias_paths.Buffer );
++    return verified;
++#else
++    return FALSE;
++#endif
++}
++
++
 +static const char *forgeplay_renderer_module_path_owner( const WINE_MODREF *module,
 +                                                         const WCHAR *basename )
 +{
@@ -1884,8 +1950,12 @@ index 443b984..a1524dc 100644
 +
 +    if (!module || !module->ldr.FullDllName.Buffer || !module->ldr.FullDllName.Length)
 +        return "unavailable";
-+    if (get_env_var( renderer_path_name, 0, &allowed_paths )) return "unavailable";
 +    actual_length = module->ldr.FullDllName.Length / sizeof(WCHAR);
++    if ((!wcsicmp( basename, L"nvngx.dll" ) ||
++         !wcsicmp( basename, L"_nvngx.dll" )) &&
++        forgeplay_renderer_path_matches_provider_alias( module ))
++        return "verified";
++    if (get_env_var( renderer_path_name, 0, &allowed_paths )) return "unavailable";
 +    cursor = allowed_paths.Buffer;
 +    end = cursor + allowed_paths.Length / sizeof(WCHAR);
 +    while (cursor <= end)
@@ -1898,7 +1968,11 @@ index 443b984..a1524dc 100644
 +            saw_directory = TRUE;
 +            if (forgeplay_renderer_path_matches_directory(
 +                    module->ldr.FullDllName.Buffer, actual_length,
-+                    entry, entry_length, basename ))
++                    entry, entry_length, basename ) ||
++                (!wcsicmp( basename, L"nvapi.dll" ) &&
++                 forgeplay_renderer_path_matches_directory(
++                    module->ldr.FullDllName.Buffer, actual_length,
++                    entry, entry_length, L"nvapi64.dll" )))
 +            {
 +                verified = TRUE;
 +                break;
@@ -2061,7 +2135,7 @@ index 443b984..a1524dc 100644
  /***********************************************************************
   *	find_builtin_without_file
   *
-@@ -3363,6 +3758,7 @@ static NTSTATUS load_dll( const WCHAR *load_path, const WCHAR *libname, DWORD fl
+@@ -3363,6 +3831,7 @@ static NTSTATUS load_dll( const WCHAR *load_path, const WCHAR *libname, DWORD fl
          TRACE("Found %s for %s at %p, count=%d\n",
                debugstr_w((*pwm)->ldr.FullDllName.Buffer), debugstr_w(libname),
                (*pwm)->ldr.DllBase, (*pwm)->ldr.LoadCount);
@@ -2069,7 +2143,7 @@ index 443b984..a1524dc 100644
          RtlFreeUnicodeString( &nt_name );
          return STATUS_SUCCESS;
      }
-@@ -3392,6 +3788,7 @@ done:
+@@ -3392,6 +3861,7 @@ done:
      else
          WARN("Failed to load module %s; status=%lx\n", debugstr_w(libname), nts);
 -
@@ -2078,20 +2152,20 @@ index 443b984..a1524dc 100644
      if (mapping) NtClose( mapping );
      RtlFreeUnicodeString( &nt_name );
      return nts;
-@@ -4483,6 +4880,12 @@ void loader_init( CONTEXT *context, void **entry )
+@@ -4483,6 +4953,12 @@ void loader_init( CONTEXT *context, void **entry )
          default_load_path = peb->ProcessParameters->DllPath.Buffer;
          if (!default_load_path)
              get_dll_load_path( peb->ProcessParameters->ImagePathName.Buffer, NULL, dll_safe_mode, &default_load_path );
 +        if ((status = prepend_forgeplay_game_renderer_dll_path( &default_load_path )))
 +        {
 +            record_forgeplay_game_renderer_loader_error( status );
-+            MESSAGE( "wine: could not apply ForgePlay game renderer DLL path, status %lx\n", status );
-+            NtTerminateProcess( GetCurrentProcess(), status );
++            MESSAGE( "wine: could not apply ForgePlay game renderer DLL path, status %lx; continuing with the default Wine DLL path\n", status );
++            status = STATUS_SUCCESS;
 +        }
  
          if (NtCurrentTeb()->WowTebOffset) init_wow64( context );
  
-@@ -4808,6 +5211,7 @@ NTSTATUS WINAPI LdrSetDefaultDllDirectories( ULONG flags )
+@@ -4808,6 +5284,7 @@ NTSTATUS WINAPI LdrSetDefaultDllDirectories( ULONG flags )
  NTSTATUS WINAPI LdrGetDllPath( PCWSTR module, ULONG flags, PWSTR *path, PWSTR *unknown )
  {
      NTSTATUS status;
@@ -2099,7 +2173,7 @@ index 443b984..a1524dc 100644
      const ULONG load_library_search_flags = (LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR |
                                               LOAD_LIBRARY_SEARCH_APPLICATION_DIR |
                                               LOAD_LIBRARY_SEARCH_USER_DIRS |
-@@ -4836,6 +5240,20 @@ NTSTATUS WINAPI LdrGetDllPath( PCWSTR module, ULONG flags, PWSTR *path, PWSTR *u
+@@ -4836,6 +5313,20 @@ NTSTATUS WINAPI LdrGetDllPath( PCWSTR module, ULONG flags, PWSTR *path, PWSTR *u
      }
  
      RtlLeaveCriticalSection( &dlldir_section );

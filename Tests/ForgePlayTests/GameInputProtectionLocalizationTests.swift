@@ -6,7 +6,7 @@ final class GameInputProtectionLocalizationTests: XCTestCase {
     private let keys = [
         "입력 및 게임 보호",
         "게임 입력 및 macOS 단축키 보호",
-        "일반 Steam과 Steam 호환성 실행에 공통으로 적용됩니다. 각 Steam 세션은 시작 시점 설정의 변경 불가능한 스냅샷을 사용하므로 여기서 바꾼 내용은 다음 실행부터 적용됩니다. 필터는 관리되는 세션의 정상 종료가 확인되면 해제됩니다. 실행 중 필터가 상실되면 즉시 해제한 뒤 관리되는 Steam 세션을 자동 종료하고 입력 상태를 복원합니다.",
+        "일반 Steam과 Steam 호환성 실행에 공통으로 적용됩니다. 각 Steam 세션은 시작 시점 설정의 변경 불가능한 스냅샷을 사용하므로 여기서 바꾼 내용은 다음 실행부터 적용됩니다. 필터는 관리되는 세션의 정상 종료가 확인되면 해제됩니다. 실행 중 필터가 상실되면 입력 보호만 비활성화하고 Wine과 Steam 실행은 유지합니다.",
         "입력 보호는 선택 기능입니다. Steam 실행이나 게임 키 바인딩 자체에는 필요하지 않으며, ForgePlay가 보조키를 변환하고 macOS 단축키를 차단할 때만 손쉬운 사용과 입력 모니터링 권한을 사용합니다.",
         "입력 보호 권한 요청",
         "권한 요청 및 설정 열기",
@@ -31,9 +31,9 @@ final class GameInputProtectionLocalizationTests: XCTestCase {
         "이 빌드에서 지원 안 함", "입력 보호 꺼짐", "입력 보호 사용 준비됨", "포인터 숨김 사용 준비됨",
         "손쉬운 사용 권한 필요", "입력 모니터링 권한 필요", "손쉬운 사용·입력 모니터링 권한 필요",
         "게임 입력 보호 권한이 준비되었습니다.",
-        "선택한 보호 기능에는 macOS 손쉬운 사용 권한이 필요합니다. 권한이 없으면 해당 설정으로 Steam을 실행하지 않습니다.",
-        "선택한 보호 기능에는 macOS 입력 모니터링 권한이 필요합니다. 권한이 없으면 해당 설정으로 Steam을 실행하지 않습니다.",
-        "선택한 보호 기능에는 macOS 손쉬운 사용 및 입력 모니터링 권한이 필요합니다. 권한이 없으면 해당 설정으로 Steam을 실행하지 않습니다.",
+        "선택한 보호 기능에는 macOS 손쉬운 사용 권한이 필요합니다. 권한이 없으면 입력 보호만 비활성화하고 Steam 실행은 계속합니다.",
+        "선택한 보호 기능에는 macOS 입력 모니터링 권한이 필요합니다. 권한이 없으면 입력 보호만 비활성화하고 Steam 실행은 계속합니다.",
+        "선택한 보호 기능에는 macOS 손쉬운 사용 및 입력 모니터링 권한이 필요합니다. 권한이 없으면 입력 보호만 비활성화하고 Steam 실행은 계속합니다.",
         "게임 입력 보호 권한을 확인했습니다.",
         "시스템 설정의 개인정보 보호 및 보안 > 손쉬운 사용에서 ForgePlay를 허용한 뒤 앱으로 돌아오세요.",
         "시스템 설정의 개인정보 보호 및 보안 > 입력 모니터링에서 ForgePlay를 허용한 뒤 앱으로 돌아오세요.",
@@ -45,13 +45,13 @@ final class GameInputProtectionLocalizationTests: XCTestCase {
         "게임 입력 보호를 사용하려면 손쉬운 사용 및 입력 모니터링 권한이 필요합니다. 시스템 설정에서 권한을 허용한 뒤 다시 실행해 주세요.",
         "macOS에 저장된 권한 등록과 현재 ForgePlay.app이 일치하지 않거나 실제 입력 필터 승인이 갱신되지 않았습니다. 손쉬운 사용과 입력 모니터링에서 기존 ForgePlay 항목을 각각 제거한 뒤, Finder에서 보기로 현재 ForgePlay.app을 다시 추가해 두 권한을 켜고 ForgePlay를 완전히 종료했다가 다시 여세요.",
         "macOS 게임 입력 필터가 활성화된 것으로 확인되지 않았습니다. 손쉬운 사용 및 입력 모니터링 권한을 확인한 뒤 다시 실행해 주세요.",
-        "macOS 게임 입력 필터가 시간 초과 후 다시 활성화되지 않아 보호된 Steam 실행을 중단합니다.",
-        "macOS 게임 입력 필터가 반복해서 시간 초과되어 보호된 Steam 실행을 중단합니다.",
-        "macOS가 게임 입력 필터를 비활성화하여 보호된 Steam 실행을 중단합니다.",
-        "macOS 포인터를 다시 표시하지 못해 관리되는 Steam 실행을 중단하고 포인터 복원을 다시 시도합니다.",
-        "변환된 보조키를 해제하지 못해 관리되는 Steam 실행을 중단하고 입력 상태 복원을 다시 시도합니다. (프로세스 %lld)",
+        "macOS 게임 입력 필터가 시간 초과 후 다시 활성화되지 않아 입력 보호를 비활성화합니다. Wine과 Steam 실행은 유지됩니다.",
+        "macOS 게임 입력 필터가 반복해서 시간 초과되어 입력 보호를 비활성화합니다. Wine과 Steam 실행은 유지됩니다.",
+        "macOS가 게임 입력 필터를 비활성화하여 입력 보호를 종료합니다. Wine과 Steam 실행은 유지됩니다.",
+        "macOS 포인터를 다시 표시하지 못해 입력 보호를 비활성화하고 포인터 복원을 다시 시도합니다. Wine과 Steam 실행은 유지됩니다.",
+        "변환된 보조키를 해제하지 못해 입력 보호를 비활성화하고 입력 상태 복원을 다시 시도합니다. Wine과 Steam 실행은 유지됩니다. (프로세스 %lld)",
         "macOS가 이번 포인터 숨김 요청을 수락하지 않았습니다. Steam 실행은 계속되며 다음에 관리되는 게임이 전면으로 전환되면 다시 시도할 수 있습니다 (베타).",
-        "게임 입력 보호가 %@ 이유로 중단되어 관리되는 Steam 세션을 종료하고 입력 상태를 복원했습니다. 진단 기록을 확인하세요.",
+        "게임 입력 보호가 %@ 이유로 중단되어 입력 보호만 비활성화했습니다. Wine과 Steam 실행은 유지되며, 진단 기록을 확인하세요.",
         "관리되는 게임 프로세스(%lld)의 입력 보호 대상을 확인할 수 없습니다. Steam을 종료한 뒤 다시 시도하세요.",
         "관리되는 게임 프로세스(%lld)의 입력 보호 연결이 확인 중 변경되었습니다. Steam을 종료한 뒤 다시 시도하세요."
     ]
@@ -83,7 +83,7 @@ final class GameInputProtectionLocalizationTests: XCTestCase {
 
     func testManagedProcessErrorsFormatInEverySupportedLocale() {
         let errorKeys = [
-            "변환된 보조키를 해제하지 못해 관리되는 Steam 실행을 중단하고 입력 상태 복원을 다시 시도합니다. (프로세스 %lld)",
+            "변환된 보조키를 해제하지 못해 입력 보호를 비활성화하고 입력 상태 복원을 다시 시도합니다. Wine과 Steam 실행은 유지됩니다. (프로세스 %lld)",
             "관리되는 게임 프로세스(%lld)의 입력 보호 대상을 확인할 수 없습니다. Steam을 종료한 뒤 다시 시도하세요.",
             "관리되는 게임 프로세스(%lld)의 입력 보호 연결이 확인 중 변경되었습니다. Steam을 종료한 뒤 다시 시도하세요."
         ]
@@ -101,7 +101,7 @@ final class GameInputProtectionLocalizationTests: XCTestCase {
 
     @MainActor
     func testModifierReleaseFailureHasExactLocalizedAndTechnicalIdentity() {
-        let key = "변환된 보조키를 해제하지 못해 관리되는 Steam 실행을 중단하고 입력 상태 복원을 다시 시도합니다. (프로세스 %lld)"
+        let key = "변환된 보조키를 해제하지 못해 입력 보호를 비활성화하고 입력 상태 복원을 다시 시도합니다. Wine과 Steam 실행은 유지됩니다. (프로세스 %lld)"
         let failure = GameInputProtectionTerminalFailure
             .modifierReleaseEmissionFailed(42)
         let bridgedError = failure as NSError

@@ -24,6 +24,27 @@ final class SteamLaunchConfigurationProductAdapterTests: XCTestCase {
             SteamVideoMemorySelection.allCases.map(\.rawValue),
             ["automatic", "gb2", "gb4", "gb8", "gb12", "gb16"]
         )
+        XCTAssertEqual(
+            SteamGraphicsBackendIdentifier.currentReleaseSelectableCases,
+            [.d3dMetalNVIDIA, .dxmt, .d9vk]
+        )
+        XCTAssertEqual(
+            SteamGraphicsBackendIdentifier.d3dMetal
+                .normalizedForCurrentRelease,
+            .d3dMetalNVIDIA
+        )
+        XCTAssertEqual(
+            SteamGraphicsBackendIdentifier.dxvk.normalizedForCurrentRelease,
+            .d3dMetalNVIDIA
+        )
+        XCTAssertEqual(
+            SteamGraphicsBackendIdentifier.dxmt.normalizedForCurrentRelease,
+            .dxmt
+        )
+        XCTAssertEqual(
+            SteamGraphicsBackendIdentifier.d9vk.normalizedForCurrentRelease,
+            .d9vk
+        )
     }
 
     func testEveryRendererMapsExactlyInBothDirections() throws {
@@ -328,7 +349,7 @@ final class SteamLaunchConfigurationProductAdapterTests: XCTestCase {
     }
 
     private func makeSelection(
-        renderer: SteamRendererPolicySelection = .d3dMetal,
+        renderer: SteamRendererPolicySelection = .d3dMetalNVIDIA,
         network: SteamNetworkCompatibilitySelection = .standard,
         audioInput: SteamAudioInputSelection = .disabled,
         synchronization: WineSynchronizationSelection = .automatic,

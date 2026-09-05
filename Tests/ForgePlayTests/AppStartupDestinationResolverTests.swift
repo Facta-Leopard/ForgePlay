@@ -85,7 +85,7 @@ final class AppStartupDestinationResolverTests: XCTestCase {
         )
     }
 
-    func testUnownedRendererRepairStillRoutesRestartedAppToSetup() {
+    func testUnownedRendererRepairRemainsAdvisoryForRestartedApp() {
         var readiness = launchableReadiness
         readiness.rendererInspection = SteamRendererPolicyInspection(
             selection: .d3dMetalNVIDIA,
@@ -99,14 +99,14 @@ final class AppStartupDestinationResolverTests: XCTestCase {
         )
 
         XCTAssertEqual(readiness.steamPrefixState, .rendererNeedsRepair)
-        XCTAssertFalse(readiness.canAttemptWindowsSteamLaunch)
+        XCTAssertTrue(readiness.canAttemptWindowsSteamLaunch)
         XCTAssertTrue(readiness.rendererInspection?.allowsRecoveryAction == true)
         XCTAssertEqual(
             AppStartupDestinationResolver.resolve(
                 current: .dashboard,
                 readiness: readiness
             ),
-            .setup
+            .steamLaunch
         )
     }
 

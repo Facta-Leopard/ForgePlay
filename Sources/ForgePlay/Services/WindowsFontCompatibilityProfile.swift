@@ -14,6 +14,10 @@ struct WindowsFontProvisioningApplicationReceipt: Hashable, Sendable {
         case reusedVerifiedProfile
         case provisionedAndVerified
         case reconciledAndVerified
+        case verifiedUnsupportedLocalePassthrough
+        case verifiedCollisionPassthrough
+        case verifiedExternalFontPassthrough
+        case unverifiedOperationalPassthrough
     }
 
     let profileIdentifier: String
@@ -24,19 +28,36 @@ struct WindowsFontProvisioningApplicationReceipt: Hashable, Sendable {
     let missingItemCount: Int
 
     var isAppliedAndReadBack: Bool {
-        profileIdentifier ==
-            WindowsFontCompatibilityProfileContract.profileIdentifier &&
-            missingItemCount == 0 &&
-            appliedItemCount ==
+        let expectedItemCount: Int?
+        switch profileIdentifier {
+        case WindowsFontCompatibilityProfileContract.profileIdentifier:
+            expectedItemCount =
                 WindowsFontCompatibilityProfileContract.definition.payloads.count +
                 WindowsFontCompatibilityProfileContract.definition
-                    .registryRequirements.count + 1 &&
+                    .registryRequirements.count + 1
+        case WindowsFontCompatibilityProfileV6Contract.profileIdentifier:
+            expectedItemCount = state == .verifiedUnsupportedLocalePassthrough ||
+                state == .verifiedCollisionPassthrough ||
+                state == .verifiedExternalFontPassthrough
+                ? 0
+                : WindowsFontCompatibilityProfileV6Contract.expectedAppliedItemCount
+        default:
+            expectedItemCount = nil
+        }
+        guard let expectedItemCount else { return false }
+        return expectedItemCount == appliedItemCount &&
+            missingItemCount == 0 &&
             SteamLaunchIdentifierValidation.isValidLowercaseSHA256(
                 baselineDigest
             ) &&
             SteamLaunchIdentifierValidation.isValidLowercaseSHA256(
                 appliedDigest
             )
+    }
+
+    var requiresScopedWineChildPOSIXLocaleFallback: Bool {
+        state == .verifiedUnsupportedLocalePassthrough ||
+            state == .verifiedCollisionPassthrough
     }
 }
 
@@ -863,6 +884,44 @@ private struct WindowsFontLifecycleJournal: Codable, Equatable, Sendable {
     }
 }
 
+private struct WindowsFontLegacyV4RetirementJournal:
+    Codable, Equatable, Sendable {
+    let schemaVersion: Int
+    let profileIdentifier: String
+    let descriptorDigest: String
+    let transactionID: String
+    let baselineVariant: WindowsFontFreshBaselineVariant
+    let phase: String
+
+    static let exactKeys: Set<String> = [
+        "schemaVersion",
+        "profileIdentifier",
+        "descriptorDigest",
+        "transactionID",
+        "baselineVariant",
+        "phase"
+    ]
+
+    func preparingRegistryRetirement() -> Self {
+        replacingPhase("retirement-prepared")
+    }
+
+    func committingRegistryRetirement() -> Self {
+        replacingPhase("registry-committed")
+    }
+
+    private func replacingPhase(_ phase: String) -> Self {
+        Self(
+            schemaVersion: schemaVersion,
+            profileIdentifier: profileIdentifier,
+            descriptorDigest: descriptorDigest,
+            transactionID: transactionID,
+            baselineVariant: baselineVariant,
+            phase: phase
+        )
+    }
+}
+
 private enum WindowsFontLifecycleJSON {
     static let maximumEvidenceByteCount = 1_048_576
 
@@ -972,6 +1031,31 @@ struct WindowsFontRegistrySnapshotState {
             forRegistryPath: requirement.registryPath,
             valueName: requirement.valueName
         ) != nil
+    }
+
+    func stringValue(registryPath: String, valueName: String) -> String? {
+        let key = "\(Self.normalizedRegistryPath(registryPath))\u{0}" +
+            valueName.lowercased()
+        guard !duplicateKeys.contains(key) else { return nil }
+        return snapshot.value(
+            forRegistryPath: registryPath,
+            valueName: valueName
+        )
+    }
+
+    func values(
+        forRegistryPath registryPath: String
+    ) -> [(name: String, value: String, isDuplicate: Bool)] {
+        let normalizedPath = Self.normalizedRegistryPath(registryPath)
+        return snapshot.values(forRegistryPath: registryPath).map { entry in
+            (
+                name: entry.name,
+                value: entry.value,
+                isDuplicate: duplicateKeys.contains(
+                    "\(normalizedPath)\u{0}\(entry.name.lowercased())"
+                )
+            )
+        }
     }
 
     private static func normalizedRegistryPath(_ path: String) -> String {
@@ -1211,26 +1295,65 @@ enum WindowsFontCompatibilityProfileContract {
             nonSelfReferential
     }()
 
-    nonisolated static let freshWineRegistryReplacements:
-        [WindowsFontRegistryReplacementDescriptor] = {
+    /// Exact locale-dependent registry baselines emitted by the bundled Wine
+    /// 11.12 `win32u` font code. Keep every ordered SystemLink closure exact:
+    /// accepting one locale's shell font with another locale's link order
+    /// would weaken the foreign-state collision boundary.
+    private nonisolated static let bundledWineNonCJKSystemLinkBaseline = [
+        "MSGOTHIC.TTC,MS UI Gothic",
+        "MINGLIU.TTC,PMingLiU",
+        "SIMSUN.TTC,SimSun",
+        "GULIM.TTC,Gulim",
+        "YUGOTHM.TTC,Yu Gothic UI",
+        "MSJH.TTC,Microsoft JhengHei UI",
+        "MSYH.TTC,Microsoft YaHei UI",
+        "MALGUN.TTF,Malgun Gothic",
+        "SEGUISYM.TTF,Segoe UI Symbol"
+    ]
+
+    private nonisolated static let bundledWineSimplifiedChineseSystemLinkBaseline = [
+        "SIMSUN.TTC,SimSun",
+        "MINGLIU.TTC,PMingLiu",
+        "MSGOTHIC.TTC,MS UI Gothic",
+        "BATANG.TTC,Batang",
+        "MSYH.TTC,Microsoft YaHei UI",
+        "MSJH.TTC,Microsoft JhengHei UI",
+        "YUGOTHM.TTC,Yu Gothic UI",
+        "MALGUN.TTF,Malgun Gothic",
+        "SEGUISYM.TTF,Segoe UI Symbol"
+    ]
+
+    private nonisolated static let bundledWineTraditionalChineseSystemLinkBaseline = [
+        "MINGLIU.TTC,PMingLiu",
+        "SIMSUN.TTC,SimSun",
+        "MSGOTHIC.TTC,MS UI Gothic",
+        "BATANG.TTC,Batang",
+        "MSJH.TTC,Microsoft JhengHei UI",
+        "MSYH.TTC,Microsoft YaHei UI",
+        "YUGOTHM.TTC,Yu Gothic UI",
+        "MALGUN.TTF,Malgun Gothic",
+        "SEGUISYM.TTF,Segoe UI Symbol"
+    ]
+
+    private nonisolated static let bundledWineKoreanSystemLinkBaseline = [
+        "GULIM.TTC,Gulim",
+        "MSGOTHIC.TTC,MS UI Gothic",
+        "MINGLIU.TTC,PMingLiU",
+        "SIMSUN.TTC,SimSun",
+        "MALGUN.TTF,Malgun Gothic",
+        "YUGOTHM.TTC,Yu Gothic UI",
+        "MSJH.TTC,Microsoft JhengHei UI",
+        "MSYH.TTC,Microsoft YaHei UI",
+        "SEGUISYM.TTF,Segoe UI Symbol"
+    ]
+
+    private nonisolated static func makeFreshWineRegistryReplacementSet(
+        systemLinkBaseline: [String],
+        shellDialogBaseline: String
+    ) -> [WindowsFontRegistryReplacementDescriptor] {
         let linksPath = "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\FontLink\\SystemLink"
         let substitutesPath =
             "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes"
-        // Exact output produced by the bundled Wine 11.12 runtime when it
-        // initializes a new prefix. FontLink is ordered, so keep this as an
-        // explicit baseline rather than normalizing or accepting arbitrary
-        // permutations.
-        let systemLinkBaseline = [
-            "MSGOTHIC.TTC,MS UI Gothic",
-            "MINGLIU.TTC,PMingLiU",
-            "SIMSUN.TTC,SimSun",
-            "GULIM.TTC,Gulim",
-            "YUGOTHM.TTC,Yu Gothic UI",
-            "MSJH.TTC,Microsoft JhengHei UI",
-            "MSYH.TTC,Microsoft YaHei UI",
-            "MALGUN.TTF,Malgun Gothic",
-            "SEGUISYM.TTF,Segoe UI Symbol"
-        ]
         let baselines = [
             WindowsFontRegistryRequirement(
                 registryPath: linksPath,
@@ -1248,7 +1371,7 @@ enum WindowsFontCompatibilityProfileContract {
                 registryPath: substitutesPath,
                 valueName: "MS Shell Dlg",
                 valueType: "REG_SZ",
-                orderedValues: ["Tahoma"]
+                orderedValues: [shellDialogBaseline]
             )
         ]
         let targets = [
@@ -1277,72 +1400,58 @@ enum WindowsFontCompatibilityProfileContract {
                 target: $0.1
             )
         }.sorted { $0.replacementID < $1.replacementID }
-    }()
+    }
 
-    /// Exact fresh-prefix baseline used by the preceding ForgePlay runtime.
-    /// Its replacement IDs may still be present in a committed v5 marker, so
-    /// it remains a supported restore/adoption set even though new prefixes
-    /// are classified against `freshWineRegistryReplacements` first.
-    nonisolated static let previousFreshWineRegistryReplacements:
-        [WindowsFontRegistryReplacementDescriptor] = {
-        let linksPath =
-            "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\FontLink\\SystemLink"
-        let substitutesPath =
-            "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes"
-        let systemLinkBaseline = [
-            "GULIM.TTC,Gulim",
-            "MSGOTHIC.TTC,MS UI Gothic",
-            "MINGLIU.TTC,PMingLiU",
-            "SIMSUN.TTC,SimSun",
-            "MALGUN.TTF,Malgun Gothic",
-            "YUGOTHM.TTC,Yu Gothic UI",
-            "MSJH.TTC,Microsoft JhengHei UI",
-            "MSYH.TTC,Microsoft YaHei UI",
-            "SEGUISYM.TTF,Segoe UI Symbol"
-        ]
-        let baselines = [
-            WindowsFontRegistryRequirement(
-                registryPath: linksPath,
-                valueName: "Microsoft Sans Serif",
-                valueType: "REG_MULTI_SZ",
-                orderedValues: systemLinkBaseline
-            ),
-            WindowsFontRegistryRequirement(
-                registryPath: linksPath,
-                valueName: "Tahoma",
-                valueType: "REG_MULTI_SZ",
-                orderedValues: systemLinkBaseline
-            ),
-            WindowsFontRegistryRequirement(
-                registryPath: substitutesPath,
-                valueName: "MS Shell Dlg",
-                valueType: "REG_SZ",
-                orderedValues: ["Gulim"]
-            )
-        ]
-        let targetsByID = Dictionary(uniqueKeysWithValues:
-            freshWineRegistryReplacements.map {
-                ($0.target.descriptorID, $0.target)
-            }
+    /// Latin, Western/Central/Eastern European, Cyrillic, Greek, Turkish,
+    /// Hebrew, Baltic, Vietnamese, Thai and UTF-8 locales use this exact
+    /// bundled-Wine baseline. This includes the United States, Canada, Spain,
+    /// Germany and France.
+    nonisolated static let freshWineRegistryReplacements =
+        makeFreshWineRegistryReplacementSet(
+            systemLinkBaseline: bundledWineNonCJKSystemLinkBaseline,
+            shellDialogBaseline: "Tahoma"
         )
-        return baselines.compactMap { baseline in
-            guard let target = registryRequirements.first(where: {
-                $0.registryPath == baseline.registryPath &&
-                    $0.valueName == baseline.valueName
-            }), targetsByID[target.descriptorID] != nil else {
-                return nil
-            }
-            return WindowsFontRegistryReplacementDescriptor(
-                baseline: baseline,
-                target: target
-            )
-        }.sorted { $0.replacementID < $1.replacementID }
-    }()
+
+    nonisolated static let japaneseFreshWineRegistryReplacements =
+        makeFreshWineRegistryReplacementSet(
+            systemLinkBaseline: bundledWineNonCJKSystemLinkBaseline,
+            shellDialogBaseline: "MS UI Gothic"
+        )
+
+    nonisolated static let simplifiedChineseFreshWineRegistryReplacements =
+        makeFreshWineRegistryReplacementSet(
+            systemLinkBaseline: bundledWineSimplifiedChineseSystemLinkBaseline,
+            shellDialogBaseline: "SimSun"
+        )
+
+    nonisolated static let traditionalChineseFreshWineRegistryReplacements =
+        makeFreshWineRegistryReplacementSet(
+            systemLinkBaseline: bundledWineTraditionalChineseSystemLinkBaseline,
+            shellDialogBaseline: "PMingLiU"
+        )
+
+    nonisolated static let arabicFreshWineRegistryReplacements =
+        makeFreshWineRegistryReplacementSet(
+            systemLinkBaseline: bundledWineNonCJKSystemLinkBaseline,
+            shellDialogBaseline: "Microsoft Sans Serif"
+        )
+
+    /// This identifier is retained for marker/source compatibility. The same
+    /// exact closure is also the current bundled-Wine Korean locale baseline.
+    nonisolated static let previousFreshWineRegistryReplacements =
+        makeFreshWineRegistryReplacementSet(
+            systemLinkBaseline: bundledWineKoreanSystemLinkBaseline,
+            shellDialogBaseline: "Gulim"
+        )
 
     nonisolated static let freshWineRegistryReplacementSets:
         [[WindowsFontRegistryReplacementDescriptor]] = [
         freshWineRegistryReplacements,
-        previousFreshWineRegistryReplacements
+        japaneseFreshWineRegistryReplacements,
+        simplifiedChineseFreshWineRegistryReplacements,
+        traditionalChineseFreshWineRegistryReplacements,
+        previousFreshWineRegistryReplacements,
+        arabicFreshWineRegistryReplacements
     ]
 
     nonisolated static let freshWineAlreadyTargetRequirements:
@@ -1447,15 +1556,24 @@ enum WindowsFontCompatibilityProfileContract {
     }()
 
     nonisolated static let supportedRegistryReplacementSets:
-        [[WindowsFontRegistryReplacementDescriptor]] = [
-        freshWineRegistryReplacements,
-        previousFreshWineRegistryReplacements,
-        legacyV4RegistryReplacements
-    ]
+        [[WindowsFontRegistryReplacementDescriptor]] =
+        freshWineRegistryReplacementSets + [legacyV4RegistryReplacements]
+
+    private nonisolated static func deduplicatedRegistryReplacements(
+        _ sets: [[WindowsFontRegistryReplacementDescriptor]]
+    ) -> [WindowsFontRegistryReplacementDescriptor] {
+        var replacementsByID: [String: WindowsFontRegistryReplacementDescriptor] = [:]
+        for replacement in sets.flatMap({ $0 }) {
+            replacementsByID[replacement.replacementID] = replacement
+        }
+        return replacementsByID.values.sorted {
+            $0.replacementID < $1.replacementID
+        }
+    }
 
     nonisolated static let supportedRegistryReplacements:
         [WindowsFontRegistryReplacementDescriptor] =
-        supportedRegistryReplacementSets.flatMap { $0 }
+        deduplicatedRegistryReplacements(supportedRegistryReplacementSets)
 
     nonisolated static func freshWineReplacement(
         forReplacementID replacementID: String
@@ -1491,7 +1609,7 @@ enum WindowsFontCompatibilityProfileContract {
         let replacementSets = supportedRegistryReplacementSets.map { set in
             set.filter { requirementIDs.contains($0.target.descriptorID) }
         }.filter { !$0.isEmpty }
-        let replacements = replacementSets.flatMap { $0 }
+        let replacements = deduplicatedRegistryReplacements(replacementSets)
         let replacementsByID = Dictionary(uniqueKeysWithValues: replacements.map {
             ($0.replacementID, $0)
         })
@@ -1533,16 +1651,6 @@ enum WindowsFontCompatibilityProfileContract {
             }
         }
         if requiresCompleteReplacementSet, !replacementIDs.isEmpty {
-            let freshSets = freshWineRegistryReplacementSets.map { set in
-                set.filter { requirementIDs.contains($0.target.descriptorID) }
-            }.filter { !$0.isEmpty }
-            let freshIDs = Set(freshSets.flatMap { $0 }.map(\.replacementID))
-            if replacementIDs.isSubset(of: freshIDs) {
-                let requiredTargetIDs = Set(freshSets.flatMap { $0 }.map {
-                    $0.target.descriptorID
-                })
-                return replacedTargetIDs == requiredTargetIDs
-            }
             return replacementSets.contains {
                 replacementIDs == Set($0.map(\.replacementID))
             }
@@ -1593,6 +1701,195 @@ enum WindowsFontCompatibilityProfileContract {
             isAcceptedAppleHostFontRegistration(
                 snapshot: snapshot,
                 requirement: requirement
+            )
+    }
+
+    /// A managed prefix may already contain a user-selected Noto build, or
+    /// Wine may have projected a host-installed Noto family into its external
+    /// font catalog. In either case, publishing ForgePlay's same-named family
+    /// beside it makes Wine/DirectWrite face selection ambiguous. Preserve the
+    /// external family when preparing a new profile; its presence alone does
+    /// not prove complete multilingual coverage. A complete, already verified
+    /// managed profile must not be retired merely because this catalog exists.
+    nonisolated static func externalNotoOwnershipObservations(
+        prefix: URL,
+        fileManager: FileManager = .default
+    ) throws -> [String] {
+        let notoPayloads = fontPayloads.filter {
+            $0.sourceRole == .appNotoPack
+        }
+        let fontsDirectory = windowsFontsDirectory(in: prefix)
+        var observations: [String] = []
+
+        var exactManagedFileNames = Set<String>()
+        if try WindowsFontLifecycleFileSystem.lstatItem(fontsDirectory) != nil {
+            try WindowsFontLifecycleFileSystem.requireDirectory(fontsDirectory)
+            let entries = try fileManager.contentsOfDirectory(
+                at: fontsDirectory,
+                includingPropertiesForKeys: nil
+            )
+            for entry in entries where isManagedNotoFamilyName(
+                entry.lastPathComponent
+            ) {
+                let normalizedFileName = entry.lastPathComponent.lowercased()
+                let payload = notoPayloads.first {
+                    $0.fileName.lowercased() == normalizedFileName
+                }
+                let status = try WindowsFontLifecycleFileSystem.lstatItem(entry)
+                guard let status,
+                      (status.st_mode & S_IFMT) == S_IFREG,
+                      status.st_nlink == 1 else {
+                    observations.append(
+                        externalNotoObservation(
+                            domain: "prefix-unsafe-entry",
+                            fields: [normalizedFileName]
+                        )
+                    )
+                    continue
+                }
+                let digest = try WindowsFontLifecycleFileSystem
+                    .sha256OfRegularFile(at: entry)
+                if let payload, digest == payload.sha256 {
+                    exactManagedFileNames.insert(normalizedFileName)
+                    continue
+                }
+                observations.append(
+                    externalNotoObservation(
+                        domain: "prefix-file",
+                        fields: [normalizedFileName, digest]
+                    )
+                )
+            }
+        }
+
+        let userSnapshot = try WindowsFontRegistrySnapshotState.load(
+            url: prefix.appending(path: "user.reg"),
+            fileManager: fileManager
+        )
+        let systemSnapshot = try WindowsFontRegistrySnapshotState.load(
+            url: prefix.appending(path: "system.reg"),
+            fileManager: fileManager
+        )
+        let fontsPath =
+            "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts"
+        let externalFontsPath = "HKCU\\Software\\Wine\\Fonts\\External Fonts"
+
+        let exactRegistrations = Dictionary(uniqueKeysWithValues:
+            notoPayloads.map {
+                ($0.registryDisplayName.lowercased(), $0.fileName.lowercased())
+            }
+        )
+        for entry in systemSnapshot.values(forRegistryPath: fontsPath) {
+            let normalizedName = entry.name.lowercased()
+            let normalizedValue = normalizedRegistryFontReference(entry.value)
+            let isExactManagedRegistration =
+                exactRegistrations[normalizedName] == normalizedValue &&
+                exactManagedFileNames.contains(normalizedValue)
+            guard !isExactManagedRegistration,
+                  isManagedNotoFamilyName(entry.name) ||
+                    isManagedNotoFamilyReference(entry.value) else {
+                continue
+            }
+            observations.append(
+                externalNotoObservation(
+                    domain: entry.isDuplicate
+                        ? "windows-registration-duplicate"
+                        : "windows-registration",
+                    fields: [normalizedName, normalizedValue]
+                )
+            )
+        }
+
+        for entry in userSnapshot.values(forRegistryPath: externalFontsPath)
+            where isManagedNotoFamilyName(entry.name) ||
+                isManagedNotoFamilyReference(entry.value) {
+            observations.append(
+                externalNotoObservation(
+                    domain: entry.isDuplicate
+                        ? "host-registration-duplicate"
+                        : "host-registration",
+                    fields: [
+                        entry.name.lowercased(),
+                        normalizedRegistryFontReference(entry.value)
+                    ]
+                )
+            )
+        }
+        return Array(Set(observations)).sorted()
+    }
+
+    private nonisolated static func isManagedNotoFamilyReference(
+        _ value: String
+    ) -> Bool {
+        isManagedNotoFamilyName(normalizedRegistryFontReference(value))
+    }
+
+    private nonisolated static func normalizedRegistryFontReference(
+        _ value: String
+    ) -> String {
+        var normalized = value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "/", with: "\\")
+            .lowercased()
+        while normalized.contains("\\\\") {
+            normalized = normalized.replacingOccurrences(
+                of: "\\\\",
+                with: "\\"
+            )
+        }
+        return normalized.split(separator: "\\").last.map(String.init) ??
+            normalized
+    }
+
+    private nonisolated static func isManagedNotoFamilyName(
+        _ name: String
+    ) -> Bool {
+        let lowercased = name.lowercased()
+        guard [".ttf", ".otf", ".ttc"].contains(where: {
+            lowercased.hasSuffix($0)
+        }) || lowercased.contains("noto sans") else {
+            return false
+        }
+        var familyAndStyle = lowercased
+        for extensionSuffix in [".ttf", ".otf", ".ttc"]
+            where familyAndStyle.hasSuffix(extensionSuffix) {
+            familyAndStyle.removeLast(extensionSuffix.count)
+            break
+        }
+        let canonical = familyAndStyle.unicodeScalars
+            .filter { CharacterSet.alphanumerics.contains($0) }
+            .map(String.init)
+            .joined()
+            .replacingOccurrences(of: "truetype", with: "")
+            .replacingOccurrences(of: "opentype", with: "")
+        let familyBases = [
+            "notosanscjkkr", "notosanscjkjp", "notosanscjksc",
+            "notosanscjktc", "notosanscjk", "notosanskr",
+            "notosansjp", "notosanssc", "notosanstc", "notosans"
+        ]
+        let styleSuffixes: Set<String> = [
+            "", "regular", "bold", "italic", "bolditalic", "medium",
+            "mediumitalic", "semibold", "semibolditalic", "light",
+            "lightitalic", "extralight", "extralightitalic", "black",
+            "blackitalic", "thin", "thinitalic", "demilight",
+            "demilightitalic", "wght", "wdthwght", "variable",
+            "variablefont", "variablefontwdthwght"
+        ]
+        for base in familyBases where canonical.hasPrefix(base) {
+            let suffix = String(canonical.dropFirst(base.count))
+            if styleSuffixes.contains(suffix) { return true }
+        }
+        return false
+    }
+
+    private nonisolated static func externalNotoObservation(
+        domain: String,
+        fields: [String]
+    ) -> String {
+        "\(domain):" +
+            WindowsFontCanonical.digest(
+                domain: "ForgePlayExternalNotoOwnershipObservationV1",
+                fields: fields
             )
     }
 
@@ -1841,6 +2138,601 @@ enum WindowsFontCompatibilityProfileContract {
             throw WindowsFontCompatibilityProfileError.malformedLifecycleEvidence
         }
         return marker
+    }
+}
+
+enum WindowsFontLocaleVariant: String, CaseIterable, Hashable, Sendable {
+    case western
+    case japanese = "ja"
+    case simplifiedChinese = "zh-Hans"
+    case traditionalChinese = "zh-Hant"
+    case korean = "ko"
+
+    nonisolated static func supportedWindowsLocale(
+        identifier: String
+    ) -> WindowsFontLocaleVariant? {
+        let normalized = identifier
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "_", with: "-")
+            .lowercased()
+        guard !normalized.isEmpty else { return nil }
+        func hasRoot(_ root: String) -> Bool {
+            normalized == root || normalized.hasPrefix("\(root)-")
+        }
+        if ["zh-hant", "zh-tw", "zh-hk", "zh-mo", "zh-cht"].contains(
+            where: { hasRoot($0) }
+        ) {
+            return .traditionalChinese
+        }
+        if ["zh-hans", "zh-cn", "zh-sg", "zh-my", "zh-chs"].contains(
+            where: { hasRoot($0) }
+        ) {
+            return .simplifiedChinese
+        }
+        if hasRoot("ja") { return .japanese }
+        if hasRoot("ko") { return .korean }
+        // A bare or unknown Chinese tag does not identify the script. Let the
+        // coordinator use Wine's codepage signal instead of guessing Western.
+        if hasRoot("zh") { return nil }
+        // CJK locales use their script-specific ordering. Every other valid
+        // locale intentionally uses the Western/English policy so a language
+        // outside ForgePlay's localized catalog never disables font setup.
+        return .western
+    }
+}
+
+fileprivate enum WindowsFontFreshBaselineVariant:
+    String, Codable, Hashable, Sendable {
+    case western
+    case japanese
+    case simplifiedChinese
+    case traditionalChinese
+    case korean
+    case unsupportedArabic
+
+    static func retirementBaseline(
+        fontCodepages: String
+    ) -> WindowsFontFreshBaselineVariant? {
+        let components = fontCodepages.split(
+            separator: ",",
+            omittingEmptySubsequences: false
+        )
+        guard components.count == 2,
+              components.allSatisfy({ component in
+                  !component.isEmpty && component.utf8.allSatisfy {
+                      (UInt8(ascii: "0")...UInt8(ascii: "9")).contains($0)
+                  }
+              }),
+              let ansi = Int(components[0]),
+              let oem = Int(components[1]),
+              (1...65_535).contains(ansi),
+              (1...65_535).contains(oem),
+              String(ansi) == String(components[0]),
+              String(oem) == String(components[1]) else {
+            return nil
+        }
+        switch (ansi, oem) {
+        case (932, 932):
+            return .japanese
+        case (936, 936):
+            return .simplifiedChinese
+        case (950, 950):
+            return .traditionalChinese
+        case (949, 949):
+            return .korean
+        case (1256, 720):
+            return .unsupportedArabic
+        case (1252, 437), (1252, 850), (65_001, 65_001),
+             (1250, 852), (1251, 866), (1253, 737),
+             (1254, 857), (1255, 862), (1257, 775),
+             (1258, 1258), (874, 874):
+            return .western
+        default:
+            return nil
+        }
+    }
+}
+
+fileprivate struct WindowsFontRegistryBaselineTransition: Hashable, Sendable {
+    let baselineVariant: WindowsFontFreshBaselineVariant
+    let sourceRequirements: [WindowsFontRegistryRequirement]
+    let replacements: [WindowsFontRegistryReplacementDescriptor]
+}
+
+fileprivate struct WindowsFontLifecycleNamespace: Hashable, Sendable {
+    let profileIdentifier: String
+
+    var journalRelativePath: String {
+        "drive_c/.\(profileIdentifier).transaction.json"
+    }
+
+    var driveCJournalRelativePath: String {
+        ".\(profileIdentifier).transaction.json"
+    }
+
+    var markerRelativePath: String {
+        "drive_c/ForgePlay/FontCompatibility/\(profileIdentifier).txt"
+    }
+
+    var driveCMarkerRelativePath: String {
+        "ForgePlay/FontCompatibility/\(profileIdentifier).txt"
+    }
+
+    var scratchDirectoryRelativePath: String {
+        ".\(profileIdentifier).scratch"
+    }
+
+    var markerStageFileName: String {
+        "\(profileIdentifier).marker-stage"
+    }
+}
+
+fileprivate struct WindowsFontLifecycleRuntimeContract: Sendable {
+    let namespace: WindowsFontLifecycleNamespace
+    let definition: WindowsFontLifecycleDefinition
+    let freshBaselineTransitions: [WindowsFontRegistryBaselineTransition]
+    let freshAlreadyTargetRequirements: [WindowsFontRegistryRequirement]
+    let legacyV4RegistryReplacements: [WindowsFontRegistryReplacementDescriptor]
+    let targetVariant: WindowsFontLocaleVariant?
+
+    private var supportedReplacementSets:
+        [[WindowsFontRegistryReplacementDescriptor]] {
+        freshBaselineTransitions.map(\.replacements) +
+            (legacyV4RegistryReplacements.isEmpty
+                ? []
+                : [legacyV4RegistryReplacements])
+    }
+
+    private var supportedReplacements:
+        [WindowsFontRegistryReplacementDescriptor] {
+        var byID: [String: WindowsFontRegistryReplacementDescriptor] = [:]
+        for replacement in supportedReplacementSets.flatMap({ $0 }) {
+            byID[replacement.replacementID] = replacement
+        }
+        return byID.values.sorted { $0.replacementID < $1.replacementID }
+    }
+
+    func supportedReplacement(
+        forReplacementID replacementID: String
+    ) -> WindowsFontRegistryReplacementDescriptor? {
+        if targetVariant == nil {
+            return WindowsFontCompatibilityProfileContract.supportedReplacement(
+                forReplacementID: replacementID
+            )
+        }
+        return supportedReplacements.first {
+            $0.replacementID == replacementID
+        }
+    }
+
+    func registryOwnershipIDsAreValid(
+        _ ids: [String],
+        allowsReplacements: Bool,
+        requiresCompleteReplacementSet: Bool
+    ) -> Bool {
+        if targetVariant == nil {
+            return WindowsFontCompatibilityProfileContract
+                .registryOwnershipIDsAreValid(
+                    ids,
+                    definition: definition,
+                    allowsReplacements: allowsReplacements,
+                    requiresCompleteReplacementSet:
+                        requiresCompleteReplacementSet
+                )
+        }
+        let requirementIDs = Set(definition.registryRequirements.map(\.descriptorID))
+        let replacementSets = supportedReplacementSets.map { set in
+            set.filter { requirementIDs.contains($0.target.descriptorID) }
+        }.filter { !$0.isEmpty }
+        var replacementsByID: [String: WindowsFontRegistryReplacementDescriptor] = [:]
+        for replacement in replacementSets.flatMap({ $0 }) {
+            replacementsByID[replacement.replacementID] = replacement
+        }
+        let replacementIDs = Set(ids.filter { replacementsByID[$0] != nil })
+        let createdIDs = Set(ids).subtracting(replacementIDs)
+        let allowedIDs = requirementIDs.union(Set(replacementsByID.keys))
+        guard createdIDs.isSubset(of: requirementIDs),
+              allowsReplacements || replacementIDs.isEmpty,
+              Set(ids).isSubset(of: allowedIDs) else {
+            return false
+        }
+        let replacedTargetIDs = Set(replacementIDs.compactMap {
+            replacementsByID[$0]?.target.descriptorID
+        })
+        guard createdIDs.isDisjoint(with: replacedTargetIDs),
+              replacedTargetIDs.count == replacementIDs.count else {
+            return false
+        }
+        if !replacementIDs.isEmpty {
+            let freshIDs = Set(
+                freshBaselineTransitions.flatMap(\.replacements).map(\.replacementID)
+            )
+            if replacementIDs.isSubset(of: freshIDs) {
+                let requiredAnchorIDs = Set(
+                    freshAlreadyTargetRequirements.map(\.descriptorID)
+                )
+                guard requiredAnchorIDs.isSubset(of: requirementIDs) else {
+                    return false
+                }
+            } else {
+                let containingSets = replacementSets.filter {
+                    replacementIDs.isSubset(of: Set($0.map(\.replacementID)))
+                }
+                guard containingSets.count == 1 else { return false }
+            }
+        }
+        if requiresCompleteReplacementSet, !replacementIDs.isEmpty {
+            return replacementSets.contains {
+                replacementIDs == Set($0.map(\.replacementID))
+            }
+        }
+        return true
+    }
+
+    func baselineVariant(
+        forOwnedRegistryIDs ownedRegistryIDs: [String]
+    ) -> WindowsFontFreshBaselineVariant? {
+        let owned = Set(ownedRegistryIDs)
+        let matches = freshBaselineTransitions.filter { transition in
+            let ids = Set(transition.replacements.map(\.replacementID))
+            return !ids.isEmpty && ids.isSubset(of: owned)
+        }
+        guard matches.count == 1 else { return nil }
+        return matches[0].baselineVariant
+    }
+
+    static func frozenV5(
+        definition: WindowsFontLifecycleDefinition =
+            WindowsFontCompatibilityProfileContract.definition
+    ) -> Self {
+        let targetByKey = Dictionary(uniqueKeysWithValues:
+            definition.registryRequirements.map {
+                (Self.registryKey($0), $0)
+            }
+        )
+        let transitions = WindowsFontCompatibilityProfileContract
+            .freshWineRegistryReplacementSets.compactMap { replacements ->
+                WindowsFontRegistryBaselineTransition? in
+                guard let variant = Self.baselineVariant(
+                    sourceRequirements: replacements.map(\.baseline)
+                ) else {
+                    return nil
+                }
+                let applicable = replacements.compactMap { replacement in
+                    targetByKey[Self.registryKey(replacement.target)].map { target in
+                        WindowsFontRegistryReplacementDescriptor(
+                            baseline: replacement.baseline,
+                            target: target
+                        )
+                    }
+                }
+                return WindowsFontRegistryBaselineTransition(
+                    baselineVariant: variant,
+                    sourceRequirements: replacements.map(\.baseline),
+                    replacements: applicable
+                )
+            }
+        return Self(
+            namespace: .init(
+                profileIdentifier:
+                    WindowsFontCompatibilityProfileContract.profileIdentifier
+            ),
+            definition: definition,
+            freshBaselineTransitions: transitions,
+            freshAlreadyTargetRequirements:
+                WindowsFontCompatibilityProfileContract
+                    .freshWineAlreadyTargetRequirements,
+            legacyV4RegistryReplacements:
+                WindowsFontCompatibilityProfileContract
+                    .legacyV4RegistryReplacements.compactMap { replacement in
+                    targetByKey[Self.registryKey(replacement.target)].map { target in
+                        WindowsFontRegistryReplacementDescriptor(
+                            baseline: replacement.baseline,
+                            target: target
+                        )
+                    }
+                },
+            targetVariant: nil
+        )
+    }
+
+    static func localeAwareV6(
+        variant: WindowsFontLocaleVariant,
+        definition definitionOverride: WindowsFontLifecycleDefinition? = nil
+    ) -> Self {
+        let definition = definitionOverride ??
+            WindowsFontCompatibilityProfileV6Contract.definition(for: variant)
+        let targetByKey = Dictionary(uniqueKeysWithValues:
+            definition.registryRequirements.map {
+                (Self.registryKey($0), $0)
+            }
+        )
+        let transitions = WindowsFontCompatibilityProfileContract
+            .freshWineRegistryReplacementSets.compactMap { source ->
+                WindowsFontRegistryBaselineTransition? in
+                let sourceRequirements = source.map(\.baseline)
+                guard let baselineVariant = Self.baselineVariant(
+                    sourceRequirements: sourceRequirements
+                ) else {
+                    return nil
+                }
+                let replacements = sourceRequirements.compactMap { baseline ->
+                    WindowsFontRegistryReplacementDescriptor? in
+                    guard let target = targetByKey[Self.registryKey(baseline)],
+                          target.descriptorID != baseline.descriptorID else {
+                        return nil
+                    }
+                    return WindowsFontRegistryReplacementDescriptor(
+                        baseline: baseline,
+                        target: target
+                    )
+                }.sorted { $0.replacementID < $1.replacementID }
+                return WindowsFontRegistryBaselineTransition(
+                    baselineVariant: baselineVariant,
+                    sourceRequirements: sourceRequirements,
+                    replacements: replacements
+                )
+            }
+        return Self(
+            namespace: .init(
+                profileIdentifier:
+                    WindowsFontCompatibilityProfileV6Contract.profileIdentifier
+            ),
+            definition: definition,
+            freshBaselineTransitions: transitions,
+            freshAlreadyTargetRequirements:
+                WindowsFontCompatibilityProfileContract
+                    .freshWineAlreadyTargetRequirements,
+            legacyV4RegistryReplacements: [],
+            targetVariant: variant
+        )
+    }
+
+    private static func registryKey(
+        _ requirement: WindowsFontRegistryRequirement
+    ) -> String {
+        "\(requirement.registryPath.lowercased())\u{0}" +
+            requirement.valueName.lowercased()
+    }
+
+    private static func baselineVariant(
+        sourceRequirements: [WindowsFontRegistryRequirement]
+    ) -> WindowsFontFreshBaselineVariant? {
+        guard let shell = sourceRequirements.first(where: {
+            $0.valueName == "MS Shell Dlg"
+        })?.orderedValues.first else {
+            return nil
+        }
+        switch shell {
+        case "Tahoma": return .western
+        case "MS UI Gothic": return .japanese
+        case "SimSun": return .simplifiedChinese
+        case "PMingLiU": return .traditionalChinese
+        case "Gulim": return .korean
+        case "Microsoft Sans Serif": return .unsupportedArabic
+        default: return nil
+        }
+    }
+}
+
+enum WindowsFontCompatibilityProfileV6Contract {
+    nonisolated static let profileIdentifier =
+        "forgeplay-windows-font-compatibility-v6"
+
+    private struct TargetPolicy: Sendable {
+        let shellDialogFamily: String
+        let linkedLatinFallbackFiles: [String]
+    }
+
+    private nonisolated static let definitionsByVariant:
+        [WindowsFontLocaleVariant: WindowsFontLifecycleDefinition] =
+        Dictionary(uniqueKeysWithValues: WindowsFontLocaleVariant.allCases.map {
+            variant in
+            (variant, makeDefinition(variant: variant))
+        })
+
+    nonisolated static let expectedAppliedItemCount: Int = {
+        guard let count = definitionsByVariant.values.first.map({
+            $0.payloads.count + $0.registryRequirements.count + 1
+        }), definitionsByVariant.values.allSatisfy({
+            $0.payloads.count + $0.registryRequirements.count + 1 == count
+        }) else {
+            return -1
+        }
+        return count
+    }()
+
+    nonisolated static func definition(
+        for variant: WindowsFontLocaleVariant
+    ) -> WindowsFontLifecycleDefinition {
+        definitionsByVariant[variant]!
+    }
+
+    nonisolated static func variant(
+        forDescriptorDigest descriptorDigest: String
+    ) -> WindowsFontLocaleVariant? {
+        definitionsByVariant.first {
+            $0.value.descriptorDigest == descriptorDigest
+        }?.key
+    }
+
+    nonisolated static func supportedVariant(
+        localeIdentifier: String
+    ) -> WindowsFontLocaleVariant? {
+        WindowsFontLocaleVariant.supportedWindowsLocale(
+            identifier: localeIdentifier
+        )
+    }
+
+    private nonisolated static func makeDefinition(
+        variant: WindowsFontLocaleVariant
+    ) -> WindowsFontLifecycleDefinition {
+        let policy = targetPolicy(for: variant)
+        let linksPath =
+            "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\FontLink\\SystemLink"
+        let substitutesPath =
+            "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes"
+        let replacementsPath = "HKCU\\Software\\Wine\\Fonts\\Replacements"
+        let forcedReplacementsPath =
+            "HKCU\\Software\\Wine\\Fonts\\ForcedReplacements"
+        let nanumFile = "NanumGothic-Regular.ttf"
+        let notoFile = "NotoSans-Regular.ttf"
+        var requirements = WindowsFontCompatibilityProfileContract
+            .registryRequirements.compactMap { requirement ->
+                WindowsFontRegistryRequirement? in
+                // v6 never replaces the whole Tahoma family. Locale-ordered
+                // SystemLink supplies only missing glyphs, preserving Tahoma's
+                // shaping for mixed-script and unsupported-language text.
+                if requirement.registryPath == forcedReplacementsPath,
+                   requirement.valueName == "Tahoma" {
+                    return nil
+                }
+                if requirement.registryPath == replacementsPath {
+                    return WindowsFontRegistryRequirement(
+                        registryPath: replacementsPath,
+                        valueName: requirement.valueName,
+                        valueType: "REG_SZ",
+                        orderedValues: ["Noto Sans CJK KR"]
+                    )
+                }
+                if requirement.registryPath == linksPath,
+                   WindowsFontCompatibilityProfileContract.linkedLatinFamilies
+                    .contains(requirement.valueName) {
+                    return WindowsFontRegistryRequirement(
+                        registryPath: linksPath,
+                        valueName: requirement.valueName,
+                        valueType: "REG_MULTI_SZ",
+                        orderedValues: policy.linkedLatinFallbackFiles
+                    )
+                }
+                if requirement.registryPath == linksPath,
+                   requirement.valueName == "NanumGothic" {
+                    return WindowsFontRegistryRequirement(
+                        registryPath: linksPath,
+                        valueName: requirement.valueName,
+                        valueType: "REG_MULTI_SZ",
+                        orderedValues: policy.linkedLatinFallbackFiles.filter {
+                            $0 != nanumFile
+                        }
+                    )
+                }
+                if requirement.registryPath == linksPath,
+                   requirement.valueName == "Noto Sans" {
+                    return WindowsFontRegistryRequirement(
+                        registryPath: linksPath,
+                        valueName: requirement.valueName,
+                        valueType: "REG_MULTI_SZ",
+                        orderedValues: policy.linkedLatinFallbackFiles.filter {
+                            $0 != notoFile
+                        }
+                    )
+                }
+                if requirement.registryPath == substitutesPath,
+                   requirement.valueName == "MS Shell Dlg" {
+                    return WindowsFontRegistryRequirement(
+                        registryPath: substitutesPath,
+                        valueName: requirement.valueName,
+                        valueType: "REG_SZ",
+                        orderedValues: [policy.shellDialogFamily]
+                    )
+                }
+                return requirement
+            }
+        let localizedNotoFamilies = [
+            ("Noto Sans CJK JP", "NotoSansCJKjp-Regular.otf"),
+            ("Noto Sans CJK SC", "NotoSansCJKsc-Regular.otf"),
+            ("Noto Sans CJK TC", "NotoSansCJKtc-Regular.otf"),
+            ("Noto Sans CJK KR", "NotoSansCJKkr-Regular.otf")
+        ]
+        requirements.append(contentsOf: localizedNotoFamilies.map { entry in
+            let (family, ownFile) = entry
+            return WindowsFontRegistryRequirement(
+                registryPath: linksPath,
+                valueName: family,
+                valueType: "REG_MULTI_SZ",
+                orderedValues: policy.linkedLatinFallbackFiles.filter {
+                    $0 != ownFile
+                }
+            )
+        })
+        return WindowsFontLifecycleDefinition(
+            profileIdentifier: profileIdentifier,
+            payloads: WindowsFontCompatibilityProfileContract.fontPayloads,
+            registryRequirements: requirements
+        )
+    }
+
+    private nonisolated static func targetPolicy(
+        for variant: WindowsFontLocaleVariant
+    ) -> TargetPolicy {
+        let latin = "NotoSans-Regular.ttf"
+        let japanese = "NotoSansCJKjp-Regular.otf"
+        let simplifiedChinese = "NotoSansCJKsc-Regular.otf"
+        let traditionalChinese = "NotoSansCJKtc-Regular.otf"
+        let korean = "NotoSansCJKkr-Regular.otf"
+        let nanum = "NanumGothic-Regular.ttf"
+        switch variant {
+        case .western:
+            return TargetPolicy(
+                shellDialogFamily: "Tahoma",
+                linkedLatinFallbackFiles: [
+                    latin,
+                    japanese,
+                    traditionalChinese,
+                    simplifiedChinese,
+                    korean,
+                    nanum
+                ]
+            )
+        case .japanese:
+            return TargetPolicy(
+                shellDialogFamily: "Noto Sans CJK JP",
+                linkedLatinFallbackFiles: [
+                    latin,
+                    japanese,
+                    traditionalChinese,
+                    simplifiedChinese,
+                    korean,
+                    nanum
+                ]
+            )
+        case .simplifiedChinese:
+            return TargetPolicy(
+                shellDialogFamily: "Noto Sans CJK SC",
+                linkedLatinFallbackFiles: [
+                    latin,
+                    simplifiedChinese,
+                    traditionalChinese,
+                    japanese,
+                    korean,
+                    nanum
+                ]
+            )
+        case .traditionalChinese:
+            return TargetPolicy(
+                shellDialogFamily: "Noto Sans CJK TC",
+                linkedLatinFallbackFiles: [
+                    latin,
+                    traditionalChinese,
+                    simplifiedChinese,
+                    japanese,
+                    korean,
+                    nanum
+                ]
+            )
+        case .korean:
+            return TargetPolicy(
+                shellDialogFamily: "Noto Sans CJK KR",
+                linkedLatinFallbackFiles: [
+                    latin,
+                    korean,
+                    nanum,
+                    japanese,
+                    traditionalChinese,
+                    simplifiedChinese
+                ]
+            )
+        }
     }
 }
 
@@ -2766,20 +3658,22 @@ final class WindowsFontCompatibilityProfile {
     ) throws -> [WindowsFontPayloadSourceRole: URL]
 
     private static var activePrefixPaths = Set<String>()
-    private static let driveCJournalRelativePath =
-        ".forgeplay-windows-font-compatibility-v5.transaction.json"
 
     private let fileManager: FileManager
     private let definition: WindowsFontLifecycleDefinition
+    private let lifecycleContract: WindowsFontLifecycleRuntimeContract
     private let sourceRootResolver: SourceRootResolver
     private let hooks: WindowsFontLifecycleExecutionHooks
     private let transactionIDProvider: () -> UUID
     private let payloadHashObserver: (URL) -> Void
+    private let performsDetachedInspection: Bool
+    private let productionCoordinator: WindowsFontCompatibilityProfileCoordinator?
     private(set) var consumedOperations: [WindowsFontLifecycleOperationInstance] = []
 
     init(runner: SafeProcessRunner, fileManager: FileManager = .default) {
         self.fileManager = fileManager
         definition = WindowsFontCompatibilityProfileContract.definition
+        lifecycleContract = .frozenV5()
         sourceRootResolver = { runtimeExecutable, fileManager in
             try WindowsFontCompatibilityProfileContract.resolvedSourceRoots(
                 runtimeExecutable: runtimeExecutable,
@@ -2789,6 +3683,11 @@ final class WindowsFontCompatibilityProfile {
         hooks = .production(runner: runner)
         transactionIDProvider = UUID.init
         payloadHashObserver = { _ in }
+        performsDetachedInspection = true
+        productionCoordinator = WindowsFontCompatibilityProfileCoordinator(
+            runner: runner,
+            fileManager: fileManager
+        )
     }
 
     init(
@@ -2801,10 +3700,56 @@ final class WindowsFontCompatibilityProfile {
     ) {
         self.fileManager = fileManager
         self.definition = definition
+        lifecycleContract = .frozenV5(definition: definition)
         self.sourceRootResolver = sourceRootResolver
         self.hooks = hooks
         self.transactionIDProvider = transactionIDProvider
         self.payloadHashObserver = payloadHashObserver
+        performsDetachedInspection = false
+        productionCoordinator = nil
+    }
+
+    init(
+        fileManager: FileManager = .default,
+        localeVariant: WindowsFontLocaleVariant,
+        definition: WindowsFontLifecycleDefinition? = nil,
+        sourceRootResolver: @escaping SourceRootResolver,
+        hooks: WindowsFontLifecycleExecutionHooks,
+        transactionIDProvider: @escaping () -> UUID = UUID.init,
+        payloadHashObserver: @escaping (URL) -> Void = { _ in }
+    ) {
+        let contract = WindowsFontLifecycleRuntimeContract.localeAwareV6(
+            variant: localeVariant,
+            definition: definition
+        )
+        self.fileManager = fileManager
+        self.definition = contract.definition
+        lifecycleContract = contract
+        self.sourceRootResolver = sourceRootResolver
+        self.hooks = hooks
+        self.transactionIDProvider = transactionIDProvider
+        self.payloadHashObserver = payloadHashObserver
+        performsDetachedInspection = false
+        productionCoordinator = nil
+    }
+
+    fileprivate init(
+        fileManager: FileManager,
+        lifecycleContract: WindowsFontLifecycleRuntimeContract,
+        sourceRootResolver: @escaping SourceRootResolver,
+        hooks: WindowsFontLifecycleExecutionHooks,
+        transactionIDProvider: @escaping () -> UUID = UUID.init,
+        payloadHashObserver: @escaping (URL) -> Void = { _ in }
+    ) {
+        self.fileManager = fileManager
+        definition = lifecycleContract.definition
+        self.lifecycleContract = lifecycleContract
+        self.sourceRootResolver = sourceRootResolver
+        self.hooks = hooks
+        self.transactionIDProvider = transactionIDProvider
+        self.payloadHashObserver = payloadHashObserver
+        performsDetachedInspection = true
+        productionCoordinator = nil
     }
 
     func apply(
@@ -2812,6 +3757,13 @@ final class WindowsFontCompatibilityProfile {
         prefix: URL,
         logDirectory: URL
     ) async throws -> ProcessRunResult? {
+        if let productionCoordinator {
+            return try await productionCoordinator.apply(
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix,
+                logDirectory: logDirectory
+            )
+        }
         let result = try await convergeForLaunch(
             runtimeExecutable: runtimeExecutable,
             prefix: prefix,
@@ -3102,8 +4054,17 @@ final class WindowsFontCompatibilityProfile {
     func provisionForLaunch(
         runtimeExecutable: URL,
         prefix: URL,
-        logDirectory: URL
+        logDirectory: URL,
+        preferredLocaleIdentifier: String? = nil
     ) async throws -> WindowsFontProvisioningApplicationReceipt {
+        if let productionCoordinator {
+            return try await productionCoordinator.provisionForLaunch(
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix,
+                logDirectory: logDirectory,
+                preferredLocaleIdentifier: preferredLocaleIdentifier
+            )
+        }
         let convergence = try await convergeForLaunch(
             runtimeExecutable: runtimeExecutable,
             prefix: prefix,
@@ -3155,11 +4116,111 @@ final class WindowsFontCompatibilityProfile {
         return receipt
     }
 
+    /// Returns a stable, path-free description of pre-existing font state
+    /// that ForgePlay must preserve instead of replacing. This is a read-only
+    /// preflight: a non-empty result selects whole-profile passthrough before
+    /// any transaction journal or registry/file mutation is created.
+    fileprivate func externalOwnershipObservations(
+        prefix: URL
+    ) throws -> [String] {
+        let normalizedPrefix = prefix.standardizedFileURL
+        if try WindowsFontLifecycleFileSystem.lstatItem(
+            journalURL(in: normalizedPrefix)
+        ) != nil {
+            throw WindowsFontCompatibilityProfileError.recoveryConflict(
+                "font-external-passthrough-with-active-transaction"
+            )
+        }
+        if try WindowsFontLifecycleFileSystem.lstatItem(
+            markerURL(in: normalizedPrefix)
+        ) != nil {
+            _ = try readAndValidateMarker(prefix: normalizedPrefix)
+        }
+        var observations: [String] = []
+        let fontsDirectory = normalizedPrefix.appending(
+            path: "drive_c/windows/Fonts",
+            directoryHint: .isDirectory
+        )
+        for payload in definition.payloadsInDescriptorOrder {
+            let destination = fontsDirectory.appending(path: payload.fileName)
+            guard let status = try WindowsFontLifecycleFileSystem
+                .lstatItem(destination) else {
+                continue
+            }
+            guard (status.st_mode & S_IFMT) == S_IFREG,
+                  status.st_nlink == 1 else {
+                throw WindowsFontCompatibilityProfileError
+                    .unsafeDestination(destination)
+            }
+            let observedDigest = try WindowsFontLifecycleFileSystem
+                .sha256OfRegularFile(at: destination)
+            guard observedDigest != payload.sha256 else { continue }
+            observations.append(
+                WindowsFontCanonical.digest(
+                    domain: "ForgePlayWindowsFontExternalPayloadV1",
+                    fields: [
+                        payload.fileName.lowercased(),
+                        observedDigest
+                    ]
+                )
+            )
+        }
+
+        let snapshots = try loadRegistrySnapshots(prefix: normalizedPrefix)
+        let selectedReplacements = try selectedRegistryReplacementSet(
+            prefix: normalizedPrefix,
+            snapshots: snapshots
+        ) ?? []
+        for requirement in definition.registryRequirementsInDescriptorOrder {
+            let snapshot = requirement.registryPath.hasPrefix("HKCU\\")
+                ? snapshots.user
+                : snapshots.system
+            if WindowsFontCompatibilityProfileContract
+                .isSatisfiedRegistryRequirement(
+                    snapshot: snapshot,
+                    requirement: requirement
+                ) || !snapshot.containsValue(for: requirement) {
+                continue
+            }
+            let isKnownBundledWineBaseline = selectedReplacements.contains {
+                $0.target.descriptorID == requirement.descriptorID &&
+                    snapshot.orderedValues(for: $0.baseline) ==
+                        $0.baseline.orderedValues
+            }
+            guard !isKnownBundledWineBaseline else { continue }
+
+            // Duplicate or type-mismatched registry data is not a readable
+            // external preference. Leave it to the lifecycle engine's
+            // existing fail-closed evidence checks.
+            guard let values = snapshot.orderedValues(for: requirement) else {
+                continue
+            }
+            observations.append(
+                WindowsFontCanonical.digest(
+                    domain: "ForgePlayWindowsFontExternalRegistryValueV1",
+                    fields: [
+                        requirement.registryPath.lowercased(),
+                        requirement.valueName.lowercased(),
+                        "present-readable"
+                    ] + values
+                )
+            )
+        }
+        return Array(Set(observations)).sorted()
+    }
+
     func uninstall(
         runtimeExecutable: URL,
         prefix: URL,
         logDirectory: URL
     ) async throws -> ProcessRunResult? {
+        if let productionCoordinator {
+            return try await productionCoordinator.uninstall(
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix,
+                logDirectory: logDirectory
+            )
+        }
         let normalizedPrefix = prefix.standardizedFileURL
         try acquirePrefixGate(normalizedPrefix)
         defer { releasePrefixGate(normalizedPrefix) }
@@ -3214,7 +4275,9 @@ final class WindowsFontCompatibilityProfile {
             committedOwnedRegistryIDs: marker.ownedRegistryIDs,
             scratchRootRelativePath: scratchRoot,
             payloadStageRelativePaths: [],
-            markerStageRelativePath: "\(scratchRoot)/marker/forgeplay-windows-font-compatibility-v5.marker-stage",
+            markerStageRelativePath:
+                "\(scratchRoot)/marker/" +
+                lifecycleContract.namespace.markerStageFileName,
             plannedCreatedDirectoryRelativePaths:
                 marker.createdDirectoryRelativePaths,
             immutablePhase: "uninstall-prepared"
@@ -3263,6 +4326,29 @@ final class WindowsFontCompatibilityProfile {
             driveCDescriptor: driveCDescriptor
         )
         return nil
+    }
+
+    fileprivate func verifiedReceiptWithoutMutation(
+        prefix: URL
+    ) async throws -> WindowsFontProvisioningApplicationReceipt {
+        let inspection = await inspectForLaunch(
+            prefix: prefix.standardizedFileURL,
+            requiresProfileMarker: true
+        )
+        guard inspection.isSatisfied else {
+            throw WindowsFontCompatibilityProfileError.verificationFailed(
+                inspection.missingItems
+            )
+        }
+        let digest = Self.inspectionDigest(inspection)
+        return WindowsFontProvisioningApplicationReceipt(
+            profileIdentifier: definition.profileIdentifier,
+            state: .reusedVerifiedProfile,
+            baselineDigest: digest,
+            appliedDigest: digest,
+            appliedItemCount: inspection.appliedItems.count,
+            missingItemCount: 0
+        )
     }
 
     private func acquirePrefixGate(_ prefix: URL) throws {
@@ -3369,13 +4455,26 @@ final class WindowsFontCompatibilityProfile {
         prefix: URL,
         requiresProfileMarker: Bool
     ) async -> WindowsFontCompatibilityInspection {
-        guard definition == WindowsFontCompatibilityProfileContract.definition else {
+        guard performsDetachedInspection else {
             return inspect(
                 prefix: prefix,
                 requiresProfileMarker: requiresProfileMarker
             )
         }
         let normalizedPrefix = prefix.standardizedFileURL
+        if definition != WindowsFontCompatibilityProfileContract.definition {
+            let capturedDefinition = definition
+            let capturedContract = lifecycleContract
+            return await Task.detached(priority: .utility) {
+                Self.inspectDefinition(
+                    definition: capturedDefinition,
+                    lifecycleContract: capturedContract,
+                    prefix: normalizedPrefix,
+                    fileManager: FileManager(),
+                    requiresProfileMarker: requiresProfileMarker
+                )
+            }.value
+        }
         return await Task.detached(priority: .utility) {
             WindowsFontCompatibilityProfileContract.inspect(
                 prefix: normalizedPrefix,
@@ -3408,12 +4507,30 @@ final class WindowsFontCompatibilityProfile {
         prefix: URL,
         requiresProfileMarker: Bool
     ) -> WindowsFontCompatibilityInspection {
+        Self.inspectDefinition(
+            definition: definition,
+            lifecycleContract: lifecycleContract,
+            prefix: prefix,
+            fileManager: fileManager,
+            requiresProfileMarker: requiresProfileMarker,
+            payloadHashObserver: payloadHashObserver
+        )
+    }
+
+    private nonisolated static func inspectDefinition(
+        definition: WindowsFontLifecycleDefinition,
+        lifecycleContract: WindowsFontLifecycleRuntimeContract,
+        prefix: URL,
+        fileManager: FileManager,
+        requiresProfileMarker: Bool,
+        payloadHashObserver: ((URL) -> Void)? = nil
+    ) -> WindowsFontCompatibilityInspection {
         var applied: [String] = []
         var missing: [String] = []
         let fonts = prefix.appending(path: "drive_c/windows/Fonts")
         for payload in definition.payloadsInDescriptorOrder {
             let destination = fonts.appending(path: payload.fileName)
-            payloadHashObserver(destination)
+            payloadHashObserver?(destination)
             if (try? WindowsFontLifecycleFileSystem.sha256OfRegularFile(at: destination)) ==
                 payload.sha256 {
                 applied.append(payload.descriptorID)
@@ -3421,7 +4538,19 @@ final class WindowsFontCompatibilityProfile {
                 missing.append(payload.descriptorID)
             }
         }
-        let snapshots = try? loadRegistrySnapshots(prefix: prefix)
+        let snapshots: (
+            user: WindowsFontRegistrySnapshotState,
+            system: WindowsFontRegistrySnapshotState
+        )? = try? (
+            WindowsFontRegistrySnapshotState.load(
+                url: prefix.appending(path: "user.reg"),
+                fileManager: fileManager
+            ),
+            WindowsFontRegistrySnapshotState.load(
+                url: prefix.appending(path: "system.reg"),
+                fileManager: fileManager
+            )
+        )
         for requirement in definition.registryRequirementsInDescriptorOrder {
             let snapshot = requirement.registryPath.hasPrefix("HKCU\\")
                 ? snapshots?.user
@@ -3438,7 +4567,11 @@ final class WindowsFontCompatibilityProfile {
             }
         }
         if requiresProfileMarker {
-            if (try? readAndValidateMarker(prefix: prefix)) != nil {
+            if markerIsValid(
+                definition: definition,
+                lifecycleContract: lifecycleContract,
+                prefix: prefix
+            ) {
                 applied.append(definition.profileIdentifier)
             } else {
                 missing.append(definition.profileIdentifier)
@@ -3447,36 +4580,114 @@ final class WindowsFontCompatibilityProfile {
         return .init(appliedItems: applied.sorted(), missingItems: missing.sorted())
     }
 
-    private var applicableFreshWineRegistryReplacementSets:
-        [[WindowsFontRegistryReplacementDescriptor]] {
-        let requirementIDs = Set(definition.registryRequirements.map(\.descriptorID))
-        return WindowsFontCompatibilityProfileContract
-            .freshWineRegistryReplacementSets.map { replacements in
-                replacements.filter {
-                    requirementIDs.contains($0.target.descriptorID)
-                }
+    private nonisolated static func markerIsValid(
+        definition: WindowsFontLifecycleDefinition,
+        lifecycleContract: WindowsFontLifecycleRuntimeContract,
+        prefix: URL
+    ) -> Bool {
+        let markerPath = prefix.appending(
+            path: lifecycleContract.namespace.markerRelativePath
+        )
+        let data: Data
+        do {
+            try WindowsFontLifecycleFileSystem.requireRegularFileMetadata(
+                at: markerPath,
+                exactMode: WindowsFontLifecycleFileSystem.evidenceFileMode
+            )
+            data = try WindowsFontLifecycleFileSystem.readRegularFile(
+                at: markerPath,
+                maximumByteCount:
+                    WindowsFontLifecycleJSON.maximumEvidenceByteCount
+            )
+        } catch {
+            return false
+        }
+        guard let marker = try? WindowsFontLifecycleJSON.decodeCanonical(
+            WindowsFontLifecycleMarker.self,
+            data: data,
+            exactKeys: WindowsFontLifecycleMarker.exactKeys
+        ) else {
+            return false
+        }
+        let allowedDirectories = Set([
+            "windows/Fonts",
+            "ForgePlay",
+            "ForgePlay/FontCompatibility"
+        ])
+        return [1, 2].contains(marker.schemaVersion) &&
+            marker.profileIdentifier == definition.profileIdentifier &&
+            marker.descriptorDigest == definition.descriptorDigest &&
+            WindowsFontCanonical.sortedUnique(marker.ownedFileIDs) &&
+            WindowsFontCanonical.sortedUnique(marker.ownedRegistryIDs) &&
+            Set(marker.ownedFileIDs).isSubset(
+                of: Set(definition.payloads.map(\.descriptorID))
+            ) &&
+            lifecycleContract.registryOwnershipIDsAreValid(
+                marker.ownedRegistryIDs,
+                allowsReplacements: marker.schemaVersion == 2,
+                requiresCompleteReplacementSet: true
+            ) &&
+            WindowsFontCanonical.sortedUnique(
+                marker.createdDirectoryRelativePaths
+            ) &&
+            Set(marker.createdDirectoryRelativePaths).isSubset(
+                of: allowedDirectories
+            )
+    }
+
+    private var applicableFreshWineRegistryTransitions:
+        [WindowsFontRegistryBaselineTransition] {
+        let requirements = definition.registryRequirements
+        func containsTarget(for source: WindowsFontRegistryRequirement) -> Bool {
+            requirements.contains {
+                $0.registryPath == source.registryPath &&
+                    $0.valueName == source.valueName
             }
+        }
+        let requirementIDs = Set(requirements.map(\.descriptorID))
+        return lifecycleContract.freshBaselineTransitions.compactMap { transition in
+            let sourceRequirements = transition.sourceRequirements.filter(
+                containsTarget
+            )
+            let replacements = transition.replacements.filter {
+                requirementIDs.contains($0.target.descriptorID)
+            }
+            guard !sourceRequirements.isEmpty, !replacements.isEmpty else {
+                return nil
+            }
+            return WindowsFontRegistryBaselineTransition(
+                baselineVariant: transition.baselineVariant,
+                sourceRequirements: sourceRequirements,
+                replacements: replacements
+            )
+        }
     }
 
     private var applicableFreshWineAlreadyTargetRequirements:
         [WindowsFontRegistryRequirement] {
         let requirementIDs = Set(definition.registryRequirements.map(\.descriptorID))
-        return WindowsFontCompatibilityProfileContract.freshWineAlreadyTargetRequirements
+        return lifecycleContract.freshAlreadyTargetRequirements
             .filter { requirementIDs.contains($0.descriptorID) }
     }
 
     private var applicableLegacyV4RegistryReplacements:
         [WindowsFontRegistryReplacementDescriptor] {
         let requirementIDs = Set(definition.registryRequirements.map(\.descriptorID))
-        return WindowsFontCompatibilityProfileContract.legacyV4RegistryReplacements
+        return lifecycleContract.legacyV4RegistryReplacements
             .filter { requirementIDs.contains($0.target.descriptorID) }
     }
 
     private var applicableSupportedRegistryReplacements:
         [WindowsFontRegistryReplacementDescriptor] {
         let requirementIDs = Set(definition.registryRequirements.map(\.descriptorID))
-        return WindowsFontCompatibilityProfileContract.supportedRegistryReplacements
-            .filter { requirementIDs.contains($0.target.descriptorID) }
+        var byID: [String: WindowsFontRegistryReplacementDescriptor] = [:]
+        for replacement in (
+            lifecycleContract.freshBaselineTransitions.flatMap(\.replacements) +
+            lifecycleContract.legacyV4RegistryReplacements
+        ) where requirementIDs.contains(replacement.target.descriptorID) {
+            byID[replacement.replacementID] = replacement
+        }
+        return byID.values.sorted { $0.replacementID < $1.replacementID }
     }
 
     private func selectedRegistryReplacementSet(
@@ -3492,9 +4703,9 @@ final class WindowsFontCompatibilityProfile {
         )
         if try WindowsFontLifecycleFileSystem.lstatItem(legacyMarker) != nil {
             let legacy = applicableLegacyV4RegistryReplacements
-            guard legacy.count ==
-                    WindowsFontCompatibilityProfileContract
-                        .legacyV4RegistryReplacements.count,
+            guard !legacy.isEmpty,
+                  legacy.count == lifecycleContract
+                    .legacyV4RegistryReplacements.count,
                   legacyV4MigrationIsAuthorized(
                     prefix: prefix,
                     snapshots: snapshots
@@ -3506,10 +4717,18 @@ final class WindowsFontCompatibilityProfile {
             return legacy
         }
 
+        return matchingFreshBaselineTransition(snapshots: snapshots)?.replacements
+    }
+
+    private func matchingFreshBaselineTransition(
+        snapshots: (
+            user: WindowsFontRegistrySnapshotState,
+            system: WindowsFontRegistrySnapshotState
+        )
+    ) -> WindowsFontRegistryBaselineTransition? {
         let anchorsMatch =
             applicableFreshWineAlreadyTargetRequirements.count ==
-                WindowsFontCompatibilityProfileContract
-                    .freshWineAlreadyTargetRequirements.count &&
+                lifecycleContract.freshAlreadyTargetRequirements.count &&
             applicableFreshWineAlreadyTargetRequirements.allSatisfy { requirement in
                 let snapshot = requirement.registryPath.hasPrefix("HKCU\\")
                     ? snapshots.user
@@ -3517,25 +4736,17 @@ final class WindowsFontCompatibilityProfile {
                 return snapshot.orderedValues(for: requirement) ==
                     requirement.orderedValues
             }
-        if anchorsMatch {
-            for (index, fresh) in
-                applicableFreshWineRegistryReplacementSets.enumerated() {
-                let completeSet = WindowsFontCompatibilityProfileContract
-                    .freshWineRegistryReplacementSets[index]
-                guard fresh.count == completeSet.count else { continue }
-                let baselineMatches = fresh.allSatisfy { replacement in
-                    let snapshot = replacement.baseline.registryPath.hasPrefix("HKCU\\")
+        guard anchorsMatch else { return nil }
+        let matches = applicableFreshWineRegistryTransitions.filter { transition in
+            transition.sourceRequirements.allSatisfy { baseline in
+                    let snapshot = baseline.registryPath.hasPrefix("HKCU\\")
                         ? snapshots.user
                         : snapshots.system
-                    return snapshot.orderedValues(for: replacement.baseline) ==
-                        replacement.baseline.orderedValues
-                }
-                if baselineMatches {
-                    return fresh
-                }
+                    return snapshot.orderedValues(for: baseline) ==
+                        baseline.orderedValues
             }
         }
-        return nil
+        return matches.count == 1 ? matches[0] : nil
     }
 
     private func legacyV4MigrationIsAuthorized(
@@ -3606,8 +4817,9 @@ final class WindowsFontCompatibilityProfile {
 
     private func restoresLegacyV4Baseline(registryIDs: [String]) -> Bool {
         let required = Set(applicableLegacyV4RegistryReplacements.map(\.replacementID))
-        return required.count == WindowsFontCompatibilityProfileContract
-            .legacyV4RegistryReplacements.count &&
+        return !required.isEmpty &&
+            required.count == lifecycleContract
+                .legacyV4RegistryReplacements.count &&
             required.isSubset(of: Set(registryIDs))
     }
 
@@ -3790,7 +5002,7 @@ final class WindowsFontCompatibilityProfile {
         let transactionID = transactionIDProvider().uuidString.lowercased()
         let scratchRoot = scratchRootRelativePath(transactionID: transactionID)
         let scratchDirectories = [
-            ".forgeplay-windows-font-compatibility-v5.scratch",
+            lifecycleContract.namespace.scratchDirectoryRelativePath,
             scratchRoot,
             "\(scratchRoot)/payload",
             "\(scratchRoot)/marker"
@@ -3813,7 +5025,8 @@ final class WindowsFontCompatibilityProfile {
             "\(scratchRoot)/payload/\($0.descriptorID).font-stage"
         }
         let markerStage =
-            "\(scratchRoot)/marker/forgeplay-windows-font-compatibility-v5.marker-stage"
+            "\(scratchRoot)/marker/" +
+            lifecycleContract.namespace.markerStageFileName
         return WindowsFontLifecyclePreflightPlan(
             profileIdentifier: definition.profileIdentifier,
             descriptorDigest: definition.descriptorDigest,
@@ -3860,7 +5073,7 @@ final class WindowsFontCompatibilityProfile {
         let transactionID = transactionIDProvider().uuidString.lowercased()
         let scratchRoot = scratchRootRelativePath(transactionID: transactionID)
         let directories = parentFirst([
-            ".forgeplay-windows-font-compatibility-v5.scratch",
+            lifecycleContract.namespace.scratchDirectoryRelativePath,
             scratchRoot,
             "\(scratchRoot)/marker"
         ])
@@ -3885,7 +5098,7 @@ final class WindowsFontCompatibilityProfile {
             payloadStageRelativePaths: [],
             markerStageRelativePath:
                 "\(scratchRoot)/marker/" +
-                "forgeplay-windows-font-compatibility-v5.marker-stage",
+                lifecycleContract.namespace.markerStageFileName,
             plannedCreatedDirectoryRelativePaths: directories,
             immutablePhase: "reconcile-prepared"
         )
@@ -3991,12 +5204,16 @@ final class WindowsFontCompatibilityProfile {
         registryRequirementsToApply: [WindowsFontRegistryRequirement]
     ) {
         let snapshots = try loadRegistrySnapshots(prefix: prefix)
+        let observedFreshTransition = matchingFreshBaselineTransition(
+            snapshots: snapshots
+        )
         var finalOwnedIDs = Set(marker.ownedRegistryIDs)
         var requirementsToApply: [WindowsFontRegistryRequirement] = []
         let ownedReplacementByTargetID = Dictionary(uniqueKeysWithValues:
             marker.ownedRegistryIDs.compactMap { ownershipID in
-                WindowsFontCompatibilityProfileContract
-                    .supportedReplacement(forReplacementID: ownershipID)
+                lifecycleContract.supportedReplacement(
+                    forReplacementID: ownershipID
+                )
                     .map { ($0.target.descriptorID, $0) }
             }
         )
@@ -4088,6 +5305,20 @@ final class WindowsFontCompatibilityProfile {
                 }
                 requirementsToApply.append(requirement)
             } else {
+                if let observedFreshTransition,
+                   let observedReplacement = observedFreshTransition
+                    .replacements.first(where: {
+                        $0.target.descriptorID == requirement.descriptorID
+                    }), snapshot.orderedValues(for: observedReplacement.baseline) ==
+                    observedReplacement.baseline.orderedValues {
+                    // A previously adopted target may be replaced by Wine as
+                    // part of one complete locale baseline rebuild. Bind that
+                    // exact source baseline before restoring the v6 target;
+                    // partial or mixed locale state never reaches this path.
+                    finalOwnedIDs.insert(observedReplacement.replacementID)
+                    requirementsToApply.append(requirement)
+                    continue
+                }
                 guard !containsValue else {
                     throw WindowsFontCompatibilityProfileError.collision(
                         registryCollisionReason(
@@ -4106,9 +5337,8 @@ final class WindowsFontCompatibilityProfile {
         }
 
         let sortedOwnedIDs = Array(finalOwnedIDs).sorted()
-        guard WindowsFontCompatibilityProfileContract.registryOwnershipIDsAreValid(
+        guard lifecycleContract.registryOwnershipIDsAreValid(
             sortedOwnedIDs,
-            definition: definition,
             allowsReplacements: true,
             requiresCompleteReplacementSet: true
         ) else {
@@ -4171,8 +5401,9 @@ final class WindowsFontCompatibilityProfile {
                 continue
             }
             let ownershipID = plan.finalMarker.ownedRegistryIDs.first(where: {
-                WindowsFontCompatibilityProfileContract
-                    .supportedReplacement(forReplacementID: $0)?
+                lifecycleContract.supportedReplacement(
+                    forReplacementID: $0
+                )?
                     .target.descriptorID == requirement.descriptorID
             }) ?? requirement.descriptorID
             attemptedRegistryMutation = true
@@ -4382,8 +5613,7 @@ final class WindowsFontCompatibilityProfile {
                 firstRelativePath: plan.journal.markerStageRelativePath,
                 firstExpectedSHA256: finalDigest,
                 secondRelativePath:
-                    "ForgePlay/FontCompatibility/" +
-                    "forgeplay-windows-font-compatibility-v5.txt",
+                    lifecycleContract.namespace.driveCMarkerRelativePath,
                 secondExpectedSHA256: originalDigest,
                 below: driveC,
                 descriptor: driveCDescriptor
@@ -4456,7 +5686,8 @@ final class WindowsFontCompatibilityProfile {
     }
 
     private func scratchRootRelativePath(transactionID: String) -> String {
-        ".forgeplay-windows-font-compatibility-v5.scratch/\(transactionID)"
+        "\(lifecycleContract.namespace.scratchDirectoryRelativePath)/" +
+            transactionID
     }
 
     private func parentFirst(_ paths: [String]) -> [String] {
@@ -4521,9 +5752,8 @@ final class WindowsFontCompatibilityProfile {
               Set(journal.plannedOwnedFileIDs).isSubset(
                 of: Set(definition.payloads.map(\.descriptorID))
               ),
-              WindowsFontCompatibilityProfileContract.registryOwnershipIDsAreValid(
+              lifecycleContract.registryOwnershipIDsAreValid(
                 journal.plannedOwnedRegistryIDs,
-                definition: definition,
                 allowsReplacements: journal.schemaVersion == 4,
                 requiresCompleteReplacementSet: true
               ),
@@ -4535,9 +5765,8 @@ final class WindowsFontCompatibilityProfile {
                 Set(journal.committedOwnedRegistryIDs).isSubset(
                     of: Set(journal.plannedOwnedRegistryIDs)
                 )),
-              WindowsFontCompatibilityProfileContract.registryOwnershipIDsAreValid(
+              lifecycleContract.registryOwnershipIDsAreValid(
                 journal.committedOwnedRegistryIDs,
-                definition: definition,
                 allowsReplacements: journal.schemaVersion == 4,
                 requiresCompleteReplacementSet: false
               ),
@@ -4546,7 +5775,8 @@ final class WindowsFontCompatibilityProfile {
               WindowsFontCanonical.isSafeRelativePath(journal.scratchRootRelativePath),
               WindowsFontCanonical.isSafeRelativePath(journal.markerStageRelativePath),
               journal.markerStageRelativePath ==
-                "\(journal.scratchRootRelativePath)/marker/forgeplay-windows-font-compatibility-v5.marker-stage",
+                "\(journal.scratchRootRelativePath)/marker/" +
+                lifecycleContract.namespace.markerStageFileName,
               journal.payloadStageRelativePaths.allSatisfy({ path in
                 WindowsFontCanonical.isSafeRelativePath(path) &&
                     path.hasPrefix("\(journal.scratchRootRelativePath)/payload/") &&
@@ -4583,7 +5813,7 @@ final class WindowsFontCompatibilityProfile {
             "ForgePlay/FontCompatibility"
         ])
         let allowedScratch = Set([
-            ".forgeplay-windows-font-compatibility-v5.scratch",
+            lifecycleContract.namespace.scratchDirectoryRelativePath,
             journal.scratchRootRelativePath,
             "\(journal.scratchRootRelativePath)/payload",
             "\(journal.scratchRootRelativePath)/marker"
@@ -4599,7 +5829,7 @@ final class WindowsFontCompatibilityProfile {
             }
         } else if journal.operation == "reconcile" {
             let required = Set([
-                ".forgeplay-windows-font-compatibility-v5.scratch",
+                lifecycleContract.namespace.scratchDirectoryRelativePath,
                 journal.scratchRootRelativePath,
                 "\(journal.scratchRootRelativePath)/marker"
             ])
@@ -4628,13 +5858,11 @@ final class WindowsFontCompatibilityProfile {
     }
 
     private func journalURL(in prefix: URL) -> URL {
-        prefix.appending(path: "drive_c/.forgeplay-windows-font-compatibility-v5.transaction.json")
+        prefix.appending(path: lifecycleContract.namespace.journalRelativePath)
     }
 
     private func markerURL(in prefix: URL) -> URL {
-        prefix.appending(
-            path: "drive_c/ForgePlay/FontCompatibility/forgeplay-windows-font-compatibility-v5.txt"
-        )
+        prefix.appending(path: lifecycleContract.namespace.markerRelativePath)
     }
 
     private func readAndValidateJournal(
@@ -4703,9 +5931,8 @@ final class WindowsFontCompatibilityProfile {
               WindowsFontCanonical.sortedUnique(marker.ownedFileIDs),
               WindowsFontCanonical.sortedUnique(marker.ownedRegistryIDs),
               Set(marker.ownedFileIDs).isSubset(of: payloadIDs),
-              WindowsFontCompatibilityProfileContract.registryOwnershipIDsAreValid(
+              lifecycleContract.registryOwnershipIDsAreValid(
                 marker.ownedRegistryIDs,
-                definition: definition,
                 allowsReplacements: marker.schemaVersion == 2,
                 requiresCompleteReplacementSet: true
               ),
@@ -4731,11 +5958,12 @@ final class WindowsFontCompatibilityProfile {
 
         try performFilesystem(try operation(
             .journalExclusiveCreate,
-            resource: WindowsFontCompatibilityProfileContract.journalRelativePath,
+            resource: lifecycleContract.namespace.journalRelativePath,
             ordinal: 0
         )) {
             descriptor = try WindowsFontLifecycleFileSystem.openExclusiveRegularFile(
-                relativePath: Self.driveCJournalRelativePath,
+                relativePath:
+                    lifecycleContract.namespace.driveCJournalRelativePath,
                 below: driveC,
                 descriptor: driveCDescriptor,
                 mode: WindowsFontLifecycleFileSystem.evidenceFileMode
@@ -4743,14 +5971,14 @@ final class WindowsFontCompatibilityProfile {
         }
         try performFilesystem(try operation(
             .journalCompleteWrite,
-            resource: WindowsFontCompatibilityProfileContract.journalRelativePath,
+            resource: lifecycleContract.namespace.journalRelativePath,
             ordinal: 0
         )) {
             try WindowsFontLifecycleFileSystem.writeAll(data, to: descriptor)
         }
         try performFilesystem(try operation(
             .journalFileFSync,
-            resource: WindowsFontCompatibilityProfileContract.journalRelativePath,
+            resource: lifecycleContract.namespace.journalRelativePath,
             ordinal: 0
         )) {
             try WindowsFontLifecycleFileSystem.fsyncDescriptor(
@@ -4760,7 +5988,7 @@ final class WindowsFontCompatibilityProfile {
         }
         try performFilesystem(try operation(
             .journalClose,
-            resource: WindowsFontCompatibilityProfileContract.journalRelativePath,
+            resource: lifecycleContract.namespace.journalRelativePath,
             ordinal: 0
         )) {
             try WindowsFontLifecycleFileSystem.closeDescriptor(
@@ -4770,7 +5998,7 @@ final class WindowsFontCompatibilityProfile {
         }
         try performFilesystem(try operation(
             .journalReopenCanonicalVerify,
-            resource: WindowsFontCompatibilityProfileContract.journalRelativePath,
+            resource: lifecycleContract.namespace.journalRelativePath,
             ordinal: 0
         )) {
             try WindowsFontLifecycleFileSystem.verifyRegularFile(
@@ -4880,7 +6108,8 @@ final class WindowsFontCompatibilityProfile {
                 try WindowsFontLifecycleFileSystem.exchangeRegularFiles(
                     firstRelativePath: updateRelativePath,
                     firstExpectedSHA256: nextDigest,
-                    secondRelativePath: Self.driveCJournalRelativePath,
+                    secondRelativePath:
+                        lifecycleContract.namespace.driveCJournalRelativePath,
                     secondExpectedSHA256: currentDigest,
                     below: driveC,
                     descriptor: driveCDescriptor
@@ -4977,7 +6206,7 @@ final class WindowsFontCompatibilityProfile {
             )
             try performFilesystem(createOperation) {
                 let isScratch = relativePath.hasPrefix(
-                    ".forgeplay-windows-font-compatibility-v5.scratch"
+                    lifecycleContract.namespace.scratchDirectoryRelativePath
                 )
                 try WindowsFontLifecycleFileSystem.createDirectory(
                     relativePath: relativePath,
@@ -5347,7 +6576,7 @@ final class WindowsFontCompatibilityProfile {
             below: driveC
         )
         let destinationRelativePath =
-            "ForgePlay/FontCompatibility/forgeplay-windows-font-compatibility-v5.txt"
+            lifecycleContract.namespace.driveCMarkerRelativePath
         var descriptor: Int32 = -1
         var publicationParents: (sourceParent: Int32, destinationParent: Int32)?
         defer {
@@ -5411,7 +6640,7 @@ final class WindowsFontCompatibilityProfile {
         }
         try performFilesystem(try operation(
             .markerNoOverwritePublication,
-            resource: "ForgePlay/FontCompatibility/forgeplay-windows-font-compatibility-v5.txt",
+            resource: lifecycleContract.namespace.driveCMarkerRelativePath,
             ordinal: 0
         )) {
             publicationParents = try WindowsFontLifecycleFileSystem.publishNoReplace(
@@ -5872,7 +7101,7 @@ final class WindowsFontCompatibilityProfile {
                         registryMutationAttempted = true
                         let result = try await performRunnerAction(
                             deleteOperation,
-                            .deleteRegistryValueIfPresent(
+                            .deleteRegistryValue(
                                 runtimeExecutable: runtimeExecutable,
                                 prefix: prefix,
                                 registryPath: mutation.target.registryPath,
@@ -6056,12 +7285,13 @@ final class WindowsFontCompatibilityProfile {
                     }
                     try performFilesystem(try operation(
                         .markerDelete,
-                        resource: "ForgePlay/FontCompatibility/forgeplay-windows-font-compatibility-v5.txt",
+                        resource:
+                            lifecycleContract.namespace.driveCMarkerRelativePath,
                         ordinal: 0
                     )) {
                         try WindowsFontLifecycleFileSystem.unlinkRegularFile(
                             relativePath:
-                                "ForgePlay/FontCompatibility/forgeplay-windows-font-compatibility-v5.txt",
+                                lifecycleContract.namespace.driveCMarkerRelativePath,
                             below: driveC,
                             descriptor: driveCDescriptor,
                             expectedSHA256: markerDigest
@@ -6441,7 +7671,9 @@ final class WindowsFontCompatibilityProfile {
         )
         try removePlannedDirectories(
             journal.plannedCreatedDirectoryRelativePaths.filter {
-                $0.hasPrefix(".forgeplay-windows-font-compatibility-v5.scratch")
+                $0.hasPrefix(
+                    lifecycleContract.namespace.scratchDirectoryRelativePath
+                )
             },
             driveC: driveC,
             driveCDescriptor: driveCDescriptor
@@ -6478,11 +7710,12 @@ final class WindowsFontCompatibilityProfile {
             .map { String(format: "%02x", $0) }.joined()
         try performFilesystem(try operation(
             .journalDelete,
-            resource: WindowsFontCompatibilityProfileContract.journalRelativePath,
+            resource: lifecycleContract.namespace.journalRelativePath,
             ordinal: 0
         )) {
             try WindowsFontLifecycleFileSystem.unlinkRegularFile(
-                relativePath: Self.driveCJournalRelativePath,
+                relativePath:
+                    lifecycleContract.namespace.driveCJournalRelativePath,
                 below: prefix.appending(path: "drive_c"),
                 descriptor: driveCDescriptor,
                 expectedSHA256: journalDigest
@@ -6508,6 +7741,1518 @@ final class WindowsFontCompatibilityProfile {
             throw WindowsFontCompatibilityProfileError.cleanupDurabilityUnknown(
                 String(describing: error)
             )
+        }
+    }
+}
+
+@MainActor
+final class WindowsFontLegacyV4RetirementEngine {
+    nonisolated static let profileIdentifier =
+        "forgeplay-windows-font-compatibility-v4-retirement-v1"
+
+    private let fileManager: FileManager
+    private let hooks: WindowsFontLifecycleExecutionHooks
+    private let transactionIDProvider: () -> UUID
+
+    init(
+        fileManager: FileManager = .default,
+        hooks: WindowsFontLifecycleExecutionHooks,
+        transactionIDProvider: @escaping () -> UUID = UUID.init
+    ) {
+        self.fileManager = fileManager
+        self.hooks = hooks
+        self.transactionIDProvider = transactionIDProvider
+    }
+
+    func retireIfPresent(
+        fontCodepages: String?,
+        runtimeExecutable: URL,
+        prefix: URL,
+        logDirectory: URL
+    ) async throws {
+        let normalizedPrefix = prefix.standardizedFileURL
+        let driveC = normalizedPrefix.appending(
+            path: "drive_c",
+            directoryHint: .isDirectory
+        )
+        try WindowsFontLifecycleFileSystem.requireDirectory(normalizedPrefix)
+        try WindowsFontLifecycleFileSystem.requireDirectory(driveC)
+        try WindowsFontLifecycleFileSystem.requireDirectory(
+            driveC.appending(path: "windows", directoryHint: .isDirectory)
+        )
+        let driveCDescriptor = try WindowsFontLifecycleFileSystem.openDirectory(
+            driveC
+        )
+        defer { Darwin.close(driveCDescriptor) }
+
+        let journalPath = normalizedPrefix.appending(path: Self.journalRelativePath)
+        let markerPath = normalizedPrefix.appending(path: Self.markerRelativePath)
+        let hasJournal = try WindowsFontLifecycleFileSystem.lstatItem(journalPath) != nil
+        let hasMarker = try WindowsFontLifecycleFileSystem.lstatItem(markerPath) != nil
+        let updatePath = normalizedPrefix.appending(
+            path: Self.journalUpdateRelativePath
+        )
+        if !hasJournal,
+           try WindowsFontLifecycleFileSystem.lstatItem(updatePath) != nil {
+            throw WindowsFontCompatibilityProfileError.recoveryConflict(
+                "orphaned-legacy-v4-retirement-journal-update"
+            )
+        }
+        guard hasJournal || hasMarker else { return }
+
+        var inferredBaseline = fontCodepages.flatMap {
+            WindowsFontFreshBaselineVariant.retirementBaseline(
+                fontCodepages: $0
+            )
+        }
+        if hasJournal {
+            let journal = try readJournal(
+                prefix: normalizedPrefix,
+                driveC: driveC
+            )
+            _ = try journalUpdateDigestIfPresent(
+                prefix: normalizedPrefix,
+                peerOf: journal
+            )
+            switch journal.phase {
+            case "retirement-prepared":
+                try validatePreparedTransitionalState(
+                    prefix: normalizedPrefix,
+                    baselineVariant: journal.baselineVariant
+                )
+                try await restoreLegacyRegistryState(
+                    runtimeExecutable: runtimeExecutable,
+                    prefix: normalizedPrefix,
+                    logDirectory: logDirectory,
+                    baselineVariant: journal.baselineVariant
+                )
+                try authenticateExactLegacyV4State(prefix: normalizedPrefix)
+                try deleteJournal(
+                    journal,
+                    prefix: normalizedPrefix,
+                    driveC: driveC,
+                    driveCDescriptor: driveCDescriptor
+                )
+                if inferredBaseline == nil {
+                    inferredBaseline = journal.baselineVariant
+                }
+            case "registry-committed":
+                try validateCommittedTransitionalState(
+                    prefix: normalizedPrefix,
+                    baselineVariant: journal.baselineVariant
+                )
+                try completeCommittedRetirement(
+                    journal: journal,
+                    prefix: normalizedPrefix,
+                    driveC: driveC,
+                    driveCDescriptor: driveCDescriptor
+                )
+                return
+            default:
+                throw WindowsFontCompatibilityProfileError
+                    .malformedLifecycleEvidence
+            }
+        }
+
+        guard let baselineVariant = inferredBaseline else {
+            throw WindowsFontCompatibilityProfileError.recoveryConflict(
+                "legacy-v4-retirement-codepages-unavailable-or-malformed"
+            )
+        }
+        try authenticateExactLegacyV4State(prefix: normalizedPrefix)
+        let transactionID = transactionIDProvider().uuidString.lowercased()
+        let prepared = WindowsFontLegacyV4RetirementJournal(
+            schemaVersion: 1,
+            profileIdentifier: Self.profileIdentifier,
+            descriptorDigest: descriptorDigest(for: baselineVariant),
+            transactionID: transactionID,
+            baselineVariant: baselineVariant,
+            phase: "retirement-prepared"
+        )
+        try validate(journal: prepared)
+        try persistNewJournal(
+            prepared,
+            prefix: normalizedPrefix,
+            driveC: driveC,
+            driveCDescriptor: driveCDescriptor
+        )
+
+        do {
+            try await applyFreshRegistryBaseline(
+                runtimeExecutable: runtimeExecutable,
+                prefix: normalizedPrefix,
+                logDirectory: logDirectory,
+                baselineVariant: baselineVariant
+            )
+            try verifyFreshRegistryBaseline(
+                prefix: normalizedPrefix,
+                baselineVariant: baselineVariant
+            )
+        } catch {
+            let originalError = error
+            do {
+                try await restoreLegacyRegistryState(
+                    runtimeExecutable: runtimeExecutable,
+                    prefix: normalizedPrefix,
+                    logDirectory: logDirectory,
+                    baselineVariant: baselineVariant
+                )
+                try authenticateExactLegacyV4State(prefix: normalizedPrefix)
+                try deleteJournal(
+                    prepared,
+                    prefix: normalizedPrefix,
+                    driveC: driveC,
+                    driveCDescriptor: driveCDescriptor
+                )
+            } catch {
+                throw WindowsFontCompatibilityProfileError.rollbackIncomplete(
+                    "legacy-v4-retirement: \(error)",
+                    [Self.profileIdentifier]
+                )
+            }
+            throw originalError
+        }
+
+        let committed = prepared.committingRegistryRetirement()
+        try replaceJournal(
+            prepared,
+            with: committed,
+            prefix: normalizedPrefix,
+            driveC: driveC,
+            driveCDescriptor: driveCDescriptor
+        )
+        try completeCommittedRetirement(
+            journal: committed,
+            prefix: normalizedPrefix,
+            driveC: driveC,
+            driveCDescriptor: driveCDescriptor
+        )
+    }
+
+    private static let driveCJournalRelativePath =
+        ".\(profileIdentifier).transaction.json"
+    private static let journalRelativePath =
+        "drive_c/\(driveCJournalRelativePath)"
+    private static let driveCJournalUpdateRelativePath =
+        ".\(profileIdentifier).transaction-update.json"
+    private static let journalUpdateRelativePath =
+        "drive_c/\(driveCJournalUpdateRelativePath)"
+    private static let driveCMarkerRelativePath =
+        "ForgePlay/FontCompatibility/" +
+            "forgeplay-windows-font-compatibility-v4.txt"
+    private static let markerRelativePath =
+        "drive_c/\(driveCMarkerRelativePath)"
+
+    private var legacyPayloads: [WindowsFontPayloadDescriptor] {
+        WindowsFontCompatibilityProfileContract.fontPayloads.filter {
+            $0.sourceRole == .runtimeNanum
+        }
+    }
+
+    private func freshRequirements(
+        for variant: WindowsFontFreshBaselineVariant
+    ) -> [WindowsFontRegistryRequirement] {
+        let replacements: [WindowsFontRegistryReplacementDescriptor]
+        switch variant {
+        case .western:
+            replacements = WindowsFontCompatibilityProfileContract
+                .freshWineRegistryReplacements
+        case .japanese:
+            replacements = WindowsFontCompatibilityProfileContract
+                .japaneseFreshWineRegistryReplacements
+        case .simplifiedChinese:
+            replacements = WindowsFontCompatibilityProfileContract
+                .simplifiedChineseFreshWineRegistryReplacements
+        case .traditionalChinese:
+            replacements = WindowsFontCompatibilityProfileContract
+                .traditionalChineseFreshWineRegistryReplacements
+        case .korean:
+            replacements = WindowsFontCompatibilityProfileContract
+                .previousFreshWineRegistryReplacements
+        case .unsupportedArabic:
+            replacements = WindowsFontCompatibilityProfileContract
+                .arabicFreshWineRegistryReplacements
+        }
+        return replacements.map(\.baseline) +
+            WindowsFontCompatibilityProfileContract
+                .freshWineAlreadyTargetRequirements
+    }
+
+    private func descriptorDigest(
+        for baselineVariant: WindowsFontFreshBaselineVariant
+    ) -> String {
+        let markerDigest = SHA256.hash(
+            data: WindowsFontCompatibilityProfileContract.legacyV4MarkerData
+        ).map { String(format: "%02x", $0) }.joined()
+        return WindowsFontCanonical.digest(
+            domain: "ForgePlayWindowsFontLegacyV4RetirementDescriptorV1",
+            fields: [
+                Self.profileIdentifier,
+                baselineVariant.rawValue,
+                markerDigest
+            ] + legacyPayloads.map(\.descriptorID).sorted() +
+                WindowsFontCompatibilityProfileContract
+                    .legacyV4RegistryRequirements.map(\.descriptorID).sorted() +
+                freshRequirements(for: baselineVariant)
+                    .map(\.descriptorID).sorted()
+        )
+    }
+
+    private func validate(
+        journal: WindowsFontLegacyV4RetirementJournal
+    ) throws {
+        guard journal.schemaVersion == 1,
+              journal.profileIdentifier == Self.profileIdentifier,
+              journal.descriptorDigest == descriptorDigest(
+                  for: journal.baselineVariant
+              ),
+              UUID(uuidString: journal.transactionID)?.uuidString.lowercased() ==
+                journal.transactionID,
+              ["retirement-prepared", "registry-committed"].contains(
+                  journal.phase
+              ) else {
+            throw WindowsFontCompatibilityProfileError
+                .malformedLifecycleEvidence
+        }
+    }
+
+    private func registryKey(
+        _ requirement: WindowsFontRegistryRequirement
+    ) -> String {
+        "\(requirement.registryPath.lowercased())\u{0}" +
+            requirement.valueName.lowercased()
+    }
+
+    private func loadRegistrySnapshots(
+        prefix: URL
+    ) throws -> (
+        user: WindowsFontRegistrySnapshotState,
+        system: WindowsFontRegistrySnapshotState
+    ) {
+        do {
+            return (
+                try WindowsFontRegistrySnapshotState.load(
+                    url: prefix.appending(path: "user.reg"),
+                    fileManager: fileManager
+                ),
+                try WindowsFontRegistrySnapshotState.load(
+                    url: prefix.appending(path: "system.reg"),
+                    fileManager: fileManager
+                )
+            )
+        } catch let error as WindowsFontCompatibilityProfileError {
+            throw error
+        } catch {
+            throw WindowsFontCompatibilityProfileError
+                .registrySnapshotMalformed(prefix.appending(path: "user.reg"))
+        }
+    }
+
+    private func snapshot(
+        for requirement: WindowsFontRegistryRequirement,
+        snapshots: (
+            user: WindowsFontRegistrySnapshotState,
+            system: WindowsFontRegistrySnapshotState
+        )
+    ) -> WindowsFontRegistrySnapshotState {
+        requirement.registryPath.hasPrefix("HKCU\\")
+            ? snapshots.user
+            : snapshots.system
+    }
+
+    private func authenticateExactLegacyV4State(prefix: URL) throws {
+        try WindowsFontLifecycleFileSystem.verifyRegularFile(
+            at: prefix.appending(path: Self.markerRelativePath),
+            expectedData:
+                WindowsFontCompatibilityProfileContract.legacyV4MarkerData,
+            exactMode: WindowsFontLifecycleFileSystem.regularFileMode
+        )
+        let fonts = prefix.appending(path: "drive_c/windows/Fonts")
+        for payload in legacyPayloads {
+            let path = fonts.appending(path: payload.fileName)
+            try WindowsFontLifecycleFileSystem.requireRegularFileMetadata(
+                at: path,
+                exactMode: WindowsFontLifecycleFileSystem.regularFileMode
+            )
+            guard try WindowsFontLifecycleFileSystem.sha256OfRegularFile(
+                at: path
+            ) == payload.sha256 else {
+                throw WindowsFontCompatibilityProfileError.recoveryConflict(
+                    "legacy-v4-payload-identity-mismatch: \(path.path)"
+                )
+            }
+        }
+        let snapshots = try loadRegistrySnapshots(prefix: prefix)
+        guard WindowsFontCompatibilityProfileContract
+            .legacyV4RegistryRequirements.allSatisfy({ requirement in
+                snapshot(for: requirement, snapshots: snapshots)
+                    .orderedValues(for: requirement) ==
+                    requirement.orderedValues
+            }) else {
+            throw WindowsFontCompatibilityProfileError.recoveryConflict(
+                "legacy-v4-registry-identity-mismatch"
+            )
+        }
+    }
+
+    private func validatePreparedTransitionalState(
+        prefix: URL,
+        baselineVariant: WindowsFontFreshBaselineVariant
+    ) throws {
+        try WindowsFontLifecycleFileSystem.verifyRegularFile(
+            at: prefix.appending(path: Self.markerRelativePath),
+            expectedData:
+                WindowsFontCompatibilityProfileContract.legacyV4MarkerData,
+            exactMode: WindowsFontLifecycleFileSystem.regularFileMode
+        )
+        let fonts = prefix.appending(path: "drive_c/windows/Fonts")
+        for payload in legacyPayloads {
+            let path = fonts.appending(path: payload.fileName)
+            try WindowsFontLifecycleFileSystem.requireRegularFileMetadata(
+                at: path,
+                exactMode: WindowsFontLifecycleFileSystem.regularFileMode
+            )
+            guard try WindowsFontLifecycleFileSystem.sha256OfRegularFile(
+                at: path
+            ) == payload.sha256 else {
+                throw WindowsFontCompatibilityProfileError.recoveryConflict(
+                    "legacy-v4-prepared-payload-drift"
+                )
+            }
+        }
+        try validateRegistryTransitionState(
+            prefix: prefix,
+            baselineVariant: baselineVariant
+        )
+    }
+
+    private func validateCommittedTransitionalState(
+        prefix: URL,
+        baselineVariant: WindowsFontFreshBaselineVariant
+    ) throws {
+        try verifyFreshRegistryBaseline(
+            prefix: prefix,
+            baselineVariant: baselineVariant
+        )
+        let fonts = prefix.appending(path: "drive_c/windows/Fonts")
+        for payload in legacyPayloads {
+            let path = fonts.appending(path: payload.fileName)
+            if try WindowsFontLifecycleFileSystem.lstatItem(path) != nil {
+                try WindowsFontLifecycleFileSystem.requireRegularFileMetadata(
+                    at: path,
+                    exactMode: WindowsFontLifecycleFileSystem.regularFileMode
+                )
+                guard try WindowsFontLifecycleFileSystem.sha256OfRegularFile(
+                    at: path
+                ) == payload.sha256 else {
+                    throw WindowsFontCompatibilityProfileError.recoveryConflict(
+                        "legacy-v4-committed-payload-drift"
+                    )
+                }
+            }
+        }
+        let marker = prefix.appending(path: Self.markerRelativePath)
+        if try WindowsFontLifecycleFileSystem.lstatItem(marker) != nil {
+            try WindowsFontLifecycleFileSystem.verifyRegularFile(
+                at: marker,
+                expectedData:
+                    WindowsFontCompatibilityProfileContract.legacyV4MarkerData,
+                exactMode: WindowsFontLifecycleFileSystem.regularFileMode
+            )
+        }
+    }
+
+    private func validateRegistryTransitionState(
+        prefix: URL,
+        baselineVariant: WindowsFontFreshBaselineVariant
+    ) throws {
+        let finalByKey = Dictionary(uniqueKeysWithValues:
+            freshRequirements(for: baselineVariant).map {
+                (registryKey($0), $0)
+            }
+        )
+        let snapshots = try loadRegistrySnapshots(prefix: prefix)
+        for legacy in WindowsFontCompatibilityProfileContract
+            .legacyV4RegistryRequirements {
+            let current = snapshot(for: legacy, snapshots: snapshots)
+            let values = current.orderedValues(for: legacy)
+            if values == legacy.orderedValues { continue }
+            if let final = finalByKey[registryKey(legacy)] {
+                guard values == final.orderedValues else {
+                    throw WindowsFontCompatibilityProfileError.recoveryConflict(
+                        "legacy-v4-retirement-registry-transition-drift"
+                    )
+                }
+            } else if current.containsValue(for: legacy) {
+                throw WindowsFontCompatibilityProfileError.recoveryConflict(
+                    "legacy-v4-retirement-registry-transition-drift"
+                )
+            }
+        }
+    }
+
+    private func applyFreshRegistryBaseline(
+        runtimeExecutable: URL,
+        prefix: URL,
+        logDirectory: URL,
+        baselineVariant: WindowsFontFreshBaselineVariant
+    ) async throws {
+        let finalByKey = Dictionary(uniqueKeysWithValues:
+            freshRequirements(for: baselineVariant).map {
+                (registryKey($0), $0)
+            }
+        )
+        var attemptedMutation = false
+        for (ordinal, legacy) in WindowsFontCompatibilityProfileContract
+            .legacyV4RegistryRequirements.sorted(by: {
+                $0.descriptorID < $1.descriptorID
+            }).enumerated() {
+            let snapshots = try loadRegistrySnapshots(prefix: prefix)
+            let current = snapshot(for: legacy, snapshots: snapshots)
+            if let final = finalByKey[registryKey(legacy)] {
+                if current.orderedValues(for: final) == final.orderedValues {
+                    continue
+                }
+                guard current.orderedValues(for: legacy) ==
+                    legacy.orderedValues else {
+                    throw WindowsFontCompatibilityProfileError.recoveryConflict(
+                        "legacy-v4-retirement-registry-forward-drift"
+                    )
+                }
+                attemptedMutation = true
+                try await performRunnerAction(
+                    kind: .replacedRegistryRestore,
+                    resource: legacy.descriptorID,
+                    ordinal: ordinal,
+                    action: .setRegistryValue(
+                        runtimeExecutable: runtimeExecutable,
+                        prefix: prefix,
+                        registryPath: final.registryPath,
+                        valueName: final.valueName,
+                        valueType: final.valueType,
+                        value: final.encodedRunnerValue,
+                        logDirectory: logDirectory
+                    )
+                )
+            } else {
+                guard current.containsValue(for: legacy) else { continue }
+                guard current.orderedValues(for: legacy) ==
+                    legacy.orderedValues else {
+                    throw WindowsFontCompatibilityProfileError.recoveryConflict(
+                        "legacy-v4-retirement-registry-delete-drift"
+                    )
+                }
+                attemptedMutation = true
+                try await performRunnerAction(
+                    kind: .ownedRegistryDelete,
+                    resource: legacy.descriptorID,
+                    ordinal: ordinal,
+                    action: .deleteRegistryValue(
+                        runtimeExecutable: runtimeExecutable,
+                        prefix: prefix,
+                        registryPath: legacy.registryPath,
+                        valueName: legacy.valueName,
+                        logDirectory: logDirectory
+                    )
+                )
+            }
+        }
+        if attemptedMutation {
+            try await performRunnerAction(
+                kind: .forwardRegistryFlush,
+                resource: "legacy-v4-retirement-forward-flush",
+                ordinal: 0,
+                action: .waitForWinePrefix(
+                    runtimeExecutable: runtimeExecutable,
+                    prefix: prefix,
+                    logDirectory: logDirectory
+                )
+            )
+        }
+    }
+
+    private func restoreLegacyRegistryState(
+        runtimeExecutable: URL,
+        prefix: URL,
+        logDirectory: URL,
+        baselineVariant: WindowsFontFreshBaselineVariant
+    ) async throws {
+        let finalByKey = Dictionary(uniqueKeysWithValues:
+            freshRequirements(for: baselineVariant).map {
+                (registryKey($0), $0)
+            }
+        )
+        var attemptedMutation = false
+        for (ordinal, legacy) in WindowsFontCompatibilityProfileContract
+            .legacyV4RegistryRequirements.sorted(by: {
+                $0.descriptorID < $1.descriptorID
+            }).enumerated() {
+            let snapshots = try loadRegistrySnapshots(prefix: prefix)
+            let current = snapshot(for: legacy, snapshots: snapshots)
+            if current.orderedValues(for: legacy) == legacy.orderedValues {
+                continue
+            }
+            if let final = finalByKey[registryKey(legacy)] {
+                guard current.orderedValues(for: final) == final.orderedValues else {
+                    throw WindowsFontCompatibilityProfileError.recoveryConflict(
+                        "legacy-v4-retirement-registry-rollback-drift"
+                    )
+                }
+            } else {
+                guard !current.containsValue(for: legacy) else {
+                    throw WindowsFontCompatibilityProfileError.recoveryConflict(
+                        "legacy-v4-retirement-registry-rollback-drift"
+                    )
+                }
+            }
+            attemptedMutation = true
+            try await performRunnerAction(
+                kind: .replacedRegistryRestore,
+                resource: legacy.descriptorID,
+                ordinal: ordinal,
+                action: .setRegistryValue(
+                    runtimeExecutable: runtimeExecutable,
+                    prefix: prefix,
+                    registryPath: legacy.registryPath,
+                    valueName: legacy.valueName,
+                    valueType: legacy.valueType,
+                    value: legacy.encodedRunnerValue,
+                    logDirectory: logDirectory
+                )
+            )
+        }
+        if attemptedMutation {
+            try await performRunnerAction(
+                kind: .compensationRegistryFlush,
+                resource: "legacy-v4-retirement-rollback-flush",
+                ordinal: 0,
+                action: .waitForWinePrefix(
+                    runtimeExecutable: runtimeExecutable,
+                    prefix: prefix,
+                    logDirectory: logDirectory
+                )
+            )
+        }
+    }
+
+    private func verifyFreshRegistryBaseline(
+        prefix: URL,
+        baselineVariant: WindowsFontFreshBaselineVariant
+    ) throws {
+        let finalByKey = Dictionary(uniqueKeysWithValues:
+            freshRequirements(for: baselineVariant).map {
+                (registryKey($0), $0)
+            }
+        )
+        let snapshots = try loadRegistrySnapshots(prefix: prefix)
+        for legacy in WindowsFontCompatibilityProfileContract
+            .legacyV4RegistryRequirements {
+            let current = snapshot(for: legacy, snapshots: snapshots)
+            if let final = finalByKey[registryKey(legacy)] {
+                guard current.orderedValues(for: final) ==
+                    final.orderedValues else {
+                    throw WindowsFontCompatibilityProfileError.verificationFailed([
+                        final.label
+                    ])
+                }
+            } else if current.containsValue(for: legacy) {
+                throw WindowsFontCompatibilityProfileError.verificationFailed([
+                    legacy.label
+                ])
+            }
+        }
+    }
+
+    private func performRunnerAction(
+        kind: WindowsFontLifecycleOperationKind,
+        resource: String,
+        ordinal: Int,
+        action: RunnerAction
+    ) async throws {
+        let operation = try WindowsFontLifecycleOperationRegistry.instance(
+            operationKind: kind,
+            resourceIDOrPathID: resource,
+            ordinal: ordinal
+        )
+        let result = try await hooks.runnerActionExecutor(operation, action)
+        try hooks.completionObserver(operation)
+        guard result.succeeded else {
+            throw SteamLaunchError.steamClientCompatibilitySetupFailed(result)
+        }
+    }
+
+    private func completeCommittedRetirement(
+        journal: WindowsFontLegacyV4RetirementJournal,
+        prefix: URL,
+        driveC: URL,
+        driveCDescriptor: Int32
+    ) throws {
+        try verifyFreshRegistryBaseline(
+            prefix: prefix,
+            baselineVariant: journal.baselineVariant
+        )
+        var deletedPayload = false
+        for payload in legacyPayloads {
+            let relativePath = "windows/Fonts/\(payload.fileName)"
+            let path = driveC.appending(path: relativePath)
+            guard try WindowsFontLifecycleFileSystem.lstatItem(path) != nil else {
+                continue
+            }
+            try WindowsFontLifecycleFileSystem.requireRegularFileMetadata(
+                at: path,
+                exactMode: WindowsFontLifecycleFileSystem.regularFileMode
+            )
+            try WindowsFontLifecycleFileSystem.unlinkRegularFile(
+                relativePath: relativePath,
+                below: driveC,
+                descriptor: driveCDescriptor,
+                expectedSHA256: payload.sha256
+            )
+            deletedPayload = true
+        }
+        if deletedPayload {
+            var fontsDescriptor = try WindowsFontLifecycleFileSystem.openDirectory(
+                relativePath: "windows/Fonts",
+                below: driveC,
+                descriptor: driveCDescriptor
+            )
+            defer { if fontsDescriptor >= 0 { Darwin.close(fontsDescriptor) } }
+            try WindowsFontLifecycleFileSystem.fsyncDescriptor(
+                fontsDescriptor,
+                label: "legacy v4 payload retirement parent fsync"
+            )
+            try WindowsFontLifecycleFileSystem.closeDescriptor(
+                &fontsDescriptor,
+                label: "legacy v4 payload retirement parent close"
+            )
+        }
+
+        let marker = prefix.appending(path: Self.markerRelativePath)
+        if try WindowsFontLifecycleFileSystem.lstatItem(marker) != nil {
+            try WindowsFontLifecycleFileSystem.verifyRegularFile(
+                at: marker,
+                expectedData:
+                    WindowsFontCompatibilityProfileContract.legacyV4MarkerData,
+                exactMode: WindowsFontLifecycleFileSystem.regularFileMode
+            )
+            let markerDigest = SHA256.hash(
+                data: WindowsFontCompatibilityProfileContract.legacyV4MarkerData
+            ).map { String(format: "%02x", $0) }.joined()
+            try WindowsFontLifecycleFileSystem.unlinkRegularFile(
+                relativePath: Self.driveCMarkerRelativePath,
+                below: driveC,
+                descriptor: driveCDescriptor,
+                expectedSHA256: markerDigest
+            )
+            var markerParent = try WindowsFontLifecycleFileSystem.openDirectory(
+                relativePath: "ForgePlay/FontCompatibility",
+                below: driveC,
+                descriptor: driveCDescriptor
+            )
+            defer { if markerParent >= 0 { Darwin.close(markerParent) } }
+            try WindowsFontLifecycleFileSystem.fsyncDescriptor(
+                markerParent,
+                label: "legacy v4 marker retirement parent fsync"
+            )
+            try WindowsFontLifecycleFileSystem.closeDescriptor(
+                &markerParent,
+                label: "legacy v4 marker retirement parent close"
+            )
+        }
+
+        for payload in legacyPayloads {
+            guard try WindowsFontLifecycleFileSystem.lstatItem(
+                driveC.appending(path: "windows/Fonts/\(payload.fileName)")
+            ) == nil else {
+                throw WindowsFontCompatibilityProfileError.verificationFailed([
+                    payload.fileName
+                ])
+            }
+        }
+        guard try WindowsFontLifecycleFileSystem.lstatItem(marker) == nil else {
+            throw WindowsFontCompatibilityProfileError.verificationFailed([
+                marker.path
+            ])
+        }
+        try deleteJournal(
+            journal,
+            prefix: prefix,
+            driveC: driveC,
+            driveCDescriptor: driveCDescriptor
+        )
+    }
+
+    private func persistNewJournal(
+        _ journal: WindowsFontLegacyV4RetirementJournal,
+        prefix: URL,
+        driveC: URL,
+        driveCDescriptor: Int32
+    ) throws {
+        let data = try WindowsFontLifecycleJSON.encodeCanonical(journal)
+        var descriptor = try WindowsFontLifecycleFileSystem
+            .openExclusiveRegularFile(
+                relativePath: Self.driveCJournalRelativePath,
+                below: driveC,
+                descriptor: driveCDescriptor,
+                mode: WindowsFontLifecycleFileSystem.evidenceFileMode
+            )
+        defer { if descriptor >= 0 { Darwin.close(descriptor) } }
+        try WindowsFontLifecycleFileSystem.writeAll(data, to: descriptor)
+        try WindowsFontLifecycleFileSystem.fsyncDescriptor(
+            descriptor,
+            label: "legacy v4 retirement journal fsync"
+        )
+        try WindowsFontLifecycleFileSystem.closeDescriptor(
+            &descriptor,
+            label: "legacy v4 retirement journal close"
+        )
+        try WindowsFontLifecycleFileSystem.verifyRegularFile(
+            at: prefix.appending(path: Self.journalRelativePath),
+            expectedData: data,
+            exactMode: WindowsFontLifecycleFileSystem.evidenceFileMode
+        )
+        try WindowsFontLifecycleFileSystem.fsyncDescriptor(
+            driveCDescriptor,
+            label: "legacy v4 retirement journal parent fsync"
+        )
+    }
+
+    private func replaceJournal(
+        _ current: WindowsFontLegacyV4RetirementJournal,
+        with next: WindowsFontLegacyV4RetirementJournal,
+        prefix: URL,
+        driveC: URL,
+        driveCDescriptor: Int32
+    ) throws {
+        try validate(journal: next)
+        let currentData = try WindowsFontLifecycleJSON.encodeCanonical(current)
+        let nextData = try WindowsFontLifecycleJSON.encodeCanonical(next)
+        let currentDigest = SHA256.hash(data: currentData)
+            .map { String(format: "%02x", $0) }.joined()
+        let nextDigest = SHA256.hash(data: nextData)
+            .map { String(format: "%02x", $0) }.joined()
+        var descriptor = try WindowsFontLifecycleFileSystem
+            .openExclusiveRegularFile(
+                relativePath: Self.driveCJournalUpdateRelativePath,
+                below: driveC,
+                descriptor: driveCDescriptor,
+                mode: WindowsFontLifecycleFileSystem.evidenceFileMode
+            )
+        defer { if descriptor >= 0 { Darwin.close(descriptor) } }
+        try WindowsFontLifecycleFileSystem.writeAll(nextData, to: descriptor)
+        try WindowsFontLifecycleFileSystem.fsyncDescriptor(
+            descriptor,
+            label: "legacy v4 retirement journal update fsync"
+        )
+        try WindowsFontLifecycleFileSystem.closeDescriptor(
+            &descriptor,
+            label: "legacy v4 retirement journal update close"
+        )
+        try WindowsFontLifecycleFileSystem.verifyRegularFile(
+            at: prefix.appending(path: Self.journalUpdateRelativePath),
+            expectedData: nextData,
+            exactMode: WindowsFontLifecycleFileSystem.evidenceFileMode
+        )
+        try WindowsFontLifecycleFileSystem.exchangeRegularFiles(
+            firstRelativePath: Self.driveCJournalUpdateRelativePath,
+            firstExpectedSHA256: nextDigest,
+            secondRelativePath: Self.driveCJournalRelativePath,
+            secondExpectedSHA256: currentDigest,
+            below: driveC,
+            descriptor: driveCDescriptor
+        )
+        try WindowsFontLifecycleFileSystem.fsyncDescriptor(
+            driveCDescriptor,
+            label: "legacy v4 retirement journal exchange parent fsync"
+        )
+        try WindowsFontLifecycleFileSystem.unlinkRegularFile(
+            relativePath: Self.driveCJournalUpdateRelativePath,
+            below: driveC,
+            descriptor: driveCDescriptor,
+            expectedSHA256: currentDigest
+        )
+        try WindowsFontLifecycleFileSystem.fsyncDescriptor(
+            driveCDescriptor,
+            label: "legacy v4 retirement journal update deletion fsync"
+        )
+        let verified = try readJournal(prefix: prefix, driveC: driveC)
+        guard verified == next else {
+            throw WindowsFontCompatibilityProfileError
+                .malformedLifecycleEvidence
+        }
+    }
+
+    private func readJournal(
+        prefix: URL,
+        driveC: URL
+    ) throws -> WindowsFontLegacyV4RetirementJournal {
+        _ = driveC
+        let path = prefix.appending(path: Self.journalRelativePath)
+        do {
+            try WindowsFontLifecycleFileSystem.requireRegularFileMetadata(
+                at: path,
+                exactMode: WindowsFontLifecycleFileSystem.evidenceFileMode
+            )
+            let data = try WindowsFontLifecycleFileSystem.readRegularFile(
+                at: path,
+                maximumByteCount:
+                    WindowsFontLifecycleJSON.maximumEvidenceByteCount
+            )
+            let journal = try WindowsFontLifecycleJSON.decodeCanonical(
+                WindowsFontLegacyV4RetirementJournal.self,
+                data: data,
+                exactKeys: WindowsFontLegacyV4RetirementJournal.exactKeys
+            )
+            try validate(journal: journal)
+            return journal
+        } catch let error as WindowsFontCompatibilityProfileError {
+            throw error
+        } catch {
+            throw WindowsFontCompatibilityProfileError
+                .malformedLifecycleEvidence
+        }
+    }
+
+    private func journalUpdateDigestIfPresent(
+        prefix: URL,
+        peerOf journal: WindowsFontLegacyV4RetirementJournal
+    ) throws -> String? {
+        let updatePath = prefix.appending(path: Self.journalUpdateRelativePath)
+        guard try WindowsFontLifecycleFileSystem.lstatItem(updatePath) != nil else {
+            return nil
+        }
+        let expectedPeer: WindowsFontLegacyV4RetirementJournal
+        switch journal.phase {
+        case "retirement-prepared":
+            expectedPeer = journal.committingRegistryRetirement()
+        case "registry-committed":
+            expectedPeer = journal.preparingRegistryRetirement()
+        default:
+            throw WindowsFontCompatibilityProfileError
+                .malformedLifecycleEvidence
+        }
+        do {
+            try WindowsFontLifecycleFileSystem.requireRegularFileMetadata(
+                at: updatePath,
+                exactMode: WindowsFontLifecycleFileSystem.evidenceFileMode
+            )
+            let data = try WindowsFontLifecycleFileSystem.readRegularFile(
+                at: updatePath,
+                maximumByteCount:
+                    WindowsFontLifecycleJSON.maximumEvidenceByteCount
+            )
+            let update = try WindowsFontLifecycleJSON.decodeCanonical(
+                WindowsFontLegacyV4RetirementJournal.self,
+                data: data,
+                exactKeys: WindowsFontLegacyV4RetirementJournal.exactKeys
+            )
+            try validate(journal: update)
+            guard update == expectedPeer else {
+                throw WindowsFontCompatibilityProfileError.recoveryConflict(
+                    "legacy-v4-retirement-journal-update-drift"
+                )
+            }
+            return SHA256.hash(data: data)
+                .map { String(format: "%02x", $0) }.joined()
+        } catch let error as WindowsFontCompatibilityProfileError {
+            throw error
+        } catch {
+            throw WindowsFontCompatibilityProfileError
+                .malformedLifecycleEvidence
+        }
+    }
+
+    private func deleteJournal(
+        _ journal: WindowsFontLegacyV4RetirementJournal,
+        prefix: URL,
+        driveC: URL,
+        driveCDescriptor: Int32
+    ) throws {
+        let current = try readJournal(prefix: prefix, driveC: driveC)
+        guard current == journal else {
+            throw WindowsFontCompatibilityProfileError.recoveryConflict(
+                "legacy-v4-retirement-journal-drift"
+            )
+        }
+        if let updateDigest = try journalUpdateDigestIfPresent(
+            prefix: prefix,
+            peerOf: current
+        ) {
+            try WindowsFontLifecycleFileSystem.unlinkRegularFile(
+                relativePath: Self.driveCJournalUpdateRelativePath,
+                below: driveC,
+                descriptor: driveCDescriptor,
+                expectedSHA256: updateDigest
+            )
+        }
+        let data = try WindowsFontLifecycleJSON.encodeCanonical(current)
+        let digest = SHA256.hash(data: data)
+            .map { String(format: "%02x", $0) }.joined()
+        try WindowsFontLifecycleFileSystem.unlinkRegularFile(
+            relativePath: Self.driveCJournalRelativePath,
+            below: driveC,
+            descriptor: driveCDescriptor,
+            expectedSHA256: digest
+        )
+        try WindowsFontLifecycleFileSystem.fsyncDescriptor(
+            driveCDescriptor,
+            label: "legacy v4 retirement journal deletion parent fsync"
+        )
+    }
+}
+
+@MainActor
+private final class WindowsFontCompatibilityProfileCoordinator {
+    private enum LocaleResolution {
+        case supported(WindowsFontLocaleVariant)
+        case unsupported
+        case unavailable
+    }
+
+    private struct RegistryLocaleSignals {
+        let localeIdentifier: String?
+        let fontCodepages: String?
+    }
+
+    private let runner: SafeProcessRunner
+    private let fileManager: FileManager
+    private static var activeMigrationPrefixPaths = Set<String>()
+
+    init(runner: SafeProcessRunner, fileManager: FileManager) {
+        self.runner = runner
+        self.fileManager = fileManager
+    }
+
+    func apply(
+        runtimeExecutable: URL,
+        prefix: URL,
+        logDirectory: URL
+    ) async throws -> ProcessRunResult? {
+        _ = try await provisionForLaunch(
+            runtimeExecutable: runtimeExecutable,
+            prefix: prefix,
+            logDirectory: logDirectory
+        )
+        return nil
+    }
+
+    func provisionForLaunch(
+        runtimeExecutable: URL,
+        prefix: URL,
+        logDirectory: URL,
+        preferredLocaleIdentifier: String? = nil
+    ) async throws -> WindowsFontProvisioningApplicationReceipt {
+        let normalizedPrefix = prefix.standardizedFileURL
+        try acquireMigrationGate(normalizedPrefix)
+        defer { releaseMigrationGate(normalizedPrefix) }
+
+        let registrySignals = registryLocaleSignals(prefix: normalizedPrefix)
+        let preferredVariant = preferredLocaleIdentifier.flatMap {
+            WindowsFontCompatibilityProfileV6Contract.supportedVariant(
+                localeIdentifier: $0
+            )
+        }
+        let localeResolution = preferredVariant.map(LocaleResolution.supported) ??
+            resolvedLocale(
+                identifier: registrySignals.localeIdentifier,
+                fontCodepages: registrySignals.fontCodepages
+            )
+        try rejectOverlappingVersionEvidence(prefix: normalizedPrefix)
+        let hasV5 = hasV5Evidence(prefix: normalizedPrefix)
+        let activeV6Variant = try v6EvidenceVariant(prefix: normalizedPrefix)
+        let hasLegacyV4 = hasLegacyV4Evidence(prefix: normalizedPrefix)
+        let v5Engine = hasV5
+            ? makeEngine(contract: .frozenV5())
+            : nil
+        let activeV6Engine = activeV6Variant.map {
+            makeEngine(contract: .localeAwareV6(variant: $0))
+        }
+
+        // Existing version evidence owns its own authentication, recovery and
+        // reconciliation. Do not duplicate that decision in a generic
+        // preflight or disguise a valid managed v6 profile as external state.
+        if let v5Engine {
+            let receipt = try await provisionOrPassthrough(
+                engine: v5Engine,
+                runtimeExecutable: runtimeExecutable,
+                prefix: normalizedPrefix,
+                logDirectory: logDirectory
+            )
+            if receipt.state == .verifiedExternalFontPassthrough ||
+                receipt.state == .verifiedCollisionPassthrough {
+                return receipt
+            }
+            if case .unavailable = localeResolution, !hasLegacyV4 {
+                return receipt
+            }
+            if let collision = try externalNotoCollisionReceipt(
+                prefix: normalizedPrefix
+            ) {
+                return collision
+            }
+            if hasLegacyV4Marker(prefix: normalizedPrefix),
+               registrySignals.fontCodepages.flatMap({
+                   WindowsFontFreshBaselineVariant.retirementBaseline(
+                       fontCodepages: $0
+                   )
+               }) == nil {
+                throw WindowsFontCompatibilityProfileError.recoveryConflict(
+                    "legacy-v4-retirement-codepages-unavailable-or-malformed"
+                )
+            }
+            try await retire(
+                engine: v5Engine,
+                runtimeExecutable: runtimeExecutable,
+                prefix: normalizedPrefix,
+                logDirectory: logDirectory
+            )
+        }
+
+        if hasLegacyV4 {
+            try await makeLegacyV4RetirementEngine().retireIfPresent(
+                fontCodepages: registrySignals.fontCodepages,
+                runtimeExecutable: runtimeExecutable,
+                prefix: normalizedPrefix,
+                logDirectory: logDirectory
+            )
+        }
+
+        var activeV6Receipt: WindowsFontProvisioningApplicationReceipt?
+        if let activeV6Engine {
+            let receipt = try await provisionOrPassthrough(
+                engine: activeV6Engine,
+                runtimeExecutable: runtimeExecutable,
+                prefix: normalizedPrefix,
+                logDirectory: logDirectory
+            )
+            if receipt.state == .verifiedExternalFontPassthrough ||
+                receipt.state == .verifiedCollisionPassthrough {
+                return receipt
+            }
+            if case .unavailable = localeResolution {
+                return receipt
+            }
+            activeV6Receipt = receipt
+        }
+
+        let requestedVariant: WindowsFontLocaleVariant
+        switch localeResolution {
+        case .supported(let variant):
+            requestedVariant = variant
+        case .unsupported:
+            requestedVariant = .western
+        case .unavailable:
+            return passthroughReceipt()
+        }
+
+        if activeV6Variant == requestedVariant, let activeV6Receipt {
+            // The engine verified every required file and registry entry.
+            // Additional host font catalog entries do not invalidate or own
+            // this complete installed profile.
+            return activeV6Receipt
+        }
+
+        if let collision = try externalNotoCollisionReceipt(
+            prefix: normalizedPrefix
+        ) {
+            return collision
+        }
+
+        if let activeV6Engine {
+            try await retire(
+                engine: activeV6Engine,
+                runtimeExecutable: runtimeExecutable,
+                prefix: normalizedPrefix,
+                logDirectory: logDirectory
+            )
+        }
+
+        let requestedEngine = makeEngine(
+            contract: .localeAwareV6(variant: requestedVariant)
+        )
+        if let receipt = try externalPassthroughReceipt(
+            engine: requestedEngine,
+            prefix: normalizedPrefix
+        ) {
+            return receipt
+        }
+        return try await provisionOrPassthrough(
+            engine: requestedEngine,
+            runtimeExecutable: runtimeExecutable,
+            prefix: normalizedPrefix,
+            logDirectory: logDirectory
+        )
+    }
+
+    func uninstall(
+        runtimeExecutable: URL,
+        prefix: URL,
+        logDirectory: URL
+    ) async throws -> ProcessRunResult? {
+        let normalizedPrefix = prefix.standardizedFileURL
+        try acquireMigrationGate(normalizedPrefix)
+        defer { releaseMigrationGate(normalizedPrefix) }
+        try rejectOverlappingVersionEvidence(prefix: normalizedPrefix)
+        if let variant = try v6EvidenceVariant(prefix: normalizedPrefix) {
+            return try await makeEngine(
+                contract: .localeAwareV6(variant: variant)
+            ).uninstall(
+                runtimeExecutable: runtimeExecutable,
+                prefix: normalizedPrefix,
+                logDirectory: logDirectory
+            )
+        }
+        if hasV5Evidence(prefix: normalizedPrefix) {
+            return try await makeEngine(contract: .frozenV5()).uninstall(
+                runtimeExecutable: runtimeExecutable,
+                prefix: normalizedPrefix,
+                logDirectory: logDirectory
+            )
+        }
+        return nil
+    }
+
+    private var v5Namespace: WindowsFontLifecycleNamespace {
+        .init(
+            profileIdentifier:
+                WindowsFontCompatibilityProfileContract.profileIdentifier
+        )
+    }
+
+    private var v6Namespace: WindowsFontLifecycleNamespace {
+        .init(
+            profileIdentifier:
+                WindowsFontCompatibilityProfileV6Contract.profileIdentifier
+        )
+    }
+
+    private func makeEngine(
+        contract: WindowsFontLifecycleRuntimeContract
+    ) -> WindowsFontCompatibilityProfile {
+        WindowsFontCompatibilityProfile(
+            fileManager: fileManager,
+            lifecycleContract: contract,
+            sourceRootResolver: { runtimeExecutable, fileManager in
+                try WindowsFontCompatibilityProfileContract.resolvedSourceRoots(
+                    runtimeExecutable: runtimeExecutable,
+                    fileManager: fileManager
+                )
+            },
+            hooks: .production(runner: runner)
+        )
+    }
+
+    private func makeLegacyV4RetirementEngine() ->
+        WindowsFontLegacyV4RetirementEngine {
+        WindowsFontLegacyV4RetirementEngine(
+            fileManager: fileManager,
+            hooks: .production(runner: runner)
+        )
+    }
+
+    private func retire(
+        engine: WindowsFontCompatibilityProfile,
+        runtimeExecutable: URL,
+        prefix: URL,
+        logDirectory: URL
+    ) async throws {
+        if let unsuccessful = try await engine.uninstall(
+            runtimeExecutable: runtimeExecutable,
+            prefix: prefix,
+            logDirectory: logDirectory
+        ) {
+            throw SteamLaunchError.steamClientCompatibilitySetupFailed(
+                unsuccessful
+            )
+        }
+    }
+
+    private func externalNotoCollisionReceipt(
+        prefix: URL
+    ) throws -> WindowsFontProvisioningApplicationReceipt? {
+        let observations = try WindowsFontCompatibilityProfileContract
+            .externalNotoOwnershipObservations(
+                prefix: prefix,
+                fileManager: fileManager
+            )
+        guard !observations.isEmpty else { return nil }
+        // A different-build same-family font does not prove multilingual
+        // coverage. Preserve it and any working old profile, and reserve the
+        // English locale fallback for this genuine ownership conflict.
+        return passthroughReceipt(
+            state: .verifiedCollisionPassthrough,
+            digestDomain: "ForgePlayWindowsFontCollisionPassthroughV1",
+            observations: observations
+        )
+    }
+
+    private func externalPassthroughReceipt(
+        engine: WindowsFontCompatibilityProfile,
+        prefix: URL
+    ) throws -> WindowsFontProvisioningApplicationReceipt? {
+        let observations = try engine.externalOwnershipObservations(
+            prefix: prefix
+        )
+        guard !observations.isEmpty else { return nil }
+        return passthroughReceipt(
+            state: .verifiedCollisionPassthrough,
+            digestDomain:
+                "ForgePlayWindowsFontCollisionPassthroughV1",
+            observations: observations
+        )
+    }
+
+    private func provisionOrPassthrough(
+        engine: WindowsFontCompatibilityProfile,
+        runtimeExecutable: URL,
+        prefix: URL,
+        logDirectory: URL
+    ) async throws -> WindowsFontProvisioningApplicationReceipt {
+        do {
+            return try await engine.provisionForLaunch(
+                runtimeExecutable: runtimeExecutable,
+                prefix: prefix,
+                logDirectory: logDirectory
+            )
+        } catch WindowsFontCompatibilityProfileError.collision(let reason) {
+            let lowercasedReason = reason.lowercased()
+            guard engine.consumedOperations.isEmpty,
+                  !lowercasedReason.contains("duplicate-or-type-mismatch"),
+                  !lowercasedReason.contains("evidence-mismatch") else {
+                throw WindowsFontCompatibilityProfileError.collision(reason)
+            }
+            return passthroughReceipt(
+                state: .verifiedCollisionPassthrough,
+                digestDomain:
+                    "ForgePlayWindowsFontCollisionPassthroughV1",
+                observations: [
+                    WindowsFontCanonical.digest(
+                        domain: "ForgePlayWindowsFontCollisionV1",
+                        fields: [reason]
+                    )
+                ]
+            )
+        }
+    }
+
+    private func registryLocaleSignals(prefix: URL) -> RegistryLocaleSignals {
+        do {
+            let snapshot = try WindowsFontRegistrySnapshotState.load(
+                url: prefix.appending(path: "user.reg"),
+                fileManager: fileManager
+            )
+            return RegistryLocaleSignals(
+                localeIdentifier: snapshot.stringValue(
+                    registryPath: "HKCU\\Control Panel\\International",
+                    valueName: "LocaleName"
+                ),
+                fontCodepages: snapshot.stringValue(
+                    registryPath: "HKCU\\Software\\Wine\\Fonts",
+                    valueName: "Codepages"
+                )
+            )
+        } catch {
+            return RegistryLocaleSignals(
+                localeIdentifier: nil,
+                fontCodepages: nil
+            )
+        }
+    }
+
+    private func resolvedLocale(
+        identifier: String?,
+        fontCodepages: String?
+    ) -> LocaleResolution {
+        if let identifier,
+           !identifier.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+           let variant = WindowsFontCompatibilityProfileV6Contract
+            .supportedVariant(localeIdentifier: identifier) {
+            return .supported(variant)
+        }
+        guard let fontCodepages,
+              let baseline = WindowsFontFreshBaselineVariant
+                .retirementBaseline(fontCodepages: fontCodepages) else {
+            return .unavailable
+        }
+        switch baseline {
+        case .japanese: return .supported(.japanese)
+        case .simplifiedChinese: return .supported(.simplifiedChinese)
+        case .traditionalChinese: return .supported(.traditionalChinese)
+        case .korean: return .supported(.korean)
+        case .western, .unsupportedArabic: return .supported(.western)
+        }
+    }
+
+    private func hasLegacyV4Marker(prefix: URL) -> Bool {
+        evidenceExists(
+            at: "drive_c/ForgePlay/FontCompatibility/" +
+                "forgeplay-windows-font-compatibility-v4.txt",
+            prefix: prefix
+        )
+    }
+
+    private func hasLegacyV4Evidence(prefix: URL) -> Bool {
+        hasLegacyV4Marker(prefix: prefix) || evidenceExists(
+            at: "drive_c/." +
+                WindowsFontLegacyV4RetirementEngine.profileIdentifier +
+                ".transaction.json",
+            prefix: prefix
+        ) || evidenceExists(
+            at: "drive_c/." +
+                WindowsFontLegacyV4RetirementEngine.profileIdentifier +
+                ".transaction-update.json",
+            prefix: prefix
+        )
+    }
+
+    private func legacyV4RetirementTransactionExists(prefix: URL) -> Bool {
+        evidenceExists(
+            at: "drive_c/." +
+                WindowsFontLegacyV4RetirementEngine.profileIdentifier +
+                ".transaction.json",
+            prefix: prefix
+        ) || evidenceExists(
+            at: "drive_c/." +
+                WindowsFontLegacyV4RetirementEngine.profileIdentifier +
+                ".transaction-update.json",
+            prefix: prefix
+        )
+    }
+
+    private func passthroughReceipt(
+        state: WindowsFontProvisioningApplicationReceipt.ProvisioningState =
+            .verifiedUnsupportedLocalePassthrough,
+        digestDomain: String =
+            "ForgePlayWindowsFontUnsupportedLocalePassthroughV1",
+        observations: [String] = []
+    ) -> WindowsFontProvisioningApplicationReceipt {
+        let digest = WindowsFontCanonical.digest(
+            domain: digestDomain,
+            fields: observations.sorted()
+        )
+        return WindowsFontProvisioningApplicationReceipt(
+            profileIdentifier:
+                WindowsFontCompatibilityProfileV6Contract.profileIdentifier,
+            state: state,
+            baselineDigest: digest,
+            appliedDigest: digest,
+            appliedItemCount: 0,
+            missingItemCount: 0
+        )
+    }
+
+    private func hasV5Evidence(prefix: URL) -> Bool {
+        evidenceExists(at: v5Namespace.markerRelativePath, prefix: prefix) ||
+            evidenceExists(at: v5Namespace.journalRelativePath, prefix: prefix)
+    }
+
+    private func rejectOverlappingVersionEvidence(prefix: URL) throws {
+        let hasV5 = hasV5Evidence(prefix: prefix)
+        let hasV6 =
+            evidenceExists(at: v6Namespace.markerRelativePath, prefix: prefix) ||
+            evidenceExists(at: v6Namespace.journalRelativePath, prefix: prefix)
+        let hasV4Marker = hasLegacyV4Marker(prefix: prefix)
+        let hasV4RetirementTransaction = legacyV4RetirementTransactionExists(
+            prefix: prefix
+        )
+        guard !(hasV5 && hasV6),
+              !(hasV6 && hasV4Marker),
+              !(hasV4RetirementTransaction && (hasV5 || hasV6)) else {
+            throw WindowsFontCompatibilityProfileError.recoveryConflict(
+                "overlapping-font-profile-version-evidence"
+            )
+        }
+    }
+
+    private func evidenceExists(at relativePath: String, prefix: URL) -> Bool {
+        do {
+            return try WindowsFontLifecycleFileSystem.lstatItem(
+                prefix.appending(path: relativePath)
+            ) != nil
+        } catch {
+            return true
+        }
+    }
+
+    private func acquireMigrationGate(_ prefix: URL) throws {
+        guard Self.activeMigrationPrefixPaths.insert(prefix.path).inserted else {
+            throw WindowsFontCompatibilityProfileError.overlappingLifecycle(prefix)
+        }
+    }
+
+    private func releaseMigrationGate(_ prefix: URL) {
+        Self.activeMigrationPrefixPaths.remove(prefix.path)
+    }
+
+    private func v6EvidenceVariant(
+        prefix: URL
+    ) throws -> WindowsFontLocaleVariant? {
+        let markerURL = prefix.appending(path: v6Namespace.markerRelativePath)
+        let journalURL = prefix.appending(path: v6Namespace.journalRelativePath)
+        var variants: [WindowsFontLocaleVariant] = []
+        if try WindowsFontLifecycleFileSystem.lstatItem(markerURL) != nil {
+            let marker: WindowsFontLifecycleMarker = try readCanonicalEvidence(
+                WindowsFontLifecycleMarker.self,
+                at: markerURL,
+                exactKeys: WindowsFontLifecycleMarker.exactKeys
+            )
+            guard marker.profileIdentifier == v6Namespace.profileIdentifier,
+                  let variant = WindowsFontCompatibilityProfileV6Contract.variant(
+                    forDescriptorDigest: marker.descriptorDigest
+                  ) else {
+                throw WindowsFontCompatibilityProfileError
+                    .malformedLifecycleEvidence
+            }
+            variants.append(variant)
+        }
+        if try WindowsFontLifecycleFileSystem.lstatItem(journalURL) != nil {
+            let journal: WindowsFontLifecycleJournal = try readCanonicalEvidence(
+                WindowsFontLifecycleJournal.self,
+                at: journalURL,
+                exactKeys: WindowsFontLifecycleJournal.exactKeys
+            )
+            guard journal.profileIdentifier == v6Namespace.profileIdentifier,
+                  let variant = WindowsFontCompatibilityProfileV6Contract.variant(
+                    forDescriptorDigest: journal.descriptorDigest
+                  ) else {
+                throw WindowsFontCompatibilityProfileError
+                    .malformedLifecycleEvidence
+            }
+            variants.append(variant)
+        }
+        guard Set(variants).count <= 1 else {
+            throw WindowsFontCompatibilityProfileError.recoveryConflict(
+                "v6-font-profile-variant-evidence-mismatch"
+            )
+        }
+        return variants.first
+    }
+
+    private func readCanonicalEvidence<T: Codable & Equatable>(
+        _ type: T.Type,
+        at url: URL,
+        exactKeys: Set<String>
+    ) throws -> T {
+        do {
+            try WindowsFontLifecycleFileSystem.requireRegularFileMetadata(
+                at: url,
+                exactMode: WindowsFontLifecycleFileSystem.evidenceFileMode
+            )
+            let data = try WindowsFontLifecycleFileSystem.readRegularFile(
+                at: url,
+                maximumByteCount:
+                    WindowsFontLifecycleJSON.maximumEvidenceByteCount
+            )
+            return try WindowsFontLifecycleJSON.decodeCanonical(
+                type,
+                data: data,
+                exactKeys: exactKeys
+            )
+        } catch let error as WindowsFontCompatibilityProfileError {
+            throw error
+        } catch {
+            throw WindowsFontCompatibilityProfileError
+                .malformedLifecycleEvidence
         }
     }
 }

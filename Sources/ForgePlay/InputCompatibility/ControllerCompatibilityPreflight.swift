@@ -20,10 +20,11 @@ struct ControllerCompatibilityPreflightSnapshot: Hashable, Sendable {
 }
 
 struct WineXInputBridgeCapability: Hashable, Sendable {
-    /// This session does not install or claim a separate XInput bridge. The
-    /// bundled Wine profile owns macOS IOHID passthrough and keeps the winebus
-    /// controller registry values at zero; child enumeration remains a QA
-    /// observation rather than launch admission evidence.
+    /// The Steam client compatibility profile owns macOS IOHID passthrough:
+    /// DisableHidraw=0 keeps IOHID enabled, while DisableInput=1 together with
+    /// Enable SDL=0 prefers raw Generic Desktop gamepads in the bundled
+    /// runtime. This session installs no separate XInput bridge; Wine-child
+    /// enumeration remains explicitly unverified real-device QA evidence.
     let isStaticRouteAvailable: Bool
     let routeDigest: String?
     let moduleNames: [String]
@@ -49,8 +50,9 @@ struct ControllerCompatibilityApplicationReceipt: Hashable, Sendable {
     let restored: Bool
 
     /// Kept as the compatibility-facing property name. Automatic mode owns no
-    /// controller resource or registry mutation: Wine's existing IOHID route
-    /// remains authoritative whether or not macOS currently sees a device.
+    /// controller resource. The shared Steam profile owns the winebus registry
+    /// policy while Wine's IOHID route remains authoritative whether or not
+    /// macOS currently sees a device.
     var isStaticPreparationVerified: Bool {
         policy == .automatic &&
             disposition == .automaticWineIOHIDPassthroughNoMutation &&

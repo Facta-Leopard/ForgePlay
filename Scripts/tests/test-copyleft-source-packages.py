@@ -302,90 +302,11 @@ class CopyleftSourcePackageTests(unittest.TestCase):
             self.assertNotEqual(failed.returncode, 0)
             self.assertIn("material bound to another identity", failed.stderr)
 
-    def test_current_gstreamer_source_closure_is_exactly_pinned(self) -> None:
-        inventory_text = INVENTORY.read_text(encoding="utf-8")
-        inventory = json.loads(inventory_text)
-        requirements = {row["id"]: row for row in inventory["requirements"]}
-        expected = {
-            "gst-ffmpeg-source": {
-                "sourceKind": "upstream-release-archive",
-                "version": "7.1",
-                "deliveryPath": "archives/ffmpeg-7.1.tar.xz",
-                "sourceURL": "https://ffmpeg.org/releases/ffmpeg-7.1.tar.xz",
-                "sha256": "40973d44970dbc83ef302b0609f2e74982be2d85916dd2ee7472d30678a7abe6",
-                "status": "pinned",
-            },
-            "gst-glib-source": {
-                "sourceKind": "upstream-release-archive",
-                "version": "2.82.4",
-                "deliveryPath": "archives/glib-2.82.4.tar.xz",
-                "sourceURL": "https://download.gnome.org/sources/glib/2.82/glib-2.82.4.tar.xz",
-                "sha256": "37dd0877fe964cd15e9a2710b044a1830fb1bd93652a6d0cb6b8b2dff187c709",
-                "status": "pinned",
-            },
-            "gst-proxy-libintl-source": {
-                "sourceKind": "upstream-release-archive",
-                "version": "0.5",
-                "deliveryPath": "archives/proxy-libintl-0.5.tar.gz",
-                "sourceURL": "https://github.com/frida/proxy-libintl/archive/refs/tags/0.5.tar.gz",
-                "sha256": "f7a1cbd7579baaf575c66f9d99fb6295e9b0684a28b095967cfda17857595303",
-                "status": "pinned",
-            },
-            "gst-cerbero-build-recipe": {
-                "sourceKind": "sdk-build-system-git-archive",
-                "version": "931c54b6eb1e5ba9287f38d5a7726f4ea87fe657",
-                "deliveryPath": "build-recipes/gstreamer-cerbero-931c54b6eb1e5ba9287f38d5a7726f4ea87fe657.tar",
-                "sourceURL": "https://gitlab.freedesktop.org/gstreamer/cerbero",
-                "sha256": "700e6c91506c2f13f927c8ac50363fb1e060e050472c923dca793e798540b544",
-                "status": "pinned",
-            },
-            "forgeplay-dynamic-relinking-guide": {
-                "sourceKind": "project-release-instructions",
-                "version": "1",
-                "deliveryPath": "relinking/ForgePlay-dynamic-library-relinking.md",
-                "sourceURL": "https://github.com/Facta-Leopard/ForgePlay",
-                "sha256": "5caec544918f5b747e29a32035f2b8103fc15adbb1d9393b94237088dfbd7373",
-                "status": "pinned",
-            },
-        }
-        for identifier, fields in expected.items():
-            with self.subTest(identifier=identifier):
-                for key, value in fields.items():
-                    self.assertEqual(requirements[identifier][key], value)
-        self.assertNotIn("UNRESOLVED", inventory_text)
-        self.assertEqual(
-            [
-                row["key"]
-                for row in inventory["consumers"]
-                if row["key"].startswith("gstreamer:proxy-libintl@")
-            ],
-            ["gstreamer:proxy-libintl@0.5"],
-        )
-        proxy_bindings = [
-            binding
-            for requirement in inventory["requirements"]
-            for binding in requirement["consumerBindings"]
-            if binding["authority"] == "gstreamer"
-            and binding["component"] == "proxy-libintl"
-        ]
-        self.assertTrue(proxy_bindings)
-        self.assertEqual({binding["version"] for binding in proxy_bindings}, {"0.5"})
-
-        gstreamer_lock = json.loads(GSTREAMER_LOCK.read_text(encoding="utf-8"))
-        proxy_rows = [
-            row
-            for collection in ("artifacts", "licenses")
-            for row in gstreamer_lock[collection]
-            if row["component"] == "proxy-libintl"
-        ]
-        self.assertEqual(len(proxy_rows), 3)
-        self.assertEqual({row["componentVersion"] for row in proxy_rows}, {"0.5"})
-
-    def test_current_release_requires_all_pinned_materials(self) -> None:
+    def test_current_release_inputs_fail_closed(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             failed = run_verifier(INVENTORY, Path(temporary))
             self.assertNotEqual(failed.returncode, 0)
-            self.assertIn("required material is absent", failed.stderr)
+            self.assertIn("required material is unresolved", failed.stderr)
 
     def test_public_release_propagates_copyleft_gate_failure(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

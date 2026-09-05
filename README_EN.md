@@ -1,5 +1,27 @@
 # ForgePlay Source — English
 
+## ForgePlay 1.2 source preparation
+
+The product baseline is `1.2_Release`, commit
+`72a2598c99f0b649d1384ed0763a00037f5d1d2e`. This preparation preserves the
+application, native implementation and Wine patch bytes while adding license
+notices and completing source-export inputs. `SOURCE-INVENTORY.json` records
+the separate preparation commit.
+
+The independently authored Frame Generation implementation uses
+`GPL-3.0-only`, matching Game Mode's license. Exact file hashes and mixed-file
+scope are recorded under `LICENSES/ForgePlayFrameGeneration/`. Wine-derived
+integration patches and Apple's D3DMetal component retain their separately
+identified terms.
+
+Personal keys, keychains and login data are excluded. The intentionally
+included `Resources/CompatibilityDBPublicKey.base64` is the product's public
+verification key for compatibility DB signatures, not a personal authentication
+key or a private signing key.
+
+This is a preparation for user review, not a published binary release. The
+final DMG must be checked against these sources before distribution.
+
 [한국어](README_KO.md) | [Language index](README.md)
 
 ## The position, stated plainly

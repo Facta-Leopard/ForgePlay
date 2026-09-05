@@ -175,6 +175,17 @@ final class SteamRendererPolicyManager {
         case stagingRollback
     }
 
+    private enum NVIDIAMetalFXDestinationRestorationState {
+        case staged
+        case alreadyRestored
+        case alreadyRemoved
+    }
+
+    private struct NVIDIAMetalFXValidatedModuleRestoration {
+        let destinationState: NVIDIAMetalFXDestinationRestorationState
+        let destinationSnapshot: URL?
+    }
+
     typealias RegistryActionExecutor = @MainActor (
         _ action: RunnerAction,
         _ runner: SafeProcessRunner
@@ -191,6 +202,15 @@ final class SteamRendererPolicyManager {
         self.registryActionExecutor = registryActionExecutor
     }
 
+    /// Returns true only for a safely readable ownership marker that the
+    /// renderer-policy owner can restore. A malformed or unrelated file must
+    /// not attach NVIDIA cleanup ownership to a DXMT or D9VK launch.
+    func hasRecoverableNVIDIAMetalFXRegistrySession(in prefix: URL) -> Bool {
+        let marker = nvidiaMetalFXRegistrySessionMarker(in: prefix)
+        guard fileManager.fileExists(atPath: marker.path) else { return false }
+        return (try? loadNVIDIAMetalFXRegistrySessionMarker(marker)) != nil
+    }
+
     func resolvedPolicy(
         _ requestedRendererPolicy: SteamRendererPolicyPreference?,
         capability: WindowsRuntimeCapability
@@ -204,7 +224,7 @@ final class SteamRendererPolicyManager {
             return requestedRendererPolicy
         }
         throw SteamLaunchError.rendererPolicyUnavailable(
-            "Steam을 실행하기 전에 D3DMetal 표준, D3DMetal NVIDIA, DXMT, D9VK 또는 DXVK 중 하나를 직접 선택해야 합니다."
+            "Steam을 실행하기 전에 D3DMetal - NVIDIA, DXMT 또는 D9VK 중 하나를 직접 선택해야 합니다."
         )
     }
 
@@ -600,14 +620,13 @@ final class SteamRendererPolicyManager {
         }
         let markerURL = sessionDirectory.appending(path: "session.json")
         guard let marker = try? loadNVIDIAMetalFXModuleSessionMarker(markerURL),
-              marker.schemaVersion == 1 || marker.schemaVersion == 2,
-              marker.entries.map(\.moduleName) ==
-                Self.nvidiaMetalFXSystem32ModuleNames.sorted() else {
+              let sessionModuleNames = Self
+                .recognizedNVIDIAMetalFXModuleSessionNames(marker) else {
             return false
         }
 
         let allowedPaths = Set(
-            Self.nvidiaMetalFXSystem32ModuleNames.map {
+            sessionModuleNames.map {
                 "system32/\($0)"
             }
         )
@@ -620,19 +639,14 @@ final class SteamRendererPolicyManager {
             path: "drive_c/windows/system32",
             directoryHint: .isDirectory
         )
-        let presentNames = Set(
-            Self.nvidiaMetalFXSystem32ModuleNames.filter {
-                fileManager.fileExists(
-                    atPath: system32.appending(path: $0).path
-                )
-            }
-        )
         for entry in marker.entries {
             do {
-                _ = try nvidiaMetalFXStagedSource(
+                _ = try validatedNVIDIAMetalFXModuleRestoration(
                     for: entry,
                     schemaVersion: marker.schemaVersion,
                     sessionDirectory: sessionDirectory,
+                    system32: system32,
+                    backupDirectory: backupDirectory,
                     prefix: prefix,
                     runtimeExecutable: runtimeExecutable
                 )
@@ -640,17 +654,7 @@ final class SteamRendererPolicyManager {
                 return false
             }
         }
-
-        return presentNames.allSatisfy { moduleName in
-            guard let entry = marker.entries.first(where: {
-                      $0.moduleName == moduleName
-                  }) else {
-                return false
-            }
-            let destination = system32.appending(path: moduleName)
-            return (try? stableRendererFileIdentity(destination)) ==
-                entry.stagedIdentity
-        }
+        return true
     }
 
     private func nvidiaMetalFXSessionInspectionPaths(
@@ -671,7 +675,8 @@ final class SteamRendererPolicyManager {
         // snapshot is malformed. The recovery predicate will then reject the
         // transaction and keep Steam blocked instead of silently treating the
         // overlay as ordinary prefix content.
-        let ownedPaths = Self.nvidiaMetalFXSystem32ModuleNames.sorted().map {
+        let allKnownOwnedPaths = Self
+            .nvidiaMetalFXKnownSessionModuleNames.sorted().map {
             "system32/\($0)"
         }
         guard FileSystemItemPolicy.hasOnlyNonSymlinkDirectoryComponents(
@@ -683,14 +688,13 @@ final class SteamRendererPolicyManager {
                 sessionDirectory,
                 fileManager: fileManager
               ) else {
-            return ownedPaths
+            return allKnownOwnedPaths
         }
         let markerURL = sessionDirectory.appending(path: "session.json")
         guard let marker = try? loadNVIDIAMetalFXModuleSessionMarker(markerURL),
-              marker.schemaVersion == 1 || marker.schemaVersion == 2,
-              marker.entries.map(\.moduleName) ==
-                Self.nvidiaMetalFXSystem32ModuleNames.sorted() else {
-            return ownedPaths
+              let sessionModuleNames = Self
+                .recognizedNVIDIAMetalFXModuleSessionNames(marker) else {
+            return allKnownOwnedPaths
         }
         for entry in marker.entries {
             guard (try? nvidiaMetalFXStagedSource(
@@ -700,13 +704,13 @@ final class SteamRendererPolicyManager {
                 prefix: prefix,
                 runtimeExecutable: runtimeExecutable
             )) != nil else {
-                return ownedPaths
+                return allKnownOwnedPaths
             }
         }
-        return ownedPaths
+        return sessionModuleNames.map { "system32/\($0)" }
     }
 
-    /// Restores only the three files owned by the transient NVIDIA MetalFX
+    /// Restores only the exact files recorded by the transient NVIDIA MetalFX
     /// session. This deliberately does not repair unrelated renderer overlays.
     func restoreNVIDIAMetalFXSessionModules(
         prefix: URL,
@@ -757,12 +761,10 @@ final class SteamRendererPolicyManager {
         let markerURL = sessionDirectory.appending(path: "session.json")
         guard fileManager.fileExists(atPath: markerURL.path) else { return }
         let marker = try loadNVIDIAMetalFXModuleSessionMarker(markerURL)
-        let requiredNames = Self.nvidiaMetalFXSystem32ModuleNames.sorted()
-        guard (marker.schemaVersion == 1 || marker.schemaVersion == 2),
-              marker.entries.map(\.moduleName) == requiredNames else {
+        guard Self.recognizedNVIDIAMetalFXModuleSessionNames(marker) != nil else {
             throw SteamLaunchError.rendererBridgeInstallFailed(
                 markerURL,
-                "MetalFX module ownership marker is incomplete"
+                "MetalFX module ownership marker has an unsupported version or module set"
             )
         }
 
@@ -770,74 +772,44 @@ final class SteamRendererPolicyManager {
         do {
             for entry in marker.entries {
                 let destination = system32.appending(path: entry.moduleName)
-                let stagedIdentity = entry.stagedIdentity
-                _ = try nvidiaMetalFXStagedSource(
+                let validated = try validatedNVIDIAMetalFXModuleRestoration(
                     for: entry,
                     schemaVersion: marker.schemaVersion,
                     sessionDirectory: sessionDirectory,
+                    system32: system32,
+                    backupDirectory: backupDirectory,
                     prefix: prefix,
                     runtimeExecutable: runtimeExecutable
                 )
-                if fileManager.fileExists(atPath: destination.path) {
-                    guard try stableRendererFileIdentity(destination) == stagedIdentity else {
-                        throw SteamLaunchError.rendererBridgeInstallFailed(
-                            destination,
-                            "MetalFX destination changed before restoration"
-                        )
-                    }
-                }
-
-                let legacyBackup = backupDirectory.appending(
-                    path: "\(entry.moduleName).original"
-                )
-                if entry.backupWasPresent {
-                    guard let expected = entry.backupIdentity,
-                          fileManager.fileExists(atPath: legacyBackup.path),
-                          try stableRendererFileIdentity(legacyBackup) == expected else {
-                        throw SteamLaunchError.rendererBridgeInstallFailed(
-                            legacyBackup,
-                            "Pre-existing MetalFX backup changed during the session"
-                        )
-                    }
-                } else if fileManager.fileExists(atPath: legacyBackup.path) {
-                    throw SteamLaunchError.rendererBridgeInstallFailed(
-                        legacyBackup,
-                        "An unowned MetalFX backup appeared during the session"
-                    )
-                }
 
                 if entry.destinationWasPresent {
-                    guard let snapshotName = entry.destinationSnapshotName,
-                          snapshotName ==
-                            "destination-\(entry.moduleName).original",
+                    guard let snapshot = validated.destinationSnapshot,
                           let expected = entry.destinationIdentity else {
                         throw SteamLaunchError.rendererBridgeInstallFailed(
                             markerURL,
                             "MetalFX destination snapshot metadata is incomplete"
                         )
                     }
-                    let snapshot = sessionDirectory.appending(path: snapshotName)
-                    guard try stableRendererFileIdentity(snapshot) == expected else {
-                        throw SteamLaunchError.rendererBridgeInstallFailed(
-                            snapshot,
-                            "MetalFX destination snapshot changed"
+                    if validated.destinationState != .alreadyRestored {
+                        // Once restoration starts, even a later temporary-file
+                        // retirement or readback failure can leave this destination
+                        // partially restored. Enroll it in rollback before the first
+                        // mutation so the ownership marker always remains retryable.
+                        restoredModuleNames.append(entry.moduleName)
+                        try restoreRegularFileAtomically(
+                            from: snapshot,
+                            to: destination
                         )
-                    }
-                    // Once restoration starts, even a later temporary-file
-                    // retirement or readback failure can leave this destination
-                    // partially restored. Enroll it in rollback before the first
-                    // mutation so the ownership marker always remains retryable.
-                    restoredModuleNames.append(entry.moduleName)
-                    try restoreRegularFileAtomically(from: snapshot, to: destination)
-                    guard try stableRendererFileIdentity(destination) == expected else {
-                        throw SteamLaunchError.rendererBridgeInstallFailed(
-                            destination,
-                            "MetalFX destination restoration verification failed"
-                        )
+                        guard try stableRendererFileIdentity(destination) == expected else {
+                            throw SteamLaunchError.rendererBridgeInstallFailed(
+                                destination,
+                                "MetalFX destination restoration verification failed"
+                            )
+                        }
                     }
                 } else {
-                    restoredModuleNames.append(entry.moduleName)
-                    if fileManager.fileExists(atPath: destination.path) {
+                    if validated.destinationState != .alreadyRemoved {
+                        restoredModuleNames.append(entry.moduleName)
                         try FileSystemItemPolicy.requireRegularNonSymlinkFile(
                             destination,
                             fileManager: fileManager
@@ -1083,7 +1055,8 @@ final class SteamRendererPolicyManager {
         }
     }
 
-    /// Stages the three modules required in the Wine prefix System32 directory
+    /// Stages the canonical modules and byte-identical compatibility aliases
+    /// required in the Wine prefix System32 directory
     /// for experimental MetalFX conversion of DLSS calls. The
     /// original files, when present, are backed up for the targeted session
     /// restoration path; the explicit full repair path remains separate.
@@ -1135,9 +1108,16 @@ final class SteamRendererPolicyManager {
         let markerURL = sessionDirectory.appending(path: "session.json")
         if fileManager.fileExists(atPath: markerURL.path) {
             let marker = try loadNVIDIAMetalFXModuleSessionMarker(markerURL)
-            guard (marker.schemaVersion == 1 || marker.schemaVersion == 2),
-                  marker.entries.map(\.moduleName) == requiredNames.sorted(),
-                  try marker.entries.allSatisfy({ entry in
+            guard let sessionModuleNames = Self
+                    .recognizedNVIDIAMetalFXModuleSessionNames(marker) else {
+                throw SteamLaunchError.rendererBridgeInstallFailed(
+                    markerURL,
+                    "Existing MetalFX session ownership marker is unsupported"
+                )
+            }
+            let reusableCurrentSession: Bool
+            if sessionModuleNames == requiredNames.sorted() {
+                reusableCurrentSession = try marker.entries.allSatisfy({ entry in
                       let destination = system32.appending(path: entry.moduleName)
                       guard fileManager.fileExists(atPath: destination.path) else {
                           return false
@@ -1155,13 +1135,34 @@ final class SteamRendererPolicyManager {
                       return try stableRendererFileIdentity(stagedSource) ==
                               entry.stagedIdentity &&
                           destinationIdentity == entry.stagedIdentity
-                  }) else {
+                  })
+            } else {
+                reusableCurrentSession = false
+            }
+            if reusableCurrentSession {
+                return requiredNames.sorted()
+            }
+            // Normal orchestration retires registry ownership, restores the
+            // prior module transaction through the completed-barrier path, and
+            // only then calls stage. A direct stage call must not bypass that
+            // ordering for a historical schema.
+            throw SteamLaunchError.rendererBridgeInstallFailed(
+                markerURL,
+                "Existing MetalFX session must be restored before staging"
+            )
+        }
+        if fileManager.fileExists(atPath: sessionDirectory.path) {
+            // System32 mutation starts only after the complete marker is
+            // atomically published and reread. A contained markerless directory
+            // therefore owns snapshots only and is safe to retire before a new
+            // transaction; it must not become a permanent launch gate.
+            try fileManager.removeItem(at: sessionDirectory)
+            guard !fileManager.fileExists(atPath: sessionDirectory.path) else {
                 throw SteamLaunchError.rendererBridgeInstallFailed(
-                    markerURL,
-                    "Existing MetalFX session ownership does not match the staged modules"
+                    sessionDirectory,
+                    "Markerless MetalFX transaction could not be retired"
                 )
             }
-            return requiredNames.sorted()
         }
         guard !fileManager.fileExists(atPath: sessionDirectory.path) else {
             throw SteamLaunchError.rendererBridgeInstallFailed(
@@ -1250,7 +1251,9 @@ final class SteamRendererPolicyManager {
                 )
             }
             let marker = NVIDIAMetalFXModuleSessionMarker(
-                schemaVersion: 2,
+                schemaVersion:
+                    D3DMetalNVIDIAProviderContract
+                        .moduleSessionSchemaVersion,
                 entries: entries
             )
             try writeNVIDIAMetalFXModuleSessionMarker(marker, to: markerURL)
@@ -1325,7 +1328,7 @@ final class SteamRendererPolicyManager {
     ) throws -> URL {
         let source: URL
         switch schemaVersion {
-        case 2:
+        case 2, 3:
             guard entry.stagedSnapshotName ==
                     "staged-\(entry.moduleName)" else {
                 throw SteamLaunchError.rendererBridgeInstallFailed(
@@ -1360,6 +1363,115 @@ final class SteamRendererPolicyManager {
             )
         }
         return source
+    }
+
+    private func nvidiaMetalFXDestinationRestorationState(
+        for entry: NVIDIAMetalFXModuleSessionEntry,
+        in system32: URL
+    ) throws -> NVIDIAMetalFXDestinationRestorationState? {
+        let destination = system32.appending(path: entry.moduleName)
+        guard fileManager.fileExists(atPath: destination.path) else {
+            return entry.destinationWasPresent ? nil : .alreadyRemoved
+        }
+        let identity = try stableRendererFileIdentity(destination)
+        if identity == entry.stagedIdentity {
+            return .staged
+        }
+        if entry.destinationWasPresent,
+           let originalIdentity = entry.destinationIdentity,
+           identity == originalIdentity {
+            return .alreadyRestored
+        }
+        return nil
+    }
+
+    private func validatedNVIDIAMetalFXModuleRestoration(
+        for entry: NVIDIAMetalFXModuleSessionEntry,
+        schemaVersion: Int,
+        sessionDirectory: URL,
+        system32: URL,
+        backupDirectory: URL,
+        prefix: URL,
+        runtimeExecutable: URL
+    ) throws -> NVIDIAMetalFXValidatedModuleRestoration {
+        _ = try nvidiaMetalFXStagedSource(
+            for: entry,
+            schemaVersion: schemaVersion,
+            sessionDirectory: sessionDirectory,
+            prefix: prefix,
+            runtimeExecutable: runtimeExecutable
+        )
+        guard let destinationState = try
+                nvidiaMetalFXDestinationRestorationState(
+            for: entry,
+            in: system32
+        ) else {
+            throw SteamLaunchError.rendererBridgeInstallFailed(
+                system32.appending(path: entry.moduleName),
+                "MetalFX destination changed before restoration"
+            )
+        }
+
+        let legacyBackup = backupDirectory.appending(
+            path: "\(entry.moduleName).original"
+        )
+        if entry.backupWasPresent {
+            guard let expected = entry.backupIdentity,
+                  fileManager.fileExists(atPath: legacyBackup.path),
+                  try stableRendererFileIdentity(legacyBackup) == expected else {
+                throw SteamLaunchError.rendererBridgeInstallFailed(
+                    legacyBackup,
+                    "Pre-existing MetalFX backup changed during the session"
+                )
+            }
+        } else {
+            guard entry.backupIdentity == nil else {
+                throw SteamLaunchError.rendererBridgeInstallFailed(
+                    sessionDirectory,
+                    "MetalFX backup marker flags are contradictory"
+                )
+            }
+            guard !fileManager.fileExists(atPath: legacyBackup.path) else {
+                throw SteamLaunchError.rendererBridgeInstallFailed(
+                    legacyBackup,
+                    "An unowned MetalFX backup appeared during the session"
+                )
+            }
+        }
+
+        let destinationSnapshot: URL?
+        if entry.destinationWasPresent {
+            guard let snapshotName = entry.destinationSnapshotName,
+                  snapshotName ==
+                    "destination-\(entry.moduleName).original",
+                  let expected = entry.destinationIdentity else {
+                throw SteamLaunchError.rendererBridgeInstallFailed(
+                    sessionDirectory,
+                    "MetalFX destination snapshot metadata is incomplete"
+                )
+            }
+            let snapshot = sessionDirectory.appending(path: snapshotName)
+            guard try stableRendererFileIdentity(snapshot) == expected else {
+                throw SteamLaunchError.rendererBridgeInstallFailed(
+                    snapshot,
+                    "MetalFX destination snapshot changed"
+                )
+            }
+            destinationSnapshot = snapshot
+        } else {
+            guard entry.destinationIdentity == nil,
+                  entry.destinationSnapshotName == nil else {
+                throw SteamLaunchError.rendererBridgeInstallFailed(
+                    sessionDirectory,
+                    "MetalFX destination marker flags are contradictory"
+                )
+            }
+            destinationSnapshot = nil
+        }
+        return NVIDIAMetalFXValidatedModuleRestoration(
+            destinationState: destinationState,
+            destinationSnapshot: destinationSnapshot
+        )
     }
 
     @MainActor
@@ -1996,11 +2108,33 @@ final class SteamRendererPolicyManager {
         "syswow64"
     ]
 
-    private nonisolated static let nvidiaMetalFXSystem32ModuleNames = [
-        "nvapi.dll",
-        "nvapi64.dll",
-        "nvngx.dll"
-    ]
+    private nonisolated static let nvidiaMetalFXSystem32ModuleNames =
+        D3DMetalNVIDIAProviderContract.system32ModuleNames
+    private nonisolated static let nvidiaMetalFXLegacyThreeModuleNames =
+        D3DMetalNVIDIAProviderContract.legacyThreeModuleNames
+    private nonisolated static let nvidiaMetalFXKnownSessionModuleNames = Set(
+        nvidiaMetalFXSystem32ModuleNames + nvidiaMetalFXLegacyThreeModuleNames
+    )
+
+    private nonisolated static func recognizedNVIDIAMetalFXModuleSessionNames(
+        _ marker: NVIDIAMetalFXModuleSessionMarker
+    ) -> [String]? {
+        let names = marker.entries.map(\.moduleName)
+        guard names == names.sorted(),
+              Set(names).count == names.count else {
+            return nil
+        }
+        switch marker.schemaVersion {
+        case 1, 2:
+            return names == nvidiaMetalFXLegacyThreeModuleNames.sorted()
+                ? names : nil
+        case 3:
+            return names == nvidiaMetalFXSystem32ModuleNames.sorted()
+                ? names : nil
+        default:
+            return nil
+        }
+    }
 
     // Wine serializes the logical 32-bit registry view under Wow6432Node.
     // NVIDIA loaders are not consistent about the location or view they
@@ -2047,6 +2181,7 @@ final class SteamRendererPolicyManager {
     }
 
     private nonisolated static let rendererPolicyDLLNames: Set<String> = [
+        "_nvngx.dll",
         "d3d8.dll",
         "d3d9.dll",
         "d3d10.dll",

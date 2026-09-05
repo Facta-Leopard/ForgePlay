@@ -44,6 +44,10 @@ struct ProcessRunResult: Sendable, Hashable {
     var relatedRunEvidenceLogs: [URL] = []
     var evidenceCaptureWarning: String? = nil
     var diagnosticCaptureWarning: String? = nil
+    /// Typed, path-free launch preparation and fallback facts. These mirror the
+    /// persisted CommandSpec evidence so downstream orchestration can consume
+    /// an effective renderer without treating diagnostic text as authority.
+    var runtimeCompatibility: [String: String] = [:]
     /// A localization key for a bounded warning that should be shown alongside
     /// an otherwise successful process launch. Technical diagnostics remain in
     /// `diagnosticCaptureWarning` and the structured process evidence.
@@ -107,6 +111,13 @@ struct ManagedWineLaunchEnvironmentProjection: Sendable, Hashable {
     let audioInputSelection: String?
     let synchronizationSelection: String?
     let synchronizationBackend: String?
+    let gameModeHostRequested: String?
+    let gameModeHostAvailability: String?
+    let gameModeHostDisabledReason: String?
+    let frameGenerationEnabled: String?
+    let frameGenerationTargetFrameRate: String?
+    let frameCheckEnabled: String?
+    let frameGenerationProxyPath: String?
 }
 
 struct ManagedWineRosettaAVXPolicyV1: Sendable, Hashable {
@@ -158,6 +169,107 @@ enum ManagedProcessSignalOwnershipSource: String, Sendable, Hashable {
     case trackedDescriptorBoundProcess
     case managedWineJournal
     case gameModeHostJournal
+    case forgePlayRuntimeProcessTable
+}
+
+/// Immutable filesystem generation captured immediately before and after an
+/// older Runtime manifest is authenticated. Historical cleanup reopens and
+/// hashes these exact objects again at every signal boundary so a same-path
+/// replacement or in-place mutation cannot inherit authorization.
+struct ManagedWineHistoricalRuntimeObjectIdentity: Sendable, Hashable {
+    let url: URL
+    let device: UInt64
+    let inode: UInt64
+    let byteCount: Int64
+    let modificationSeconds: Int64
+    let modificationNanoseconds: Int64
+    let changeSeconds: Int64
+    let changeNanoseconds: Int64
+    let contentSHA256: String
+
+    static func capture(_ input: URL) throws -> Self {
+        let url = input.standardizedFileURL.resolvingSymlinksInPath()
+        let descriptor = Darwin.open(
+            url.path,
+            O_RDONLY | O_CLOEXEC | O_NOFOLLOW
+        )
+        guard descriptor >= 0 else {
+            throw SafeProcessRunnerError.prefixProcessVerificationFailed(
+                url,
+                "historical Runtime object could not be opened"
+            )
+        }
+        defer { Darwin.close(descriptor) }
+        var before = stat()
+        guard fstat(descriptor, &before) == 0,
+              (before.st_mode & S_IFMT) == S_IFREG,
+              before.st_nlink == 1,
+              before.st_size >= 0,
+              before.st_size <= 512 * 1024 * 1024 else {
+            throw SafeProcessRunnerError.prefixProcessVerificationFailed(
+                url,
+                "historical Runtime object is not a bounded regular file"
+            )
+        }
+
+        var hasher = SHA256()
+        var offset: Int64 = 0
+        var buffer = [UInt8](repeating: 0, count: 64 * 1024)
+        while offset < Int64(before.st_size) {
+            let requested = min(
+                buffer.count,
+                Int(Int64(before.st_size) - offset)
+            )
+            let count = buffer.withUnsafeMutableBytes { bytes in
+                Darwin.pread(
+                    descriptor,
+                    bytes.baseAddress,
+                    requested,
+                    off_t(offset)
+                )
+            }
+            if count < 0, errno == EINTR { continue }
+            guard count > 0 else {
+                throw SafeProcessRunnerError.prefixProcessVerificationFailed(
+                    url,
+                    "historical Runtime object changed while it was hashed"
+                )
+            }
+            hasher.update(data: Data(buffer.prefix(count)))
+            offset += Int64(count)
+        }
+        var after = stat()
+        guard fstat(descriptor, &after) == 0,
+              before.st_dev == after.st_dev,
+              before.st_ino == after.st_ino,
+              before.st_size == after.st_size,
+              before.st_mtimespec.tv_sec == after.st_mtimespec.tv_sec,
+              before.st_mtimespec.tv_nsec == after.st_mtimespec.tv_nsec,
+              before.st_ctimespec.tv_sec == after.st_ctimespec.tv_sec,
+              before.st_ctimespec.tv_nsec == after.st_ctimespec.tv_nsec else {
+            throw SafeProcessRunnerError.prefixProcessVerificationFailed(
+                url,
+                "historical Runtime object changed during authentication"
+            )
+        }
+        return Self(
+            url: url,
+            device: UInt64(after.st_dev),
+            inode: UInt64(after.st_ino),
+            byteCount: Int64(after.st_size),
+            modificationSeconds: Int64(after.st_mtimespec.tv_sec),
+            modificationNanoseconds: Int64(after.st_mtimespec.tv_nsec),
+            changeSeconds: Int64(after.st_ctimespec.tv_sec),
+            changeNanoseconds: Int64(after.st_ctimespec.tv_nsec),
+            contentSHA256: hasher.finalize()
+                .map { String(format: "%02x", $0) }
+                .joined()
+        )
+    }
+
+    func matchesCurrentObject() -> Bool {
+        (try? Self.capture(url)) == self
+    }
 }
 
 /// A PID number is never a signal capability by itself. Every cleanup target
@@ -172,6 +284,8 @@ struct ManagedProcessSignalTarget: Sendable, Hashable {
     let processStartedAtUnixMicroseconds: UInt64
     let executableURL: URL
     let source: ManagedProcessSignalOwnershipSource
+    var authenticatedHistoricalRuntimeObjects:
+        Set<ManagedWineHistoricalRuntimeObjectIdentity> = []
 }
 
 /// Exact live identity returned to launch-lifecycle observers. A Darwin PID is
@@ -183,6 +297,31 @@ struct ManagedWineLaunchProcessIdentity: Sendable, Hashable {
     let processID: Int32
     let processStartedAtUnixMicroseconds: UInt64
     let executableURL: URL
+}
+
+struct StartupWineProcessCleanupTarget: Sendable, Hashable {
+    let processID: pid_t
+    let processStartedAtUnixMicroseconds: UInt64
+    let executableURL: URL
+    let forgePlayApplicationURL: URL
+}
+
+struct StartupWineProcessCleanupPlan: Sendable, Hashable {
+    let targets: [StartupWineProcessCleanupTarget]
+    let inspectionFailures: [String]
+}
+
+struct StartupWineProcessCleanupResult: Sendable, Hashable {
+    let initiallyTargetedProcessIDs: [pid_t]
+    let remainingProcessIDs: [pid_t]
+    let inspectionFailures: [String]
+    let signalFailures: [String]
+
+    var succeeded: Bool {
+        remainingProcessIDs.isEmpty &&
+            inspectionFailures.isEmpty &&
+            signalFailures.isEmpty
+    }
 }
 
 enum ManagedSignalCapabilityMergeDecision: Sendable, Hashable {
@@ -525,6 +664,11 @@ enum WineSynchronizationBackend: String, Codable, CaseIterable, Hashable, Sendab
 /// Records every Wine prefix touched by this ForgePlay process. The registry is
 /// deliberately independent of the actor so the synchronous application-
 /// termination planner can include prefixes used before a storage-root change.
+enum ManagedWineProcessLaunchSessionOrigin: Hashable, Sendable {
+    case currentProcess
+    case hydratedEvidence
+}
+
 struct ManagedWineProcessLaunchSession: Hashable, Sendable {
     let prefixURL: URL
     let runIdentifier: String
@@ -534,6 +678,15 @@ struct ManagedWineProcessLaunchSession: Hashable, Sendable {
     let runtimeFingerprint: String
     let prefixScope: String
     let registeredAt: Date
+    /// A prior-Runtime session may be adopted only for the exact immutable
+    /// PID/start/executable capabilities that passed the same bounded lsof
+    /// snapshot used during authentication. Later journal appends must never
+    /// expand this set.
+    let authenticatedHistoricalSignalTargets:
+        Set<ManagedProcessSignalTarget>?
+    let authenticatedHistoricalArtifact:
+        ManagedWineStaleSessionArtifacts?
+    let origin: ManagedWineProcessLaunchSessionOrigin
 
     init(
         prefixURL: URL,
@@ -543,7 +696,12 @@ struct ManagedWineProcessLaunchSession: Hashable, Sendable {
         runtimeRootURL: URL,
         runtimeFingerprint: String,
         prefixScope: String,
-        registeredAt: Date
+        registeredAt: Date,
+        authenticatedHistoricalSignalTargets:
+            Set<ManagedProcessSignalTarget>? = nil,
+        authenticatedHistoricalArtifact:
+            ManagedWineStaleSessionArtifacts? = nil,
+        origin: ManagedWineProcessLaunchSessionOrigin = .currentProcess
     ) {
         self.prefixURL = prefixURL
         self.runIdentifier = runIdentifier
@@ -553,6 +711,29 @@ struct ManagedWineProcessLaunchSession: Hashable, Sendable {
         self.runtimeFingerprint = runtimeFingerprint
         self.prefixScope = prefixScope
         self.registeredAt = registeredAt
+        self.authenticatedHistoricalSignalTargets =
+            authenticatedHistoricalSignalTargets
+        self.authenticatedHistoricalArtifact =
+            authenticatedHistoricalArtifact
+        self.origin = origin
+    }
+}
+
+struct ManagedWineStaleSessionArtifacts: Hashable, Sendable {
+    let prefixURL: URL
+    let runIdentifier: String
+    let evidenceURL: URL
+    let descriptorURL: URL
+    let descriptor: ManagedWineActiveSessionDescriptor
+}
+
+private struct ManagedWineArtifactFileIdentity: Equatable {
+    let device: UInt64
+    let inode: UInt64
+
+    init(_ status: stat) {
+        device = UInt64(status.st_dev)
+        inode = UInt64(status.st_ino)
     }
 }
 
@@ -629,11 +810,13 @@ private struct ManagedWineProcessEvidenceScopeProbe: Decodable {
 private struct ManagedWineLegacyProcessEvidenceIdentityProbe: Decodable {
     let role: String
     let darwinPID: Int32
+    let recordedAtUnixMilliseconds: Int64
     let processStartedAtUnixMicroseconds: Int64
 
     enum CodingKeys: String, CodingKey {
         case role
         case darwinPID = "darwin_pid"
+        case recordedAtUnixMilliseconds = "recorded_at_unix_milliseconds"
         case processStartedAtUnixMicroseconds =
             "process_started_at_unix_microseconds"
     }
@@ -646,6 +829,8 @@ final class ManagedWineSessionRegistry: @unchecked Sendable {
     private var prefixesByPath: [String: URL] = [:]
     private var launchSessionsByPrefixPath:
         [String: [String: ManagedWineProcessLaunchSession]] = [:]
+    private var staleSessionArtifactsByPrefixPath:
+        [String: [String: ManagedWineStaleSessionArtifacts]] = [:]
 
     func record(_ prefix: URL) {
         let normalized = prefix.standardizedFileURL
@@ -687,6 +872,111 @@ final class ManagedWineSessionRegistry: @unchecked Sendable {
                 return []
             }
             return sessions.values.sorted { $0.registeredAt < $1.registeredAt }
+        }
+    }
+
+    func staleSessionArtifacts(
+        for prefix: URL
+    ) -> [ManagedWineStaleSessionArtifacts] {
+        let prefixPath = prefix.standardizedFileURL.path
+        return lock.withLock {
+            guard let artifacts = staleSessionArtifactsByPrefixPath[
+                prefixPath
+            ] else {
+                return []
+            }
+            return artifacts.values.sorted {
+                $0.descriptor.registeredAt < $1.descriptor.registeredAt
+            }
+        }
+    }
+
+    private func record(
+        _ staleArtifacts: [ManagedWineStaleSessionArtifacts]
+    ) {
+        lock.withLock {
+            for artifact in staleArtifacts {
+                let prefix = artifact.prefixURL.standardizedFileURL
+                prefixesByPath[prefix.path] = prefix
+                var artifacts = staleSessionArtifactsByPrefixPath[
+                    prefix.path
+                ] ?? [:]
+                artifacts[artifact.runIdentifier] = artifact
+                staleSessionArtifactsByPrefixPath[prefix.path] = artifacts
+            }
+        }
+    }
+
+    /// Publishes one fully validated hydration transaction. Callers discover
+    /// every canonical and legacy evidence directory first, reject duplicate
+    /// run identities, and validate all live process capabilities before this
+    /// method makes any of them visible to cleanup.
+    func commitHydratedSessions(
+        _ launchSessions: [ManagedWineProcessLaunchSession],
+        staleArtifacts: [ManagedWineStaleSessionArtifacts],
+        for prefix: URL
+    ) {
+        let normalizedPrefix = prefix.standardizedFileURL
+        let prefixPath = normalizedPrefix.path
+        lock.withLock {
+            var sessions = (launchSessionsByPrefixPath[prefixPath] ?? [:])
+                .filter { $0.value.origin == .currentProcess }
+            var nextStaleArtifacts: [String: ManagedWineStaleSessionArtifacts]
+                = [:]
+
+            for launchSession in launchSessions {
+                guard launchSession.prefixURL.standardizedFileURL ==
+                        normalizedPrefix else {
+                    continue
+                }
+                if sessions[launchSession.runIdentifier] == nil {
+                    sessions[launchSession.runIdentifier] = launchSession
+                }
+                if let historicalArtifact = launchSession
+                    .authenticatedHistoricalArtifact {
+                    nextStaleArtifacts[historicalArtifact.runIdentifier] =
+                        historicalArtifact
+                }
+            }
+
+            for artifact in staleArtifacts {
+                guard artifact.prefixURL.standardizedFileURL ==
+                        normalizedPrefix,
+                      sessions[artifact.runIdentifier] == nil else {
+                    continue
+                }
+                nextStaleArtifacts[artifact.runIdentifier] = artifact
+            }
+
+            prefixesByPath[prefixPath] = normalizedPrefix
+            if sessions.isEmpty {
+                launchSessionsByPrefixPath.removeValue(forKey: prefixPath)
+            } else {
+                launchSessionsByPrefixPath[prefixPath] = sessions
+            }
+            if nextStaleArtifacts.isEmpty {
+                staleSessionArtifactsByPrefixPath.removeValue(
+                    forKey: prefixPath
+                )
+            } else {
+                staleSessionArtifactsByPrefixPath[prefixPath] =
+                    nextStaleArtifacts
+            }
+        }
+    }
+
+    func completeStaleSessionArtifacts(
+        for prefix: URL
+    ) -> [ManagedWineStaleSessionArtifacts] {
+        let prefixPath = prefix.standardizedFileURL.path
+        return lock.withLock {
+            guard let artifacts = staleSessionArtifactsByPrefixPath
+                .removeValue(forKey: prefixPath) else {
+                return []
+            }
+            return artifacts.values.sorted {
+                $0.descriptor.registeredAt < $1.descriptor.registeredAt
+            }
         }
     }
 
@@ -773,45 +1063,44 @@ final class ManagedWineSessionRegistry: @unchecked Sendable {
                 to: normalizedDirectory,
                 fileManager: fileManager
               ) else {
-            throw SafeProcessRunnerError.prefixProcessVerificationFailed(
-                normalizedDirectory,
-                "the managed Wine session directory is not owner-private"
-            )
+            return []
         }
 
-        var enumerationError: Error?
         guard let enumerator = fileManager.enumerator(
             at: normalizedDirectory,
             includingPropertiesForKeys: nil,
             options: [.skipsSubdirectoryDescendants],
-            errorHandler: { _, error in
-                enumerationError = error
+            errorHandler: { _, _ in
                 return false
             }
         ) else {
-            throw SafeProcessRunnerError.prefixProcessVerificationFailed(
-                normalizedDirectory,
-                "the managed Wine session directory could not be enumerated"
-            )
+            return []
         }
 
         var entryCount = 0
         var descriptorCount = 0
         var hydrated: [ManagedWineProcessLaunchSession] = []
-        var descriptorRunIdentifiers = Set<String>()
-        var evidenceURLsByRunIdentifier: [String: URL] = [:]
-        let currentProcessIdentifier = Darwin.getpid()
-        let currentProcessStartedAt = ManagedWineProcessJournal
-            .processStartTimeUnixMicroseconds(for: currentProcessIdentifier)
+        var staleArtifacts: [ManagedWineStaleSessionArtifacts] = []
+        func recordStaleArtifact(
+            descriptor: ManagedWineActiveSessionDescriptor,
+            runIdentifier: String,
+            descriptorURL: URL
+        ) {
+            staleArtifacts.append(ManagedWineStaleSessionArtifacts(
+                prefixURL: normalizedPrefix,
+                runIdentifier: runIdentifier,
+                evidenceURL: normalizedDirectory.appending(
+                    path: descriptor.evidenceFileName,
+                    directoryHint: .notDirectory
+                ),
+                descriptorURL: descriptorURL.standardizedFileURL,
+                descriptor: descriptor
+            ))
+        }
 
         while let next = enumerator.nextObject() as? URL {
             entryCount += 1
-            guard entryCount <= Self.maximumDirectoryEntryCount else {
-                throw SafeProcessRunnerError.prefixProcessVerificationFailed(
-                    normalizedDirectory,
-                    "the managed Wine session scan exceeded its bounded entry count"
-                )
-            }
+            guard entryCount <= Self.maximumDirectoryEntryCount else { break }
             if next.pathExtension == "jsonl",
                let runIdentifier = UUID(
                 uuidString: next.deletingPathExtension().lastPathComponent
@@ -820,8 +1109,9 @@ final class ManagedWineSessionRegistry: @unchecked Sendable {
                 ManagedWineProcessJournal.evidenceFileName(
                     runIdentifier: runIdentifier
                 ) {
-                evidenceURLsByRunIdentifier[runIdentifier] =
-                    next.standardizedFileURL
+                // A journal without its descriptor has no signal authority.
+                // Its contents are diagnostics only and must never become a
+                // startup, prefix-preparation, migration, or launch gate.
                 continue
             }
             guard next.lastPathComponent.hasSuffix(
@@ -830,15 +1120,12 @@ final class ManagedWineSessionRegistry: @unchecked Sendable {
                 continue
             }
             descriptorCount += 1
-            guard descriptorCount <= Self.maximumDescriptorCount else {
-                throw SafeProcessRunnerError.prefixProcessVerificationFailed(
-                    normalizedDirectory,
-                    "the managed Wine session scan exceeded its bounded descriptor count"
-                )
-            }
+            guard descriptorCount <= Self.maximumDescriptorCount else { break }
 
-            let descriptor = try ManagedWineProcessJournal
-                .readActiveSessionDescriptor(at: next)
+            guard let descriptor = try? ManagedWineProcessJournal
+                .readActiveSessionDescriptor(at: next) else {
+                continue
+            }
             guard descriptor.schemaVersion ==
                     ManagedWineActiveSessionDescriptor.currentSchemaVersion,
                   descriptor.producer ==
@@ -869,52 +1156,54 @@ final class ManagedWineSessionRegistry: @unchecked Sendable {
                   descriptor.registeredAtUnixMilliseconds > 946_684_800_000,
                   descriptor.registeredAt <=
                     observedAt.addingTimeInterval(5) else {
-                throw SafeProcessRunnerError.prefixProcessVerificationFailed(
-                    next,
-                    "the managed Wine active-session descriptor is invalid"
-                )
+                continue
             }
-            descriptorRunIdentifiers.insert(normalizedRunIdentifier)
-
             // A valid descriptor for another prefix is not ownership for the
             // requested cleanup. Invalid descriptors are rejected above so an
             // attacker cannot hide ambiguity behind a foreign scope value.
             guard descriptor.prefixScope == expectedPrefixScope else { continue }
-            guard descriptor.prefixIdentity == expectedPrefixIdentity,
-                  descriptor.runtimeFingerprint == runtimeFingerprint,
-                  descriptor.runtimeRootScope == expectedRuntimeRootScope else {
-                throw SafeProcessRunnerError.prefixProcessVerificationFailed(
-                    next,
-                    "the active session does not match the selected prefix and Runtime identity"
-                )
-            }
-
-            switch ManagedWineProcessJournal
+            let ownerResolution = ManagedWineProcessJournal
                 .resolveProcessIdentityAcrossExitBoundary(
                     for: pid_t(descriptor.ownerProcessIdentifier)
-                ) {
-            case .live(let liveOwnerStartedAt):
-                if liveOwnerStartedAt ==
-                    descriptor.ownerProcessStartedAtUnixMicroseconds {
-                    let isCurrentOwner = descriptor.ownerProcessIdentifier ==
-                        currentProcessIdentifier &&
-                        currentProcessStartedAt == liveOwnerStartedAt
-                    guard isCurrentOwner else {
-                        throw SafeProcessRunnerError.prefixProcessVerificationFailed(
-                            next,
-                            "the active session is still owned by another live ForgePlay process"
-                        )
-                    }
-                }
-                // A different start identity proves PID reuse and therefore
-                // proves that the descriptor's original owner has exited.
-            case .exited:
-                break
-            case .unavailable:
-                throw SafeProcessRunnerError.prefixProcessVerificationFailed(
-                    next,
-                    "the active-session owner death identity could not be verified"
                 )
+
+            guard case .live(let liveOwnerStartedAt) = ownerResolution,
+                  liveOwnerStartedAt ==
+                    descriptor.ownerProcessStartedAtUnixMicroseconds else {
+                recordStaleArtifact(
+                    descriptor: descriptor,
+                    runIdentifier: normalizedRunIdentifier,
+                    descriptorURL: next
+                )
+                continue
+            }
+
+            // A persisted prefix object identity is valid signal authority
+            // only while it still matches the selected object. Device numbers
+            // can change across boot/mount generations; a mismatch therefore
+            // makes this descriptor non-authoritative stale metadata, not an
+            // execution failure. Actual live Wine conflicts are established
+            // later from exact PID/start/executable and prefix-holder state.
+            guard descriptor.prefixIdentity == expectedPrefixIdentity else {
+                recordStaleArtifact(
+                    descriptor: descriptor,
+                    runIdentifier: normalizedRunIdentifier,
+                    descriptorURL: next
+                )
+                continue
+            }
+            let usesSelectedRuntime =
+                descriptor.runtimeFingerprint == runtimeFingerprint &&
+                descriptor.runtimeRootScope == expectedRuntimeRootScope
+            if !usesSelectedRuntime {
+                // Runtime-mismatched metadata cannot grant signal authority.
+                // Keep it only as a best-effort retirement candidate.
+                recordStaleArtifact(
+                    descriptor: descriptor,
+                    runIdentifier: normalizedRunIdentifier,
+                    descriptorURL: next
+                )
+                continue
             }
 
             let evidenceURL = normalizedDirectory.appending(
@@ -929,96 +1218,28 @@ final class ManagedWineSessionRegistry: @unchecked Sendable {
                 runtimeRootURL: normalizedRuntimeRoot,
                 runtimeFingerprint: runtimeFingerprint,
                 prefixScope: expectedPrefixScope,
-                registeredAt: descriptor.registeredAt
+                registeredAt: descriptor.registeredAt,
+                origin: .hydratedEvidence
             ))
         }
-        if let enumerationError {
-            throw SafeProcessRunnerError.prefixProcessVerificationFailed(
-                normalizedDirectory,
-                "the managed Wine session scan failed: " +
-                    forgePlayTechnicalErrorSummary(enumerationError)
-            )
-        }
+        // A journal without its exact descriptor never grants signal
+        // authority and is ignored as diagnostic residue. The actual process
+        // table/prefix-holder inspection owns live-conflict decisions.
 
-        // A pre-descriptor ForgePlay build can leave a process journal behind
-        // after its app owner exits. It is safe to ignore only recorded PID
-        // identities that are now dead or have been reused. A still-live or
-        // unreadable matching identity has no exact app owner, so fail closed
-        // without adopting or signalling any of its PIDs.
-        for (runIdentifier, evidenceURL) in evidenceURLsByRunIdentifier
-        where !descriptorRunIdentifiers.contains(runIdentifier) {
-            guard let data = try ManagedWineProcessJournal
-                .readOwnerPrivateBoundedFile(
-                    at: evidenceURL,
-                    maximumBytes: ManagedWineProcessJournal
-                        .maximumProcessEvidenceBytes,
-                    purpose: "legacy managed Wine process"
-                ),
-                !data.isEmpty else {
+        // Validate each session independently. An invalid artifact grants no
+        // authority but cannot erase unrelated valid live-process evidence.
+        var validatedSessions: [ManagedWineProcessLaunchSession] = []
+        for session in hydrated {
+            do {
+                try validateSession(session)
+                validatedSessions.append(session)
+            } catch {
                 continue
             }
-            let decoder = JSONDecoder()
-            var containsUnownedLiveOrAmbiguousProcess = false
-            for line in data.split(separator: 0x0A) where !line.isEmpty {
-                guard line.count <= 2_048,
-                      let scope = try? decoder.decode(
-                        ManagedWineProcessEvidenceScopeProbe.self,
-                        from: Data(line)
-                      ),
-                      scope.schemaVersion == 1,
-                      scope.producer == "forgeplay-wine-runtime",
-                      scope.eventCode == "darwin_process_started",
-                      scope.runIdentifier.lowercased() == runIdentifier,
-                      scope.prefixScope == expectedPrefixScope,
-                      scope.runtimeFingerprint == runtimeFingerprint else {
-                    continue
-                }
-                guard let identity = try? decoder.decode(
-                        ManagedWineLegacyProcessEvidenceIdentityProbe.self,
-                        from: Data(line)
-                      ),
-                      ["wine-loader", "wineserver"].contains(identity.role),
-                      identity.darwinPID > 1,
-                      identity.processStartedAtUnixMicroseconds > 0 else {
-                    containsUnownedLiveOrAmbiguousProcess = true
-                    break
-                }
-                let recordedStart = UInt64(
-                    identity.processStartedAtUnixMicroseconds
-                )
-                switch ManagedWineProcessJournal
-                    .resolveProcessIdentityAcrossExitBoundary(
-                        for: pid_t(identity.darwinPID)
-                    ) {
-                case .live(let liveStart):
-                    if liveStart == recordedStart {
-                        containsUnownedLiveOrAmbiguousProcess = true
-                        break
-                    }
-                    continue
-                case .exited:
-                    continue
-                case .unavailable:
-                    containsUnownedLiveOrAmbiguousProcess = true
-                    break
-                }
-            }
-            guard !containsUnownedLiveOrAmbiguousProcess else {
-                throw SafeProcessRunnerError.prefixProcessVerificationFailed(
-                    evidenceURL,
-                    "a live or ambiguous managed Wine journal predates exact owner-session descriptors"
-                )
-            }
         }
-
-        // Validate every evidence PID/start/executable identity before making
-        // any hydrated session visible to cleanup. One ambiguous session keeps
-        // the entire scan fail-closed and yields no partial signal target set.
-        for session in hydrated {
-            try validateSession(session)
-        }
-        record(hydrated)
-        return hydrated.sorted { $0.registeredAt < $1.registeredAt }
+        record(validatedSessions)
+        record(staleArtifacts)
+        return validatedSessions.sorted { $0.registeredAt < $1.registeredAt }
     }
 }
 
@@ -1708,6 +1929,12 @@ enum RunnerAction: Sendable, Hashable {
     case extractRuntimeArchive(runtimeExecutable: URL, prefix: URL, archive: URL, extractionDirectory: URL, runtime: RuntimeId, logDirectory: URL)
     case installRuntime(runtimeExecutable: URL, prefix: URL, installer: URL, runtime: RuntimeId, logDirectory: URL)
     case setWindowsVersion(runtimeExecutable: URL, prefix: URL, version: String, logDirectory: URL)
+    case importRegistryFile(
+        runtimeExecutable: URL,
+        prefix: URL,
+        registryFile: URL,
+        logDirectory: URL
+    )
     case setRegistryValue(runtimeExecutable: URL, prefix: URL, registryPath: String, valueName: String, valueType: String?, value: String, registryView: WindowsRegistryView? = nil, logDirectory: URL)
     case deleteRegistryValue(runtimeExecutable: URL, prefix: URL, registryPath: String, valueName: String, registryView: WindowsRegistryView? = nil, logDirectory: URL)
     case deleteRegistryValueIfPresent(runtimeExecutable: URL, prefix: URL, registryPath: String, valueName: String, logDirectory: URL)
@@ -1733,6 +1960,7 @@ extension RunnerAction {
              .extractRuntimeArchive(_, _, _, _, _, let logDirectory),
              .installRuntime(_, _, _, _, let logDirectory),
              .setWindowsVersion(_, _, _, let logDirectory),
+             .importRegistryFile(_, _, _, let logDirectory),
              .setRegistryValue(_, _, _, _, _, _, _, let logDirectory),
              .deleteRegistryValue(_, _, _, _, _, let logDirectory),
              .deleteRegistryValueIfPresent(_, _, _, _, let logDirectory),
@@ -1758,6 +1986,7 @@ extension RunnerAction {
              .extractRuntimeArchive(_, let prefix, _, _, _, _),
              .installRuntime(_, let prefix, _, _, _),
              .setWindowsVersion(_, let prefix, _, _),
+             .importRegistryFile(_, let prefix, _, _),
              .setRegistryValue(_, let prefix, _, _, _, _, _, _),
              .deleteRegistryValue(_, let prefix, _, _, _, _),
              .deleteRegistryValueIfPresent(_, let prefix, _, _, _),
@@ -1784,6 +2013,7 @@ extension RunnerAction {
              .extractRuntimeArchive(let runtimeExecutable, _, _, _, _, _),
              .installRuntime(let runtimeExecutable, _, _, _, _),
              .setWindowsVersion(let runtimeExecutable, _, _, _),
+             .importRegistryFile(let runtimeExecutable, _, _, _),
              .setRegistryValue(let runtimeExecutable, _, _, _, _, _, _, _),
              .deleteRegistryValue(let runtimeExecutable, _, _, _, _, _),
              .deleteRegistryValueIfPresent(let runtimeExecutable, _, _, _, _),
@@ -1815,6 +2045,7 @@ extension RunnerAction {
              .extractRuntimeArchive,
              .installRuntime,
              .setWindowsVersion,
+             .importRegistryFile,
              .setRegistryValue,
              .deleteRegistryValue,
              .deleteRegistryValueIfPresent,
@@ -1842,6 +2073,7 @@ extension RunnerAction {
              .extractRuntimeArchive,
              .installRuntime,
              .setWindowsVersion,
+             .importRegistryFile,
              .setRegistryValue,
              .deleteRegistryValue,
              .deleteRegistryValueIfPresent,
@@ -1889,6 +2121,8 @@ extension RunnerAction {
             "installRuntime"
         case .setWindowsVersion:
             "setWindowsVersion"
+        case .importRegistryFile:
+            "importRegistryFile"
         case .setRegistryValue:
             "setRegistryValue"
         case .deleteRegistryValue:
@@ -2217,7 +2451,7 @@ enum SafeProcessRunnerError: LocalizedError, ForgePlayTechnicalDescribingError {
         case .prefixProcessVerificationFailed(let url, let message):
             "ForgePlay Runtime 프로세스 정리 상태를 확인하지 못했습니다: \(url.path). \(message)"
         case .manualRendererSelectionRequired:
-            "Steam을 실행하기 전에 D3DMetal 표준, D3DMetal NVIDIA, DXMT, D9VK 또는 DXVK 중 하나를 직접 선택해야 합니다."
+            "Steam을 실행하기 전에 D3DMetal - NVIDIA, DXMT 또는 D9VK 중 하나를 직접 선택해야 합니다."
         case .invalidSteamCompatibilitySelection:
             "선택한 그래픽 백엔드와 Steam 실행 호환성 설정이 일치하지 않습니다."
         case .gameRendererPayloadMissing(let url, let architecture):
@@ -2758,6 +2992,8 @@ actor SafeProcessRunner {
         let prefixPath: String
         let processStartedAtUnixMicroseconds: UInt64
         let executableURL: URL
+        var authenticatedHistoricalRuntimeObjects:
+            Set<ManagedWineHistoricalRuntimeObjectIdentity> = []
     }
 
     private struct ManagedWineProcessValidationResult {
@@ -2874,8 +3110,6 @@ actor SafeProcessRunner {
         ManagedWineRosettaAVXPolicySnapshotProvider
     private let managedWineChildSynchronizationReadbackProvider:
         ManagedWineChildSynchronizationReadbackProvider
-    private let supplementalRendererAuthenticator:
-        any AppleSupplementalRendererAuthenticating
     private let externalStorageGrantPublisher:
         ExternalStorageGrantPublisher
     private let gameModeHostApplicationGroupIdentifier: String?
@@ -2943,17 +3177,16 @@ actor SafeProcessRunner {
             ManagedWineChildSynchronizationReadbackProvider? = nil,
         windowsRuntimeValidator: WindowsRuntimeValidator? = nil,
         runtimeAuthenticationContextProvider:
-            RuntimeAuthenticationContextProvider? = nil,
-        supplementalRendererAuthenticator:
-            any AppleSupplementalRendererAuthenticating =
-                AppleSupplementalRendererTrustPolicy()
+            RuntimeAuthenticationContextProvider? = nil
     ) {
         self.fileManager = fileManager
         self.sandboxEnabled = sandboxEnabled
         self.managedWineProcessJournalEnabled =
             managedWineProcessJournalEnabled
         self.managedWineProcessEvidenceSandboxEnabled =
-            managedWineProcessEvidenceSandboxEnabled ?? sandboxEnabled
+            managedWineProcessEvidenceSandboxEnabled ??
+                (ForgePlaySandboxPolicy
+                    .primaryApplicationGroupIdentifier != nil)
         self.managedWineSessionRegistry = managedWineSessionRegistry
         self.externalStorageGrantPublisher =
             externalStorageGrantPublisher
@@ -2977,8 +3210,6 @@ actor SafeProcessRunner {
                     processIdentifier: processIdentifier
                 )
             }
-        self.supplementalRendererAuthenticator =
-            supplementalRendererAuthenticator
         self.runtimeLaunchObjectIdentityProvider =
             runtimeLaunchObjectIdentityProvider ?? { executable in
                 try RuntimeManifestResolver()
@@ -3045,21 +3276,38 @@ actor SafeProcessRunner {
             }
             try Task.checkCancellation()
             try validateActionInputs(for: action)
+            var ignoredManagedWineMetadataWarning: String?
             if managedWineProcessJournalEnabled,
                case .shutdownWinePrefix(
                     let runtimeExecutable,
                     let prefix,
                     let logDirectory
                ) = action {
-                try hydrateManagedWineSessions(
-                    for: prefix,
-                    runtimeExecutable: runtimeExecutable,
-                    logDirectory: logDirectory,
-                    runtimeFingerprint: runtimeAuthenticationContext?
-                        .manifest.runnerBuildFingerprint
-                )
+                do {
+                    try hydrateManagedWineSessions(
+                        for: prefix,
+                        runtimeExecutable: runtimeExecutable,
+                        logDirectory: logDirectory,
+                        runtimeFingerprint: runtimeAuthenticationContext?
+                            .manifest.runnerBuildFingerprint
+                    )
+                } catch {
+                    // Persisted journals are optional signal-capability hints,
+                    // never a prerequisite for prefix shutdown, preparation,
+                    // migration, or game launch. An invalid/stale artifact
+                    // grants no signal authority; the real process-table and
+                    // prefix-holder checks below remain authoritative.
+                    ignoredManagedWineMetadataWarning =
+                        "Ignored non-authoritative managed Wine metadata: " +
+                        forgePlayTechnicalErrorSummary(error)
+                }
             }
             var preparedSpec = try commandSpec(for: action)
+            if let ignoredManagedWineMetadataWarning {
+                preparedSpec.preparationDiagnosticMarkers.append(
+                    "[ForgePlay] \(ignoredManagedWineMetadataWarning)"
+                )
+            }
             if action.requiresWindowsRuntime {
                 preparedSpec = try attachingRuntimeLaunchObjectIdentity(
                     to: preparedSpec,
@@ -3150,24 +3398,6 @@ actor SafeProcessRunner {
                         spec: spec,
                         error: error
                     )
-                    result = Self.applyingPreparationDiagnostics(
-                        from: spec,
-                        to: result
-                    )
-                    registerManagedWineProcessLaunch(
-                        from: spec,
-                        prefix: action.detachedProcessPrefixURL,
-                        registeredAt: attemptStartedAt,
-                        result: result
-                    )
-                    let persisted = persistProcessEvidence(
-                        result,
-                        spec: spec
-                    )
-                    throw ProcessExecutionEvidenceError(
-                        underlyingError: error,
-                        result: persisted
-                    )
                 }
             }
             result = Self.applyingPreparationDiagnostics(
@@ -3208,6 +3438,11 @@ actor SafeProcessRunner {
             throw error
         }
         switch action {
+        case .waitForWinePrefix(_, let prefix, _):
+            result = completeNaturalWinePrefixWait(
+                after: result,
+                prefix: prefix
+            )
         case .shutdownWinePrefix(let runtimeExecutable, let prefix, let logDirectory):
             do {
                 result = try completeWinePrefixShutdown(
@@ -3275,6 +3510,471 @@ actor SafeProcessRunner {
         result.userFacingWarningLocalizationKey =
             spec.userFacingWarningLocalizationKey ??
             result.userFacingWarningLocalizationKey
+        result.runtimeCompatibility.merge(
+            spec.runtimeCompatibility,
+            uniquingKeysWith: { _, prepared in prepared }
+        )
+        return result
+    }
+
+    /// Captures only Wine processes that were already running before the root
+    /// UI becomes launchable. The immutable PID/start/path/application tuple is
+    /// the complete authority for the later cleanup; processes created after
+    /// this snapshot can never be added to it.
+    nonisolated func captureStartupWineProcessCleanupPlan()
+        -> StartupWineProcessCleanupPlan {
+        Self.captureStartupWineProcessCleanupPlan()
+    }
+
+    /// ForgePlay owns the Wine runtime embedded in ForgePlay.app. Terminate the
+    /// immutable startup snapshot off the runner actor so the bounded TERM/KILL
+    /// wait cannot serialize later process work. This is lifecycle cleanup,
+    /// not a prefix validation gate. Every signal revalidates PID, kernel start
+    /// time, and the exact ForgePlay application scope.
+    nonisolated func forceTerminateWineProcessesAfterStartup(
+        _ plan: StartupWineProcessCleanupPlan
+    ) -> StartupWineProcessCleanupResult {
+        var inspectionFailures = plan.inspectionFailures
+        let terminateSignal = Self.sendStartupWineSignal(
+            SIGTERM,
+            to: plan.targets
+        )
+        inspectionFailures.append(
+            contentsOf: terminateSignal.inspectionFailures
+        )
+        var signalFailures = terminateSignal.signalFailures
+        if !plan.targets.isEmpty {
+            Thread.sleep(forTimeInterval: 1)
+        }
+
+        var afterTerminate = Self.inspectStartupWineTargets(plan.targets)
+        inspectionFailures.append(contentsOf: afterTerminate.failures)
+        let killSignal = Self.sendStartupWineSignal(
+            SIGKILL,
+            to: afterTerminate.liveTargets
+        )
+        inspectionFailures.append(contentsOf: killSignal.inspectionFailures)
+        signalFailures.append(contentsOf: killSignal.signalFailures)
+        if !afterTerminate.liveTargets.isEmpty ||
+            !afterTerminate.unresolvedProcessIDs.isEmpty {
+            let deadline = Date().addingTimeInterval(2)
+            while Date() < deadline {
+                afterTerminate = Self.inspectStartupWineTargets(plan.targets)
+                if afterTerminate.liveTargets.isEmpty &&
+                    afterTerminate.unresolvedProcessIDs.isEmpty {
+                    break
+                }
+                Thread.sleep(forTimeInterval: 0.025)
+            }
+        }
+
+        let finalInspection = Self.inspectStartupWineTargets(plan.targets)
+        inspectionFailures.append(contentsOf: finalInspection.failures)
+        return StartupWineProcessCleanupResult(
+            initiallyTargetedProcessIDs:
+                plan.targets.map(\.processID).sorted(),
+            remainingProcessIDs: Array(Set(
+                finalInspection.liveTargets.map(\.processID) +
+                    finalInspection.unresolvedProcessIDs
+            )).sorted(),
+            inspectionFailures: Array(Set(inspectionFailures)).sorted(),
+            signalFailures: Array(Set(signalFailures)).sorted()
+        )
+    }
+
+    /// User-initiated emergency stop for every Wine process owned by any
+    /// running ForgePlay application bundle. Unlike startup cleanup, this path
+    /// deliberately re-enumerates after each SIGKILL so a child created while
+    /// its parent is being torn down cannot escape an immutable snapshot.
+    /// Signals still require the exact PID/start-time/application identity
+    /// observed in the same round; PID numbers alone are never authority.
+    nonisolated func forceTerminateAllForgePlayWineProcesses()
+        -> StartupWineProcessCleanupResult {
+        let deadline = Date().addingTimeInterval(3)
+        let requiredQuietSnapshots = 5
+        var consecutiveQuietSnapshots = 0
+        var targetedProcessIDs = Set<pid_t>()
+        var inspectionFailures: [String] = []
+        var signalFailures: [String] = []
+
+        while Date() < deadline {
+            let plan = Self.captureStartupWineProcessCleanupPlan()
+            inspectionFailures.append(contentsOf: plan.inspectionFailures)
+            targetedProcessIDs.formUnion(plan.targets.map(\.processID))
+
+            if plan.targets.isEmpty {
+                consecutiveQuietSnapshots += 1
+                if consecutiveQuietSnapshots >= requiredQuietSnapshots {
+                    break
+                }
+            } else {
+                consecutiveQuietSnapshots = 0
+                let killResult = Self.sendStartupWineSignal(
+                    SIGKILL,
+                    to: plan.targets
+                )
+                inspectionFailures.append(
+                    contentsOf: killResult.inspectionFailures
+                )
+                signalFailures.append(contentsOf: killResult.signalFailures)
+            }
+            Thread.sleep(forTimeInterval: 0.05)
+        }
+
+        // Close the deadline-edge race with one final independently captured
+        // capability set, then inspect a fresh process list for the product
+        // postcondition: no ForgePlay Wine process may remain.
+        let deadlinePlan = Self.captureStartupWineProcessCleanupPlan()
+        inspectionFailures.append(contentsOf: deadlinePlan.inspectionFailures)
+        targetedProcessIDs.formUnion(deadlinePlan.targets.map(\.processID))
+        if !deadlinePlan.targets.isEmpty {
+            let killResult = Self.sendStartupWineSignal(
+                SIGKILL,
+                to: deadlinePlan.targets
+            )
+            inspectionFailures.append(
+                contentsOf: killResult.inspectionFailures
+            )
+            signalFailures.append(contentsOf: killResult.signalFailures)
+            Thread.sleep(forTimeInterval: 0.05)
+        }
+        let finalPlan = Self.captureStartupWineProcessCleanupPlan()
+        inspectionFailures.append(contentsOf: finalPlan.inspectionFailures)
+        targetedProcessIDs.formUnion(finalPlan.targets.map(\.processID))
+        let finalInspection = Self.inspectStartupWineTargets(finalPlan.targets)
+        inspectionFailures.append(contentsOf: finalInspection.failures)
+        return StartupWineProcessCleanupResult(
+            initiallyTargetedProcessIDs: targetedProcessIDs.sorted(),
+            remainingProcessIDs: Array(Set(
+                finalInspection.liveTargets.map(\.processID) +
+                    finalInspection.unresolvedProcessIDs
+            )).sorted(),
+            inspectionFailures: Array(Set(inspectionFailures)).sorted(),
+            signalFailures: Array(Set(signalFailures)).sorted()
+        )
+    }
+
+    private struct StartupWineTargetInspection {
+        var liveTargets: [StartupWineProcessCleanupTarget] = []
+        var unresolvedProcessIDs: [pid_t] = []
+        var failures: [String] = []
+    }
+
+    private nonisolated static func captureStartupWineProcessCleanupPlan()
+        -> StartupWineProcessCleanupPlan {
+        let initialCount = proc_listallpids(nil, 0)
+        guard initialCount > 0 else {
+            return StartupWineProcessCleanupPlan(
+                targets: [],
+                inspectionFailures: [
+                    "process enumeration failed before startup cleanup"
+                ]
+            )
+        }
+        var capacity = max(Int(initialCount) + 64, 256)
+        var processIDs: [pid_t]?
+        for _ in 0..<3 {
+            var buffer = [pid_t](repeating: 0, count: capacity)
+            let count = buffer.withUnsafeMutableBytes {
+                proc_listallpids($0.baseAddress, Int32($0.count))
+            }
+            guard count >= 0 else {
+                return StartupWineProcessCleanupPlan(
+                    targets: [],
+                    inspectionFailures: [
+                        "process enumeration failed during startup cleanup"
+                    ]
+                )
+            }
+            if Int(count) < capacity {
+                processIDs = Array(buffer.prefix(Int(count))).filter {
+                    $0 > 1 && $0 != Darwin.getpid()
+                }
+                break
+            }
+            capacity = Int(count) + 64
+        }
+        guard let processIDs else {
+            return StartupWineProcessCleanupPlan(
+                targets: [],
+                inspectionFailures: [
+                    "process enumeration changed continuously during startup cleanup"
+                ]
+            )
+        }
+
+        var targets: [StartupWineProcessCleanupTarget] = []
+        var failures: [String] = []
+        for processID in processIDs {
+            guard let firstStart = ManagedWineProcessJournal
+                .processStartTimeUnixMicroseconds(for: processID) else {
+                if let name = processName(for: processID),
+                   isStartupWineProcessNameCandidate(name),
+                   !startupProcessIsMissing(processID) {
+                    failures.append(
+                        "Wine candidate PID \(processID) start identity was unavailable"
+                    )
+                }
+                continue
+            }
+            guard let path = processCommandPath(for: processID) else {
+                if let name = processName(for: processID),
+                   isStartupWineProcessNameCandidate(name),
+                   !startupProcessIsMissing(processID) {
+                    failures.append(
+                        "Wine candidate PID \(processID) executable path was unavailable"
+                    )
+                }
+                continue
+            }
+            guard let applicationURL = startupForgePlayApplicationURL(
+                for: path
+            ) else {
+                continue
+            }
+            guard let finalStart = ManagedWineProcessJournal
+                .processStartTimeUnixMicroseconds(for: processID) else {
+                if !startupProcessIsMissing(processID) {
+                    failures.append(
+                        "ForgePlay Wine PID \(processID) could not be revalidated"
+                    )
+                }
+                continue
+            }
+            guard firstStart == finalStart else { continue }
+            targets.append(StartupWineProcessCleanupTarget(
+                processID: processID,
+                processStartedAtUnixMicroseconds: firstStart,
+                executableURL: URL(fileURLWithPath: path)
+                    .standardizedFileURL.resolvingSymlinksInPath(),
+                forgePlayApplicationURL: applicationURL
+            ))
+        }
+        return StartupWineProcessCleanupPlan(
+            targets: targets.sorted { $0.processID < $1.processID },
+            inspectionFailures: Array(Set(failures)).sorted()
+        )
+    }
+
+    private nonisolated static func processCommandPath(
+        for processID: pid_t
+    ) -> String? {
+        var buffer = [CChar](repeating: 0, count: Int(MAXPATHLEN) * 4)
+        let length = proc_pidpath(
+            processID,
+            &buffer,
+            UInt32(buffer.count)
+        )
+        guard length > 0 else {
+            return nil
+        }
+        return String(
+            decoding: buffer.prefix { $0 != 0 }.map {
+                UInt8(bitPattern: $0)
+            },
+            as: UTF8.self
+        )
+    }
+
+    private nonisolated static func processName(
+        for processID: pid_t
+    ) -> String? {
+        var buffer = [CChar](repeating: 0, count: Int(MAXPATHLEN))
+        let length = proc_name(processID, &buffer, UInt32(buffer.count))
+        guard length > 0 else { return nil }
+        return String(
+            decoding: buffer.prefix { $0 != 0 }.map {
+                UInt8(bitPattern: $0)
+            },
+            as: UTF8.self
+        )
+    }
+
+    private nonisolated static func startupProcessIsMissing(
+        _ processID: pid_t
+    ) -> Bool {
+        if Darwin.kill(processID, 0) == 0 { return false }
+        return errno == ESRCH
+    }
+
+    private nonisolated static func isStartupWineProcessNameCandidate(
+        _ name: String
+    ) -> Bool {
+        let normalized = name.lowercased()
+        let basename = URL(fileURLWithPath: normalized).lastPathComponent
+        let exactNames: Set<String> = [
+            "wine", "wine64", "wine.bin", "wine64.bin",
+            "wine-preloader", "wine64-preloader",
+            "wineserver", "wineserver.bin", "gamemodeprocesshost"
+        ]
+        if exactNames.contains(basename) { return true }
+        let bytes = Array(normalized.utf8)
+        return bytes.count >= 3 &&
+            ((bytes[0] >= 65 && bytes[0] <= 90) ||
+                (bytes[0] >= 97 && bytes[0] <= 122)) &&
+            bytes[1] == 58 && bytes[2] == 92
+    }
+
+    nonisolated static func isStartupWineExecutablePath(
+        _ path: String
+    ) -> Bool {
+        startupForgePlayApplicationURL(for: path) != nil
+    }
+
+    private nonisolated static func startupForgePlayApplicationURL(
+        for path: String
+    ) -> URL? {
+        let executableURL = URL(fileURLWithPath: path)
+            .standardizedFileURL.resolvingSymlinksInPath()
+        let components = executableURL.pathComponents
+        guard components.first == "/" else { return nil }
+        for applicationIndex in components.indices.reversed()
+        where components[applicationIndex].caseInsensitiveCompare(
+            "ForgePlay.app"
+        ) == .orderedSame {
+            let suffix = components.dropFirst(applicationIndex + 1)
+                .map { $0.lowercased() }
+            let gameModeSuffix = [
+                "contents", "helpers", "gamemodeprocesshost.app",
+                "contents", "macos", "gamemodeprocesshost"
+            ]
+            let runtimePrefix = [
+                "contents", "resources", "runners",
+                "forgeplayruntime", "wine"
+            ]
+            let isGameModeHost = suffix == gameModeSuffix
+            let runtimeRelative = Array(suffix.dropFirst(runtimePrefix.count))
+            let allowedRuntimeExecutables: Set<[String]> = [
+                ["bin", "wine"],
+                ["bin", "wine64"],
+                ["bin", "wine.bin"],
+                ["bin", "wine64.bin"],
+                ["bin", "wine-preloader"],
+                ["bin", "wine64-preloader"],
+                ["bin", "wineserver"],
+                ["bin", "wineserver.bin"],
+                ["lib", "wine", "i386-unix", "wine"],
+                ["lib", "wine", "x86_64-unix", "wine"]
+            ]
+            let isRuntimeExecutable = suffix.starts(with: runtimePrefix) &&
+                allowedRuntimeExecutables.contains(runtimeRelative)
+            guard isGameModeHost || isRuntimeExecutable else { continue }
+            let relativeApplicationComponents = components
+                .dropFirst()
+                .prefix(applicationIndex)
+            return URL(
+                fileURLWithPath: "/" +
+                    relativeApplicationComponents.joined(separator: "/"),
+                isDirectory: true
+            ).standardizedFileURL.resolvingSymlinksInPath()
+        }
+        return nil
+    }
+
+    private nonisolated static func inspectStartupWineTargets(
+        _ targets: [StartupWineProcessCleanupTarget]
+    ) -> StartupWineTargetInspection {
+        var result = StartupWineTargetInspection()
+        for target in targets {
+            switch ManagedWineProcessJournal
+                .resolveProcessIdentityAcrossExitBoundary(
+                    for: target.processID
+                ) {
+            case .exited:
+                continue
+            case .unavailable:
+                result.unresolvedProcessIDs.append(target.processID)
+                result.failures.append(
+                    "ForgePlay Wine PID \(target.processID) identity was unavailable"
+                )
+                continue
+            case .live(let startedAt):
+                guard startedAt ==
+                    target.processStartedAtUnixMicroseconds else {
+                    continue
+                }
+            }
+            guard let observedPath = processCommandPath(
+                for: target.processID
+            ), let observedApplicationURL = startupForgePlayApplicationURL(
+                for: observedPath
+            ) else {
+                switch ManagedWineProcessJournal
+                    .resolveProcessIdentityAcrossExitBoundary(
+                        for: target.processID
+                    ) {
+                case .exited:
+                    continue
+                case .live(let startedAt)
+                    where startedAt !=
+                        target.processStartedAtUnixMicroseconds:
+                    continue
+                default:
+                    result.unresolvedProcessIDs.append(target.processID)
+                    result.failures.append(
+                        "ForgePlay Wine PID \(target.processID) path was unavailable"
+                    )
+                    continue
+                }
+            }
+            guard observedApplicationURL ==
+                target.forgePlayApplicationURL else {
+                continue
+            }
+            switch ManagedWineProcessJournal
+                .resolveProcessIdentityAcrossExitBoundary(
+                    for: target.processID
+                ) {
+            case .live(let finalStart)
+                where finalStart ==
+                    target.processStartedAtUnixMicroseconds:
+                result.liveTargets.append(target)
+            case .exited, .live:
+                continue
+            case .unavailable:
+                result.unresolvedProcessIDs.append(target.processID)
+                result.failures.append(
+                    "ForgePlay Wine PID \(target.processID) final identity was unavailable"
+                )
+            }
+        }
+        result.liveTargets.sort { $0.processID < $1.processID }
+        result.unresolvedProcessIDs = Array(Set(
+            result.unresolvedProcessIDs
+        )).sorted()
+        result.failures = Array(Set(result.failures)).sorted()
+        return result
+    }
+
+    private struct StartupWineSignalResult {
+        var inspectionFailures: [String] = []
+        var signalFailures: [String] = []
+    }
+
+    private nonisolated static func sendStartupWineSignal(
+        _ signal: Int32,
+        to targets: [StartupWineProcessCleanupTarget]
+    ) -> StartupWineSignalResult {
+        let inspection = inspectStartupWineTargets(targets)
+        var result = StartupWineSignalResult(
+            inspectionFailures: inspection.failures
+        )
+        for target in inspection.liveTargets {
+            guard Darwin.kill(target.processID, signal) == 0 else {
+                let failureCode = errno
+                if failureCode != ESRCH {
+                    result.signalFailures.append(
+                        "signal \(signal) failed for ForgePlay Wine PID " +
+                            "\(target.processID) (errno \(failureCode))"
+                    )
+                }
+                continue
+            }
+        }
+        result.inspectionFailures = Array(Set(
+            result.inspectionFailures
+        )).sorted()
+        result.signalFailures = Array(Set(result.signalFailures)).sorted()
         return result
     }
 
@@ -3356,6 +4056,125 @@ actor SafeProcessRunner {
 
     func hasManagedPrefixActivity(_ prefix: URL) throws -> Bool {
         return try !managedPrefixActivityProcessIDs(under: prefix).isEmpty
+    }
+
+    /// Returns true only when an exact process capability already owned by the
+    /// managed prefix still brackets a live Wine loader whose Windows argv[0]
+    /// is Steam or Steam WebHelper. A game, registry helper, wineserver, Game
+    /// Mode host, native macOS Steam process, or an argument merely mentioning
+    /// `steam.exe` never authorizes launching `steam.exe -shutdown`.
+    func hasVerifiedManagedWindowsSteamActivity(
+        under prefix: URL
+    ) throws -> Bool {
+        let inspection = try managedProcessIDsHoldingOpenFiles(under: prefix)
+        guard inspection.liveObstructions.isEmpty else {
+            throw SafeProcessRunnerError.prefixProcessVerificationFailed(
+                prefix,
+                inspection.obstructionSummary
+            )
+        }
+
+        var inspectionWasIncomplete = false
+        for target in inspection.signalCapabilities {
+            let firstStart = ManagedWineProcessJournal
+                .processStartTimeUnixMicroseconds(for: target.processID)
+            guard let executableBefore = DarwinProcessSnapshotReader
+                    .executablePath(for: target.processID),
+                  Self.isManagedWineLoaderExecutablePath(executableBefore)
+            else {
+                continue
+            }
+            guard let processArguments = DarwinProcessSnapshotReader
+                    .arguments(for: target.processID),
+                  let executableAfter = DarwinProcessSnapshotReader
+                    .executablePath(for: target.processID),
+                  URL(fileURLWithPath: executableBefore)
+                    .standardizedFileURL.resolvingSymlinksInPath() ==
+                    URL(fileURLWithPath: executableAfter)
+                        .standardizedFileURL.resolvingSymlinksInPath()
+            else {
+                inspectionWasIncomplete = true
+                continue
+            }
+            let finalStart = ManagedWineProcessJournal
+                .processStartTimeUnixMicroseconds(for: target.processID)
+            guard Self.managedSignalTargetPassesFinalValidation(
+                target,
+                firstObservedStartTimeUnixMicroseconds: firstStart,
+                observedExecutableURL: URL(fileURLWithPath: executableAfter),
+                finalObservedStartTimeUnixMicroseconds: finalStart
+            ) else {
+                inspectionWasIncomplete = true
+                continue
+            }
+            if Self.isWindowsSteamProcessArguments(
+                processArguments.arguments,
+                observedWineLoaderPath: executableAfter
+            ) {
+                return true
+            }
+        }
+        if inspectionWasIncomplete {
+            throw SafeProcessRunnerError.prefixProcessVerificationFailed(
+                prefix,
+                "managed Windows process identity or arguments changed during Steam activity inspection"
+            )
+        }
+        return false
+    }
+
+    nonisolated static func isWindowsSteamProcessArguments(
+        _ arguments: [String],
+        observedWineLoaderPath: String
+    ) -> Bool {
+        let loaderPath = URL(fileURLWithPath: observedWineLoaderPath)
+            .standardizedFileURL.path
+        var candidates = arguments.filter {
+            !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        while let first = candidates.first {
+            let normalizedFirst = first.replacingOccurrences(of: "\\", with: "/")
+            let firstBaseName = normalizedFirst.split(separator: "/").last
+                .map(String.init)?.lowercased() ?? ""
+            let isObservedLoader = URL(fileURLWithPath: first)
+                .standardizedFileURL.path == loaderPath
+            if isObservedLoader || Self.managedWineLoaderBasenames
+                .contains(firstBaseName) || first == "--" {
+                candidates.removeFirst()
+                continue
+            }
+            break
+        }
+        guard let executableArgument = candidates.first else { return false }
+        let normalized = executableArgument
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "\\", with: "/")
+        let pathComponents = normalized.split(
+            separator: "/",
+            omittingEmptySubsequences: true
+        )
+        let baseName = pathComponents.last
+            .map(String.init)?.lowercased()
+        guard baseName == "steam.exe" || baseName == "steamwebhelper.exe"
+        else { return false }
+        let canonicalWindowsPath = pathComponents.joined(separator: "/")
+            .lowercased()
+        return canonicalWindowsPath.hasPrefix(
+            "c:/program files (x86)/steam/"
+        )
+    }
+
+    private nonisolated static let managedWineLoaderBasenames: Set<String> = [
+        "wine", "wine64", "wine.bin", "wine64.bin",
+        "wine-preloader", "wine64-preloader"
+    ]
+
+    private nonisolated static func isManagedWineLoaderExecutablePath(
+        _ path: String
+    ) -> Bool {
+        managedWineLoaderBasenames.contains(
+            URL(fileURLWithPath: path).lastPathComponent.lowercased()
+        )
     }
 
     /// Returns only live Darwin process identifiers owned by the exact
@@ -4312,6 +5131,78 @@ actor SafeProcessRunner {
         }
     }
 
+    /// A natural wineserver wait may retire launch ownership only after its
+    /// successful exit agrees with the exact PID/start/executable identities
+    /// already registered for this prefix. This deliberately does not add the
+    /// broader open-file/process-table scan used by explicit shutdown, so an
+    /// unrelated reader cannot turn a natural wait into a foreign-reader gate.
+    private func completeNaturalWinePrefixWait(
+        after waitResult: ProcessRunResult,
+        prefix: URL
+    ) -> ProcessRunResult {
+        guard waitResult.succeeded else { return waitResult }
+
+        var finalized = waitResult
+        do {
+            let remainingTargets = try registeredManagedWineProcessTargets(
+                for: prefix
+            )
+            guard remainingTargets.isEmpty else {
+                finalized.postconditionSatisfied = false
+                finalized.forgePlayStatusCode =
+                    Self.prefixProcessCleanupFailureExitCode
+                let warning =
+                    "Wine prefix wait exited successfully, but exact managed " +
+                    "Wine process ownership remains for PID(s): " +
+                    Self.formattedPIDList(
+                        remainingTargets.map(\.processID)
+                    )
+                finalized.diagnosticCaptureWarning =
+                    DiagnosticWarningText.combined(
+                        finalized.diagnosticCaptureWarning,
+                        warning
+                    )
+                _ = appendDiagnosticLines(
+                    ["", "[ForgePlay] \(warning)"],
+                    to: finalized.stderrLog
+                )
+                return finalized
+            }
+        } catch {
+            finalized.postconditionSatisfied = false
+            finalized.forgePlayStatusCode =
+                Self.prefixProcessCleanupFailureExitCode
+            let warning =
+                "Wine prefix wait exited successfully, but exact managed " +
+                "Wine process verification failed: " +
+                forgePlayTechnicalErrorSummary(error)
+            finalized.diagnosticCaptureWarning =
+                DiagnosticWarningText.combined(
+                    finalized.diagnosticCaptureWarning,
+                    warning
+                )
+            _ = appendDiagnosticLines(
+                ["", "[ForgePlay] \(warning)"],
+                to: finalized.stderrLog
+            )
+            return finalized
+        }
+
+        finalized.postconditionSatisfied = true
+        finalized.forgePlayStatusCode = 0
+        _ = appendDiagnosticLines(
+            [
+                "",
+                "[ForgePlay] Wine prefix wait completed and exact managed Wine process inspection confirmed that the prefix is inactive."
+            ],
+            to: finalized.stderrLog
+        )
+        return clearingManagedProcessLaunchRecords(
+            for: prefix,
+            from: finalized
+        )
+    }
+
     /// Completes Wine shutdown by evaluating the actual postcondition rather
     /// than trusting a single `wineserver` invocation. Every command keeps its
     /// own raw sidecar; the primary result links those attempts and records the
@@ -4458,13 +5349,15 @@ actor SafeProcessRunner {
     ) -> ProcessRunResult {
         var result = input
         let prefixPath = prefix.standardizedFileURL.path
-        // The clean-prefix postcondition, not best-effort artifact deletion,
-        // ends this actor's in-memory ownership. A descriptor that cannot be
-        // removed remains an intentional fail-closed marker for a later app
-        // process; it is never silently reclassified as an empty registry.
+        // The real Wine-process postcondition, not diagnostic artifact
+        // deletion, ends this actor's in-memory ownership. An artifact that
+        // cannot be removed remains non-authoritative residue and is reported
+        // without becoming a future launch gate.
         let launchSessions = managedWineSessionRegistry.completeSessions(
             for: prefix
         )
+        let staleSessionArtifacts = managedWineSessionRegistry
+            .completeStaleSessionArtifacts(for: prefix)
         gameModeHostLaunchRecords = gameModeHostLaunchRecords.filter {
             $0.prefixPath != prefixPath
         }
@@ -4478,7 +5371,15 @@ actor SafeProcessRunner {
             }
 
         var cleanupFailures: [String] = []
+        var staleValidationFailures: [String] = []
         for launchSession in launchSessions {
+            // Authenticated historical sessions keep their full descriptor
+            // snapshot in the stale-artifact collection below. That path
+            // rebinds both evidence and descriptor inode identities and
+            // requires full descriptor equality before deletion.
+            if launchSession.authenticatedHistoricalArtifact != nil {
+                continue
+            }
             var validatedDescriptorURL: URL?
             if let descriptorURL = launchSession.descriptorURL {
                 var descriptorStatus = stat()
@@ -4569,6 +5470,108 @@ actor SafeProcessRunner {
             }
         }
 
+        for artifact in staleSessionArtifacts {
+            let validatedEvidenceIdentity: ManagedWineArtifactFileIdentity
+            let validatedDescriptorIdentity: ManagedWineArtifactFileIdentity
+            do {
+                guard let evidenceIdentity = try
+                        staleManagedWineSessionEvidenceIsQuiescent(
+                    artifact
+                ) else {
+                    staleValidationFailures.append(
+                        artifact.runIdentifier
+                    )
+                    continue
+                }
+                let descriptorIdentity = try ownerPrivateArtifactIdentity(
+                    at: artifact.descriptorURL,
+                    purpose: "stale managed Wine active-session descriptor"
+                )
+                let currentDescriptor = try ManagedWineProcessJournal
+                    .readActiveSessionDescriptor(
+                        at: artifact.descriptorURL
+                    )
+                guard currentDescriptor == artifact.descriptor else {
+                    throw SafeProcessRunnerError
+                        .prefixProcessVerificationFailed(
+                            artifact.descriptorURL,
+                            "the stale active-session cleanup identity changed"
+                        )
+                }
+                guard try ownerPrivateArtifactIdentity(
+                    at: artifact.descriptorURL,
+                    purpose: "stale managed Wine active-session descriptor"
+                ) == descriptorIdentity else {
+                    throw SafeProcessRunnerError
+                        .prefixProcessVerificationFailed(
+                            artifact.descriptorURL,
+                            "the stale active-session descriptor object changed during validation"
+                        )
+                }
+                validatedEvidenceIdentity = evidenceIdentity
+                validatedDescriptorIdentity = descriptorIdentity
+            } catch {
+                staleValidationFailures.append(artifact.runIdentifier)
+                continue
+            }
+
+            do {
+                guard try ownerPrivateArtifactIdentity(
+                    at: artifact.evidenceURL,
+                    purpose: "stale managed Wine session"
+                ) == validatedEvidenceIdentity,
+                try ownerPrivateArtifactIdentity(
+                    at: artifact.descriptorURL,
+                    purpose: "stale managed Wine active-session descriptor"
+                ) == validatedDescriptorIdentity else {
+                    throw SafeProcessRunnerError
+                        .prefixProcessVerificationFailed(
+                            artifact.descriptorURL,
+                            "the stale ownership artifact object changed before deletion"
+                        )
+                }
+            } catch {
+                staleValidationFailures.append(artifact.runIdentifier)
+                continue
+            }
+
+            do {
+                try fileManager.removeItem(at: artifact.evidenceURL)
+            } catch {
+                cleanupFailures.append(
+                    "\(artifact.runIdentifier):stale-evidence"
+                )
+                continue
+            }
+            do {
+                try fileManager.removeItem(at: artifact.descriptorURL)
+            } catch {
+                cleanupFailures.append(
+                    "\(artifact.runIdentifier):stale-descriptor"
+                )
+            }
+        }
+
+        if !staleValidationFailures.isEmpty {
+            let warning =
+                "Ignored non-authoritative managed Wine ownership metadata " +
+                "after the real prefix-process postcondition was checked " +
+                "(sessions: " + staleValidationFailures.sorted().joined(
+                    separator: ", "
+                ) + ")."
+            result.diagnosticCaptureWarning = DiagnosticWarningText.combined(
+                result.diagnosticCaptureWarning,
+                warning
+            )
+            _ = appendDiagnosticLines(
+                [
+                    "",
+                    "[ForgePlay] \(warning)"
+                ],
+                to: result.stderrLog
+            )
+        }
+
         guard !cleanupFailures.isEmpty else { return result }
         let warning =
             "Managed Wine session ownership was cleared after the clean-prefix " +
@@ -4584,6 +5587,121 @@ actor SafeProcessRunner {
             to: result.stderrLog
         )
         return result
+    }
+
+    private func staleManagedWineSessionEvidenceIsQuiescent(
+        _ artifact: ManagedWineStaleSessionArtifacts
+    ) throws -> ManagedWineArtifactFileIdentity? {
+        let initialEvidenceIdentity = try ownerPrivateArtifactIdentity(
+            at: artifact.evidenceURL,
+            purpose: "stale managed Wine session"
+        )
+        guard let data = try ManagedWineProcessJournal
+            .readOwnerPrivateBoundedFile(
+                at: artifact.evidenceURL,
+                maximumBytes: ManagedWineProcessJournal
+                    .maximumProcessEvidenceBytes,
+                purpose: "stale managed Wine session"
+            ) else {
+                throw SafeProcessRunnerError.prefixProcessVerificationFailed(
+                    artifact.evidenceURL,
+                    "the stale managed Wine evidence file is missing"
+                )
+            }
+        guard !data.isEmpty else {
+            throw SafeProcessRunnerError.prefixProcessVerificationFailed(
+                artifact.evidenceURL,
+                "the stale managed Wine evidence contains no process identity"
+            )
+        }
+        let decoder = JSONDecoder()
+        let latestAllowedRecordTime = Int64(
+            Date().addingTimeInterval(5).timeIntervalSince1970 * 1_000
+        )
+        let earliestAllowedRecordTime =
+            artifact.descriptor.registeredAtUnixMilliseconds - 5_000
+        var validatedRowCount = 0
+        for line in data.split(separator: 0x0A) where !line.isEmpty {
+            guard line.count <= 2_048,
+                  let scope = try? decoder.decode(
+                    ManagedWineProcessEvidenceScopeProbe.self,
+                    from: Data(line)
+                  ),
+                  scope.schemaVersion == 1,
+                  scope.producer == "forgeplay-wine-runtime",
+                  scope.eventCode == "darwin_process_started",
+                  scope.runIdentifier == artifact.runIdentifier,
+                  scope.prefixScope == artifact.descriptor.prefixScope,
+                  scope.runtimeFingerprint ==
+                    artifact.descriptor.runtimeFingerprint,
+                  let identity = try? decoder.decode(
+                    ManagedWineLegacyProcessEvidenceIdentityProbe.self,
+                    from: Data(line)
+                  ),
+                  ["wine-loader", "wineserver"].contains(identity.role),
+                  identity.darwinPID > 1,
+                  identity.recordedAtUnixMilliseconds >=
+                    earliestAllowedRecordTime,
+                  identity.recordedAtUnixMilliseconds <=
+                    latestAllowedRecordTime,
+                  identity.processStartedAtUnixMicroseconds > 0,
+                  identity.recordedAtUnixMilliseconds >=
+                    (identity.processStartedAtUnixMicroseconds / 1_000) - 1_000,
+                  identity.recordedAtUnixMilliseconds - 5_000 <=
+                    identity.processStartedAtUnixMicroseconds / 1_000 else {
+                throw SafeProcessRunnerError
+                    .prefixProcessVerificationFailed(
+                        artifact.evidenceURL,
+                        "the stale managed Wine evidence is invalid"
+                    )
+            }
+            validatedRowCount += 1
+            let recordedStart = UInt64(
+                identity.processStartedAtUnixMicroseconds
+            )
+            switch ManagedWineProcessJournal
+                .resolveProcessIdentityAcrossExitBoundary(
+                    for: pid_t(identity.darwinPID)
+                ) {
+            case .live(let liveStart):
+                if liveStart == recordedStart { return nil }
+            case .exited:
+                continue
+            case .unavailable:
+                return nil
+            }
+        }
+        guard validatedRowCount > 0 else { return nil }
+        let reboundEvidenceIdentity = try ownerPrivateArtifactIdentity(
+            at: artifact.evidenceURL,
+            purpose: "stale managed Wine session"
+        )
+        guard reboundEvidenceIdentity == initialEvidenceIdentity else {
+            throw SafeProcessRunnerError.prefixProcessVerificationFailed(
+                artifact.evidenceURL,
+                "the stale managed Wine evidence object changed during validation"
+            )
+        }
+        return reboundEvidenceIdentity
+    }
+
+    private func ownerPrivateArtifactIdentity(
+        at url: URL,
+        purpose: String
+    ) throws -> ManagedWineArtifactFileIdentity {
+        var status = stat()
+        guard lstat(url.path, &status) == 0,
+              (status.st_mode & S_IFMT) == S_IFREG,
+              status.st_uid == geteuid(),
+              status.st_nlink == 1,
+              (status.st_mode & mode_t(0o777)) ==
+                (S_IRUSR | S_IWUSR) else {
+            throw SafeProcessRunnerError.prefixProcessVerificationFailed(
+                url,
+                "\(purpose) is not the validated owner-private file object"
+            )
+        }
+        return ManagedWineArtifactFileIdentity(status)
     }
 
     private func runWineServerControlCommand(
@@ -4879,16 +5997,39 @@ actor SafeProcessRunner {
             case .exited:
                 continue
             case .unavailable:
-                obstructions.append(ManagedProcessLiveObstruction(
+                if let name = Self.processName(for: pid),
+                   Self.isStartupWineProcessNameCandidate(name) {
+                    obstructions.append(ManagedProcessLiveObstruction(
+                        processID: pid,
+                        reason: "ForgePlay Wine-like prefix holder has no readable exact process identity"
+                    ))
+                }
+            case .live(let startedAt):
+                guard let executable = try? processCommand(for: pid),
+                      Self.isStartupWineExecutablePath(executable) else {
+                    // Spotlight, backup, antivirus, and other foreign readers
+                    // can hold old prefix inodes across an atomic replacement.
+                    // They are neither Wine ownership nor signal authority and
+                    // must not turn diagnostics into status 74.
+                    continue
+                }
+                let executableURL = URL(fileURLWithPath: executable)
+                    .standardizedFileURL.resolvingSymlinksInPath()
+                guard case .live(let finalStartedAt) =
+                        ManagedWineProcessJournal
+                            .resolveProcessIdentityAcrossExitBoundary(for: pid),
+                      finalStartedAt == startedAt else {
+                    obstructions.append(ManagedProcessLiveObstruction(
+                        processID: pid,
+                        reason: "ForgePlay Wine prefix holder changed identity during process-table authentication"
+                    ))
+                    continue
+                }
+                mergeCapability(ManagedProcessSignalTarget(
                     processID: pid,
-                    reason: "lsof-only prefix holder has no readable exact process identity"
-                ))
-            case .live:
-                let executable = try? processCommand(for: pid)
-                obstructions.append(ManagedProcessLiveObstruction(
-                    processID: pid,
-                    reason: "lsof-only prefix holder is not a trusted signal capability" +
-                        (executable.map { ": \($0)" } ?? "")
+                    processStartedAtUnixMicroseconds: startedAt,
+                    executableURL: executableURL,
+                    source: .forgePlayRuntimeProcessTable
                 ))
             }
         }
@@ -4925,8 +6066,120 @@ actor SafeProcessRunner {
             )
         }
 
-        let evidenceDirectory: URL
-        let evidenceTrustedAncestor: URL
+        let evidenceLocations = try managedWineProcessEvidenceLocations(
+            for: logDirectory
+        )
+        var discoveredSessions: [ManagedWineProcessLaunchSession] = []
+        var discoveredStaleArtifacts:
+            [ManagedWineStaleSessionArtifacts] = []
+        var acceptedRunIdentifiers = Set<String>()
+
+        // Each root and artifact is optional authority. Invalid residue loses
+        // only its own authority; it cannot erase a valid exact-live session
+        // found in another root or block the runtime workflow.
+        for location in evidenceLocations {
+            let stagingRegistry = ManagedWineSessionRegistry()
+            let sessions: [ManagedWineProcessLaunchSession]
+            do {
+                sessions = try stagingRegistry.hydrate(
+                    from: location.directory,
+                    trustedAncestor: location.trustedAncestor,
+                    for: prefix,
+                    runtimeRootURL: runtimeRootURL,
+                    runtimeFingerprint: runtimeFingerprint,
+                    fileManager: fileManager,
+                    validating: { _ in }
+                )
+            } catch {
+                continue
+            }
+            let staleArtifacts = stagingRegistry.staleSessionArtifacts(
+                for: prefix
+            )
+            for session in sessions where acceptedRunIdentifiers.insert(
+                session.runIdentifier
+            ).inserted {
+                discoveredSessions.append(session)
+            }
+            for artifact in staleArtifacts where acceptedRunIdentifiers.insert(
+                artifact.runIdentifier
+            ).inserted {
+                discoveredStaleArtifacts.append(artifact)
+            }
+        }
+
+        var validatedSessions: [ManagedWineProcessLaunchSession] = []
+        for launchSession in discoveredSessions {
+            let priorSignalIdentities = verifiedManagedWineSignalIdentities
+            let priorExcludedIdentities =
+                excludedReusedManagedWineSignalIdentities
+            do {
+                _ = try validatedManagedWineProcessIDs(for: launchSession)
+                validatedSessions.append(launchSession)
+            } catch {
+                verifiedManagedWineSignalIdentities = priorSignalIdentities
+                excludedReusedManagedWineSignalIdentities =
+                    priorExcludedIdentities
+            }
+        }
+
+        var adoptedHistoricalSessions:
+            [ManagedWineProcessLaunchSession] = []
+        var remainingStaleArtifacts:
+            [ManagedWineStaleSessionArtifacts] = []
+        for artifact in discoveredStaleArtifacts {
+            // App Sandbox cannot authenticate historical executable objects
+            // through lsof/proc_pidpath. Keep the artifact non-authoritative;
+            // prefix-scoped wineserver IPC remains the runtime mechanism.
+            guard !sandboxEnabled else {
+                remainingStaleArtifacts.append(artifact)
+                continue
+            }
+            let priorSignalIdentities = verifiedManagedWineSignalIdentities
+            let priorExcludedIdentities =
+                excludedReusedManagedWineSignalIdentities
+            do {
+                if let adopted = try authenticatedHistoricalWineSession(
+                    artifact,
+                    selectedRuntimeRootURL: runtimeRootURL
+                ) {
+                    _ = try validatedManagedWineProcessIDs(for: adopted)
+                    adoptedHistoricalSessions.append(adopted)
+                } else {
+                    remainingStaleArtifacts.append(artifact)
+                }
+            } catch {
+                verifiedManagedWineSignalIdentities = priorSignalIdentities
+                excludedReusedManagedWineSignalIdentities =
+                    priorExcludedIdentities
+                remainingStaleArtifacts.append(artifact)
+            }
+        }
+
+        managedWineSessionRegistry.commitHydratedSessions(
+            validatedSessions + adoptedHistoricalSessions,
+            staleArtifacts: remainingStaleArtifacts,
+            for: prefix
+        )
+    }
+
+    private func managedWineProcessEvidenceLocations(
+        for logDirectory: URL
+    ) throws -> [(directory: URL, trustedAncestor: URL)] {
+        var locations: [(directory: URL, trustedAncestor: URL)] = []
+        var seenPaths = Set<String>()
+
+        func append(_ directory: URL, trustedAncestor: URL) {
+            let normalizedDirectory = directory.standardizedFileURL
+            guard seenPaths.insert(normalizedDirectory.path).inserted else {
+                return
+            }
+            locations.append((
+                directory: normalizedDirectory,
+                trustedAncestor: trustedAncestor.standardizedFileURL
+            ))
+        }
+
         if managedWineProcessEvidenceSandboxEnabled {
             guard let applicationGroupIdentifier =
                     ForgePlaySandboxPolicy.primaryApplicationGroupIdentifier,
@@ -4936,49 +6189,304 @@ actor SafeProcessRunner {
                   ) else {
                 throw SafeProcessRunnerError.sandboxIPCConfigurationMissing
             }
-            evidenceDirectory = groupContainer
-                .appending(
-                    path: "Library/Application Support/ForgePlay",
-                    directoryHint: .isDirectory
-                )
-                .appending(
-                    path: ManagedWineProcessJournal.evidenceDirectoryName,
-                    directoryHint: .isDirectory
-                )
-                .standardizedFileURL
-            evidenceTrustedAncestor = groupContainer.standardizedFileURL
-        } else {
-            evidenceDirectory = logDirectory
-                .appending(
-                    path: ManagedWineProcessJournal.evidenceDirectoryName,
-                    directoryHint: .isDirectory
-                )
-                .standardizedFileURL
-            evidenceTrustedAncestor = logDirectory.standardizedFileURL
-        }
-        let priorSignalIdentities = verifiedManagedWineSignalIdentities
-        let priorExcludedIdentities =
-            excludedReusedManagedWineSignalIdentities
-        do {
-            try managedWineSessionRegistry.hydrate(
-                from: evidenceDirectory,
-                trustedAncestor: evidenceTrustedAncestor,
-                for: prefix,
-                runtimeRootURL: runtimeRootURL,
-                runtimeFingerprint: runtimeFingerprint,
-                fileManager: fileManager,
-                validating: { launchSession in
-                    _ = try self.validatedManagedWineProcessIDs(
-                        for: launchSession
+            append(
+                groupContainer
+                    .appending(
+                        path: "Library/Application Support/ForgePlay",
+                        directoryHint: .isDirectory
                     )
-                }
+                    .appending(
+                        path: ManagedWineProcessJournal
+                            .evidenceDirectoryName,
+                        directoryHint: .isDirectory
+                    ),
+                trustedAncestor: groupContainer
             )
-        } catch {
-            verifiedManagedWineSignalIdentities = priorSignalIdentities
-            excludedReusedManagedWineSignalIdentities =
-                priorExcludedIdentities
-            throw error
         }
+
+        let normalizedLogDirectory = logDirectory.standardizedFileURL
+        let logsRoot = normalizedLogDirectory.deletingLastPathComponent()
+        append(
+            logsRoot.appending(
+                path: ManagedWineProcessJournal.evidenceDirectoryName,
+                directoryHint: .isDirectory
+            ),
+            trustedAncestor: logsRoot
+        )
+        append(
+            normalizedLogDirectory.appending(
+                path: ManagedWineProcessJournal.evidenceDirectoryName,
+                directoryHint: .isDirectory
+            ),
+            trustedAncestor: logsRoot
+        )
+        // Transitional read-only allowlist for builds that wrote ownership
+        // evidence below an action-specific log category. New writes use the
+        // App Group or the category-independent Logs root above.
+        for category in [
+            "Launch", "Install", "Runtime", "Diagnostic", "SteamClient"
+        ] {
+            append(
+                logsRoot
+                    .appending(path: category, directoryHint: .isDirectory)
+                    .appending(
+                        path: ManagedWineProcessJournal
+                            .evidenceDirectoryName,
+                        directoryHint: .isDirectory
+                    ),
+                trustedAncestor: logsRoot
+            )
+        }
+        return locations
+    }
+
+    /// Promotes a dead-owner session from an older app Runtime only after the
+    /// persisted prefix binding, historical Runtime manifest, descriptor,
+    /// journal, current kernel identity, executable path, and two prefix-holder
+    /// snapshots all agree. Arbitrary lsof-only processes never reach this
+    /// path and remain fail-closed obstructions.
+    private func authenticatedHistoricalWineSession(
+        _ artifact: ManagedWineStaleSessionArtifacts,
+        selectedRuntimeRootURL: URL
+    ) throws -> ManagedWineProcessLaunchSession? {
+        guard let data = try ManagedWineProcessJournal
+            .readOwnerPrivateBoundedFile(
+                at: artifact.evidenceURL,
+                maximumBytes: ManagedWineProcessJournal
+                    .maximumProcessEvidenceBytes,
+                purpose: "historical managed Wine session"
+            ) else {
+            throw SafeProcessRunnerError.prefixProcessVerificationFailed(
+                artifact.evidenceURL,
+                "historical managed Wine process evidence is missing"
+            )
+        }
+        let probeSession = ManagedWineProcessLaunchSession(
+            prefixURL: artifact.prefixURL,
+            runIdentifier: artifact.runIdentifier,
+            evidenceURL: artifact.evidenceURL,
+            descriptorURL: artifact.descriptorURL,
+            runtimeRootURL: selectedRuntimeRootURL,
+            runtimeFingerprint: artifact.descriptor.runtimeFingerprint,
+            prefixScope: artifact.descriptor.prefixScope,
+            registeredAt: artifact.descriptor.registeredAt
+        )
+        let candidates = Self.managedWineProcessEvidenceIdentities(
+            in: data,
+            launchSession: probeSession
+        )
+        guard !candidates.isEmpty else { return nil }
+
+        var liveProcessIdentifiers = Set<pid_t>()
+        var boundedSignalTargets = Set<ManagedProcessSignalTarget>()
+        var historicalRuntimeRoot: URL?
+        for candidate in candidates {
+            let resolution = ManagedWineProcessJournal
+                .resolveProcessIdentityAcrossExitBoundary(
+                    for: candidate.processID
+                )
+            switch resolution {
+            case .exited:
+                continue
+            case .unavailable:
+                throw SafeProcessRunnerError
+                    .prefixProcessVerificationFailed(
+                        artifact.evidenceURL,
+                        "historical managed Wine PID \(candidate.processID) has no readable exact start identity"
+                    )
+            case .live(let observedStart):
+                guard observedStart ==
+                        candidate.processStartedAtUnixMicroseconds else {
+                    continue
+                }
+            }
+
+            guard let command = try processCommand(
+                for: candidate.processID
+            ) else {
+                throw SafeProcessRunnerError.prefixProcessVerificationFailed(
+                    artifact.evidenceURL,
+                    "historical managed Wine PID \(candidate.processID) has no readable executable identity"
+                )
+            }
+            let commandURL = URL(fileURLWithPath: command)
+                .standardizedFileURL
+                .resolvingSymlinksInPath()
+            guard let inferredRoot = Self
+                .managedWineRootForHistoricalProcessExecutable(commandURL)
+            else {
+                throw SafeProcessRunnerError.prefixProcessVerificationFailed(
+                    artifact.evidenceURL,
+                    "historical managed Wine PID \(candidate.processID) is outside the curated Runtime executable layout"
+                )
+            }
+            if let historicalRuntimeRoot,
+               historicalRuntimeRoot != inferredRoot {
+                throw SafeProcessRunnerError.prefixProcessVerificationFailed(
+                    artifact.evidenceURL,
+                    "historical managed Wine journal spans multiple Runtime roots"
+                )
+            }
+            historicalRuntimeRoot = inferredRoot
+            liveProcessIdentifiers.insert(candidate.processID)
+            boundedSignalTargets.insert(ManagedProcessSignalTarget(
+                processID: candidate.processID,
+                processStartedAtUnixMicroseconds:
+                    candidate.processStartedAtUnixMicroseconds,
+                executableURL: commandURL,
+                source: .managedWineJournal
+            ))
+        }
+        guard !liveProcessIdentifiers.isEmpty,
+              let historicalRuntimeRoot else {
+            return nil
+        }
+
+        let firstHolders = try processIDsHoldingOpenFiles(
+            under: artifact.prefixURL
+        )
+        let latestHolders = try processIDsHoldingOpenFiles(
+            under: artifact.prefixURL
+        )
+        let verifiedHolders = Set(
+            Self.latestPrefixHolderProcessIDsRequiringInspection(
+                initialSnapshot: firstHolders,
+                latestSnapshot: latestHolders
+            )
+        )
+        guard liveProcessIdentifiers.isSubset(of: verifiedHolders) else {
+            throw SafeProcessRunnerError.prefixProcessVerificationFailed(
+                artifact.evidenceURL,
+                "historical managed Wine journal contains a live PID that is not an exact current prefix holder"
+            )
+        }
+
+        guard ManagedWineProcessJournal.runtimeRootScope(
+            for: historicalRuntimeRoot
+        ) == artifact.descriptor.runtimeRootScope else {
+            throw SafeProcessRunnerError.prefixProcessVerificationFailed(
+                artifact.evidenceURL,
+                "historical managed Wine Runtime root scope does not match its owner descriptor"
+            )
+        }
+        guard try ManagedWineProcessJournal.readActiveSessionDescriptor(
+            at: artifact.descriptorURL
+        ) == artifact.descriptor else {
+            throw SafeProcessRunnerError.prefixProcessVerificationFailed(
+                artifact.descriptorURL,
+                "historical managed Wine owner descriptor changed during authentication"
+            )
+        }
+
+        let historicalLauncher = historicalRuntimeRoot.appending(
+            path: "bin/wine",
+            directoryHint: .notDirectory
+        )
+        guard FileSystemItemPolicy.hasOnlyNonSymlinkDirectoryComponents(
+            from: historicalRuntimeRoot,
+            to: historicalLauncher,
+            fileManager: fileManager
+        ), FileSystemItemPolicy.isRegularNonSymlinkFile(
+            historicalLauncher,
+            fileManager: fileManager
+        ), fileManager.isExecutableFile(atPath: historicalLauncher.path) else {
+            throw SafeProcessRunnerError.prefixProcessVerificationFailed(
+                historicalLauncher,
+                "historical managed Wine Runtime launcher is not a safe executable"
+            )
+        }
+        let historicalRuntimeObjectURLs = Set(
+            [historicalLauncher] +
+                boundedSignalTargets.map(\.executableURL)
+        )
+        let generationBeforeAuthentication = Set(
+            try historicalRuntimeObjectURLs.map {
+                try ManagedWineHistoricalRuntimeObjectIdentity.capture($0)
+            }
+        )
+        let authenticatedHistoricalFingerprint = try
+            managedWineRuntimeFingerprintResolver(historicalLauncher)
+        guard authenticatedHistoricalFingerprint ==
+                artifact.descriptor.runtimeFingerprint else {
+            throw SafeProcessRunnerError.prefixProcessVerificationFailed(
+                historicalLauncher,
+                "authenticated historical Runtime fingerprint does not match its owner descriptor"
+            )
+        }
+        let generationAfterAuthentication = Set(
+            try historicalRuntimeObjectURLs.map {
+                try ManagedWineHistoricalRuntimeObjectIdentity.capture($0)
+            }
+        )
+        guard generationBeforeAuthentication ==
+                generationAfterAuthentication else {
+            throw SafeProcessRunnerError.prefixProcessVerificationFailed(
+                historicalLauncher,
+                "historical Runtime generation changed while its manifest was authenticated"
+            )
+        }
+        boundedSignalTargets = Set(boundedSignalTargets.map { target in
+            var bound = target
+            bound.authenticatedHistoricalRuntimeObjects =
+                generationAfterAuthentication
+            return bound
+        })
+
+        return ManagedWineProcessLaunchSession(
+            prefixURL: artifact.prefixURL,
+            runIdentifier: artifact.runIdentifier,
+            evidenceURL: artifact.evidenceURL,
+            descriptorURL: artifact.descriptorURL,
+            runtimeRootURL: historicalRuntimeRoot,
+            runtimeFingerprint: artifact.descriptor.runtimeFingerprint,
+            prefixScope: artifact.descriptor.prefixScope,
+            registeredAt: artifact.descriptor.registeredAt,
+            authenticatedHistoricalSignalTargets: boundedSignalTargets,
+            authenticatedHistoricalArtifact: artifact,
+            origin: .hydratedEvidence
+        )
+    }
+
+    private nonisolated static func
+        managedWineRootForHistoricalProcessExecutable(
+            _ executable: URL
+        ) -> URL? {
+        let normalized = executable.standardizedFileURL
+            .resolvingSymlinksInPath()
+        let components = normalized.pathComponents
+        let wineSuffixes = [
+            ["bin", "wine.bin"],
+            ["bin", "wineserver.bin"],
+            ["lib", "wine", "x86_64-unix", "wine"]
+        ]
+        for suffix in wineSuffixes where
+            Array(components.suffix(suffix.count)) == suffix {
+            var root = normalized
+            for _ in suffix { root.deleteLastPathComponent() }
+            guard root.lastPathComponent == "wine" else { return nil }
+            return root.standardizedFileURL.resolvingSymlinksInPath()
+        }
+
+        let gameModeSuffix = [
+            "Helpers", "GameModeProcessHost.app", "Contents", "MacOS",
+            "GameModeProcessHost"
+        ]
+        guard Array(components.suffix(gameModeSuffix.count)) ==
+                gameModeSuffix else {
+            return nil
+        }
+        var outerContents = normalized
+        for _ in gameModeSuffix { outerContents.deleteLastPathComponent() }
+        guard outerContents.lastPathComponent == "Contents" else {
+            return nil
+        }
+        return outerContents
+            .appending(
+                path: "Resources/Runners/ForgePlayRuntime/wine",
+                directoryHint: .isDirectory
+            )
+            .standardizedFileURL
+            .resolvingSymlinksInPath()
     }
 
     private func registerManagedWineProcessLaunch(
@@ -5012,8 +6520,9 @@ actor SafeProcessRunner {
     /// A descriptor is written immediately before spawn so a detached child
     /// can never outrun host ownership persistence. If spawning fails before
     /// the curated Runtime writes even one journal row, remove the empty file
-    /// and then its descriptor. Any identity or deletion ambiguity intentionally
-    /// leaves the descriptor in place so a later cleanup fails closed.
+    /// and then its descriptor. Any identity or deletion ambiguity leaves the
+    /// artifact in place as non-authoritative diagnostics; it never becomes a
+    /// prerequisite for a later cleanup or launch.
     private func discardUnstartedManagedWineSessionArtifacts(
         from spec: CommandSpec
     ) {
@@ -5057,8 +6566,7 @@ actor SafeProcessRunner {
             try fileManager.removeItem(at: launchSession.evidenceURL)
             try fileManager.removeItem(at: descriptorURL)
         } catch {
-            // The descriptor is deliberately retained when possible; its
-            // presence prevents unverified clean-prefix completion later.
+            // Retain diagnostic residue without granting it signal authority.
         }
     }
 
@@ -5099,7 +6607,9 @@ actor SafeProcessRunner {
                 processStartedAtUnixMicroseconds:
                     verified.processStartedAtUnixMicroseconds,
                 executableURL: verified.executableURL,
-                source: .managedWineJournal
+                source: .managedWineJournal,
+                authenticatedHistoricalRuntimeObjects:
+                    verified.authenticatedHistoricalRuntimeObjects
             )
         }
     }
@@ -5113,6 +6623,13 @@ actor SafeProcessRunner {
     private func managedWineProcessValidation(
         for launchSession: ManagedWineProcessLaunchSession
     ) throws -> ManagedWineProcessValidationResult {
+        if let historicalTargets = launchSession
+            .authenticatedHistoricalSignalTargets {
+            return try authenticatedHistoricalWineProcessValidation(
+                historicalTargets,
+                launchSession: launchSession
+            )
+        }
         guard let data = try ownerPrivateProcessEvidenceTail(
             at: launchSession.evidenceURL,
             purpose: "managed Wine process"
@@ -5256,6 +6773,123 @@ actor SafeProcessRunner {
                     executableURL: commandURL
                 )
             processIDs.insert(candidate.processID)
+        }
+        return ManagedWineProcessValidationResult(
+            processIDs: processIDs.sorted(),
+            inactiveReasons: inactiveReasons
+        )
+    }
+
+    private func authenticatedHistoricalWineProcessValidation(
+        _ targets: Set<ManagedProcessSignalTarget>,
+        launchSession: ManagedWineProcessLaunchSession
+    ) throws -> ManagedWineProcessValidationResult {
+        guard !targets.isEmpty,
+              targets.allSatisfy({
+                  $0.source == .managedWineJournal && $0.processID > 1
+              }) else {
+            throw SafeProcessRunnerError.prefixProcessVerificationFailed(
+                launchSession.evidenceURL,
+                "the authenticated historical signal capability set is invalid"
+            )
+        }
+
+        var processIDs = Set<pid_t>()
+        var inactiveReasons: [String] = []
+        for target in targets.sorted(by: { $0.processID < $1.processID }) {
+            let initialIdentity = ManagedWineProcessJournal
+                .resolveProcessIdentityAcrossExitBoundary(
+                    for: target.processID
+                )
+            switch initialIdentity {
+            case .exited:
+                verifiedManagedWineSignalIdentities.removeValue(
+                    forKey: target.processID
+                )
+                excludedReusedManagedWineSignalIdentities.removeValue(
+                    forKey: target.processID
+                )
+                inactiveReasons.append(
+                    "PID \(target.processID) exited after historical authentication"
+                )
+                continue
+            case .unavailable:
+                throw SafeProcessRunnerError
+                    .prefixProcessVerificationFailed(
+                        launchSession.evidenceURL,
+                        "authenticated historical PID \(target.processID) has no readable exact start identity"
+                    )
+            case .live(let observedStart)
+            where observedStart !=
+                    target.processStartedAtUnixMicroseconds:
+                excludedReusedManagedWineSignalIdentities[
+                    target.processID
+                ] = ExcludedReusedManagedWineSignalIdentity(
+                    prefixPath: launchSession.prefixURL
+                        .standardizedFileURL.path,
+                    processStartedAtUnixMicroseconds: observedStart
+                )
+                inactiveReasons.append(
+                    "PID \(target.processID) was reused after historical authentication"
+                )
+                continue
+            case .live:
+                break
+            }
+
+            if excludedReusedManagedWineSignalIdentities[
+                target.processID
+            ] != nil {
+                inactiveReasons.append(
+                    "PID \(target.processID) remains covered by a PID-reuse exclusion"
+                )
+                continue
+            }
+            guard managedSignalTargetIsExactNow(target) else {
+                let finalIdentity = ManagedWineProcessJournal
+                    .resolveProcessIdentityAcrossExitBoundary(
+                        for: target.processID
+                    )
+                switch finalIdentity {
+                case .exited:
+                    inactiveReasons.append(
+                        "PID \(target.processID) exited during historical capability revalidation"
+                    )
+                    continue
+                case .live(let observedStart)
+                where observedStart !=
+                        target.processStartedAtUnixMicroseconds:
+                    excludedReusedManagedWineSignalIdentities[
+                        target.processID
+                    ] = ExcludedReusedManagedWineSignalIdentity(
+                        prefixPath: launchSession.prefixURL
+                            .standardizedFileURL.path,
+                        processStartedAtUnixMicroseconds: observedStart
+                    )
+                    inactiveReasons.append(
+                        "PID \(target.processID) was reused during historical capability revalidation"
+                    )
+                    continue
+                case .live, .unavailable:
+                    throw SafeProcessRunnerError
+                        .prefixProcessVerificationFailed(
+                            launchSession.evidenceURL,
+                            "authenticated historical PID \(target.processID) changed executable identity or became unreadable"
+                        )
+                }
+            }
+
+            verifiedManagedWineSignalIdentities[target.processID] =
+                VerifiedManagedWineSignalIdentity(
+                    prefixPath: launchSession.prefixURL
+                        .standardizedFileURL.path,
+                    processStartedAtUnixMicroseconds:
+                        target.processStartedAtUnixMicroseconds,
+                    executableURL: target.executableURL,
+                    authenticatedHistoricalRuntimeObjects:
+                        target.authenticatedHistoricalRuntimeObjects
+                )
+            processIDs.insert(target.processID)
         }
         return ManagedWineProcessValidationResult(
             processIDs: processIDs.sorted(),
@@ -5431,6 +7065,11 @@ actor SafeProcessRunner {
         for launchSession: ManagedWineProcessLaunchSession
     ) -> Set<URL> {
         let runtimeRoot = launchSession.runtimeRootURL.standardizedFileURL
+        let runtimeContainer = runtimeRoot.deletingLastPathComponent()
+        let runnersDirectory = runtimeContainer.deletingLastPathComponent()
+        let resourcesDirectory = runnersDirectory.deletingLastPathComponent()
+        let outerContentsDirectory = resourcesDirectory
+            .deletingLastPathComponent()
         let paths = [
             runtimeRoot.appending(
                 path: "bin/wine.bin",
@@ -5444,9 +7083,9 @@ actor SafeProcessRunner {
                 path: "lib/wine/x86_64-unix/wine",
                 directoryHint: .notDirectory
             ),
-            GameModeHostCapabilityInspector.bundledHostAppURL()
+            outerContentsDirectory
                 .appending(
-                    path: "Contents/MacOS/GameModeProcessHost",
+                    path: "Helpers/GameModeProcessHost.app/Contents/MacOS/GameModeProcessHost",
                     directoryHint: .notDirectory
                 )
         ]
@@ -5909,98 +7548,16 @@ actor SafeProcessRunner {
             return result
         }
 
-        var disposition =
-            "the spawned child remains tracked with its actual PID"
-        if let tracked = trackedDescriptorBoundProcesses[processIdentifier] {
-            let fullyTerminated = terminateAndReapDescriptorBoundOwnership(
-                tracked.process,
-                signalCapability: tracked.signalCapability
-            )
-            if fullyTerminated {
-                trackedDescriptorBoundProcesses.removeValue(
-                    forKey: processIdentifier
-                )
-            }
-            result = descriptorBoundResult(
-                spec,
-                process: tracked.process,
-                startedAt: input.startedAt,
-                didTimeOut: false
-            )
-            if fullyTerminated {
-                disposition =
-                    "the spawned process group was terminated and its leader was reaped"
-            } else {
-                // Observing leader exit with WNOWAIT is not equivalent to
-                // reaping that leader or completing group ownership. Keep the
-                // record live and project the residual group as a detached
-                // outcome until group absence is proven.
-                result.waitedForExit = false
-                result.hasProcessExitCode = false
-                result.outcome = .runningDetached
-                disposition = Self
-                    .descriptorBoundResidualOwnershipDiagnostic(
-                        processGroupIdentifier: processIdentifier,
-                        groupPresence: tracked.process
-                            .processGroupPresence.diagnosticDescription,
-                        leaderExitObserved:
-                            tracked.process.rootExitWasObserved,
-                        leaderWasActuallyReaped:
-                            tracked.process.rootWasActuallyReaped
-                    )
-            }
-        } else if let tracked = trackedDetachedProcesses[processIdentifier] {
-            if tracked.process.isRunning,
-               let capability = tracked.signalCapability {
-                let termObstructions = sendSignal(
-                    SIGTERM,
-                    to: [capability],
-                    for: URL(fileURLWithPath: tracked.prefixPath)
-                )
-                let terminationDeadline = Date().addingTimeInterval(1)
-                while termObstructions.isEmpty,
-                      tracked.process.isRunning,
-                      Date() < terminationDeadline {
-                    Thread.sleep(forTimeInterval: 0.01)
-                }
-                if termObstructions.isEmpty, tracked.process.isRunning {
-                    let killObstructions = sendSignal(
-                        SIGKILL,
-                        to: [capability],
-                        for: URL(fileURLWithPath: tracked.prefixPath)
-                    )
-                    let killDeadline = Date().addingTimeInterval(2)
-                    while killObstructions.isEmpty,
-                          tracked.process.isRunning,
-                          Date() < killDeadline {
-                        Thread.sleep(forTimeInterval: 0.01)
-                    }
-                }
-            } else if tracked.process.isRunning {
-                disposition = "the spawned child remains tracked because no exact launch-time signal capability is available"
-            }
-            if !tracked.process.isRunning {
-                tracked.process.waitUntilExit()
-                trackedDetachedProcesses.removeValue(
-                    forKey: processIdentifier
-                )
-                result.endedAt = Date()
-                result.waitedForExit = true
-                result.hasProcessExitCode =
-                    tracked.process.terminationReason == .exit
-                result.exitCode = tracked.process.terminationStatus
-                result.outcome = tracked.process.terminationReason ==
-                    .uncaughtSignal ? .signaled : .exited
-                result.terminationSignal = tracked.process.terminationReason ==
-                    .uncaughtSignal
-                    ? tracked.process.terminationStatus
-                    : nil
-                disposition = "the spawned child was terminated and reaped"
-            }
+        let disposition: String
+        if trackedDescriptorBoundProcesses[processIdentifier] != nil {
+            disposition =
+                "the spawned descriptor-bound process remains tracked"
+        } else if trackedDetachedProcesses[processIdentifier] != nil {
+            disposition = "the spawned detached process remains tracked"
         } else {
             disposition =
                 "the spawned child's actual PID and outcome were preserved " +
-                "because no in-memory tracker entry was available"
+                "without a current in-memory tracker entry"
         }
 
         result.managedWineLaunchEnvironmentProjection =
@@ -6153,6 +7710,11 @@ actor SafeProcessRunner {
     private func managedSignalTargetIsExactNow(
         _ target: ManagedProcessSignalTarget
     ) -> Bool {
+        guard target.authenticatedHistoricalRuntimeObjects.allSatisfy({
+            $0.matchesCurrentObject()
+        }) else {
+            return false
+        }
         guard case .live(let firstStartedAt) = ManagedWineProcessJournal
                 .resolveProcessIdentityAcrossExitBoundary(
                     for: target.processID
@@ -6204,19 +7766,21 @@ actor SafeProcessRunner {
     private func processIDsHoldingOpenFiles(under prefix: URL) throws -> [pid_t] {
         let lsof = URL(fileURLWithPath: "/usr/sbin/lsof")
         guard fileManager.isExecutableFile(atPath: lsof.path) else {
-            throw SafeProcessRunnerError.executableMissing(lsof)
+            return []
         }
-        let capture = try BoundedProcessExecutor.capture(
-            executable: lsof,
-            arguments: ["-t", "+D", prefix.path],
-            timeout: 10,
-            fileManager: fileManager
-        )
-        guard capture.didExit else {
-            throw SafeProcessRunnerError.prefixProcessVerificationFailed(
-                prefix,
-                "lsof did not exit before the prefix inspection deadline"
+        let capture: BoundedProcessCaptureResult
+        do {
+            capture = try BoundedProcessExecutor.capture(
+                executable: lsof,
+                arguments: ["-t", "+D", prefix.path],
+                timeout: 10,
+                fileManager: fileManager
             )
+        } catch {
+            return []
+        }
+        guard capture.didExit else {
+            return []
         }
         let output = capture.stdout
         let errorOutput = capture.stderr
@@ -6228,15 +7792,12 @@ actor SafeProcessRunner {
         if !pids.isEmpty {
             return pids
         }
-        if capture.exitCode == 1, output.isEmpty, errorOutput.isEmpty {
-            return []
-        }
-        if capture.exitCode != 0 {
-            let message = String(data: errorOutput, encoding: .utf8) ??
-                String(data: output, encoding: .utf8) ??
-                "lsof exited with \(capture.exitCode)"
-            throw SafeProcessRunnerError.prefixProcessVerificationFailed(prefix, message)
-        }
+        // lsof can return a non-zero status or traversal warning when no
+        // process row exists (Spotlight races, disappearing files, unreadable
+        // non-Wine entries). With no PID there is neither signal authority nor
+        // a live Wine obstruction. Journals and exact process-table identity
+        // remain the owning cleanup evidence.
+        _ = errorOutput
         return []
     }
 
@@ -6425,6 +7986,14 @@ actor SafeProcessRunner {
             } else {
                 finalStartedAt = nil
             }
+            guard target.authenticatedHistoricalRuntimeObjects
+                .allSatisfy({ $0.matchesCurrentObject() }) else {
+                obstructions.append(ManagedProcessLiveObstruction(
+                    processID: pid,
+                    reason: "authenticated historical Runtime generation changed; no signal was sent"
+                ))
+                continue
+            }
             guard Self.managedSignalTargetPassesFinalValidation(
                     target,
                     firstObservedStartTimeUnixMicroseconds:
@@ -6456,7 +8025,8 @@ actor SafeProcessRunner {
             case .trackedFoundationProcess:
                 retainedTrackerMatches = trackedDetachedProcesses[pid]?
                     .signalCapability == target
-            case .managedWineJournal, .gameModeHostJournal:
+            case .managedWineJournal, .gameModeHostJournal,
+                 .forgePlayRuntimeProcessTable:
                 retainedTrackerMatches = false
             }
             if Self.managedSignalSourceRequiresRetainedTracker(
@@ -6465,6 +8035,14 @@ actor SafeProcessRunner {
                 obstructions.append(ManagedProcessLiveObstruction(
                     processID: pid,
                     reason: "retained tracker/capability is missing or conflicting; no raw fallback signal was sent"
+                ))
+                continue
+            }
+            guard target.authenticatedHistoricalRuntimeObjects
+                .allSatisfy({ $0.matchesCurrentObject() }) else {
+                obstructions.append(ManagedProcessLiveObstruction(
+                    processID: pid,
+                    reason: "authenticated historical Runtime changed at the final signal boundary; no signal was sent"
                 ))
                 continue
             }
@@ -6479,7 +8057,8 @@ actor SafeProcessRunner {
                 )
             case .trackedFoundationProcess:
                 signalError = Darwin.kill(pid, signal) == 0 ? nil : errno
-            case .managedWineJournal, .gameModeHostJournal:
+            case .managedWineJournal, .gameModeHostJournal,
+                 .forgePlayRuntimeProcessTable:
                 signalError = Darwin.kill(pid, signal) == 0 ? nil : errno
             }
             if let signalError, signalError != ESRCH {
@@ -6565,7 +8144,8 @@ actor SafeProcessRunner {
         switch source {
         case .trackedFoundationProcess, .trackedDescriptorBoundProcess:
             true
-        case .managedWineJournal, .gameModeHostJournal:
+        case .managedWineJournal, .gameModeHostJournal,
+             .forgePlayRuntimeProcessTable:
             false
         }
     }
@@ -6629,6 +8209,8 @@ actor SafeProcessRunner {
         case .managedWineJournal:
             2
         case .gameModeHostJournal:
+            1
+        case .forgePlayRuntimeProcessTable:
             1
         }
     }
@@ -7277,8 +8859,22 @@ actor SafeProcessRunner {
             let logDirectory,
             let externalStorageRoots
         ):
-            let rosettaAVXPolicy =
-                try managedWineRosettaAVXPolicySnapshotProvider()
+            var launchRuntimeCompatibility: [String: String] = [:]
+            var launchPreparationWarnings: [String] = []
+            let rosettaAVXPolicy: ManagedWineRosettaAVXPolicyV1
+            do {
+                rosettaAVXPolicy =
+                    try managedWineRosettaAVXPolicySnapshotProvider()
+            } catch {
+                rosettaAVXPolicy = .managedDefault
+                launchRuntimeCompatibility["rosettaAVXPolicyStatus"] =
+                    "invalid-override-fallback-default"
+                launchPreparationWarnings.append(
+                    "[ForgePlay] Invalid Rosetta AVX override was ignored; " +
+                        "the managed default was used: " +
+                        forgePlayTechnicalErrorSummary(error)
+                )
+            }
             guard let graphicsBackend else {
                 throw SafeProcessRunnerError.manualRendererSelectionRequired
             }
@@ -7296,19 +8892,55 @@ actor SafeProcessRunner {
                     graphicsBackend else {
                 throw SafeProcessRunnerError.invalidSteamCompatibilitySelection
             }
+            launchRuntimeCompatibility["rendererRequested"] =
+                compatibilitySelection.rendererSelection.rawValue
+            launchRuntimeCompatibility["frameGenerationRequested"] =
+                compatibilitySelection.frameGenerationConfiguration.isEnabled
+                    ? "enabled" : "disabled"
+            launchRuntimeCompatibility["wineChildPOSIXLocale"] =
+                compatibilitySelection.wineChildPOSIXLocalePolicy
+                    .localeIdentifier ?? "inherited"
+            var effectiveCompatibilitySelection = compatibilitySelection
+            var frameGenerationConfiguration =
+                compatibilitySelection.frameGenerationConfiguration
+            do {
+                try frameGenerationConfiguration.validate(
+                    isSupportedRenderer:
+                        compatibilitySelection.rendererSelection
+                            .supportsD3DMetalFrameGeneration
+                )
+            } catch {
+                frameGenerationConfiguration = .off
+                launchRuntimeCompatibility["frameGenerationStatus"] =
+                    "invalid-selection-disabled"
+                launchPreparationWarnings.append(
+                    "[ForgePlay] Invalid Frame Generation settings were " +
+                        "disabled for this launch: " +
+                        forgePlayTechnicalErrorSummary(error)
+                )
+            }
             let logs = Self.logPair(in: logDirectory, name: "steam_launch")
             let runIdentifier = ProcessRunEvidenceWriter.runIdentifier(for: logs.stderr)
-            let gameRunLogDirectory = logDirectory.appending(
-                path: "GameRuns/\(runIdentifier)",
-                directoryHint: .isDirectory
-            )
+            let gameRunLogDirectory: URL
+            var gameRunDiagnosticMarker: String?
             // Renderer and crash diagnostics for an actual Steam session use
             // the managed GameRuns UUID directory. Non-launch Wine actions
             // keep their lifecycle journal out of this game-only namespace.
-            _ = try makeGameRunEvidenceDirectory(
-                in: logDirectory,
-                runIdentifier: runIdentifier
-            )
+            // Failure to create this optional diagnostic namespace degrades
+            // telemetry to the primary launch-log directory but never owns
+            // permission to prevent the actual Steam process from spawning.
+            do {
+                gameRunLogDirectory = try makeGameRunEvidenceDirectory(
+                    in: logDirectory,
+                    runIdentifier: runIdentifier
+                )
+            } catch {
+                gameRunLogDirectory = logDirectory.standardizedFileURL
+                gameRunDiagnosticMarker =
+                    "[ForgePlay] GameRuns diagnostics unavailable; using " +
+                    "the primary launch log directory: " +
+                    forgePlayTechnicalErrorSummary(error)
+            }
             let processObservationLog = logs.stderr
                 .deletingPathExtension()
                 .appendingPathExtension("process-observation.log")
@@ -7328,40 +8960,180 @@ actor SafeProcessRunner {
                 for: steamLaunch.executable,
                 graphicsBackend: steamClientGraphicsBackend
             )
-            var environment = try Self.runnerEnvironment(
-                for: steamLaunch.executable,
-                base: try Self.launchSteamBaseEnvironment(
+            let launchBaseEnvironment: [String: String]
+            do {
+                launchBaseEnvironment = try Self.launchSteamBaseEnvironment(
                     runnerExecutable: steamLaunch.executable,
                     prefix: prefix,
                     gameGraphicsBackend: graphicsBackend,
-                    compatibilitySelection: compatibilitySelection,
+                    compatibilitySelection: effectiveCompatibilitySelection,
+                    frameGenerationConfiguration: frameGenerationConfiguration,
                     logDirectory: gameRunLogDirectory,
                     processObservationLog: processObservationLog,
                     correlationIdentifier: runIdentifier,
-                    rosettaAVXPolicy: rosettaAVXPolicy,
-                    supplementalRendererAuthenticator:
-                        supplementalRendererAuthenticator
-                ),
+                    rosettaAVXPolicy: rosettaAVXPolicy
+                )
+                launchRuntimeCompatibility["rendererEffective"] =
+                    effectiveCompatibilitySelection.rendererSelection.rawValue
+            } catch let requestedRendererError {
+                if effectiveCompatibilitySelection.rendererSelection
+                    .usesD3DMetalNVIDIACompatibility {
+                    effectiveCompatibilitySelection =
+                        SteamPrelaunchCompatibilitySelection(
+                            rendererSelection: .d3dMetal,
+                            frameGenerationConfiguration: .off,
+                            networkSelection:
+                                compatibilitySelection.networkSelection,
+                            audioInputSelection:
+                                compatibilitySelection.audioInputSelection,
+                            fpsCursorPolicy:
+                                compatibilitySelection.fpsCursorPolicy,
+                            controllerPolicy:
+                                compatibilitySelection.controllerPolicy,
+                            keyboardMapping:
+                                compatibilitySelection.keyboardMapping,
+                            managedWineChildPolicy:
+                                compatibilitySelection.managedWineChildPolicy,
+                            wineChildPOSIXLocalePolicy:
+                                compatibilitySelection.wineChildPOSIXLocalePolicy
+                        )
+                    frameGenerationConfiguration = .off
+                    launchRuntimeCompatibility["nvidiaPreparationStatus"] =
+                        "failed-fallback-d3dmetal"
+                    launchRuntimeCompatibility["frameGenerationStatus"] =
+                        "disabled-nvidia-fallback"
+                    launchPreparationWarnings.append(
+                        "[ForgePlay] NVIDIA/MetalFX renderer preparation " +
+                            "failed; effective renderer=d3dMetal and Frame " +
+                            "Generation=disabled: " +
+                            forgePlayTechnicalErrorSummary(
+                                requestedRendererError
+                            )
+                    )
+                    do {
+                        launchBaseEnvironment = try Self
+                            .launchSteamBaseEnvironment(
+                                runnerExecutable: steamLaunch.executable,
+                                prefix: prefix,
+                                gameGraphicsBackend: .d3dMetal,
+                                compatibilitySelection:
+                                    effectiveCompatibilitySelection,
+                                frameGenerationConfiguration: .off,
+                                logDirectory: gameRunLogDirectory,
+                                processObservationLog: processObservationLog,
+                                correlationIdentifier: runIdentifier,
+                                rosettaAVXPolicy: rosettaAVXPolicy
+                            )
+                        launchRuntimeCompatibility["rendererEffective"] =
+                            SteamRendererPolicySelection.d3dMetal.rawValue
+                    } catch let plainD3DMetalError {
+                        launchBaseEnvironment = try Self
+                            .launchSteamBaseEnvironment(
+                                runnerExecutable: steamLaunch.executable,
+                                prefix: prefix,
+                                gameGraphicsBackend: nil,
+                                compatibilitySelection:
+                                    effectiveCompatibilitySelection,
+                                frameGenerationConfiguration: .off,
+                                logDirectory: gameRunLogDirectory,
+                                processObservationLog: processObservationLog,
+                                correlationIdentifier: runIdentifier,
+                                rosettaAVXPolicy: rosettaAVXPolicy
+                            )
+                        launchRuntimeCompatibility["rendererEffective"] =
+                            "baseWine"
+                        launchRuntimeCompatibility["rendererFallbackStatus"] =
+                            "renderer-injection-unavailable"
+                        launchPreparationWarnings.append(
+                            "[ForgePlay] Plain D3DMetal renderer injection " +
+                                "was unavailable; Steam and game children " +
+                                "continued on base Wine: " +
+                                forgePlayTechnicalErrorSummary(
+                                    plainD3DMetalError
+                                )
+                        )
+                    }
+                } else {
+                    effectiveCompatibilitySelection =
+                        SteamPrelaunchCompatibilitySelection(
+                            rendererSelection:
+                                compatibilitySelection.rendererSelection,
+                            frameGenerationConfiguration: .off,
+                            networkSelection:
+                                compatibilitySelection.networkSelection,
+                            audioInputSelection:
+                                compatibilitySelection.audioInputSelection,
+                            fpsCursorPolicy:
+                                compatibilitySelection.fpsCursorPolicy,
+                            controllerPolicy:
+                                compatibilitySelection.controllerPolicy,
+                            keyboardMapping:
+                                compatibilitySelection.keyboardMapping,
+                            managedWineChildPolicy:
+                                compatibilitySelection.managedWineChildPolicy,
+                            wineChildPOSIXLocalePolicy:
+                                compatibilitySelection.wineChildPOSIXLocalePolicy
+                        )
+                    frameGenerationConfiguration = .off
+                    launchBaseEnvironment = try Self.launchSteamBaseEnvironment(
+                        runnerExecutable: steamLaunch.executable,
+                        prefix: prefix,
+                        gameGraphicsBackend: nil,
+                        compatibilitySelection:
+                            effectiveCompatibilitySelection,
+                        frameGenerationConfiguration: .off,
+                        logDirectory: gameRunLogDirectory,
+                        processObservationLog: processObservationLog,
+                        correlationIdentifier: runIdentifier,
+                        rosettaAVXPolicy: rosettaAVXPolicy
+                    )
+                    launchRuntimeCompatibility["rendererEffective"] =
+                        "baseWine"
+                    launchRuntimeCompatibility["rendererFallbackStatus"] =
+                        "renderer-injection-unavailable"
+                    launchPreparationWarnings.append(
+                        "[ForgePlay] Renderer injection was unavailable; " +
+                            "Steam and game children continued on base Wine: " +
+                            forgePlayTechnicalErrorSummary(
+                                requestedRendererError
+                            )
+                    )
+                }
+            }
+            do {
+                _ = try Self.appliedSynchronizationProfile(in: prefix)
+            } catch {
+                launchRuntimeCompatibility["synchronizationProfileStatus"] =
+                    "invalid-fallback-server"
+                launchPreparationWarnings.append(
+                    "[ForgePlay] Invalid synchronization metadata was " +
+                        "ignored; the server backend was used: " +
+                        forgePlayTechnicalErrorSummary(error)
+                )
+            }
+            var environment = try Self.runnerEnvironment(
+                for: steamLaunch.executable,
+                base: launchBaseEnvironment,
                 graphicsBackend: steamClientGraphicsBackend,
                 exposesVulkanICD: exposesVulkanICD,
                 injectGraphicsDLLOverrides: false,
+                allowsInvalidPrefixSynchronizationProfileForCleanup: true,
                 rosettaAVXPolicy: rosettaAVXPolicy
             )
+            let fallbackGameModeEvidenceLog = logs.stderr
+                .deletingPathExtension()
+                .appendingPathExtension("game-mode-host.jsonl")
             switch gameModePolicy {
             case .standard:
                 environment = GameModeHostEnvironment.applyingStandardLaunch(
                     to: environment,
-                    evidenceLogURL: logs.stderr
-                        .deletingPathExtension()
-                        .appendingPathExtension("game-mode-host.jsonl"),
+                    evidenceLogURL: fallbackGameModeEvidenceLog,
                     runIdentifier: runIdentifier
                 )
             case .experimentalRequiredHost:
                 let gameModeEvidenceLog = try GameModeHostCoordinationPaths
                     .evidenceLogURL(
-                        fallbackLogURL: logs.stderr
-                            .deletingPathExtension()
-                            .appendingPathExtension("game-mode-host.jsonl"),
+                        fallbackLogURL: fallbackGameModeEvidenceLog,
                         fileManager: fileManager,
                         primaryApplicationGroupIdentifier:
                             gameModeHostApplicationGroupIdentifier,
@@ -7381,14 +9153,13 @@ actor SafeProcessRunner {
             }
             environment = SteamExternalStorageProcessGrant
                 .removingEnvironment(from: environment)
-            var launchRuntimeCompatibility: [String: String] = [:]
-            if compatibilitySelection.managedWineChildPolicy != nil {
+            if effectiveCompatibilitySelection.managedWineChildPolicy != nil {
                 launchRuntimeCompatibility[
                     "externalStorageGrantRequiredForManagedChild"
                 ] = "true"
             }
             if sandboxEnabled,
-               compatibilitySelection.managedWineChildPolicy != nil,
+               effectiveCompatibilitySelection.managedWineChildPolicy != nil,
                externalStorageRoots.isEmpty {
                 throw SteamExternalStorageGrantPreparationError(
                     reasonCode: "root-required",
@@ -7420,7 +9191,8 @@ actor SafeProcessRunner {
                     throw SteamExternalStorageGrantPreparationError(
                         reasonCode: reasonCode,
                         requiredForManagedChild:
-                            compatibilitySelection.managedWineChildPolicy != nil
+                            effectiveCompatibilitySelection
+                                .managedWineChildPolicy != nil
                     )
                 }
             }
@@ -7439,10 +9211,24 @@ actor SafeProcessRunner {
                 startupValidationInterval: steamLaunch.validatesStartup ? 6 : 0,
                 processObservationLog: processObservationLog,
                 anchoredLibraryPathIdentity:
-                    compatibilitySelection.managedWineChildPolicy?
+                    effectiveCompatibilitySelection.managedWineChildPolicy?
                         .anchoredLibraryPathIdentity
             )
             spec.managedWineRosettaAVXPolicy = rosettaAVXPolicy
+            if let gameRunDiagnosticMarker {
+                spec.preparationDiagnosticMarkers.append(
+                    gameRunDiagnosticMarker
+                )
+            }
+            spec.preparationDiagnosticMarkers.append(
+                contentsOf: launchPreparationWarnings
+            )
+            if !launchPreparationWarnings.isEmpty {
+                spec.runtimeCompatibility["advisoryFallbackCount"] =
+                    String(launchPreparationWarnings.count)
+                spec.preparationDiagnosticWarning =
+                    launchPreparationWarnings.joined(separator: " | ")
+            }
             return spec
         case .launchWindowsUtility(
             let runtimeExecutable,
@@ -7480,9 +9266,7 @@ actor SafeProcessRunner {
                 let rendererModules = try Self.rendererWindowsModuleFiles(
                     for: utilityLaunch.executable,
                     graphicsBackend: graphicsBackend,
-                    prefix: prefix,
-                    supplementalRendererAuthenticator:
-                        supplementalRendererAuthenticator
+                    prefix: prefix
                 )
                 guard !rendererModules.isEmpty else {
                     throw SafeProcessRunnerError.gameRendererPayloadMissing(
@@ -7497,9 +9281,7 @@ actor SafeProcessRunner {
                 graphicsBackend: graphicsBackend,
                 exposesVulkanICD: graphicsBackend == .vulkan,
                 injectGraphicsDLLOverrides: graphicsBackend != nil,
-                rosettaAVXPolicy: rosettaAVXPolicy,
-                supplementalRendererAuthenticator:
-                    supplementalRendererAuthenticator
+                rosettaAVXPolicy: rosettaAVXPolicy
             )
             environment = SteamExternalStorageProcessGrant
                 .removingEnvironment(from: environment)
@@ -7608,6 +9390,33 @@ actor SafeProcessRunner {
                 stdoutLog: logs.stdout,
                 stderrLog: logs.stderr,
                 timeout: 30
+            )
+        case .importRegistryFile(
+            let runtimeExecutable,
+            let prefix,
+            let registryFile,
+            let logDirectory
+        ):
+            let logs = Self.logPair(
+                in: logDirectory,
+                name: "registry_batch_import"
+            )
+            return CommandSpec(
+                actionName: "importRegistryFile",
+                executable: runtimeExecutable,
+                arguments: [
+                    "reg",
+                    "import",
+                    Self.windowsHostPath(for: registryFile)
+                ],
+                environment: try Self.runnerEnvironment(
+                    for: runtimeExecutable,
+                    base: ["WINEPREFIX": prefix.path]
+                ),
+                workingDirectory: prefix,
+                stdoutLog: logs.stdout,
+                stderrLog: logs.stderr,
+                timeout: 60
             )
         case .setRegistryValue(
             let runtimeExecutable,
@@ -7933,7 +9742,7 @@ actor SafeProcessRunner {
         spec.runtimeCompatibility["managedWineActiveSessionDescriptor"] =
             "schema-1-owner-private-atomic"
         spec.runtimeCompatibility["managedWineOwnerDeathContainment"] =
-            "wineserver-owner-process-v2-graceful-hard-watchdog"
+            "all-loaders-owner-process-v3-graceful-hard-watchdog"
         return spec
     }
 
@@ -7941,29 +9750,41 @@ actor SafeProcessRunner {
         in logDirectory: URL
     ) throws -> URL {
         do {
+            let normalizedLogDirectory = logDirectory.standardizedFileURL
             try fileManager.createDirectory(
-                at: logDirectory,
+                at: normalizedLogDirectory,
                 withIntermediateDirectories: true
             )
             try Self.requireNonSymlinkDirectory(
-                logDirectory,
+                normalizedLogDirectory,
                 fileManager: fileManager,
                 unsafeError: SafeProcessRunnerError.cannotCreateLog
             )
-            let directory = logDirectory.appending(
+            let stableParent = normalizedLogDirectory.lastPathComponent ==
+                ForgePlayPathRole.logs.rawValue
+                ? normalizedLogDirectory
+                : normalizedLogDirectory.deletingLastPathComponent()
+            try Self.requireNonSymlinkDirectory(
+                stableParent,
+                fileManager: fileManager,
+                unsafeError: SafeProcessRunnerError.cannotCreateLog
+            )
+            let directory = stableParent.appending(
                 path: ManagedWineProcessJournal.evidenceDirectoryName,
                 directoryHint: .isDirectory
             )
             try Self.createPrivateDiagnosticDirectory(
                 directory,
-                parent: logDirectory,
+                parent: stableParent,
                 fileManager: fileManager
             )
             return directory
         } catch let error as SafeProcessRunnerError {
             throw error
         } catch {
-            throw SafeProcessRunnerError.cannotCreateLog(logDirectory)
+            throw SafeProcessRunnerError.cannotCreateLog(
+                logDirectory.standardizedFileURL
+            )
         }
     }
 
@@ -8108,14 +9929,13 @@ actor SafeProcessRunner {
     private static func launchSteamBaseEnvironment(
         runnerExecutable: URL,
         prefix: URL,
-        gameGraphicsBackend: SteamRendererPolicyPreference,
+        gameGraphicsBackend: SteamRendererPolicyPreference?,
         compatibilitySelection: SteamPrelaunchCompatibilitySelection,
+        frameGenerationConfiguration: FrameGenerationConfiguration,
         logDirectory: URL,
         processObservationLog: URL,
         correlationIdentifier: String,
-        rosettaAVXPolicy: ManagedWineRosettaAVXPolicyV1,
-        supplementalRendererAuthenticator:
-            any AppleSupplementalRendererAuthenticating
+        rosettaAVXPolicy: ManagedWineRosettaAVXPolicyV1
     ) throws -> [String: String] {
         var environment = [
             "WINEPREFIX": prefix.path,
@@ -8137,6 +9957,12 @@ actor SafeProcessRunner {
             "FORGEPLAY_AUDIO_INPUT_MODE":
                 compatibilitySelection.audioInputSelection.rawValue
         ]
+        if let locale =
+            compatibilitySelection.wineChildPOSIXLocalePolicy.localeIdentifier {
+            environment[wineChildPOSIXLocaleFallbackEnvironmentKey] = locale
+            environment["LANG"] = locale
+            environment["LC_ALL"] = locale
+        }
         if let policy = compatibilitySelection.managedWineChildPolicy {
             environment[
                 Helldivers2ManagedWineChildPolicyContract.policyVersionKey
@@ -8174,12 +10000,28 @@ actor SafeProcessRunner {
            !wineDebug.isEmpty {
             environment["WINEDEBUG"] = wineDebug
         }
-        if compatibilitySelection.rendererSelection
+        if let gameGraphicsBackend {
+            environment.merge(
+                try steamGameRendererPolicyEnvironment(
+                    for: runnerExecutable,
+                    prefix: prefix,
+                    graphicsBackend: gameGraphicsBackend,
+                    rendererSelection:
+                        compatibilitySelection.rendererSelection,
+                    frameGenerationConfiguration:
+                        frameGenerationConfiguration,
+                    networkSelection:
+                        compatibilitySelection.networkSelection,
+                    logDirectory: logDirectory,
+                    rosettaAVXPolicy: rosettaAVXPolicy
+                ),
+                uniquingKeysWith: { _, rendererValue in rendererValue }
+            )
+        }
+        if gameGraphicsBackend != nil,
+           compatibilitySelection.rendererSelection
             .usesD3DMetalNVIDIACompatibility {
-            // NVIDIA Streamline 2.7+ honors these documented overrides. Keep
-            // its file in the per-launch GameRuns directory so a field test
-            // can distinguish an adapter/driver-store rejection from a later
-            // NGX bridge load failure.
+            // NVIDIA Streamline 2.7+ honors these documented overrides.
             environment["SL_ENABLE_CONSOLE_LOGGING"] = "0"
             environment["SL_LOG_LEVEL"] = "2"
             environment["SL_LOG_PATH"] =
@@ -8187,22 +10029,13 @@ actor SafeProcessRunner {
             environment["SL_LOG_NAME"] =
                 "forgeplay-streamline.log"
         }
-        environment.merge(
-            try steamGameRendererPolicyEnvironment(
-                for: runnerExecutable,
-                prefix: prefix,
-                graphicsBackend: gameGraphicsBackend,
-                rendererSelection:
-                    compatibilitySelection.rendererSelection,
-                networkSelection:
-                    compatibilitySelection.networkSelection,
-                logDirectory: logDirectory,
-                rosettaAVXPolicy: rosettaAVXPolicy,
-                supplementalRendererAuthenticator:
-                    supplementalRendererAuthenticator
-            ),
-            uniquingKeysWith: { _, rendererValue in rendererValue }
-        )
+        if gameGraphicsBackend != nil,
+           frameGenerationConfiguration.isEnabled {
+            environment[
+                "FORGEPLAY_GAME_RENDERER_ENV_" +
+                    FrameGenerationEnvironmentContract.observationFileKey
+            ] = processObservationLog.standardizedFileURL.path
+        }
         return environment
     }
 
@@ -8211,12 +10044,10 @@ actor SafeProcessRunner {
         prefix: URL,
         graphicsBackend: SteamRendererPolicyPreference,
         rendererSelection: SteamRendererPolicySelection? = nil,
+        frameGenerationConfiguration: FrameGenerationConfiguration = .off,
         networkSelection: SteamNetworkCompatibilitySelection = .standard,
         logDirectory: URL,
-        rosettaAVXPolicy: ManagedWineRosettaAVXPolicyV1? = nil,
-        supplementalRendererAuthenticator:
-            any AppleSupplementalRendererAuthenticating =
-                AppleSupplementalRendererTrustPolicy()
+        rosettaAVXPolicy: ManagedWineRosettaAVXPolicyV1? = nil
     ) throws -> [String: String] {
         let resolvedRendererSelection =
             rendererSelection ??
@@ -8225,6 +10056,10 @@ actor SafeProcessRunner {
                 graphicsBackend else {
             throw SafeProcessRunnerError.invalidSteamCompatibilitySelection
         }
+        try frameGenerationConfiguration.validate(
+            isSupportedRenderer:
+                resolvedRendererSelection.supportsD3DMetalFrameGeneration
+        )
         switch graphicsBackend {
         case .d3dMetal:
             return try d3dMetalSteamGameRendererPolicyEnvironment(
@@ -8233,10 +10068,9 @@ actor SafeProcessRunner {
                 logDirectory: logDirectory,
                 scope: .direct3D12,
                 rendererSelection: resolvedRendererSelection,
+                frameGenerationConfiguration: frameGenerationConfiguration,
                 networkSelection: networkSelection,
-                rosettaAVXPolicy: rosettaAVXPolicy,
-                supplementalRendererAuthenticator:
-                    supplementalRendererAuthenticator
+                rosettaAVXPolicy: rosettaAVXPolicy
             )
         case .dxmt:
             return try dxmtSteamGameRendererPolicyEnvironment(
@@ -8273,19 +10107,16 @@ actor SafeProcessRunner {
         logDirectory: URL,
         scope: D3DMetalRendererPayloadContract.LaunchScope,
         rendererSelection: SteamRendererPolicySelection,
+        frameGenerationConfiguration: FrameGenerationConfiguration,
         networkSelection: SteamNetworkCompatibilitySelection,
-        rosettaAVXPolicy: ManagedWineRosettaAVXPolicyV1?,
-        supplementalRendererAuthenticator:
-            any AppleSupplementalRendererAuthenticating
+        rosettaAVXPolicy: ManagedWineRosettaAVXPolicyV1?
     ) throws -> [String: String] {
         let d3dMetalRoot = try requiredD3DMetalRendererRoot(
             for: executable,
             prefix: prefix,
             scope: scope,
             requiresNVIDIACompatibility:
-                rendererSelection.usesD3DMetalNVIDIACompatibility,
-            supplementalRendererAuthenticator:
-                supplementalRendererAuthenticator
+                rendererSelection.usesD3DMetalNVIDIACompatibility
         )
         var selectedModules: [String: [URL]] = [:]
         try appendRendererWindowsModuleFilesByWindowsDirectory(
@@ -8295,6 +10126,7 @@ actor SafeProcessRunner {
         )
         if !rendererSelection.usesD3DMetalNVIDIACompatibility {
             let nvidiaOnlyNames: Set<String> = [
+                "_nvngx.dll",
                 "nvapi.dll",
                 "nvapi64.dll",
                 "nvngx.dll",
@@ -8351,7 +10183,8 @@ actor SafeProcessRunner {
             requiresVulkan: false,
             d3dMetalRoot: d3dMetalRoot,
             d3dMetalNGXBridgeRoot: ngxBridgeRoot,
-            rosettaAVXPolicy: rosettaAVXPolicy
+            rosettaAVXPolicy: rosettaAVXPolicy,
+            frameGenerationConfiguration: frameGenerationConfiguration
         )
     }
 
@@ -8359,10 +10192,7 @@ actor SafeProcessRunner {
         for executable: URL,
         prefix: URL,
         scope: D3DMetalRendererPayloadContract.LaunchScope,
-        requiresNVIDIACompatibility: Bool = false,
-        supplementalRendererAuthenticator:
-            any AppleSupplementalRendererAuthenticating =
-                AppleSupplementalRendererTrustPolicy()
+        requiresNVIDIACompatibility: Bool = false
     ) throws -> URL {
         let fileManager = FileManager.default
         var candidates = rendererSupportContentsDirectories(for: executable).map {
@@ -8378,10 +10208,7 @@ actor SafeProcessRunner {
         }
         // The app-bundled renderer is authoritative. A managed Apple renderer is
         // considered only when no bundled root satisfies this exact generation.
-        let supplemental = usableSupplementalRendererRoot(
-            containingPrefix: prefix
-        )
-        if let supplemental {
+        if let supplemental = usableSupplementalRendererRoot(containingPrefix: prefix) {
             candidates.append(supplemental)
         }
         if let selected = deduplicated(candidates).first(where: { candidate in
@@ -8395,14 +10222,6 @@ actor SafeProcessRunner {
                     fileManager: fileManager
                 ))
         }) {
-            if let supplemental,
-               selected.standardizedFileURL ==
-                supplemental.standardizedFileURL {
-                try supplementalRendererAuthenticator.authenticate(
-                    rendererRoot: selected,
-                    fileManager: fileManager
-                )
-            }
             return selected
         }
         let providerDetail = requiresNVIDIACompatibility
@@ -8418,19 +10237,31 @@ actor SafeProcessRunner {
     /// Materializing the derived `nvngx.dll` remains part of launch preparation.
     static func validateD3DMetalNVIDIACompatibilityPayload(
         for executable: URL,
-        prefix: URL,
-        supplementalRendererAuthenticator:
-            any AppleSupplementalRendererAuthenticating =
-                AppleSupplementalRendererTrustPolicy()
+        prefix: URL
     ) throws {
         _ = try requiredD3DMetalRendererRoot(
             for: executable,
             prefix: prefix,
             scope: .direct3D12,
-            requiresNVIDIACompatibility: true,
-            supplementalRendererAuthenticator:
-                supplementalRendererAuthenticator
+            requiresNVIDIACompatibility: true
         )
+    }
+
+    /// Returns the production bundle location without turning an optional
+    /// runtime feature into a Steam/game launch gate. Release packaging proves
+    /// that this signed dylib exists. If a deployed bundle is damaged, the Wine
+    /// owner records an explicit frame-generation error and keeps its original
+    /// Metal view visible instead of terminating the game or silently claiming
+    /// frame generation is active.
+    private static func d3dMetalFrameGenerationProxyURL(
+        for executable: URL
+    ) -> URL {
+        let contentsDirectory = bundleContentsDirectory(for: executable) ??
+            wineRootDirectory(for: executable)?.deletingLastPathComponent() ??
+            executable.deletingLastPathComponent()
+        return contentsDirectory.appending(
+            path: "Frameworks/ForgePlayD3DMetalFrameGenerationProxy.dylib"
+        ).standardizedFileURL
     }
 
     private static func fixedSteamGameRendererPolicyEnvironment(
@@ -8600,7 +10431,8 @@ actor SafeProcessRunner {
         requiresVulkan: Bool,
         d3dMetalRoot: URL?,
         d3dMetalNGXBridgeRoot: URL?,
-        rosettaAVXPolicy: ManagedWineRosettaAVXPolicyV1?
+        rosettaAVXPolicy: ManagedWineRosettaAVXPolicyV1?,
+        frameGenerationConfiguration: FrameGenerationConfiguration = .off
     ) throws -> [String: String] {
         let x64Directories = rendererModuleDirectories(
             modulesByWindowsDirectory["system32", default: []]
@@ -8693,18 +10525,20 @@ actor SafeProcessRunner {
                 )
                 rendererEnvironment["D3DM_ENABLE_METALFX"] = "1"
                 rendererEnvironment["D3DM_NVNGX_PATH"] = ngxWindowsDirectory.path
-                rendererEnvironment["D3DM_VENDOR_ID"] = "0x10de"
-                // Streamline 2.8 enumerates physical GPUs before explicitly
-                // initializing NVAPI. The scoped Wine loader bootstrap primes
-                // Apple's verified nvapi64 module before the game entry point.
-                rendererEnvironment["FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP"] = "1"
+                let identity =
+                    GraphicsIdentityPolicy.nvidiaRTX4090Driver56109
+                rendererEnvironment["D3DM_VENDOR_ID"] = identity.vendorID
+                rendererEnvironment.merge(
+                    identity.childEnvironment,
+                    uniquingKeysWith: { _, policyValue in policyValue }
+                )
             } else {
                 rendererEnvironment.removeValue(forKey: "D3DM_ENABLE_METALFX")
                 rendererEnvironment.removeValue(forKey: "D3DM_NVNGX_PATH")
                 rendererEnvironment.removeValue(forKey: "D3DM_VENDOR_ID")
-                rendererEnvironment.removeValue(
-                    forKey: "FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP"
-                )
+                for key in GraphicsIdentityPolicy.EnvironmentKey.all {
+                    rendererEnvironment.removeValue(forKey: key)
+                }
             }
         } else {
             for key in [
@@ -8714,9 +10548,31 @@ actor SafeProcessRunner {
                 "D3DM_WINE_UNIX_CALL",
                 "D3DM_ENABLE_METALFX",
                 "D3DM_NVNGX_PATH",
-                "D3DM_VENDOR_ID",
-                "FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP"
-            ] {
+                "D3DM_VENDOR_ID"
+            ] + GraphicsIdentityPolicy.EnvironmentKey.all {
+                rendererEnvironment.removeValue(forKey: key)
+            }
+        }
+        if d3dMetalRoot != nil,
+           requested.usesD3DMetalNVIDIACompatibility,
+           frameGenerationConfiguration.isEnabled {
+            let proxy = d3dMetalFrameGenerationProxyURL(
+                for: executable
+            )
+            rendererEnvironment[
+                FrameGenerationEnvironmentContract.enabledKey
+            ] = "1"
+            rendererEnvironment[
+                FrameGenerationEnvironmentContract.targetFrameRateKey
+            ] = String(frameGenerationConfiguration.targetFrameRate.rawValue)
+            rendererEnvironment[
+                FrameGenerationEnvironmentContract.frameCheckEnabledKey
+            ] = frameGenerationConfiguration.isFrameCheckEnabled ? "1" : "0"
+            rendererEnvironment[
+                FrameGenerationEnvironmentContract.proxyPathKey
+            ] = proxy.path
+        } else {
+            for key in frameGenerationEnvironmentKeys {
                 rendererEnvironment.removeValue(forKey: key)
             }
         }
@@ -8782,6 +10638,14 @@ actor SafeProcessRunner {
             SteamBaseRuntimeCompatibilityHelperContract.environmentKey:
                 SteamBaseRuntimeCompatibilityHelperContract.encodedRules
         ]
+        if requested.usesD3DMetalNVIDIACompatibility {
+            policyEnvironment[
+                D3DMetalNVIDIAProviderContract
+                    .providerAliasPathsEnvironmentKey
+            ] = D3DMetalNVIDIAProviderContract
+                .exactNGXAliasWindowsPaths
+                .joined(separator: ";")
+        }
         for key in gameRendererUnixEnvironmentKeys {
             policyEnvironment["FORGEPLAY_GAME_RENDERER_ENV_\(key)"] =
                 rendererEnvironment[key] ?? gameRendererUnsetValue
@@ -8858,6 +10722,25 @@ actor SafeProcessRunner {
         case .installRuntime(_, let prefix, let installer, _, _):
             try requireRunnerDirectory(prefix)
             try requireRunnerRegularFile(installer)
+        case .importRegistryFile(
+            _, let prefix, let registryFile, let logDirectory
+        ):
+            try requireRunnerDirectory(prefix)
+            try requireRunnerDirectory(logDirectory)
+            try requireRunnerRegularFile(registryFile)
+            guard registryFile.pathExtension.lowercased() == "reg",
+                  FileSystemItemPolicy.hasOnlyNonSymlinkDirectoryComponents(
+                    from: logDirectory,
+                    to: registryFile,
+                    fileManager: fileManager
+                  ),
+                  let values = try? registryFile.resourceValues(
+                    forKeys: [.fileSizeKey]
+                  ),
+                  let byteCount = values.fileSize,
+                  (1...1_048_576).contains(byteCount) else {
+                throw SafeProcessRunnerError.unsafeActionInput(registryFile)
+            }
         case .setWindowsVersion(_, let prefix, _, _),
              .setRegistryValue(_, let prefix, _, _, _, _, _, _),
              .setDLLOverride(_, let prefix, _, _, _),
@@ -8957,6 +10840,14 @@ actor SafeProcessRunner {
         inherited: [String: String] = ProcessInfo.processInfo.environment
     ) -> [String: String] {
         var environment = sanitizedParentEnvironment(from: inherited)
+        if overrides[wineChildPOSIXLocaleFallbackEnvironmentKey] ==
+            SteamWineChildPOSIXLocalePolicy.englishUTF8FontFallback
+                .localeIdentifier {
+            for key in Array(environment.keys)
+                where key == "LC_ALL" || key.hasPrefix("LC_") {
+                environment.removeValue(forKey: key)
+            }
+        }
         for (key, value) in overrides {
             environment[key] = value
         }
@@ -9021,6 +10912,31 @@ actor SafeProcessRunner {
             ],
             synchronizationBackend: environment[
                 "FORGEPLAY_SYNCHRONIZATION_BACKEND"
+            ],
+            gameModeHostRequested: environment[
+                GameModeHostEnvironment.requestedKey
+            ],
+            gameModeHostAvailability: environment[
+                GameModeHostEnvironment.availabilityKey
+            ],
+            gameModeHostDisabledReason: environment[
+                GameModeHostEnvironment.disabledReasonKey
+            ],
+            frameGenerationEnabled: environment[
+                "FORGEPLAY_GAME_RENDERER_ENV_" +
+                    FrameGenerationEnvironmentContract.enabledKey
+            ],
+            frameGenerationTargetFrameRate: environment[
+                "FORGEPLAY_GAME_RENDERER_ENV_" +
+                    FrameGenerationEnvironmentContract.targetFrameRateKey
+            ],
+            frameCheckEnabled: environment[
+                "FORGEPLAY_GAME_RENDERER_ENV_" +
+                    FrameGenerationEnvironmentContract.frameCheckEnabledKey
+            ],
+            frameGenerationProxyPath: environment[
+                "FORGEPLAY_GAME_RENDERER_ENV_" +
+                    FrameGenerationEnvironmentContract.proxyPathKey
             ]
         )
     }
@@ -9322,10 +11238,7 @@ actor SafeProcessRunner {
         sandboxEnabled: Bool = ForgePlaySandboxPolicy.isAppSandboxEnabled,
         primaryApplicationGroupIdentifier: String? =
             ForgePlaySandboxPolicy.primaryApplicationGroupIdentifier,
-        applicationGroupContainerResolver: ((String) -> URL?)? = nil,
-        supplementalRendererAuthenticator:
-            any AppleSupplementalRendererAuthenticating =
-                AppleSupplementalRendererTrustPolicy()
+        applicationGroupContainerResolver: ((String) -> URL?)? = nil
     ) throws -> [String: String] {
         var environment = base
         // Launch admission supplies its one captured ambient policy. Commands
@@ -9352,16 +11265,7 @@ actor SafeProcessRunner {
                 )
             }
             applySynchronizationProfile(synchronizationProfile, to: &environment)
-            if graphicsBackend == .d3dMetal,
-               let candidate = usableSupplementalRendererRoot(
-                containingPrefix: prefix
-               ) {
-                try supplementalRendererAuthenticator.authenticate(
-                    rendererRoot: candidate,
-                    fileManager: .default
-                )
-                supplementalRendererRoot = candidate
-            }
+            supplementalRendererRoot = usableSupplementalRendererRoot(containingPrefix: prefix)
             if let applicationGroupIdentifier =
                     primaryApplicationGroupIdentifier {
                 let applicationGroupContainer: URL?
@@ -9582,17 +11486,12 @@ actor SafeProcessRunner {
     static func rendererWindowsModuleFiles(
         for executable: URL,
         graphicsBackend: SteamRendererPolicyPreference,
-        prefix: URL? = nil,
-        supplementalRendererAuthenticator:
-            any AppleSupplementalRendererAuthenticating =
-                AppleSupplementalRendererTrustPolicy()
+        prefix: URL? = nil
     ) throws -> [URL] {
         try rendererWindowsModuleFilesByWindowsDirectory(
             for: executable,
             graphicsBackend: graphicsBackend,
-            prefix: prefix,
-            supplementalRendererAuthenticator:
-                supplementalRendererAuthenticator
+            prefix: prefix
         )["system32"] ?? []
     }
 
@@ -9601,18 +11500,13 @@ actor SafeProcessRunner {
     /// is requested as `nvapi64.dll` but identifies itself as `nvapi.dll`.
     static func d3dMetalNVIDIAMetalFXSystem32Modules(
         for executable: URL,
-        prefix: URL,
-        supplementalRendererAuthenticator:
-            any AppleSupplementalRendererAuthenticating =
-                AppleSupplementalRendererTrustPolicy()
+        prefix: URL
     ) throws -> [URL] {
         let rendererRoot = try requiredD3DMetalRendererRoot(
             for: executable,
             prefix: prefix,
             scope: .direct3D12,
-            requiresNVIDIACompatibility: true,
-            supplementalRendererAuthenticator:
-                supplementalRendererAuthenticator
+            requiresNVIDIACompatibility: true
         )
         let bridgeRoot = try D3DMetalNGXBridgeContract.materialize(
             from: rendererRoot,
@@ -9627,6 +11521,9 @@ actor SafeProcessRunner {
             ),
             bridgeRoot.appending(
                 path: D3DMetalNGXBridgeContract.windowsModuleRelativePath
+            ),
+            bridgeRoot.appending(
+                path: D3DMetalNGXBridgeContract.windowsAliasRelativePath
             )
         ]
         for module in modules {
@@ -9638,10 +11535,7 @@ actor SafeProcessRunner {
     static func rendererWindowsModuleFilesByWindowsDirectory(
         for executable: URL,
         graphicsBackend: SteamRendererPolicyPreference,
-        prefix: URL? = nil,
-        supplementalRendererAuthenticator:
-            any AppleSupplementalRendererAuthenticating =
-                AppleSupplementalRendererTrustPolicy()
+        prefix: URL? = nil
     ) throws -> [String: [URL]] {
         let fileManager = FileManager.default
         var modulesByWindowsDirectory: [String: [URL]] = [:]
@@ -9708,10 +11602,6 @@ actor SafeProcessRunner {
             at: supplementalRendererRoot,
             fileManager: fileManager
            ) {
-            try supplementalRendererAuthenticator.authenticate(
-                rendererRoot: supplementalRendererRoot,
-                fileManager: fileManager
-            )
             try appendRendererWindowsModuleFilesByWindowsDirectory(
                 wineModulesRoot: supplementalRendererRoot.appending(path: "wine", directoryHint: .isDirectory),
                 fileManager: fileManager,
@@ -10758,6 +12648,7 @@ actor SafeProcessRunner {
     ].joined(separator: ",")
 
     nonisolated static let rendererBridgeDLLNames: Set<String> = [
+        "_nvngx.dll",
         "d3d8.dll",
         "d3d9.dll",
         "d3d10.dll",
@@ -10789,7 +12680,18 @@ actor SafeProcessRunner {
 
     private nonisolated static let defaultExecutableSearchPath = "/usr/bin:/bin:/usr/sbin:/sbin"
 
+    nonisolated static let wineChildPOSIXLocaleFallbackEnvironmentKey =
+        "FORGEPLAY_WINE_CHILD_POSIX_LOCALE_FALLBACK"
+
     private nonisolated static let gameRendererUnsetValue = "__FORGEPLAY_UNSET__"
+
+    private nonisolated static let frameGenerationEnvironmentKeys = [
+        FrameGenerationEnvironmentContract.enabledKey,
+        FrameGenerationEnvironmentContract.targetFrameRateKey,
+        FrameGenerationEnvironmentContract.frameCheckEnabledKey,
+        FrameGenerationEnvironmentContract.proxyPathKey,
+        FrameGenerationEnvironmentContract.observationFileKey
+    ]
 
     private nonisolated static let gameRendererUnixEnvironmentKeys = [
         "WINEDLLOVERRIDES",
@@ -10803,14 +12705,14 @@ actor SafeProcessRunner {
         "D3DM_ENABLE_METALFX",
         "D3DM_NVNGX_PATH",
         "D3DM_VENDOR_ID",
-        "FORGEPLAY_D3DMETAL_NVAPI_BOOTSTRAP",
         "FORGEPLAY_NETWORK_PROFILE",
         "VK_ICD_FILENAMES",
         "VK_DRIVER_FILES",
         "DXVK_LOG_PATH",
         "DXVK_LOG_LEVEL",
         "DXVK_CONFIG"
-    ]
+    ] + GraphicsIdentityPolicy.EnvironmentKey.all +
+        frameGenerationEnvironmentKeys
 
     private static func deduplicated(_ values: [String]) -> [String] {
         var seen = Set<String>()

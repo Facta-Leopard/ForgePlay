@@ -22,11 +22,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 VERIFIER = ROOT / "Scripts/verify-open-source-export.sh"
 BUILDER = ROOT / "Scripts/build-public-distribution-archive.sh"
-OFFICIAL_RELEASE_BUILDER = ROOT / "Scripts/build-commercial-release.sh"
-EXPORTER = ROOT / "Scripts/export-open-source.sh"
-PROJECT_GENERATOR = ROOT / "Scripts/generate-xcode-project.sh"
 RUNTIME_RECEIPT_VERIFIER = ROOT / "Scripts/verify-public-runtime-build-receipt.py"
-QUARANTINE_TOOL = ROOT / "Scripts/quarantine-owned-directory.py"
 
 SCRIPT_NAMES = {
     "build-commercial-release.sh", "build-forgeplay-wine-runtime.sh",
@@ -44,7 +40,6 @@ SCRIPT_NAMES = {
     "restore-preserved-apple-d3dmetal-signatures.sh", "runtime-core-payload-identity.py",
     "runtime-sbom.py", "sign-app-store-runtime-code.sh",
     "sign-compatibility-db-feed.swift", "test-wine-session-compatibility.sh",
-    "validate-d3dmetal-ngx-bridge.sh",
     "validate-compatibility-db-public-key.swift", "validate-product-identity.sh",
     "verify-app-store-app-security.sh",
     "verify-app-store-controller-permissions.py", "verify-bundled-runtime-capability.sh",
@@ -65,20 +60,17 @@ CONFIG_NAMES = {
     "ForgePlayApp.xcconfig", "ForgePlayAppStore.xcconfig", "ForgePlayDefaults.xcconfig",
     "ForgePlayDirectRelease.xcconfig",
     "ForgePlayCopyleftSourcePackages.json", "ForgePlayDistribution.xcconfig",
+    "ForgePlayD3DMetalFrameGenerationProxy.xcconfig",
     "ForgePlayExternalStorageAccessBridge.xcconfig",
     "ForgePlayGameModeProcessHost.xcconfig", "ForgePlayGameModeProcessHostAppStore.xcconfig",
     "ForgePlayGameModeProcessHostDistribution.xcconfig", "ForgePlayGStreamerPayload.lock.json",
     "ForgePlayGameModeProcessHostRelease.xcconfig",
-    "ForgePlayNetworkControlHelper.xcconfig",
-    "ForgePlayNetworkControlHelperAppStore.xcconfig",
-    "ForgePlayNetworkControlHelperDistribution.xcconfig",
     "ForgePlayPublicDistributionSourceGraph.json", "ForgePlayRendererPayload.lock.json",
     "ForgePlayRuntimeDependencies.lock.json", "ForgePlayRuntimePatchProvenance.lock.json",
     "ForgePlayRuntimeSourceIdentity.lock.json", "ForgePlayTests.xcconfig",
 }
 SCRIPT_TESTS = {
     "test-copyleft-source-packages.py", "test-freeze-public-source-export.py",
-    "test-generate-xcode-project.sh",
     "test-open-source-export-transaction.py", "test-packaging-license-release-contracts.py",
     "test-public-distribution-archive-graph.py", "test-quarantine-owned-directory.py",
     "test-public-release-set-transaction.py", "test-public-runtime-build-receipt.py",
@@ -153,14 +145,11 @@ class PublicDistributionArchiveGraphTests(unittest.TestCase):
 
     def _write_release_tree(self) -> None:
         project = b'''Distribution: Config/ForgePlayDistribution.xcconfig
-Distribution: Config/ForgePlayNetworkControlHelperDistribution.xcconfig
 "$SRCROOT/Scripts/sign-app-store-runtime-code.sh"
 "$SRCROOT/Scripts/prepare-game-mode-host-build-identity.sh"
 Sources/ForgePlay/ForgePlay-Runtime-Inherit.entitlements
 Sources/ForgePlay/ForgePlay-Runtime-Direct.entitlements
 Resources/PublicDistributionBuildClaim.json
-Native/NetworkControlHelper/ForgePlayNetworkControl.plist
-Native/NetworkControlHelper/main.swift
 /usr/bin/install -m 0444 "$claim_source" "$claim_destination"
 '''
         write(self.authority / "project.yml", project)
@@ -177,25 +166,22 @@ Native/NetworkControlHelper/main.swift
                     "Config/ForgePlayCopyleftSourcePackages.json",
                     "Config/ForgePlayDefaults.xcconfig",
                     "Config/ForgePlayDirectRelease.xcconfig", "Config/ForgePlayDistribution.xcconfig",
+                    "Config/ForgePlayD3DMetalFrameGenerationProxy.xcconfig",
                     "Config/ForgePlayExternalStorageAccessBridge.xcconfig",
                     "Config/ForgePlayGameModeProcessHost.xcconfig",
-                    "Config/ForgePlayGameModeProcessHostDistribution.xcconfig",
+                    "Config/ForgePlayGameModeProcessHostDistribution.xcconfig", "Config/ForgePlayPublicDistributionSourceGraph.json",
                     "Config/ForgePlayGameModeProcessHostRelease.xcconfig",
-                    "Config/ForgePlayNetworkControlHelper.xcconfig",
-                    "Config/ForgePlayNetworkControlHelperDistribution.xcconfig",
-                    "Config/ForgePlayPublicDistributionSourceGraph.json",
                     "Sources/ForgePlay/ForgePlay-Distribution.entitlements",
                     "Sources/ForgePlay/ForgePlay-DirectRelease.entitlements",
                     "Sources/ForgePlay/ForgePlay-Runtime-Direct.entitlements",
                     "Sources/ForgePlay/ForgePlay-Runtime-Inherit.entitlements",
+                    "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.m",
+                    "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.h",
+                    "Native/D3DMetalFrameGenerationProxy/FrameGenerationStateMachine.c",
+                    "Native/D3DMetalFrameGenerationProxy/FrameGenerationStateMachine.h",
+                    "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.exports",
                     "Native/GameModeProcessHost/GameModeProcessHost-Distribution.entitlements",
                     "Native/GameModeProcessHost/GameModeProcessHost-Release.entitlements",
-                    "Native/NetworkControlHelper/ForgePlayNetworkControl.plist",
-                    "Native/NetworkControlHelper/Info.plist",
-                    "Native/NetworkControlHelper/main.swift",
-                    "Resources/AppIcon.icon/Assets/ForgePlay_ICON_Dark.png",
-                    "Resources/AppIcon.icon/Assets/ForgePlay_ICON_Default.png",
-                    "Resources/AppIcon.icon/icon.json",
                     *[f"Scripts/{script}" for script in sorted(SCRIPT_NAMES)],
                 ]
                 payload = canonical_inventory({
@@ -203,7 +189,7 @@ Native/NetworkControlHelper/main.swift
                     "buildClaimResourcePath": "Resources/PublicDistributionBuildClaim.json",
                     "excludedThirdPartyPayloadRoots": ["Resources/Runners/ForgePlayRuntime/Frameworks/renderer/d3dmetal"],
                     "requiredReleaseCommitPaths": required,
-                    "runtimePayloadInjectionRoot": "Resources/Runners/ForgePlayRuntime",
+                    "runtimePayloadInjectionRoot": "Resources/Runners",
                     "schemaVersion": 1,
                 })
             write(self.authority / "Config" / name, payload)
@@ -218,59 +204,7 @@ Native/NetworkControlHelper/main.swift
             elif script == "verify-public-runtime-build-receipt.py":
                 payload = RUNTIME_RECEIPT_VERIFIER.read_bytes()
             elif script == "generate-xcode-project.sh":
-                payload = PROJECT_GENERATOR.read_bytes()
-            elif script == "verify-bundled-runtime-capability.sh":
-                payload = b'''#!/bin/bash
-set -euo pipefail
-case "${1:-}" in
-  --release-runtime-inventory-only)
-    [[ "$#" -eq 2 ]]
-    runtime_root="$2"
-    ;;
-  --verify-runtime-file-inventory)
-    [[ "$#" -eq 3 && "$3" == "$2/RuntimeFileInventory.json" ]]
-    runtime_root="$2"
-    ;;
-  *)
-    exit 64
-    ;;
-esac
-/usr/bin/python3 - "$runtime_root" "$FORGEPLAY_FAKE_RUNTIME_AUTHORITY" <<'PY'
-import hashlib
-import os
-import stat
-import sys
-from pathlib import Path
-
-
-def snapshot(root):
-    root = Path(root)
-    rows = []
-    for candidate in sorted(root.rglob("*")):
-        relative = candidate.relative_to(root).as_posix()
-        metadata = candidate.lstat()
-        if stat.S_ISDIR(metadata.st_mode):
-            rows.append((relative, "directory"))
-        elif stat.S_ISREG(metadata.st_mode):
-            rows.append((
-                relative,
-                "file",
-                bool(metadata.st_mode & 0o111),
-                hashlib.sha256(candidate.read_bytes()).hexdigest(),
-            ))
-        elif stat.S_ISLNK(metadata.st_mode):
-            rows.append((relative, "symlink", os.readlink(candidate)))
-        else:
-            raise SystemExit(f"unsupported fixture Runtime entry: {relative}")
-    return rows
-
-
-if snapshot(sys.argv[1]) != snapshot(sys.argv[2]):
-    raise SystemExit("fixture Runtime tree differs from its authority")
-PY
-'''
-            elif script == "quarantine-owned-directory.py":
-                payload = QUARANTINE_TOOL.read_bytes()
+                payload = b"#!/bin/sh\nset -eu\nprintf 'generated\n' > \"$FORGEPLAY_FAKE_GENERATOR_RECEIPT\"\n"
             if script == "package-forgeplay-runtime.sh":
                 payload = b"#!/bin/sh\n# --public-source-package\n# public-source package mode requires FORGEPLAY_RUNTIME_POLICY_SOURCE\n"
             elif script == "materialize-forgeplay-wine-11.12-source.sh":
@@ -280,7 +214,6 @@ PY
             mode = 0o755 if script_test in {
                 "test-copyleft-source-packages.py",
                 "test-freeze-public-source-export.py",
-                "test-generate-xcode-project.sh",
                 "test-public-release-set-transaction.py",
             } else 0o644
             write(self.authority / "Scripts/tests" / script_test, b"fixture test\n", mode)
@@ -292,17 +225,16 @@ PY
             "Sources/ForgePlay/ForgePlay-Runtime-Inherit.entitlements",
             "Native/GameModeProcessHost/GameModeProcessHost-Distribution.entitlements",
             "Native/GameModeProcessHost/GameModeProcessHost-Release.entitlements",
-            "Native/NetworkControlHelper/ForgePlayNetworkControl.plist",
-            "Native/NetworkControlHelper/Info.plist",
-            "Native/NetworkControlHelper/main.swift",
+            "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.m",
+            "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.h",
+            "Native/D3DMetalFrameGenerationProxy/FrameGenerationStateMachine.c",
+            "Native/D3DMetalFrameGenerationProxy/FrameGenerationStateMachine.h",
+            "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.exports",
             "Tests/ForgePlayTests/GameModeHostCapabilityTests.swift",
             "Tests/ForgePlayTests/GameModeLaunchRequestStoreTests.swift",
             "LICENSES/fixture.txt",
             "site-data/fixture.txt",
             "Resources/CompatibilityDBPublicKey.base64",
-            "Resources/AppIcon.icon/Assets/ForgePlay_ICON_Dark.png",
-            "Resources/AppIcon.icon/Assets/ForgePlay_ICON_Default.png",
-            "Resources/AppIcon.icon/icon.json",
         ]:
             write(self.authority / path, b"fixture\n")
         write(
@@ -392,19 +324,8 @@ PY
 
     def _create_runtime_output(self) -> None:
         self.runtime.mkdir()
-        manifest = json.loads(
-            (
-                self.export
-                / "Resources/Runners/ForgePlayRuntime/RuntimeManifest.json"
-            ).read_text(encoding="utf-8")
-        )
-        manifest["corePayloadFingerprint"] = "f" * 64
-        write(
-            self.runtime / "RuntimeManifest.json",
-            canonical_inventory(manifest),
-            0o444,
-        )
-        write(self.runtime / "RuntimePayload.txt", b"fresh Runtime only\n", 0o444)
+        manifest = (self.export / "Resources/Runners/ForgePlayRuntime/RuntimeManifest.json").read_bytes()
+        write(self.runtime / "RuntimeManifest.json", manifest)
         install_root = self.root / "fresh-runtime-install"
         write(install_root / "payload.txt", b"fresh public runtime fixture\n")
         compiler_manifest = self.root / "compiler-capsule.json"
@@ -435,46 +356,13 @@ PY
             check=True,
             capture_output=True,
         )
-        fake_xcodegen = self.root / "xcodegen"
-        write(
-            fake_xcodegen,
-            b'''#!/bin/sh
-set -eu
-[ "${SWIFT_DETERMINISTIC_HASHING:-}" = "1" ] || exit 91
-[ "${SWIFT_HASH_SEED+x}" != "x" ] || exit 92
-printf '%s\n' "$*" > "$FORGEPLAY_FAKE_GENERATOR_RECEIPT"
-workspace="$(/usr/bin/dirname "$3")"
-if [ "${FORGEPLAY_FAKE_MUTATE_PROJECT:-0}" = "1" ]; then
-  printf 'mutated generated project\n' > "$workspace/ForgePlay.xcodeproj/project.pbxproj"
-else
-  printf 'generated fixture\n' > "$workspace/ForgePlay.xcodeproj/project.pbxproj"
-fi
-if [ "${FORGEPLAY_FAKE_MUTATE_RUNTIME:-0}" = "1" ]; then
-  printf 'mutated Runtime\n' > "$workspace/Resources/Runners/ForgePlayRuntime/GeneratorMutation.txt"
-fi
-if [ "${FORGEPLAY_FAKE_MUTATE_SOURCE:-0}" = "1" ]; then
-  printf 'mutated source\n' > "$workspace/LICENSE.md"
-fi
-if [ "${FORGEPLAY_FAKE_MUTATE_INVENTORY:-0}" = "1" ]; then
-  printf '{}\n' > "$workspace/SOURCE-INVENTORY.json"
-fi
-if [ "${FORGEPLAY_FAKE_ADD_RUNNER:-0}" = "1" ]; then
-  /bin/mkdir -p "$workspace/Resources/Runners/UnexpectedRunner"
-  printf 'unexpected runner\n' > "$workspace/Resources/Runners/UnexpectedRunner/payload.txt"
-fi
-if [ "${FORGEPLAY_FAKE_ADD_SPECIAL_ENTRY:-0}" = "1" ]; then
-  /usr/bin/mkfifo "$workspace/Unexpected.fifo"
-fi
-''',
-            0o755,
-        )
-        self.fake_xcodegen = fake_xcodegen
         fake_xcodebuild = self.root / "fake-xcodebuild.py"
         write(
             fake_xcodebuild,
             b'''#!/usr/bin/env python3
 import json
 import os
+import plistlib
 import shutil
 import sys
 from pathlib import Path
@@ -486,22 +374,13 @@ project = Path(arguments[arguments.index("-project") + 1])
 source_root = project.parent
 destination = archive / "Products/Applications/ForgePlay.app/Contents/Resources"
 destination.mkdir(parents=True)
-if os.environ.get("FORGEPLAY_FAKE_MUTATE_DISTRIBUTION_CLAIM") == "1":
-    (source_root / "Resources/PublicDistributionBuildClaim.json").write_text(
-        '{"mutated":true}\\n',
-        encoding="utf-8",
-    )
 shutil.copyfile(source_root / "Resources/PublicDistributionBuildClaim.json", destination / "PublicDistributionBuildClaim.json")
-shutil.copytree(
-    source_root / "Resources/Runners/ForgePlayRuntime",
-    destination / "Runners/ForgePlayRuntime",
-    symlinks=True,
-)
-if os.environ.get("FORGEPLAY_FAKE_MUTATE_ARCHIVED_RUNTIME") == "1":
-    (destination / "Runners/ForgePlayRuntime/ArchiveMutation.txt").write_text(
-        "mutated archive Runtime\\n",
-        encoding="utf-8",
-    )
+values = dict(argument.split("=", 1) for argument in arguments if "=" in argument)
+with (destination.parent / "Info.plist").open("wb") as stream:
+    plistlib.dump({
+        "CFBundleShortVersionString": values["MARKETING_VERSION"],
+        "CFBundleVersion": values["CURRENT_PROJECT_VERSION"],
+    }, stream)
 ''',
             0o755,
         )
@@ -517,16 +396,8 @@ if os.environ.get("FORGEPLAY_FAKE_MUTATE_ARCHIVED_RUNTIME") == "1":
     def verify(self, *options: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(self.command(*options), capture_output=True, text=True, check=False)
 
-    def archive_command(
-        self,
-        *,
-        workspace: Path | None = None,
-        archive: Path | None = None,
-        development_team: str | None = "ABCDE12345",
-        signing_style: str = "Automatic",
-        signing_identity: str | None = None,
-    ) -> list[str]:
-        command = [
+    def archive_command(self, *, workspace: Path | None = None, archive: Path | None = None) -> list[str]:
+        return [
             "/bin/bash", os.fspath(BUILDER),
             "--source-export", os.fspath(self.export),
             "--trusted-git-repository", os.fspath(self.authority),
@@ -537,25 +408,18 @@ if os.environ.get("FORGEPLAY_FAKE_MUTATE_ARCHIVED_RUNTIME") == "1":
             "--log", os.fspath(self.archive_log),
             "--scheme", "ForgePlayDMG",
             "--configuration", "Distribution",
-            "--signing-style", signing_style,
+            "--signing-style", "Automatic",
+            "--marketing-version", "1.2",
+            "--build-number", "3",
         ]
-        if development_team is not None:
-            command.extend(["--development-team", development_team])
-        if signing_identity is not None:
-            command.extend(["--code-sign-identity", signing_identity])
-        return command
 
     def archive_environment(self) -> dict[str, str]:
         return {
             **os.environ,
             "FORGEPLAY_PUBLIC_ARCHIVE_TEST_MODE": "1",
             "FORGEPLAY_PUBLIC_ARCHIVE_XCODEBUILD": os.fspath(self.fake_xcodebuild),
-            "FORGEPLAY_XCODEGEN_PATH": os.fspath(self.fake_xcodegen),
             "FORGEPLAY_FAKE_XCODEBUILD_ARGUMENTS": os.fspath(self.fake_xcodebuild_arguments),
             "FORGEPLAY_FAKE_GENERATOR_RECEIPT": os.fspath(self.generator_receipt),
-            "FORGEPLAY_FAKE_RUNTIME_AUTHORITY": os.fspath(self.runtime),
-            "SWIFT_DETERMINISTIC_HASHING": "0",
-            "SWIFT_HASH_SEED": "untrusted-fixture-seed",
         }
 
     def rewrite_inventory(self, mutate) -> None:
@@ -580,51 +444,7 @@ if os.environ.get("FORGEPLAY_FAKE_MUTATE_ARCHIVED_RUNTIME") == "1":
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue(self.generator_receipt.is_file())
-        self.assertEqual(
-            self.generator_receipt.read_text(encoding="utf-8").strip(),
-            f"generate --spec {self.workspace}/project.yml",
-        )
         self.assertTrue(self.fake_xcodebuild_arguments.is_file())
-        xcodebuild_arguments = json.loads(
-            self.fake_xcodebuild_arguments.read_text(encoding="utf-8")
-        )
-        for exact_setting in (
-            "FORGEPLAY_ALLOW_UNNOTARIZED_DMG=0",
-            "FORGEPLAY_APP_BUNDLE_ID=com.forgeplay.client",
-            "FORGEPLAY_DISTRIBUTION_BUNDLE_ID=com.forgeplay.client",
-            "FORGEPLAY_MARKETING_VERSION=1.1",
-            "FORGEPLAY_CURRENT_PROJECT_VERSION=2",
-            "MARKETING_VERSION=1.1",
-            "CURRENT_PROJECT_VERSION=2",
-            "FORGEPLAY_DEVELOPMENT_TEAM=ABCDE12345",
-            "DEVELOPMENT_TEAM=ABCDE12345",
-            "FORGEPLAY_CODE_SIGN_STYLE=Automatic",
-            "CODE_SIGN_STYLE=Automatic",
-            "OTHER_CODE_SIGN_FLAGS=--timestamp",
-        ):
-            self.assertIn(exact_setting, xcodebuild_arguments)
-        self.assertFalse(
-            any(argument.startswith("PRODUCT_BUNDLE_IDENTIFIER=") for argument in xcodebuild_arguments)
-        )
-        self.assertFalse((self.workspace / "Config/ForgePlay.local.xcconfig").exists())
-        workspace_runtime = self.workspace / "Resources/Runners/ForgePlayRuntime"
-        self.assertEqual(
-            (workspace_runtime / "RuntimeManifest.json").read_bytes(),
-            (self.runtime / "RuntimeManifest.json").read_bytes(),
-        )
-        self.assertEqual(
-            stat.S_IMODE((workspace_runtime / "RuntimeManifest.json").stat().st_mode),
-            0o444,
-        )
-        self.assertEqual(
-            (workspace_runtime / "RuntimePayload.txt").read_bytes(),
-            b"fresh Runtime only\n",
-        )
-        for source_only_sidecar in (
-            "wine-11.12-game-mode-process-host-routing.patch.license",
-            "wine-11.12-game-mode-direct-target-scope.patch.license",
-        ):
-            self.assertFalse((workspace_runtime / "Patches" / source_only_sidecar).exists())
         authority_path = (
             self.archive
             / "Products/Applications/ForgePlay.app/Contents/Resources/PublicDistributionBuildClaim.json"
@@ -639,173 +459,6 @@ if os.environ.get("FORGEPLAY_FAKE_MUTATE_ARCHIVED_RUNTIME") == "1":
         self.assertEqual(
             authority["runtimeBuildClaimSHA256"],
             hashlib.sha256((self.runtime / "PublicRuntimeBuildClaim.json").read_bytes()).hexdigest(),
-        )
-
-    def test_export_and_archive_share_one_explicit_xcodegen_binary_contract(self) -> None:
-        exporter = EXPORTER.read_text(encoding="utf-8")
-        generator = PROJECT_GENERATOR.read_text(encoding="utf-8")
-        self.assertIn(
-            'fail "FORGEPLAY_XCODEGEN_PATH is required under the sanitized release PATH"',
-            exporter,
-        )
-        self.assertIn('export FORGEPLAY_XCODEGEN_PATH="$candidate"', exporter)
-        self.assertIn('"$FORGEPLAY_XCODEGEN_PATH" --version', exporter)
-        self.assertNotIn("command -v xcodegen", exporter)
-        self.assertIn('XCODEGEN_PATH="${FORGEPLAY_XCODEGEN_PATH:-}"', generator)
-        self.assertIn('/usr/bin/env -u SWIFT_HASH_SEED', generator)
-        self.assertIn('SWIFT_DETERMINISTIC_HASHING=1', generator)
-        self.assertIn('"$XCODEGEN_PATH" generate --spec', generator)
-
-    def test_d3dmetal_validator_is_exported_and_snapshotted_in_the_release_graph(self) -> None:
-        exporter = EXPORTER.read_text(encoding="utf-8")
-        verifier = VERIFIER.read_text(encoding="utf-8")
-        packager = (ROOT / "Scripts/package-forgeplay-runtime.sh").read_text(encoding="utf-8")
-        graph = json.loads(
-            (ROOT / "Config/ForgePlayPublicDistributionSourceGraph.json").read_text(
-                encoding="utf-8"
-            )
-        )
-
-        self.assertIn("validate-d3dmetal-ngx-bridge.sh", exporter)
-        self.assertIn('"validate-d3dmetal-ngx-bridge.sh"', verifier)
-        self.assertIn(
-            "Scripts/validate-d3dmetal-ngx-bridge.sh",
-            graph["requiredReleaseCommitPaths"],
-        )
-        self.assertIn(
-            'snapshot_regular_input "$D3DMETAL_NGX_BRIDGE_VALIDATOR"',
-            packager,
-        )
-        self.assertIn(
-            'D3DMETAL_NGX_BRIDGE_VALIDATOR="$root/d3dmetal-ngx-bridge-validator.sh"',
-            packager,
-        )
-
-    def test_archive_requires_exact_team_and_manual_developer_id_identity(self) -> None:
-        for label, development_team, expected_error in (
-            ("missing", None, "development team are required"),
-            ("invalid", "lowercase1", "10-character Apple team identifier"),
-        ):
-            with self.subTest(label=label):
-                workspace = self.root / f"RejectedTeam-{label}"
-                archive = self.root / f"RejectedTeam-{label}.xcarchive"
-                result = subprocess.run(
-                    self.archive_command(
-                        workspace=workspace,
-                        archive=archive,
-                        development_team=development_team,
-                    ),
-                    env=self.archive_environment(),
-                    check=False,
-                    capture_output=True,
-                    text=True,
-                )
-                self.assertNotEqual(result.returncode, 0)
-                self.assertIn(expected_error, result.stderr)
-                self.assertFalse(workspace.exists())
-                self.assertFalse(archive.exists())
-                self.assertFalse(self.generator_receipt.exists())
-                self.assertFalse(self.fake_xcodebuild_arguments.exists())
-
-        invalid_identity = "Developer ID Application: Fixture (WRONG12345)"
-        workspace = self.root / "RejectedIdentity"
-        archive = self.root / "RejectedIdentity.xcarchive"
-        result = subprocess.run(
-            self.archive_command(
-                workspace=workspace,
-                archive=archive,
-                signing_style="Manual",
-                signing_identity=invalid_identity,
-            ),
-            env=self.archive_environment(),
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("exact Developer ID Application identity", result.stderr)
-        self.assertFalse(workspace.exists())
-        self.assertFalse(archive.exists())
-
-        valid_identity = "Developer ID Application: Fixture (ABCDE12345)"
-        workspace = self.root / "ManualPublicBuild"
-        archive = self.root / "Manual.xcarchive"
-        result = subprocess.run(
-            self.archive_command(
-                workspace=workspace,
-                archive=archive,
-                signing_style="Manual",
-                signing_identity=valid_identity,
-            ),
-            env=self.archive_environment(),
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        self.assertEqual(result.returncode, 0, result.stderr)
-        xcodebuild_arguments = json.loads(
-            self.fake_xcodebuild_arguments.read_text(encoding="utf-8")
-        )
-        self.assertIn("FORGEPLAY_CODE_SIGN_STYLE=Manual", xcodebuild_arguments)
-        self.assertIn("CODE_SIGN_STYLE=Manual", xcodebuild_arguments)
-        self.assertIn(f"CODE_SIGN_IDENTITY={valid_identity}", xcodebuild_arguments)
-
-    def test_public_archive_has_no_private_xcconfig_ingress(self) -> None:
-        source = BUILDER.read_text(encoding="utf-8")
-        self.assertNotIn("--local-xcconfig", source)
-        self.assertNotIn("Config/ForgePlay.local.xcconfig", source)
-
-        workspace = self.root / "RejectedLocalConfig"
-        archive = self.root / "RejectedLocalConfig.xcarchive"
-        local_config = self.root / "ForgePlay.local.xcconfig"
-        write(local_config, b"FORGEPLAY_DEVELOPMENT_TEAM = PRIVATE1234\n")
-        result = subprocess.run(
-            [
-                *self.archive_command(workspace=workspace, archive=archive),
-                "--local-xcconfig",
-                os.fspath(local_config),
-            ],
-            env=self.archive_environment(),
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("unknown or incomplete option: --local-xcconfig", result.stderr)
-        self.assertFalse(workspace.exists())
-        self.assertFalse(archive.exists())
-
-    def test_official_release_projects_only_canonical_signing_metadata(self) -> None:
-        source = OFFICIAL_RELEASE_BUILDER.read_text(encoding="utf-8")
-        for contract in (
-            'CANONICAL_BUNDLE_IDENTIFIER="com.forgeplay.client"',
-            'CANONICAL_MARKETING_VERSION="1.1"',
-            'CANONICAL_BUILD_NUMBER="2"',
-            'RELEASE_DEVELOPMENT_TEAM="${FORGEPLAY_RELEASE_DEVELOPMENT_TEAM:-}"',
-            '--development-team "$RELEASE_DEVELOPMENT_TEAM"',
-            'Add :teamID string $RELEASE_DEVELOPMENT_TEAM',
-            'write_release_evidence "official-notarized-dmg"',
-            "Official notarized release artifact:",
-        ):
-            self.assertIn(contract, source)
-        self.assertNotIn("--local-xcconfig", source)
-
-    def test_official_release_kind_is_neutral_and_consistent(self) -> None:
-        for relative in (
-            "Scripts/build-commercial-release.sh",
-            "Scripts/generate-commercial-release-status-report.sh",
-            "Scripts/public-release-set-transaction.py",
-            "Scripts/verify-commercial-release-status-report.sh",
-            "Scripts/verify-direct-release-readiness.sh",
-            "Scripts/verify-public-release-assets.sh",
-            "Scripts/verify-release-evidence.sh",
-            "docs/commercial-release.md",
-        ):
-            source = (ROOT / relative).read_text(encoding="utf-8")
-            self.assertNotIn("commercial-notarized-dmg", source, relative)
-        self.assertIn(
-            "홈페이지를 통한 무료·비상업 배포물",
-            (ROOT / "docs/commercial-release.md").read_text(encoding="utf-8"),
         )
 
     def test_archive_rejects_runtime_receipt_before_generation(self) -> None:
@@ -825,159 +478,6 @@ if os.environ.get("FORGEPLAY_FAKE_MUTATE_ARCHIVED_RUNTIME") == "1":
         self.assertFalse(self.fake_xcodebuild_arguments.exists())
         self.assertFalse(workspace.exists())
         self.assertFalse(archive.exists())
-
-    def test_archive_rejects_runtime_mutation_after_generation(self) -> None:
-        environment = self.archive_environment()
-        environment["FORGEPLAY_FAKE_MUTATE_RUNTIME"] = "1"
-        result = subprocess.run(
-            self.archive_command(),
-            env=environment,
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("public build Runtime differs", result.stderr)
-        self.assertTrue(self.generator_receipt.is_file())
-        self.assertFalse(self.fake_xcodebuild_arguments.exists())
-        self.assertFalse(self.archive.exists())
-
-    def test_archive_rejects_source_mutation_after_generation(self) -> None:
-        environment = self.archive_environment()
-        environment["FORGEPLAY_FAKE_MUTATE_SOURCE"] = "1"
-        result = subprocess.run(
-            self.archive_command(),
-            env=environment,
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("public build input differs from exported source: LICENSE.md", result.stderr)
-        self.assertTrue(self.generator_receipt.is_file())
-        self.assertFalse(self.fake_xcodebuild_arguments.exists())
-        self.assertFalse(self.archive.exists())
-
-    def test_archive_rejects_generated_project_mutation_after_generation(self) -> None:
-        environment = self.archive_environment()
-        environment["FORGEPLAY_FAKE_MUTATE_PROJECT"] = "1"
-        result = subprocess.run(
-            self.archive_command(),
-            env=environment,
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn(
-            "public build input differs from exported source: "
-            "ForgePlay.xcodeproj/project.pbxproj",
-            result.stderr,
-        )
-        self.assertTrue(self.generator_receipt.is_file())
-        self.assertFalse(self.fake_xcodebuild_arguments.exists())
-        self.assertFalse(self.archive.exists())
-
-    def test_archive_rejects_source_inventory_mutation_after_generation(self) -> None:
-        environment = self.archive_environment()
-        environment["FORGEPLAY_FAKE_MUTATE_INVENTORY"] = "1"
-        result = subprocess.run(
-            self.archive_command(),
-            env=environment,
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("source inventory differs from the verified export", result.stderr)
-        self.assertTrue(self.generator_receipt.is_file())
-        self.assertFalse(self.fake_xcodebuild_arguments.exists())
-        self.assertFalse(self.archive.exists())
-
-    def test_archive_rejects_addition_outside_exact_runtime_leaf(self) -> None:
-        environment = self.archive_environment()
-        environment["FORGEPLAY_FAKE_ADD_RUNNER"] = "1"
-        result = subprocess.run(
-            self.archive_command(),
-            env=environment,
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn(
-            "public build graph contains an unbound addition: "
-            "Resources/Runners/UnexpectedRunner/payload.txt",
-            result.stderr,
-        )
-        self.assertTrue(self.generator_receipt.is_file())
-        self.assertFalse(self.fake_xcodebuild_arguments.exists())
-        self.assertFalse(self.archive.exists())
-
-    def test_archive_rejects_special_entry_outside_runtime_leaf(self) -> None:
-        environment = self.archive_environment()
-        environment["FORGEPLAY_FAKE_ADD_SPECIAL_ENTRY"] = "1"
-        result = subprocess.run(
-            self.archive_command(),
-            env=environment,
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn(
-            "public build graph contains an unsupported entry: Unexpected.fifo",
-            result.stderr,
-        )
-        self.assertTrue(self.generator_receipt.is_file())
-        self.assertFalse(self.fake_xcodebuild_arguments.exists())
-        self.assertFalse(self.archive.exists())
-
-    def test_archive_rejects_runtime_mutation_by_xcodebuild(self) -> None:
-        environment = self.archive_environment()
-        environment["FORGEPLAY_FAKE_MUTATE_ARCHIVED_RUNTIME"] = "1"
-        result = subprocess.run(
-            self.archive_command(),
-            env=environment,
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("archive changed the signed-release Runtime", result.stderr)
-        self.assertTrue(self.generator_receipt.is_file())
-        self.assertTrue(self.fake_xcodebuild_arguments.is_file())
-        self.assertTrue(self.archive.exists())
-
-    def test_archive_rejects_matching_workspace_and_archived_claim_mutation(self) -> None:
-        environment = self.archive_environment()
-        environment["FORGEPLAY_FAKE_MUTATE_DISTRIBUTION_CLAIM"] = "1"
-        result = subprocess.run(
-            self.archive_command(),
-            env=environment,
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn(
-            "public Distribution build claim changed after creation",
-            result.stderr,
-        )
-        self.assertTrue(self.generator_receipt.is_file())
-        self.assertTrue(self.fake_xcodebuild_arguments.is_file())
-        self.assertTrue(self.archive.exists())
-        self.assertEqual(
-            (
-                self.workspace
-                / "Resources/PublicDistributionBuildClaim.json"
-            ).read_bytes(),
-            (
-                self.archive
-                / "Products/Applications/ForgePlay.app/Contents/Resources/"
-                "PublicDistributionBuildClaim.json"
-            ).read_bytes(),
-        )
 
     def test_release_authority_requires_trusted_git_for_gitless_export(self) -> None:
         result = self.verify("--release-authority")

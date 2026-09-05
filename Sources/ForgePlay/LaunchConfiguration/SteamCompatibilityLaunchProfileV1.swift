@@ -44,10 +44,14 @@ enum SteamCompatibilityLaunchProfileErrorV1: LocalizedError, Equatable, Sendable
 
 enum SteamCompatibilityLaunchProfileContractV1 {
     static let contractVersion = 1
-    static let recipeSchemaVersion = 1
-    static let preferenceSchemaVersion = 1
-    static let requestSchemaVersion = 1
-    static let capabilitySchemaVersion = 1
+    static let legacyRecipeSchemaVersion = 1
+    static let recipeSchemaVersion = 2
+    static let legacyPreferenceSchemaVersion = 1
+    static let preferenceSchemaVersion = 2
+    static let legacyRequestSchemaVersion = 1
+    static let requestSchemaVersion = 2
+    static let legacyCapabilitySchemaVersion = 1
+    static let capabilitySchemaVersion = 2
     static let processPolicySchemaVersion = 1
     static let runtimeReceiptSchemaVersion = 1
 }
@@ -115,11 +119,38 @@ struct CompatibilitySteamLaunchUserSelectionsV1: Hashable, Sendable {
     var audioInputPolicy: SteamAudioInputPolicyIdentifier
     var synchronizationPolicy: SteamSynchronizationPolicyIdentifier
     var videoMemoryPolicy: SteamVideoMemoryPolicyIdentifier
+    var frameGenerationConfiguration: FrameGenerationConfiguration
     var gameModeEnabled: Bool
     var heapZeroMemoryEnabled: Bool
     var fpsCursorPolicy: FPSCursorCapturePolicy
     var controllerPolicy: ControllerCompatibilityPolicy
     var keyboardMapping: KeyboardMappingPreference
+
+    init(
+        graphicsBackend: SteamGraphicsBackendIdentifier,
+        networkPolicy: SteamNetworkPolicyIdentifier,
+        audioInputPolicy: SteamAudioInputPolicyIdentifier,
+        synchronizationPolicy: SteamSynchronizationPolicyIdentifier,
+        videoMemoryPolicy: SteamVideoMemoryPolicyIdentifier,
+        frameGenerationConfiguration: FrameGenerationConfiguration = .off,
+        gameModeEnabled: Bool,
+        heapZeroMemoryEnabled: Bool,
+        fpsCursorPolicy: FPSCursorCapturePolicy,
+        controllerPolicy: ControllerCompatibilityPolicy,
+        keyboardMapping: KeyboardMappingPreference
+    ) {
+        self.graphicsBackend = graphicsBackend
+        self.networkPolicy = networkPolicy
+        self.audioInputPolicy = audioInputPolicy
+        self.synchronizationPolicy = synchronizationPolicy
+        self.videoMemoryPolicy = videoMemoryPolicy
+        self.frameGenerationConfiguration = frameGenerationConfiguration
+        self.gameModeEnabled = gameModeEnabled
+        self.heapZeroMemoryEnabled = heapZeroMemoryEnabled
+        self.fpsCursorPolicy = fpsCursorPolicy
+        self.controllerPolicy = controllerPolicy
+        self.keyboardMapping = keyboardMapping
+    }
 
     func validate() throws {
         _ = try SteamGraphicsBackendIdentifier.validated(graphicsBackend.rawValue)
@@ -127,6 +158,10 @@ struct CompatibilitySteamLaunchUserSelectionsV1: Hashable, Sendable {
         _ = try SteamAudioInputPolicyIdentifier.validated(audioInputPolicy.rawValue)
         _ = try SteamSynchronizationPolicyIdentifier.validated(synchronizationPolicy.rawValue)
         _ = try SteamVideoMemoryPolicyIdentifier.validated(videoMemoryPolicy.rawValue)
+        try frameGenerationConfiguration.validate(
+            isSupportedRenderer:
+                graphicsBackend.supportsCurrentReleaseFrameGeneration
+        )
         _ = try KeyboardMappingPreference(
             preset: keyboardMapping.preset,
             customPermutation: keyboardMapping.customPermutation
@@ -140,10 +175,35 @@ struct CompatibilitySteamLaunchSupportedOptionsV1: Hashable, Sendable {
     let audioInputPolicies: [SteamAudioInputPolicyIdentifier]
     let synchronizationPolicies: [SteamSynchronizationPolicyIdentifier]
     let videoMemoryPolicies: [SteamVideoMemoryPolicyIdentifier]
+    let frameGenerationTargetFrameRates: [FrameGenerationTargetFrameRate]
     let fpsCursorPolicies: [FPSCursorCapturePolicy]
     let controllerPolicies: [ControllerCompatibilityPolicy]
     let keyboardPresets: [KeyboardMappingPreset]
     let supportsCustomKeyboardPermutation: Bool
+
+    init(
+        graphicsBackends: [SteamGraphicsBackendIdentifier],
+        networkPolicies: [SteamNetworkPolicyIdentifier],
+        audioInputPolicies: [SteamAudioInputPolicyIdentifier],
+        synchronizationPolicies: [SteamSynchronizationPolicyIdentifier],
+        videoMemoryPolicies: [SteamVideoMemoryPolicyIdentifier],
+        frameGenerationTargetFrameRates: [FrameGenerationTargetFrameRate] = [.fps120],
+        fpsCursorPolicies: [FPSCursorCapturePolicy],
+        controllerPolicies: [ControllerCompatibilityPolicy],
+        keyboardPresets: [KeyboardMappingPreset],
+        supportsCustomKeyboardPermutation: Bool
+    ) {
+        self.graphicsBackends = graphicsBackends
+        self.networkPolicies = networkPolicies
+        self.audioInputPolicies = audioInputPolicies
+        self.synchronizationPolicies = synchronizationPolicies
+        self.videoMemoryPolicies = videoMemoryPolicies
+        self.frameGenerationTargetFrameRates = frameGenerationTargetFrameRates
+        self.fpsCursorPolicies = fpsCursorPolicies
+        self.controllerPolicies = controllerPolicies
+        self.keyboardPresets = keyboardPresets
+        self.supportsCustomKeyboardPermutation = supportsCustomKeyboardPermutation
+    }
 
     func validate() throws {
         try validateUniqueNonempty(graphicsBackends, category: "graphics-backend")
@@ -151,6 +211,15 @@ struct CompatibilitySteamLaunchSupportedOptionsV1: Hashable, Sendable {
         try validateUniqueNonempty(audioInputPolicies, category: "audio-input-policy")
         try validateUniqueNonempty(synchronizationPolicies, category: "synchronization-policy")
         try validateUniqueNonempty(videoMemoryPolicies, category: "video-memory-policy")
+        try validateUniqueNonempty(
+            frameGenerationTargetFrameRates,
+            category: "frame-generation-target-frame-rate"
+        )
+        guard frameGenerationTargetFrameRates.allSatisfy(\.isSelectableInCurrentRelease) else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidRecipe(
+                "supported-frame-generation-target-availability"
+            )
+        }
         try validateUniqueNonempty(fpsCursorPolicies, category: "fps-cursor-policy")
         try validateUniqueNonempty(controllerPolicies, category: "controller-policy")
         try validateUniqueNonempty(keyboardPresets, category: "keyboard-preset")
@@ -188,10 +257,11 @@ struct CompatibilitySteamLaunchRecommendationsV1: Hashable, Sendable {
 enum CompatibilitySteamLaunchOptionKindV1:
     String, Codable, CaseIterable, Hashable, Sendable
 {
+    case graphicsBackend
+    case frameGeneration
     case gameMode
     case heapZeroMemory
     case automaticProcessPolicies
-    case graphicsBackend
     case networkPolicy
     case audioInputPolicy
     case synchronizationPolicy
@@ -276,11 +346,12 @@ struct SteamCompatibilityLaunchProfileRecipeV1: Hashable, Sendable {
 
     fileprivate static let helldivers2BuiltIn: Self = {
         let initialSelections = CompatibilitySteamLaunchUserSelectionsV1(
-            graphicsBackend: .d3dMetal,
+            graphicsBackend: .d3dMetalNVIDIA,
             networkPolicy: .standard,
             audioInputPolicy: .disabled,
             synchronizationPolicy: .automatic,
             videoMemoryPolicy: .automatic,
+            frameGenerationConfiguration: .off,
             gameModeEnabled: true,
             heapZeroMemoryEnabled: true,
             fpsCursorPolicy: .off,
@@ -310,6 +381,7 @@ struct SteamCompatibilityLaunchProfileRecipeV1: Hashable, Sendable {
                 audioInputPolicies: [.disabled, .enabled],
                 synchronizationPolicies: [.automatic],
                 videoMemoryPolicies: [.automatic, .gb2, .gb4, .gb8, .gb12, .gb16],
+                frameGenerationTargetFrameRates: [.fps120],
                 fpsCursorPolicies: [.off],
                 controllerPolicies: [.automatic],
                 keyboardPresets: [.systemDefault],
@@ -329,10 +401,10 @@ struct SteamCompatibilityLaunchProfileRecipeV1: Hashable, Sendable {
         for kind: CompatibilitySteamLaunchOptionKindV1
     ) -> CompatibilitySteamLaunchOptionPlacementV1 {
         switch kind {
-        case .gameMode, .heapZeroMemory, .automaticProcessPolicies:
+        case .graphicsBackend, .frameGeneration, .gameMode,
+             .heapZeroMemory, .automaticProcessPolicies:
             .primary
-        case .graphicsBackend,
-             .networkPolicy,
+        case .networkPolicy,
              .audioInputPolicy,
              .synchronizationPolicy,
              .videoMemoryPolicy,
@@ -375,6 +447,11 @@ struct SteamCompatibilityLaunchProfileRecipeV1: Hashable, Sendable {
         try requireSupported(initialSelections.audioInputPolicy, in: supportedOptions.audioInputPolicies, category: "initial-audio-input-policy")
         try requireSupported(initialSelections.synchronizationPolicy, in: supportedOptions.synchronizationPolicies, category: "initial-synchronization-policy")
         try requireSupported(initialSelections.videoMemoryPolicy, in: supportedOptions.videoMemoryPolicies, category: "initial-video-memory-policy")
+        try requireSupported(
+            initialSelections.frameGenerationConfiguration.targetFrameRate,
+            in: supportedOptions.frameGenerationTargetFrameRates,
+            category: "initial-frame-generation-target-frame-rate"
+        )
         try requireSupported(initialSelections.fpsCursorPolicy, in: supportedOptions.fpsCursorPolicies, category: "initial-fps-cursor-policy")
         try requireSupported(initialSelections.controllerPolicy, in: supportedOptions.controllerPolicies, category: "initial-controller-policy")
         try requireSupported(initialSelections.keyboardMapping.preset, in: supportedOptions.keyboardPresets, category: "initial-keyboard-preset")
@@ -393,13 +470,18 @@ struct SteamCompatibilityLaunchProfileRecipeV1: Hashable, Sendable {
         try requireSupported(recommendations.selections.audioInputPolicy, in: supportedOptions.audioInputPolicies, category: "recommended-audio-input-policy")
         try requireSupported(recommendations.selections.synchronizationPolicy, in: supportedOptions.synchronizationPolicies, category: "recommended-synchronization-policy")
         try requireSupported(recommendations.selections.videoMemoryPolicy, in: supportedOptions.videoMemoryPolicies, category: "recommended-video-memory-policy")
+        try requireSupported(
+            recommendations.selections.frameGenerationConfiguration.targetFrameRate,
+            in: supportedOptions.frameGenerationTargetFrameRates,
+            category: "recommended-frame-generation-target-frame-rate"
+        )
         try requireSupported(recommendations.selections.fpsCursorPolicy, in: supportedOptions.fpsCursorPolicies, category: "recommended-fps-cursor-policy")
         try requireSupported(recommendations.selections.controllerPolicy, in: supportedOptions.controllerPolicies, category: "recommended-controller-policy")
         try requireSupported(recommendations.selections.keyboardMapping.preset, in: supportedOptions.keyboardPresets, category: "recommended-keyboard-preset")
         guard !orderedOptionDescriptors.isEmpty,
               orderedOptionDescriptors.count == CompatibilitySteamLaunchOptionKindV1.allCases.count,
               Set(orderedOptionDescriptors.map(\.kind)) == Set(CompatibilitySteamLaunchOptionKindV1.allCases),
-              orderedOptionDescriptors.first?.kind == .gameMode,
+              orderedOptionDescriptors.first?.kind == .graphicsBackend,
               orderedOptionDescriptors.first(where: { $0.kind == .automaticProcessPolicies })?.isUserSelectable == false else {
             throw SteamCompatibilityLaunchProfileErrorV1.invalidRecipe(
                 "ordered-option-descriptors"
@@ -444,7 +526,30 @@ enum SteamCompatibilityLaunchProfileCatalogV1 {
 }
 
 struct CompatibilitySteamLaunchPreferencePayloadV1: Hashable, Sendable {
-    static let canonicalHeader = Data("forgeplay-steam-compatibility-preference-v1\n".utf8)
+    static let legacyCanonicalHeader = Data(
+        "forgeplay-steam-compatibility-preference-v1\n".utf8
+    )
+    static let canonicalHeader = Data("forgeplay-steam-compatibility-preference-v2\n".utf8)
+    private static let legacyCanonicalFieldNames = [
+        "schemaVersion",
+        "steamAppID",
+        "profileID",
+        "recipeRevision",
+        "graphicsBackend",
+        "networkPolicy",
+        "audioInputPolicy",
+        "synchronizationPolicy",
+        "videoMemoryPolicy",
+        "gameModeEnabled",
+        "heapZeroMemoryEnabled",
+        "fpsCursorPolicy",
+        "controllerPolicy",
+        "keyboardPreset",
+        "hasCustomPermutation",
+        "customCommandRole",
+        "customOptionRole",
+        "customControlRole"
+    ]
     private static let canonicalFieldNames = [
         "schemaVersion",
         "steamAppID",
@@ -455,6 +560,9 @@ struct CompatibilitySteamLaunchPreferencePayloadV1: Hashable, Sendable {
         "audioInputPolicy",
         "synchronizationPolicy",
         "videoMemoryPolicy",
+        "frameGenerationEnabled",
+        "frameGenerationTargetFPS",
+        "frameCheckEnabled",
         "gameModeEnabled",
         "heapZeroMemoryEnabled",
         "fpsCursorPolicy",
@@ -506,6 +614,9 @@ struct CompatibilitySteamLaunchPreferencePayloadV1: Hashable, Sendable {
             selections.audioInputPolicy.rawValue,
             selections.synchronizationPolicy.rawValue,
             selections.videoMemoryPolicy.rawValue,
+            selections.frameGenerationConfiguration.isEnabled ? "1" : "0",
+            String(selections.frameGenerationConfiguration.targetFrameRate.rawValue),
+            selections.frameGenerationConfiguration.isFrameCheckEnabled ? "1" : "0",
             selections.gameModeEnabled ? "1" : "0",
             selections.heapZeroMemoryEnabled ? "1" : "0",
             selections.fpsCursorPolicy.rawValue,
@@ -529,17 +640,44 @@ struct CompatibilitySteamLaunchPreferencePayloadV1: Hashable, Sendable {
         }
     }
 
+    static func canonicalPayloadSchemaVersion(_ data: Data) -> Int? {
+        if data.starts(with: canonicalHeader) {
+            return SteamCompatibilityLaunchProfileContractV1.preferenceSchemaVersion
+        }
+        if data.starts(with: legacyCanonicalHeader) {
+            return SteamCompatibilityLaunchProfileContractV1.legacyPreferenceSchemaVersion
+        }
+        return nil
+    }
+
     init(canonicalPayload data: Data) throws {
+        let sourceSchemaVersion: Int
+        let header: Data
+        let fieldNames: [String]
+        switch Self.canonicalPayloadSchemaVersion(data) {
+        case SteamCompatibilityLaunchProfileContractV1.preferenceSchemaVersion:
+            sourceSchemaVersion = SteamCompatibilityLaunchProfileContractV1.preferenceSchemaVersion
+            header = Self.canonicalHeader
+            fieldNames = Self.canonicalFieldNames
+        case SteamCompatibilityLaunchProfileContractV1.legacyPreferenceSchemaVersion:
+            sourceSchemaVersion =
+                SteamCompatibilityLaunchProfileContractV1.legacyPreferenceSchemaVersion
+            header = Self.legacyCanonicalHeader
+            fieldNames = Self.legacyCanonicalFieldNames
+        default:
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidCanonicalPayload("header")
+        }
+
         var parser = SteamCompatibilityCanonicalParserV1(data: data)
-        try parser.consume(Self.canonicalHeader, reason: "header")
+        try parser.consume(header, reason: "header")
         var values: [String] = []
-        values.reserveCapacity(Self.canonicalFieldNames.count)
-        for name in Self.canonicalFieldNames {
+        values.reserveCapacity(fieldNames.count)
+        for name in fieldNames {
             values.append(try parser.readField(named: name))
         }
         try parser.requireEnd()
 
-        guard values[0] == String(SteamCompatibilityLaunchProfileContractV1.preferenceSchemaVersion) else {
+        guard values[0] == String(sourceSchemaVersion) else {
             throw SteamCompatibilityLaunchProfileErrorV1.invalidCanonicalPayload(
                 "schema-version"
             )
@@ -549,39 +687,57 @@ struct CompatibilitySteamLaunchPreferencePayloadV1: Hashable, Sendable {
             profileID: values[2],
             recipeRevision: values[3]
         )
-        let gameModeEnabled = try Self.decodeBoolean(values[9], field: "game-mode-enabled")
+        let gameModeIndex = sourceSchemaVersion ==
+            SteamCompatibilityLaunchProfileContractV1.legacyPreferenceSchemaVersion ? 9 : 12
+        let heapZeroMemoryIndex = gameModeIndex + 1
+        let fpsCursorIndex = gameModeIndex + 2
+        let controllerIndex = gameModeIndex + 3
+        let keyboardPresetIndex = gameModeIndex + 4
+        let customPresenceIndex = gameModeIndex + 5
+        let customCommandIndex = gameModeIndex + 6
+        let customOptionIndex = gameModeIndex + 7
+        let customControlIndex = gameModeIndex + 8
+
+        let gameModeEnabled = try Self.decodeBoolean(
+            values[gameModeIndex],
+            field: "game-mode-enabled"
+        )
         let heapZeroMemoryEnabled = try Self.decodeBoolean(
-            values[10],
+            values[heapZeroMemoryIndex],
             field: "heap-zero-memory-enabled"
         )
-        guard let fpsCursorPolicy = FPSCursorCapturePolicy(rawValue: values[11]) else {
+        guard let fpsCursorPolicy = FPSCursorCapturePolicy(rawValue: values[fpsCursorIndex]) else {
             throw SteamCompatibilityLaunchProfileErrorV1.invalidCanonicalPayload(
                 "fps-cursor-policy"
             )
         }
-        guard let controllerPolicy = ControllerCompatibilityPolicy(rawValue: values[12]) else {
+        guard let controllerPolicy = ControllerCompatibilityPolicy(
+            rawValue: values[controllerIndex]
+        ) else {
             throw SteamCompatibilityLaunchProfileErrorV1.invalidCanonicalPayload(
                 "controller-policy"
             )
         }
-        guard let keyboardPreset = KeyboardMappingPreset(rawValue: values[13]) else {
+        guard let keyboardPreset = KeyboardMappingPreset(rawValue: values[keyboardPresetIndex]) else {
             throw SteamCompatibilityLaunchProfileErrorV1.invalidCanonicalPayload(
                 "keyboard-preset"
             )
         }
         let customPermutation: ModifierKeyPermutation?
-        switch values[14] {
+        switch values[customPresenceIndex] {
         case "0":
-            guard values[15] == "-", values[16] == "-", values[17] == "-" else {
+            guard values[customCommandIndex] == "-",
+                  values[customOptionIndex] == "-",
+                  values[customControlIndex] == "-" else {
                 throw SteamCompatibilityLaunchProfileErrorV1.invalidCanonicalPayload(
                     "unexpected-custom-permutation"
                 )
             }
             customPermutation = nil
         case "1":
-            guard let command = WindowsModifierRole(rawValue: values[15]),
-                  let option = WindowsModifierRole(rawValue: values[16]),
-                  let control = WindowsModifierRole(rawValue: values[17]) else {
+            guard let command = WindowsModifierRole(rawValue: values[customCommandIndex]),
+                  let option = WindowsModifierRole(rawValue: values[customOptionIndex]),
+                  let control = WindowsModifierRole(rawValue: values[customControlIndex]) else {
                 throw SteamCompatibilityLaunchProfileErrorV1.invalidCanonicalPayload(
                     "custom-permutation-role"
                 )
@@ -597,6 +753,34 @@ struct CompatibilitySteamLaunchPreferencePayloadV1: Hashable, Sendable {
             )
         }
 
+        let frameGenerationConfiguration: FrameGenerationConfiguration
+        if sourceSchemaVersion ==
+            SteamCompatibilityLaunchProfileContractV1.legacyPreferenceSchemaVersion {
+            frameGenerationConfiguration = .off
+        } else {
+            let isEnabled = try Self.decodeBoolean(
+                values[9],
+                field: "frame-generation-enabled"
+            )
+            guard let rawTargetFrameRate = Int(values[10]),
+                  let targetFrameRate = FrameGenerationTargetFrameRate(
+                      rawValue: rawTargetFrameRate
+                  ) else {
+                throw SteamCompatibilityLaunchProfileErrorV1.invalidCanonicalPayload(
+                    "frame-generation-target-fps"
+                )
+            }
+            let isFrameCheckEnabled = try Self.decodeBoolean(
+                values[11],
+                field: "frame-check-enabled"
+            )
+            frameGenerationConfiguration = FrameGenerationConfiguration(
+                isEnabled: isEnabled,
+                targetFrameRate: targetFrameRate,
+                isFrameCheckEnabled: isFrameCheckEnabled
+            )
+        }
+
         try self.init(
             identity: identity,
             selections: CompatibilitySteamLaunchUserSelectionsV1(
@@ -605,6 +789,7 @@ struct CompatibilitySteamLaunchPreferencePayloadV1: Hashable, Sendable {
                 audioInputPolicy: SteamAudioInputPolicyIdentifier.validated(values[6]),
                 synchronizationPolicy: SteamSynchronizationPolicyIdentifier.validated(values[7]),
                 videoMemoryPolicy: SteamVideoMemoryPolicyIdentifier.validated(values[8]),
+                frameGenerationConfiguration: frameGenerationConfiguration,
                 gameModeEnabled: gameModeEnabled,
                 heapZeroMemoryEnabled: heapZeroMemoryEnabled,
                 fpsCursorPolicy: fpsCursorPolicy,
@@ -615,7 +800,10 @@ struct CompatibilitySteamLaunchPreferencePayloadV1: Hashable, Sendable {
                 )
             )
         )
-        guard try canonicalPayload() == data else {
+        if sourceSchemaVersion !=
+                SteamCompatibilityLaunchProfileContractV1
+                    .legacyPreferenceSchemaVersion,
+           try canonicalPayload() != data {
             throw SteamCompatibilityLaunchProfileErrorV1.invalidCanonicalPayload(
                 "noncanonical-reencoding"
             )
@@ -761,6 +949,7 @@ enum SteamCompatibilitySnapshotV1MigrationAdapter {
                 audioInputPolicy: snapshot.audioInputPolicy,
                 synchronizationPolicy: snapshot.synchronizationPolicy,
                 videoMemoryPolicy: snapshot.videoMemoryPolicy,
+                frameGenerationConfiguration: snapshot.frameGenerationConfiguration,
                 gameModeEnabled: snapshot.gameModeEnabled,
                 heapZeroMemoryEnabled: recipe.initialSelections.heapZeroMemoryEnabled,
                 fpsCursorPolicy: snapshot.fpsCursorPolicy,

@@ -36,10 +36,6 @@ struct DeveloperAppsView: View {
         DeveloperAppCatalog.listings(for: selectedPlatform)
     }
 
-    private var developmentListings: [DeveloperProjectListing] {
-        DeveloperAppCatalog.inDevelopmentListings(for: selectedPlatform)
-    }
-
     private var visibleListings: [DeveloperAppListing] {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty else { return platformListings }
@@ -54,7 +50,7 @@ struct DeveloperAppsView: View {
     var body: some View {
         ForgePageScaffold(
             "제작자의 다른 앱",
-            subtitle: "출시된 앱과 개발 중인 프로젝트를 살펴보세요.",
+            subtitle: "출시된 앱과 곧 출시될 프로젝트, 개발 중인 프로젝트를 살펴보세요.",
             systemImage: "square.grid.3x3.square"
         ) {
             SectionHelpButton(section: .developerApps)
@@ -65,19 +61,8 @@ struct DeveloperAppsView: View {
             case .appCatalog:
                 appCatalogContent
             case .inDevelopment:
-                inDevelopmentContent
+                inDevelopmentGrid
             }
-        }
-    }
-
-    @ViewBuilder
-    private var inDevelopmentContent: some View {
-        developmentControls
-
-        if developmentListings.isEmpty {
-            emptyDevelopmentPlatformCard
-        } else {
-            inDevelopmentGrid
         }
     }
 
@@ -99,6 +84,7 @@ struct DeveloperAppsView: View {
 
     @ViewBuilder
     private var appCatalogContent: some View {
+        upcomingProjectsSection
         catalogControls
 
         if platformListings.isEmpty {
@@ -107,6 +93,30 @@ struct DeveloperAppsView: View {
             emptySearchCard
         } else {
             appGrid
+        }
+    }
+
+    private var upcomingProjectsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label(appState.localized("출시 예정"), systemImage: "calendar.badge.clock")
+                .font(.title3.weight(.bold))
+                .foregroundStyle(palette.text)
+
+            LazyVGrid(
+                columns: [
+                    GridItem(
+                        .adaptive(minimum: 340, maximum: 520),
+                        spacing: ForgePlayLayout.sectionSpacing,
+                        alignment: .top
+                    )
+                ],
+                alignment: .leading,
+                spacing: ForgePlayLayout.sectionSpacing
+            ) {
+                ForEach(DeveloperAppCatalog.upcomingListings) { listing in
+                    DeveloperUpcomingProjectCard(listing: listing)
+                }
+            }
         }
     }
 
@@ -122,15 +132,14 @@ struct DeveloperAppsView: View {
             alignment: .leading,
             spacing: ForgePlayLayout.sectionSpacing
         ) {
-            ForEach(developmentListings) { listing in
+            ForEach(DeveloperAppCatalog.inDevelopmentListings) { listing in
                 DeveloperInDevelopmentProjectTile(listing: listing)
             }
         }
-        .animation(.easeInOut(duration: 0.18), value: developmentListings.map(\.id))
     }
 
     private var catalogControls: some View {
-        ForgeCard {
+        ForgeCard("앱 카탈로그", systemImage: "rectangle.3.group") {
             ViewThatFits(in: .horizontal) {
                 HStack(alignment: .center, spacing: 16) {
                     platformPicker
@@ -144,17 +153,6 @@ struct DeveloperAppsView: View {
             }
 
             Text(appState.localizedFormat("%d개의 앱", visibleListings.count))
-                .font(.caption)
-                .foregroundStyle(palette.secondaryText)
-                .contentTransition(.numericText())
-        }
-    }
-
-    private var developmentControls: some View {
-        ForgeCard {
-            platformPicker
-
-            Text(appState.localizedFormat("%d개의 프로젝트", developmentListings.count))
                 .font(.caption)
                 .foregroundStyle(palette.secondaryText)
                 .contentTransition(.numericText())
@@ -251,14 +249,6 @@ struct DeveloperAppsView: View {
         )
     }
 
-    private var emptyDevelopmentPlatformCard: some View {
-        emptyStateCard(
-            title: "이 디바이스에서 개발 중인 프로젝트가 아직 없습니다.",
-            detail: "다른 디바이스를 선택해 보세요.",
-            systemImage: selectedPlatform.systemImage
-        )
-    }
-
     private func emptyStateCard(
         title: String,
         detail: String,
@@ -284,6 +274,51 @@ struct DeveloperAppsView: View {
     }
 }
 
+private struct DeveloperUpcomingProjectCard: View {
+    var listing: DeveloperProjectListing
+    @Environment(AppState.self) private var appState
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var palette: ForgePlayPalette {
+        ForgePlayTheme.palette(mode: appState.themeMode, colorScheme: colorScheme)
+    }
+
+    var body: some View {
+        ForgeCard {
+            HStack(alignment: .top, spacing: 14) {
+                DeveloperProjectArtwork(
+                    name: listing.name,
+                    artworkAssetName: listing.artworkAssetName,
+                    size: 74
+                )
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(listing.name)
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(palette.text)
+                        .textSelection(.enabled)
+
+                    DeveloperAppBadge(
+                        title: appState.localized("조만간 출시 예정"),
+                        systemImage: "clock.fill",
+                        foregroundColor: palette.primary,
+                        backgroundColor: palette.primary.opacity(0.10)
+                    )
+
+                    if let summaryKey = listing.summaryKey {
+                        Text(appState.localized(summaryKey))
+                            .font(.callout)
+                            .foregroundStyle(palette.secondaryText)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+
+                Spacer(minLength: 0)
+            }
+        }
+    }
+}
+
 private struct DeveloperInDevelopmentProjectTile: View {
     var listing: DeveloperProjectListing
     @Environment(AppState.self) private var appState
@@ -301,23 +336,12 @@ private struct DeveloperInDevelopmentProjectTile: View {
                     artworkAssetName: listing.artworkAssetName,
                     size: 96
                 )
-
-                VStack(spacing: 5) {
-                    Text(listing.name)
-                        .font(.title3.weight(.bold))
-                        .foregroundStyle(palette.text)
-                        .multilineTextAlignment(.center)
-                        .textSelection(.enabled)
-
-                    if let summaryKey = listing.summaryKey {
-                        Text(appState.localized(summaryKey))
-                            .font(.callout)
-                            .foregroundStyle(palette.secondaryText)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
+                Text(listing.name)
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(palette.text)
+                    .textSelection(.enabled)
             }
-            .frame(maxWidth: .infinity, minHeight: 178)
+            .frame(maxWidth: .infinity, minHeight: 154)
         }
     }
 }
@@ -341,18 +365,10 @@ private struct DeveloperAppCard: View {
         ForgeCard {
             VStack(alignment: .leading, spacing: 15) {
                 HStack(alignment: .top, spacing: 14) {
-                    if let artworkAssetName = listing.artworkAssetName {
-                        DeveloperProjectArtwork(
-                            name: listing.name,
-                            artworkAssetName: artworkAssetName,
-                            size: 74
-                        )
-                    } else {
-                        DeveloperAppArtwork(
-                            name: listing.name,
-                            artworkURL: listing.artworkURL
-                        )
-                    }
+                    DeveloperAppArtwork(
+                        name: listing.name,
+                        artworkURL: listing.artworkURL
+                    )
 
                     VStack(alignment: .leading, spacing: 7) {
                         Text(listing.name)
@@ -409,24 +425,13 @@ private struct DeveloperAppCard: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                if let appStoreURL = listing.appStoreURL {
-                    ThemedActionButton(
-                        title: "App Store에서 보기",
-                        systemImage: "arrow.up.right.square",
-                        prominence: .secondary,
-                        controlSize: .small
-                    ) {
-                        appState.openExternalURL(appStoreURL)
-                    }
-                } else if let homepageURL = listing.homepageURL {
-                    ThemedActionButton(
-                        title: "홈페이지 열기",
-                        systemImage: "arrow.up.right.square",
-                        prominence: .secondary,
-                        controlSize: .small
-                    ) {
-                        appState.openExternalURL(homepageURL)
-                    }
+                ThemedActionButton(
+                    title: "App Store에서 보기",
+                    systemImage: "arrow.up.right.square",
+                    prominence: .secondary,
+                    controlSize: .small
+                ) {
+                    appState.openExternalURL(listing.appStoreURL)
                 }
             }
         }

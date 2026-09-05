@@ -7,6 +7,37 @@ import XCTest
 final class SteamCompatibilityLaunchPreferencePersistenceV1Tests: XCTestCase {
     private let recipe = SteamCompatibilityLaunchProfileCatalogV1.helldivers2
 
+    func testCorruptPreferenceHasExplicitCASTokenRecoveryReset() throws {
+        let container = try makeContainer()
+        let repository = CompatibilitySteamLaunchPreferenceRepositoryV1(
+            container: container
+        )
+        _ = try repository.save(
+            preference(),
+            expectedSourceVersion: nil
+        )
+        let corruptionContext = ModelContext(container)
+        corruptionContext.autosaveEnabled = false
+        let record = try XCTUnwrap(
+            corruptionContext.fetch(
+                FetchDescriptor<CompatibilitySteamLaunchPreferenceRecord>()
+            ).first
+        )
+        record.canonicalPreferencePayload.append(0)
+        try corruptionContext.save()
+
+        XCTAssertThrowsError(try repository.loadOrMigrate(recipe: recipe))
+        let recoveryVersion = try XCTUnwrap(
+            repository.recoveryVersion(identity: recipe.identity)
+        )
+        try repository.resetForRecovery(
+            identity: recipe.identity,
+            expectedVersion: recoveryVersion
+        )
+        XCTAssertNil(try repository.recoveryVersion(identity: recipe.identity))
+        XCTAssertNil(try repository.loadOrMigrate(recipe: recipe))
+    }
+
     func testCreateAndReplacementUseExpectedSourceVersionAndIncrementGenerationExactlyOnce() throws {
         let container = try makeContainer()
         let repository = CompatibilitySteamLaunchPreferenceRepositoryV1(container: container)

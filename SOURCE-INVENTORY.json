@@ -63,12 +63,26 @@
         "classification": "release-commit-blob",
         "destinationPath": "Config/ForgePlayCopyleftSourcePackages.json",
         "gitMode": "100644",
-        "gitObjectID": "0b2cc9a8bee8cd959efffe47d311522fc79daf70",
-        "sha256": "c312d7bde86a0e76417ce8851966048e0d1ba53933a99fff5a983b5f86b81932",
+        "gitObjectID": "2103ce04882b80c5232b485df7f0227aa2e72891",
+        "sha256": "10559385a05a5724a032781e9977214135f481e00cd8bb096398fc47342ac429",
         "sourcePath": "Config/ForgePlayCopyleftSourcePackages.json"
       },
       "path": "Config/ForgePlayCopyleftSourcePackages.json",
-      "sha256": "c312d7bde86a0e76417ce8851966048e0d1ba53933a99fff5a983b5f86b81932"
+      "sha256": "10559385a05a5724a032781e9977214135f481e00cd8bb096398fc47342ac429"
+    },
+    {
+      "byteLength": 835,
+      "mode": "100644",
+      "origin": {
+        "classification": "release-commit-blob",
+        "destinationPath": "Config/ForgePlayD3DMetalFrameGenerationProxy.xcconfig",
+        "gitMode": "100644",
+        "gitObjectID": "39eb9ffa0508232a4ed3a548974decf3188363a6",
+        "sha256": "fb4c0ddaf68be55591ff9d452486f19c43a30ee6451ea8f307b4e35e332a432a",
+        "sourcePath": "Config/ForgePlayD3DMetalFrameGenerationProxy.xcconfig"
+      },
+      "path": "Config/ForgePlayD3DMetalFrameGenerationProxy.xcconfig",
+      "sha256": "fb4c0ddaf68be55591ff9d452486f19c43a30ee6451ea8f307b4e35e332a432a"
     },
     {
       "byteLength": 918,
@@ -77,12 +91,12 @@
         "classification": "release-commit-blob",
         "destinationPath": "Config/ForgePlayDefaults.xcconfig",
         "gitMode": "100644",
-        "gitObjectID": "1814bbf28e3d70fafd6dc028269b16063239fe45",
-        "sha256": "894f5465f9d07432ce9ebb5984956efbd76473b0dbbd5700db325805f1328099",
+        "gitObjectID": "6c4a22b3dd9b30c6d7e357cb6e613a51d4dac9e6",
+        "sha256": "7c0361869295ba930b7bdf481afb74738e73040025bf21db78bc413b730e0dac",
         "sourcePath": "Config/ForgePlayDefaults.xcconfig"
       },
       "path": "Config/ForgePlayDefaults.xcconfig",
-      "sha256": "894f5465f9d07432ce9ebb5984956efbd76473b0dbbd5700db325805f1328099"
+      "sha256": "7c0361869295ba930b7bdf481afb74738e73040025bf21db78bc413b730e0dac"
     },
     {
       "byteLength": 621,
@@ -133,12 +147,12 @@
         "classification": "release-commit-blob",
         "destinationPath": "Config/ForgePlayGStreamerPayload.lock.json",
         "gitMode": "100644",
-        "gitObjectID": "e5890ef7950ec358a72b4787a7f0001eeffba1a3",
-        "sha256": "fce9b6d128fcbc3b9a92d27c78f49b1ee01dbeac35da1b1d60a9d7cda89cc374",
+        "gitObjectID": "77eda82ffe57a8c7ac90c6c285cf5cfb13edb567",
+        "sha256": "6e327c3981a41c07bde0a725083546278320dd987cccdf47bcafa7ec8cea260d",
         "sourcePath": "Config/ForgePlayGStreamerPayload.lock.json"
       },
       "path": "Config/ForgePlayGStreamerPayload.lock.json",
-      "sha256": "fce9b6d128fcbc3b9a92d27c78f49b1ee01dbeac35da1b1d60a9d7cda89cc374"
+      "sha256": "6e327c3981a41c07bde0a725083546278320dd987cccdf47bcafa7ec8cea260d"
     },
     {
       "byteLength": 2348,
@@ -239,18 +253,18 @@
       "sha256": "3a2928e9ea64167526afcb520216a619c337275c9353aa81e7bf6d61d02936f4"
     },
     {
-      "byteLength": 4423,
+      "byteLength": 4432,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Config/ForgePlayPublicDistributionSourceGraph.json",
         "gitMode": "100644",
-        "gitObjectID": "86135bc4391d0ff14ebc0d3db12cfbd9f6988e7b",
-        "sha256": "54c6e2c3e5801422290aa8ed196f0f0d4bb34d8d2fadeeb2f40be2fe6ec8250a",
+        "gitObjectID": "435bd8fb78e021b5289ce53d4f697852b3508729",
+        "sha256": "975bfca7e2fa18a41e7a18b0954560a3b014c6210d8deb66f15a0b1aab77146a",
         "sourcePath": "Config/ForgePlayPublicDistributionSourceGraph.json"
       },
       "path": "Config/ForgePlayPublicDistributionSourceGraph.json",
-      "sha256": "54c6e2c3e5801422290aa8ed196f0f0d4bb34d8d2fadeeb2f40be2fe6ec8250a"
+      "sha256": "975bfca7e2fa18a41e7a18b0954560a3b014c6210d8deb66f15a0b1aab77146a"
     },
     {
       "byteLength": 2247,
@@ -281,18 +295,18 @@
       "sha256": "ad9acde93dc4913415ea47f7586c1b542239299a1b3b7c82cf368130eee5b1e5"
     },
     {
-      "byteLength": 17976,
+      "byteLength": 18472,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Config/ForgePlayRuntimePatchProvenance.lock.json",
         "gitMode": "100644",
-        "gitObjectID": "eeb665f31665c507c0ec6a1df56de6010b5247cf",
-        "sha256": "434d50895bc78ba5c4cfc75fed21dec22a80ae951586ad76ab326daac62665a1",
+        "gitObjectID": "0602b022ff97404628e4e0d592190882b554b090",
+        "sha256": "09d132a94fff66415aa61faa7163b664645aeafa686535063ad52d47200e6c94",
         "sourcePath": "Config/ForgePlayRuntimePatchProvenance.lock.json"
       },
       "path": "Config/ForgePlayRuntimePatchProvenance.lock.json",
-      "sha256": "434d50895bc78ba5c4cfc75fed21dec22a80ae951586ad76ab326daac62665a1"
+      "sha256": "09d132a94fff66415aa61faa7163b664645aeafa686535063ad52d47200e6c94"
     },
     {
       "byteLength": 366,
@@ -301,12 +315,12 @@
         "classification": "release-commit-blob",
         "destinationPath": "Config/ForgePlayRuntimeSourceIdentity.lock.json",
         "gitMode": "100644",
-        "gitObjectID": "cc211f16ec4125f489afc34e58153252d043c2fb",
-        "sha256": "043d9216762ebbbd1ebc47559bd44a392b345fcfc2bba565906eb372ddf849c7",
+        "gitObjectID": "23f89b331eaa7b52d6e0b3d8d937031b83116705",
+        "sha256": "d3d8c20ceef7768bb0993616c2f9e57852687a5bbf6f5602051dbba38220f7b1",
         "sourcePath": "Config/ForgePlayRuntimeSourceIdentity.lock.json"
       },
       "path": "Config/ForgePlayRuntimeSourceIdentity.lock.json",
-      "sha256": "043d9216762ebbbd1ebc47559bd44a392b345fcfc2bba565906eb372ddf849c7"
+      "sha256": "d3d8c20ceef7768bb0993616c2f9e57852687a5bbf6f5602051dbba38220f7b1"
     },
     {
       "byteLength": 125,
@@ -323,23 +337,23 @@
       "sha256": "dab4063ca6d98a6146cf9225162d31f933745b51e6fc3b82b0c8d771ba5c2cc5"
     },
     {
-      "byteLength": 163438,
+      "byteLength": 175090,
       "mode": "100644",
       "origin": {
         "classification": "generated-xcode-project",
         "generator": {
           "gitMode": "100755",
-          "gitObjectID": "cea9fd1753f286eeea763688dc8e37c78a645d79",
+          "gitObjectID": "1553d837aadc156ae4a3ae4092b4a4be15a27ba6",
           "path": "Scripts/generate-xcode-project.sh",
-          "sha256": "caefb6ef63b603b7bd1c876119fe4c3f60574ab331855654ee850254fbfbf2c6",
+          "sha256": "772bdd0f464fb3d7e273cc1d8096afb19238d0b4db55e36d656f5daef31cbc41",
           "sourcePath": "Scripts/generate-xcode-project.sh"
         },
         "inputs": [
           {
             "gitMode": "100644",
-            "gitObjectID": "eb5b028b7cc982c6c33e7f92b37e4b08f1fb93a3",
+            "gitObjectID": "03284d589697d60984ccb2727b907e8cf9d424e8",
             "path": "project.yml",
-            "sha256": "f61694d6a3deea67b3c84522350396859805c357529760e7968ffdf201d1a3d6",
+            "sha256": "7fadea466db46327283e2f6aaf17dfdb2a2f3e669054576a0a16f46177de20c8",
             "sourcePath": "project.yml"
           }
         ],
@@ -349,7 +363,7 @@
         }
       },
       "path": "ForgePlay.xcodeproj/project.pbxproj",
-      "sha256": "df843ceed2b38a5e451115965c9a6bbb55cca6fdef062fa15dabf5a01af57875"
+      "sha256": "074bd87e403033894311b76ea82b87e2190783329a7e146967f77b9c4caaa60a"
     },
     {
       "byteLength": 135,
@@ -358,17 +372,17 @@
         "classification": "generated-xcode-project",
         "generator": {
           "gitMode": "100755",
-          "gitObjectID": "cea9fd1753f286eeea763688dc8e37c78a645d79",
+          "gitObjectID": "1553d837aadc156ae4a3ae4092b4a4be15a27ba6",
           "path": "Scripts/generate-xcode-project.sh",
-          "sha256": "caefb6ef63b603b7bd1c876119fe4c3f60574ab331855654ee850254fbfbf2c6",
+          "sha256": "772bdd0f464fb3d7e273cc1d8096afb19238d0b4db55e36d656f5daef31cbc41",
           "sourcePath": "Scripts/generate-xcode-project.sh"
         },
         "inputs": [
           {
             "gitMode": "100644",
-            "gitObjectID": "eb5b028b7cc982c6c33e7f92b37e4b08f1fb93a3",
+            "gitObjectID": "03284d589697d60984ccb2727b907e8cf9d424e8",
             "path": "project.yml",
-            "sha256": "f61694d6a3deea67b3c84522350396859805c357529760e7968ffdf201d1a3d6",
+            "sha256": "7fadea466db46327283e2f6aaf17dfdb2a2f3e669054576a0a16f46177de20c8",
             "sourcePath": "project.yml"
           }
         ],
@@ -387,17 +401,17 @@
         "classification": "generated-xcode-project",
         "generator": {
           "gitMode": "100755",
-          "gitObjectID": "cea9fd1753f286eeea763688dc8e37c78a645d79",
+          "gitObjectID": "1553d837aadc156ae4a3ae4092b4a4be15a27ba6",
           "path": "Scripts/generate-xcode-project.sh",
-          "sha256": "caefb6ef63b603b7bd1c876119fe4c3f60574ab331855654ee850254fbfbf2c6",
+          "sha256": "772bdd0f464fb3d7e273cc1d8096afb19238d0b4db55e36d656f5daef31cbc41",
           "sourcePath": "Scripts/generate-xcode-project.sh"
         },
         "inputs": [
           {
             "gitMode": "100644",
-            "gitObjectID": "eb5b028b7cc982c6c33e7f92b37e4b08f1fb93a3",
+            "gitObjectID": "03284d589697d60984ccb2727b907e8cf9d424e8",
             "path": "project.yml",
-            "sha256": "f61694d6a3deea67b3c84522350396859805c357529760e7968ffdf201d1a3d6",
+            "sha256": "7fadea466db46327283e2f6aaf17dfdb2a2f3e669054576a0a16f46177de20c8",
             "sourcePath": "project.yml"
           }
         ],
@@ -416,17 +430,17 @@
         "classification": "generated-xcode-project",
         "generator": {
           "gitMode": "100755",
-          "gitObjectID": "cea9fd1753f286eeea763688dc8e37c78a645d79",
+          "gitObjectID": "1553d837aadc156ae4a3ae4092b4a4be15a27ba6",
           "path": "Scripts/generate-xcode-project.sh",
-          "sha256": "caefb6ef63b603b7bd1c876119fe4c3f60574ab331855654ee850254fbfbf2c6",
+          "sha256": "772bdd0f464fb3d7e273cc1d8096afb19238d0b4db55e36d656f5daef31cbc41",
           "sourcePath": "Scripts/generate-xcode-project.sh"
         },
         "inputs": [
           {
             "gitMode": "100644",
-            "gitObjectID": "eb5b028b7cc982c6c33e7f92b37e4b08f1fb93a3",
+            "gitObjectID": "03284d589697d60984ccb2727b907e8cf9d424e8",
             "path": "project.yml",
-            "sha256": "f61694d6a3deea67b3c84522350396859805c357529760e7968ffdf201d1a3d6",
+            "sha256": "7fadea466db46327283e2f6aaf17dfdb2a2f3e669054576a0a16f46177de20c8",
             "sourcePath": "project.yml"
           }
         ],
@@ -445,17 +459,17 @@
         "classification": "generated-xcode-project",
         "generator": {
           "gitMode": "100755",
-          "gitObjectID": "cea9fd1753f286eeea763688dc8e37c78a645d79",
+          "gitObjectID": "1553d837aadc156ae4a3ae4092b4a4be15a27ba6",
           "path": "Scripts/generate-xcode-project.sh",
-          "sha256": "caefb6ef63b603b7bd1c876119fe4c3f60574ab331855654ee850254fbfbf2c6",
+          "sha256": "772bdd0f464fb3d7e273cc1d8096afb19238d0b4db55e36d656f5daef31cbc41",
           "sourcePath": "Scripts/generate-xcode-project.sh"
         },
         "inputs": [
           {
             "gitMode": "100644",
-            "gitObjectID": "eb5b028b7cc982c6c33e7f92b37e4b08f1fb93a3",
+            "gitObjectID": "03284d589697d60984ccb2727b907e8cf9d424e8",
             "path": "project.yml",
-            "sha256": "f61694d6a3deea67b3c84522350396859805c357529760e7968ffdf201d1a3d6",
+            "sha256": "7fadea466db46327283e2f6aaf17dfdb2a2f3e669054576a0a16f46177de20c8",
             "sourcePath": "project.yml"
           }
         ],
@@ -468,18 +482,88 @@
       "sha256": "6020de095878f9ae4956132b1f4a0782eb0fecf2e5e7f0c35e8c8ad5e55c87a3"
     },
     {
-      "byteLength": 2608,
+      "byteLength": 3920,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "LICENSE.md",
         "gitMode": "100644",
-        "gitObjectID": "48c0f9f4a9a6d2ebd35e687779f5493592124570",
-        "sha256": "98a715c6d8e51d4d67eb440381da947676ca3e5dfbca67f4c20a1e8b5d41be51",
+        "gitObjectID": "69c3a18c2b476035339b11808a9b9b7e65cbc9d6",
+        "sha256": "42bd16191e065f37b84e60876368305485796566f9978fc52275fc74db68f246",
         "sourcePath": "LICENSE.md"
       },
       "path": "LICENSE.md",
-      "sha256": "98a715c6d8e51d4d67eb440381da947676ca3e5dfbca67f4c20a1e8b5d41be51"
+      "sha256": "42bd16191e065f37b84e60876368305485796566f9978fc52275fc74db68f246"
+    },
+    {
+      "byteLength": 5437,
+      "mode": "100644",
+      "origin": {
+        "classification": "release-commit-blob",
+        "destinationPath": "LICENSES/ForgePlayFrameGeneration/FRAME_GENERATION_FILE_LICENSES.json",
+        "gitMode": "100644",
+        "gitObjectID": "0d4f68c18c0ae6c8244184f47978fa602b30a89c",
+        "sha256": "654929a141b6b8b452c0e31729f6a02c4db7a6d302de09659a04ee68d5a9629b",
+        "sourcePath": "LICENSES/ForgePlayFrameGeneration/FRAME_GENERATION_FILE_LICENSES.json"
+      },
+      "path": "LICENSES/ForgePlayFrameGeneration/FRAME_GENERATION_FILE_LICENSES.json",
+      "sha256": "654929a141b6b8b452c0e31729f6a02c4db7a6d302de09659a04ee68d5a9629b"
+    },
+    {
+      "byteLength": 8259,
+      "mode": "100644",
+      "origin": {
+        "classification": "release-commit-blob",
+        "destinationPath": "LICENSES/ForgePlayFrameGeneration/FRAME_GENERATION_LICENSE_SCOPE.md",
+        "gitMode": "100644",
+        "gitObjectID": "1c9b244118a2355f03baf9e3c99c676253e0b160",
+        "sha256": "df0adacd519960ccf475b057282e51a8c5174917039866e1d6b2cced31449154",
+        "sourcePath": "LICENSES/ForgePlayFrameGeneration/FRAME_GENERATION_LICENSE_SCOPE.md"
+      },
+      "path": "LICENSES/ForgePlayFrameGeneration/FRAME_GENERATION_LICENSE_SCOPE.md",
+      "sha256": "df0adacd519960ccf475b057282e51a8c5174917039866e1d6b2cced31449154"
+    },
+    {
+      "byteLength": 8169,
+      "mode": "100644",
+      "origin": {
+        "classification": "release-commit-blob",
+        "destinationPath": "LICENSES/ForgePlayFrameGeneration/FRAME_GENERATION_LICENSE_SCOPE_KO.md",
+        "gitMode": "100644",
+        "gitObjectID": "ed927b831c2c8e585f57d7d63ea74f8f4708582b",
+        "sha256": "b11887425d90e06c46be2f29755c905a1473d467e0e43545a7e0eff9524cf0bb",
+        "sourcePath": "LICENSES/ForgePlayFrameGeneration/FRAME_GENERATION_LICENSE_SCOPE_KO.md"
+      },
+      "path": "LICENSES/ForgePlayFrameGeneration/FRAME_GENERATION_LICENSE_SCOPE_KO.md",
+      "sha256": "b11887425d90e06c46be2f29755c905a1473d467e0e43545a7e0eff9524cf0bb"
+    },
+    {
+      "byteLength": 1586,
+      "mode": "100644",
+      "origin": {
+        "classification": "release-commit-blob",
+        "destinationPath": "LICENSES/ForgePlayFrameGeneration/FRAME_GENERATION_NOTICE",
+        "gitMode": "100644",
+        "gitObjectID": "3191990250d25e7b90030833b0bfa19d5850e724",
+        "sha256": "0da2d22ac489b04cb07fb4990dd34dc626ebb34502575849f675b1756faa4a6e",
+        "sourcePath": "LICENSES/ForgePlayFrameGeneration/FRAME_GENERATION_NOTICE"
+      },
+      "path": "LICENSES/ForgePlayFrameGeneration/FRAME_GENERATION_NOTICE",
+      "sha256": "0da2d22ac489b04cb07fb4990dd34dc626ebb34502575849f675b1756faa4a6e"
+    },
+    {
+      "byteLength": 13542,
+      "mode": "100644",
+      "origin": {
+        "classification": "release-commit-blob",
+        "destinationPath": "LICENSES/ForgePlayFrameGeneration/FRAME_GENERATION_SYMBOL_MANIFEST.md",
+        "gitMode": "100644",
+        "gitObjectID": "fca3b4922b028410b3a0f81929a8dd3e9131529e",
+        "sha256": "0acc98f637d550325bfb37466e9b10cdb1be1f46c492fdd6dfce240990ce789f",
+        "sourcePath": "LICENSES/ForgePlayFrameGeneration/FRAME_GENERATION_SYMBOL_MANIFEST.md"
+      },
+      "path": "LICENSES/ForgePlayFrameGeneration/FRAME_GENERATION_SYMBOL_MANIFEST.md",
+      "sha256": "0acc98f637d550325bfb37466e9b10cdb1be1f46c492fdd6dfce240990ce789f"
     },
     {
       "byteLength": 3504,
@@ -594,18 +678,18 @@
       "sha256": "821358e7ecd15a3edd532fd42395e408870b271fa3d3da84325ff77ae0297432"
     },
     {
-      "byteLength": 2414,
+      "byteLength": 2413,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "LICENSES/ForgePlayWine/FORGEPLAY-MODIFICATIONS.md",
         "gitMode": "100644",
-        "gitObjectID": "982277331e202cc778d0bf0c00eb0050f7f099dc",
-        "sha256": "613ab79178fece6ea534589d64c1e9716b7a8a5c8730eebb4ea067fdd46ff081",
+        "gitObjectID": "01eab77e244c88a4ff4b00708198652c20a47390",
+        "sha256": "7bc6195b962110ba65eba9a9e72aef96e195d2fe1d4fd1c7fce38d2f070faccd",
         "sourcePath": "LICENSES/ForgePlayWine/FORGEPLAY-MODIFICATIONS.md"
       },
       "path": "LICENSES/ForgePlayWine/FORGEPLAY-MODIFICATIONS.md",
-      "sha256": "613ab79178fece6ea534589d64c1e9716b7a8a5c8730eebb4ea067fdd46ff081"
+      "sha256": "7bc6195b962110ba65eba9a9e72aef96e195d2fe1d4fd1c7fce38d2f070faccd"
     },
     {
       "byteLength": 35149,
@@ -634,6 +718,90 @@
       },
       "path": "LICENSES/LGPL-2.1-or-later.txt",
       "sha256": "e237fa56668030e928551ddd60f05df5fe957f75eab874bbd017e085ed722e7c"
+    },
+    {
+      "byteLength": 3774,
+      "mode": "100644",
+      "origin": {
+        "classification": "release-commit-blob",
+        "destinationPath": "LICENSES/THIRD-PARTY-SOURCE-PROVENANCE.md",
+        "gitMode": "100644",
+        "gitObjectID": "71d7c63db1f2e8f061f4602d994069f99de4d136",
+        "sha256": "50c2ebb0a54972d219914a89d4e1f23a3dcf2a8348df9c394962ece628a38e9c",
+        "sourcePath": "LICENSES/THIRD-PARTY-SOURCE-PROVENANCE.md"
+      },
+      "path": "LICENSES/THIRD-PARTY-SOURCE-PROVENANCE.md",
+      "sha256": "50c2ebb0a54972d219914a89d4e1f23a3dcf2a8348df9c394962ece628a38e9c"
+    },
+    {
+      "byteLength": 40,
+      "mode": "100644",
+      "origin": {
+        "classification": "release-commit-blob",
+        "destinationPath": "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.exports",
+        "gitMode": "100644",
+        "gitObjectID": "631a251fa9567f9b0fde22106e7aa91ab250af6b",
+        "sha256": "9918a6d51b3bd8b798dacb098960aba09db44b36c97b0c93e104e08156c04c5a",
+        "sourcePath": "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.exports"
+      },
+      "path": "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.exports",
+      "sha256": "9918a6d51b3bd8b798dacb098960aba09db44b36c97b0c93e104e08156c04c5a"
+    },
+    {
+      "byteLength": 1081,
+      "mode": "100644",
+      "origin": {
+        "classification": "release-commit-blob",
+        "destinationPath": "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.h",
+        "gitMode": "100644",
+        "gitObjectID": "972791a964419ab7926786c71019a827ebbc7971",
+        "sha256": "75400dd7e6db05301ba7eaf4634177ee5ef41a8879f0f005a42738ff992b2dce",
+        "sourcePath": "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.h"
+      },
+      "path": "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.h",
+      "sha256": "75400dd7e6db05301ba7eaf4634177ee5ef41a8879f0f005a42738ff992b2dce"
+    },
+    {
+      "byteLength": 158376,
+      "mode": "100644",
+      "origin": {
+        "classification": "release-commit-blob",
+        "destinationPath": "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.m",
+        "gitMode": "100644",
+        "gitObjectID": "2900456414af3a34ac4f899bb249d2d9848f3fa4",
+        "sha256": "3d12c4e3d3b299d3717bf5326e8765642b34170548ed7d83ee60c5304305c85f",
+        "sourcePath": "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.m"
+      },
+      "path": "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.m",
+      "sha256": "3d12c4e3d3b299d3717bf5326e8765642b34170548ed7d83ee60c5304305c85f"
+    },
+    {
+      "byteLength": 68721,
+      "mode": "100644",
+      "origin": {
+        "classification": "release-commit-blob",
+        "destinationPath": "Native/D3DMetalFrameGenerationProxy/FrameGenerationStateMachine.c",
+        "gitMode": "100644",
+        "gitObjectID": "b3c18e9ee0476c5ac2e83bd7ed52e77e190f68a8",
+        "sha256": "b4e02ed5b0873b3277e16cdb1a8c3d451b89618d0a78b00cbe0440f71e033130",
+        "sourcePath": "Native/D3DMetalFrameGenerationProxy/FrameGenerationStateMachine.c"
+      },
+      "path": "Native/D3DMetalFrameGenerationProxy/FrameGenerationStateMachine.c",
+      "sha256": "b4e02ed5b0873b3277e16cdb1a8c3d451b89618d0a78b00cbe0440f71e033130"
+    },
+    {
+      "byteLength": 11384,
+      "mode": "100644",
+      "origin": {
+        "classification": "release-commit-blob",
+        "destinationPath": "Native/D3DMetalFrameGenerationProxy/FrameGenerationStateMachine.h",
+        "gitMode": "100644",
+        "gitObjectID": "f907d6689ac473dfa90103a05c9ccc0039267a57",
+        "sha256": "3ad8bb385a4547bff15f7e1cbc9e2f3b825b21f9e630cc4d8e2266a91dfc64a6",
+        "sourcePath": "Native/D3DMetalFrameGenerationProxy/FrameGenerationStateMachine.h"
+      },
+      "path": "Native/D3DMetalFrameGenerationProxy/FrameGenerationStateMachine.h",
+      "sha256": "3ad8bb385a4547bff15f7e1cbc9e2f3b825b21f9e630cc4d8e2266a91dfc64a6"
     },
     {
       "byteLength": 40,
@@ -818,18 +986,18 @@
       "sha256": "3d50db5f32bf831748caa95f954d4c1fd205b391f5ce96f3f208726b874e2e04"
     },
     {
-      "byteLength": 9793,
+      "byteLength": 9855,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Native/GameModeProcessHost/GameModeProcessHost.m",
         "gitMode": "100644",
-        "gitObjectID": "b446f007311909d6f8aab5f2ebffde424cc118ad",
-        "sha256": "b472a4c2dc48ba9f05e337a2f0bff367cd3aafdad044ee678285c4ac0fd3f8ce",
+        "gitObjectID": "824fce16164928c8d6325de4a2373c97cff81878",
+        "sha256": "c3bf16d9edc7615593ce2bef1b3da73240f8cffa8c56c8dbe1aca61813a3bad7",
         "sourcePath": "Native/GameModeProcessHost/GameModeProcessHost.m"
       },
       "path": "Native/GameModeProcessHost/GameModeProcessHost.m",
-      "sha256": "b472a4c2dc48ba9f05e337a2f0bff367cd3aafdad044ee678285c4ac0fd3f8ce"
+      "sha256": "c3bf16d9edc7615593ce2bef1b3da73240f8cffa8c56c8dbe1aca61813a3bad7"
     },
     {
       "byteLength": 1557,
@@ -916,18 +1084,18 @@
       "sha256": "a09799ec252fcfde59b485c6ea1be2e63a42e806ca2df615e539335039052794"
     },
     {
-      "byteLength": 8905,
+      "byteLength": 9109,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Native/GameModeProcessHost/README.md",
         "gitMode": "100644",
-        "gitObjectID": "30ab19b263c36e1921950dade4ec1849b059b7fe",
-        "sha256": "d1ac397040f092c4106ab8799f589f47ee1aa9b1cdb1bc9936ebeed59e1218c5",
+        "gitObjectID": "92baabb01e973e289a7d2acac343a6266a03fac7",
+        "sha256": "50554519fe923045c2ea54b8851a443f4891cd09a5fa40657d619ce8edf2558f",
         "sourcePath": "Native/GameModeProcessHost/README.md"
       },
       "path": "Native/GameModeProcessHost/README.md",
-      "sha256": "d1ac397040f092c4106ab8799f589f47ee1aa9b1cdb1bc9936ebeed59e1218c5"
+      "sha256": "50554519fe923045c2ea54b8851a443f4891cd09a5fa40657d619ce8edf2558f"
     },
     {
       "byteLength": 3606,
@@ -1000,46 +1168,46 @@
       "sha256": "7b970d274e2cf5ae700e981f7dbd295505d4b2ae4f253c804baa89cb67049f88"
     },
     {
-      "byteLength": 1284,
+      "byteLength": 2403,
       "mode": "100644",
       "origin": {
         "classification": "injected-template-blob",
         "destinationPath": "README.md",
         "gitMode": "100644",
-        "gitObjectID": "fc04422f8e0db3de032184405920788baa45aa37",
-        "sha256": "11d422963b69116f688219f90da98ae626edb2ff9fea2c13bbde782f4447fcc5",
+        "gitObjectID": "64ba6ceab6372678db04026bf377f60d85b0ef77",
+        "sha256": "f8a22ff82f6197701cbae406cf6efe9b6a2c30c96c2b307e0ff4287a5d0206db",
         "sourcePath": "Scripts/Templates/OpenSource/README.md"
       },
       "path": "README.md",
-      "sha256": "11d422963b69116f688219f90da98ae626edb2ff9fea2c13bbde782f4447fcc5"
+      "sha256": "f8a22ff82f6197701cbae406cf6efe9b6a2c30c96c2b307e0ff4287a5d0206db"
     },
     {
-      "byteLength": 12961,
+      "byteLength": 14025,
       "mode": "100644",
       "origin": {
         "classification": "injected-template-blob",
         "destinationPath": "README_EN.md",
         "gitMode": "100644",
-        "gitObjectID": "85081dbde487e7a7b61c0659e55fa97459de2d88",
-        "sha256": "b4fcf0f9e850cc7a9aa12e37e9aa282ff723edff8ed6b805baa10402ac89692f",
+        "gitObjectID": "f65fdc1bcb189b7859eb7bd11fc9071989ea2ed1",
+        "sha256": "bed094d509af6678b93f3d4001231aa405d345355495321988e0a2a181db8670",
         "sourcePath": "Scripts/Templates/OpenSource/README_EN.md"
       },
       "path": "README_EN.md",
-      "sha256": "b4fcf0f9e850cc7a9aa12e37e9aa282ff723edff8ed6b805baa10402ac89692f"
+      "sha256": "bed094d509af6678b93f3d4001231aa405d345355495321988e0a2a181db8670"
     },
     {
-      "byteLength": 14224,
+      "byteLength": 15350,
       "mode": "100644",
       "origin": {
         "classification": "injected-template-blob",
         "destinationPath": "README_KO.md",
         "gitMode": "100644",
-        "gitObjectID": "bcae258eac2c0bb924a29aedb518b1dc81af637e",
-        "sha256": "3ed1d3ac68bda8e2ae0beb0d444555af953526f60c13473ca92d879162a36cde",
+        "gitObjectID": "96132445a314d2174cf5f5f3813b085e3bb4fb44",
+        "sha256": "532d9d2efd715ccd0700424909f3ac59ba1463af37376c94fcaff26ded05aa93",
         "sourcePath": "Scripts/Templates/OpenSource/README_KO.md"
       },
       "path": "README_KO.md",
-      "sha256": "3ed1d3ac68bda8e2ae0beb0d444555af953526f60c13473ca92d879162a36cde"
+      "sha256": "532d9d2efd715ccd0700424909f3ac59ba1463af37376c94fcaff26ded05aa93"
     },
     {
       "byteLength": 989763,
@@ -1284,62 +1452,6 @@
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
-        "destinationPath": "Resources/Assets.xcassets/DeveloperAppForgePlay.imageset/Contents.json",
-        "gitMode": "100644",
-        "gitObjectID": "f81feac205a47093e6f2bca7de20ddd0a1bf61f9",
-        "sha256": "3a6247d66218983a41e808e26dceb0507f8e4ac7d2acd90c84012baba82afcae",
-        "sourcePath": "Resources/Assets.xcassets/DeveloperAppForgePlay.imageset/Contents.json"
-      },
-      "path": "Resources/Assets.xcassets/DeveloperAppForgePlay.imageset/Contents.json",
-      "sha256": "3a6247d66218983a41e808e26dceb0507f8e4ac7d2acd90c84012baba82afcae"
-    },
-    {
-      "byteLength": 245338,
-      "mode": "100644",
-      "origin": {
-        "classification": "release-commit-blob",
-        "destinationPath": "Resources/Assets.xcassets/DeveloperAppForgePlay.imageset/ForgePlay.png",
-        "gitMode": "100644",
-        "gitObjectID": "4caac51c78edfff5fe2cbf0888ff74faf4ae9d95",
-        "sha256": "4c728bd34d8e17a7a31610097e09a11f8deb58b957b06fde06bf244c618b7376",
-        "sourcePath": "Resources/Assets.xcassets/DeveloperAppForgePlay.imageset/ForgePlay.png"
-      },
-      "path": "Resources/Assets.xcassets/DeveloperAppForgePlay.imageset/ForgePlay.png",
-      "sha256": "4c728bd34d8e17a7a31610097e09a11f8deb58b957b06fde06bf244c618b7376"
-    },
-    {
-      "byteLength": 306,
-      "mode": "100644",
-      "origin": {
-        "classification": "release-commit-blob",
-        "destinationPath": "Resources/Assets.xcassets/DeveloperAppGrayLine.imageset/Contents.json",
-        "gitMode": "100644",
-        "gitObjectID": "c0d850f76e8c623485e25fc18529c013f5cb655d",
-        "sha256": "6c1be20f33fec4c81e383c130f6cdcdb5dbb250453959f9313a51f49d4d4312f",
-        "sourcePath": "Resources/Assets.xcassets/DeveloperAppGrayLine.imageset/Contents.json"
-      },
-      "path": "Resources/Assets.xcassets/DeveloperAppGrayLine.imageset/Contents.json",
-      "sha256": "6c1be20f33fec4c81e383c130f6cdcdb5dbb250453959f9313a51f49d4d4312f"
-    },
-    {
-      "byteLength": 301430,
-      "mode": "100644",
-      "origin": {
-        "classification": "release-commit-blob",
-        "destinationPath": "Resources/Assets.xcassets/DeveloperAppGrayLine.imageset/GrayLine.png",
-        "gitMode": "100644",
-        "gitObjectID": "d5eb1fb1012833602345d92ffd45cebf3943d111",
-        "sha256": "e711d6fc39786b8650cdadd876c4a785425c18717bde78589400c5d38d3d6f88",
-        "sourcePath": "Resources/Assets.xcassets/DeveloperAppGrayLine.imageset/GrayLine.png"
-      },
-      "path": "Resources/Assets.xcassets/DeveloperAppGrayLine.imageset/GrayLine.png",
-      "sha256": "e711d6fc39786b8650cdadd876c4a785425c18717bde78589400c5d38d3d6f88"
-    },
-    {
-      "byteLength": 307,
-      "mode": "100644",
-      "origin": {
-        "classification": "release-commit-blob",
         "destinationPath": "Resources/Assets.xcassets/DeveloperAppHareWatch.imageset/Contents.json",
         "gitMode": "100644",
         "gitObjectID": "f048e271e6524304a7802523834d0b87dc234417",
@@ -1364,62 +1476,6 @@
       "sha256": "6f73ec849436bdeb91398ed7b1b76cd67e2cec3d4782fbfc5de475d73afd5cd0"
     },
     {
-      "byteLength": 312,
-      "mode": "100644",
-      "origin": {
-        "classification": "release-commit-blob",
-        "destinationPath": "Resources/Assets.xcassets/DeveloperAppHazelAndPeanut.imageset/Contents.json",
-        "gitMode": "100644",
-        "gitObjectID": "cc7369170b2c7b9951c930c75071627994ad31ff",
-        "sha256": "061c6286cacccb9f79feb035e387ba6c1b5f68721c086c983e0a34a392a498fb",
-        "sourcePath": "Resources/Assets.xcassets/DeveloperAppHazelAndPeanut.imageset/Contents.json"
-      },
-      "path": "Resources/Assets.xcassets/DeveloperAppHazelAndPeanut.imageset/Contents.json",
-      "sha256": "061c6286cacccb9f79feb035e387ba6c1b5f68721c086c983e0a34a392a498fb"
-    },
-    {
-      "byteLength": 424830,
-      "mode": "100644",
-      "origin": {
-        "classification": "release-commit-blob",
-        "destinationPath": "Resources/Assets.xcassets/DeveloperAppHazelAndPeanut.imageset/HazelAndPeanut.png",
-        "gitMode": "100644",
-        "gitObjectID": "b46c8bf30af046662303fc15352070d3cd5cdde8",
-        "sha256": "328158bc8681ee6b2d5731e914f39fe8897b57408fc7bdd6b24d764cf1837063",
-        "sourcePath": "Resources/Assets.xcassets/DeveloperAppHazelAndPeanut.imageset/HazelAndPeanut.png"
-      },
-      "path": "Resources/Assets.xcassets/DeveloperAppHazelAndPeanut.imageset/HazelAndPeanut.png",
-      "sha256": "328158bc8681ee6b2d5731e914f39fe8897b57408fc7bdd6b24d764cf1837063"
-    },
-    {
-      "byteLength": 314,
-      "mode": "100644",
-      "origin": {
-        "classification": "release-commit-blob",
-        "destinationPath": "Resources/Assets.xcassets/DeveloperAppLeporisAscendant.imageset/Contents.json",
-        "gitMode": "100644",
-        "gitObjectID": "620032f34a9b4abe458572acbba7012f22589c6b",
-        "sha256": "93194ed3ee9b778bb1bd0355b9a961fb8471ac5ea2f492e7444cf5e7e051ac07",
-        "sourcePath": "Resources/Assets.xcassets/DeveloperAppLeporisAscendant.imageset/Contents.json"
-      },
-      "path": "Resources/Assets.xcassets/DeveloperAppLeporisAscendant.imageset/Contents.json",
-      "sha256": "93194ed3ee9b778bb1bd0355b9a961fb8471ac5ea2f492e7444cf5e7e051ac07"
-    },
-    {
-      "byteLength": 155898,
-      "mode": "100644",
-      "origin": {
-        "classification": "release-commit-blob",
-        "destinationPath": "Resources/Assets.xcassets/DeveloperAppLeporisAscendant.imageset/LeporisAscendant.png",
-        "gitMode": "100644",
-        "gitObjectID": "0b8edb5895f3fd7c64e2b00d9e11fd21a3df6234",
-        "sha256": "a17ebfcb31b77fc57e8a53f230d62c1d8d02cf7d4600d1a873fd7704aea27215",
-        "sourcePath": "Resources/Assets.xcassets/DeveloperAppLeporisAscendant.imageset/LeporisAscendant.png"
-      },
-      "path": "Resources/Assets.xcassets/DeveloperAppLeporisAscendant.imageset/LeporisAscendant.png",
-      "sha256": "a17ebfcb31b77fc57e8a53f230d62c1d8d02cf7d4600d1a873fd7704aea27215"
-    },
-    {
       "byteLength": 306,
       "mode": "100644",
       "origin": {
@@ -1434,18 +1490,18 @@
       "sha256": "11dc89fc9d21626b90e469786e000904e9fa2d4b8b10d0b113fdd3f30720b99f"
     },
     {
-      "byteLength": 324925,
+      "byteLength": 176745,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/Assets.xcassets/DeveloperAppMajorDex.imageset/MajorDex.png",
         "gitMode": "100644",
-        "gitObjectID": "2b5edaddef20c4c1bd08911713d217e0d0c629fc",
-        "sha256": "3455a1b4ff3afe34df01db3aa6ef187bed7edd57fb670a8629be381aad17bd52",
+        "gitObjectID": "432a11009ca03c2d4643ee9b1a3ae1434fdb079d",
+        "sha256": "49af61b46d320207e972b6ff7a09e88b49796d601979b7f499315157ac47966b",
         "sourcePath": "Resources/Assets.xcassets/DeveloperAppMajorDex.imageset/MajorDex.png"
       },
       "path": "Resources/Assets.xcassets/DeveloperAppMajorDex.imageset/MajorDex.png",
-      "sha256": "3455a1b4ff3afe34df01db3aa6ef187bed7edd57fb670a8629be381aad17bd52"
+      "sha256": "49af61b46d320207e972b6ff7a09e88b49796d601979b7f499315157ac47966b"
     },
     {
       "byteLength": 307,
@@ -1784,18 +1840,18 @@
       "sha256": "a99b00bdab7cd1088870fb020cab1a7c7f015ecc8608f7dc5ec0e58083d975a9"
     },
     {
-      "byteLength": 6799,
+      "byteLength": 8394,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/Legal/ForgePlayThirdPartyNotices.md",
         "gitMode": "100644",
-        "gitObjectID": "ebde993bf6cf24106df217695b5a1e3143d9cd15",
-        "sha256": "69a2e7e2c3546d674ea64e449b306d9090d2f7eb4281ed2ebefad4cd38bdc89e",
+        "gitObjectID": "fc2667874ec427e7f55b93245bf34ad4e214220c",
+        "sha256": "34bc1bd78426c5fc15a8cfd713d49b7570183c47814178b1aa7227f72b3dc045",
         "sourcePath": "Resources/Legal/ForgePlayThirdPartyNotices.md"
       },
       "path": "Resources/Legal/ForgePlayThirdPartyNotices.md",
-      "sha256": "69a2e7e2c3546d674ea64e449b306d9090d2f7eb4281ed2ebefad4cd38bdc89e"
+      "sha256": "34bc1bd78426c5fc15a8cfd713d49b7570183c47814178b1aa7227f72b3dc045"
     },
     {
       "byteLength": 1056,
@@ -1854,18 +1910,18 @@
       "sha256": "e237fa56668030e928551ddd60f05df5fe957f75eab874bbd017e085ed722e7c"
     },
     {
-      "byteLength": 2414,
+      "byteLength": 2413,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/Runners/ForgePlayRuntime/Legal/Wine/FORGEPLAY-MODIFICATIONS.md",
         "gitMode": "100644",
-        "gitObjectID": "982277331e202cc778d0bf0c00eb0050f7f099dc",
-        "sha256": "613ab79178fece6ea534589d64c1e9716b7a8a5c8730eebb4ea067fdd46ff081",
+        "gitObjectID": "01eab77e244c88a4ff4b00708198652c20a47390",
+        "sha256": "7bc6195b962110ba65eba9a9e72aef96e195d2fe1d4fd1c7fce38d2f070faccd",
         "sourcePath": "Resources/Runners/ForgePlayRuntime/Legal/Wine/FORGEPLAY-MODIFICATIONS.md"
       },
       "path": "Resources/Runners/ForgePlayRuntime/Legal/Wine/FORGEPLAY-MODIFICATIONS.md",
-      "sha256": "613ab79178fece6ea534589d64c1e9716b7a8a5c8730eebb4ea067fdd46ff081"
+      "sha256": "7bc6195b962110ba65eba9a9e72aef96e195d2fe1d4fd1c7fce38d2f070faccd"
     },
     {
       "byteLength": 824,
@@ -1994,18 +2050,18 @@
       "sha256": "b12c5b80e18cea93e8116704a759e08b7a2af4ffe731ddd9dd6a16228617afe8"
     },
     {
-      "byteLength": 13761,
+      "byteLength": 15015,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forgeplay-d3dmetal-bridge-contract.md",
         "gitMode": "100644",
-        "gitObjectID": "f15280b6b8143da7b23abf707b7536e3adb29509",
-        "sha256": "c95f02bc3bf2573aa80074cd3d42b68ae6759e595442496ff6e66c0bf1093ce8",
+        "gitObjectID": "b2e3a4915eb5b540b5a5140d15e6b9439d0985bd",
+        "sha256": "7e922ae2e9326fdae3bbf8fb0a306ac8370b11fe66d3580de5f022b07e933fc1",
         "sourcePath": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forgeplay-d3dmetal-bridge-contract.md"
       },
       "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forgeplay-d3dmetal-bridge-contract.md",
-      "sha256": "c95f02bc3bf2573aa80074cd3d42b68ae6759e595442496ff6e66c0bf1093ce8"
+      "sha256": "7e922ae2e9326fdae3bbf8fb0a306ac8370b11fe66d3580de5f022b07e933fc1"
     },
     {
       "byteLength": 9781,
@@ -2022,32 +2078,32 @@
       "sha256": "4c841c7efbf515e57fe2b3fd24a40796beeff5be8120ebd80a48a8a1c40754f1"
     },
     {
-      "byteLength": 8068,
+      "byteLength": 23493,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forgeplay-metal-window-surface-contract.patch",
         "gitMode": "100644",
-        "gitObjectID": "432ae46943cae4e69ba87d9d20968474cf11ed05",
-        "sha256": "c8f6e4abd715aac59c1be6edf03c0b927438ac9b86a027d6fd49d5bc1469d263",
+        "gitObjectID": "a454a9f0f4e771fa1892621114a7d6538681db3d",
+        "sha256": "5bd899aba26eb2ac64ce0943eb7c1ea2ce2510c0242d70c40dac6967e158087e",
         "sourcePath": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forgeplay-metal-window-surface-contract.patch"
       },
       "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forgeplay-metal-window-surface-contract.patch",
-      "sha256": "c8f6e4abd715aac59c1be6edf03c0b927438ac9b86a027d6fd49d5bc1469d263"
+      "sha256": "5bd899aba26eb2ac64ce0943eb7c1ea2ce2510c0242d70c40dac6967e158087e"
     },
     {
-      "byteLength": 6965,
+      "byteLength": 6927,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-game-mode-direct-target-scope.patch",
         "gitMode": "100644",
-        "gitObjectID": "b376683c4ccc1d3ca483caf12e3a3391b18ddb42",
-        "sha256": "592ad576ffd31b78846a107a899ce7a96acd0c0f9b65a0b28541db2c2b7a72c1",
+        "gitObjectID": "a6e0c9e1161b92d76de07e839db791b823c6d198",
+        "sha256": "b09e09eebb6ac91e287ebdff1314fa8302644942c6ce0a8f3f8107ea6ee656e6",
         "sourcePath": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-game-mode-direct-target-scope.patch"
       },
       "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-game-mode-direct-target-scope.patch",
-      "sha256": "592ad576ffd31b78846a107a899ce7a96acd0c0f9b65a0b28541db2c2b7a72c1"
+      "sha256": "b09e09eebb6ac91e287ebdff1314fa8302644942c6ce0a8f3f8107ea6ee656e6"
     },
     {
       "byteLength": 217,
@@ -2064,18 +2120,18 @@
       "sha256": "479efa2903cd8e63fcde50b441cbf2fba316cdd840c190a3df3d7c5e6311e8cf"
     },
     {
-      "byteLength": 11444,
+      "byteLength": 11626,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-game-mode-process-host-routing.patch",
         "gitMode": "100644",
-        "gitObjectID": "9dc38526dce7a84fa9ba66b5e221af2a729203b1",
-        "sha256": "18ec28ed12f13c9c5b834f4e75e59d51f3ef2eb434bd6041124b5475ba65ae40",
+        "gitObjectID": "b731e83eb8cdced7afbcded00340c18cd19239f0",
+        "sha256": "977c445aae295206ebf7d24c1250f84d47a65a0b9d0320c35313b799e9be193b",
         "sourcePath": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-game-mode-process-host-routing.patch"
       },
       "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-game-mode-process-host-routing.patch",
-      "sha256": "18ec28ed12f13c9c5b834f4e75e59d51f3ef2eb434bd6041124b5475ba65ae40"
+      "sha256": "977c445aae295206ebf7d24c1250f84d47a65a0b9d0320c35313b799e9be193b"
     },
     {
       "byteLength": 217,
@@ -2162,32 +2218,32 @@
       "sha256": "7e1e6f4daa5d6cc6b3b30d2cce9e9833985bbbf43edca7df036522213b030c68"
     },
     {
-      "byteLength": 15122,
+      "byteLength": 16140,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-managed-darwin-process-journal.patch",
         "gitMode": "100644",
-        "gitObjectID": "d19646db3081a2c7386f0738f195e299deb48bae",
-        "sha256": "188bad1fd8de9751c84cb6e510a063cf203b530ce31ba94cc1c31440c24d41d6",
+        "gitObjectID": "f1524049ee50ac20a368000f52a23e72ccaa4c35",
+        "sha256": "011799aa3aba31a6f7059e3bfff737ad544ff7413251b4da6fe9422201a48e7b",
         "sourcePath": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-managed-darwin-process-journal.patch"
       },
       "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-managed-darwin-process-journal.patch",
-      "sha256": "188bad1fd8de9751c84cb6e510a063cf203b530ce31ba94cc1c31440c24d41d6"
+      "sha256": "011799aa3aba31a6f7059e3bfff737ad544ff7413251b4da6fe9422201a48e7b"
     },
     {
-      "byteLength": 35373,
+      "byteLength": 35625,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-manual-steam-renderer-selection.patch",
         "gitMode": "100644",
-        "gitObjectID": "7b310be333b63457bb9c7e677c6f3f2907166b7b",
-        "sha256": "f7af05903edb1ec303d3d5a8a68fe5f112bf578d0f13b786114b57d0fd45f2e3",
+        "gitObjectID": "4c30551beb961365342e206c74f0a79bd5953287",
+        "sha256": "a578b144e4ca77068d745224a472e86ddd786b4afaaa01b57caddaf69c287d0d",
         "sourcePath": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-manual-steam-renderer-selection.patch"
       },
       "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-manual-steam-renderer-selection.patch",
-      "sha256": "f7af05903edb1ec303d3d5a8a68fe5f112bf578d0f13b786114b57d0fd45f2e3"
+      "sha256": "a578b144e4ca77068d745224a472e86ddd786b4afaaa01b57caddaf69c287d0d"
     },
     {
       "byteLength": 4374,
@@ -2260,18 +2316,18 @@
       "sha256": "392ad5ae54a76470e355c2229751637737f312099c0b9ab6bddd56f6201d49d1"
     },
     {
-      "byteLength": 97155,
+      "byteLength": 99995,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-game-renderer-process-policy.patch",
         "gitMode": "100644",
-        "gitObjectID": "88318439e818a73cd209f2bed6214ea543b50265",
-        "sha256": "5129ade053c232fc6ac3afe5e62ffbcf9aeb63124f740e5bde6bbda8b129063b",
+        "gitObjectID": "c29f4959c8a9f51a68c1e004adff017fed07d03b",
+        "sha256": "e987b24d8b06b6e3f03ae94eb280f73cff96102c01ed1dadb67605c12d8d6130",
         "sourcePath": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-game-renderer-process-policy.patch"
       },
       "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-game-renderer-process-policy.patch",
-      "sha256": "5129ade053c232fc6ac3afe5e62ffbcf9aeb63124f740e5bde6bbda8b129063b"
+      "sha256": "e987b24d8b06b6e3f03ae94eb280f73cff96102c01ed1dadb67605c12d8d6130"
     },
     {
       "byteLength": 2477,
@@ -2288,18 +2344,18 @@
       "sha256": "bf4f8f20a7b69e8b57e3a46e367cbe95cd8d049f5b00ad989ace1ea5a1a04694"
     },
     {
-      "byteLength": 23323,
+      "byteLength": 30207,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-session-compatibility-controls.patch",
         "gitMode": "100644",
-        "gitObjectID": "41f100e2b500257016bc20fd8195483c20eff648",
-        "sha256": "c13592df15c779eef89b40be58eb1de718b5e8afa7ecaacbf4e195b2fab9898f",
+        "gitObjectID": "5a8674a30d09b761ce62ebb3c3871159dbf2c0e3",
+        "sha256": "969247505447baba41f002262462dc19d48c2851ec2eaf6f8fd6f94673453a44",
         "sourcePath": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-session-compatibility-controls.patch"
       },
       "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-session-compatibility-controls.patch",
-      "sha256": "c13592df15c779eef89b40be58eb1de718b5e8afa7ecaacbf4e195b2fab9898f"
+      "sha256": "969247505447baba41f002262462dc19d48c2851ec2eaf6f8fd6f94673453a44"
     },
     {
       "byteLength": 5131,
@@ -2308,26 +2364,26 @@
         "classification": "release-commit-blob",
         "destinationPath": "Resources/Runners/ForgePlayRuntime/RuntimeManifest.json",
         "gitMode": "100644",
-        "gitObjectID": "036f3f855648f662c666c522295363fed4c76a11",
-        "sha256": "fb15e98ad0a48fb9e0f8b8d3c73d7b8976a83565abdd1d969e2df0f011df0d56",
+        "gitObjectID": "7dec225f22f9fb71054acb830986603bd58d9963",
+        "sha256": "27e7328f742e49212c8307f9f0cde2acf432cd64b28ec260d637899b281a0842",
         "sourcePath": "Resources/Runners/ForgePlayRuntime/RuntimeManifest.json"
       },
       "path": "Resources/Runners/ForgePlayRuntime/RuntimeManifest.json",
-      "sha256": "fb15e98ad0a48fb9e0f8b8d3c73d7b8976a83565abdd1d969e2df0f011df0d56"
+      "sha256": "27e7328f742e49212c8307f9f0cde2acf432cd64b28ec260d637899b281a0842"
     },
     {
-      "byteLength": 17159,
+      "byteLength": 18020,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/Runners/ForgePlayRuntime/SOURCE-AVAILABILITY.md",
         "gitMode": "100644",
-        "gitObjectID": "949aa9485076f074dac1c7b93a4906d60ad2e076",
-        "sha256": "e9f5b13f0db42260e1261d9c0d28d83adfd0d842814027c6bd99e061ad922182",
+        "gitObjectID": "4cdeab4bd747de811f45976c51f1252e0d4f8800",
+        "sha256": "fe213a22fedb5b5a5d76cae9a8a3d433a7560138e8da8abd44f0482ef300466b",
         "sourcePath": "Resources/Runners/ForgePlayRuntime/SOURCE-AVAILABILITY.md"
       },
       "path": "Resources/Runners/ForgePlayRuntime/SOURCE-AVAILABILITY.md",
-      "sha256": "e9f5b13f0db42260e1261d9c0d28d83adfd0d842814027c6bd99e061ad922182"
+      "sha256": "fe213a22fedb5b5a5d76cae9a8a3d433a7560138e8da8abd44f0482ef300466b"
     },
     {
       "byteLength": 5855,
@@ -2344,18 +2400,18 @@
       "sha256": "5e12ea2d4cdcd242e99d3f6418c1bedb27b81297caea564a7cf7a59e6aea9239"
     },
     {
-      "byteLength": 2475,
+      "byteLength": 4575,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/de.lproj/ForgePlayLicenseNotice.md",
         "gitMode": "100644",
-        "gitObjectID": "e8c8ce97d61a08cf07d24a6a2825eab237f7b8db",
-        "sha256": "2f2ad09d4ba29037f9421093e1ae9a116382acf97047d5114fec8d2a07ab3f09",
+        "gitObjectID": "1ecd9235ad9c119e4815de3f8cc3c862183c6cba",
+        "sha256": "76dedf3353a69397f4321336abb221a183eb88c3c88f1d747c9f1a1d55237d33",
         "sourcePath": "Resources/de.lproj/ForgePlayLicenseNotice.md"
       },
       "path": "Resources/de.lproj/ForgePlayLicenseNotice.md",
-      "sha256": "2f2ad09d4ba29037f9421093e1ae9a116382acf97047d5114fec8d2a07ab3f09"
+      "sha256": "76dedf3353a69397f4321336abb221a183eb88c3c88f1d747c9f1a1d55237d33"
     },
     {
       "byteLength": 323,
@@ -2372,32 +2428,32 @@
       "sha256": "40b6c3131824861158e3d509ba6196b9d6cc411fefe5866a175172fff9a352fd"
     },
     {
-      "byteLength": 395672,
+      "byteLength": 409614,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/de.lproj/Localizable.strings",
         "gitMode": "100644",
-        "gitObjectID": "9f24c040d6b864d56e598a148c4a6a34f9e291ff",
-        "sha256": "f5e25747f6fcbb69e0226121e100da31ef115b3387858805485e9bc9cd23ced8",
+        "gitObjectID": "6c59678ef510c6d348db05d01ebabe7253c476cf",
+        "sha256": "d4ae22abd3754c2d36041eaeac818560d4ebafe9e793ac198e66d6d756f6377f",
         "sourcePath": "Resources/de.lproj/Localizable.strings"
       },
       "path": "Resources/de.lproj/Localizable.strings",
-      "sha256": "f5e25747f6fcbb69e0226121e100da31ef115b3387858805485e9bc9cd23ced8"
+      "sha256": "d4ae22abd3754c2d36041eaeac818560d4ebafe9e793ac198e66d6d756f6377f"
     },
     {
-      "byteLength": 2271,
+      "byteLength": 4128,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/en.lproj/ForgePlayLicenseNotice.md",
         "gitMode": "100644",
-        "gitObjectID": "9f49400e2464abba71130da35b56b28d6c6f17fb",
-        "sha256": "9ee4b856f32635f4999bd4b69d516b4a4cf401b0078be7f1af18293725064c37",
+        "gitObjectID": "2a6b3541b37b192343f7001309bc3b3018c26246",
+        "sha256": "a0b5d4fcb67277a82ed266e416b78bb034069502e8a895e3df0b83a8b0d5a088",
         "sourcePath": "Resources/en.lproj/ForgePlayLicenseNotice.md"
       },
       "path": "Resources/en.lproj/ForgePlayLicenseNotice.md",
-      "sha256": "9ee4b856f32635f4999bd4b69d516b4a4cf401b0078be7f1af18293725064c37"
+      "sha256": "a0b5d4fcb67277a82ed266e416b78bb034069502e8a895e3df0b83a8b0d5a088"
     },
     {
       "byteLength": 283,
@@ -2414,32 +2470,32 @@
       "sha256": "c5ef7289188dca23cd28cbb4e5f8656d4813505239febfd4706605ca1e379aba"
     },
     {
-      "byteLength": 359988,
+      "byteLength": 373168,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/en.lproj/Localizable.strings",
         "gitMode": "100644",
-        "gitObjectID": "6231035db6803874fc4479269a4520e2eaba0ac1",
-        "sha256": "a16fc0d7000f3c4833c2df86be3912655032e21c6c7087d8b89f965793b83ff7",
+        "gitObjectID": "c119144262f18218e95d7685ca1e530f23052676",
+        "sha256": "230f1415c11a05658f7dded3f555f398c44877e7adfc7daf9089194d53581032",
         "sourcePath": "Resources/en.lproj/Localizable.strings"
       },
       "path": "Resources/en.lproj/Localizable.strings",
-      "sha256": "a16fc0d7000f3c4833c2df86be3912655032e21c6c7087d8b89f965793b83ff7"
+      "sha256": "230f1415c11a05658f7dded3f555f398c44877e7adfc7daf9089194d53581032"
     },
     {
-      "byteLength": 2505,
+      "byteLength": 4652,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/es.lproj/ForgePlayLicenseNotice.md",
         "gitMode": "100644",
-        "gitObjectID": "edb1c2d27cd13ab06e2d887b1655a7302de1b429",
-        "sha256": "65a5ffe39a31343cab3ecef1ece01217fc554537f7ec7006a17097d19ad5ca43",
+        "gitObjectID": "9b888f289c1f027c4cacab856885dc0f45dfb272",
+        "sha256": "071ecfa16726254afeb7c5304be4b585bd12032be886c7a2bb1b0460ad910078",
         "sourcePath": "Resources/es.lproj/ForgePlayLicenseNotice.md"
       },
       "path": "Resources/es.lproj/ForgePlayLicenseNotice.md",
-      "sha256": "65a5ffe39a31343cab3ecef1ece01217fc554537f7ec7006a17097d19ad5ca43"
+      "sha256": "071ecfa16726254afeb7c5304be4b585bd12032be886c7a2bb1b0460ad910078"
     },
     {
       "byteLength": 334,
@@ -2456,32 +2512,32 @@
       "sha256": "1eebe4276ebd0105f8b36717de5e4f3a84a40a2e77b111af86fe547a6c32f2bf"
     },
     {
-      "byteLength": 393106,
+      "byteLength": 407141,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/es.lproj/Localizable.strings",
         "gitMode": "100644",
-        "gitObjectID": "d21a02f159cd5b327d041e6bf92a61c81a367a51",
-        "sha256": "8ce1f7a5b36b0c76acef14016f8c76285294a4fc53639e296dd7ae704de34ca8",
+        "gitObjectID": "0710d495aab916c11ef9d9f643f670bc7256f3f0",
+        "sha256": "201ef50e7b16029d3719e4d4c843f818887ff6922005125a087cb00381039492",
         "sourcePath": "Resources/es.lproj/Localizable.strings"
       },
       "path": "Resources/es.lproj/Localizable.strings",
-      "sha256": "8ce1f7a5b36b0c76acef14016f8c76285294a4fc53639e296dd7ae704de34ca8"
+      "sha256": "201ef50e7b16029d3719e4d4c843f818887ff6922005125a087cb00381039492"
     },
     {
-      "byteLength": 2682,
+      "byteLength": 4846,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/fr.lproj/ForgePlayLicenseNotice.md",
         "gitMode": "100644",
-        "gitObjectID": "3c94ba685bda0d921966c3effc80f3830b70b9c2",
-        "sha256": "50d74011c789da175f53b780c48cac53cd26c27495bc0db324fe56837831779c",
+        "gitObjectID": "eab1d4e1a4c153dbd269b328de2aa228bc6de327",
+        "sha256": "6900e487fb723400b0391cbbbe979f9c6321f095ed408538e2eee155f2706974",
         "sourcePath": "Resources/fr.lproj/ForgePlayLicenseNotice.md"
       },
       "path": "Resources/fr.lproj/ForgePlayLicenseNotice.md",
-      "sha256": "50d74011c789da175f53b780c48cac53cd26c27495bc0db324fe56837831779c"
+      "sha256": "6900e487fb723400b0391cbbbe979f9c6321f095ed408538e2eee155f2706974"
     },
     {
       "byteLength": 331,
@@ -2498,32 +2554,32 @@
       "sha256": "c515c2bcd76d81eaf09d739d4adfcb196e1ee8e99a3c115dee24999c6385db1d"
     },
     {
-      "byteLength": 404252,
+      "byteLength": 418716,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/fr.lproj/Localizable.strings",
         "gitMode": "100644",
-        "gitObjectID": "80d9c5683b60f49fe9f01baac8a0251986df4d73",
-        "sha256": "59b441401e3a66037ae3f81457f2623a68f214bed8bbbdbd366bb5d264ce4b18",
+        "gitObjectID": "4b9ff4e14b53be1a03e3f4c14e3c0527b0eafa82",
+        "sha256": "fbda04e9fbdff5a924c36533c7724d7d779d3d6289bc3ee0aa5239d4c30f8c53",
         "sourcePath": "Resources/fr.lproj/Localizable.strings"
       },
       "path": "Resources/fr.lproj/Localizable.strings",
-      "sha256": "59b441401e3a66037ae3f81457f2623a68f214bed8bbbdbd366bb5d264ce4b18"
+      "sha256": "fbda04e9fbdff5a924c36533c7724d7d779d3d6289bc3ee0aa5239d4c30f8c53"
     },
     {
-      "byteLength": 2915,
+      "byteLength": 5284,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/ja.lproj/ForgePlayLicenseNotice.md",
         "gitMode": "100644",
-        "gitObjectID": "63749dec396941ba43b3c0921ee05c18675da816",
-        "sha256": "e180b52a03387a9b5044e30d802528579309f0b3d40c016bdd256f07ff3427c5",
+        "gitObjectID": "a0359bab75c0d1d62097c4baf50ca0a14a6aa2c6",
+        "sha256": "edd1ad46bd66cb1f1d8ff781a5619893e5371a7a7ff895a86a3446377bd7c964",
         "sourcePath": "Resources/ja.lproj/ForgePlayLicenseNotice.md"
       },
       "path": "Resources/ja.lproj/ForgePlayLicenseNotice.md",
-      "sha256": "e180b52a03387a9b5044e30d802528579309f0b3d40c016bdd256f07ff3427c5"
+      "sha256": "edd1ad46bd66cb1f1d8ff781a5619893e5371a7a7ff895a86a3446377bd7c964"
     },
     {
       "byteLength": 407,
@@ -2540,32 +2596,32 @@
       "sha256": "a33666e559a73981cb5af9b6d05b3f5caf74cc8faec744f0661745dee8c3431d"
     },
     {
-      "byteLength": 416724,
+      "byteLength": 431518,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/ja.lproj/Localizable.strings",
         "gitMode": "100644",
-        "gitObjectID": "46e7832fc8c69ca3547f80fc417878ebdb7aab04",
-        "sha256": "832156878420f4004726994f6bb711931b5cb828e3ce3ca3ef301806fd551971",
+        "gitObjectID": "deb3c3fd3bc44b2e281ac22febe5f63b496843dc",
+        "sha256": "bd40b12edc611aec46f600df8ad917da2bac1644bf8bda9780a419c9d0701ed2",
         "sourcePath": "Resources/ja.lproj/Localizable.strings"
       },
       "path": "Resources/ja.lproj/Localizable.strings",
-      "sha256": "832156878420f4004726994f6bb711931b5cb828e3ce3ca3ef301806fd551971"
+      "sha256": "bd40b12edc611aec46f600df8ad917da2bac1644bf8bda9780a419c9d0701ed2"
     },
     {
-      "byteLength": 2641,
+      "byteLength": 4671,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/ko.lproj/ForgePlayLicenseNotice.md",
         "gitMode": "100644",
-        "gitObjectID": "5b541edf7d2d37f2daf4bfabef27534fe3f29f9d",
-        "sha256": "13cf813aa87caa8706ea71bee69ea5db740acc4a1b70a54721bda92e2ec165ab",
+        "gitObjectID": "d6218e317f8228c43bf421eba7bff86966933476",
+        "sha256": "44df9e31e3e1f4207c7fbcc5ebc80c8ca59343b86c9a98f77b750926d516371c",
         "sourcePath": "Resources/ko.lproj/ForgePlayLicenseNotice.md"
       },
       "path": "Resources/ko.lproj/ForgePlayLicenseNotice.md",
-      "sha256": "13cf813aa87caa8706ea71bee69ea5db740acc4a1b70a54721bda92e2ec165ab"
+      "sha256": "44df9e31e3e1f4207c7fbcc5ebc80c8ca59343b86c9a98f77b750926d516371c"
     },
     {
       "byteLength": 356,
@@ -2582,32 +2638,32 @@
       "sha256": "05d885e7a7502b29459228902fd2670ce9b13d78d22d5f8bf5742096a08bdecb"
     },
     {
-      "byteLength": 392246,
+      "byteLength": 406562,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/ko.lproj/Localizable.strings",
         "gitMode": "100644",
-        "gitObjectID": "d6769c8818973438e423f89b1d9f1ea1ed6a1fe3",
-        "sha256": "3650e9ce5b7801115ed63d2af487f41ece8e44473c03d8a08fc9db20ec942bf9",
+        "gitObjectID": "e56ab4476e834148f5df8d54e749114ceaca576f",
+        "sha256": "1a85d8afc923bf36a07c2b133caf6c090b1021e17c7e0c7d2799b7ebc693b724",
         "sourcePath": "Resources/ko.lproj/Localizable.strings"
       },
       "path": "Resources/ko.lproj/Localizable.strings",
-      "sha256": "3650e9ce5b7801115ed63d2af487f41ece8e44473c03d8a08fc9db20ec942bf9"
+      "sha256": "1a85d8afc923bf36a07c2b133caf6c090b1021e17c7e0c7d2799b7ebc693b724"
     },
     {
-      "byteLength": 2082,
+      "byteLength": 3860,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/zh-Hans.lproj/ForgePlayLicenseNotice.md",
         "gitMode": "100644",
-        "gitObjectID": "24df3e5aa7134bec6dc87e0b7d9038b50ea2b5ef",
-        "sha256": "03db25de9c032364364f6021fef3bc197afa119cf17e413bd01869d3d05923bb",
+        "gitObjectID": "79cb9d0f5bc428eed544b743e16eb16c1dafcfc2",
+        "sha256": "2527538a1ce1f98b74c84135264464b204d6ddceb736b435b599ab09bc3ef5be",
         "sourcePath": "Resources/zh-Hans.lproj/ForgePlayLicenseNotice.md"
       },
       "path": "Resources/zh-Hans.lproj/ForgePlayLicenseNotice.md",
-      "sha256": "03db25de9c032364364f6021fef3bc197afa119cf17e413bd01869d3d05923bb"
+      "sha256": "2527538a1ce1f98b74c84135264464b204d6ddceb736b435b599ab09bc3ef5be"
     },
     {
       "byteLength": 280,
@@ -2624,32 +2680,32 @@
       "sha256": "9b99d0a6758dc9343b42b860b85f062ecaff760f4a943fd092ae051f687184e7"
     },
     {
-      "byteLength": 348220,
+      "byteLength": 360590,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/zh-Hans.lproj/Localizable.strings",
         "gitMode": "100644",
-        "gitObjectID": "ef4990d1e5b6153179a8540be5f882a2664723d6",
-        "sha256": "b3f9522b5d9335bde83082c95314e0a723319ad4d0eba639fa2428a129f83a7c",
+        "gitObjectID": "8eb11fd0ee5bcf8758bc8472ea5d916957fa3300",
+        "sha256": "c7389f1c82bab6ab38a47b37298bdaac1f3e4731084e635f91e1fdbfdf1d1356",
         "sourcePath": "Resources/zh-Hans.lproj/Localizable.strings"
       },
       "path": "Resources/zh-Hans.lproj/Localizable.strings",
-      "sha256": "b3f9522b5d9335bde83082c95314e0a723319ad4d0eba639fa2428a129f83a7c"
+      "sha256": "c7389f1c82bab6ab38a47b37298bdaac1f3e4731084e635f91e1fdbfdf1d1356"
     },
     {
-      "byteLength": 2065,
+      "byteLength": 3845,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/zh-Hant.lproj/ForgePlayLicenseNotice.md",
         "gitMode": "100644",
-        "gitObjectID": "1ae0428c2d3cc25ff83a5d6ea7bb7a227c366924",
-        "sha256": "c6a8906c7755314ec8cf2f1cd63d42c92454683de44666076b21329573f45439",
+        "gitObjectID": "9f8bb45cfed86c6a089404a7725998841f777b82",
+        "sha256": "c3d4d0f5b2a1c006b94b7657c3dd3f45488b375ebc3e91c50e8a9a0ac5fe5318",
         "sourcePath": "Resources/zh-Hant.lproj/ForgePlayLicenseNotice.md"
       },
       "path": "Resources/zh-Hant.lproj/ForgePlayLicenseNotice.md",
-      "sha256": "c6a8906c7755314ec8cf2f1cd63d42c92454683de44666076b21329573f45439"
+      "sha256": "c3d4d0f5b2a1c006b94b7657c3dd3f45488b375ebc3e91c50e8a9a0ac5fe5318"
     },
     {
       "byteLength": 286,
@@ -2666,32 +2722,74 @@
       "sha256": "03f1d0127802f3577523d4912acbe7679541cf5a2bdae1377be55d16b296995a"
     },
     {
-      "byteLength": 350064,
+      "byteLength": 362562,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Resources/zh-Hant.lproj/Localizable.strings",
         "gitMode": "100644",
-        "gitObjectID": "8ad0054dd04114de8cffdf5d009e272d4def3848",
-        "sha256": "1134764d80391ae0c4c479cdaeaea4ad620da0f9d175aa9eb8e72e234f585755",
+        "gitObjectID": "c2b4488c8b361b4eeec51274b1a8e723ea760249",
+        "sha256": "6106c096384fcc5ef449cda46107a45e9389415ca0c9a357e933d650fd19f64a",
         "sourcePath": "Resources/zh-Hant.lproj/Localizable.strings"
       },
       "path": "Resources/zh-Hant.lproj/Localizable.strings",
-      "sha256": "1134764d80391ae0c4c479cdaeaea4ad620da0f9d175aa9eb8e72e234f585755"
+      "sha256": "6106c096384fcc5ef449cda46107a45e9389415ca0c9a357e933d650fd19f64a"
     },
     {
-      "byteLength": 8504,
+      "byteLength": 9471,
       "mode": "100644",
       "origin": {
         "classification": "injected-template-blob",
         "destinationPath": "SOURCE-LICENSES.md",
         "gitMode": "100644",
-        "gitObjectID": "390ba806c4e8b86c5e108321975d076fb149fbb7",
-        "sha256": "2268f9191857a1a2f240cae5caca28d22e95a4f31cc6aea9c22d065e429b72fd",
+        "gitObjectID": "1004ac4f23c4f956ffa346851bb23c8aa2ddaeb5",
+        "sha256": "a6f1161631299c043ccbdeff172fd45aeb534374fa2836ad481caa0f0f51a4a2",
         "sourcePath": "Scripts/Templates/OpenSource/SOURCE-LICENSES.md"
       },
       "path": "SOURCE-LICENSES.md",
-      "sha256": "2268f9191857a1a2f240cae5caca28d22e95a4f31cc6aea9c22d065e429b72fd"
+      "sha256": "a6f1161631299c043ccbdeff172fd45aeb534374fa2836ad481caa0f0f51a4a2"
+    },
+    {
+      "byteLength": 1060,
+      "mode": "100644",
+      "origin": {
+        "classification": "release-commit-blob",
+        "destinationPath": "Scripts/Fixtures/WineGameRendererPolicy/base_desktop_initializer.c",
+        "gitMode": "100644",
+        "gitObjectID": "9e71878067fbfe5234f383046456f3a4a2cfe892",
+        "sha256": "c6ef83aca3abc838c23cf0419c4422f10413d4a1c4a6eb5c9493377ad02158c5",
+        "sourcePath": "Scripts/Fixtures/WineGameRendererPolicy/base_desktop_initializer.c"
+      },
+      "path": "Scripts/Fixtures/WineGameRendererPolicy/base_desktop_initializer.c",
+      "sha256": "c6ef83aca3abc838c23cf0419c4422f10413d4a1c4a6eb5c9493377ad02158c5"
+    },
+    {
+      "byteLength": 62259,
+      "mode": "100644",
+      "origin": {
+        "classification": "release-commit-blob",
+        "destinationPath": "Scripts/Fixtures/WineGameRendererPolicy/d3dmetal_probe.c",
+        "gitMode": "100644",
+        "gitObjectID": "79d71a69e6c91020c3c9e4388bcf314ffa9c4dab",
+        "sha256": "f983418580370f5760329d30bfbf26a3447c6968a50c6c08a623f97695d98e27",
+        "sourcePath": "Scripts/Fixtures/WineGameRendererPolicy/d3dmetal_probe.c"
+      },
+      "path": "Scripts/Fixtures/WineGameRendererPolicy/d3dmetal_probe.c",
+      "sha256": "f983418580370f5760329d30bfbf26a3447c6968a50c6c08a623f97695d98e27"
+    },
+    {
+      "byteLength": 1960,
+      "mode": "100644",
+      "origin": {
+        "classification": "release-commit-blob",
+        "destinationPath": "Scripts/Fixtures/WineGameRendererPolicy/launcher.c",
+        "gitMode": "100644",
+        "gitObjectID": "79d16848db9dce46aafc8f17d9239336812acb98",
+        "sha256": "11e390d6ae9594df2c7244994d1fddcc49328414c49f12e3c8f20bfff8334393",
+        "sourcePath": "Scripts/Fixtures/WineGameRendererPolicy/launcher.c"
+      },
+      "path": "Scripts/Fixtures/WineGameRendererPolicy/launcher.c",
+      "sha256": "11e390d6ae9594df2c7244994d1fddcc49328414c49f12e3c8f20bfff8334393"
     },
     {
       "byteLength": 5821,
@@ -2708,18 +2806,18 @@
       "sha256": "120ad3925d129320fee9429c0bbaf27dd08f8fa14fa92624ac73a62e165105ad"
     },
     {
-      "byteLength": 52427,
+      "byteLength": 50591,
       "mode": "100755",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/build-commercial-release.sh",
         "gitMode": "100755",
-        "gitObjectID": "3e5e38d302350cebdf203c5f4dd88ffc947f810f",
-        "sha256": "6159b24e8142cba21ad26e5a22689b35d3c2bc2418a0d3a92d879b8e904e0b79",
+        "gitObjectID": "5b5ab2209f1c4790ab1b009a20640ca130df9139",
+        "sha256": "f0bad88b4ff3920b78ea70006856d490ec43fc57e4dd9d28572770aacd41f0df",
         "sourcePath": "Scripts/build-commercial-release.sh"
       },
       "path": "Scripts/build-commercial-release.sh",
-      "sha256": "6159b24e8142cba21ad26e5a22689b35d3c2bc2418a0d3a92d879b8e904e0b79"
+      "sha256": "f0bad88b4ff3920b78ea70006856d490ec43fc57e4dd9d28572770aacd41f0df"
     },
     {
       "byteLength": 123042,
@@ -2736,32 +2834,32 @@
       "sha256": "9ce8389200d26a79f78fbbfdd7325835dcd9fcd6122479325abebcad86441571"
     },
     {
-      "byteLength": 28954,
+      "byteLength": 15944,
       "mode": "100755",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/build-public-distribution-archive.sh",
         "gitMode": "100755",
-        "gitObjectID": "e31b93c5a55974657a8c781cc210a86e0155740e",
-        "sha256": "dc746b31ac751fc9caa1ad00fcb525900ba6d01442fe9c00f9adb6bcebecbef5",
+        "gitObjectID": "3e81da5fd5b12a597da0c0723698e4b304ed2e67",
+        "sha256": "405175dd6a5ab219551164bc9075d5843e92730fb810c2662f7e5722b1bc9697",
         "sourcePath": "Scripts/build-public-distribution-archive.sh"
       },
       "path": "Scripts/build-public-distribution-archive.sh",
-      "sha256": "dc746b31ac751fc9caa1ad00fcb525900ba6d01442fe9c00f9adb6bcebecbef5"
+      "sha256": "405175dd6a5ab219551164bc9075d5843e92730fb810c2662f7e5722b1bc9697"
     },
     {
-      "byteLength": 6194,
+      "byteLength": 6165,
       "mode": "100755",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/build-public-forgeplay-runtime.sh",
         "gitMode": "100755",
-        "gitObjectID": "fde87dcc5471988b0446639e4b6652d3613c83ad",
-        "sha256": "f6538ba44cbf793b3badd28bb3af1da50d56d8b2c5b2576d986e64a73d73a34a",
+        "gitObjectID": "18cd78f57ce0e8b51bce8f1ed686197a96fed792",
+        "sha256": "e0ed41832624ca078de40f9c8503c9e1c5518632b235972723b26f1c07224d92",
         "sourcePath": "Scripts/build-public-forgeplay-runtime.sh"
       },
       "path": "Scripts/build-public-forgeplay-runtime.sh",
-      "sha256": "f6538ba44cbf793b3badd28bb3af1da50d56d8b2c5b2576d986e64a73d73a34a"
+      "sha256": "e0ed41832624ca078de40f9c8503c9e1c5518632b235972723b26f1c07224d92"
     },
     {
       "byteLength": 784,
@@ -2778,18 +2876,18 @@
       "sha256": "846a9bc5dad09b5940bcac21da67f2b78a4b2ceef68b93bff1a10b10186572f5"
     },
     {
-      "byteLength": 20744,
+      "byteLength": 20640,
       "mode": "100755",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/export-open-source.sh",
         "gitMode": "100755",
-        "gitObjectID": "26fca5666a2be4f8e02fc2b8b61ad128b12f0570",
-        "sha256": "88c6ca5f34a805d11978e6f7372193f651ebe0329f778b6417b88570c2ae1f0e",
+        "gitObjectID": "33a656f38fc9d47ce49a57d378cce4a7d713b706",
+        "sha256": "41269797e0fcfb7b58a5582c8c0a28a3facdfaddb3dcfbe5813900eba79d518c",
         "sourcePath": "Scripts/export-open-source.sh"
       },
       "path": "Scripts/export-open-source.sh",
-      "sha256": "88c6ca5f34a805d11978e6f7372193f651ebe0329f778b6417b88570c2ae1f0e"
+      "sha256": "41269797e0fcfb7b58a5582c8c0a28a3facdfaddb3dcfbe5813900eba79d518c"
     },
     {
       "byteLength": 45853,
@@ -2820,32 +2918,32 @@
       "sha256": "c772e89d1153751243b939e0decee525470559810b739e899207f36d4596a0ae"
     },
     {
-      "byteLength": 1482,
+      "byteLength": 570,
       "mode": "100755",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/generate-xcode-project.sh",
         "gitMode": "100755",
-        "gitObjectID": "cea9fd1753f286eeea763688dc8e37c78a645d79",
-        "sha256": "caefb6ef63b603b7bd1c876119fe4c3f60574ab331855654ee850254fbfbf2c6",
+        "gitObjectID": "1553d837aadc156ae4a3ae4092b4a4be15a27ba6",
+        "sha256": "772bdd0f464fb3d7e273cc1d8096afb19238d0b4db55e36d656f5daef31cbc41",
         "sourcePath": "Scripts/generate-xcode-project.sh"
       },
       "path": "Scripts/generate-xcode-project.sh",
-      "sha256": "caefb6ef63b603b7bd1c876119fe4c3f60574ab331855654ee850254fbfbf2c6"
+      "sha256": "772bdd0f464fb3d7e273cc1d8096afb19238d0b4db55e36d656f5daef31cbc41"
     },
     {
-      "byteLength": 41979,
+      "byteLength": 40680,
       "mode": "100755",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/materialize-forgeplay-wine-11.12-source.sh",
         "gitMode": "100755",
-        "gitObjectID": "063190a20db8179e0ce15ef3fa46a7e44eb8f857",
-        "sha256": "54e3316c684870a82c2bea24ccd2345e6935114b5506bf1eb1138f9b399229dd",
+        "gitObjectID": "5f6f18e86c1b10266fc2e083ad21fa877a505d90",
+        "sha256": "dfa4db7c2910b988627b4739264f1895ab482a4e2123501a58594f11e43e9ea1",
         "sourcePath": "Scripts/materialize-forgeplay-wine-11.12-source.sh"
       },
       "path": "Scripts/materialize-forgeplay-wine-11.12-source.sh",
-      "sha256": "54e3316c684870a82c2bea24ccd2345e6935114b5506bf1eb1138f9b399229dd"
+      "sha256": "dfa4db7c2910b988627b4739264f1895ab482a4e2123501a58594f11e43e9ea1"
     },
     {
       "byteLength": 13218,
@@ -2904,18 +3002,18 @@
       "sha256": "a76fbb5da70214037b4d3adc05cc1cddd0858ffeea49e7c120425329b782d73d"
     },
     {
-      "byteLength": 208369,
+      "byteLength": 207630,
       "mode": "100755",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/package-forgeplay-runtime.sh",
         "gitMode": "100755",
-        "gitObjectID": "90f2f3fac03cd75528e7672700ef0edd85ed50fc",
-        "sha256": "b89b2dc901cea323500058a78a87dc48366b45c1fbd9d714c71b343b11123219",
+        "gitObjectID": "3722432d18ef6923f9c268b451450c4732212b34",
+        "sha256": "c6d4d1c75ac0ac65fdbd1aaf4cda37a471058f9e51e382ce4a669081b1067ee7",
         "sourcePath": "Scripts/package-forgeplay-runtime.sh"
       },
       "path": "Scripts/package-forgeplay-runtime.sh",
-      "sha256": "b89b2dc901cea323500058a78a87dc48366b45c1fbd9d714c71b343b11123219"
+      "sha256": "c6d4d1c75ac0ac65fdbd1aaf4cda37a471058f9e51e382ce4a669081b1067ee7"
     },
     {
       "byteLength": 3086,
@@ -2974,32 +3072,32 @@
       "sha256": "326817b586644e44f8befeb0aba6269029f2498ecd1200c4e8941da0c0106600"
     },
     {
-      "byteLength": 25244,
+      "byteLength": 25254,
       "mode": "100755",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/public-release-set-transaction.py",
         "gitMode": "100755",
-        "gitObjectID": "82b969c3da48dd3ace21cbfc1169b23ef326a055",
-        "sha256": "2a4c393e3a4b1dbd3ed9dc017110521b0be089655f511f8da7b055e8387bc947",
+        "gitObjectID": "96cac969f1054447efd8b9bf565c4f1ac27efcad",
+        "sha256": "2daef13ce946426b08bb71443222b229ebae4ce2c163d13231f740d6a5a101a3",
         "sourcePath": "Scripts/public-release-set-transaction.py"
       },
       "path": "Scripts/public-release-set-transaction.py",
-      "sha256": "2a4c393e3a4b1dbd3ed9dc017110521b0be089655f511f8da7b055e8387bc947"
+      "sha256": "2daef13ce946426b08bb71443222b229ebae4ce2c163d13231f740d6a5a101a3"
     },
     {
-      "byteLength": 11206,
+      "byteLength": 11193,
       "mode": "100755",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/public-runtime-release-attestation.py",
         "gitMode": "100755",
-        "gitObjectID": "1962f6c0f5d4dc03cedcb894dd78fffd8d65063f",
-        "sha256": "6ddf2297fae124cfef383542d3b10a35ffb4e0ccdaf7240169f1ab2b866e3efc",
+        "gitObjectID": "f2a91ef12aa8c73dbd8126d4cf135eee36b4ef7e",
+        "sha256": "c3491dbae516ab0d86d62e56a49fd11b0bc7ac94d0b787414878f94c7bc9cb1a",
         "sourcePath": "Scripts/public-runtime-release-attestation.py"
       },
       "path": "Scripts/public-runtime-release-attestation.py",
-      "sha256": "6ddf2297fae124cfef383542d3b10a35ffb4e0ccdaf7240169f1ab2b866e3efc"
+      "sha256": "c3491dbae516ab0d86d62e56a49fd11b0bc7ac94d0b787414878f94c7bc9cb1a"
     },
     {
       "byteLength": 9559,
@@ -3086,6 +3184,20 @@
       "sha256": "a32560f94b38fa74328ab45feb0a20a575395ef575d70e04ec96ce79c5be292a"
     },
     {
+      "byteLength": 35388,
+      "mode": "100755",
+      "origin": {
+        "classification": "release-commit-blob",
+        "destinationPath": "Scripts/test-wine-game-renderer-d3dmetal.sh",
+        "gitMode": "100755",
+        "gitObjectID": "a88a75794451c415755467d79c12a3603f978e23",
+        "sha256": "178a7722293534a412c03093e97a73030c15091e60b4190a9dbf6e2e49964a6e",
+        "sourcePath": "Scripts/test-wine-game-renderer-d3dmetal.sh"
+      },
+      "path": "Scripts/test-wine-game-renderer-d3dmetal.sh",
+      "sha256": "178a7722293534a412c03093e97a73030c15091e60b4190a9dbf6e2e49964a6e"
+    },
+    {
       "byteLength": 5164,
       "mode": "100755",
       "origin": {
@@ -3100,46 +3212,46 @@
       "sha256": "91222f1f98eb4bbf86ddaaabac963d7ebf8c73f5f2e518f13eaa828e1786467a"
     },
     {
-      "byteLength": 27559,
+      "byteLength": 23637,
       "mode": "100755",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/tests/test-copyleft-source-packages.py",
         "gitMode": "100755",
-        "gitObjectID": "b61fb7ddb6358d005d570d58901fecaf4f8d534b",
-        "sha256": "33ed141865fef379d5f6a8fe18999f1a0e6884c6859d2b0b5e43e492dd45f0f5",
+        "gitObjectID": "7db08d0ec92aab029cc06d074fca085474f43c50",
+        "sha256": "1a1685959fb7baff4b68359016160485fdd937e979b634a48011fd166a52ae2c",
         "sourcePath": "Scripts/tests/test-copyleft-source-packages.py"
       },
       "path": "Scripts/tests/test-copyleft-source-packages.py",
-      "sha256": "33ed141865fef379d5f6a8fe18999f1a0e6884c6859d2b0b5e43e492dd45f0f5"
+      "sha256": "1a1685959fb7baff4b68359016160485fdd937e979b634a48011fd166a52ae2c"
     },
     {
-      "byteLength": 21779,
+      "byteLength": 61420,
+      "mode": "100755",
+      "origin": {
+        "classification": "release-commit-blob",
+        "destinationPath": "Scripts/tests/test-d3dmetal-frame-generation-production-contract.sh",
+        "gitMode": "100755",
+        "gitObjectID": "9059d6d957a3af24e0d1b9f7afd1855a67be6dfa",
+        "sha256": "b795909fc8d927d6f756242d6e650e4c786f3139452ad261d5774ab1ef5c73c7",
+        "sourcePath": "Scripts/tests/test-d3dmetal-frame-generation-production-contract.sh"
+      },
+      "path": "Scripts/tests/test-d3dmetal-frame-generation-production-contract.sh",
+      "sha256": "b795909fc8d927d6f756242d6e650e4c786f3139452ad261d5774ab1ef5c73c7"
+    },
+    {
+      "byteLength": 21754,
       "mode": "100755",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/tests/test-freeze-public-source-export.py",
         "gitMode": "100755",
-        "gitObjectID": "662c7227b5a3448ff22436a30300ef97d01e2d0a",
-        "sha256": "16525e4405bddcdfd97ee7cb768f564d00f4c5a7eed65d21f733fee04e4dac93",
+        "gitObjectID": "e87e85c3c3be8da3b0a14047648be602ad2f9843",
+        "sha256": "21b77a6c533d0a2df6e6fcbaafe851cdb49c1d00a04e42b3068f2a101874344d",
         "sourcePath": "Scripts/tests/test-freeze-public-source-export.py"
       },
       "path": "Scripts/tests/test-freeze-public-source-export.py",
-      "sha256": "16525e4405bddcdfd97ee7cb768f564d00f4c5a7eed65d21f733fee04e4dac93"
-    },
-    {
-      "byteLength": 4765,
-      "mode": "100755",
-      "origin": {
-        "classification": "release-commit-blob",
-        "destinationPath": "Scripts/tests/test-generate-xcode-project.sh",
-        "gitMode": "100755",
-        "gitObjectID": "416395801f0afef8c8e88286ffa11672bc75ae92",
-        "sha256": "8c2dba13d06d4aba5feb042af7664e9e03b3184279f3aed0d9829f6417aaf4e2",
-        "sourcePath": "Scripts/tests/test-generate-xcode-project.sh"
-      },
-      "path": "Scripts/tests/test-generate-xcode-project.sh",
-      "sha256": "8c2dba13d06d4aba5feb042af7664e9e03b3184279f3aed0d9829f6417aaf4e2"
+      "sha256": "21b77a6c533d0a2df6e6fcbaafe851cdb49c1d00a04e42b3068f2a101874344d"
     },
     {
       "byteLength": 11971,
@@ -3156,74 +3268,74 @@
       "sha256": "7970d9a9ae19e3253f88160ec24205cdc0aa0297fc5a63ec4be984d9048a1c1c"
     },
     {
-      "byteLength": 5043,
+      "byteLength": 4135,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/tests/test-packaging-license-release-contracts.py",
         "gitMode": "100644",
-        "gitObjectID": "1238de1fda7e01a8579f9a9f9178d8c5d2b09fdd",
-        "sha256": "19b7dd243b1e3a23c474749a2d03532fbded40c6701dc428a3cc23d8733f043d",
+        "gitObjectID": "b0cf634adec17cc9c9c6336e1fa99640851e5636",
+        "sha256": "b8dc0be9099b15397734231225a153007234d4e68fb58b455b81b28c0e347d59",
         "sourcePath": "Scripts/tests/test-packaging-license-release-contracts.py"
       },
       "path": "Scripts/tests/test-packaging-license-release-contracts.py",
-      "sha256": "19b7dd243b1e3a23c474749a2d03532fbded40c6701dc428a3cc23d8733f043d"
+      "sha256": "b8dc0be9099b15397734231225a153007234d4e68fb58b455b81b28c0e347d59"
     },
     {
-      "byteLength": 51030,
+      "byteLength": 30578,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/tests/test-public-distribution-archive-graph.py",
         "gitMode": "100644",
-        "gitObjectID": "c521fc42ac685c089a8d0be81b64e1208965b1a3",
-        "sha256": "3f0df44e928165cfa8540d052df26a34c1ab9c49be8b239a52f5f523814fad1d",
+        "gitObjectID": "201890a6fa3f60c2473c9f11dbb546401983791f",
+        "sha256": "6611e41da67e033e7c5a0b6137b7f2ffeaf232d4e02189b1b035d290b757c583",
         "sourcePath": "Scripts/tests/test-public-distribution-archive-graph.py"
       },
       "path": "Scripts/tests/test-public-distribution-archive-graph.py",
-      "sha256": "3f0df44e928165cfa8540d052df26a34c1ab9c49be8b239a52f5f523814fad1d"
+      "sha256": "6611e41da67e033e7c5a0b6137b7f2ffeaf232d4e02189b1b035d290b757c583"
     },
     {
-      "byteLength": 15731,
+      "byteLength": 15733,
       "mode": "100755",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/tests/test-public-release-set-transaction.py",
         "gitMode": "100755",
-        "gitObjectID": "8dc802d5a572bad1b0d94e4e40e3802eeeac3603",
-        "sha256": "b2940a51cefb128925d1348a13cc8d96010a91a36773c478359198d5cd28f557",
+        "gitObjectID": "1f342e7eede99b399cc3c5e6d985b0f437168482",
+        "sha256": "0e8a5fe6f86aafd86bf0eaba0d52bf365b3830beb5afbc8dd939f0d4c27a1744",
         "sourcePath": "Scripts/tests/test-public-release-set-transaction.py"
       },
       "path": "Scripts/tests/test-public-release-set-transaction.py",
-      "sha256": "b2940a51cefb128925d1348a13cc8d96010a91a36773c478359198d5cd28f557"
+      "sha256": "0e8a5fe6f86aafd86bf0eaba0d52bf365b3830beb5afbc8dd939f0d4c27a1744"
     },
     {
-      "byteLength": 7591,
+      "byteLength": 7355,
       "mode": "100755",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/tests/test-public-runtime-build-receipt.py",
         "gitMode": "100755",
-        "gitObjectID": "ab759097982f41df2be98903356c85c8a4b4fddf",
-        "sha256": "222be66ca54aa193c9728520d4ceb36614da9cfe6e52d779d7fa9bcde2a1c49f",
+        "gitObjectID": "7efb1fe2da1e5b41461b3eff9449533637e7b6cd",
+        "sha256": "660e18193371cbb700fcecbd453f2c3adb5749db1383ddf30f05d50b1c57b581",
         "sourcePath": "Scripts/tests/test-public-runtime-build-receipt.py"
       },
       "path": "Scripts/tests/test-public-runtime-build-receipt.py",
-      "sha256": "222be66ca54aa193c9728520d4ceb36614da9cfe6e52d779d7fa9bcde2a1c49f"
+      "sha256": "660e18193371cbb700fcecbd453f2c3adb5749db1383ddf30f05d50b1c57b581"
     },
     {
-      "byteLength": 6792,
+      "byteLength": 6775,
       "mode": "100755",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/tests/test-public-runtime-release-attestation.py",
         "gitMode": "100755",
-        "gitObjectID": "4e228e9ab3affe308d9d14af30627c921db6b4b9",
-        "sha256": "1839feca49228b27797d0143a8b02743c62ba54b3434f71f9827ae074586f647",
+        "gitObjectID": "ef5d34a8105e6ac3d117366fb83f10bbc72b00b2",
+        "sha256": "a167c5e00d1d6f14e97ed6563011516f2c866f649f50c77b4055ef654950ab1f",
         "sourcePath": "Scripts/tests/test-public-runtime-release-attestation.py"
       },
       "path": "Scripts/tests/test-public-runtime-release-attestation.py",
-      "sha256": "1839feca49228b27797d0143a8b02743c62ba54b3434f71f9827ae074586f647"
+      "sha256": "a167c5e00d1d6f14e97ed6563011516f2c866f649f50c77b4055ef654950ab1f"
     },
     {
       "byteLength": 6005,
@@ -3240,18 +3352,18 @@
       "sha256": "1d22424af39ef7921fa0b0489452576d83e6942530d1ce6742033cd3a901a94a"
     },
     {
-      "byteLength": 21351,
+      "byteLength": 22906,
       "mode": "100755",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/tests/test-wine-game-mode-process-host-routing.sh",
         "gitMode": "100755",
-        "gitObjectID": "cf5a30d510a7720adcad1689145ab65c35ceb029",
-        "sha256": "da7a5d4fc01eaff079ecf9bad28cc6f5526a9c1ae5bdfc4ffb8ab5a8b5e8b7bd",
+        "gitObjectID": "976fd298420c93a0f4d7b30c45034bd1c77fae29",
+        "sha256": "4242cc84aaf2cd6e7a8666dce6912e759d8d056c3fdd4660f730e6591c650186",
         "sourcePath": "Scripts/tests/test-wine-game-mode-process-host-routing.sh"
       },
       "path": "Scripts/tests/test-wine-game-mode-process-host-routing.sh",
-      "sha256": "da7a5d4fc01eaff079ecf9bad28cc6f5526a9c1ae5bdfc4ffb8ab5a8b5e8b7bd"
+      "sha256": "4242cc84aaf2cd6e7a8666dce6912e759d8d056c3fdd4660f730e6591c650186"
     },
     {
       "byteLength": 649,
@@ -3268,32 +3380,18 @@
       "sha256": "dac7cbe29b23ed5c78a241bdb56be642b39b5f1bbd2dad0ff99089d49f461d08"
     },
     {
-      "byteLength": 5254,
-      "mode": "100755",
-      "origin": {
-        "classification": "release-commit-blob",
-        "destinationPath": "Scripts/validate-d3dmetal-ngx-bridge.sh",
-        "gitMode": "100755",
-        "gitObjectID": "707db503f5ca42dfcabe42c15b5a0b02134f1056",
-        "sha256": "ebd7182a0226ea43c4678e16d92e07433919ee5d6fc03de48bb4171167dbe8ee",
-        "sourcePath": "Scripts/validate-d3dmetal-ngx-bridge.sh"
-      },
-      "path": "Scripts/validate-d3dmetal-ngx-bridge.sh",
-      "sha256": "ebd7182a0226ea43c4678e16d92e07433919ee5d6fc03de48bb4171167dbe8ee"
-    },
-    {
-      "byteLength": 3497,
+      "byteLength": 3185,
       "mode": "100755",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/validate-product-identity.sh",
         "gitMode": "100755",
-        "gitObjectID": "dd8aaf136bc03718fdf84e3314ea2cd6027df4cc",
-        "sha256": "387a2e146808b651485ec3a12401a05ca4d0396586ca2d9193e5f799f8f274a4",
+        "gitObjectID": "9f7dcdee7f30a547501bb5b245bfaa11c23a3f78",
+        "sha256": "12fa50e81b838ff9179fe65f7ab0c12a0edabb8abfb4c897461933ff65da4d10",
         "sourcePath": "Scripts/validate-product-identity.sh"
       },
       "path": "Scripts/validate-product-identity.sh",
-      "sha256": "387a2e146808b651485ec3a12401a05ca4d0396586ca2d9193e5f799f8f274a4"
+      "sha256": "12fa50e81b838ff9179fe65f7ab0c12a0edabb8abfb4c897461933ff65da4d10"
     },
     {
       "byteLength": 30015,
@@ -3324,18 +3422,18 @@
       "sha256": "3bf7ee1b53570207f0aa11b5e626b9e56c5cbdbf502acd747f74daa86a47353d"
     },
     {
-      "byteLength": 99640,
+      "byteLength": 69286,
       "mode": "100755",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/verify-bundled-runtime-capability.sh",
         "gitMode": "100755",
-        "gitObjectID": "2b0e6ea4a3edc2d17100465247650d7894f7d310",
-        "sha256": "7c344e4195de2217b2ba9aa40547a88496b37bafbe33e075385dc2ae2317b131",
+        "gitObjectID": "bdf518bcf9ba6e34170b02c6eba3daf4d777e218",
+        "sha256": "0d0b989e9319cc341b986426939601b4160315de55c81ac64fe78c5d93e3f85e",
         "sourcePath": "Scripts/verify-bundled-runtime-capability.sh"
       },
       "path": "Scripts/verify-bundled-runtime-capability.sh",
-      "sha256": "7c344e4195de2217b2ba9aa40547a88496b37bafbe33e075385dc2ae2317b131"
+      "sha256": "0d0b989e9319cc341b986426939601b4160315de55c81ac64fe78c5d93e3f85e"
     },
     {
       "byteLength": 2093,
@@ -3408,32 +3506,32 @@
       "sha256": "456b5643161be6e3dd858f6a506fc0f5258641b489387df4fd93b2e1d0b91d01"
     },
     {
-      "byteLength": 6533,
+      "byteLength": 6875,
       "mode": "100755",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/verify-legal-documents.sh",
         "gitMode": "100755",
-        "gitObjectID": "a980660157cdb3f7b7a1281fa58e0de03dbdba71",
-        "sha256": "d1eafcec8c66dd8a7fa6d9ac0d972f31ef0b70f2cd60c873b419dfbfee142618",
+        "gitObjectID": "187e8c6344c6d0c36d2da2d69ecc4974253ea9d4",
+        "sha256": "ef7b1c65c952664075aa7379845b6341e889e8eb3ef9a038726b8f6f76accd36",
         "sourcePath": "Scripts/verify-legal-documents.sh"
       },
       "path": "Scripts/verify-legal-documents.sh",
-      "sha256": "d1eafcec8c66dd8a7fa6d9ac0d972f31ef0b70f2cd60c873b419dfbfee142618"
+      "sha256": "ef7b1c65c952664075aa7379845b6341e889e8eb3ef9a038726b8f6f76accd36"
     },
     {
-      "byteLength": 5327,
+      "byteLength": 6422,
       "mode": "100755",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/verify-license-documents.sh",
         "gitMode": "100755",
-        "gitObjectID": "85d8d1bd6956acf0e7fd07f0ceb8565d19a2001f",
-        "sha256": "e47e25a55f46a085f7e7d5fbdecb480622432d8afafa8e58fb19d808446c40f0",
+        "gitObjectID": "c49e4489235bb27ba414de34e28d32aa5ded484e",
+        "sha256": "6f49bd8298e199281b1461ec27ccd1e7fab4b5870cf43709d3c3944774f84530",
         "sourcePath": "Scripts/verify-license-documents.sh"
       },
       "path": "Scripts/verify-license-documents.sh",
-      "sha256": "e47e25a55f46a085f7e7d5fbdecb480622432d8afafa8e58fb19d808446c40f0"
+      "sha256": "6f49bd8298e199281b1461ec27ccd1e7fab4b5870cf43709d3c3944774f84530"
     },
     {
       "byteLength": 6647,
@@ -3464,18 +3562,18 @@
       "sha256": "dac086a2b957985b95baba2958644c683259468e5531deabd78f161598780785"
     },
     {
-      "byteLength": 37541,
+      "byteLength": 40633,
       "mode": "100755",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/verify-open-source-export.sh",
         "gitMode": "100755",
-        "gitObjectID": "a16e2d7f49587955ebb3019e9240bdf5133fce9a",
-        "sha256": "cdbaad70d8c67ececefc6f2776cf705098551b794dbfba692f327c2112da7ebf",
+        "gitObjectID": "4b91f70375ddf334ccd6c45f3901d5fe6283017a",
+        "sha256": "de8501b2607ce5773a2934ed124a27534c119d1c674aff2c8519523f29c2198a",
         "sourcePath": "Scripts/verify-open-source-export.sh"
       },
       "path": "Scripts/verify-open-source-export.sh",
-      "sha256": "cdbaad70d8c67ececefc6f2776cf705098551b794dbfba692f327c2112da7ebf"
+      "sha256": "de8501b2607ce5773a2934ed124a27534c119d1c674aff2c8519523f29c2198a"
     },
     {
       "byteLength": 4861,
@@ -3506,18 +3604,18 @@
       "sha256": "466146caa4e31e6122dfcc0a506dc466b8ba022b7e8202015b9b09be9f5c4151"
     },
     {
-      "byteLength": 21268,
+      "byteLength": 21276,
       "mode": "100755",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/verify-public-release-assets.sh",
         "gitMode": "100755",
-        "gitObjectID": "edec5b6920105e1f8620f262c1e58d8c19aa6888",
-        "sha256": "13fcc1b8579d74e71971c0dfc27f8ee608e136699d35426721fee5a0223f05f2",
+        "gitObjectID": "ff812d247b41e87f91eb8ecb10c6c385594fbae5",
+        "sha256": "d20a24d588dfd41ac1d055b29c0e5b85ed32dfc86e48d242df6c3df1b35d6f88",
         "sourcePath": "Scripts/verify-public-release-assets.sh"
       },
       "path": "Scripts/verify-public-release-assets.sh",
-      "sha256": "13fcc1b8579d74e71971c0dfc27f8ee608e136699d35426721fee5a0223f05f2"
+      "sha256": "d20a24d588dfd41ac1d055b29c0e5b85ed32dfc86e48d242df6c3df1b35d6f88"
     },
     {
       "byteLength": 16070,
@@ -3576,60 +3674,60 @@
       "sha256": "656161469df6853522f64212bb5b9add9b67b04a3c6aac9587c685b27d1e445c"
     },
     {
-      "byteLength": 20180,
+      "byteLength": 20015,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/verify-release-app-security.sh",
         "gitMode": "100644",
-        "gitObjectID": "eb415c76e0671d6ad1d3f9361c5310538044acfc",
-        "sha256": "f8f5ab1f3d9e29a972afbe090ee6bbae50eb712a22f33984e494402d2573f6a0",
+        "gitObjectID": "0948ede72754a63dd4c2faf3525c3ade32955c2f",
+        "sha256": "fd65307e3b6d4917a8cde6d45c3849bc2979754f3c2b72f7abb7d86606cddbe5",
         "sourcePath": "Scripts/verify-release-app-security.sh"
       },
       "path": "Scripts/verify-release-app-security.sh",
-      "sha256": "f8f5ab1f3d9e29a972afbe090ee6bbae50eb712a22f33984e494402d2573f6a0"
+      "sha256": "fd65307e3b6d4917a8cde6d45c3849bc2979754f3c2b72f7abb7d86606cddbe5"
     },
     {
-      "byteLength": 8369,
+      "byteLength": 5719,
       "mode": "100755",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/verify-release-bundle-privacy.sh",
         "gitMode": "100755",
-        "gitObjectID": "f630c42089df3a02a5d37b35891b5d330fffae0f",
-        "sha256": "77ade2f4a8c8c89af9c24a36dd32bf572c3b21f348b6501ad5f493b59cf32bb8",
+        "gitObjectID": "209d7a011adf22b407ec1538e549da9d6286972c",
+        "sha256": "0fa9fd50222eac1670c3507c156be956f53ee0095fa69c67d5e8c30ad1fa671d",
         "sourcePath": "Scripts/verify-release-bundle-privacy.sh"
       },
       "path": "Scripts/verify-release-bundle-privacy.sh",
-      "sha256": "77ade2f4a8c8c89af9c24a36dd32bf572c3b21f348b6501ad5f493b59cf32bb8"
+      "sha256": "0fa9fd50222eac1670c3507c156be956f53ee0095fa69c67d5e8c30ad1fa671d"
     },
     {
-      "byteLength": 26005,
+      "byteLength": 26029,
       "mode": "100755",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/verify-release-evidence.sh",
         "gitMode": "100755",
-        "gitObjectID": "325b41c04179597e994e49ed11c26bae09455e62",
-        "sha256": "bb37058c37bc228ee378580475f94ce267638354fcae96ffc0c8fe2f3cc39bbc",
+        "gitObjectID": "c66068e7d4df0c849d9992feff98c07761804ed4",
+        "sha256": "fe7be8543a74c27e9fa96b5c4cc29a3fc63c21e9e4b49baf6340541c11cc496b",
         "sourcePath": "Scripts/verify-release-evidence.sh"
       },
       "path": "Scripts/verify-release-evidence.sh",
-      "sha256": "bb37058c37bc228ee378580475f94ce267638354fcae96ffc0c8fe2f3cc39bbc"
+      "sha256": "fe7be8543a74c27e9fa96b5c4cc29a3fc63c21e9e4b49baf6340541c11cc496b"
     },
     {
-      "byteLength": 8151,
+      "byteLength": 2361,
       "mode": "100755",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Scripts/verify-wine-runtime-build-paths.py",
         "gitMode": "100755",
-        "gitObjectID": "c65be1614b9b14224d73903c1b32a51e247853a8",
-        "sha256": "fe76d68d8c5d396fec78082c4def2a8cb76ddb3a69345503a04119697b465767",
+        "gitObjectID": "92f81dae4876282537e31babb4d22bbbefc588fd",
+        "sha256": "b3b5bb15cf28af680551645b120f9eb1545c963dda3d10a8140cee5bfd26b068",
         "sourcePath": "Scripts/verify-wine-runtime-build-paths.py"
       },
       "path": "Scripts/verify-wine-runtime-build-paths.py",
-      "sha256": "fe76d68d8c5d396fec78082c4def2a8cb76ddb3a69345503a04119697b465767"
+      "sha256": "b3b5bb15cf28af680551645b120f9eb1545c963dda3d10a8140cee5bfd26b068"
     },
     {
       "byteLength": 7367,
@@ -3646,32 +3744,32 @@
       "sha256": "d7f080ebbae7477e3667877b7f46d1d07eb8e25a8b25842c05eade35989f548c"
     },
     {
-      "byteLength": 100685,
+      "byteLength": 118535,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/App/AppServices.swift",
         "gitMode": "100644",
-        "gitObjectID": "a1529ead0503885c55f3a5135a9501cfd1bfe7d2",
-        "sha256": "1372b591661228ae49b257c1d8877b64049987a278f47d7448218be9b77f3672",
+        "gitObjectID": "b696036fcd7ff528dcb7456710a05bcf7f079270",
+        "sha256": "d05d9278c9cfb8ff9977ac2316f9b7380e54588b9d584a2d1fa1df16ac8d45e8",
         "sourcePath": "Sources/ForgePlay/App/AppServices.swift"
       },
       "path": "Sources/ForgePlay/App/AppServices.swift",
-      "sha256": "1372b591661228ae49b257c1d8877b64049987a278f47d7448218be9b77f3672"
+      "sha256": "d05d9278c9cfb8ff9977ac2316f9b7380e54588b9d584a2d1fa1df16ac8d45e8"
     },
     {
-      "byteLength": 116455,
+      "byteLength": 116035,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/App/AppState.swift",
         "gitMode": "100644",
-        "gitObjectID": "e01e7519c965d876a2dc21ad00175f9c7b7d436e",
-        "sha256": "4d8091326260b296917e1245d4317b22a3064dc378571d0ff33a5120f23d44da",
+        "gitObjectID": "2ec52debc3aff40cabf185fddd90a9b0804056ff",
+        "sha256": "6bb82a34cc41a79a69221f4a8214a4f6d692efc8f39f183b1fa4dcfed7a18cf2",
         "sourcePath": "Sources/ForgePlay/App/AppState.swift"
       },
       "path": "Sources/ForgePlay/App/AppState.swift",
-      "sha256": "4d8091326260b296917e1245d4317b22a3064dc378571d0ff33a5120f23d44da"
+      "sha256": "6bb82a34cc41a79a69221f4a8214a4f6d692efc8f39f183b1fa4dcfed7a18cf2"
     },
     {
       "byteLength": 9922,
@@ -3716,18 +3814,18 @@
       "sha256": "2079b8c69cb8d5ec11ae0dee56fc5eed3a34fdf37c5c018ba4e0ad109f82b090"
     },
     {
-      "byteLength": 94041,
+      "byteLength": 94507,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/App/Localization.swift",
         "gitMode": "100644",
-        "gitObjectID": "fca287d9cff0e53c5133c1333c11cbd1d572d007",
-        "sha256": "809bf50f4e2e4cd6f81ac14f3e3a517b56a3ecc6615d3312de065c7d89850b60",
+        "gitObjectID": "796bafd4ba19aad07f24f6f20213d47572966929",
+        "sha256": "bcc8f9197e63e726ff329401b0d2bfe0ca1eb9ed00cf41d200120c1a36f4169e",
         "sourcePath": "Sources/ForgePlay/App/Localization.swift"
       },
       "path": "Sources/ForgePlay/App/Localization.swift",
-      "sha256": "809bf50f4e2e4cd6f81ac14f3e3a517b56a3ecc6615d3312de065c7d89850b60"
+      "sha256": "bcc8f9197e63e726ff329401b0d2bfe0ca1eb9ed00cf41d200120c1a36f4169e"
     },
     {
       "byteLength": 930,
@@ -3842,6 +3940,34 @@
       "sha256": "40543a032b9935f8d1c57985763c800802ead44961a7f63f60a7943bd9313ca6"
     },
     {
+      "byteLength": 4018,
+      "mode": "100644",
+      "origin": {
+        "classification": "release-commit-blob",
+        "destinationPath": "Sources/ForgePlay/FrameGeneration/FrameGenerationDomain.swift",
+        "gitMode": "100644",
+        "gitObjectID": "ba78f9f532766cab58beb8c2861e2dd0f3ee7791",
+        "sha256": "4a3f4e8c465fa6dd83987abff4effab14a631ac2a011b2777c9ebd940243d89f",
+        "sourcePath": "Sources/ForgePlay/FrameGeneration/FrameGenerationDomain.swift"
+      },
+      "path": "Sources/ForgePlay/FrameGeneration/FrameGenerationDomain.swift",
+      "sha256": "4a3f4e8c465fa6dd83987abff4effab14a631ac2a011b2777c9ebd940243d89f"
+    },
+    {
+      "byteLength": 2068,
+      "mode": "100644",
+      "origin": {
+        "classification": "release-commit-blob",
+        "destinationPath": "Sources/ForgePlay/Graphics/GraphicsIdentityPolicy.swift",
+        "gitMode": "100644",
+        "gitObjectID": "e741bf2021af9817a955bf6dc85fd9edcb162700",
+        "sha256": "c7f4417e4574131a5e6053b37305d00a79be71aeb58d2747f7ba62e999a54292",
+        "sourcePath": "Sources/ForgePlay/Graphics/GraphicsIdentityPolicy.swift"
+      },
+      "path": "Sources/ForgePlay/Graphics/GraphicsIdentityPolicy.swift",
+      "sha256": "c7f4417e4574131a5e6053b37305d00a79be71aeb58d2747f7ba62e999a54292"
+    },
+    {
       "byteLength": 2105,
       "mode": "100644",
       "origin": {
@@ -3856,18 +3982,18 @@
       "sha256": "907f89961c5acef7eff74b0a72b324a0098f40543944e20c38f337c70011beba"
     },
     {
-      "byteLength": 10938,
+      "byteLength": 11071,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/InputCompatibility/ControllerCompatibilityPreflight.swift",
         "gitMode": "100644",
-        "gitObjectID": "799fa40dc9a597dc7c949da9d832acc85e51351b",
-        "sha256": "802493c7c2c23efc335c3cf08d6501ef82eb0a61dc38142c80a282a6866000cc",
+        "gitObjectID": "098210976c70293a1d42a4ae59b02e9a00ed67fc",
+        "sha256": "4fe7224fa4e178f272df81285b07d446f4d546d0127e71c3a17741558041a4b8",
         "sourcePath": "Sources/ForgePlay/InputCompatibility/ControllerCompatibilityPreflight.swift"
       },
       "path": "Sources/ForgePlay/InputCompatibility/ControllerCompatibilityPreflight.swift",
-      "sha256": "802493c7c2c23efc335c3cf08d6501ef82eb0a61dc38142c80a282a6866000cc"
+      "sha256": "4fe7224fa4e178f272df81285b07d446f4d546d0127e71c3a17741558041a4b8"
     },
     {
       "byteLength": 96362,
@@ -3898,74 +4024,74 @@
       "sha256": "d6abf1e2f93b1803b8195d37e323e189ed1a1157b63e00d5358c0643dd5796df"
     },
     {
-      "byteLength": 17020,
+      "byteLength": 24048,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/LaunchConfiguration/SteamCompatibilityLaunchPreferencePersistenceV1.swift",
         "gitMode": "100644",
-        "gitObjectID": "8a47822719f3f0e45731198e0ce6c317cc75988e",
-        "sha256": "743ba5c478e225b5c65293373ff2573cde5b440cdeda343a02debe35fe7249d0",
+        "gitObjectID": "79bbc58b4d260267e318d295fcd05e4b0be27b2b",
+        "sha256": "42c174a889231fa8f5be242c32b91da5b617980ed35b26a8df71908a8645fc33",
         "sourcePath": "Sources/ForgePlay/LaunchConfiguration/SteamCompatibilityLaunchPreferencePersistenceV1.swift"
       },
       "path": "Sources/ForgePlay/LaunchConfiguration/SteamCompatibilityLaunchPreferencePersistenceV1.swift",
-      "sha256": "743ba5c478e225b5c65293373ff2573cde5b440cdeda343a02debe35fe7249d0"
+      "sha256": "42c174a889231fa8f5be242c32b91da5b617980ed35b26a8df71908a8645fc33"
     },
     {
-      "byteLength": 36049,
+      "byteLength": 44502,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/LaunchConfiguration/SteamCompatibilityLaunchProfileV1.swift",
         "gitMode": "100644",
-        "gitObjectID": "e9e0fbfb7884ff4651b9edf8804aee5ce7bb159f",
-        "sha256": "5a98d780e51cd44d15d71d7cac4afe9262305ffb1a1915c96972e62245f521b8",
+        "gitObjectID": "d0ca3ae581bd4448b7deac13ffbee4364db20a62",
+        "sha256": "cf6b06cf05aeab3f66874dae38dc23411b1d6f955d657a26e37be98f0c2e33a8",
         "sourcePath": "Sources/ForgePlay/LaunchConfiguration/SteamCompatibilityLaunchProfileV1.swift"
       },
       "path": "Sources/ForgePlay/LaunchConfiguration/SteamCompatibilityLaunchProfileV1.swift",
-      "sha256": "5a98d780e51cd44d15d71d7cac4afe9262305ffb1a1915c96972e62245f521b8"
+      "sha256": "cf6b06cf05aeab3f66874dae38dc23411b1d6f955d657a26e37be98f0c2e33a8"
     },
     {
-      "byteLength": 60591,
+      "byteLength": 64849,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/LaunchConfiguration/SteamCompatibilityLaunchRuntimeV1.swift",
         "gitMode": "100644",
-        "gitObjectID": "d43e21023a7588302063744db296ba6f484dbb9c",
-        "sha256": "88e1ff2ea10b4609d8264baa9ab118a5e77084c20baf35791ebe6b6edfe01253",
+        "gitObjectID": "4d46c6c043d26b18c7c412f364dc20b5df6d0899",
+        "sha256": "368e86280d92fd3fc6f7222fc51898fe630fed4fae43c2f76aede6985d25c4a6",
         "sourcePath": "Sources/ForgePlay/LaunchConfiguration/SteamCompatibilityLaunchRuntimeV1.swift"
       },
       "path": "Sources/ForgePlay/LaunchConfiguration/SteamCompatibilityLaunchRuntimeV1.swift",
-      "sha256": "88e1ff2ea10b4609d8264baa9ab118a5e77084c20baf35791ebe6b6edfe01253"
+      "sha256": "368e86280d92fd3fc6f7222fc51898fe630fed4fae43c2f76aede6985d25c4a6"
     },
     {
-      "byteLength": 28500,
+      "byteLength": 44572,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/LaunchConfiguration/SteamLaunchConfigurationDomain.swift",
         "gitMode": "100644",
-        "gitObjectID": "8ff31bf19b50a9c928e30644f44408fc9b53f076",
-        "sha256": "cfa414cceb7760b43e3fcc0ddca3ade58786ec040a0739254689fade16a243de",
+        "gitObjectID": "d818555bfc61b7a532da20715098aefb7d64f396",
+        "sha256": "2b3c400091787dc58d6586319437a03a295bebdf4cbfd1b7effc8e1935826e3b",
         "sourcePath": "Sources/ForgePlay/LaunchConfiguration/SteamLaunchConfigurationDomain.swift"
       },
       "path": "Sources/ForgePlay/LaunchConfiguration/SteamLaunchConfigurationDomain.swift",
-      "sha256": "cfa414cceb7760b43e3fcc0ddca3ade58786ec040a0739254689fade16a243de"
+      "sha256": "2b3c400091787dc58d6586319437a03a295bebdf4cbfd1b7effc8e1935826e3b"
     },
     {
-      "byteLength": 11339,
+      "byteLength": 12904,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/LaunchConfiguration/SteamLaunchConfigurationProductAdapter.swift",
         "gitMode": "100644",
-        "gitObjectID": "b5e848da4e5e03981dcc676f2a8a86d638c8fd88",
-        "sha256": "16c1cc1b4d10d699bee31f3948bb2ac61065130e255c98ea636a40be2dc9050b",
+        "gitObjectID": "2802e7cc794fa0e5dbda7e42ad60cb3e5923937d",
+        "sha256": "d46fb8a8a6a0fced5929898d36ec46cde230eda0158f5348eb6f823384638c05",
         "sourcePath": "Sources/ForgePlay/LaunchConfiguration/SteamLaunchConfigurationProductAdapter.swift"
       },
       "path": "Sources/ForgePlay/LaunchConfiguration/SteamLaunchConfigurationProductAdapter.swift",
-      "sha256": "16c1cc1b4d10d699bee31f3948bb2ac61065130e255c98ea636a40be2dc9050b"
+      "sha256": "d46fb8a8a6a0fced5929898d36ec46cde230eda0158f5348eb6f823384638c05"
     },
     {
       "byteLength": 14402,
@@ -3982,46 +4108,46 @@
       "sha256": "6ef9928756fd97c186fbf15695110705a359533dce28913973f7579bc5aff8bb"
     },
     {
-      "byteLength": 82497,
+      "byteLength": 88020,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/LaunchConfiguration/SteamManagerCompatibilityLaunchRuntimeProviderV1.swift",
         "gitMode": "100644",
-        "gitObjectID": "c1ab0edf92e55f79c894cb0ad7c6fc478279c81a",
-        "sha256": "c40b7bcde3873cacd2402c1ae6e20216b3132d36109f395693602ca60c732260",
+        "gitObjectID": "bc99773ddde1a83cd228156ddf0eb26623ca740a",
+        "sha256": "66e950f86d212742c75d1d00e2f8a5f60f860e17706991c38798c9b5d7f10e15",
         "sourcePath": "Sources/ForgePlay/LaunchConfiguration/SteamManagerCompatibilityLaunchRuntimeProviderV1.swift"
       },
       "path": "Sources/ForgePlay/LaunchConfiguration/SteamManagerCompatibilityLaunchRuntimeProviderV1.swift",
-      "sha256": "c40b7bcde3873cacd2402c1ae6e20216b3132d36109f395693602ca60c732260"
+      "sha256": "66e950f86d212742c75d1d00e2f8a5f60f860e17706991c38798c9b5d7f10e15"
     },
     {
-      "byteLength": 16306,
+      "byteLength": 13214,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/Models/DeveloperAppCatalog.swift",
         "gitMode": "100644",
-        "gitObjectID": "d70d02379fb6444844fdb60bbfc5e658b3f38bd3",
-        "sha256": "d3b3012c86ad5d7fa82bbd0da08dc39c92c6ba2146b163ee7ee8895f2e3a1ff0",
+        "gitObjectID": "674849e3d189e2ed582c45d1db165c8c58687dc2",
+        "sha256": "c34aedb2957cba568c7f47343b44aaab35163f1f579f2a904d7f9f5f67b2eecb",
         "sourcePath": "Sources/ForgePlay/Models/DeveloperAppCatalog.swift"
       },
       "path": "Sources/ForgePlay/Models/DeveloperAppCatalog.swift",
-      "sha256": "d3b3012c86ad5d7fa82bbd0da08dc39c92c6ba2146b163ee7ee8895f2e3a1ff0"
+      "sha256": "c34aedb2957cba568c7f47343b44aaab35163f1f579f2a904d7f9f5f67b2eecb"
     },
     {
-      "byteLength": 48046,
+      "byteLength": 50651,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/Models/DomainModels.swift",
         "gitMode": "100644",
-        "gitObjectID": "4352742583e15856d866712772f5d1dd1b3aed8d",
-        "sha256": "ff79bf7e647cc6ac55868021f07d20c93efc86b97b3447da90128b5c42bac57b",
+        "gitObjectID": "534972a18716defbe924a946c44f3ca5f6aebe8b",
+        "sha256": "b3641467f8dcf46ab5528b21ae753991558a433d27358c91e4b060df2639cae5",
         "sourcePath": "Sources/ForgePlay/Models/DomainModels.swift"
       },
       "path": "Sources/ForgePlay/Models/DomainModels.swift",
-      "sha256": "ff79bf7e647cc6ac55868021f07d20c93efc86b97b3447da90128b5c42bac57b"
+      "sha256": "b3641467f8dcf46ab5528b21ae753991558a433d27358c91e4b060df2639cae5"
     },
     {
       "byteLength": 20773,
@@ -4038,18 +4164,18 @@
       "sha256": "1f3fb8870d859aed1d360580241b5a48f5085488ab32f1a9e3a4afbc62540f24"
     },
     {
-      "byteLength": 80833,
+      "byteLength": 82542,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/Models/PersistenceModels.swift",
         "gitMode": "100644",
-        "gitObjectID": "598c07101a1948c6ed82c5aa1161a9aa64bb79f4",
-        "sha256": "b8897388a21fea012a845b5e48d3aba8c2e7240e24815426dbf95fc433362612",
+        "gitObjectID": "b31f4b29333d39984df2de671d16a05894123c2d",
+        "sha256": "41397f216c2ebad1361e618fd866dac76754ab73d43a2c4379786f4f75361efd",
         "sourcePath": "Sources/ForgePlay/Models/PersistenceModels.swift"
       },
       "path": "Sources/ForgePlay/Models/PersistenceModels.swift",
-      "sha256": "b8897388a21fea012a845b5e48d3aba8c2e7240e24815426dbf95fc433362612"
+      "sha256": "41397f216c2ebad1361e618fd866dac76754ab73d43a2c4379786f4f75361efd"
     },
     {
       "byteLength": 249,
@@ -4318,18 +4444,18 @@
       "sha256": "7f0e90f3ed12633a269484d289d3e77ba11bf7c397657d2c8389edfb9da7adf7"
     },
     {
-      "byteLength": 34881,
+      "byteLength": 34882,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/Services/GameModeHostCapability.swift",
         "gitMode": "100644",
-        "gitObjectID": "ae8847d8998c87d9dab601925fc336eaacda5a3b",
-        "sha256": "766bd128f44ceb40f5ed2d432bcae2ff7820238d60fa319317f6dfbe0f2d2e98",
+        "gitObjectID": "4c027dbabc5ef619eb2cb032fd9c8fc178f96fc2",
+        "sha256": "8facdd746bb74cf153d9be06a875da399a1d33aff085ef4d82318a291b76ef09",
         "sourcePath": "Sources/ForgePlay/Services/GameModeHostCapability.swift"
       },
       "path": "Sources/ForgePlay/Services/GameModeHostCapability.swift",
-      "sha256": "766bd128f44ceb40f5ed2d432bcae2ff7820238d60fa319317f6dfbe0f2d2e98"
+      "sha256": "8facdd746bb74cf153d9be06a875da399a1d33aff085ef4d82318a291b76ef09"
     },
     {
       "byteLength": 49483,
@@ -4444,18 +4570,18 @@
       "sha256": "248edaf25986967fddd811f4d7e77c32e41e7cc6490bd13a4ff488729c5fce45"
     },
     {
-      "byteLength": 98410,
+      "byteLength": 134746,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/Services/PrefixManager.swift",
         "gitMode": "100644",
-        "gitObjectID": "bf7c40cdd0806b773010b1a53a01b53ed6cd338b",
-        "sha256": "e94457f9075f7d35bb713f41b77849a54860e89faaf5f369c159e1fc440dd008",
+        "gitObjectID": "ab042f9007b333f78b70237a43617735fa6f2f99",
+        "sha256": "f21c9bb9cb6c3566ab6022de1a432ad4fb2dac1f770f09923b791e51350218fd",
         "sourcePath": "Sources/ForgePlay/Services/PrefixManager.swift"
       },
       "path": "Sources/ForgePlay/Services/PrefixManager.swift",
-      "sha256": "e94457f9075f7d35bb713f41b77849a54860e89faaf5f369c159e1fc440dd008"
+      "sha256": "f21c9bb9cb6c3566ab6022de1a432ad4fb2dac1f770f09923b791e51350218fd"
     },
     {
       "byteLength": 33253,
@@ -4514,32 +4640,32 @@
       "sha256": "06c3834778d58156ff9f3c44cd0f3a95fb292bade12f6704f5dbc9bfb8cd3c50"
     },
     {
-      "byteLength": 92123,
+      "byteLength": 92846,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/Services/RuntimeManifest.swift",
         "gitMode": "100644",
-        "gitObjectID": "a1230f7a136256f5a4f31187b8dcb950685ab1f6",
-        "sha256": "89f321fd0221def98ab74abc257c164e8d3b452a5d39e1bfba406e9cef64d2dc",
+        "gitObjectID": "c2fa6dead36bd7f9ac36ba59ee42ecf8d3444959",
+        "sha256": "dd3923d0d75bb02cb932b71122a2901d6b92d86fd35c711c10bc5acf590e2aae",
         "sourcePath": "Sources/ForgePlay/Services/RuntimeManifest.swift"
       },
       "path": "Sources/ForgePlay/Services/RuntimeManifest.swift",
-      "sha256": "89f321fd0221def98ab74abc257c164e8d3b452a5d39e1bfba406e9cef64d2dc"
+      "sha256": "dd3923d0d75bb02cb932b71122a2901d6b92d86fd35c711c10bc5acf590e2aae"
     },
     {
-      "byteLength": 459703,
+      "byteLength": 541052,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/Services/SafeProcessRunner.swift",
         "gitMode": "100644",
-        "gitObjectID": "5dc7617392a7a582808cc86b06bb09817c8ae5af",
-        "sha256": "bc2224477a43da3a78cafcd026e71e358331889c6f432b9bde04bd7594725341",
+        "gitObjectID": "b94ad67dc2883291ec057f86044d3caf070770fe",
+        "sha256": "b7112d10fb4855b49d2b9e343da7a5e0e1cc15f1ef1f2bfde8978d8d24146274",
         "sourcePath": "Sources/ForgePlay/Services/SafeProcessRunner.swift"
       },
       "path": "Sources/ForgePlay/Services/SafeProcessRunner.swift",
-      "sha256": "bc2224477a43da3a78cafcd026e71e358331889c6f432b9bde04bd7594725341"
+      "sha256": "b7112d10fb4855b49d2b9e343da7a5e0e1cc15f1ef1f2bfde8978d8d24146274"
     },
     {
       "byteLength": 8982,
@@ -4584,18 +4710,18 @@
       "sha256": "ce9a3d7ae15e24bccf19d0b2e9a925d0709b920901d118facd86edb67067c4f9"
     },
     {
-      "byteLength": 47372,
+      "byteLength": 64629,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/Services/SteamClientCompatibilityProfile.swift",
         "gitMode": "100644",
-        "gitObjectID": "449f335a5892a02627007182996d81813f24820a",
-        "sha256": "55e5b76cb708d2933f512665ef31f46121ea1f85cd8f64622779ce2e69946a6f",
+        "gitObjectID": "7e23eb5b4f6d5bc254e24326eb952ef6f92e70c5",
+        "sha256": "867e175edf375698357be755f599a3e3b21b781306b635741d7eeaa132859531",
         "sourcePath": "Sources/ForgePlay/Services/SteamClientCompatibilityProfile.swift"
       },
       "path": "Sources/ForgePlay/Services/SteamClientCompatibilityProfile.swift",
-      "sha256": "55e5b76cb708d2933f512665ef31f46121ea1f85cd8f64622779ce2e69946a6f"
+      "sha256": "867e175edf375698357be755f599a3e3b21b781306b635741d7eeaa132859531"
     },
     {
       "byteLength": 24324,
@@ -4696,18 +4822,18 @@
       "sha256": "0e2e8e891cbddfafa6d1ac4a7aee989d86557451a68083372b6690849e9c38b9"
     },
     {
-      "byteLength": 475413,
+      "byteLength": 564758,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/Services/SteamManager.swift",
         "gitMode": "100644",
-        "gitObjectID": "e295221811b77f11a99a86bb1cfb6d602d001016",
-        "sha256": "9e6556914e0f542fb82ae5d74195bf1cf6d23206785f91c8f900034cb3b191ba",
+        "gitObjectID": "a1e00da71e77b96c98ff6a08b602c6b0ce11a948",
+        "sha256": "17a2c313ebacf7c925fed2a06319b65b5f36b9a0b3820e9cd4875335ad515c8e",
         "sourcePath": "Sources/ForgePlay/Services/SteamManager.swift"
       },
       "path": "Sources/ForgePlay/Services/SteamManager.swift",
-      "sha256": "9e6556914e0f542fb82ae5d74195bf1cf6d23206785f91c8f900034cb3b191ba"
+      "sha256": "17a2c313ebacf7c925fed2a06319b65b5f36b9a0b3820e9cd4875335ad515c8e"
     },
     {
       "byteLength": 4032,
@@ -4724,46 +4850,46 @@
       "sha256": "a1fa4d96f9757664e8b51b55181a02f12aa72822806c7529fb2c0630cac67428"
     },
     {
-      "byteLength": 83871,
+      "byteLength": 102610,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/Services/SteamPrefixService.swift",
         "gitMode": "100644",
-        "gitObjectID": "e4795cae9ad5fbc15cf39ad0ba21dd9c725cdb09",
-        "sha256": "edc7efec4a5a9840e07046a8a11c43dc9e49a4c23738502128430740fd7a5796",
+        "gitObjectID": "54bb5a2b8b1a23f229cff34b2c113fed30b4b627",
+        "sha256": "d6cc4a1f77025a16513726109c3603072a1ccdc66434537d830669b467a656a3",
         "sourcePath": "Sources/ForgePlay/Services/SteamPrefixService.swift"
       },
       "path": "Sources/ForgePlay/Services/SteamPrefixService.swift",
-      "sha256": "edc7efec4a5a9840e07046a8a11c43dc9e49a4c23738502128430740fd7a5796"
+      "sha256": "d6cc4a1f77025a16513726109c3603072a1ccdc66434537d830669b467a656a3"
     },
     {
-      "byteLength": 43390,
+      "byteLength": 44840,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/Services/SteamPrefixState.swift",
         "gitMode": "100644",
-        "gitObjectID": "80e741f07d17f0c7f17bf935d2673197c794554d",
-        "sha256": "8060e2d90b3da186d1a73e367c399ef7c22a82a2b559edc1499bd0c47c4ececc",
+        "gitObjectID": "48ed443656038a9664ecc394594093b860494fd4",
+        "sha256": "1b554089ad3fac050f16fa2ac29ca04fc1b0fc424df7e6fb86a8e3977e7a45c4",
         "sourcePath": "Sources/ForgePlay/Services/SteamPrefixState.swift"
       },
       "path": "Sources/ForgePlay/Services/SteamPrefixState.swift",
-      "sha256": "8060e2d90b3da186d1a73e367c399ef7c22a82a2b559edc1499bd0c47c4ececc"
+      "sha256": "1b554089ad3fac050f16fa2ac29ca04fc1b0fc424df7e6fb86a8e3977e7a45c4"
     },
     {
-      "byteLength": 88005,
+      "byteLength": 93397,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/Services/SteamRendererPolicyManager.swift",
         "gitMode": "100644",
-        "gitObjectID": "ca2eb2cbcdd4c1ce26de2fbc5b1f3247c9d69bd5",
-        "sha256": "233b760122289de077d4542212ab7a5d8d8b22c5aafd37dd0447b8aa96d6b611",
+        "gitObjectID": "270929b5072679645919cfa0057bb24748022b44",
+        "sha256": "76dd41f43248f710cb84d7d8d9ef98c9768c2f16482849b9320d9b453a276485",
         "sourcePath": "Sources/ForgePlay/Services/SteamRendererPolicyManager.swift"
       },
       "path": "Sources/ForgePlay/Services/SteamRendererPolicyManager.swift",
-      "sha256": "233b760122289de077d4542212ab7a5d8d8b22c5aafd37dd0447b8aa96d6b611"
+      "sha256": "76dd41f43248f710cb84d7d8d9ef98c9768c2f16482849b9320d9b453a276485"
     },
     {
       "byteLength": 62496,
@@ -4850,18 +4976,18 @@
       "sha256": "18071b2b06f470ef9e4711680d8896966ea9286b30afd475864134bcb706c9c4"
     },
     {
-      "byteLength": 714,
+      "byteLength": 713,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/Services/TechnicalErrorSummary.swift",
         "gitMode": "100644",
-        "gitObjectID": "37c4d99158dde5ac7dabdb28e72e630db0f961a4",
-        "sha256": "47c7a68f7f8cffbe5267bd02fdf2fa5f4ef3c05bd583a66a0a28d6f20439f157",
+        "gitObjectID": "f7c8631683092f85bfe465ff258830d0a0646749",
+        "sha256": "d74514e79eaa56a9d757e88fe23aae50635cdc7a2bef14f1532c34e494ad2e23",
         "sourcePath": "Sources/ForgePlay/Services/TechnicalErrorSummary.swift"
       },
       "path": "Sources/ForgePlay/Services/TechnicalErrorSummary.swift",
-      "sha256": "47c7a68f7f8cffbe5267bd02fdf2fa5f4ef3c05bd583a66a0a28d6f20439f157"
+      "sha256": "d74514e79eaa56a9d757e88fe23aae50635cdc7a2bef14f1532c34e494ad2e23"
     },
     {
       "byteLength": 6904,
@@ -4920,18 +5046,18 @@
       "sha256": "90c4b19fe20e97693701a1c0ef954a0d15d843a74c2c7b9b31f553b05601d543"
     },
     {
-      "byteLength": 268320,
+      "byteLength": 376174,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/Services/WindowsFontCompatibilityProfile.swift",
         "gitMode": "100644",
-        "gitObjectID": "9514f32c421fdd13a101365441b2d7bb9c4916a3",
-        "sha256": "5a616cfb8b61643dab0a03de757a89b0f0acb30006c1074d453ec8763db0e7e8",
+        "gitObjectID": "d103f7b1085f940b8f40f10a8ba6506ae008d0fd",
+        "sha256": "d4f94102988b273709fbd86a6b08f3104e2316a0940cc6b281921a6fceae1c4e",
         "sourcePath": "Sources/ForgePlay/Services/WindowsFontCompatibilityProfile.swift"
       },
       "path": "Sources/ForgePlay/Services/WindowsFontCompatibilityProfile.swift",
-      "sha256": "5a616cfb8b61643dab0a03de757a89b0f0acb30006c1074d453ec8763db0e7e8"
+      "sha256": "d4f94102988b273709fbd86a6b08f3104e2316a0940cc6b281921a6fceae1c4e"
     },
     {
       "byteLength": 16725,
@@ -4990,18 +5116,18 @@
       "sha256": "9fdcf9dcd3d570239c4b91cb5bb04027a694db916293d5fb1713e21ee289b471"
     },
     {
-      "byteLength": 174638,
+      "byteLength": 163890,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/Services/WindowsRuntimeService.swift",
         "gitMode": "100644",
-        "gitObjectID": "602cefe57aa740d6e05812f7a4a8910108735403",
-        "sha256": "9d05853f76595b9e44de34eab3d435e1470319c24ae4527447feab29040d5ee5",
+        "gitObjectID": "07857eec226a819e48573cfb200b828bcb229b47",
+        "sha256": "c378771de5294535c49559d8aaf8550fab9ea08f8b1dc806921481530c67cded",
         "sourcePath": "Sources/ForgePlay/Services/WindowsRuntimeService.swift"
       },
       "path": "Sources/ForgePlay/Services/WindowsRuntimeService.swift",
-      "sha256": "9d05853f76595b9e44de34eab3d435e1470319c24ae4527447feab29040d5ee5"
+      "sha256": "c378771de5294535c49559d8aaf8550fab9ea08f8b1dc806921481530c67cded"
     },
     {
       "byteLength": 10318,
@@ -5046,60 +5172,60 @@
       "sha256": "e43dd3910de1f65368fbfea88c8cda81a02a27be9105f1b5b7102b665643c18a"
     },
     {
-      "byteLength": 64205,
+      "byteLength": 64244,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/UI/Components.swift",
         "gitMode": "100644",
-        "gitObjectID": "dec91441fe2c157b768580112b48deded5b9be34",
-        "sha256": "f9d74e5075e3ae8732b5eafaf412529ef15b741ddb9cbd92293371a65567231c",
+        "gitObjectID": "faafa965162992c2a14947c12e36417178cf9fb5",
+        "sha256": "c2a3039ffbc3429240bdf242dcd01dcb98b543577ed25b3625d144a7efaeda9e",
         "sourcePath": "Sources/ForgePlay/UI/Components.swift"
       },
       "path": "Sources/ForgePlay/UI/Components.swift",
-      "sha256": "f9d74e5075e3ae8732b5eafaf412529ef15b741ddb9cbd92293371a65567231c"
+      "sha256": "c2a3039ffbc3429240bdf242dcd01dcb98b543577ed25b3625d144a7efaeda9e"
     },
     {
-      "byteLength": 3739,
+      "byteLength": 3894,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/UI/ControllerCompatibilityPreflightPanel.swift",
         "gitMode": "100644",
-        "gitObjectID": "eb67b79e0656b377390e5991aeaa68b0ea80e5f2",
-        "sha256": "13bb4f9dce1ce6f6180c765ca9dd9a940b092034fcd2c1e91e1aae4abb85bd26",
+        "gitObjectID": "8e3c59133e7ed47d2823fce9ff2d0c7b03101c2b",
+        "sha256": "f1f9133ecaadfeb51161c9d96bc04586de6be0e86eb1d969c3c0d0ed250b3d26",
         "sourcePath": "Sources/ForgePlay/UI/ControllerCompatibilityPreflightPanel.swift"
       },
       "path": "Sources/ForgePlay/UI/ControllerCompatibilityPreflightPanel.swift",
-      "sha256": "13bb4f9dce1ce6f6180c765ca9dd9a940b092034fcd2c1e91e1aae4abb85bd26"
+      "sha256": "f1f9133ecaadfeb51161c9d96bc04586de6be0e86eb1d969c3c0d0ed250b3d26"
     },
     {
-      "byteLength": 27371,
+      "byteLength": 26842,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/UI/DashboardView.swift",
         "gitMode": "100644",
-        "gitObjectID": "255cb1528e3b0f146a6531d5c499949634039d18",
-        "sha256": "89eecdb0b5ec4df3e710ecaa4218b7d3685225ca9aa152963ba480154bf75d0a",
+        "gitObjectID": "de9138f3f580a701a5a002dbab9b1b78a9e32048",
+        "sha256": "827a2fd75192adce8c9896b152d632b54aa7fed49e4433f6dc269613178c1ef3",
         "sourcePath": "Sources/ForgePlay/UI/DashboardView.swift"
       },
       "path": "Sources/ForgePlay/UI/DashboardView.swift",
-      "sha256": "89eecdb0b5ec4df3e710ecaa4218b7d3685225ca9aa152963ba480154bf75d0a"
+      "sha256": "827a2fd75192adce8c9896b152d632b54aa7fed49e4433f6dc269613178c1ef3"
     },
     {
-      "byteLength": 18590,
+      "byteLength": 18739,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/UI/DeveloperAppsView.swift",
         "gitMode": "100644",
-        "gitObjectID": "758cb25bcf6def54c6305e8a072ec679f4719971",
-        "sha256": "fa5550513b3e8cf912ceff06cc5a7381f76ef34b2bd44b6926b7099c88869f01",
+        "gitObjectID": "12f1e91c628002cc07b05d05d11da2b75ebbf35f",
+        "sha256": "f5b2fe6063e339a3393ffe3ef20d65169142ad0a5118f640b2f752b6735e94c2",
         "sourcePath": "Sources/ForgePlay/UI/DeveloperAppsView.swift"
       },
       "path": "Sources/ForgePlay/UI/DeveloperAppsView.swift",
-      "sha256": "fa5550513b3e8cf912ceff06cc5a7381f76ef34b2bd44b6926b7099c88869f01"
+      "sha256": "f5b2fe6063e339a3393ffe3ef20d65169142ad0a5118f640b2f752b6735e94c2"
     },
     {
       "byteLength": 84239,
@@ -5144,18 +5270,18 @@
       "sha256": "909dabd9e93fef0ff07fa36746e1e1201569a39b07f3a4a28c386f7670a48874"
     },
     {
-      "byteLength": 23169,
+      "byteLength": 23097,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/UI/LocalizedActionPresentation.swift",
         "gitMode": "100644",
-        "gitObjectID": "359ad5dcb57cfeec453059eff1aedc9f286b6164",
-        "sha256": "e2a9ddabace60662ace9128b1e72211bc5426b5a5fcc7801bdd2c4ed325706b8",
+        "gitObjectID": "aa094dee51d5580375c7c4930b8ca6e5f99a8720",
+        "sha256": "52012f8b575b7a460e91111d2bea4be2e0d0cb7f79e8b21be3f354dd938eff1c",
         "sourcePath": "Sources/ForgePlay/UI/LocalizedActionPresentation.swift"
       },
       "path": "Sources/ForgePlay/UI/LocalizedActionPresentation.swift",
-      "sha256": "e2a9ddabace60662ace9128b1e72211bc5426b5a5fcc7801bdd2c4ed325706b8"
+      "sha256": "52012f8b575b7a460e91111d2bea4be2e0d0cb7f79e8b21be3f354dd938eff1c"
     },
     {
       "byteLength": 28173,
@@ -5172,32 +5298,32 @@
       "sha256": "4abbe5c23d5f62221184c50b325c023001ea3e72bf8efbc3b74a02f306561809"
     },
     {
-      "byteLength": 37143,
+      "byteLength": 38953,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/UI/RootView.swift",
         "gitMode": "100644",
-        "gitObjectID": "aba940f1448b6e83ecf5ab9be308261bc54ad827",
-        "sha256": "b0fbc4718bcd083a43fda6b96b5ec8e5aaa8592d70780bd92ef129e76be497de",
+        "gitObjectID": "8b5d7cf801413e87973cd57dfbf10b044d0855fc",
+        "sha256": "9af68c80cc5955ac7d6e4f66bb5f4a58dbfeb021e9e7aa776e273216fe8030b1",
         "sourcePath": "Sources/ForgePlay/UI/RootView.swift"
       },
       "path": "Sources/ForgePlay/UI/RootView.swift",
-      "sha256": "b0fbc4718bcd083a43fda6b96b5ec8e5aaa8592d70780bd92ef129e76be497de"
+      "sha256": "9af68c80cc5955ac7d6e4f66bb5f4a58dbfeb021e9e7aa776e273216fe8030b1"
     },
     {
-      "byteLength": 88427,
+      "byteLength": 88670,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/UI/SettingsView.swift",
         "gitMode": "100644",
-        "gitObjectID": "649888f24a0c90b20f33953142a2d149d94c5311",
-        "sha256": "e7e6c907eca9ab5a5d265d229ede329e5b9ec6a411f0c5fb1082f0292692a01e",
+        "gitObjectID": "f2d4058838ede35335618d6c9a256e13f5ada5bb",
+        "sha256": "180a9fea7257a2579ba2618cb75d91ec72deeaef79af29188012d53de9cc3299",
         "sourcePath": "Sources/ForgePlay/UI/SettingsView.swift"
       },
       "path": "Sources/ForgePlay/UI/SettingsView.swift",
-      "sha256": "e7e6c907eca9ab5a5d265d229ede329e5b9ec6a411f0c5fb1082f0292692a01e"
+      "sha256": "180a9fea7257a2579ba2618cb75d91ec72deeaef79af29188012d53de9cc3299"
     },
     {
       "byteLength": 3590,
@@ -5228,18 +5354,18 @@
       "sha256": "dcf38935fc1a9da8e55a1b5cb3efe15a253c24e6d7580beaa32a1c25e59b04ab"
     },
     {
-      "byteLength": 90508,
+      "byteLength": 90568,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/UI/SheetHostView.swift",
         "gitMode": "100644",
-        "gitObjectID": "b0e55c16a37e73aa90ca378cad2b72a1312d9103",
-        "sha256": "27d7332dcb011109c26ca1d06a54eb50f1aba54f8096ab742a6a656ff8d32887",
+        "gitObjectID": "391d228260fbfac44e49dbb8b5c8028e6b659788",
+        "sha256": "dbba8df27d949b92b30b4c28ca5de430e6f40016d670d8777a00241c50edbdb0",
         "sourcePath": "Sources/ForgePlay/UI/SheetHostView.swift"
       },
       "path": "Sources/ForgePlay/UI/SheetHostView.swift",
-      "sha256": "27d7332dcb011109c26ca1d06a54eb50f1aba54f8096ab742a6a656ff8d32887"
+      "sha256": "dbba8df27d949b92b30b4c28ca5de430e6f40016d670d8777a00241c50edbdb0"
     },
     {
       "byteLength": 10173,
@@ -5256,18 +5382,18 @@
       "sha256": "f165a4067d27b5d9295321b19a512ca5280e6e7ebdfb8ef42d53206612c65c6c"
     },
     {
-      "byteLength": 93351,
+      "byteLength": 110643,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/UI/SteamCompatibilityLaunchView.swift",
         "gitMode": "100644",
-        "gitObjectID": "0ba4b1e8f039d69a345c6c0570519f7a74fcb559",
-        "sha256": "210aabcaf9a5ff9483f58793c1b6f57f167ea3fb147a5cfcdc95234613bc5961",
+        "gitObjectID": "6af758d8e20db0d4b4947c37721bc04a8938c597",
+        "sha256": "59e9080d791d1d50787da569cd1cf15ad48c13a2730ed17243f292ddef92e2ad",
         "sourcePath": "Sources/ForgePlay/UI/SteamCompatibilityLaunchView.swift"
       },
       "path": "Sources/ForgePlay/UI/SteamCompatibilityLaunchView.swift",
-      "sha256": "210aabcaf9a5ff9483f58793c1b6f57f167ea3fb147a5cfcdc95234613bc5961"
+      "sha256": "59e9080d791d1d50787da569cd1cf15ad48c13a2730ed17243f292ddef92e2ad"
     },
     {
       "byteLength": 10465,
@@ -5284,18 +5410,18 @@
       "sha256": "693ad5c0aac2eebc6c4c90dc2b2387a42d5f26a0f280ff9062cc90f76942f489"
     },
     {
-      "byteLength": 153241,
+      "byteLength": 170860,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/UI/SteamLaunchView.swift",
         "gitMode": "100644",
-        "gitObjectID": "7ea9e20c268e8f8f0a58028b6298da500bb58c4c",
-        "sha256": "b2398e0ff8bc6dc13b6949a777a88c40d01d3e59418dc96fef03beed675e0ec9",
+        "gitObjectID": "766690b4ff073a95f56006def05d5a6a509b21cc",
+        "sha256": "8e3e513dd9739e48e24b9719fdb904749f97c6aad78793e0d77254f1c76cc2fa",
         "sourcePath": "Sources/ForgePlay/UI/SteamLaunchView.swift"
       },
       "path": "Sources/ForgePlay/UI/SteamLaunchView.swift",
-      "sha256": "b2398e0ff8bc6dc13b6949a777a88c40d01d3e59418dc96fef03beed675e0ec9"
+      "sha256": "8e3e513dd9739e48e24b9719fdb904749f97c6aad78793e0d77254f1c76cc2fa"
     },
     {
       "byteLength": 6666,
@@ -5326,18 +5452,18 @@
       "sha256": "0b627870fc000e85c10e79540d30fe9a9c0289d2ffe95b5ef962bc0e0ff8ed11"
     },
     {
-      "byteLength": 66818,
+      "byteLength": 66608,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Sources/ForgePlay/UI/UsageGuideView.swift",
         "gitMode": "100644",
-        "gitObjectID": "817025626e49769f53f3ac8819cbd71993a950ed",
-        "sha256": "e71bc12ffb3c1a633a6fed3bbcc80e3e7d90287d5a2f81a0e9861c65e95819e2",
+        "gitObjectID": "de78a1a45caa388822af31b000fc946327b609d1",
+        "sha256": "77bc17b881c2e6c1fdd0d493c3e4a03f7d5a29e57b5a2eb458f5758cd1082a4e",
         "sourcePath": "Sources/ForgePlay/UI/UsageGuideView.swift"
       },
       "path": "Sources/ForgePlay/UI/UsageGuideView.swift",
-      "sha256": "e71bc12ffb3c1a633a6fed3bbcc80e3e7d90287d5a2f81a0e9861c65e95819e2"
+      "sha256": "77bc17b881c2e6c1fdd0d493c3e4a03f7d5a29e57b5a2eb458f5758cd1082a4e"
     },
     {
       "byteLength": 31580,
@@ -5352,6 +5478,20 @@
       },
       "path": "Sources/ForgePlay/UI/WindowsUtilityLaunchView.swift",
       "sha256": "b4d1dd04053d48d2e3b68fe012507af0446bdb7cb22faed1ec4891f10de64929"
+    },
+    {
+      "byteLength": 80492,
+      "mode": "100644",
+      "origin": {
+        "classification": "release-commit-blob",
+        "destinationPath": "Tests/ForgePlayD3DMetalFrameGenerationProxyTests/state_machine_tests.c",
+        "gitMode": "100644",
+        "gitObjectID": "bd9773d78633aad87019de7542474f6e23f783f6",
+        "sha256": "3424bbc398e9ca7d2b4c8f554b34dedb9ace3948ca1ccdda4202f4e06a305a5b",
+        "sourcePath": "Tests/ForgePlayD3DMetalFrameGenerationProxyTests/state_machine_tests.c"
+      },
+      "path": "Tests/ForgePlayD3DMetalFrameGenerationProxyTests/state_machine_tests.c",
+      "sha256": "3424bbc398e9ca7d2b4c8f554b34dedb9ace3948ca1ccdda4202f4e06a305a5b"
     },
     {
       "byteLength": 13218,
@@ -5374,40 +5514,40 @@
         "classification": "release-commit-blob",
         "destinationPath": "Tests/ForgePlayTests/AppLaunchTests.swift",
         "gitMode": "100644",
-        "gitObjectID": "9b9fffd0ad775bcc71a0621eb8fffed24ea4c6b3",
-        "sha256": "9fefd293c432391118773466e188cbc8165f97651ab6bc0842f0a333f17bd63a",
+        "gitObjectID": "630a0f7f9264f0e788c059236a1141b6f2a1a601",
+        "sha256": "ebcc8e10ce5bbf4b3c350f57fdc403b66bd4e5bd6aac0b19fd031dc2e2085a23",
         "sourcePath": "Tests/ForgePlayTests/AppLaunchTests.swift"
       },
       "path": "Tests/ForgePlayTests/AppLaunchTests.swift",
-      "sha256": "9fefd293c432391118773466e188cbc8165f97651ab6bc0842f0a333f17bd63a"
+      "sha256": "ebcc8e10ce5bbf4b3c350f57fdc403b66bd4e5bd6aac0b19fd031dc2e2085a23"
     },
     {
-      "byteLength": 204103,
+      "byteLength": 239933,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Tests/ForgePlayTests/AppServicesTests.swift",
         "gitMode": "100644",
-        "gitObjectID": "a15623d9e5651548db8189da5d7b7cf785e246c9",
-        "sha256": "f7f9e965c8fe4ec475eccdb9d576e68f67fdd44a24772b70cd4ded06ac4b12b8",
+        "gitObjectID": "361fd23715d3435013ccbfa88749999e6372e935",
+        "sha256": "89903d8db9115fbf7a6a72d4e6c9f9d2582374324d05aabf0e6bca83bb497387",
         "sourcePath": "Tests/ForgePlayTests/AppServicesTests.swift"
       },
       "path": "Tests/ForgePlayTests/AppServicesTests.swift",
-      "sha256": "f7f9e965c8fe4ec475eccdb9d576e68f67fdd44a24772b70cd4ded06ac4b12b8"
+      "sha256": "89903d8db9115fbf7a6a72d4e6c9f9d2582374324d05aabf0e6bca83bb497387"
     },
     {
-      "byteLength": 5658,
+      "byteLength": 5663,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Tests/ForgePlayTests/AppStartupDestinationResolverTests.swift",
         "gitMode": "100644",
-        "gitObjectID": "b0e5deea159d45dd2b2636152f60349254d0a63e",
-        "sha256": "fd88eee104c5c99b67e2cd8aa499396f19ffc0fc2bfd61b2abf64775c1af364c",
+        "gitObjectID": "99ce2b35d6cfd266ba1bc40b09251d6a2fe7e543",
+        "sha256": "7cfb0e27996904a86cce9fe3f0636f8de5ab58629a3623f1e8588be5181a0cbf",
         "sourcePath": "Tests/ForgePlayTests/AppStartupDestinationResolverTests.swift"
       },
       "path": "Tests/ForgePlayTests/AppStartupDestinationResolverTests.swift",
-      "sha256": "fd88eee104c5c99b67e2cd8aa499396f19ffc0fc2bfd61b2abf64775c1af364c"
+      "sha256": "7cfb0e27996904a86cce9fe3f0636f8de5ab58629a3623f1e8588be5181a0cbf"
     },
     {
       "byteLength": 18519,
@@ -5438,18 +5578,18 @@
       "sha256": "c5dc1f1c422146789bd7c66e82f3c84cfd5c05940364543dc7899998f7b3df23"
     },
     {
-      "byteLength": 64715,
+      "byteLength": 66182,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Tests/ForgePlayTests/BundledWindowsRuntimePolicyTests.swift",
         "gitMode": "100644",
-        "gitObjectID": "ebf1cb7fa22b8c8b246a961393781c3569fc853d",
-        "sha256": "2029c14fccd2af6ab7d0f75ddc235dd3acdc85d07d7529e97d12f81cd8311bc7",
+        "gitObjectID": "83a930a9c59659e1f070fbf5d6fcc74c931e2279",
+        "sha256": "58c55c6727ad28782d10b393999c9b3bc27e5afac55a6d9f4ed51d0a1bffa75c",
         "sourcePath": "Tests/ForgePlayTests/BundledWindowsRuntimePolicyTests.swift"
       },
       "path": "Tests/ForgePlayTests/BundledWindowsRuntimePolicyTests.swift",
-      "sha256": "2029c14fccd2af6ab7d0f75ddc235dd3acdc85d07d7529e97d12f81cd8311bc7"
+      "sha256": "58c55c6727ad28782d10b393999c9b3bc27e5afac55a6d9f4ed51d0a1bffa75c"
     },
     {
       "byteLength": 102726,
@@ -5494,6 +5634,20 @@
       "sha256": "929f66517365866ce58f3e3f886094485613164f6a9817e28518d052d7b6efbe"
     },
     {
+      "byteLength": 63932,
+      "mode": "100644",
+      "origin": {
+        "classification": "release-commit-blob",
+        "destinationPath": "Tests/ForgePlayTests/D3DMetalFrameGenerationContractTests.swift",
+        "gitMode": "100644",
+        "gitObjectID": "8f772627255b9991197af330ac24aee3ff7130b1",
+        "sha256": "fc6a80d042e5326e87dfea4bec9fa0d223420bfda22ec374d77a7c6b306b266e",
+        "sourcePath": "Tests/ForgePlayTests/D3DMetalFrameGenerationContractTests.swift"
+      },
+      "path": "Tests/ForgePlayTests/D3DMetalFrameGenerationContractTests.swift",
+      "sha256": "fc6a80d042e5326e87dfea4bec9fa0d223420bfda22ec374d77a7c6b306b266e"
+    },
+    {
       "byteLength": 25117,
       "mode": "100644",
       "origin": {
@@ -5508,18 +5662,18 @@
       "sha256": "467d9a2d8a74c10f4e1f2ca79f2ee490f821d6ded0522fa4fefba43678d86585"
     },
     {
-      "byteLength": 17631,
+      "byteLength": 13742,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Tests/ForgePlayTests/DeveloperAppCatalogTests.swift",
         "gitMode": "100644",
-        "gitObjectID": "4423b60378c4a6cf772ac0e88f658b5fa1f931bc",
-        "sha256": "d98be6e2452af45fb143d38c6af473ab907f164671424aefe8edaf7d7abe4a30",
+        "gitObjectID": "efb461f481446857cd8a789ec1a9d735a37e04e4",
+        "sha256": "609618ef27594c1838f69b3f783d8aff0606beb3a93ce374b17340e756f7b70a",
         "sourcePath": "Tests/ForgePlayTests/DeveloperAppCatalogTests.swift"
       },
       "path": "Tests/ForgePlayTests/DeveloperAppCatalogTests.swift",
-      "sha256": "d98be6e2452af45fb143d38c6af473ab907f164671424aefe8edaf7d7abe4a30"
+      "sha256": "609618ef27594c1838f69b3f783d8aff0606beb3a93ce374b17340e756f7b70a"
     },
     {
       "byteLength": 9153,
@@ -5564,18 +5718,18 @@
       "sha256": "51d0e01c95557a832123d5d1a888e4d3a8c630a5bee824148f17f81d9712e06b"
     },
     {
-      "byteLength": 18660,
+      "byteLength": 18922,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Tests/ForgePlayTests/GameInputProtectionLocalizationTests.swift",
         "gitMode": "100644",
-        "gitObjectID": "fdca9b26fc9d237cee78aa862dad429df9803520",
-        "sha256": "56a1eebf08fd0bb0ec16e4550a7d946167bcd4157a1760ad5e8153353dfc248a",
+        "gitObjectID": "ae108d57a0eb2ab4495e630610608f12e8fa7b57",
+        "sha256": "0f9bd72202708c3535a7ef17efb6cd184d782a1ab9cea6d6c7643ff87718979d",
         "sourcePath": "Tests/ForgePlayTests/GameInputProtectionLocalizationTests.swift"
       },
       "path": "Tests/ForgePlayTests/GameInputProtectionLocalizationTests.swift",
-      "sha256": "56a1eebf08fd0bb0ec16e4550a7d946167bcd4157a1760ad5e8153353dfc248a"
+      "sha256": "0f9bd72202708c3535a7ef17efb6cd184d782a1ab9cea6d6c7643ff87718979d"
     },
     {
       "byteLength": 113032,
@@ -5606,18 +5760,18 @@
       "sha256": "14448c5425d00317c69365218b3cb40f6bac04bb6441747623b7c63b25f54028"
     },
     {
-      "byteLength": 21916,
+      "byteLength": 22932,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Tests/ForgePlayTests/GameModeHostCapabilityTests.swift",
         "gitMode": "100644",
-        "gitObjectID": "ce643ad8d247a5663c12ca29ded135b969b9ae9f",
-        "sha256": "48e6c62bb843d48320f924a02183812d78e6740a6f3f4959974e5b41737a910c",
+        "gitObjectID": "e4c36c531390e26b30a79ba97b39d8b0ce8f19c4",
+        "sha256": "f7ba5164d14b0db7dc5059c89825f5eb151d1e9de47adca6e25a21701625852c",
         "sourcePath": "Tests/ForgePlayTests/GameModeHostCapabilityTests.swift"
       },
       "path": "Tests/ForgePlayTests/GameModeHostCapabilityTests.swift",
-      "sha256": "48e6c62bb843d48320f924a02183812d78e6740a6f3f4959974e5b41737a910c"
+      "sha256": "f7ba5164d14b0db7dc5059c89825f5eb151d1e9de47adca6e25a21701625852c"
     },
     {
       "byteLength": 16751,
@@ -5662,18 +5816,18 @@
       "sha256": "590539ddb97b92b6fb84991d0642c6d00ab00fb87ba3d77dba0819c173837e0a"
     },
     {
-      "byteLength": 231870,
+      "byteLength": 238465,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Tests/ForgePlayTests/LocalizationTests.swift",
         "gitMode": "100644",
-        "gitObjectID": "7207680c930548c359bdc5de9d331be6e80b1d52",
-        "sha256": "5e26ce3e263b8e2c07c1d30afcf9716e5692b3d50bf57c1f1024949a24d5b576",
+        "gitObjectID": "caae76eaa6c70bc9a562f1cc53e55cf0f47c27fd",
+        "sha256": "3f4ce2931797a1b4ddfb695ca656336a10252adda9b39c999a5a10db0d11f2f6",
         "sourcePath": "Tests/ForgePlayTests/LocalizationTests.swift"
       },
       "path": "Tests/ForgePlayTests/LocalizationTests.swift",
-      "sha256": "5e26ce3e263b8e2c07c1d30afcf9716e5692b3d50bf57c1f1024949a24d5b576"
+      "sha256": "3f4ce2931797a1b4ddfb695ca656336a10252adda9b39c999a5a10db0d11f2f6"
     },
     {
       "byteLength": 60877,
@@ -5732,18 +5886,18 @@
       "sha256": "1e680d0516d12f7c32c44d1f78b253f2bcde7280b9e49194f1adc917a1234ce9"
     },
     {
-      "byteLength": 109325,
+      "byteLength": 141269,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Tests/ForgePlayTests/PrefixManagerTests.swift",
         "gitMode": "100644",
-        "gitObjectID": "39ed17e470e8fb2eabeda4ebb67ad4afb4f864c1",
-        "sha256": "0a10dcdf5259224a5bb5342902c3f3af984825c37e5aa0c3a282fea152fd0eb5",
+        "gitObjectID": "5c64e828c1c90fe86d585b5f1dc9eb7ec933f7f3",
+        "sha256": "f0255a218608757b7e07d5c10da8669914d1a29e391e1d3ef07eb5cac1f59953",
         "sourcePath": "Tests/ForgePlayTests/PrefixManagerTests.swift"
       },
       "path": "Tests/ForgePlayTests/PrefixManagerTests.swift",
-      "sha256": "0a10dcdf5259224a5bb5342902c3f3af984825c37e5aa0c3a282fea152fd0eb5"
+      "sha256": "f0255a218608757b7e07d5c10da8669914d1a29e391e1d3ef07eb5cac1f59953"
     },
     {
       "byteLength": 4193,
@@ -5802,18 +5956,18 @@
       "sha256": "a6b5c012bb0e59b6a8165b2fb5e050c7b8975a1d485f4cc8285d1cb076e0f64f"
     },
     {
-      "byteLength": 368578,
+      "byteLength": 442910,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Tests/ForgePlayTests/SafeProcessRunnerTests.swift",
         "gitMode": "100644",
-        "gitObjectID": "536ac1a65d66dd9c834c12e04ab8f41a0731fbfd",
-        "sha256": "a13ef6adb201e01f758818760252ba14c8404c77769653719639118022f643ef",
+        "gitObjectID": "609ce286e398d2ff3d12287869ed0aa209301eb8",
+        "sha256": "200b821ad39c12d3a78e4b88d184a7e261b87a423fa975ec52a945ae229e46c8",
         "sourcePath": "Tests/ForgePlayTests/SafeProcessRunnerTests.swift"
       },
       "path": "Tests/ForgePlayTests/SafeProcessRunnerTests.swift",
-      "sha256": "a13ef6adb201e01f758818760252ba14c8404c77769653719639118022f643ef"
+      "sha256": "200b821ad39c12d3a78e4b88d184a7e261b87a423fa975ec52a945ae229e46c8"
     },
     {
       "byteLength": 80851,
@@ -5858,46 +6012,46 @@
       "sha256": "9a554d6095013ef3be78a7028242abefcfe409039667bf1b9f32a246d4aa9e55"
     },
     {
-      "byteLength": 18385,
+      "byteLength": 19587,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Tests/ForgePlayTests/SteamCompatibilityLaunchPreferencePersistenceV1Tests.swift",
         "gitMode": "100644",
-        "gitObjectID": "0171e58d56771d3c428ebd8c7bde623a7c9db4f3",
-        "sha256": "98a18670f94708b4fd48d92aab58c87439343dc99939a8eff5b6e2053969a309",
+        "gitObjectID": "06740247317165f09520e7ac5e43481002ffcd15",
+        "sha256": "f88ba70af0c020fea8a8beb7f61bd7308c6488ea9e49d0d8ff5289e18cfe6160",
         "sourcePath": "Tests/ForgePlayTests/SteamCompatibilityLaunchPreferencePersistenceV1Tests.swift"
       },
       "path": "Tests/ForgePlayTests/SteamCompatibilityLaunchPreferencePersistenceV1Tests.swift",
-      "sha256": "98a18670f94708b4fd48d92aab58c87439343dc99939a8eff5b6e2053969a309"
+      "sha256": "f88ba70af0c020fea8a8beb7f61bd7308c6488ea9e49d0d8ff5289e18cfe6160"
     },
     {
-      "byteLength": 45109,
+      "byteLength": 51581,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Tests/ForgePlayTests/SteamCompatibilityLaunchProfileV1Tests.swift",
         "gitMode": "100644",
-        "gitObjectID": "f3521b654e6e0cdeca6e22765cffacc9a671f2c2",
-        "sha256": "675d9d35b6e2903b99195c193bb2aa85e514728def22984b212eef2c1750d40e",
+        "gitObjectID": "d88c511071dc7333eab74eb3ba4814e65cce686c",
+        "sha256": "d3d1babc8c461e307a3707b2f3e173f2bb8a77915c772083a11c74a70845788a",
         "sourcePath": "Tests/ForgePlayTests/SteamCompatibilityLaunchProfileV1Tests.swift"
       },
       "path": "Tests/ForgePlayTests/SteamCompatibilityLaunchProfileV1Tests.swift",
-      "sha256": "675d9d35b6e2903b99195c193bb2aa85e514728def22984b212eef2c1750d40e"
+      "sha256": "d3d1babc8c461e307a3707b2f3e173f2bb8a77915c772083a11c74a70845788a"
     },
     {
-      "byteLength": 43694,
+      "byteLength": 47449,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Tests/ForgePlayTests/SteamCompatibilitySessionCoordinatorTests.swift",
         "gitMode": "100644",
-        "gitObjectID": "3d3c3709e4e8d41310f5f30af6f88dbedf8aceae",
-        "sha256": "91e4247d8aa4cf9c27a7f6db904d906834873d471094d6224089023420ad8de8",
+        "gitObjectID": "f3346ef25de4fb583bc8f6f7f494a9499152aea0",
+        "sha256": "17daa4d6db0312859b03a72d16b4a12cd1fe8e3751df85f46b8c884eb7dca7d3",
         "sourcePath": "Tests/ForgePlayTests/SteamCompatibilitySessionCoordinatorTests.swift"
       },
       "path": "Tests/ForgePlayTests/SteamCompatibilitySessionCoordinatorTests.swift",
-      "sha256": "91e4247d8aa4cf9c27a7f6db904d906834873d471094d6224089023420ad8de8"
+      "sha256": "17daa4d6db0312859b03a72d16b4a12cd1fe8e3751df85f46b8c884eb7dca7d3"
     },
     {
       "byteLength": 12977,
@@ -5914,74 +6068,74 @@
       "sha256": "a34b64e9c28aa021e7b0591c41f1f599e1298a238b6bc145adb86a641797cfd3"
     },
     {
-      "byteLength": 33329,
+      "byteLength": 36469,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Tests/ForgePlayTests/SteamLaunchConfigurationPersistenceTests.swift",
         "gitMode": "100644",
-        "gitObjectID": "4b9e06c678b71f8f8aa48157013be44e67907f1f",
-        "sha256": "a158a99d03ab3e474ff5b4aab12059459a9fc4affc8c14bd81a43147d9203e7a",
+        "gitObjectID": "635a7bc054860fd08063a1d5b8d72be05194dd65",
+        "sha256": "1c6927867652c85a3ab44151feba435e03bd4b4be8ec8432eecad2e0cb3cc5cf",
         "sourcePath": "Tests/ForgePlayTests/SteamLaunchConfigurationPersistenceTests.swift"
       },
       "path": "Tests/ForgePlayTests/SteamLaunchConfigurationPersistenceTests.swift",
-      "sha256": "a158a99d03ab3e474ff5b4aab12059459a9fc4affc8c14bd81a43147d9203e7a"
+      "sha256": "1c6927867652c85a3ab44151feba435e03bd4b4be8ec8432eecad2e0cb3cc5cf"
     },
     {
-      "byteLength": 14931,
+      "byteLength": 15646,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Tests/ForgePlayTests/SteamLaunchConfigurationProductAdapterTests.swift",
         "gitMode": "100644",
-        "gitObjectID": "894a96e068caa6de82d978da63823c2cd07a1afa",
-        "sha256": "04a25d65dc497ea538c26fc7ae66613f72b27f894c1e2d3a6d80afece36d591d",
+        "gitObjectID": "67c3b9bb3677fd1d9c71a987163d490eeafd2c99",
+        "sha256": "a87f3cef7a20226fff81d168edcf2d940364e6d02530a8ca87944c9b38e29ca7",
         "sourcePath": "Tests/ForgePlayTests/SteamLaunchConfigurationProductAdapterTests.swift"
       },
       "path": "Tests/ForgePlayTests/SteamLaunchConfigurationProductAdapterTests.swift",
-      "sha256": "04a25d65dc497ea538c26fc7ae66613f72b27f894c1e2d3a6d80afece36d591d"
+      "sha256": "a87f3cef7a20226fff81d168edcf2d940364e6d02530a8ca87944c9b38e29ca7"
     },
     {
-      "byteLength": 24159,
+      "byteLength": 33442,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Tests/ForgePlayTests/SteamLaunchConfigurationTests.swift",
         "gitMode": "100644",
-        "gitObjectID": "148b418df4475e94e210f04a90505c1ebdc54a1f",
-        "sha256": "8285c0859abde599d0d9bc9c781792d7df0a73241c95cc169d88d3ef2a28e134",
+        "gitObjectID": "62b8ccec95f58a2eb04f1a6f5a8696a3d7cbe829",
+        "sha256": "20bbef806a8902a79619ae50f7b12c29ec2e3e1dbf7391706e1f436cce009aa1",
         "sourcePath": "Tests/ForgePlayTests/SteamLaunchConfigurationTests.swift"
       },
       "path": "Tests/ForgePlayTests/SteamLaunchConfigurationTests.swift",
-      "sha256": "8285c0859abde599d0d9bc9c781792d7df0a73241c95cc169d88d3ef2a28e134"
+      "sha256": "20bbef806a8902a79619ae50f7b12c29ec2e3e1dbf7391706e1f436cce009aa1"
     },
     {
-      "byteLength": 42766,
+      "byteLength": 45935,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Tests/ForgePlayTests/SteamLaunchProfileAVXBoundaryTests.swift",
         "gitMode": "100644",
-        "gitObjectID": "3efe3dd7e5e05a7f64f3c8cb21a52c580e990ec4",
-        "sha256": "d24ab0bb6e8906518ff92382297eeb2bf0dd64177a613c749566c0a90e50620f",
+        "gitObjectID": "3a597bf9495669e8de87d192e3276cda406a2944",
+        "sha256": "8b8c749a70bd534777b9a5d61c0e7b30890be4666a643014f95f53670d7b6fde",
         "sourcePath": "Tests/ForgePlayTests/SteamLaunchProfileAVXBoundaryTests.swift"
       },
       "path": "Tests/ForgePlayTests/SteamLaunchProfileAVXBoundaryTests.swift",
-      "sha256": "d24ab0bb6e8906518ff92382297eeb2bf0dd64177a613c749566c0a90e50620f"
+      "sha256": "8b8c749a70bd534777b9a5d61c0e7b30890be4666a643014f95f53670d7b6fde"
     },
     {
-      "byteLength": 852579,
+      "byteLength": 934384,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Tests/ForgePlayTests/SteamLibraryReferenceTests.swift",
         "gitMode": "100644",
-        "gitObjectID": "46bff00d3728178b6ba76bcb0aa738f456e76f1c",
-        "sha256": "e297477a057cca528054a067705b59a3f192a3b1e798420a929e289bf1b51a44",
+        "gitObjectID": "69165b6d3112785bbdf21125a9eafd5ca46f9b5d",
+        "sha256": "f6f3ffe4dff46cd29f5260e3f9c62a6a4d45596efab6ca226f39781bf7d9b97d",
         "sourcePath": "Tests/ForgePlayTests/SteamLibraryReferenceTests.swift"
       },
       "path": "Tests/ForgePlayTests/SteamLibraryReferenceTests.swift",
-      "sha256": "e297477a057cca528054a067705b59a3f192a3b1e798420a929e289bf1b51a44"
+      "sha256": "f6f3ffe4dff46cd29f5260e3f9c62a6a4d45596efab6ca226f39781bf7d9b97d"
     },
     {
       "byteLength": 10077,
@@ -5998,18 +6152,18 @@
       "sha256": "6e74df9e60471c3b6938879b13aa52749d04a7431a6743af6c3d991e337d8afc"
     },
     {
-      "byteLength": 5958,
+      "byteLength": 6058,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Tests/ForgePlayTests/SteamSessionStateTests.swift",
         "gitMode": "100644",
-        "gitObjectID": "6a1338e4496e0cc1121ef1174ffce11fdf016176",
-        "sha256": "3613eb6501f7401437da19a76cb3de2829b8db5532880744ee069a3a4f164b94",
+        "gitObjectID": "46f7dc1bc7b07a6616b5d6fe825d16ec284b5937",
+        "sha256": "da8a80ba945fb6d39349627441ae26300f69adceec6146b0269b30cba77637c3",
         "sourcePath": "Tests/ForgePlayTests/SteamSessionStateTests.swift"
       },
       "path": "Tests/ForgePlayTests/SteamSessionStateTests.swift",
-      "sha256": "3613eb6501f7401437da19a76cb3de2829b8db5532880744ee069a3a4f164b94"
+      "sha256": "da8a80ba945fb6d39349627441ae26300f69adceec6146b0269b30cba77637c3"
     },
     {
       "byteLength": 14752,
@@ -6166,32 +6320,32 @@
       "sha256": "4ae5f5d935e10cb3f998c810e08d9b4528e1e902974adc4fd066592ad79b0971"
     },
     {
-      "byteLength": 56927,
+      "byteLength": 46727,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "Tests/ForgePlayTests/WindowsRuntimeServiceTests.swift",
         "gitMode": "100644",
-        "gitObjectID": "97a083f673fb9472f2b6d01b515fd4a5337eecef",
-        "sha256": "7cd72e2b5ca952546a212b6443748750268ffc8f6f70aa5e8a53eeda4e226eef",
+        "gitObjectID": "af88d201f9d02d8e3e5b5c49fcb31ab9451fdd77",
+        "sha256": "1e3d85c0d7ab3b43b300841701ec1702405c116a0e2259d74a1533d9360b77a6",
         "sourcePath": "Tests/ForgePlayTests/WindowsRuntimeServiceTests.swift"
       },
       "path": "Tests/ForgePlayTests/WindowsRuntimeServiceTests.swift",
-      "sha256": "7cd72e2b5ca952546a212b6443748750268ffc8f6f70aa5e8a53eeda4e226eef"
+      "sha256": "1e3d85c0d7ab3b43b300841701ec1702405c116a0e2259d74a1533d9360b77a6"
     },
     {
-      "byteLength": 11260,
+      "byteLength": 12528,
       "mode": "100644",
       "origin": {
         "classification": "release-commit-blob",
         "destinationPath": "project.yml",
         "gitMode": "100644",
-        "gitObjectID": "eb5b028b7cc982c6c33e7f92b37e4b08f1fb93a3",
-        "sha256": "f61694d6a3deea67b3c84522350396859805c357529760e7968ffdf201d1a3d6",
+        "gitObjectID": "03284d589697d60984ccb2727b907e8cf9d424e8",
+        "sha256": "7fadea466db46327283e2f6aaf17dfdb2a2f3e669054576a0a16f46177de20c8",
         "sourcePath": "project.yml"
       },
       "path": "project.yml",
-      "sha256": "f61694d6a3deea67b3c84522350396859805c357529760e7968ffdf201d1a3d6"
+      "sha256": "7fadea466db46327283e2f6aaf17dfdb2a2f3e669054576a0a16f46177de20c8"
     },
     {
       "byteLength": 23132,
@@ -6324,12 +6478,12 @@
   "hashAlgorithm": "sha256",
   "inventoryGenerator": {
     "gitMode": "100755",
-    "gitObjectID": "26fca5666a2be4f8e02fc2b8b61ad128b12f0570",
+    "gitObjectID": "33a656f38fc9d47ce49a57d378cce4a7d713b706",
     "path": "Scripts/export-open-source.sh",
-    "sha256": "88c6ca5f34a805d11978e6f7372193f651ebe0329f778b6417b88570c2ae1f0e",
+    "sha256": "41269797e0fcfb7b58a5582c8c0a28a3facdfaddb3dcfbe5813900eba79d518c",
     "sourcePath": "Scripts/export-open-source.sh"
   },
-  "inventorySHA256": "8ce6e6beca065cbba7a01c21e177a0232a1f887e4563cd1978ed9b344e628b6c",
-  "releaseCommit": "7d7bed8ffcd09e34ab941982d5a483e4586c9818",
+  "inventorySHA256": "0102685e22e5f80ab0c8ac216901af91e5132b4e1207d5f2dc4d4e780cac4eb4",
+  "releaseCommit": "967e6f1141a2494087b0044a4f2ab84293b919cb",
   "schemaVersion": 2
 }

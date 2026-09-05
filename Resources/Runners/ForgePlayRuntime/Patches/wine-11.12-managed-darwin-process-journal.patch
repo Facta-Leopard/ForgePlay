@@ -2,7 +2,7 @@ diff --git a/include/forgeplay_process_journal.h b/include/forgeplay_process_jou
 new file mode 100644
 --- /dev/null
 +++ b/include/forgeplay_process_journal.h
-@@ -0,0 +1,327 @@
+@@ -0,0 +1,349 @@
 +/*
 + * Project-owned Darwin process lifecycle journal for the ForgePlay runtime.
 + *
@@ -181,14 +181,14 @@ new file mode 100644
 +    return 1;
 +}
 +
-+static void forgeplay_terminate_managed_wineserver(void)
++static void forgeplay_terminate_managed_wine_process(void)
 +{
 +    struct timespec delay = {2, 0}, remaining;
 +
 +    /*
 +     * This runs in the dedicated monitor thread, never in a signal handler.
 +     * Ask Wine's normal SIGTERM path to flush state first. If its main loop is
-+     * wedged, hard-stop this exact wineserver process after two seconds. No
++     * wedged, hard-stop this exact managed Wine process after two seconds. No
 +     * foreign PID is ever accepted or signalled by this watchdog.
 +     */
 +    if (kill( getpid(), SIGTERM ) == -1) _exit(1);
@@ -200,8 +200,22 @@ new file mode 100644
 +static void *forgeplay_monitor_application_owner( void *context )
 +{
 +    const int queue = (int)(intptr_t)context;
++    static const char signal_mask_failure[] =
++        "FORGEPLAY_MANAGED_WINE_OWNER_V1 status=monitor-failed reason=signal-mask action=hard-stop\n";
 +    struct kevent event;
++    sigset_t blocked_signals;
 +    int result;
++
++    /* Keep the watchdog independent from Wine's graceful SIGTERM path. */
++    if (sigemptyset( &blocked_signals ) == -1 ||
++        sigaddset( &blocked_signals, SIGTERM ) == -1 ||
++        pthread_sigmask( SIG_BLOCK, &blocked_signals, NULL ))
++    {
++        (void)write( STDERR_FILENO, signal_mask_failure,
++                     sizeof(signal_mask_failure) - 1 );
++        close( queue );
++        _exit(1);
++    }
 +
 +    do result = kevent( queue, NULL, 0, &event, 1, NULL );
 +    while (result == -1 && errno == EINTR);
@@ -219,7 +233,7 @@ new file mode 100644
 +            "FORGEPLAY_MANAGED_WINE_OWNER_V1 status=monitor-failed action=graceful-then-hard-watchdog\n";
 +        (void)write( STDERR_FILENO, message, sizeof(message) - 1 );
 +    }
-+    forgeplay_terminate_managed_wineserver();
++    forgeplay_terminate_managed_wine_process();
 +    return NULL; /* unreachable */
 +}
 +
@@ -235,7 +249,7 @@ new file mode 100644
 +    pthread_attr_t attributes;
 +    pthread_t thread;
 +    char *end;
-+    int queue, error;
++    int queue, descriptor_flags, error;
 +
 +    if (!process_id_value && !started_at_value) return 1;
 +    if (!process_id_value || !started_at_value)
@@ -262,6 +276,14 @@ new file mode 100644
 +
 +    if ((queue = kqueue()) == -1)
 +        goto monitor_unavailable;
++    if ((descriptor_flags = fcntl( queue, F_GETFD )) == -1 ||
++        fcntl( queue, F_SETFD, descriptor_flags | FD_CLOEXEC ) == -1 ||
++        (descriptor_flags = fcntl( queue, F_GETFD )) == -1 ||
++        !(descriptor_flags & FD_CLOEXEC))
++    {
++        close( queue );
++        goto monitor_unavailable;
++    }
 +    EV_SET( &change, (uintptr_t)parsed_process_id, EVFILT_PROC,
 +            EV_ADD | EV_ENABLE | EV_ONESHOT, NOTE_EXIT, 0, NULL );
 +    if (kevent( queue, &change, 1, NULL, 0, NULL ) == -1)
@@ -341,26 +363,28 @@ diff --git a/include/Makefile.in b/include/Makefile.in
  	fontsub.h \
  	fusion.idl \
  	gameinput.idl \
-diff --git a/dlls/ntdll/unix/loader.c b/dlls/ntdll/unix/loader.c
---- a/dlls/ntdll/unix/loader.c
-+++ b/dlls/ntdll/unix/loader.c
-@@ -77,6 +77,7 @@
- #include "winioctl.h"
- #include "winternl.h"
- #include "unix_private.h"
-+#include "forgeplay_process_journal.h"
- #include "wine/list.h"
+diff --git a/dlls/ntdll/unix/server.c b/dlls/ntdll/unix/server.c
+--- a/dlls/ntdll/unix/server.c
++++ b/dlls/ntdll/unix/server.c
+@@ -77,6 +77,8 @@
+ #include "wine/server.h"
  #include "wine/debug.h"
- 
-@@ -2321,7 +2322,8 @@ static void check_command_line( int argc, char *argv[] )
-  */
- DECLSPEC_EXPORT void __wine_main( int argc, char *argv[] )
- {
+ #include "unix_private.h"
++#define FORGEPLAY_PROCESS_JOURNAL_ENABLE_OWNER_MONITOR 1
++#include "forgeplay_process_journal.h"
+ #include "ddk/wdm.h"
+
+ WINE_DEFAULT_DEBUG_CHANNEL(server);
+@@ -1785,6 +1787,9 @@ void server_init_process_done(void)
+     SERVER_END_REQ;
+
+     assert( !status );
 +    forgeplay_record_managed_wine_process( "wine-loader" );
-     if (!forgeplay_activate_external_storage_grants( "wine" ))
-         fatal_error( "ForgePlay external-storage access activation failed\n" );
- 
-     main_argc = argc;
++    if (!forgeplay_start_application_owner_monitor())
++        fatal_error( "ForgePlay managed application owner monitor failed\n" );
+     signal_start_thread( main_image_info.TransferAddress, peb, data->teb );
+ }
+
 diff --git a/dlls/ntdll/unix/process.c b/dlls/ntdll/unix/process.c
 --- a/dlls/ntdll/unix/process.c
 +++ b/dlls/ntdll/unix/process.c

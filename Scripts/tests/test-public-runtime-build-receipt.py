@@ -174,12 +174,6 @@ class PublicRuntimeBuildReceiptTests(unittest.TestCase):
         positions = [text.index(marker) for marker in ordered]
         self.assertEqual(positions, sorted(positions))
         self.assertIn('TRANSACTION_ROOT=""', text)
-        self.assertIn(
-            'FORGEPLAY_RUNTIME_POLICY_SOURCE="$RUNTIME_POLICY_SOURCE" \\\n'
-            'TMPDIR="$TRANSACTION_ROOT" \\\n'
-            '  /bin/bash "$PACKAGER" --public-source-package',
-            text,
-        )
         self.assertNotIn('$SOURCE_EXPORT/Resources/Runners', text)
 
 

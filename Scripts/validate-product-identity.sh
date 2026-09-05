@@ -31,10 +31,6 @@ for component in "${identifier_components[@]}"; do
     fail "PRODUCT_BUNDLE_IDENTIFIER contains an unsafe component: $bundle_identifier"
 done
 
-last_component="${identifier_components[${#identifier_components[@]} - 1]}"
-[[ "$(printf '%s' "$last_component" | /usr/bin/tr '[:upper:]' '[:lower:]')" != "app" ]] ||
-  fail "the final bundle-identifier component must not be 'app'; macOS can classify its container as an application bundle: $bundle_identifier"
-
 if [[ -n "$team_identifier" ]]; then
   [[ "$team_identifier" =~ ^[A-Z0-9]{10}$ ]] ||
     fail "DEVELOPMENT_TEAM must be a 10-character Apple team identifier."

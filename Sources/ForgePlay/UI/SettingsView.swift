@@ -608,7 +608,7 @@ struct SettingsView: View {
 
     private func gameInputPreferencesCard(palette: ForgePlayPalette) -> some View {
         ForgeCard("게임 입력 및 macOS 단축키 보호", systemImage: "keyboard.badge.ellipsis") {
-            Text(appState.localized("일반 Steam과 Steam 호환성 실행에 공통으로 적용됩니다. 각 Steam 세션은 시작 시점 설정의 변경 불가능한 스냅샷을 사용하므로 여기서 바꾼 내용은 다음 실행부터 적용됩니다. 필터는 관리되는 세션의 정상 종료가 확인되면 해제됩니다. 실행 중 필터가 상실되면 즉시 해제한 뒤 관리되는 Steam 세션을 자동 종료하고 입력 상태를 복원합니다."))
+            Text(appState.localized("일반 Steam과 Steam 호환성 실행에 공통으로 적용됩니다. 각 Steam 세션은 시작 시점 설정의 변경 불가능한 스냅샷을 사용하므로 여기서 바꾼 내용은 다음 실행부터 적용됩니다. 필터는 관리되는 세션의 정상 종료가 확인되면 해제됩니다. 실행 중 필터가 상실되면 입력 보호만 비활성화하고 Wine과 Steam 실행은 유지합니다."))
                 .font(.callout)
                 .foregroundStyle(palette.secondaryText)
                 .lineLimit(nil)
@@ -852,11 +852,11 @@ struct SettingsView: View {
         case .authorized:
             return "게임 입력 보호 권한이 준비되었습니다."
         case .accessibilityRequired:
-            return "선택한 보호 기능에는 macOS 손쉬운 사용 권한이 필요합니다. 권한이 없으면 해당 설정으로 Steam을 실행하지 않습니다."
+            return "선택한 보호 기능에는 macOS 손쉬운 사용 권한이 필요합니다. 권한이 없으면 입력 보호만 비활성화하고 Steam 실행은 계속합니다."
         case .inputMonitoringRequired:
-            return "선택한 보호 기능에는 macOS 입력 모니터링 권한이 필요합니다. 권한이 없으면 해당 설정으로 Steam을 실행하지 않습니다."
+            return "선택한 보호 기능에는 macOS 입력 모니터링 권한이 필요합니다. 권한이 없으면 입력 보호만 비활성화하고 Steam 실행은 계속합니다."
         case .accessibilityAndInputMonitoringRequired:
-            return "선택한 보호 기능에는 macOS 손쉬운 사용 및 입력 모니터링 권한이 필요합니다. 권한이 없으면 해당 설정으로 Steam을 실행하지 않습니다."
+            return "선택한 보호 기능에는 macOS 손쉬운 사용 및 입력 모니터링 권한이 필요합니다. 권한이 없으면 입력 보호만 비활성화하고 Steam 실행은 계속합니다."
         }
     }
 
@@ -1784,10 +1784,15 @@ struct SettingsView: View {
                 appState.launchLogLimit = persistedLaunchLogLimit
                 throw error
             }
-            logCleanupStatusMessage = appState.localized("보존 설정을 저장했습니다.")
+            let message = appState.localized("보존 설정을 저장했습니다.")
+            logCleanupStatusMessage = message
+            let notice = appState.setNotice(message, kind: .success)
+            clearTaskLater(notice.id)
             return true
         } catch {
-            logCleanupStatusMessage = appState.localizedError(error)
+            let message = appState.localizedError(error)
+            logCleanupStatusMessage = message
+            appState.setNotice(message, kind: .failure)
             return false
         }
     }

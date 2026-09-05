@@ -30,6 +30,24 @@ struct CompatibilitySteamLaunchLegacySnapshotV1: Hashable, Sendable {
     let sourceVersion: CompatibilitySteamLaunchLegacySnapshotSourceVersionV1
 }
 
+struct CompatibilitySteamLaunchPreferenceRecoveryVersionV1:
+    Hashable, Sendable
+{
+    let payloadDigest: String
+    let generation: Int64
+    let persistenceRevision: UUID
+
+    init(
+        payloadDigest: String,
+        generation: Int64,
+        persistenceRevision: UUID
+    ) {
+        self.payloadDigest = payloadDigest
+        self.generation = generation
+        self.persistenceRevision = persistenceRevision
+    }
+}
+
 extension CompatibilitySteamLaunchPreferencePayloadV1 {
     func snapshotV1Projection() throws -> SteamLaunchConfigurationSnapshot {
         try validate()
@@ -40,6 +58,7 @@ extension CompatibilitySteamLaunchPreferencePayloadV1 {
             audioInputPolicy: selections.audioInputPolicy,
             synchronizationPolicy: selections.synchronizationPolicy,
             videoMemoryPolicy: selections.videoMemoryPolicy,
+            frameGenerationConfiguration: selections.frameGenerationConfiguration,
             gameModeEnabled: selections.gameModeEnabled,
             fpsCursorPolicy: selections.fpsCursorPolicy,
             controllerPolicy: selections.controllerPolicy,
@@ -72,44 +91,68 @@ extension CompatibilitySteamLaunchPreferenceRecord {
     func decodedCompatibilityPreferenceEnvelopeV1()
         throws -> CompatibilitySteamLaunchPreferenceEnvelopeV1
     {
-        guard persistenceRevision.uuidString.lowercased() !=
-            "00000000-0000-0000-0000-000000000000" else {
-            throw SteamLaunchConfigurationPersistenceError.invalidPersistenceRevision(
-                persistenceRevision
-            )
-        }
-        let preference = try CompatibilitySteamLaunchPreferencePayloadV1(
-            canonicalPayload: canonicalPreferencePayload
-        )
-        guard id == preference.identity.deterministicRecordID else {
-            throw SteamLaunchConfigurationPersistenceError.recordIdentityMismatch(
-                "compatibility-v1-record-id"
-            )
-        }
-        guard steamAppID == preference.identity.steamAppID,
-              profileID == preference.identity.profileID,
-              recipeRevision == preference.identity.recipeRevision else {
-            throw SteamLaunchConfigurationPersistenceError.recordIdentityMismatch(
-                "compatibility-v1-identity-columns"
-            )
-        }
-        guard schemaVersion == preference.schemaVersion else {
+        let decoded = try decodedCompatibilityPreferencePayloadAllowingLegacyV1()
+        guard decoded.sourceSchemaVersion ==
+                SteamCompatibilityLaunchProfileContractV1.preferenceSchemaVersion else {
             throw SteamLaunchConfigurationPersistenceError.schemaVersionMismatch(
                 stored: schemaVersion,
-                decoded: preference.schemaVersion
+                decoded: SteamCompatibilityLaunchProfileContractV1.preferenceSchemaVersion
             )
         }
-        guard preferenceDigest == (try preference.canonicalDigest) else {
-            throw SteamLaunchConfigurationPersistenceError.digestMismatch
-        }
         return try CompatibilitySteamLaunchPreferenceEnvelopeV1(
-            payload: preference,
+            payload: decoded.preference,
             payloadDigest: preferenceDigest,
             generation: generation,
             persistenceRevision: persistenceRevision,
             createdAt: createdAt,
             updatedAt: updatedAt
         )
+    }
+
+    /// Rewrites an already-deployed generation-1+ preference payload from the
+    /// legacy v1 canonical schema to the current schema without changing any
+    /// user selection. The CAS generation and revision advance atomically so a
+    /// stale window cannot save through the migration.
+    func migrateCompatibilityPreferencePayloadSchemaV1(now: Date) throws {
+        let decoded = try decodedCompatibilityPreferencePayloadAllowingLegacyV1()
+        guard generation > 0,
+              decoded.sourceSchemaVersion ==
+                SteamCompatibilityLaunchProfileContractV1.legacyPreferenceSchemaVersion else {
+            throw SteamCompatibilityLaunchProfileErrorV1.migrationRejected(
+                "preference-payload-schema-source"
+            )
+        }
+        guard generation < Int64.max else {
+            throw SteamCompatibilityLaunchProfileErrorV1.invalidPreference(
+                "generation-overflow"
+            )
+        }
+        guard now >= createdAt else {
+            throw SteamCompatibilityLaunchProfileErrorV1.migrationRejected(
+                "preference-payload-schema-timestamp"
+            )
+        }
+
+        let projection = try Self.compatibilityPreferenceProjection(decoded.preference)
+        let nextGeneration = generation + 1
+        let nextRevision = Self.makeCompatibilityPreferenceRevisionV1(
+            excluding: persistenceRevision
+        )
+        _ = try CompatibilitySteamLaunchPreferenceEnvelopeV1(
+            payload: decoded.preference,
+            payloadDigest: projection.digest,
+            generation: nextGeneration,
+            persistenceRevision: nextRevision,
+            createdAt: createdAt,
+            updatedAt: now
+        )
+
+        schemaVersion = projection.schemaVersion
+        canonicalPreferencePayload = projection.payload
+        preferenceDigest = projection.digest
+        generation = nextGeneration
+        persistenceRevision = nextRevision
+        updatedAt = now
     }
 
     func decodedCompatibilityLegacySnapshotV1()
@@ -241,6 +284,53 @@ extension CompatibilitySteamLaunchPreferenceRecord {
             }
         }
     }
+
+    private func decodedCompatibilityPreferencePayloadAllowingLegacyV1() throws -> (
+        preference: CompatibilitySteamLaunchPreferencePayloadV1,
+        sourceSchemaVersion: Int
+    ) {
+        guard generation > 0 else {
+            throw SteamCompatibilityLaunchProfileErrorV1.migrationRejected(
+                "preference-generation"
+            )
+        }
+        guard persistenceRevision.uuidString.lowercased() !=
+            "00000000-0000-0000-0000-000000000000" else {
+            throw SteamLaunchConfigurationPersistenceError.invalidPersistenceRevision(
+                persistenceRevision
+            )
+        }
+        guard preferenceDigest == SteamLaunchIdentifierValidation.lowercaseSHA256(
+            canonicalPreferencePayload
+        ) else {
+            throw SteamLaunchConfigurationPersistenceError.digestMismatch
+        }
+        guard let sourceSchemaVersion = CompatibilitySteamLaunchPreferencePayloadV1
+            .canonicalPayloadSchemaVersion(canonicalPreferencePayload),
+              schemaVersion == sourceSchemaVersion else {
+            throw SteamLaunchConfigurationPersistenceError.schemaVersionMismatch(
+                stored: schemaVersion,
+                decoded: CompatibilitySteamLaunchPreferencePayloadV1
+                    .canonicalPayloadSchemaVersion(canonicalPreferencePayload) ?? -1
+            )
+        }
+        let preference = try CompatibilitySteamLaunchPreferencePayloadV1(
+            canonicalPayload: canonicalPreferencePayload
+        )
+        guard id == preference.identity.deterministicRecordID else {
+            throw SteamLaunchConfigurationPersistenceError.recordIdentityMismatch(
+                "compatibility-v1-record-id"
+            )
+        }
+        guard steamAppID == preference.identity.steamAppID,
+              profileID == preference.identity.profileID,
+              recipeRevision == preference.identity.recipeRevision else {
+            throw SteamLaunchConfigurationPersistenceError.recordIdentityMismatch(
+                "compatibility-v1-identity-columns"
+            )
+        }
+        return (preference, sourceSchemaVersion)
+    }
 }
 
 @MainActor
@@ -255,7 +345,21 @@ struct CompatibilitySteamLaunchPreferenceRepositoryV1 {
         identity: SteamCompatibilityProfileIdentity
     ) throws -> CompatibilitySteamLaunchPreferenceEnvelopeV1? {
         let context = makeContext()
-        return try fetch(identity: identity, in: context)?.decodedCompatibilityPreferenceEnvelopeV1()
+        do {
+            guard let record = try fetch(identity: identity, in: context) else {
+                return nil
+            }
+            try migratePreferencePayloadSchemaIfRequired(record, now: Date())
+            if context.hasChanges {
+                try context.saveOrRollback()
+            }
+            return try record.decodedCompatibilityPreferenceEnvelopeV1()
+        } catch {
+            if context.hasChanges {
+                context.rollback()
+            }
+            throw error
+        }
     }
 
     /// Loads the current envelope or atomically migrates an exact generation-0
@@ -272,6 +376,10 @@ struct CompatibilitySteamLaunchPreferenceRepositoryV1 {
                 return nil
             }
             guard record.generation == 0 else {
+                try migratePreferencePayloadSchemaIfRequired(record, now: now)
+                if context.hasChanges {
+                    try context.saveOrRollback()
+                }
                 return try record.decodedCompatibilityPreferenceEnvelopeV1()
             }
             let legacy = try record.decodedCompatibilityLegacySnapshotV1()
@@ -305,6 +413,38 @@ struct CompatibilitySteamLaunchPreferenceRepositoryV1 {
         return try record.decodedCompatibilityLegacySnapshotV1()
     }
 
+    func recoveryVersion(
+        identity: SteamCompatibilityProfileIdentity
+    ) throws -> CompatibilitySteamLaunchPreferenceRecoveryVersionV1? {
+        let context = makeContext()
+        guard let record = try fetch(identity: identity, in: context) else {
+            return nil
+        }
+        try validateRecoveryIdentity(record, expected: identity)
+        return recoveryVersion(from: record)
+    }
+
+    func resetForRecovery(
+        identity: SteamCompatibilityProfileIdentity,
+        expectedVersion: CompatibilitySteamLaunchPreferenceRecoveryVersionV1
+    ) throws {
+        let context = makeContext()
+        do {
+            guard let record = try fetch(identity: identity, in: context) else {
+                throw conflict(for: identity)
+            }
+            try validateRecoveryIdentity(record, expected: identity)
+            guard recoveryVersion(from: record) == expectedVersion else {
+                throw conflict(for: identity)
+            }
+            context.delete(record)
+            try context.saveOrRollback()
+        } catch {
+            if context.hasChanges { context.rollback() }
+            throw error
+        }
+    }
+
     @discardableResult
     func save(
         _ preference: CompatibilitySteamLaunchPreferencePayloadV1,
@@ -320,6 +460,7 @@ struct CompatibilitySteamLaunchPreferenceRepositoryV1 {
             let existing = try fetch(identity: preference.identity, in: context)
             let record: CompatibilitySteamLaunchPreferenceRecord
             if let existing {
+                try migratePreferencePayloadSchemaIfRequired(existing, now: now)
                 let current = try existing.decodedCompatibilityPreferenceEnvelopeV1()
                 guard let expectedSourceVersion,
                       expectedSourceVersion == current.sourceVersion else {
@@ -397,6 +538,7 @@ struct CompatibilitySteamLaunchPreferenceRepositoryV1 {
             guard let existing = try fetch(identity: identity, in: context) else {
                 throw conflict(for: identity)
             }
+            try migratePreferencePayloadSchemaIfRequired(existing, now: Date())
             let current = try existing.decodedCompatibilityPreferenceEnvelopeV1()
             guard current.sourceVersion == expectedSourceVersion else {
                 throw conflict(for: identity)
@@ -417,6 +559,18 @@ struct CompatibilitySteamLaunchPreferenceRepositoryV1 {
         return context
     }
 
+    private func migratePreferencePayloadSchemaIfRequired(
+        _ record: CompatibilitySteamLaunchPreferenceRecord,
+        now: Date
+    ) throws {
+        guard record.generation > 0,
+              record.schemaVersion ==
+                SteamCompatibilityLaunchProfileContractV1.legacyPreferenceSchemaVersion else {
+            return
+        }
+        try record.migrateCompatibilityPreferencePayloadSchemaV1(now: now)
+    }
+
     private func fetch(
         identity: SteamCompatibilityProfileIdentity,
         in context: ModelContext
@@ -433,6 +587,30 @@ struct CompatibilitySteamLaunchPreferenceRepositoryV1 {
             )
         }
         return matches.first
+    }
+
+    private func validateRecoveryIdentity(
+        _ record: CompatibilitySteamLaunchPreferenceRecord,
+        expected identity: SteamCompatibilityProfileIdentity
+    ) throws {
+        guard record.id == identity.deterministicRecordID,
+              record.steamAppID == identity.steamAppID,
+              record.profileID == identity.profileID,
+              record.recipeRevision == identity.recipeRevision else {
+            throw SteamLaunchConfigurationPersistenceError.recordIdentityMismatch(
+                "compatibility-v1-recovery-identity"
+            )
+        }
+    }
+
+    private func recoveryVersion(
+        from record: CompatibilitySteamLaunchPreferenceRecord
+    ) -> CompatibilitySteamLaunchPreferenceRecoveryVersionV1 {
+        CompatibilitySteamLaunchPreferenceRecoveryVersionV1(
+            payloadDigest: record.preferenceDigest,
+            generation: record.generation,
+            persistenceRevision: record.persistenceRevision
+        )
     }
 
     private func conflict(

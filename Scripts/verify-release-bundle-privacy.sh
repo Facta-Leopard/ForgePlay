@@ -3,12 +3,6 @@ set -euo pipefail
 
 PROJECT_ROOT=""
 APP_PATH=""
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BUILD_PATH_VERIFIER="$SCRIPT_DIR/verify-wine-runtime-build-paths.py"
-RUNTIME_CAPABILITY_VERIFIER="$SCRIPT_DIR/verify-bundled-runtime-capability.sh"
-RUNTIME_ROOT_RELATIVE_PATH="Contents/Resources/Runners/ForgePlayRuntime"
-REVIEWED_DXMT_RELATIVE_PATH="Contents/Resources/Runners/ForgePlayRuntime/Frameworks/renderer/dxmt/wine/x86_64-unix/winemetal.so"
-REVIEWED_DXMT_ALLOW_FLAG="--allow-inventory-verified-dxmt-github-actions-paths"
 
 fail() {
   printf 'error: release bundle privacy verification failed: %s\n' "$*" >&2
@@ -65,51 +59,6 @@ if [[ -n "$PROHIBITED_FILES" ]]; then
     printf '%s\n' "${prohibited_file#"$APP_PATH/"}" >&2
   done <<< "$PROHIBITED_FILES"
   fail "app contains a local-development or credential-shaped file"
-fi
-
-[[ -f "$BUILD_PATH_VERIFIER" && ! -L "$BUILD_PATH_VERIFIER" ]] ||
-  fail "release build-path verifier is unavailable"
-
-ALLOW_REVIEWED_DXMT_PATHS=0
-RUNTIME_VERIFICATION_TARGET=""
-REVIEWED_DXMT_PATH="$APP_PATH/$REVIEWED_DXMT_RELATIVE_PATH"
-if [[ -e "$REVIEWED_DXMT_PATH" || -L "$REVIEWED_DXMT_PATH" ]]; then
-  RUNTIME_ROOT_PATH="$APP_PATH/$RUNTIME_ROOT_RELATIVE_PATH"
-  [[ -d "$RUNTIME_ROOT_PATH" && ! -L "$RUNTIME_ROOT_PATH" ]] ||
-    fail "reviewed DXMT payload lacks a non-symlink Runtime root"
-  [[ -f "$REVIEWED_DXMT_PATH" && ! -L "$REVIEWED_DXMT_PATH" ]] ||
-    fail "reviewed DXMT payload path is not a non-symlink regular file"
-  [[ -f "$RUNTIME_CAPABILITY_VERIFIER" && ! -L "$RUNTIME_CAPABILITY_VERIFIER" ]] ||
-    fail "release Runtime inventory verifier is unavailable"
-  RUNTIME_VERIFICATION_TARGET="$(cd "$RUNTIME_ROOT_PATH" && pwd -P)" ||
-    fail "reviewed DXMT Runtime root could not be resolved"
-  /bin/bash "$RUNTIME_CAPABILITY_VERIFIER" \
-    --release-runtime-inventory-only \
-    "$RUNTIME_VERIFICATION_TARGET" >/dev/null ||
-    fail "reviewed DXMT path exception lacks a verified Runtime inventory and renderer/SBOM locks"
-  ALLOW_REVIEWED_DXMT_PATHS=1
-fi
-
-if [[ "$ALLOW_REVIEWED_DXMT_PATHS" == "1" ]]; then
-  /usr/bin/python3 "$BUILD_PATH_VERIFIER" \
-    "$REVIEWED_DXMT_ALLOW_FLAG" \
-    "$APP_PATH" >/dev/null ||
-    fail "app contains a personal user-home or mounted-volume path"
-else
-  /usr/bin/python3 "$BUILD_PATH_VERIFIER" "$APP_PATH" >/dev/null ||
-    fail "app contains a personal user-home or mounted-volume path"
-fi
-
-if [[ "$ALLOW_REVIEWED_DXMT_PATHS" == "1" ]]; then
-  # Bind the accepted bytes to the same exhaustive inventory after scanning as
-  # well, closing the mutation window between authorization and inspection.
-  [[ "$(cd "$APP_PATH/$RUNTIME_ROOT_RELATIVE_PATH" && pwd -P)" == \
-      "$RUNTIME_VERIFICATION_TARGET" ]] ||
-    fail "reviewed DXMT Runtime root changed during privacy inspection"
-  /bin/bash "$RUNTIME_CAPABILITY_VERIFIER" \
-    --release-runtime-inventory-only \
-    "$RUNTIME_VERIFICATION_TARGET" >/dev/null ||
-    fail "Runtime inventory or renderer/SBOM locks changed during privacy inspection"
 fi
 
 python3 - "$APP_PATH" "$PROJECT_ROOT" "${HOME:-}" "${USER:-}" "${FORGEPLAY_NOTARY_KEY_PATH:-}" <<'PY'

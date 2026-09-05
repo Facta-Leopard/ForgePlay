@@ -5,18 +5,57 @@ import XCTest
 final class SteamCompatibilityLaunchProfileV1Tests: XCTestCase {
     private let recipe = SteamCompatibilityLaunchProfileCatalogV1.helldivers2
 
+    func testAcceptedSessionPostDispatchAdvisoryReadbackFailureUsesFallback() {
+        let fallback = String(repeating: "a", count: 64)
+        var readAttempts = 0
+
+        let result = SteamCompatibilityPostDispatchAdvisoryReadback.capture(
+            componentID: "persistent-prefix verification snapshot",
+            fallback: fallback
+        ) {
+            readAttempts += 1
+            throw PostDispatchAdvisoryReadbackProbeError.unavailable
+        }
+
+        XCTAssertEqual(readAttempts, 1)
+        XCTAssertEqual(result.value, fallback)
+        XCTAssertTrue(
+            result.diagnosticWarning?.contains(
+                "the accepted Steam session remains active"
+            ) == true
+        )
+        XCTAssertTrue(
+            result.diagnosticWarning?.contains(
+                "deterministic fallback evidence was recorded"
+            ) == true
+        )
+    }
+
+    func testAcceptedSessionPostDispatchAdvisoryReadbackSuccessKeepsCapturedValue() {
+        let result = SteamCompatibilityPostDispatchAdvisoryReadback.capture(
+            componentID: "applied-state digest",
+            fallback: "fallback"
+        ) {
+            "captured"
+        }
+
+        XCTAssertEqual(result.value, "captured")
+        XCTAssertNil(result.diagnosticWarning)
+    }
+
     func testBuiltInRecipeIdentityDefaultsAndOrderedDescriptors() throws {
         XCTAssertEqual(recipe.identity.steamAppID, "553850")
-        XCTAssertEqual(recipe.recommendations.graphicsBackend, .d3dMetal)
+        XCTAssertEqual(recipe.recommendations.graphicsBackend, .d3dMetalNVIDIA)
         XCTAssertTrue(recipe.recommendations.gameModeEnabled)
         XCTAssertTrue(recipe.recommendations.selections.heapZeroMemoryEnabled)
         XCTAssertEqual(
             recipe.orderedOptionDescriptors.map(\.kind),
             [
+                .graphicsBackend,
+                .frameGeneration,
                 .gameMode,
                 .heapZeroMemory,
                 .automaticProcessPolicies,
-                .graphicsBackend,
                 .networkPolicy,
                 .audioInputPolicy,
                 .synchronizationPolicy,
@@ -139,7 +178,7 @@ final class SteamCompatibilityLaunchProfileV1Tests: XCTestCase {
         }
     }
 
-    func testExplicitEventTapProtectionBlocksUnauthorizedLaunchOnly() {
+    func testExplicitEventTapProtectionReportsUnauthorizedLaunchAdvisory() {
         let eventTapPolicy = GameInputProtectionPolicy(
             modifierMap: .recommended
         )
@@ -150,12 +189,13 @@ final class SteamCompatibilityLaunchProfileV1Tests: XCTestCase {
             .inputMonitoringRequired,
             .accessibilityAndInputMonitoringRequired
         ] {
-            XCTAssertNotNil(
-                SteamLaunchGameInputProtectionAdmissionPolicy
-                    .blockerLocalizationKey(
-                        policy: eventTapPolicy,
-                        authorizationStatus: status
-                    )
+            let advisory = SteamLaunchGameInputProtectionAdmissionPolicy
+                .blockerLocalizationKey(
+                    policy: eventTapPolicy,
+                    authorizationStatus: status
+                )
+            XCTAssertTrue(
+                advisory?.contains("Steam 실행은 계속합니다") == true
             )
         }
         XCTAssertNil(
@@ -471,6 +511,46 @@ final class SteamCompatibilityLaunchProfileV1Tests: XCTestCase {
         }
     }
 
+    func testCurrentReleaseFrameGenerationResolvesOnlyForNVIDIAD3DMetal()
+        async throws
+    {
+        let authorization = try await manifestAuthorization()
+        for backend in recipe.supportedOptions.graphicsBackends {
+            var oneLaunchOverride = CompatibilitySteamLaunchOneLaunchOverrideV1(
+                identity: recipe.identity
+            )
+            oneLaunchOverride.graphicsBackend = backend
+            oneLaunchOverride.frameGenerationConfiguration =
+                FrameGenerationConfiguration(
+                    isEnabled: true,
+                    targetFrameRate: .fps120,
+                    isFrameCheckEnabled: true
+                )
+
+            do {
+                let request = try SteamCompatibilityLaunchResolverV1.resolve(
+                    recipe: recipe,
+                    manifestRootAuthorization: authorization,
+                    savedPreference: nil,
+                    oneLaunchOverride: oneLaunchOverride,
+                    capabilities: .supporting(recipe: recipe),
+                    transactionID: UUID()
+                )
+                XCTAssertEqual(backend, .d3dMetalNVIDIA)
+                let projection = try SteamManagerCompatibilityLaunchRequestMapperV1
+                    .projection(for: request)
+                XCTAssertEqual(projection.rendererSelection, .d3dMetalNVIDIA)
+                XCTAssertTrue(projection.frameGenerationConfiguration.isEnabled)
+            } catch {
+                guard backend != .d3dMetalNVIDIA else { throw error }
+                XCTAssertEqual(
+                    error as? FrameGenerationConfigurationError,
+                    .d3dMetalNVIDIARendererRequired
+                )
+            }
+        }
+    }
+
     func testEverySupportedNetworkAudioAndVideoMemoryValueResolvesAndProjectsExactly()
         async throws
     {
@@ -617,6 +697,93 @@ final class SteamCompatibilityLaunchProfileV1Tests: XCTestCase {
         XCTAssertEqual(try decoded.canonicalDigest, try preference.canonicalDigest)
         XCTAssertFalse(decoded.selections.gameModeEnabled)
         XCTAssertFalse(decoded.selections.heapZeroMemoryEnabled)
+    }
+
+    func testPreferenceCanonicalRoundTripPreservesFrameGenerationAndFrameCheck()
+        throws
+    {
+        var selections = recipe.initialSelections
+        selections.graphicsBackend = .d3dMetalNVIDIA
+        selections.frameGenerationConfiguration = FrameGenerationConfiguration(
+            isEnabled: true,
+            targetFrameRate: .fps120,
+            isFrameCheckEnabled: true
+        )
+        let preference = try CompatibilitySteamLaunchPreferencePayloadV1(
+            identity: recipe.identity,
+            selections: selections
+        )
+
+        let decoded = try CompatibilitySteamLaunchPreferencePayloadV1(
+            canonicalPayload: preference.canonicalPayload()
+        )
+
+        XCTAssertEqual(
+            decoded.selections.frameGenerationConfiguration,
+            selections.frameGenerationConfiguration
+        )
+
+        selections.frameGenerationConfiguration.isFrameCheckEnabled = false
+        let explicitFrameCheckOffPreference = try
+            CompatibilitySteamLaunchPreferencePayloadV1(
+                identity: recipe.identity,
+                selections: selections
+            )
+        let explicitFrameCheckOffDecoded = try
+            CompatibilitySteamLaunchPreferencePayloadV1(
+                canonicalPayload: explicitFrameCheckOffPreference
+                    .canonicalPayload()
+            )
+        XCTAssertTrue(
+            explicitFrameCheckOffDecoded.selections
+                .frameGenerationConfiguration.isEnabled
+        )
+        XCTAssertFalse(
+            explicitFrameCheckOffDecoded.selections
+                .frameGenerationConfiguration.isFrameCheckEnabled
+        )
+    }
+
+    func testHiddenD3DMetalPreferenceNormalizesWithoutDroppingEnvelope()
+        throws
+    {
+        var selections = recipe.initialSelections
+        selections.graphicsBackend = .d3dMetal
+        selections.frameGenerationConfiguration = .off
+        let payload = try CompatibilitySteamLaunchPreferencePayloadV1(
+            identity: recipe.identity,
+            selections: selections
+        )
+        let saved = try CompatibilitySteamLaunchPreferenceEnvelopeV1(
+            payload: payload,
+            payloadDigest: payload.canonicalDigest,
+            generation: 7,
+            persistenceRevision: UUID(),
+            createdAt: Date(timeIntervalSinceReferenceDate: 100),
+            updatedAt: Date(timeIntervalSinceReferenceDate: 200)
+        )
+        var normalizationOverride = CompatibilitySteamLaunchOneLaunchOverrideV1(
+            identity: recipe.identity
+        )
+        normalizationOverride.graphicsBackend = .d3dMetalNVIDIA
+
+        let resolved = try SteamCompatibilityLaunchResolverV1.resolveDraft(
+            recipe: recipe,
+            savedPreference: saved,
+            oneLaunchOverride: normalizationOverride
+        )
+
+        XCTAssertEqual(resolved.graphicsBackend.value, .d3dMetalNVIDIA)
+        XCTAssertEqual(resolved.graphicsBackend.provenance, .oneLaunchOverride)
+        XCTAssertEqual(
+            resolved.frameGenerationConfiguration.value,
+            .off
+        )
+        XCTAssertEqual(
+            resolved.frameGenerationConfiguration.provenance,
+            .savedPreference
+        )
+        XCTAssertEqual(saved.generation, 7)
     }
 
     func testMigrationPreservesSnapshotFieldsAndInitializesOnlyNewSelectionFromRecipe() throws {
@@ -1120,5 +1287,9 @@ final class SteamCompatibilityLaunchProfileV1Tests: XCTestCase {
                 relativePathComponents: components
             )
         )
+    }
+
+    private enum PostDispatchAdvisoryReadbackProbeError: Error {
+        case unavailable
     }
 }
