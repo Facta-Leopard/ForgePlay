@@ -3,16 +3,16 @@
   "schemaVersion": 1,
   "product": "ForgePlay",
   "channel": "stable",
-  "marketingVersion": "1.1",
-  "buildNumber": 2,
-  "releaseTag": "v1.1.0",
-  "publishedAt": "2026-08-21T16:20:03Z",
+  "marketingVersion": "1.2",
+  "buildNumber": 3,
+  "releaseTag": "v1.2.0",
+  "publishedAt": "2026-09-05T05:52:28Z",
   "minimumMacOSVersion": "26.0",
-  "releaseURL": "https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.1.0",
+  "releaseURL": "https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.2.0",
   "download": {
-    "assetName": "ForgePlay-1.1-2.dmg",
-    "url": "https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.1.0/ForgePlay-1.1-2.dmg",
-    "sha256": "44c19b51d65990d2194854484b1ce27610b4f80f3fae5be08317fb1791f318c8",
-    "byteSize": 839483215
+    "assetName": "ForgePlay-1.2-3.dmg",
+    "url": "https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.2.0/ForgePlay-1.2-3.dmg",
+    "sha256": "9a671c1b637962b8c344598c77968cafcc1af097d39a2d1219d4d4cfd94b4235",
+    "byteSize": 837632151
   }
 }

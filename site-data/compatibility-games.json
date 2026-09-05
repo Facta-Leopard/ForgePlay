@@ -1,7 +1,7 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-08-31",
+  "updatedAt": "2026-09-05",
   "testProfiles": [
     {
       "id": "apple-silicon-m4-pro-24gb",
@@ -872,14 +872,14 @@
       "reporter": "ddol2ya",
       "testedAt": null,
       "notes": {
-        "en": "Gameplay was confirmed with a source-modified development build. The related changes are planned for a future ForgePlay release and are not included in the currently published 1.0 release.",
-        "ko": "소스 수정이 적용된 개발 빌드에서 게임 모드로 플레이할 수 있음을 확인했습니다. 관련 변경은 향후 ForgePlay 릴리스에 포함할 예정이며, 현재 공개된 1.0에는 아직 적용되지 않았습니다.",
-        "ja": "ソース修正を適用した開発ビルドで、ゲームモードによるプレイが可能であることを確認しました。関連する変更は今後のForgePlayリリースに含める予定で、現在公開中の1.0にはまだ反映されていません。",
-        "zh-Hans": "已确认在应用源代码修改的开发版本中可通过游戏模式游玩。相关更改计划在未来的 ForgePlay 版本中发布，目前公开的 1.0 尚未包含这些更改。",
-        "zh-Hant": "已確認在套用原始碼修改的開發版本中可透過遊戲模式遊玩。相關變更預計在未來的 ForgePlay 版本中發布，目前公開的 1.0 尚未包含這些變更。",
-        "de": "Mit einem quellcodeangepassten Entwicklungs-Build wurde bestätigt, dass das Spiel im Spielmodus spielbar ist. Die zugehörigen Änderungen sind für eine künftige ForgePlay-Version vorgesehen und noch nicht in der derzeit veröffentlichten Version 1.0 enthalten.",
-        "es": "Se ha confirmado que se puede jugar en el modo Juego con una compilación de desarrollo modificada a nivel de código fuente. Los cambios correspondientes están previstos para una futura versión de ForgePlay y aún no están incluidos en la versión 1.0 publicada actualmente.",
-        "fr": "Il a été confirmé que le jeu fonctionne en mode Jeu avec une version de développement modifiée au niveau du code source. Les changements correspondants sont prévus pour une prochaine version de ForgePlay et ne figurent pas encore dans la version 1.0 actuellement publiée."
+        "en": "Gameplay was confirmed with a source-modified development build. At the time of the report, the related changes were planned for a future ForgePlay release and were not included in the then-current 1.0 release.",
+        "ko": "소스 수정이 적용된 개발 빌드에서 게임 모드로 플레이할 수 있음을 확인했습니다. 제보 당시 관련 변경은 향후 ForgePlay 릴리스에 포함할 예정이었으며, 당시 공개된 1.0에는 아직 적용되지 않았습니다.",
+        "ja": "ソース修正を適用した開発ビルドで、ゲームモードによるプレイが可能であることを確認しました。報告時点では、関連する変更は今後のForgePlayリリースに含める予定で、その時点で公開されていた1.0にはまだ反映されていませんでした。",
+        "zh-Hans": "已确认在应用源代码修改的开发版本中可通过游戏模式游玩。在该报告提交时，相关更改计划在后续的 ForgePlay 版本中发布，当时公开的 1.0 尚未包含这些更改。",
+        "zh-Hant": "已確認在套用原始碼修改的開發版本中可透過遊戲模式遊玩。在該報告提交時，相關變更預計在後續的 ForgePlay 版本中發布，當時公開的 1.0 尚未包含這些變更。",
+        "de": "Mit einem quellcodeangepassten Entwicklungs-Build wurde bestätigt, dass das Spiel im Spielmodus spielbar ist. Zum Zeitpunkt der Meldung waren die zugehörigen Änderungen für eine künftige ForgePlay-Version vorgesehen und noch nicht in der damals veröffentlichten Version 1.0 enthalten.",
+        "es": "Se ha confirmado que se puede jugar en el modo Juego con una compilación de desarrollo modificada a nivel de código fuente. En el momento del informe, los cambios correspondientes estaban previstos para una futura versión de ForgePlay y aún no estaban incluidos en la versión 1.0 publicada entonces.",
+        "fr": "Il a été confirmé que le jeu fonctionne en mode Jeu avec une version de développement modifiée au niveau du code source. Au moment du signalement, les changements correspondants étaient prévus pour une prochaine version de ForgePlay et ne figuraient pas encore dans la version 1.0 publiée à cette époque."
       },
       "blocker": null
     },
@@ -905,14 +905,14 @@
       "reporter": "맥갤러",
       "testedAt": null,
       "notes": {
-        "en": "Gameplay is currently blocked by what appears to be a Rosetta AVX issue. A ForgePlay release containing the fix is planned.",
-        "ko": "Rosetta AVX 관련 문제로 인해 게임을 플레이할 수 없는 것으로 보입니다. 수정 사항을 반영한 ForgePlay 릴리스를 준비하고 있습니다.",
-        "ja": "RosettaのAVX関連の問題により、現在はプレイできないとみられます。修正を含むForgePlayリリースを準備しています。",
-        "zh-Hans": "目前疑似受 Rosetta AVX 相关问题影响，无法游玩。正在准备包含修复的 ForgePlay 版本。",
-        "zh-Hant": "目前疑似受 Rosetta AVX 相關問題影響，無法遊玩。正在準備包含修正的 ForgePlay 版本。",
-        "de": "Das Spiel ist derzeit offenbar wegen eines Rosetta-AVX-Problems nicht spielbar. Eine ForgePlay-Version mit der Fehlerbehebung ist geplant.",
-        "es": "Actualmente no se puede jugar, al parecer debido a un problema de Rosetta relacionado con AVX. Está prevista una versión de ForgePlay con la corrección.",
-        "fr": "Le jeu n’est actuellement pas jouable, apparemment en raison d’un problème AVX lié à Rosetta. Une version de ForgePlay intégrant le correctif est prévue."
+        "en": "At the time of this report, gameplay appeared to be blocked by a Rosetta AVX issue, and a ForgePlay release containing the fix was planned.",
+        "ko": "제보 당시에는 Rosetta AVX 관련 문제로 인해 게임을 플레이할 수 없는 것으로 보였으며, 수정 사항을 반영한 ForgePlay 릴리스를 준비 중이었습니다.",
+        "ja": "報告時点では、RosettaのAVX関連の問題によりプレイできないとみられ、修正を含むForgePlayリリースを準備していました。",
+        "zh-Hans": "在该报告提交时，游戏疑似受 Rosetta AVX 相关问题影响而无法游玩，当时正在准备包含修复的 ForgePlay 版本。",
+        "zh-Hant": "在該報告提交時，遊戲疑似受 Rosetta AVX 相關問題影響而無法遊玩，當時正在準備包含修正的 ForgePlay 版本。",
+        "de": "Zum Zeitpunkt der Meldung war das Spiel offenbar wegen eines Rosetta-AVX-Problems nicht spielbar; eine ForgePlay-Version mit der Fehlerbehebung war geplant.",
+        "es": "En el momento del informe no se podía jugar, al parecer debido a un problema de Rosetta relacionado con AVX. Estaba prevista una versión de ForgePlay con la corrección.",
+        "fr": "Au moment du signalement, le jeu n’était pas jouable, apparemment en raison d’un problème AVX lié à Rosetta. Une version de ForgePlay intégrant le correctif était alors prévue."
       },
       "blocker": "runtime"
     },
