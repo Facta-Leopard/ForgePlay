@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facta-leopard.github.io/ForgePlay/site-data/website-compatibility-reports.schema.json",
+  "title": "ForgePlay website-only compatibility reports",
+  "description": "Supplemental community reports displayed on the website without modifying the app-consumed compatibility database.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schemaVersion",
+    "updatedAt",
+    "testProfiles",
+    "reports"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "./website-compatibility-reports.schema.json"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date"
+    },
+    "testProfiles": {
+      "type": "array",
+      "items": {
+        "$ref": "./compatibility.schema.json#/$defs/testProfile"
+      }
+    },
+    "reports": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "./compatibility.schema.json#/$defs/report"
+          },
+          {
+            "type": "object",
+            "required": [
+              "forgePlayVersion",
+              "gameVersion",
+              "reporter"
+            ],
+            "properties": {
+              "source": {
+                "const": "community-report"
+              },
+              "notes": {
+                "type": "object",
+                "required": [
+                  "en",
+                  "ko",
+                  "ja",
+                  "zh-Hans",
+                  "zh-Hant",
+                  "de",
+                  "es",
+                  "fr"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "ko": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "ja": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "zh-Hans": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "zh-Hant": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "de": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "fr": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

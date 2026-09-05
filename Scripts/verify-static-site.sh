@@ -18,6 +18,7 @@ PAGES=(
   locale-bootstrap.js
   site.js
   site-assets/current-release.js
+  site-assets/website-compatibility.js
   site-assets/why-story.js
   compatibility.js
   announcements.js
@@ -26,6 +27,8 @@ PAGES=(
   site-assets/site-shell.js
   site-data/compatibility-games.json
   site-data/compatibility.schema.json
+  site-data/website-compatibility-reports.json
+  site-data/website-compatibility-reports.schema.json
   site-data/current-release.json
   site-data/current-release.schema.json
   site-data/announcements.json
@@ -252,6 +255,7 @@ class Parser(HTMLParser):
     def __init__(self):
         super().__init__()
         self.references = []
+        self.scripts = []
         self.ids = []
         self.i18n_keys = []
 
@@ -261,6 +265,8 @@ class Parser(HTMLParser):
                 self.ids.append(value)
             if key in {"href", "src"} and value:
                 self.references.append(value)
+            if tag == "script" and key == "src" and value:
+                self.scripts.append(urlsplit(value).path)
             if key in {
                 "data-i18n",
                 "data-i18n-aria-label",
@@ -290,6 +296,23 @@ def parse_page(path):
 
 for path in paths:
     parse_page(path)
+
+for page_name in ("index.html", "compatibility.html"):
+    parser = Parser()
+    parser.feed((root / page_name).read_text(encoding="utf-8"))
+    parser.close()
+    shared_scripts = [
+        "site-assets/current-release.js",
+        "site-assets/website-compatibility.js",
+        "compatibility.js",
+    ]
+    if page_name == "index.html":
+        shared_scripts.append("site-assets/home-experience.js")
+    if any(parser.scripts.count(script) != 1 for script in shared_scripts):
+        raise SystemExit(f"{page_name}: shared compatibility scripts must each load exactly once")
+    positions = [parser.scripts.index(script) for script in shared_scripts]
+    if positions != sorted(positions):
+        raise SystemExit(f"{page_name}: release and website catalog must load before their consumers")
 
 for path in paths:
     references, _, _ = parse_page(path)
@@ -762,6 +785,104 @@ def validate_compatibility_database(candidate):
         )
 
 validate_compatibility_database(database)
+
+# Website-only reports extend the display model, never the app's public payload.
+website_reports_path = root / "site-data" / "website-compatibility-reports.json"
+website_schema_path = root / "site-data" / "website-compatibility-reports.schema.json"
+try:
+    website_reports = json.loads(website_reports_path.read_text(encoding="utf-8"))
+    website_schema = json.loads(website_schema_path.read_text(encoding="utf-8"))
+except (OSError, json.JSONDecodeError) as exc:
+    raise SystemExit(f"website compatibility JSON is invalid: {exc}")
+
+website_fields = {"$schema", "schemaVersion", "updatedAt", "testProfiles", "reports"}
+if website_schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
+    raise SystemExit("website compatibility schema must use JSON Schema draft 2020-12")
+if website_schema.get("type") != "object" or website_schema.get("additionalProperties") is not False:
+    raise SystemExit("website compatibility schema must reject unknown root fields")
+if set(website_schema.get("required", [])) != website_fields:
+    raise SystemExit("website compatibility schema must require its complete field contract")
+website_properties = website_schema.get("properties", {})
+if set(website_properties) != website_fields:
+    raise SystemExit("website compatibility schema fields differ from the website-only contract")
+if website_properties.get("$schema", {}).get("const") != "./website-compatibility-reports.schema.json":
+    raise SystemExit("website compatibility schema must bind its own schema reference")
+if website_properties.get("schemaVersion", {}).get("const") != 1:
+    raise SystemExit("website compatibility schema must require schemaVersion 1")
+website_date_schema = website_properties.get("updatedAt", {})
+if website_date_schema.get("type") != "string" or website_date_schema.get("format") != "date":
+    raise SystemExit("website compatibility schema must require an ISO date")
+for collection in ("testProfiles", "reports"):
+    if website_properties.get(collection, {}).get("type") != "array":
+        raise SystemExit(f"website compatibility schema {collection} must be an array")
+if website_properties["testProfiles"].get("items", {}).get("$ref") != "./compatibility.schema.json#/$defs/testProfile":
+    raise SystemExit("website compatibility profiles must reuse the base profile schema")
+website_report_rules = website_properties["reports"].get("items", {}).get("allOf", [])
+if len(website_report_rules) != 2 or website_report_rules[0].get("$ref") != "./compatibility.schema.json#/$defs/report":
+    raise SystemExit("website compatibility reports must reuse the base report schema")
+website_report_extension = website_report_rules[1]
+if set(website_report_extension.get("required", [])) != {"forgePlayVersion", "gameVersion", "reporter"}:
+    raise SystemExit("website compatibility reports must explicitly include version and attribution fields")
+website_report_properties = website_report_extension.get("properties", {})
+if website_report_properties.get("source", {}).get("const") != "community-report":
+    raise SystemExit("website compatibility reports must identify community sources")
+website_note_schema = website_report_properties.get("notes", {})
+if (
+    website_note_schema.get("type") != "object"
+    or website_note_schema.get("additionalProperties") is not False
+    or set(website_note_schema.get("required", [])) != set(locale_names)
+    or set(website_note_schema.get("properties", {})) != set(locale_names)
+    or any(
+        rule.get("type") != "string" or rule.get("minLength") != 1
+        for rule in website_note_schema.get("properties", {}).values()
+    )
+):
+    raise SystemExit("website compatibility notes schema must require all eight non-empty locales")
+
+def validate_website_compatibility_reports(candidate, base):
+    require_object_shape(candidate, website_fields, website_fields, "website compatibility reports")
+    if candidate.get("$schema") != "./website-compatibility-reports.schema.json":
+        raise SystemExit("website compatibility reports reference the wrong schema")
+    if isinstance(candidate.get("schemaVersion"), bool) or candidate.get("schemaVersion") != 1:
+        raise SystemExit("website compatibility reports schemaVersion must be 1")
+    updated_at = parse_iso_date(candidate.get("updatedAt"), "website compatibility reports updatedAt")
+    if not all(isinstance(candidate.get(key), list) for key in ("testProfiles", "reports")):
+        raise SystemExit("website compatibility report collections must be arrays")
+    for report in candidate["reports"]:
+        if not isinstance(report, dict):
+            raise SystemExit("website compatibility report must be an object")
+        if not {"forgePlayVersion", "gameVersion", "reporter"}.issubset(report):
+            raise SystemExit("website compatibility report is missing version or attribution fields")
+        if report.get("source") != "community-report":
+            raise SystemExit("website compatibility report must identify a community source")
+        notes = report.get("notes")
+        if (
+            not isinstance(notes, dict)
+            or set(notes) != set(locale_names)
+            or not all(isinstance(note, str) and note.strip() for note in notes.values())
+        ):
+            raise SystemExit("website compatibility report notes must cover exactly all eight locales")
+        if report.get("testedAt") is not None and parse_iso_date(
+            report["testedAt"], "website compatibility report testedAt"
+        ) > updated_at:
+            raise SystemExit("website compatibility report is newer than its own updatedAt")
+
+    # Concatenation deliberately leaves collisions intact so the existing
+    # validator rejects duplicate IDs, invalid references, and malformed rows.
+    merged = {
+        **base,
+        "updatedAt": max(base["updatedAt"], candidate["updatedAt"]),
+        "testProfiles": [*base["testProfiles"], *candidate["testProfiles"]],
+        "reports": [*base["reports"], *candidate["reports"]],
+    }
+    validate_compatibility_database(merged)
+
+validate_website_compatibility_reports(website_reports, database)
+validate_website_compatibility_reports({
+    **website_reports,
+    "testProfiles": [],
+    "reports": [],
+}, database)
 
 # A minimal future database must pass without changing this verifier. This
 # guards the compatibility pipeline against content-specific hardcoding.
@@ -1380,9 +1501,12 @@ for html in index.html why.html license.html privacy.html support.html compatibi
   else
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-14"'
   fi
-  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260905-4"'
-  require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.css?v=20260905-2'
+  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260905-7"'
+  require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.css?v=20260905-7'
   require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.js?v=20260905-2'
+  if [[ "$html" != "index.html" ]]; then
+    require_snippet "$ROOT_DIR/$html" 'site-assets/page-experience.css?v=20260905-7'
+  fi
   require_snippet "$ROOT_DIR/$html" 'data-language-select'
   require_snippet "$ROOT_DIR/$html" 'site-assets/forgeplay-icon.png?v=20260821-dark-1'
   require_snippet "$ROOT_DIR/$html" 'target="_blank" rel="noopener noreferrer"'
@@ -1413,7 +1537,10 @@ require_snippet "$ROOT_DIR/index.html" 'data-current-release-status'
 require_snippet "$ROOT_DIR/index.html" 'data-current-release-download'
 require_snippet "$ROOT_DIR/index.html" 'data-current-release-download-label'
 require_snippet "$ROOT_DIR/index.html" 'data-current-release-link'
-require_snippet "$ROOT_DIR/index.html" 'src="site-assets/current-release.js?v=20260811-22"'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/current-release.js?v=20260905-7"'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/website-compatibility.js?v=20260905-7"'
+require_snippet "$ROOT_DIR/index.html" 'site-assets/home-experience.css?v=20260905-8'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/home-experience.js?v=20260905-7"'
 require_snippet "$ROOT_DIR/index.html" 'data-release-download'
 require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.releaseNotesButton"'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/forgeplay-social.png'
@@ -1427,7 +1554,7 @@ require_snippet "$ROOT_DIR/index.html" 'data-home-search'
 require_snippet "$ROOT_DIR/index.html" 'data-home-games'
 require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
-require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260802-21"'
+require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260905-7"'
 require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260905-2"'
 require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260821-3"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
@@ -1454,9 +1581,10 @@ require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.logLabel"'
 require_snippet "$ROOT_DIR/compatibility.html" 'issues/new?template=compatibility-report.yml'
 require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/compatibility.html" 'href="site.css?v=20260811-22"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260905-4"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/current-release.js?v=20260811-22"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260802-21"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260905-7"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/current-release.js?v=20260905-7"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20260905-7"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260905-7"'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-card'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-tag'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-meta'
@@ -1466,13 +1594,32 @@ require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.currentRelease
 require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.columnTestedForgePlayVersions"'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.columnMacOSVersion"'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.columnRecords"'
-require_snippet "$ROOT_DIR/compatibility.js" 'site-data/compatibility-games.json'
 require_snippet "$ROOT_DIR/compatibility.js" 'forgeplay:localechange'
-require_snippet "$ROOT_DIR/compatibility.js" 'const cacheBustedDataURL = (path) =>'
-require_snippet "$ROOT_DIR/compatibility.js" 'url.searchParams.set("refresh", Date.now().toString())'
-require_snippet "$ROOT_DIR/compatibility.js" 'cache: "no-store"'
-require_snippet "$ROOT_DIR/compatibility.js" 'const playableGameIds = new Set('
-require_snippet "$ROOT_DIR/compatibility.js" 'element.textContent = String(playableGameIds.size)'
+require_snippet "$ROOT_DIR/compatibility.js" 'const catalog = () => window.ForgePlayWebCatalog'
+require_snippet "$ROOT_DIR/compatibility.js" 'catalog().load()'
+require_snippet "$ROOT_DIR/compatibility.js" 'catalog().summarize('
+require_snippet "$ROOT_DIR/compatibility.js" 'catalog().sortReports('
+require_snippet "$ROOT_DIR/compatibility.js" 'catalog().describe('
+require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebCatalog.load()'
+require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebCatalog.summarize('
+require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebCatalog.sortReports('
+require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebCatalog.describe('
+require_snippet "$ROOT_DIR/site-assets/website-compatibility.js" 'site-data/compatibility-games.json'
+require_snippet "$ROOT_DIR/site-assets/website-compatibility.js" 'site-data/website-compatibility-reports.json'
+if ! grep -Eq 'cache[[:space:]]*:[[:space:]]*"no-store"' "$ROOT_DIR/site-assets/website-compatibility.js"; then
+  fail "website-compatibility.js must request uncached compatibility data"
+fi
+require_snippet "$ROOT_DIR/site-assets/website-compatibility.js" 'url.searchParams.set("refresh", Date.now().toString())'
+require_snippet "$ROOT_DIR/site-assets/website-compatibility.js" 'window.ForgePlayWebCatalog'
+require_snippet "$ROOT_DIR/site-assets/website-compatibility.js" 'window.ForgePlayCurrentRelease'
+require_snippet "$ROOT_DIR/site-assets/current-release.js" 'window.ForgePlayCurrentRelease = '
+require_snippet "$ROOT_DIR/compatibility.js" 'entry.dataset.tone = summary.tone'
+require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'details.dataset.tone = assessment.tone'
+for script in compatibility.js site-assets/home-experience.js site-assets/website-compatibility.js; do
+  if grep -Eq 'innerHTML|outerHTML|insertAdjacentHTML|document\.write' "$ROOT_DIR/$script"; then
+    fail "$script must render compatibility data without unsafe HTML insertion"
+  fi
+done
 require_snippet "$ROOT_DIR/compatibility.js" '"github-issue": "compat.verificationGitHubIssue"'
 require_snippet "$ROOT_DIR/compatibility.js" '"community-report": "compat.verificationCommunityReport"'
 require_snippet "$ROOT_DIR/compatibility.js" '"security-module": "compat.blockerSecurityModule"'
@@ -1481,15 +1628,11 @@ require_snippet "$ROOT_DIR/compatibility.js" 'const formatMacOSVersion = (profil
 require_snippet "$ROOT_DIR/compatibility.js" 'profile.macOSVersion.trim()'
 require_snippet "$ROOT_DIR/compatibility.js" 'report.reporter ? "@" + report.reporter : null'
 require_snippet "$ROOT_DIR/compatibility.js" 'const localizedNote = localizedText(report.notes, selectedLocale)'
-require_snippet "$ROOT_DIR/compatibility.js" 'const aggregateStatus = (records) => ('
-require_snippet "$ROOT_DIR/compatibility.js" 'records.some(({ report }) => report.status === status)'
-require_snippet "$ROOT_DIR/compatibility.js" 'report.status === "playable"'
 require_snippet "$ROOT_DIR/compatibility.js" 'report.forgePlayVersion'
 require_snippet "$ROOT_DIR/compatibility.js" 'development: "compat.versionDevelopment"'
 require_snippet "$ROOT_DIR/compatibility.js" 'message(versionMessageKey, "Development build")'
 require_snippet "$ROOT_DIR/compatibility.js" 'report.gameVersion'
 require_snippet "$ROOT_DIR/compatibility.js" 'const appendVersionBadges = (cell, records, resolveVersion) => {'
-require_snippet "$ROOT_DIR/compatibility.js" 'const headlineRecords = playableRecords.length'
 require_snippet "$ROOT_DIR/compatibility.js" '({ profile }) => formatMacOSVersion(profile)'
 require_snippet "$ROOT_DIR/compatibility.js" 'compatibility-blocked-button'
 require_snippet "$ROOT_DIR/compatibility.js" 'updatePanelState("blocked")'
@@ -1531,6 +1674,12 @@ require_snippet "$ROOT_DIR/site-data/README.md" '`docs/update-check-contract.md`
 require_snippet "$ROOT_DIR/site-data/README.md" 'Excel / spreadsheet import contract'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Compatibility-only update workflow'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Edit only `compatibility-games.json`'
+require_snippet "$ROOT_DIR/site-data/README.md" 'Website-only community reports'
+require_snippet "$ROOT_DIR/site-data/README.md" '`website-compatibility-reports.json`, not `compatibility-games.json`'
+require_snippet "$ROOT_DIR/site-data/README.md" 'Same-day website-only updates are allowed.'
+require_snippet "$ROOT_DIR/site-data/README.md" 'Promoting website-first reports to the app catalog'
+require_snippet "$ROOT_DIR/site-data/README.md" 'remove those same IDs from the website supplement'
+require_snippet "$ROOT_DIR/site-data/README.md" '`testProfiles` and `reports` arrays are allowed'
 require_snippet "$ROOT_DIR/site-data/README.md" '`reporter`'
 require_snippet "$ROOT_DIR/site-data/README.md" '`forgeplay_version`'
 require_snippet "$ROOT_DIR/site-data/README.md" 'use `development` for an unreleased development build'
@@ -1742,6 +1891,7 @@ for script in \
   locale-bootstrap.js \
   site.js \
   site-assets/current-release.js \
+  site-assets/website-compatibility.js \
   compatibility.js \
   announcements.js \
   developer-apps.js \
@@ -1750,6 +1900,68 @@ for script in \
   site-assets/why-story.js; do
   node --check "$ROOT_DIR/$script" >/dev/null || fail "$script has invalid JavaScript syntax"
 done
+
+node - "$ROOT_DIR" <<'JS'
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const vm = require("node:vm");
+const root = process.argv[2];
+const readJSON = (name) => JSON.parse(fs.readFileSync(path.join(root, "site-data", name), "utf8"));
+const base = readJSON("compatibility-games.json");
+const additions = readJSON("website-compatibility-reports.json");
+const beforeBase = JSON.stringify(base);
+const beforeAdditions = JSON.stringify(additions);
+const context = {window: {}};
+vm.runInNewContext(
+  fs.readFileSync(path.join(root, "site-assets/website-compatibility.js"), "utf8"),
+  context,
+  {filename: "website-compatibility.js", timeout: 1000}
+);
+const model = context.window.ForgePlayWebCatalog;
+for (const name of ["load", "merge", "summarize", "sortReports", "describe", "compareVersions"]) {
+  assert.equal(typeof model?.[name], "function", `website catalog must expose ${name}`);
+}
+const merged = model.merge(base, additions);
+assert.equal(merged.games.length, base.games.length, "website reports must not replace games");
+assert.equal(merged.reports.length, base.reports.length + additions.reports.length);
+assert.equal(merged.testProfiles.length, base.testProfiles.length + additions.testProfiles.length);
+assert.equal(JSON.stringify(base), beforeBase, "website merge must preserve the app catalog");
+assert.equal(JSON.stringify(additions), beforeAdditions, "website merge must preserve source reports");
+const empty = {...additions, testProfiles: [], reports: []};
+assert.equal(model.merge(base, empty).reports.length, base.reports.length);
+
+const report = (version, status) => ({forgePlayVersion: version, status, testedAt: "2099-01-01"});
+const check = (reports, currentVersion, expected) => {
+  const actual = model.summarize(reports, currentVersion);
+  for (const [field, value] of Object.entries(expected)) {
+    assert.equal(actual[field], value, `incorrect release-aware compatibility ${field}`);
+  }
+};
+check([report("1.0", "blocked")], "1.2", {status: "blocked", tone: "yellow", warningKey: "compat.retestNeeded"});
+check([report("1.2", "blocked")], "1.2", {status: "blocked", tone: "red", warningKey: null});
+check([report("1.0", "playable"), report("1.2", "blocked")], "1.2", {status: "blocked", tone: "red"});
+check([report("1.0", "blocked"), report("1.2", "playable")], "1.2", {status: "playable", tone: "green", warningKey: null});
+check([report("1.2.0", "blocked")], "1.2", {status: "blocked", tone: "red"});
+check([report(null, "blocked")], "1.2", {status: "blocked", tone: "yellow", warningKey: "compat.unversionedBlocked"});
+check([report("1.0", "blocked")], null, {status: "blocked", tone: "yellow", warningKey: "compat.currentVersionUnknown"});
+assert.equal(model.compareVersions("1.2.0", "1.2"), 0);
+
+const referenceBase = {
+  schemaVersion: 2,
+  updatedAt: "2099-01-01",
+  games: [{id: "fixture-game"}],
+  testProfiles: [{id: "fixture-profile"}],
+  reports: [{id: "fixture-report", gameId: "fixture-game", testProfileId: "fixture-profile", status: "playable"}]
+};
+const referenceSupplement = {schemaVersion: 1, updatedAt: "2099-01-01", testProfiles: [], reports: []};
+assert.throws(() => model.merge(referenceBase, {...referenceSupplement, testProfiles: [{id: "fixture-profile"}]}));
+assert.throws(() => model.merge(referenceBase, {...referenceSupplement, reports: [referenceBase.reports[0]]}));
+assert.throws(() => model.merge(referenceBase, {
+  ...referenceSupplement,
+  reports: [{id: "new-report", gameId: "missing-game", testProfileId: "fixture-profile", status: "playable"}]
+}));
+JS
 
 if [[ -e "$ROOT_DIR/.git" ]]; then
   require_regular_file "$ROOT_DIR/docs/update-check-contract.md"

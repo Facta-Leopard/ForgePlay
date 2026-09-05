@@ -20,6 +20,7 @@ PAGES=(
   locale-bootstrap.js
   site.js
   site-assets/current-release.js
+  site-assets/website-compatibility.js
   site-assets/why-story.js
   compatibility.js
   announcements.js
@@ -28,6 +29,8 @@ PAGES=(
   site-assets/site-shell.js
   site-data/compatibility-games.json
   site-data/compatibility.schema.json
+  site-data/website-compatibility-reports.json
+  site-data/website-compatibility-reports.schema.json
   site-data/current-release.json
   site-data/current-release.schema.json
   site-data/announcements.json

@@ -210,8 +210,9 @@
       loadFailed = true;
       renderFailure();
     }
+    return currentRelease;
   };
 
   document.addEventListener("forgeplay:localechange", render);
-  load();
+  window.ForgePlayCurrentRelease = {ready: load()};
 })();

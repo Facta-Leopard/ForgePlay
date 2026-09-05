@@ -1,0 +1,67 @@
+{
+  "$schema": "./website-compatibility-reports.schema.json",
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-05",
+  "testProfiles": [
+    {
+      "id": "apple-silicon-m3-max",
+      "platform": "Apple Silicon Mac",
+      "chip": "M3 Max",
+      "unifiedMemoryGB": null,
+      "macOSVersion": null
+    },
+    {
+      "id": "apple-silicon-m5-pro-24gb",
+      "platform": "Apple Silicon Mac",
+      "chip": "M5 Pro",
+      "unifiedMemoryGB": 24,
+      "macOSVersion": null
+    }
+  ],
+  "reports": [
+    {
+      "id": "overwatch-2-forgeplay-1-2-m3-max-community-macgallery-20260905",
+      "gameId": "overwatch",
+      "testProfileId": "apple-silicon-m3-max",
+      "forgePlayVersion": "1.2",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "맥갤러",
+      "testedAt": null,
+      "notes": {
+        "en": "Community report for ForgePlay 1.2: with Frame Generation (beta) turned off, Overwatch 2 reportedly ran smoothly on a full-configuration M3 Max for about two hours, averaging approximately 120 FPS with moderate heat and no frame drops. Turning Frame Generation on reportedly caused severe lag. For comparison, the reporter said CrossOver initially ran well but developed substantial heat and frame drops after more than 30 minutes.",
+        "ko": "ForgePlay 1.2 커뮤니티 제보: M3 Max 풀칩 환경에서 프레임 생성(베타)을 끄면 원활하게 플레이된다고 합니다. 약 2시간 동안 평균 약 120 FPS를 유지했고, 발열은 보통 수준이며 프레임 드롭은 없었다고 제보했습니다. 프레임 생성을 켰을 때는 심한 렉이 발생했다고 합니다. 비교한 CrossOver는 처음에는 괜찮았지만 30분이 지나면 발열과 프레임 드롭이 심해졌다고 합니다.",
+        "ja": "ForgePlay 1.2 のコミュニティ報告：M3 Max のフル構成チップを搭載した環境で、フレーム生成（ベータ）をオフにすると Overwatch 2 を快適にプレイできたとのことです。約2時間にわたり平均約120 FPS を維持し、発熱は中程度でフレーム落ちはなかったと報告されています。フレーム生成をオンにすると激しいラグが発生したとのことです。比較した CrossOver は最初は快適だったものの、30分を超えると発熱とフレーム落ちがひどくなったそうです。",
+        "zh-Hans": "ForgePlay 1.2 社区反馈：在满配版 M3 Max 芯片环境下，关闭帧生成（测试版）后，Overwatch 2 可流畅运行。反馈者称，游玩约两小时期间平均约为 120 FPS，发热适中且没有掉帧；开启帧生成后则出现严重卡顿。作为对比，反馈者表示 CrossOver 起初运行良好，但超过 30 分钟后发热和掉帧明显加重。",
+        "zh-Hant": "ForgePlay 1.2 社群回報：在滿配版 M3 Max 晶片環境下，關閉影格生成（測試版）後，Overwatch 2 可順暢執行。回報者表示，遊玩約兩小時期間平均約為 120 FPS，發熱適中且沒有掉幀；開啟影格生成後則出現嚴重延遲。作為比較，回報者表示 CrossOver 起初執行良好，但超過 30 分鐘後發熱和掉幀明顯加劇。",
+        "de": "Community-Bericht zu ForgePlay 1.2: Bei deaktivierter Frame Generation (Beta) lief Overwatch 2 laut Bericht auf einem M3 Max mit voll ausgebautem Chip etwa zwei Stunden lang flüssig, mit durchschnittlich rund 120 FPS, mäßiger Wärmeentwicklung und ohne FPS-Einbrüche. Mit aktivierter Frame Generation trat demnach starkes Ruckeln auf. Zum Vergleich berichtete die Person, dass CrossOver zunächst gut lief, nach mehr als 30 Minuten jedoch starke Wärmeentwicklung und FPS-Einbrüche auftraten.",
+        "es": "Informe de la comunidad sobre ForgePlay 1.2: con Frame Generation (beta) desactivado, Overwatch 2 funcionó con fluidez en un M3 Max con el chip en su configuración completa durante unas dos horas, con una media aproximada de 120 FPS, calentamiento moderado y sin caídas de FPS, según el usuario. Al activar Frame Generation, experimentó mucho lag. Como comparación, señaló que CrossOver funcionaba bien al principio, pero que el calentamiento y las caídas de FPS se volvían importantes después de más de 30 minutos.",
+        "fr": "Témoignage de la communauté pour ForgePlay 1.2 : avec Frame Generation (bêta) désactivé, Overwatch 2 aurait fonctionné de manière fluide sur un M3 Max doté de la puce en configuration complète pendant environ deux heures, à environ 120 FPS en moyenne, avec une chauffe modérée et sans chute de FPS. L’activation de Frame Generation aurait provoqué de fortes saccades. À titre de comparaison, la personne indique que CrossOver fonctionnait bien au début, mais présentait une chauffe importante et des chutes de FPS après plus de 30 minutes."
+      },
+      "blocker": null
+    },
+    {
+      "id": "satisfactory-forgeplay-1-2-m5-pro-24gb-community-macgallery-20260905",
+      "gameId": "satisfactory",
+      "testProfileId": "apple-silicon-m5-pro-24gb",
+      "forgePlayVersion": "1.2",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "맥갤러",
+      "testedAt": null,
+      "notes": {
+        "en": "Community report for ForgePlay 1.2: on an M5 Pro with 24 GB of unified memory, Satisfactory reportedly ran very smoothly with Frame Generation (beta) turned off. With Frame Generation on and graphics set to Medium, the reporter saw a maximum of 60 FPS. No FPS figure or graphics preset was provided for play with Frame Generation off.",
+        "ko": "ForgePlay 1.2 커뮤니티 제보: M5 Pro·통합 메모리 24GB 환경에서 프레임 생성(베타)을 끄면 Satisfactory가 매우 쾌적하게 실행된다고 합니다. 프레임 생성을 켜고 그래픽 옵션을 보통으로 설정했을 때는 최대 60 FPS였다고 제보했습니다. 프레임 생성을 끈 상태의 FPS와 그래픽 옵션은 별도로 기재되지 않았습니다.",
+        "ja": "ForgePlay 1.2 のコミュニティ報告：M5 Pro・ユニファイドメモリ24 GB の環境で、フレーム生成（ベータ）をオフにすると Satisfactory が非常に快適に動作したとのことです。フレーム生成をオンにし、グラフィック設定を「中」にした場合は最大60 FPS だったと報告されています。フレーム生成をオフにした状態の FPS とグラフィック設定は記載されていません。",
+        "zh-Hans": "ForgePlay 1.2 社区反馈：在 M5 Pro、24 GB 统一内存环境下，关闭帧生成（测试版）后，Satisfactory 运行非常流畅。反馈者表示，开启帧生成并将画质设为中等时，最高为 60 FPS。未提供关闭帧生成时的具体 FPS 或画质设置。",
+        "zh-Hant": "ForgePlay 1.2 社群回報：在 M5 Pro、24 GB 統一記憶體環境下，關閉影格生成（測試版）後，Satisfactory 執行非常順暢。回報者表示，開啟影格生成並將畫質設為中等時，最高為 60 FPS。未提供關閉影格生成時的具體 FPS 或畫質設定。",
+        "de": "Community-Bericht zu ForgePlay 1.2: Auf einem M5 Pro mit 24 GB gemeinsamem Arbeitsspeicher lief Satisfactory laut Bericht bei deaktivierter Frame Generation (Beta) sehr flüssig. Mit aktivierter Frame Generation und mittleren Grafikeinstellungen wurden höchstens 60 FPS erreicht. Für das Spielen mit deaktivierter Frame Generation wurden weder ein FPS-Wert noch die Grafikeinstellungen angegeben.",
+        "es": "Informe de la comunidad sobre ForgePlay 1.2: en un M5 Pro con 24 GB de memoria unificada, Satisfactory funcionó con mucha fluidez al desactivar Frame Generation (beta), según el usuario. Con Frame Generation activado y los gráficos en calidad media, alcanzó un máximo de 60 FPS. No se indicó la cifra de FPS ni la calidad gráfica utilizada con Frame Generation desactivado.",
+        "fr": "Témoignage de la communauté pour ForgePlay 1.2 : sur un M5 Pro avec 24 Go de mémoire unifiée, Satisfactory aurait fonctionné de manière très fluide avec Frame Generation (bêta) désactivé. Avec Frame Generation activé et les graphismes réglés sur Moyen, la personne a relevé un maximum de 60 FPS. Aucun chiffre de FPS ni réglage graphique n’a été précisé pour le jeu avec Frame Generation désactivé."
+      },
+      "blocker": null
+    }
+  ]
+}

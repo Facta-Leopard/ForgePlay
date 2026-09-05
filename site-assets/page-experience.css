@@ -222,8 +222,13 @@
 .fp-site .compatibility-ledger-head { color: var(--page-muted); font-size: .59rem; font-weight: 500; line-height: 1.5; letter-spacing: .025em; }
 .fp-site .compatibility-ledger-head span { padding: 16px 14px; border: 0; }
 .fp-site .compatibility-entry { background: var(--page-surface); border-color: var(--page-line); }
+.fp-site .compatibility-entry[data-tone="green"] { --compat-surface: #13291f; --compat-line: #376c4f; --compat-ink: #b8e6c9; }
+.fp-site .compatibility-entry[data-tone="yellow"] { --compat-surface: #2b2515; --compat-line: #82702f; --compat-ink: #f0d78c; }
+.fp-site .compatibility-entry[data-tone="red"] { --compat-surface: #321b1e; --compat-line: #974a55; --compat-ink: #ffb6bd; }
+.fp-site .compatibility-entry[data-tone] { background: var(--compat-surface); border: 1px solid var(--compat-line); border-inline-start-width: 3px; }
 .fp-site .compatibility-row { min-height: 108px; background: transparent; transition: background 160ms ease; }
 .fp-site .compatibility-entry:hover .compatibility-row { background: #1b1f25; transform: none; }
+.fp-site .compatibility-entry[data-tone]:hover .compatibility-row { background: rgb(255 255 255 / .035); }
 .fp-site .compatibility-row > div { padding: 22px 14px; border-color: var(--page-line); border-right: 0; }
 .fp-site .compatibility-game-cell { gap: 10px; }
 .fp-site .compatibility-index { color: var(--page-muted); font-size: .6rem; }
@@ -234,8 +239,12 @@
 .fp-site .compatibility-status[data-status="playable"] { color: #a4cbb4; }
 .fp-site .compatibility-status[data-status="blocked"] { color: var(--page-accent); }
 .fp-site .compatibility-status[data-status="testing"] { color: #dfc18a; }
+.fp-site .compatibility-entry[data-tone] > .compatibility-row .compatibility-status { color: var(--compat-ink); }
+.fp-site .compatibility-version-summary { display: block; margin-top: 8px; color: var(--compat-ink); font-size: .72rem; font-weight: 500; line-height: 1.6; overflow-wrap: anywhere; }
 .fp-site .compatibility-version { align-self: flex-start; padding: 3px 6px; color: var(--page-copy); background: #22262d; border-color: var(--page-line); font-size: .66rem; font-weight: 500; }
 .fp-site .compatibility-notes-cell { color: var(--page-copy); font-size: .78rem; line-height: 1.7; }
+.fp-site .compatibility-version-warning { margin: 0 0 10px; color: var(--compat-ink); font-weight: 600; }
+.fp-site .compatibility-report-note { margin: 0; }
 .fp-site .compatibility-record-count-cell strong { font-size: .76rem; font-weight: 500; }
 .fp-site .compatibility-expand-button { color: var(--page-muted); font-size: 20px; }
 .fp-site .compatibility-expand-button:hover,
@@ -251,6 +260,7 @@
 .fp-site .compatibility-record-cell::before { content: attr(data-label); margin-bottom: 4px; color: var(--page-muted); font-size: .62rem; font-weight: 500; line-height: 1.5; letter-spacing: .02em; }
 .fp-site .compatibility-record-cell strong { font-size: .8rem; font-weight: 500; overflow-wrap: anywhere; }
 .fp-site .compatibility-record-cell span { font-size: .76rem; }
+.fp-site .compatibility-record-cell .compatibility-web-report-label { color: var(--page-accent); font-size: .7rem; }
 .fp-site .compatibility-record-notes-cell { grid-column: 1 / -1; color: var(--page-copy); font-size: .82rem; line-height: 1.7; }
 .fp-site .compatibility-report { grid-template-columns: 1.4fr 1fr; gap: 40px; padding-bottom: 90px; }
 .fp-site .compatibility-report-copy { padding: 32px; color: var(--page-ink); background: var(--page-surface); border: 1px solid var(--page-line); border-radius: 12px; }

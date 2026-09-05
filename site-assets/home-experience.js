@@ -50,7 +50,6 @@
   let selectedStatus = "all";
   let expanded = false;
   let openGameId = null;
-  const statusOrder = ["playable", "testing", "blocked", "unknown"];
   const statusKey = {
     playable: "refresh.playable", blocked: "refresh.blocked",
     testing: "compat.statusTesting", unknown: "compat.statusUnknown"
@@ -69,7 +68,7 @@
     return element;
   };
   const gameRecords = (game) => catalog.reports.filter((report) => report.gameId === game.id);
-  const gameStatus = (records) => statusOrder.find((status) => records.some((record) => record.status === status)) || "unknown";
+  const gameSummary = (records) => window.ForgePlayWebCatalog.summarize(records, catalog.currentRelease?.marketingVersion);
 
   const renderRecord = (parent, report) => {
     const record = document.createElement("div");
@@ -87,6 +86,7 @@
     appendText(record, "p", "", localized(report.notes) || message("refresh.noReportNotes"));
     const attribution = [
       message(sourceKey[report.source] || "compat.verificationInitial"),
+      catalog.websiteReportIds.includes(report.id) ? message("compat.webReportsLabel") : "",
       report.reporter ? "@" + report.reporter : "",
       report.testedAt || ""
     ].filter(Boolean).join(" · ");
@@ -104,17 +104,20 @@
     const query = search.value.trim().normalize("NFKC").toLocaleLowerCase();
     const games = catalog.games.map((game) => {
       const records = gameRecords(game);
-      return {game, records, status:gameStatus(records)};
+      const summary = gameSummary(records);
+      return {game, records, status:summary.status, summary};
     }).filter(({game, status}) => (
       (selectedStatus === "all" || status === selectedStatus) &&
       (!query || Object.values(game.titles).some((title) => title.normalize("NFKC").toLocaleLowerCase().includes(query)))
     ));
     const visible = expanded || query ? games : games.slice(0, 6);
     const fragment = document.createDocumentFragment();
-    visible.forEach(({game, records, status}, index) => {
+    visible.forEach(({game, records, status, summary:assessment}, index) => {
+      const description = window.ForgePlayWebCatalog.describe(assessment, message);
       const details = document.createElement("details");
       details.className = "fp-game";
       details.dataset.status = status;
+      details.dataset.tone = assessment.tone;
       details.dataset.gameId = game.id;
       details.open = openGameId === game.id;
       const summary = document.createElement("summary");
@@ -123,18 +126,20 @@
       const title = locale() === "ko" ? game.titles.ko : game.titles.en;
       appendText(copy, "h3", "", title);
       if (locale() === "ko" && title !== game.titles.en) appendText(copy, "span", "fp-game-official", game.titles.en);
+      appendText(copy, "p", "fp-game-tested-version", description.versionText);
       const meta = document.createElement("div");
       meta.className = "fp-game-meta";
-      appendText(meta, "span", "fp-game-status", "● " + message(statusKey[status]));
+      appendText(meta, "span", "fp-game-status", "● " + description.statusText);
       appendText(meta, "span", "", format("refresh.records", records.length));
       copy.append(meta);
+      if (description.warningText) appendText(copy, "p", "fp-game-version-warning", description.warningText);
       summary.append(copy);
       appendText(summary, "span", "fp-game-arrow", "↗").setAttribute("aria-hidden", "true");
       details.append(summary);
       const reports = document.createElement("div");
       reports.className = "fp-game-records";
       reports.setAttribute("aria-label", message("refresh.reportDetails"));
-      records.forEach((report) => renderRecord(reports, report));
+      window.ForgePlayWebCatalog.sortReports(records).forEach((report) => renderRecord(reports, report));
       details.append(reports);
       details.addEventListener("toggle", () => {
         if (details.open) {
@@ -173,13 +178,10 @@
 
   const load = async () => {
     try {
-      const url = new URL("site-data/compatibility-games.json", document.baseURI);
-      url.searchParams.set("refresh", Date.now().toString());
-      const response = await fetch(url, {cache:"no-store", headers:{Accept:"application/json"}});
-      if (!response.ok) throw new Error("HTTP " + response.status);
-      const data = await response.json();
-      if (data.schemaVersion !== 2 || !Array.isArray(data.games) || !Array.isArray(data.reports) || !Array.isArray(data.testProfiles)) throw new Error("Invalid compatibility catalog");
-      catalog = data;
+      catalog = await window.ForgePlayWebCatalog.load();
+      document.querySelectorAll("[data-website-reports-scope]").forEach((element) => {
+        element.hidden = catalog.websiteReportIds.length === 0;
+      });
     } catch {
       loadError = true;
     }

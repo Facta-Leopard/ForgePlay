@@ -78,6 +78,18 @@
 .fp-game { position:relative; min-width:0; border:1px solid var(--fp-line); border-radius:11px; background:#15181d; transition:border-color .18s,background .18s; }
 .fp-game:hover { border-color:#525964; background:#191d23; }
 .fp-game[open] { grid-column:1 / -1; border-color:#62616a; }
+.fp-game[data-tone="green"] { background:#14271e; border-color:#3d7655; }
+.fp-game[data-tone="yellow"] { background:#2b2617; border-color:#8b7533; }
+.fp-game[data-tone="red"] { background:#2d191c; border-color:#994d54; }
+.fp-game[data-tone="green"]:hover { background:#193124; border-color:#67a880; }
+.fp-game[data-tone="yellow"]:hover { background:#352e19; border-color:#b59b4f; }
+.fp-game[data-tone="red"]:hover { background:#391e22; border-color:#c26a72; }
+.fp-game[data-tone="green"] .fp-game-status { color:#a7e0b8; }
+.fp-game[data-tone="yellow"] .fp-game-status { color:#f0d47f; }
+.fp-game[data-tone="red"] .fp-game-status { color:#ffa6ad; }
+.fp-game-tested-version { margin-top:9px!important; color:#d6dfe0; font-size:11px; line-height:1.65; }
+.fp-game-version-warning { margin-top:12px!important; color:#e6d59d; font-size:12px; line-height:1.75; }
+.fp-game-meta { overflow-wrap:anywhere; }
 .fp-game summary { list-style:none; cursor:pointer; display:grid; grid-template-columns:36px minmax(0,1fr) 18px; gap:16px; padding:22px 20px; align-items:center; min-height:120px; }
 .fp-game summary::-webkit-details-marker { display:none; }
 .fp-game-number { font-size:12px; font-family:ui-monospace,monospace; color:#727b87; align-self:start; padding-top:2px; }
@@ -85,8 +97,6 @@
 .fp-game-official { display:block; color:#929ba8; font-size:11px; margin-top:4px; }
 .fp-game-meta { display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:10px; color:#9ea6b3; margin-top:14px; }
 .fp-game-status { color:var(--fp-green); }
-.fp-game[data-status=blocked] .fp-game-status { color:#e49e91; }
-.fp-game[data-status=testing] .fp-game-status,.fp-game[data-status=unknown] .fp-game-status { color:#e2c58f; }
 .fp-game-arrow { color:#959fae; transition:transform .16s; }
 .fp-game[open] .fp-game-arrow { transform:rotate(90deg); }
 .fp-game-records { border-top:1px solid var(--fp-line); padding:0 28px 15px; }

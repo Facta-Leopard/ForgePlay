@@ -1,8 +1,10 @@
 # ForgePlay compatibility data
 
-`compatibility-games.json` is the public compatibility database used by the
-website. Games, test devices, and test reports are separate records so one game
-can accumulate results from multiple Macs without changing the page structure.
+`compatibility-games.json` is the public compatibility database shared by the
+app and website. Games, test devices, and test reports are separate records so
+one game can accumulate results from multiple Macs without changing the page
+structure. Website-only community reports live separately in
+`website-compatibility-reports.json`; they do not change the app's database.
 
 ## Current stable release manifest
 
@@ -24,10 +26,11 @@ boundary, and release workflow are documented in
 
 ## Compatibility-only update workflow
 
-Compatibility content has one source of truth:
-`site-data/compatibility-games.json`.
+The app-shared compatibility catalog has one source of truth:
+`site-data/compatibility-games.json`. Updates to that catalog affect both the
+app and website and must follow its immutable publication contract below.
 
-For future compatibility updates:
+For compatibility updates that do not promote website-first reports:
 
 1. Edit only `compatibility-games.json`, including its `updatedAt` value.
 2. Commit and push that file to `main`.
@@ -38,13 +41,66 @@ website requests the compatibility database independently of asset versions,
 and both the homepage count and compatibility rows are derived from the JSON.
 New data appears the next time the page is loaded or refreshed.
 
-The ForgePlay app also consumes this public JSON through an explicit refresh.
+The ForgePlay app consumes only this base JSON through an explicit refresh.
 Its cache, rollback, same-date conflict, failure-preservation, and coordinated
 schema rules are documented in
 [`docs/compatibility-catalog-consumer-contract.md`](https://github.com/Facta-Leopard/ForgePlay/blob/main/docs/compatibility-catalog-consumer-contract.md).
 Under the current contract, a published `updatedAt` identifies one immutable
 payload; batch reports into a single publication when they arrive on the same
 date.
+
+## Website-only community reports
+
+For a report requested only for the website, or for website-first publication
+before a later app catalog update, edit
+`website-compatibility-reports.json`, not `compatibility-games.json`. Keep the
+app-shared base file and its `updatedAt` unchanged. The website supplement has
+its own schema, `website-compatibility-reports.schema.json`, and carries only
+additional test profiles and attributed community reports; game identifiers
+must already exist in the base catalog.
+
+`site-assets/website-compatibility.js` loads both files and merges them only in
+memory for the two website consumers. Profile and report IDs must be unique
+across the base and supplement, all references must resolve, and each new
+report must contain notes in all eight website languages. Preserve the reported
+ForgePlay version and distinguish observed results from untested releases.
+The static-site verifier validates the unchanged base first, then validates
+the merged display data using the same report and profile rules.
+
+Same-day website-only updates are allowed. The supplement's `updatedAt` is a
+display date, not the app's immutable cache revision, and website requests do
+not use the app's same-date conflict policy. Data-only supplement changes do
+not require HTML or JavaScript cache-version bumps. They appear after refresh
+once the normal GitHub Pages validation and deployment complete.
+
+### Promoting website-first reports to the app catalog
+
+Promotion is a separate, user-requested publication, not a scheduled or
+automatic action. Wait for a valid publication date later than the app-shared
+catalog's existing `updatedAt`; do not rewrite today's immutable payload or
+invent a future date to bypass the app's same-date conflict rule.
+
+In the same commit and deployment, move the selected report records and any
+required new test profiles into `compatibility-games.json`, advance the base
+catalog's `updatedAt`, and remove those same IDs from the website supplement.
+Preserve report IDs, attribution, tested dates, ForgePlay versions, and notes.
+Profiles moved into the base must also be removed from the supplement; any
+remaining website reports can reference the profiles now stored in the base.
+This keeps each report and profile present exactly once in the merged website
+view while making the promoted reports available to the app's manual refresh.
+
+Keep the supplement and its schema published after promotion. Empty
+`testProfiles` and `reports` arrays are allowed, so the website loader and
+validation contract do not need to change when all pending reports have been
+promoted. Validate both the base and merged website view before publishing.
+
+The website uses `current-release.json` to classify release-aware cards:
+playable reports are green and show the tested ForgePlay versions; blocked
+reports for the current release are red; blocked results known only from an
+older release are yellow and explicitly remain unverified on the current
+release. Unknown versions or a missing current release must not be presented
+as confirmed current-release failures. These display classifications do not
+rewrite historical report statuses or imply that a later release fixes a game.
 
 ## Excel / spreadsheet import contract
 
@@ -94,7 +150,8 @@ line-oriented markers for structured notices: `## ` for a section heading,
 and an exact `---` item for a divider. No raw HTML or Markdown is rendered.
 
 Routine compatibility database additions and result changes must not create
-project notices. They belong only in `compatibility-games.json` and appear on
+project notices. They belong in the app-shared `compatibility-games.json` or,
+for website-only reports, `website-compatibility-reports.json`, and appear on
 the compatibility page and its live homepage count. This keeps the project
 timeline focused on releases and substantive project updates.
 

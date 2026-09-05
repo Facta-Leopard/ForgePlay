@@ -43,6 +43,7 @@
 .fp-site .fp-text-link:hover { color:var(--fp-accent); text-decoration:underline; text-underline-offset:5px; }
 .fp-site .fp-footer a:hover { color:var(--fp-accent); }
 .fp-site .fp-footer p { margin-top:24px; }
+.fp-site .fp-catalog-scope { margin:18px 0 0; color:#a6b3c1; font-size:12px; line-height:1.75; }
 @media(max-width:1050px) {
   .fp-nav { gap:18px; }
   .fp-site .fp-links { gap:0; }

@@ -1,13 +1,6 @@
 (() => {
   "use strict";
 
-  const cacheBustedDataURL = (path) => {
-    const url = new URL(path, document.baseURI);
-    url.searchParams.set("refresh", Date.now().toString());
-    return url.href;
-  };
-
-  const databaseURL = cacheBustedDataURL("site-data/compatibility-games.json");
   const statusMessageKeys = {
     playable: "compat.statusPlayable",
     testing: "compat.statusTesting",
@@ -40,6 +33,8 @@
   let database = null;
 
   const site = () => window.ForgePlaySite;
+  const catalog = () => window.ForgePlayWebCatalog;
+  const currentVersion = () => database?.currentRelease?.marketingVersion || null;
   const locale = () => site()?.getLocale() || document.documentElement.lang || "en";
   const message = (key, fallback = "") => site()?.message(key) || fallback;
 
@@ -117,25 +112,11 @@
         ));
   };
 
-  const aggregateStatus = (records) => (
-    statusPriority.find((status) => (
-      records.some(({ report }) => report.status === status)
-    )) || "unknown"
-  );
-
-  const sortRecords = (records) => (
-    [...records].sort((left, right) => {
-      const statusDifference = (
-        statusPriority.indexOf(left.report.status)
-        - statusPriority.indexOf(right.report.status)
-      );
-      if (statusDifference !== 0) return statusDifference;
-      const leftDate = left.report.testedAt || "";
-      const rightDate = right.report.testedAt || "";
-      if (leftDate !== rightDate) return rightDate.localeCompare(leftDate);
-      return left.databaseIndex - right.databaseIndex;
-    })
-  );
+  const sortRecords = (records) => {
+    const recordsByReport = new Map(records.map((record) => [record.report, record]));
+    return catalog().sortReports(records.map(({ report }) => report))
+      .map((report) => recordsByReport.get(report));
+  };
 
   const reportVersion = (report) => {
     const version = typeof report.forgePlayVersion === "string"
@@ -247,6 +228,14 @@
     );
     const details = verificationDetails(report, selectedLocale);
     if (details) appendTextElement(verificationCell, "span", "", details);
+    if (database.websiteReportIds.includes(report.id)) {
+      appendTextElement(
+        verificationCell,
+        "span",
+        "compatibility-web-report-label",
+        message("compat.webReportsLabel", "Website community report")
+      );
+    }
 
     const notesCell = makeRecordCell(
       "compatibility-record-notes-cell",
@@ -268,13 +257,16 @@
 
   const updateSummary = () => {
     if (!database) return;
-    const playableGameIds = new Set(
-      database.reports
-        .filter((report) => report.status === "playable")
-        .map((report) => report.gameId)
-    );
+    const reportsByGame = new Map();
+    database.reports.forEach((report) => {
+      if (!reportsByGame.has(report.gameId)) reportsByGame.set(report.gameId, []);
+      reportsByGame.get(report.gameId).push(report);
+    });
+    const playableCount = [...reportsByGame.values()].filter((reports) => (
+      catalog().summarize(reports, currentVersion()).status === "playable"
+    )).length;
     document.querySelectorAll("[data-compatibility-count]").forEach((element) => {
-      element.textContent = String(playableGameIds.size);
+      element.textContent = String(playableCount);
     });
 
     const firstProfile = database.testProfiles[0];
@@ -311,11 +303,16 @@
     const groups = database.games
       .map((game, gameIndex) => {
         const records = recordsByGame.get(game.id) || [];
+        const summary = catalog().summarize(
+          records.map(({ report }) => report),
+          currentVersion()
+        );
         return {
           game,
           gameIndex,
           records,
-          status: aggregateStatus(records)
+          summary,
+          status: summary.status
         };
       })
       .filter(({ game, records, status }) => {
@@ -335,21 +332,22 @@
       });
 
     const fragment = document.createDocumentFragment();
-    groups.forEach(({ game, records, status }, index) => {
+    groups.forEach(({ game, records, status, summary }, index) => {
       const sortedRecords = sortRecords(records);
-      const playableRecords = sortedRecords.filter(({ report }) => (
-        report.status === "playable"
-      ));
       const blockedRecords = sortedRecords.filter(({ report }) => (
         report.status === "blocked"
       ));
-      const headlineRecords = playableRecords.length
-        ? playableRecords
-        : sortedRecords;
+      const headlineReports = new Set(summary.headlineReports);
+      const headlineRecords = sortedRecords.filter(({ report }) => (
+        headlineReports.has(report)
+      ));
+      const description = catalog().describe(summary, message);
 
       const entry = document.createElement("article");
       entry.className = "compatibility-entry";
       entry.dataset.status = status;
+      entry.dataset.tone = summary.tone;
+      entry.dataset.gameId = game.id;
 
       const row = document.createElement("div");
       row.className = "compatibility-row";
@@ -375,6 +373,12 @@
           game.titles.en
         );
       }
+      appendTextElement(
+        titleWrap,
+        "span",
+        "compatibility-version-summary",
+        description.versionText
+      );
       gameCell.append(titleWrap);
 
       const statusCell = makeCell(
@@ -385,7 +389,7 @@
         statusCell,
         "span",
         "compatibility-status",
-        message(statusMessageKeys[status], status)
+        description.statusText
       );
       statusBadge.dataset.status = status;
 
@@ -416,7 +420,7 @@
       );
       appendVersionBadges(
         versionCell,
-        headlineRecords,
+        sortedRecords,
         ({ report }) => reportVersion(report)
       );
 
@@ -447,12 +451,25 @@
         message("compat.allRecords", "All records")
       );
 
-      const summaryRecord = sortedRecords[0];
+      const summaryRecord = headlineRecords[0] || sortedRecords[0];
       const notesCell = makeCell(
         "compatibility-notes-cell",
         message("compat.columnNotes", "Notes")
       );
-      notesCell.textContent = reportNote(summaryRecord.report, selectedLocale);
+      if (description.warningText) {
+        appendTextElement(
+          notesCell,
+          "p",
+          "compatibility-version-warning",
+          description.warningText
+        );
+      }
+      appendTextElement(
+        notesCell,
+        "p",
+        "compatibility-report-note",
+        reportNote(summaryRecord.report, selectedLocale)
+      );
 
       const expandCell = makeCell("compatibility-expand-cell", "");
       const expandButton = document.createElement("button");
@@ -586,12 +603,10 @@
 
   const load = async () => {
     try {
-      const response = await fetch(databaseURL, {
-        cache: "no-store",
-        headers: { Accept: "application/json" }
+      database = await catalog().load();
+      document.querySelectorAll("[data-website-reports-scope]").forEach((element) => {
+        element.hidden = database.websiteReportIds.length === 0;
       });
-      if (!response.ok) throw new Error("HTTP " + response.status);
-      database = await response.json();
       render();
     } catch {
       if (list) {
