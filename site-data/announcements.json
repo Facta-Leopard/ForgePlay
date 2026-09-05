@@ -4,10 +4,79 @@
   "updatedAt": "2026-09-05",
   "announcements": [
     {
+      "id": "forgeplay-1-2-update-notice",
+      "type": "project",
+      "publishedAt": "2026-09-05",
+      "featured": true,
+      "titles": {
+        "en": "Notice about the 1.2 update",
+        "ko": "1.2 업데이트 관련 안내",
+        "de": "Hinweise zum Update 1.2",
+        "es": "Información sobre la actualización 1.2",
+        "fr": "Informations concernant la mise à jour 1.2",
+        "ja": "1.2アップデートに関するお知らせ",
+        "zh-Hans": "1.2 更新相关说明",
+        "zh-Hant": "1.2 更新相關說明"
+      },
+      "summaries": {
+        "en": "Frame Generation (beta) may reduce performance in some games. If gameplay is not smooth, try running the game with the feature turned off.",
+        "ko": "프레임 생성(베타) 사용 시 일부 게임에서 성능이 저하될 수 있습니다. 원활하지 않으면 기능을 끄고 실행해 주세요.",
+        "de": "Die Frame-Generierung (Beta) kann in einigen Spielen die Leistung beeinträchtigen. Falls das Spiel nicht flüssig läuft, deaktivieren Sie die Funktion und starten Sie es erneut.",
+        "es": "La generación de fotogramas (beta) puede reducir el rendimiento en algunos juegos. Si el juego no funciona con fluidez, desactiva la función y vuelve a ejecutarlo.",
+        "fr": "La génération d’images (bêta) peut réduire les performances dans certains jeux. Si le jeu manque de fluidité, désactivez cette fonction et relancez-le.",
+        "ja": "フレーム生成（ベータ）を使用すると、一部のゲームでパフォーマンスが低下する場合があります。動作がスムーズでない場合は、この機能をオフにして再度起動してください。",
+        "zh-Hans": "使用帧生成（测试版）可能导致部分游戏性能下降。如果游戏运行不流畅，请关闭此功能后重新运行。",
+        "zh-Hant": "使用影格生成（測試版）可能導致部分遊戲效能下降。如果遊戲運行不順暢，請關閉此功能後重新執行。"
+      },
+      "paragraphs": {
+        "en": [
+          "In some games, frame generation may instead create a bottleneck, causing severe lag or a drop in frame rate.",
+          "If gameplay is not smooth or performance drops after enabling the feature, we recommend turning frame generation off and launching the game again. Change this setting before starting Steam.",
+          "Frame generation is currently a beta feature, and its effectiveness may vary depending on the game, device, and settings. Use it selectively to suit your setup."
+        ],
+        "ko": [
+          "일부 게임에서는 프레임 생성 기능이 오히려 병목을 일으켜 심한 렉이나 프레임 저하가 발생할 수 있습니다.",
+          "게임이 원활하지 않거나 기능을 켠 뒤 성능이 떨어진다면, 프레임 생성을 끄고 다시 실행하는 것을 권장드립니다. 설정은 Steam 실행 전에 변경해 주세요.",
+          "프레임 생성은 현재 베타 기능이며, 게임·기기·설정에 따라 효과가 달라질 수 있습니다. 사용 환경에 맞춰 선택적으로 이용해 주세요."
+        ],
+        "de": [
+          "In einigen Spielen kann die Frame-Generierung stattdessen einen Leistungsengpass verursachen und zu starken Rucklern oder einer niedrigeren Bildrate führen.",
+          "Wenn das Spiel nicht flüssig läuft oder die Leistung nach dem Aktivieren der Funktion sinkt, empfehlen wir, die Frame-Generierung zu deaktivieren und das Spiel erneut zu starten. Ändern Sie diese Einstellung, bevor Sie Steam starten.",
+          "Die Frame-Generierung ist derzeit eine Beta-Funktion. Ihre Wirkung kann je nach Spiel, Gerät und Einstellungen unterschiedlich ausfallen. Nutzen Sie die Funktion gezielt, wenn sie für Ihre Spielumgebung geeignet ist."
+        ],
+        "es": [
+          "En algunos juegos, la generación de fotogramas puede provocar un cuello de botella y causar tirones intensos o una reducción de la tasa de fotogramas.",
+          "Si el juego no funciona con fluidez o el rendimiento empeora al activar la función, recomendamos desactivar la generación de fotogramas y volver a ejecutar el juego. Cambia este ajuste antes de iniciar Steam.",
+          "La generación de fotogramas es una función en fase beta y sus resultados pueden variar según el juego, el dispositivo y los ajustes. Utilízala de forma selectiva según tu entorno de juego."
+        ],
+        "fr": [
+          "Dans certains jeux, la génération d’images peut au contraire créer un goulot d’étranglement et provoquer de fortes saccades ou une baisse de la fréquence d’images.",
+          "Si le jeu manque de fluidité ou si les performances diminuent après l’activation de cette fonction, nous recommandons de désactiver la génération d’images et de relancer le jeu. Modifiez ce réglage avant de lancer Steam.",
+          "La génération d’images est actuellement une fonction bêta. Ses effets peuvent varier selon le jeu, l’appareil et les réglages. Utilisez-la de manière sélective en fonction de votre environnement de jeu."
+        ],
+        "ja": [
+          "一部のゲームでは、フレーム生成機能がかえってボトルネックとなり、激しいカクつきやフレームレートの低下が発生する場合があります。",
+          "ゲームがスムーズに動作しない場合や、機能をオンにした後にパフォーマンスが低下した場合は、フレーム生成をオフにしてゲームを再度起動することをおすすめします。設定はSteamを起動する前に変更してください。",
+          "フレーム生成は現在ベータ機能であり、ゲーム・デバイス・設定によって効果が異なる場合があります。ご利用の環境に合わせて、必要に応じて使用してください。"
+        ],
+        "zh-Hans": [
+          "在部分游戏中，帧生成功能反而可能造成性能瓶颈，导致严重卡顿或帧率下降。",
+          "如果游戏运行不流畅，或开启此功能后性能下降，建议关闭帧生成后重新运行游戏。请在启动 Steam 之前更改此设置。",
+          "帧生成目前仍处于测试阶段，其效果可能因游戏、设备和设置而异。请根据实际使用环境选择是否启用。"
+        ],
+        "zh-Hant": [
+          "在部分遊戲中，影格生成功能反而可能造成效能瓶頸，導致嚴重卡頓或影格率下降。",
+          "如果遊戲運行不順暢，或開啟此功能後效能下降，建議關閉影格生成後重新執行遊戲。請在啟動 Steam 之前變更此設定。",
+          "影格生成目前仍處於測試階段，其效果可能因遊戲、裝置和設定而異。請依實際使用環境選擇是否啟用。"
+        ]
+      },
+      "href": "updates.html#update-forgeplay-1-2-update-notice"
+    },
+    {
       "id": "forgeplay-1-2-released",
       "type": "release",
       "publishedAt": "2026-09-05",
-      "featured": true,
+      "featured": false,
       "titles": {
         "en": "ForgePlay 1.2 update released!",
         "ko": "ForgePlay 1.2 업데이트 출시!",
