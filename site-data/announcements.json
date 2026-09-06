@@ -1,13 +1,90 @@
 {
   "$schema": "./announcements.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-09-05",
+  "updatedAt": "2026-09-07",
   "announcements": [
+    {
+      "id": "forgeplay-1-3-preparing",
+      "type": "project",
+      "publishedAt": "2026-09-07",
+      "featured": true,
+      "titles": {
+        "en": "Preparing the 1.3 update",
+        "ko": "1.3 업데이트 준비 중",
+        "de": "Update 1.3 in Vorbereitung",
+        "es": "Actualización 1.3 en preparación",
+        "fr": "Mise à jour 1.3 en préparation",
+        "ja": "1.3アップデートを準備中",
+        "zh-Hans": "1.3 更新准备中",
+        "zh-Hant": "1.3 更新準備中"
+      },
+      "summaries": {
+        "en": "Planned improvements include optimizing Wine, existing graphics backends and frame generation, as well as improving compatibility with 32-bit games and controllers.",
+        "ko": "Wine·기존 그래픽 백엔드와 프레임 생성 기능을 최적화하고, 32비트 게임 및 컨트롤러 호환성을 개선할 예정입니다.",
+        "de": "Wir planen, Wine, bestehende Grafik-Backends und die Frame-Generation zu optimieren sowie die Kompatibilität für 32-Bit-Spiele und Controller zu verbessern.",
+        "es": "Planeamos optimizar Wine, los backends gráficos existentes y la generación de fotogramas, además de mejorar la compatibilidad con juegos de 32 bits y mandos.",
+        "fr": "Nous prévoyons d’optimiser Wine, les backends graphiques existants et la génération d’images, ainsi que d’améliorer la compatibilité des jeux 32 bits et des manettes.",
+        "ja": "Wine、既存のグラフィックスバックエンド、フレーム生成機能を最適化し、32ビットゲームおよびコントローラーの互換性を改善する予定です。",
+        "zh-Hans": "我们计划优化 Wine、现有图形后端和帧生成功能，并改善 32 位游戏及控制器的兼容性。",
+        "zh-Hant": "我們計劃最佳化 Wine、現有圖形後端與影格生成功能，並改善 32 位元遊戲及控制器的相容性。"
+      },
+      "paragraphs": {
+        "en": [
+          "We are preparing the ForgePlay 1.3 update.",
+          "The main planned improvements are:",
+          "- Wine and existing graphics backend optimization\n  - Optimize the runtime environment, including DXMT, DXVK and D9VK, and improve compatibility when running 32-bit games.\n- Frame generation optimization\n  - Reduce load and bottlenecks in some games to make the feature smoother to use.\n- Gamepad (controller) compatibility improvements\n  - Improve detection and input compatibility across different controller setups.",
+          "We will share the detailed changes when the update is released."
+        ],
+        "ko": [
+          "ForgePlay 1.3 업데이트를 준비하고 있습니다.",
+          "주요 개선 예정 사항은 다음과 같습니다.",
+          "- Wine 및 기존 그래픽 백엔드 최적화\n  - DXMT·DXVK·D9VK를 포함한 실행 환경을 최적화하고, 32비트 게임의 실행 호환성도 개선합니다.\n- 프레임 생성 기능 최적화\n  - 일부 게임에서 발생하는 부하와 병목을 줄이고, 보다 원활하게 사용할 수 있도록 개선합니다.\n- 게임패드(컨트롤러) 호환성 강화\n  - 다양한 컨트롤러 환경에서의 인식과 입력 호환성을 개선합니다.",
+          "세부 변경 사항은 업데이트 공개 시 함께 안내드리겠습니다."
+        ],
+        "de": [
+          "Wir bereiten das ForgePlay-Update 1.3 vor.",
+          "Die wichtigsten geplanten Verbesserungen sind:",
+          "- Optimierung von Wine und bestehenden Grafik-Backends\n  - Wir optimieren Laufzeitumgebungen einschließlich DXMT, DXVK und D9VK und verbessern zudem die Ausführungskompatibilität von 32-Bit-Spielen.\n- Optimierung der Frame-Generation\n  - Wir verringern die Belastung und Engpässe, die in einigen Spielen auftreten, um eine flüssigere Nutzung zu ermöglichen.\n- Verbesserte Kompatibilität mit Gamepads (Controllern)\n  - Wir verbessern die Erkennung und Eingabekompatibilität in verschiedenen Controller-Umgebungen.",
+          "Weitere Details zu den Änderungen geben wir mit der Veröffentlichung des Updates bekannt."
+        ],
+        "es": [
+          "Estamos preparando la actualización 1.3 de ForgePlay.",
+          "Las principales mejoras previstas son las siguientes:",
+          "- Optimización de Wine y de los backends gráficos existentes\n  - Optimizaremos los entornos de ejecución, incluidos DXMT, DXVK y D9VK, y también mejoraremos la compatibilidad de ejecución de los juegos de 32 bits.\n- Optimización de la generación de fotogramas\n  - Reduciremos la carga y los cuellos de botella que se producen en algunos juegos para ofrecer una experiencia más fluida.\n- Mejora de la compatibilidad con gamepads (mandos)\n  - Mejoraremos la detección y la compatibilidad de entrada en diversas configuraciones de mandos.",
+          "Los detalles de los cambios se compartirán junto con la publicación de la actualización."
+        ],
+        "fr": [
+          "Nous préparons la mise à jour 1.3 de ForgePlay.",
+          "Les principales améliorations prévues sont les suivantes :",
+          "- Optimisation de Wine et des backends graphiques existants\n  - Nous optimiserons les environnements d’exécution, y compris DXMT, DXVK et D9VK, et améliorerons également la compatibilité d’exécution des jeux 32 bits.\n- Optimisation de la génération d’images\n  - Nous réduirons la charge et les goulots d’étranglement rencontrés dans certains jeux afin de rendre l’utilisation plus fluide.\n- Amélioration de la compatibilité des manettes (contrôleurs)\n  - Nous améliorerons la détection et la compatibilité des entrées dans divers environnements de contrôleurs.",
+          "Les détails des changements seront communiqués lors de la publication de la mise à jour."
+        ],
+        "ja": [
+          "ForgePlay 1.3アップデートを準備しています。",
+          "主な改善予定項目は以下のとおりです。",
+          "- Wineおよび既存のグラフィックスバックエンドの最適化\n  - DXMT、DXVK、D9VKを含む実行環境を最適化し、32ビットゲームの実行互換性も改善します。\n- フレーム生成機能の最適化\n  - 一部のゲームで発生する負荷やボトルネックを軽減し、よりスムーズに利用できるよう改善します。\n- ゲームパッド（コントローラー）の互換性向上\n  - さまざまなコントローラー環境での認識および入力互換性を改善します。",
+          "詳細な変更内容は、アップデート公開時にあわせてご案内します。"
+        ],
+        "zh-Hans": [
+          "我们正在准备 ForgePlay 1.3 更新。",
+          "计划进行的主要改进如下：",
+          "- 优化 Wine 和现有图形后端\n  - 优化包括 DXMT、DXVK 和 D9VK 在内的运行环境，并改善 32 位游戏的运行兼容性。\n- 优化帧生成功能\n  - 减少部分游戏中出现的负载和瓶颈，使使用体验更加流畅。\n- 增强游戏手柄（控制器）兼容性\n  - 改善在各种控制器环境中的识别和输入兼容性。",
+          "详细变更内容将在更新发布时一并说明。"
+        ],
+        "zh-Hant": [
+          "我們正在準備 ForgePlay 1.3 更新。",
+          "預計進行的主要改善如下：",
+          "- 最佳化 Wine 與現有圖形後端\n  - 最佳化包括 DXMT、DXVK 與 D9VK 在內的執行環境，並改善 32 位元遊戲的執行相容性。\n- 最佳化影格生成功能\n  - 減少部分遊戲中出現的負載與瓶頸，讓使用體驗更加流暢。\n- 強化遊戲手把（控制器）相容性\n  - 改善各種控制器環境中的辨識與輸入相容性。",
+          "詳細變更內容將於更新發布時一併說明。"
+        ]
+      },
+      "href": "updates.html#update-forgeplay-1-3-preparing"
+    },
     {
       "id": "forgeplay-1-2-update-notice",
       "type": "project",
       "publishedAt": "2026-09-05",
-      "featured": true,
+      "featured": false,
       "titles": {
         "en": "Notice about the 1.2 update",
         "ko": "1.2 업데이트 관련 안내",
