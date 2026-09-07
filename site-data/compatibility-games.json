@@ -1,7 +1,7 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-09-07",
+  "updatedAt": "2026-09-08",
   "testProfiles": [
     {
       "id": "apple-silicon-m4-pro-24gb",
@@ -106,6 +106,13 @@
       "platform": "Apple Silicon Mac",
       "chip": "M5 Pro",
       "unifiedMemoryGB": 48,
+      "macOSVersion": "Tahoe 26.6.2"
+    },
+    {
+      "id": "apple-silicon-m2-pro-16gb-tahoe-26-6-2",
+      "platform": "Apple Silicon Mac",
+      "chip": "M2 Pro",
+      "unifiedMemoryGB": 16,
       "macOSVersion": "Tahoe 26.6.2"
     }
   ],
@@ -374,6 +381,20 @@
       "titles": {
         "en": "Bodycam",
         "ko": "바디캠"
+      }
+    },
+    {
+      "id": "company-of-heroes-3",
+      "titles": {
+        "en": "Company of Heroes 3",
+        "ko": "컴퍼니 오브 히어로즈 3"
+      }
+    },
+    {
+      "id": "the-forest",
+      "titles": {
+        "en": "The Forest",
+        "ko": "더 포레스트"
       }
     }
   ],
@@ -1094,6 +1115,50 @@
         "de": "Gemeldete Testumgebung: ein 16-Zoll-Mac mit M5 Pro, 48GB gemeinsamem Arbeitsspeicher, 1TB SSD und macOS Tahoe 26.6.2. Frame-Generation war beim Spielen ausgeschaltet. Laut dem Bericht lief Bodycam mit ForgePlay 1.2 ohne zusätzliche Konfiguration sehr flüssig, und sämtliche Optionen im Spiel funktionierten korrekt. Beim Vergleich mit CrossOver ließ sich die Maus nicht fixieren, und ihre Koordinaten stimmten nicht, weshalb die Konfiguration viel Zeit beanspruchte.",
         "es": "Equipo indicado: un Mac de 16 pulgadas con M5 Pro, 48GB de memoria unificada, SSD de 1TB y macOS Tahoe 26.6.2. La generación de fotogramas estaba desactivada durante el juego. Según el reporte, Bodycam funcionó con gran fluidez en ForgePlay 1.2 sin necesidad de configuración adicional, y todas las opciones del juego funcionaron correctamente. Al compararlo con CrossOver, el ratón no se mantenía bloqueado y sus coordenadas eran incorrectas, por lo que la configuración llevó bastante tiempo.",
         "fr": "Configuration indiquée : Mac 16 pouces avec M5 Pro, 48Go de mémoire unifiée, SSD de 1To et macOS Tahoe 26.6.2. La génération d’images était désactivée pendant le jeu. Selon le témoignage, Bodycam fonctionnait de manière très fluide avec ForgePlay 1.2 sans configuration supplémentaire, et toutes les options du jeu fonctionnaient correctement. Lors de la comparaison avec CrossOver, la souris ne restait pas verrouillée et ses coordonnées étaient incorrectes, ce qui a nécessité beaucoup de temps de configuration."
+      },
+      "blocker": null
+    },
+    {
+      "id": "company-of-heroes-3-forgeplay-1-2-community-macgallery-20260908",
+      "gameId": "company-of-heroes-3",
+      "testProfileId": null,
+      "forgePlayVersion": "1.2",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "맥갤러",
+      "testedAt": null,
+      "notes": {
+        "en": "The reporter confirmed that Company of Heroes 3 runs on ForgePlay 1.2.",
+        "ko": "ForgePlay 1.2에서 컴퍼니 오브 히어로즈 3 실행을 확인했다고 제보했습니다.",
+        "ja": "ForgePlay 1.2で『Company of Heroes 3』が動作することを確認したとの報告です。",
+        "zh-Hans": "据反馈，已确认 Company of Heroes 3 可在 ForgePlay 1.2 上运行。",
+        "zh-Hant": "據回報，已確認 Company of Heroes 3 可在 ForgePlay 1.2 上執行。",
+        "de": "Laut dem Bericht wurde bestätigt, dass Company of Heroes 3 mit ForgePlay 1.2 läuft.",
+        "es": "Según el informe, se confirmó que Company of Heroes 3 funciona con ForgePlay 1.2.",
+        "fr": "Le signalement confirme que Company of Heroes 3 fonctionne avec ForgePlay 1.2."
+      },
+      "blocker": null
+    },
+    {
+      "id": "the-forest-forgeplay-1-2-github-eddymooncs-20260908",
+      "gameId": "the-forest",
+      "testProfileId": "apple-silicon-m2-pro-16gb-tahoe-26-6-2",
+      "forgePlayVersion": "1.2",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "github-issue",
+      "reporter": "eddymooncs",
+      "testedAt": null,
+      "notes": {
+        "en": "The reporter said the game plays normally. Changing the language to Korean did not work until they separately downloaded the Windows default fonts Malgun.ttf (Regular), Malgunbd.ttf (Bold), and Malgunsl.ttf (Semilight) and placed them in C:\\\\Windows\\\\Fonts.",
+        "ko": "게임은 정상적으로 플레이된다고 제보했습니다. 다만 한글로 언어를 변경할 수 없었으며, Windows 기본 글꼴인 Malgun.ttf(Regular), Malgunbd.ttf(Bold), Malgunsl.ttf(Semilight)를 별도로 다운로드해 C:\\\\Windows\\\\Fonts에 넣은 뒤 정상적으로 언어 변경이 가능해졌다고 합니다.",
+        "ja": "ゲームは正常にプレイできるとの報告です。ただし、韓国語への言語変更ができませんでした。Windowsの標準フォントであるMalgun.ttf（Regular）、Malgunbd.ttf（Bold）、Malgunsl.ttf（Semilight）を別途ダウンロードしてC:\\\\Windows\\\\Fontsに配置したところ、言語を正常に変更できるようになったとのことです。",
+        "zh-Hans": "据反馈，游戏可以正常游玩。但无法切换为韩语；单独下载 Windows 默认字体 Malgun.ttf（Regular）、Malgunbd.ttf（Bold）和 Malgunsl.ttf（Semilight），并放入 C:\\\\Windows\\\\Fonts 后，语言切换恢复正常。",
+        "zh-Hant": "據回報，遊戲可以正常遊玩。但無法切換為韓文；另外下載 Windows 預設字型 Malgun.ttf（Regular）、Malgunbd.ttf（Bold）與 Malgunsl.ttf（Semilight），並放入 C:\\\\Windows\\\\Fonts 後，語言切換恢復正常。",
+        "de": "Laut dem Bericht läuft das Spiel normal. Der Wechsel auf Koreanisch funktionierte jedoch erst, nachdem die Windows-Standardschriftarten Malgun.ttf (Regular), Malgunbd.ttf (Bold) und Malgunsl.ttf (Semilight) separat heruntergeladen und nach C:\\\\Windows\\\\Fonts kopiert wurden.",
+        "es": "Según el informe, el juego funciona con normalidad. Sin embargo, el cambio de idioma a coreano no funcionó hasta que se descargaron por separado las fuentes predeterminadas de Windows Malgun.ttf (Regular), Malgunbd.ttf (Bold) y Malgunsl.ttf (Semilight) y se colocaron en C:\\\\Windows\\\\Fonts.",
+        "fr": "Selon le signalement, le jeu fonctionne normalement. Le passage au coréen ne fonctionnait toutefois pas jusqu’à ce que les polices Windows par défaut Malgun.ttf (Regular), Malgunbd.ttf (Bold) et Malgunsl.ttf (Semilight) soient téléchargées séparément et placées dans C:\\\\Windows\\\\Fonts."
       },
       "blocker": null
     }
