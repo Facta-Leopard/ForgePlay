@@ -1,7 +1,7 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-09-06",
+  "updatedAt": "2026-09-07",
   "testProfiles": [
     {
       "id": "apple-silicon-m4-pro-24gb",
@@ -100,6 +100,13 @@
       "chip": "M5 Pro",
       "unifiedMemoryGB": 24,
       "macOSVersion": null
+    },
+    {
+      "id": "apple-silicon-m5-pro-48gb-tahoe-26-6-2",
+      "platform": "Apple Silicon Mac",
+      "chip": "M5 Pro",
+      "unifiedMemoryGB": 48,
+      "macOSVersion": "Tahoe 26.6.2"
     }
   ],
   "games": [
@@ -1071,7 +1078,7 @@
     {
       "id": "bodycam-forgeplay-1-2-community-00-20260906",
       "gameId": "bodycam",
-      "testProfileId": null,
+      "testProfileId": "apple-silicon-m5-pro-48gb-tahoe-26-6-2",
       "forgePlayVersion": "1.2",
       "gameVersion": null,
       "status": "playable",
@@ -1079,14 +1086,14 @@
       "reporter": "00",
       "testedAt": null,
       "notes": {
-        "en": "The reporter said Bodycam ran very smoothly on ForgePlay 1.2 without any additional configuration, and all in-game options worked correctly. In their comparison with CrossOver, the mouse would not stay locked and its coordinates were incorrect, so configuration took considerable time.",
-        "ko": "ForgePlay 1.2에서 별도 설정 없이 Bodycam이 매우 원활하게 실행되고, 게임의 모든 옵션이 정상 작동했다고 제보했습니다. 비교한 CrossOver에서는 마우스가 고정되지 않고 좌표가 맞지 않아 설정에 많은 시간이 걸렸다고 합니다.",
-        "ja": "ForgePlay 1.2では、追加の設定なしでBodycamが非常に快適に動作し、ゲーム内のすべてのオプションも正常に機能したとの報告です。比較したCrossOverではマウスが固定されず、座標もずれていたため、設定にかなりの時間がかかったとのことです。",
-        "zh-Hans": "据玩家反馈，Bodycam 在 ForgePlay 1.2 中无需额外设置即可非常流畅地运行，游戏内所有选项均正常工作。该玩家对比使用 CrossOver 时，遇到了鼠标无法锁定、坐标不正确的问题，因此花费了较长时间进行设置。",
-        "zh-Hant": "據玩家回報，Bodycam 在 ForgePlay 1.2 中無需額外設定即可非常流暢地執行，遊戲內所有選項均正常運作。該玩家比較使用 CrossOver 時，遇到了滑鼠無法鎖定、座標不正確的問題，因此花費了不少時間進行設定。",
-        "de": "Laut dem Bericht lief Bodycam mit ForgePlay 1.2 ohne zusätzliche Konfiguration sehr flüssig, und sämtliche Optionen im Spiel funktionierten korrekt. Beim Vergleich mit CrossOver ließ sich die Maus nicht fixieren, und ihre Koordinaten stimmten nicht, weshalb die Konfiguration viel Zeit beanspruchte.",
-        "es": "Según el reporte, Bodycam funcionó con gran fluidez en ForgePlay 1.2 sin necesidad de configuración adicional, y todas las opciones del juego funcionaron correctamente. Al compararlo con CrossOver, el ratón no se mantenía bloqueado y sus coordenadas eran incorrectas, por lo que la configuración llevó bastante tiempo.",
-        "fr": "Selon le témoignage, Bodycam fonctionnait de manière très fluide avec ForgePlay 1.2 sans configuration supplémentaire, et toutes les options du jeu fonctionnaient correctement. Lors de la comparaison avec CrossOver, la souris ne restait pas verrouillée et ses coordonnées étaient incorrectes, ce qui a nécessité beaucoup de temps de configuration."
+        "en": "Reported setup: a 16-inch Mac with M5 Pro, 48GB of unified memory, a 1TB SSD, and macOS Tahoe 26.6.2. Frame generation was turned off. The reporter said Bodycam ran very smoothly on ForgePlay 1.2 without any additional configuration, and all in-game options worked correctly. In their comparison with CrossOver, the mouse would not stay locked and its coordinates were incorrect, so configuration took considerable time.",
+        "ko": "제보 기기는 16인치 Mac(M5 Pro, 통합 메모리 48GB, SSD 1TB, macOS Tahoe 26.6.2)이며, 프레임 생성은 끈 상태로 플레이했다고 합니다. ForgePlay 1.2에서 별도 설정 없이 Bodycam이 매우 원활하게 실행되고, 게임의 모든 옵션이 정상 작동했다고 제보했습니다. 비교한 CrossOver에서는 마우스가 고정되지 않고 좌표가 맞지 않아 설정에 많은 시간이 걸렸다고 합니다.",
+        "ja": "報告された環境は、M5 Pro、48GBユニファイドメモリ、1TB SSD、macOS Tahoe 26.6.2を搭載した16インチMacです。フレーム生成はオフにしてプレイしたとのことです。 ForgePlay 1.2では、追加の設定なしでBodycamが非常に快適に動作し、ゲーム内のすべてのオプションも正常に機能したとの報告です。比較したCrossOverではマウスが固定されず、座標もずれていたため、設定にかなりの時間がかかったとのことです。",
+        "zh-Hans": "报告的设备为 16 英寸 Mac，搭载 M5 Pro、48GB 统一内存和 1TB SSD，运行 macOS Tahoe 26.6.2，游玩时关闭了帧生成。 据玩家反馈，Bodycam 在 ForgePlay 1.2 中无需额外设置即可非常流畅地运行，游戏内所有选项均正常工作。该玩家对比使用 CrossOver 时，遇到了鼠标无法锁定、坐标不正确的问题，因此花费了较长时间进行设置。",
+        "zh-Hant": "回報的裝置為 16 吋 Mac，搭載 M5 Pro、48GB 統一記憶體和 1TB SSD，執行 macOS Tahoe 26.6.2，遊玩時關閉了影格生成。 據玩家回報，Bodycam 在 ForgePlay 1.2 中無需額外設定即可非常流暢地執行，遊戲內所有選項均正常運作。該玩家比較使用 CrossOver 時，遇到了滑鼠無法鎖定、座標不正確的問題，因此花費了不少時間進行設定。",
+        "de": "Gemeldete Testumgebung: ein 16-Zoll-Mac mit M5 Pro, 48GB gemeinsamem Arbeitsspeicher, 1TB SSD und macOS Tahoe 26.6.2. Frame-Generation war beim Spielen ausgeschaltet. Laut dem Bericht lief Bodycam mit ForgePlay 1.2 ohne zusätzliche Konfiguration sehr flüssig, und sämtliche Optionen im Spiel funktionierten korrekt. Beim Vergleich mit CrossOver ließ sich die Maus nicht fixieren, und ihre Koordinaten stimmten nicht, weshalb die Konfiguration viel Zeit beanspruchte.",
+        "es": "Equipo indicado: un Mac de 16 pulgadas con M5 Pro, 48GB de memoria unificada, SSD de 1TB y macOS Tahoe 26.6.2. La generación de fotogramas estaba desactivada durante el juego. Según el reporte, Bodycam funcionó con gran fluidez en ForgePlay 1.2 sin necesidad de configuración adicional, y todas las opciones del juego funcionaron correctamente. Al compararlo con CrossOver, el ratón no se mantenía bloqueado y sus coordenadas eran incorrectas, por lo que la configuración llevó bastante tiempo.",
+        "fr": "Configuration indiquée : Mac 16 pouces avec M5 Pro, 48Go de mémoire unifiée, SSD de 1To et macOS Tahoe 26.6.2. La génération d’images était désactivée pendant le jeu. Selon le témoignage, Bodycam fonctionnait de manière très fluide avec ForgePlay 1.2 sans configuration supplémentaire, et toutes les options du jeu fonctionnaient correctement. Lors de la comparaison avec CrossOver, la souris ne restait pas verrouillée et ses coordonnées étaient incorrectes, ce qui a nécessité beaucoup de temps de configuration."
       },
       "blocker": null
     }
