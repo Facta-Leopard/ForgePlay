@@ -1538,7 +1538,7 @@ require_snippet "$ROOT_DIR/index.html" 'data-current-release-download'
 require_snippet "$ROOT_DIR/index.html" 'data-current-release-download-label'
 require_snippet "$ROOT_DIR/index.html" 'data-current-release-link'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/current-release.js?v=20260905-7"'
-require_snippet "$ROOT_DIR/index.html" 'src="site-assets/website-compatibility.js?v=20260905-7"'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/website-compatibility.js?v=20260907-1"'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/home-experience.css?v=20260905-8'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/home-experience.js?v=20260905-7"'
 require_snippet "$ROOT_DIR/index.html" 'data-release-download'
@@ -1583,7 +1583,7 @@ require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count
 require_snippet "$ROOT_DIR/compatibility.html" 'href="site.css?v=20260811-22"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260905-7"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/current-release.js?v=20260905-7"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20260905-7"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20260907-1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260905-7"'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-card'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-tag'
@@ -1946,6 +1946,12 @@ check([report("1.2.0", "blocked")], "1.2", {status: "blocked", tone: "red"});
 check([report(null, "blocked")], "1.2", {status: "blocked", tone: "yellow", warningKey: "compat.unversionedBlocked"});
 check([report("1.0", "blocked")], null, {status: "blocked", tone: "yellow", warningKey: "compat.currentVersionUnknown"});
 assert.equal(model.compareVersions("1.2.0", "1.2"), 0);
+const initialReport = {...report("1.2", "playable"), id: "initial", testedAt: null};
+const followupReport = {...report("1.2", "playable"), id: "followup", testedAt: null};
+const publicationOrder = [initialReport, followupReport];
+assert.equal(model.sortReports(publicationOrder)[0], followupReport);
+assert.equal(model.summarize(publicationOrder, "1.2").headlineReports[0], followupReport);
+assert.equal(publicationOrder[0], initialReport, "sorting must not reorder the source catalog");
 
 const referenceBase = {
   schemaVersion: 2,

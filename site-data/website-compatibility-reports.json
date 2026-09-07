@@ -1,7 +1,30 @@
 {
   "$schema": "./website-compatibility-reports.schema.json",
   "schemaVersion": 1,
-  "updatedAt": "2026-09-06",
+  "updatedAt": "2026-09-07",
   "testProfiles": [],
-  "reports": []
+  "reports": [
+    {
+      "id": "bodycam-forgeplay-1-2-followup-00-20260907",
+      "gameId": "bodycam",
+      "testProfileId": "apple-silicon-m5-pro-48gb-tahoe-26-6-2",
+      "forgePlayVersion": "1.2",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "00",
+      "testedAt": null,
+      "notes": {
+        "en": "The same reporter conducted additional testing in ForgePlay 1.2 with frame generation enabled and reported that the game ran very smoothly. They observed FPS in the 40s before generation, FPS in the 70s generated, and roughly 120 final FPS; they reported no graphical artifacts or gameplay issues. The DualSense Edge controller was also recognized correctly. Test hardware: 16-inch M5 Pro full-chip Mac, 48GB unified memory, 1TB SSD.",
+        "ko": "같은 제보자가 ForgePlay 1.2에서 프레임 생성 기능을 켠 상태로 추가 실험한 결과, 게임이 매우 원활하게 실행됐다고 합니다. 원본 FPS는 40대, 생성 FPS는 70대, 최종 FPS는 약 120으로 확인됐으며, 그래픽 깨짐이나 게임 플레이에 지장은 없었다고 제보했습니다. DualSense Edge 컨트롤러도 정상 인식됐다고 합니다. 제보 기기는 16인치 M5 Pro 풀칩 Mac, 통합 메모리 48GB, SSD 1TB입니다.",
+        "ja": "同じ報告者がForgePlay 1.2でフレーム生成を有効にして追加検証を行ったところ、ゲームは非常にスムーズに動作したとのことです。生成前のFPSは40台、生成FPSは70台、最終FPSはおよそ120と報告されており、グラフィックの乱れやゲームプレイ上の支障はなかったとしています。DualSense Edgeコントローラーも正常に認識されました。検証機器は16インチM5 ProフルチップMac、ユニファイドメモリ48GB、SSD 1TBです。",
+        "zh-Hans": "同一位反馈者在 ForgePlay 1.2 中开启帧生成功能进行了额外测试，称游戏运行非常流畅。其报告称，生成前 FPS 为 40 多帧，生成 FPS 为 70 多帧，最终 FPS 约为 120；未出现画面异常，也未影响游戏游玩。DualSense Edge 控制器也被正常识别。测试设备为 16 英寸 M5 Pro 满血版 Mac、48GB 统一内存和 1TB SSD。",
+        "zh-Hant": "同一位回報者在 ForgePlay 1.2 中開啟影格生成功能進行額外測試，稱遊戲運行非常流暢。其回報稱，生成前 FPS 為 40 多幀，生成 FPS 為 70 多幀，最終 FPS 約為 120；未出現畫面異常，也未影響遊戲遊玩。DualSense Edge 控制器也被正常辨識。測試裝置為 16 吋 M5 Pro 滿血版 Mac、48GB 統一記憶體和 1TB SSD。",
+        "de": "Derselbe Melder führte in ForgePlay 1.2 zusätzliche Tests mit aktivierter Frame-Generation durch und berichtete, dass das Spiel sehr flüssig lief. Gemeldet wurden FPS-Werte im 40er-Bereich vor der Generierung, im 70er-Bereich durch die Generierung und etwa 120 FPS insgesamt; weder Grafikartefakte noch Beeinträchtigungen beim Spielen wurden beobachtet. Auch ein DualSense-Edge-Controller wurde korrekt erkannt. Testgerät: 16-Zoll-Mac mit M5 Pro Vollausbau, 48 GB Unified Memory und 1-TB-SSD.",
+        "es": "La misma persona que envió el informe realizó pruebas adicionales en ForgePlay 1.2 con la generación de fotogramas activada e indicó que el juego funcionó con mucha fluidez. Reportó FPS en los 40 antes de la generación, FPS en los 70 generados y unos 120 FPS finales; no observó artefactos gráficos ni problemas durante el juego. El mando DualSense Edge también fue reconocido correctamente. Equipo de prueba: Mac de 16 pulgadas con M5 Pro de máxima configuración, 48 GB de memoria unificada y SSD de 1 TB.",
+        "fr": "La même personne ayant soumis le rapport a effectué des essais supplémentaires dans ForgePlay 1.2 avec la génération d’images activée et indique que le jeu tournait de façon très fluide. Elle a relevé des FPS dans les 40 avant génération, dans les 70 pour les images générées et environ 120 FPS au total ; aucun artefact graphique ni problème de jouabilité n’a été constaté. La manette DualSense Edge a également été reconnue correctement. Configuration de test : Mac 16 pouces M5 Pro dans sa configuration complète, 48 Go de mémoire unifiée et SSD de 1 To."
+      },
+      "blocker": null
+    }
+  ]
 }

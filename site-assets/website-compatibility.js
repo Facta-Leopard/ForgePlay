@@ -18,7 +18,11 @@
     }
     return 0;
   };
-  const sortReports = (reports) => [...reports].sort((a, b) => {
+  const sortReports = (reports) => {
+    // Reports are appended in publication order; later follow-ups lead when
+    // their version, reported test date and status otherwise tie.
+    const sourceOrder = new Map(reports.map((report, index) => [report, index]));
+    return [...reports].sort((a, b) => {
     const version = compareVersions(a.forgePlayVersion, b.forgePlayVersion);
     if (version) return -version;
     if (version === null) {
@@ -27,8 +31,10 @@
       if (numericDifference) return numericDifference;
     }
     return (b.testedAt || "").localeCompare(a.testedAt || "")
-      || statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status);
-  });
+      || statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status)
+      || sourceOrder.get(b) - sourceOrder.get(a);
+    });
+  };
 
   const summarize = (reports, currentVersion) => {
     const current = versionParts(currentVersion) ? currentVersion : null;

@@ -64,6 +64,9 @@ memory for the two website consumers. Profile and report IDs must be unique
 across the base and supplement, all references must resolve, and each new
 report must contain notes in all eight website languages. Preserve the reported
 ForgePlay version and distinguish observed results from untested releases.
+Append follow-up test reports after earlier records. When release version,
+reported test date and status tie, the website shows the later appended report
+first while retaining earlier test conditions and results in the history.
 The static-site verifier validates the unchanged base first, then validates
 the merged display data using the same report and profile rules.
 
@@ -83,6 +86,7 @@ invent a future date to bypass the app's same-date conflict rule.
 In the same commit and deployment, move the selected report records and any
 required new test profiles into `compatibility-games.json`, advance the base
 catalog's `updatedAt`, and remove those same IDs from the website supplement.
+Append promoted reports after existing base reports, preserving their order.
 Preserve report IDs, attribution, tested dates, ForgePlay versions, and notes.
 Profiles moved into the base must also be removed from the supplement; any
 remaining website reports can reference the profiles now stored in the base.
