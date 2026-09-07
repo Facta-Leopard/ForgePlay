@@ -795,12 +795,13 @@ try:
 except (OSError, json.JSONDecodeError) as exc:
     raise SystemExit(f"website compatibility JSON is invalid: {exc}")
 
-website_fields = {"$schema", "schemaVersion", "updatedAt", "testProfiles", "reports"}
+website_required_fields = {"$schema", "schemaVersion", "updatedAt", "testProfiles", "reports"}
+website_fields = website_required_fields | {"notePatches"}
 if website_schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
     raise SystemExit("website compatibility schema must use JSON Schema draft 2020-12")
 if website_schema.get("type") != "object" or website_schema.get("additionalProperties") is not False:
     raise SystemExit("website compatibility schema must reject unknown root fields")
-if set(website_schema.get("required", [])) != website_fields:
+if set(website_schema.get("required", [])) != website_required_fields:
     raise SystemExit("website compatibility schema must require its complete field contract")
 website_properties = website_schema.get("properties", {})
 if set(website_properties) != website_fields:
@@ -817,6 +818,9 @@ for collection in ("testProfiles", "reports"):
         raise SystemExit(f"website compatibility schema {collection} must be an array")
 if website_properties["testProfiles"].get("items", {}).get("$ref") != "./compatibility.schema.json#/$defs/testProfile":
     raise SystemExit("website compatibility profiles must reuse the base profile schema")
+note_patch_schema = website_properties.get("notePatches", {})
+if note_patch_schema.get("type") != "array":
+    raise SystemExit("website compatibility notePatches must be an array")
 website_report_rules = website_properties["reports"].get("items", {}).get("allOf", [])
 if len(website_report_rules) != 2 or website_report_rules[0].get("$ref") != "./compatibility.schema.json#/$defs/report":
     raise SystemExit("website compatibility reports must reuse the base report schema")
@@ -840,7 +844,7 @@ if (
     raise SystemExit("website compatibility notes schema must require all eight non-empty locales")
 
 def validate_website_compatibility_reports(candidate, base):
-    require_object_shape(candidate, website_fields, website_fields, "website compatibility reports")
+    require_object_shape(candidate, website_required_fields, website_fields, "website compatibility reports")
     if candidate.get("$schema") != "./website-compatibility-reports.schema.json":
         raise SystemExit("website compatibility reports reference the wrong schema")
     if isinstance(candidate.get("schemaVersion"), bool) or candidate.get("schemaVersion") != 1:
@@ -848,6 +852,26 @@ def validate_website_compatibility_reports(candidate, base):
     updated_at = parse_iso_date(candidate.get("updatedAt"), "website compatibility reports updatedAt")
     if not all(isinstance(candidate.get(key), list) for key in ("testProfiles", "reports")):
         raise SystemExit("website compatibility report collections must be arrays")
+    note_patches = candidate.get("notePatches", [])
+    if not isinstance(note_patches, list):
+        raise SystemExit("website compatibility notePatches must be an array")
+    base_report_ids = {report.get("id") for report in base.get("reports", [])}
+    seen_note_patch_ids = set()
+    for patch in note_patches:
+        if (
+            not isinstance(patch, dict)
+            or set(patch) != {"reportId", "notes"}
+            or not isinstance(patch.get("reportId"), str)
+            or patch["reportId"] in seen_note_patch_ids
+            or patch["reportId"] not in base_report_ids
+        ):
+            raise SystemExit("website compatibility note patch has an invalid or duplicate target")
+        seen_note_patch_ids.add(patch["reportId"])
+        notes = patch.get("notes")
+        if not isinstance(notes, dict) or set(notes) != set(locale_names) or not all(
+            isinstance(note, str) and note.strip() for note in notes.values()
+        ):
+            raise SystemExit("website compatibility note patches must cover all eight locales")
     for report in candidate["reports"]:
         if not isinstance(report, dict):
             raise SystemExit("website compatibility report must be an object")
@@ -869,11 +893,28 @@ def validate_website_compatibility_reports(candidate, base):
 
     # Concatenation deliberately leaves collisions intact so the existing
     # validator rejects duplicate IDs, invalid references, and malformed rows.
+    patched_reports = []
+    note_patches_by_id = {patch["reportId"]: patch for patch in note_patches}
+    for report in base["reports"]:
+        patch = note_patches_by_id.get(report.get("id"))
+        if not patch:
+            patched_reports.append(report)
+            continue
+        patched_report = dict(report)
+        original_notes = report.get("notes") or {}
+        patched_report["notes"] = {
+            locale: "\n\n".join(
+                value for value in (original_notes.get(locale), patch["notes"][locale])
+                if value
+            )
+            for locale in locale_names
+        }
+        patched_reports.append(patched_report)
     merged = {
         **base,
         "updatedAt": max(base["updatedAt"], candidate["updatedAt"]),
         "testProfiles": [*base["testProfiles"], *candidate["testProfiles"]],
-        "reports": [*base["reports"], *candidate["reports"]],
+        "reports": [*patched_reports, *candidate["reports"]],
     }
     validate_compatibility_database(merged)
 
@@ -1501,7 +1542,7 @@ for html in index.html why.html license.html privacy.html support.html compatibi
   else
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-14"'
   fi
-  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260905-7"'
+  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260908-1"'
   require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.css?v=20260905-7'
   require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.js?v=20260905-2'
   if [[ "$html" != "index.html" ]]; then
@@ -1540,7 +1581,7 @@ require_snippet "$ROOT_DIR/index.html" 'data-current-release-link'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/current-release.js?v=20260905-7"'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/website-compatibility.js?v=20260907-1"'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/home-experience.css?v=20260905-8'
-require_snippet "$ROOT_DIR/index.html" 'src="site-assets/home-experience.js?v=20260905-7"'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/home-experience.js?v=20260908-1"'
 require_snippet "$ROOT_DIR/index.html" 'data-release-download'
 require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.releaseNotesButton"'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/forgeplay-social.png'
@@ -1554,7 +1595,7 @@ require_snippet "$ROOT_DIR/index.html" 'data-home-search'
 require_snippet "$ROOT_DIR/index.html" 'data-home-games'
 require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
-require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260905-7"'
+require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260908-1"'
 require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260905-2"'
 require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260821-3"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
@@ -1581,10 +1622,10 @@ require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.logLabel"'
 require_snippet "$ROOT_DIR/compatibility.html" 'issues/new?template=compatibility-report.yml'
 require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/compatibility.html" 'href="site.css?v=20260811-22"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260905-7"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260908-1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/current-release.js?v=20260905-7"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20260907-1"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260905-7"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260908-1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-card'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-tag'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-meta'
@@ -1622,6 +1663,7 @@ for script in compatibility.js site-assets/home-experience.js site-assets/websit
 done
 require_snippet "$ROOT_DIR/compatibility.js" '"github-issue": "compat.verificationGitHubIssue"'
 require_snippet "$ROOT_DIR/compatibility.js" '"community-report": "compat.verificationCommunityReport"'
+require_snippet "$ROOT_DIR/compatibility.js" 'compat.verificationDeveloperNote'
 require_snippet "$ROOT_DIR/compatibility.js" '"security-module": "compat.blockerSecurityModule"'
 require_snippet "$ROOT_DIR/compatibility.js" 'Number.isInteger(profile.unifiedMemoryGB)'
 require_snippet "$ROOT_DIR/compatibility.js" 'const formatMacOSVersion = (profile) => ('

@@ -82,6 +82,15 @@
     const games = new Set(base.games.map((game) => game.id));
     const profiles = new Set(base.testProfiles.map((profile) => profile.id));
     const reports = new Set(base.reports.map((report) => report.id));
+    const notePatches = Array.isArray(additions.notePatches) ? additions.notePatches : [];
+    const patchIds = new Set();
+    for (const patch of notePatches) {
+      if (!patch?.reportId || patchIds.has(patch.reportId) || !reports.has(patch.reportId)
+        || !patch.notes || Object.keys(patch.notes).length !== 8) {
+        throw new Error("Invalid website developer note patch");
+      }
+      patchIds.add(patch.reportId);
+    }
     for (const profile of additions.testProfiles) {
       if (!profile.id || profiles.has(profile.id)) throw new Error("Duplicate website device");
       profiles.add(profile.id);
@@ -92,11 +101,20 @@
         || !statusOrder.includes(report.status)) throw new Error("Invalid website report reference");
       reports.add(report.id);
     }
+    const patchedReports = base.reports.map((report) => {
+      const patch = notePatches.find((candidate) => candidate.reportId === report.id);
+      if (!patch) return report;
+      const notes = Object.fromEntries(Object.keys(patch.notes).map((locale) => [
+        locale,
+        [report.notes?.[locale], patch.notes[locale]].filter(Boolean).join("\\n\\n")
+      ]));
+      return {...report, notes, websiteDeveloperNote: true};
+    });
     return {
       ...base,
       updatedAt: [base.updatedAt, additions.updatedAt].sort().at(-1),
       testProfiles: [...base.testProfiles, ...additions.testProfiles],
-      reports: [...base.reports, ...additions.reports],
+      reports: [...patchedReports, ...additions.reports],
       websiteReportIds: additions.reports.map((report) => report.id)
     };
   };

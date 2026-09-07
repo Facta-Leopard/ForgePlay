@@ -13,6 +13,11 @@
     "github-issue": "compat.verificationGitHubIssue",
     "community-report": "compat.verificationCommunityReport"
   };
+  const verificationMessageKey = (report) => (
+    report.websiteDeveloperNote || report.reporter === "ForgePlay 개발자"
+      ? "compat.verificationDeveloperNote"
+      : sourceMessageKeys[report.source]
+  );
   const forgePlayVersionMessageKeys = {
     development: "compat.versionDevelopment"
   };
@@ -224,7 +229,7 @@
       verificationCell,
       "strong",
       "",
-      message(sourceMessageKeys[report.source], report.source)
+      message(verificationMessageKey(report), report.source)
     );
     const details = verificationDetails(report, selectedLocale);
     if (details) appendTextElement(verificationCell, "span", "", details);

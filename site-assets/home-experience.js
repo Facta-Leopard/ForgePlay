@@ -85,7 +85,9 @@
     record.append(heading);
     appendText(record, "p", "", localized(report.notes) || message("refresh.noReportNotes"));
     const attribution = [
-      message(sourceKey[report.source] || "compat.verificationInitial"),
+      message(report.websiteDeveloperNote || report.reporter === "ForgePlay 개발자"
+        ? "compat.verificationDeveloperNote"
+        : sourceKey[report.source] || "compat.verificationInitial"),
       catalog.websiteReportIds.includes(report.id) ? message("compat.webReportsLabel") : "",
       report.reporter ? "@" + report.reporter : "",
       report.testedAt || ""

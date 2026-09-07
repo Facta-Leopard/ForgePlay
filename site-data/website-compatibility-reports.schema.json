@@ -99,6 +99,34 @@
           }
         ]
       }
+    },
+    "notePatches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["reportId", "notes"],
+        "properties": {
+          "reportId": {
+            "$ref": "./compatibility.schema.json#/$defs/identifier"
+          },
+          "notes": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["en", "ko", "ja", "zh-Hans", "zh-Hant", "de", "es", "fr"],
+            "properties": {
+              "en": { "type": "string", "minLength": 1 },
+              "ko": { "type": "string", "minLength": 1 },
+              "ja": { "type": "string", "minLength": 1 },
+              "zh-Hans": { "type": "string", "minLength": 1 },
+              "zh-Hant": { "type": "string", "minLength": 1 },
+              "de": { "type": "string", "minLength": 1 },
+              "es": { "type": "string", "minLength": 1 },
+              "fr": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
     }
   }
 }

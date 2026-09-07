@@ -64,6 +64,10 @@ memory for the two website consumers. Profile and report IDs must be unique
 across the base and supplement, all references must resolve, and each new
 report must contain notes in all eight website languages. Preserve the reported
 ForgePlay version and distinguish observed results from untested releases.
+Use `notePatches` when a developer clarification belongs in an existing report;
+the website appends that localized note to the existing record instead of
+creating a second card. The patch target must already exist in the app-shared
+catalog and remains unchanged there until a later app-catalog promotion.
 Append follow-up test reports after earlier records. When release version,
 reported test date and status tie, the website shows the later appended report
 first while retaining earlier test conditions and results in the history.

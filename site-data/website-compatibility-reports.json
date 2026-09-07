@@ -1,7 +1,7 @@
 {
   "$schema": "./website-compatibility-reports.schema.json",
   "schemaVersion": 1,
-  "updatedAt": "2026-09-07",
+  "updatedAt": "2026-09-08",
   "testProfiles": [],
   "reports": [
     {
@@ -25,6 +25,21 @@
         "fr": "La même personne ayant soumis le rapport a effectué des essais supplémentaires dans ForgePlay 1.2 avec la génération d’images activée et indique que le jeu tournait de façon très fluide. Elle a relevé des FPS dans les 40 avant génération, dans les 70 pour les images générées et environ 120 FPS au total ; aucun artefact graphique ni problème de jouabilité n’a été constaté. La manette DualSense Edge a également été reconnue correctement. Configuration de test : Mac 16 pouces M5 Pro dans sa configuration complète, 48 Go de mémoire unifiée et SSD de 1 To."
       },
       "blocker": null
+    }
+  ],
+  "notePatches": [
+    {
+      "reportId": "the-forest-forgeplay-1-2-github-eddymooncs-20260908",
+      "notes": {
+        "en": "Developer note: The Malgun.ttf, Malgunbd.ttf and Malgunsl.ttf font files cannot be included in a ForgePlay update because of copyright-related concerns. If needed, users should obtain and apply them separately at their own discretion.",
+        "ko": "개발자 추가 안내: Malgun.ttf, Malgunbd.ttf, Malgunsl.ttf 글꼴 파일은 저작권 관련 문제로 ForgePlay 업데이트에 포함하기 어렵습니다. 필요한 경우 사용자가 직접 준비해 선택적으로 적용해 주세요.",
+        "ja": "開発者追記：Malgun.ttf、Malgunbd.ttf、Malgunsl.ttfのフォントファイルは、著作権上の問題があるためForgePlayのアップデートに含めることが困難です。必要な場合は、ユーザー自身で用意し、任意で適用してください。",
+        "zh-Hans": "开发者补充说明：由于存在版权相关问题，Malgun.ttf、Malgunbd.ttf 和 Malgunsl.ttf 字体文件难以随 ForgePlay 更新一同提供。如有需要，请用户自行准备并酌情应用。",
+        "zh-Hant": "開發者補充說明：由於存在著作權相關問題，Malgun.ttf、Malgunbd.ttf 與 Malgunsl.ttf 字型檔難以隨 ForgePlay 更新一同提供。如有需要，請使用者自行準備並斟酌套用。",
+        "de": "Hinweis des Entwicklers: Die Schriftdateien Malgun.ttf, Malgunbd.ttf und Malgunsl.ttf können wegen urheberrechtlicher Bedenken nicht in ein ForgePlay-Update aufgenommen werden. Falls erforderlich, sollten Nutzer sie selbst beschaffen und nach eigenem Ermessen anwenden.",
+        "es": "Nota del desarrollador: Los archivos de fuente Malgun.ttf, Malgunbd.ttf y Malgunsl.ttf no pueden incluirse en una actualización de ForgePlay por cuestiones relacionadas con los derechos de autor. Si son necesarios, cada usuario deberá obtenerlos y aplicarlos por su cuenta.",
+        "fr": "Note du développeur : les fichiers de police Malgun.ttf, Malgunbd.ttf et Malgunsl.ttf ne peuvent pas être inclus dans une mise à jour de ForgePlay en raison de considérations liées aux droits d’auteur. Si nécessaire, chaque utilisateur doit se les procurer et les appliquer lui-même."
+      }
     }
   ]
 }
