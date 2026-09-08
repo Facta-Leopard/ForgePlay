@@ -1,0 +1,199 @@
+--- a/dlls/winemac.drv/cocoa_opengl.m
++++ b/dlls/winemac.drv/cocoa_opengl.m
+@@ -25,12 +25,15 @@
+ #include "macdrv_cocoa.h"
+ #include "cocoa_app.h"
+ #include "cocoa_event.h"
++#include "metal_surface_contract.h"
+ 
+ #pragma GCC diagnostic ignored "-Wdeclaration-after-statement"
+ 
+ 
+ @interface WineOpenGLContext ()
+ @property (retain, nonatomic) NSView* latentView;
++@property (nonatomic) void *forgeplayFramegenSession;
++@property (nonatomic) BOOL forgeplayFramegenAttempted;
+ @property (nullable, weak) NSView *view;    /* redeclare this to avoid NSOpenGLContext's deprecation warnings */
+ 
+     + (NSView*) dummyView;
+@@ -45,6 +48,8 @@
+ 
+     - (void) dealloc
+     {
++        macdrv_framegen_destroy_opengl_session(self.forgeplayFramegenSession);
++        self.forgeplayFramegenSession = NULL;
+         [[self view] release];
+         [latentView release];
+         [super dealloc];
+@@ -137,6 +142,12 @@
+     - (void) setView:(NSView*)newView
+     {
+         NSView* oldView = [self view];
++        if (oldView != newView)
++        {
++            macdrv_framegen_destroy_opengl_session(self.forgeplayFramegenSession);
++            self.forgeplayFramegenSession = NULL;
++            self.forgeplayFramegenAttempted = NO;
++        }
+         if ([NSThread isMainThread])
+             [super setView:newView];
+         else OnMainThread(^{
+@@ -148,6 +159,9 @@
+ 
+     - (void) clearDrawable
+     {
++        macdrv_framegen_destroy_opengl_session(self.forgeplayFramegenSession);
++        self.forgeplayFramegenSession = NULL;
++        self.forgeplayFramegenAttempted = NO;
+         NSView* oldView = [self view];
+         if ([NSThread isMainThread])
+             [super clearDrawable];
+@@ -341,6 +355,23 @@
+     WineOpenGLContext *context = (WineOpenGLContext*)c;
+ 
+     macdrv_update_opengl_context(c);
++    if (!context.forgeplayFramegenAttempted && context.view)
++    {
++        context.forgeplayFramegenAttempted = YES;
++        context.forgeplayFramegenSession = macdrv_framegen_create_opengl_session(
++            context.view, context.CGLContextObj);
++    }
++    if (context.forgeplayFramegenSession)
++    {
++        int backing[2];
++        if (macdrv_get_view_backing_size((macdrv_view)context.view, backing) &&
++            backing[0] > 0 && backing[1] > 0 &&
++            !macdrv_framegen_before_opengl_swap(context.forgeplayFramegenSession, backing[0], backing[1]))
++        {
++            macdrv_framegen_destroy_opengl_session(context.forgeplayFramegenSession);
++            context.forgeplayFramegenSession = NULL;
++        }
++    }
+     [context flushBuffer];
+ }
+ }
+--- a/dlls/winemac.drv/metal_surface_contract.c
++++ b/dlls/winemac.drv/metal_surface_contract.c
+@@ -39,6 +39,7 @@
+ 
+ #include "macdrv.h"
+ #include "ntuser.h"
++#include "metal_surface_contract.h"
+ 
+ /*
+  * Metal renderers discover this table with dlsym().  Keep this layout stable:
+@@ -104,6 +105,18 @@
+ typedef const struct forgeplay_framegen_api_v1 *
+     (*forgeplay_framegen_get_api_v1_func)(void);
+ 
++struct forgeplay_opengl_framegen_api_v1
++{
++    uint32_t structure_size;
++    uint32_t abi_version;
++    void *(*create_session)(void *view, void *context,
++        const struct forgeplay_framegen_configuration_v1 *configuration,
++        char *failure_reason, size_t failure_reason_capacity);
++    int (*before_swap)(void *session, uint32_t width, uint32_t height);
++    void (*destroy_session)(void *session);
++};
++static const struct forgeplay_opengl_framegen_api_v1 *framegen_gl_api;
++
+ struct forgeplay_framegen_view
+ {
+     macdrv_view client_view;
+@@ -231,6 +244,15 @@
+         return;
+     }
+     framegen_api = api;
++    {
++        const struct forgeplay_opengl_framegen_api_v1 *(*get_gl_api)(void);
++        const struct forgeplay_opengl_framegen_api_v1 *gl_api;
++        get_gl_api = (void *)dlsym(handle, "FPWineD3DOpenGLFrameGenerationProxyGetAPIV1");
++        if (get_gl_api && (gl_api = get_gl_api()) &&
++            gl_api->structure_size == sizeof(*gl_api) && gl_api->abi_version == 1 &&
++            gl_api->create_session && gl_api->before_swap && gl_api->destroy_session)
++            framegen_gl_api = gl_api;
++    }
+     framegen_load_failure = NULL;
+     /* The process-lifetime handle remains loaded while function pointers and
+      * sessions from this exact ABI can still be observed. */
+@@ -587,3 +609,68 @@
+     macdrv_framegen_release_metal_view,
+     macdrv_on_main_thread,
+ };
++
++struct forgeplay_gl_framegen_creation_error
++{
++    uint32_t target;
++    char reason[64];
++};
++
++static void framegen_gl_creation_error_on_main(void *context)
++{
++    struct forgeplay_gl_framegen_creation_error *error = context;
++    framegen_record_error(error->target, error->reason);
++    free(error);
++}
++
++static void framegen_record_gl_creation_error(uint32_t target, const char *reason)
++{
++    static LONG queued;
++    struct forgeplay_gl_framegen_creation_error *error;
++
++    /* Reuse the existing main-executor, size-limited failure writer. Exactly
++     * one value-only delivery can be queued for all GL contexts in a process;
++     * renderer threads never wait for the main executor or file I/O. */
++    if (InterlockedCompareExchange(&queued, 1, 0)) return;
++    if (!(error = malloc(sizeof(*error)))) return;
++    error->target = target;
++    snprintf(error->reason, sizeof(error->reason), "%s", reason ? reason : "gl-session-create-failed");
++    dispatch_async_f(dispatch_get_main_queue(), error, framegen_gl_creation_error_on_main);
++}
++
++/* The caller is Wine's current OpenGL render context, before its original swap.
++ * No main-executor round trip is made on the per-frame capture boundary. */
++void *macdrv_framegen_create_opengl_session(void *view, void *cgl_context)
++{
++    struct forgeplay_framegen_configuration_v1 configuration;
++    const char *failure = NULL;
++    char reason[64] = {0};
++    void *session;
++
++    if (!framegen_requested_configuration(&configuration, &failure)) return NULL;
++    if (failure)
++    {
++        framegen_record_gl_creation_error(configuration.target_frame_rate, failure);
++        return NULL;
++    }
++    pthread_once(&framegen_load_once, framegen_load_proxy);
++    if (!framegen_gl_api)
++    {
++        framegen_record_gl_creation_error(configuration.target_frame_rate,
++            framegen_load_failure ? framegen_load_failure : "gl-proxy-entrypoint-missing");
++        return NULL;
++    }
++    session = framegen_gl_api->create_session(view, cgl_context, &configuration, reason, sizeof(reason));
++    if (!session)
++        framegen_record_gl_creation_error(configuration.target_frame_rate,
++            reason[0] ? reason : "gl-session-create-failed");
++    return session;
++}
++int macdrv_framegen_before_opengl_swap(void *session, uint32_t width, uint32_t height)
++{
++    return session && framegen_gl_api ? framegen_gl_api->before_swap(session, width, height) : 0;
++}
++void macdrv_framegen_destroy_opengl_session(void *session)
++{
++    if (session && framegen_gl_api) framegen_gl_api->destroy_session(session);
++}
+--- /dev/null
++++ b/dlls/winemac.drv/metal_surface_contract.h
+@@ -0,0 +1,8 @@
++/* ForgePlay optional OpenGL capture lifecycle; the owning Wine swap remains intact. */
++#ifndef FORGEPLAY_METAL_SURFACE_CONTRACT_H
++#define FORGEPLAY_METAL_SURFACE_CONTRACT_H
++#include <stdint.h>
++void *macdrv_framegen_create_opengl_session(void *view, void *cgl_context);
++int macdrv_framegen_before_opengl_swap(void *session, uint32_t width, uint32_t height);
++void macdrv_framegen_destroy_opengl_session(void *session);
++#endif

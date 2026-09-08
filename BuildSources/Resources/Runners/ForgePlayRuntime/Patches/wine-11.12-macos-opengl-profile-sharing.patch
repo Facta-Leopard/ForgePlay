@@ -1,0 +1,373 @@
+--- a/include/wine/opengl_driver.h
++++ b/include/wine/opengl_driver.h
+@@ -73,6 +73,9 @@
+     struct HGLRC__              obj;            /* client object header */
+     UINT64                      unix_handle;
+     UINT64                      unix_funcs;
++    /* Zero means the driver supports its usual global native sharing.
++     * Nonzero tokens identify host-imposed native sharing domains. */
++    UINT64                      native_share_group;
+     DWORD                       current_tid;                            /* thread that the context is current in */
+     GLenum                      last_error;
+     GLint                       context_flags;
+@@ -112,7 +115,7 @@
+ #include "wine/gdi_driver.h"
+ 
+ /* Wine internal opengl driver version, needs to be bumped upon opengl_funcs changes. */
+-#define WINE_OPENGL_DRIVER_VERSION 38
++#define WINE_OPENGL_DRIVER_VERSION 39
+ 
+ struct opengl_drawable;
+ 
+@@ -148,6 +151,8 @@
+     BOOL (*p_context_flush)( struct opengl_context *context, void (*flush)(void), UINT flags );
+     BOOL (*p_context_create)( struct opengl_context *context, HDC hdc, const int *attribs );
+     BOOL (*p_context_destroy)( struct opengl_context *context );
++    /* Bind/restore a context only while opengl32 retires its native objects. */
++    BOOL (*p_context_cleanup)( struct opengl_context *context, BOOL begin );
+     BOOL (*p_pbuffer_create)( HDC hdc, int format, int width, int height, const int *attribs, HPBUFFERARB client_pbuffer );
+     void *egl_handle;
+ };
+@@ -250,6 +255,9 @@
+     BOOL (*p_pbuffer_updated)( HDC hdc, struct opengl_drawable *drawable, GLenum cube_face, GLint mipmap_level );
+     UINT (*p_pbuffer_bind)( HDC hdc, struct opengl_drawable *drawable, GLenum buffer );
+     BOOL (*p_null_surface_create)( int format, struct opengl_drawable **drawable );
++    /* Optional: hosts such as CGL cannot share between legacy/core profiles. */
++    UINT64 (*p_context_share_group)( void *context );
++    BOOL (*p_context_cleanup)( void *context, BOOL begin );
+ };
+ 
+ #endif /* WINE_UNIX_LIB */
+--- a/dlls/winemac.drv/opengl.c
++++ b/dlls/winemac.drv/opengl.c
+@@ -69,6 +69,9 @@
+     macdrv_view             read_view;
+     CGLPBufferObj           read_pbuffer;
+     int                     swap_interval;
++    BOOL                    core_profile;
++    CGLContextObj           cleanup_previous_context;
++    struct macdrv_context  *cleanup_previous_wine_context;
+ };
+ 
+ struct gl_drawable
+@@ -2100,6 +2103,12 @@
+  *
+  * WGL_ARB_create_context: wglCreateContextAttribsARB
+  */
++/* Wine's object-name virtualization requires all compatible contexts to share
++ * native objects. CGL explicitly forbids legacy/core cross-profile sharing,
++ * so retain one native anchor for each of those two process-lifetime domains. */
++static pthread_mutex_t profile_share_mutex = PTHREAD_MUTEX_INITIALIZER;
++static CGLContextObj profile_share_contexts[2];
++
+ static BOOL macdrv_context_create(int format, void *shared, const int *attrib_list, void **private)
+ {
+     struct macdrv_context *share_context = shared;
+@@ -2111,6 +2120,14 @@
+ 
+     TRACE("format %d, share_context %p, attrib_list %p\n", format, share_context, attrib_list);
+ 
++    /* win32u's internal null contexts request the same native domain as the
++     * selected share context. Application attributes remain authoritative. */
++    if (!attrib_list && share_context && share_context->core_profile)
++    {
++        major = gl_info.max_major;
++        minor = gl_info.max_minor;
++        flags = WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB;
++    }
+     for (iptr = attrib_list; iptr && *iptr; iptr += 2)
+     {
+         int attr = iptr[0];
+@@ -2206,11 +2223,19 @@
+ 
+     context->format = format;
+     context->renderer_id = renderer_id;
+-    if (!create_context(context, share_context ? share_context->cglcontext : NULL, major))
+-    {
++    context->core_profile = core;
++    pthread_mutex_lock(&profile_share_mutex);
++    /* A request is a minimum version. Use the actually probed highest core
++     * profile for both 3.2 and 4.x requests, keeping their objects shareable. */
++    if (!create_context(context, profile_share_contexts[core], core ? gl_info.max_major : major))
++    {
++        pthread_mutex_unlock(&profile_share_mutex);
+         free(context);
+         return FALSE;
+     }
++    if (!profile_share_contexts[core])
++        profile_share_contexts[core] = CGLRetainContext(context->cglcontext);
++    pthread_mutex_unlock(&profile_share_mutex);
+ 
+     *private = context;
+     return TRUE;
+@@ -2271,7 +2296,8 @@
+     }
+     if (!draw || !read)
+     {
+-        CGLSetCurrentContext(context->cglcontext);
++        if (CGLSetCurrentContext(context->cglcontext) != kCGLNoError) return FALSE;
++        NtCurrentTeb()->glReserved2 = context;
+         return TRUE;
+     }
+ 
+@@ -2724,6 +2750,44 @@
+     return TRUE;
+ }
+ 
++static UINT64 macdrv_context_share_group(void *private)
++{
++    struct macdrv_context *context = private;
++    return (UINT_PTR)CGLGetShareGroup(context->cglcontext);
++}
++
++static BOOL macdrv_context_cleanup(void *private, BOOL begin)
++{
++    struct macdrv_context *context = private;
++    CGLError error;
++    if (begin)
++    {
++        context->cleanup_previous_context = CGLGetCurrentContext();
++        if (context->cleanup_previous_context) CGLRetainContext(context->cleanup_previous_context);
++        context->cleanup_previous_wine_context = NtCurrentTeb()->glReserved2;
++        if ((error = CGLSetCurrentContext(context->cglcontext)) != kCGLNoError)
++        {
++            if (context->cleanup_previous_context) CGLReleaseContext(context->cleanup_previous_context);
++            context->cleanup_previous_context = NULL;
++            context->cleanup_previous_wine_context = NULL;
++            WARN("Cannot select object cleanup context: %d\n", error);
++            return FALSE;
++        }
++        NtCurrentTeb()->glReserved2 = context;
++    }
++    else
++    {
++        error = CGLSetCurrentContext(context->cleanup_previous_context);
++        NtCurrentTeb()->glReserved2 = context->cleanup_previous_wine_context;
++        if (context->cleanup_previous_context) CGLReleaseContext(context->cleanup_previous_context);
++        context->cleanup_previous_context = NULL;
++        context->cleanup_previous_wine_context = NULL;
++        if (error != kCGLNoError) WARN("Cannot restore context after object cleanup: %d\n", error);
++        return error == kCGLNoError;
++    }
++    return TRUE;
++}
++
+ static BOOL macdrv_context_destroy(void *private)
+ {
+     struct macdrv_context *context = private;
+@@ -2777,6 +2841,8 @@
+     .p_pbuffer_create = macdrv_pbuffer_create,
+     .p_pbuffer_updated = macdrv_pbuffer_updated,
+     .p_pbuffer_bind = macdrv_pbuffer_bind,
++    .p_context_share_group = macdrv_context_share_group,
++    .p_context_cleanup = macdrv_context_cleanup,
+ };
+ 
+ static const struct opengl_drawable_funcs macdrv_surface_funcs =
+--- a/dlls/win32u/opengl.c
++++ b/dlls/win32u/opengl.c
+@@ -42,6 +42,8 @@
+ struct opengl_thread_data
+ {
+     void                   *null_context;  /* dummy context when no client context is active */
++    void                   *profile_null_context; /* host-restricted profile sharing domain */
++    UINT64                  profile_null_share_group;
+     struct opengl_drawable *null_surface;  /* dummy surface when no client context is active */
+ };
+ 
+@@ -196,9 +198,26 @@
+ static BOOL make_null_context_current( struct opengl_drawable *drawable )
+ {
+     struct opengl_thread_data *data = get_opengl_thread_data();
++    struct opengl_context *current = NtCurrentTeb()->glContext;
++    void **null_context = &data->null_context;
++    void *share = global_context;
++    UINT64 group;
+     int format;
+ 
+-    if (!data->null_context)
++    if (current && driver_funcs->p_context_share_group &&
++        (group = driver_funcs->p_context_share_group(current->driver_private)) !=
++            driver_funcs->p_context_share_group(global_context))
++    {
++        share = current->driver_private;
++        null_context = &data->profile_null_context;
++        if (*null_context && data->profile_null_share_group != group)
++        {
++            driver_funcs->p_context_destroy(*null_context);
++            *null_context = NULL;
++        }
++        data->profile_null_share_group = group;
++    }
++    if (!*null_context)
+     {
+         for (format = 1; format <= formats_count; format++)
+         {
+@@ -210,12 +229,12 @@
+         }
+ 
+         if (format > formats_count) return FALSE;
+-        driver_funcs->p_context_create( format, global_context, NULL, &data->null_context );
++        if (!driver_funcs->p_context_create( format, share, NULL, null_context )) return FALSE;
+         if (driver_funcs->p_null_surface_create) driver_funcs->p_null_surface_create( format, &data->null_surface );
+     }
+ 
+     if (!drawable) drawable = data->null_surface;
+-    return driver_funcs->p_make_current( drawable, drawable, data->null_context );
++    return driver_funcs->p_make_current( drawable, drawable, *null_context );
+ }
+ 
+ static void make_client_context_current(void)
+@@ -2291,9 +2310,18 @@
+         return FALSE;
+     }
+     context->format = format;
++    if (driver_funcs->p_context_share_group)
++        opengl_client_context_from_client(context->client_context)->native_share_group =
++            driver_funcs->p_context_share_group(context->driver_private);
+ 
+     TRACE( "created context %p, format %u for driver context %p\n", context, format, context->driver_private );
+     return TRUE;
++}
++
++static BOOL win32u_context_cleanup( struct opengl_context *context, BOOL begin )
++{
++    return !driver_funcs->p_context_cleanup ||
++        driver_funcs->p_context_cleanup(context->driver_private, begin);
+ }
+ 
+ static BOOL win32u_context_destroy( struct opengl_context *context )
+@@ -2706,6 +2734,7 @@
+     display_funcs.p_context_flush = win32u_context_flush;
+     display_funcs.p_context_create = win32u_context_create;
+     display_funcs.p_context_destroy = win32u_context_destroy;
++    display_funcs.p_context_cleanup = win32u_context_cleanup;
+ 
+     global_extensions[WGL_ARB_multisample] = 1;
+ 
+@@ -2855,6 +2884,7 @@
+ 
+     if (!(data = info->opengl_data)) return;
+     if (data->null_context) driver_funcs->p_context_destroy( data->null_context );
++    if (data->profile_null_context) driver_funcs->p_context_destroy( data->profile_null_context );
+     if (data->null_surface) opengl_drawable_release( data->null_surface );
+     free( data );
+ }
+--- a/dlls/opengl32/wgl.c
++++ b/dlls/opengl32/wgl.c
+@@ -567,7 +567,7 @@
+ {
+     struct context *context = context_from_opengl_client_context( ptr->context );
+ 
+-    display_lists_release( context->lists );
++    if (context->lists) display_lists_release( context->lists );
+ 
+     free_handle( &contexts, ptr );
+     free( context );
+@@ -955,8 +955,25 @@
+     if ((status = UNIX_CALL( wglDeleteContext, &args ))) WARN( "wglDeleteContext returned %#lx\n", status );
+     if (status || !args.ret) return FALSE;
+ 
+-    /* make sure there's a (dummy) context before releasing and destroying display list objects */
+-    if (!teb->glCurrentRC) wglMakeContextCurrentARB( NULL, NULL, NULL );
++    if (ptr->context->native_share_group)
++    {
++        struct context *context = context_from_opengl_client_context(ptr->context);
++        /* The first native phase has selected this context's sharing domain.
++         * Retire the host objects before restoring the caller's native context. */
++        display_lists_release(context->lists);
++        context->lists = NULL;
++        args.ret = FALSE;
++        if ((status = UNIX_CALL(wglDeleteContext, &args)) || !args.ret)
++        {
++            WARN("Failed to finish native object cleanup, status %#lx.\n", status);
++            return FALSE;
++        }
++    }
++    else
++    {
++        /* make sure there's a (dummy) context before destroying display list objects */
++        if (!teb->glCurrentRC) wglMakeContextCurrentARB( NULL, NULL, NULL );
++    }
+     free_client_context( ptr );
+     return TRUE;
+ }
+@@ -1012,6 +1029,12 @@
+ 
+     if (!(src_context = context_from_handle( src_handle ))) return FALSE;
+     if (!(dst_context = context_from_handle( dst_handle ))) return FALSE;
++    if ((src_context->base.native_share_group || dst_context->base.native_share_group) &&
++        src_context->base.native_share_group != dst_context->base.native_share_group)
++    {
++        SetLastError(ERROR_INVALID_OPERATION);
++        return FALSE;
++    }
+     if (ReadNoFence( &dst_context->lists->modified )) return FALSE;
+ 
+     lists = display_lists_acquire( src_context->lists );
+--- a/dlls/opengl32/unix_wgl.c
++++ b/dlls/opengl32/unix_wgl.c
+@@ -125,6 +125,9 @@
+ struct context
+ {
+     struct opengl_context base;
++    BOOL cleanup_pending;
++    const struct opengl_funcs *cleanup_previous_table;
++    struct opengl_context *cleanup_previous_context;
+ 
+     HGLRC client;                  /* client-side context handle */
+     UINT64 debug_callback;         /* client pointer */
+@@ -1116,6 +1119,33 @@
+ {
+     const struct opengl_funcs *funcs = get_context_funcs( client_context );
+     struct context *ctx = context_from_client_context( client_context );
++    struct opengl_client_context *client = opengl_client_context_from_client(client_context);
++
++    /* Restricted native domains need two internal phases: select the owning
++     * context, let the PE side delete its objects, then restore and destroy.
++     * Other drivers retain the original one-call deletion contract. */
++    if (client->native_share_group && funcs->p_context_cleanup)
++    {
++        if (!ctx->cleanup_pending)
++        {
++            if (!funcs->p_context_cleanup(&ctx->base, TRUE)) return FALSE;
++            /* Object deletion thunks dispatch through the TEB, even when the
++             * caller has no guest context or a different profile current.
++             * Select the owning dispatch/state as well as its native context. */
++            ctx->cleanup_previous_table = teb->glTable;
++            ctx->cleanup_previous_context = teb->glContext;
++            teb->glTable = funcs;
++            teb->glContext = &ctx->base;
++            ctx->cleanup_pending = TRUE;
++            return TRUE;
++        }
++        funcs->p_context_cleanup(&ctx->base, FALSE);
++        teb->glTable = ctx->cleanup_previous_table;
++        teb->glContext = ctx->cleanup_previous_context;
++        ctx->cleanup_previous_table = NULL;
++        ctx->cleanup_previous_context = NULL;
++        ctx->cleanup_pending = FALSE;
++    }
+     funcs->p_context_destroy( &ctx->base );
+     free_context( funcs, ctx );
+     return TRUE;
+@@ -1285,6 +1315,19 @@
+         return 0;
+     }
+ 
++    if (client_shared)
++    {
++        const struct opengl_client_context *source = opengl_client_context_from_client(client_shared);
++        const struct opengl_client_context *created = opengl_client_context_from_client(client_context);
++        if ((source->native_share_group || created->native_share_group) &&
++            source->native_share_group != created->native_share_group)
++        {
++            funcs->p_context_destroy(&context->base);
++            free_context(funcs, context);
++            RtlSetLastWin32Error(ERROR_INVALID_OPERATION);
++            return 0;
++        }
++    }
+     context->client = client_context;
+     opengl_client_context_init( client_context, context, funcs );
+     return client_context;

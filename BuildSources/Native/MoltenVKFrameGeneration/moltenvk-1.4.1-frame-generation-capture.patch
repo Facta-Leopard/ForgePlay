@@ -1,0 +1,220 @@
+diff --git a/MoltenVK/MoltenVK/GPUObjects/MVKImage.mm b/MoltenVK/MoltenVK/GPUObjects/MVKImage.mm
+--- a/MoltenVK/MoltenVK/GPUObjects/MVKImage.mm
++++ b/MoltenVK/MoltenVK/GPUObjects/MVKImage.mm
+@@ -28,6 +28,57 @@
+ 
+ #import "MTLSamplerDescriptor+MoltenVK.h"
+ #import "CAMetalLayer+MoltenVK.h"
++
++
++#if MVK_MACOS
++#include <atomic>
++#include <climits>
++#include <cstdlib>
++#include <cstring>
++#include <dlfcn.h>
++#include <sys/stat.h>
++#include <unistd.h>
++
++// ForgePlay modification, Copyright 2026 Facta-Leopard, Apache-2.0.
++// Bind the exact drawable to its uncommitted writer without changing Vulkan's
++// scheduled presentation, presentation timing, or semaphore/fence lifecycle.
++static void mvkForgePlayBindSourceDrawable(void* drawable, void* commandBuffer) {
++	const char* enabled = getenv("FORGEPLAY_D3DMETAL_FRAME_GENERATION");
++	if (!enabled || strcmp(enabled, "1") || !drawable || !commandBuffer) { return; }
++
++	using BindSourceDrawable = int (*)(void*, void*);
++	static std::atomic<BindSourceDrawable> cachedBinder{nullptr};
++	auto binder = cachedBinder.load(std::memory_order_acquire);
++	if (!binder) {
++		const char* path = getenv("FORGEPLAY_D3DMETAL_FRAME_GENERATION_PROXY");
++		static const char suffix[] = "/ForgePlayD3DMetalFrameGenerationProxy.dylib";
++		char canonical[PATH_MAX];
++		struct stat metadata;
++		if (!path || path[0] != '/') { return; }
++		size_t length = strlen(path);
++		if (length < sizeof(suffix) - 1 || length >= sizeof(canonical) ||
++			strcmp(path + length - (sizeof(suffix) - 1), suffix) ||
++			lstat(path, &metadata) || !S_ISREG(metadata.st_mode) || metadata.st_nlink != 1 ||
++			metadata.st_uid != geteuid() || (metadata.st_mode & (S_IWGRP | S_IWOTH)) ||
++			!realpath(path, canonical) || strcmp(path, canonical)) { return; }
++
++		// Wine owns the validated proxy handle for the lifetime of this process.
++		// NOLOAD cannot introduce a new library from the environment path.
++		void* handle = dlopen(path, RTLD_LAZY | RTLD_NOLOAD);
++		if (!handle) { return; }
++		void* symbol = dlsym(handle, "FPD3DMetalFrameGenerationProxyBindSourceDrawableV1");
++		Dl_info owner = {};
++		if (symbol && dladdr(symbol, &owner) && owner.dli_fname &&
++			realpath(owner.dli_fname, canonical) && !strcmp(path, canonical)) {
++			binder = reinterpret_cast<BindSourceDrawable>(symbol);
++			cachedBinder.store(binder, std::memory_order_release);
++		}
++		dlclose(handle);
++		// Do not cache a miss: the first drawable can precede proxy attachment.
++	}
++	if (binder) { (void)binder(drawable, commandBuffer); }
++}
++#endif
+ 
+ using namespace std;
+ using namespace SPIRV_CROSS_NAMESPACE;
+@@ -1618,6 +1669,9 @@
+ 	// But get current drawable now, intead of in handler, because a new drawable might be acquired by then.
+ 	// Attach present handler before presenting to avoid race condition.
+ 	id<CAMetalDrawable> mtlDrwbl = getCAMetalDrawable();
++#if MVK_MACOS
++	mvkForgePlayBindSourceDrawable((void*)mtlDrwbl, (void*)mtlCmdBuff);
++#endif
+ 	MVKSwapchainSignaler signaler = getPresentationSignaler();
+ 	[mtlCmdBuff addScheduledHandler: ^(id<MTLCommandBuffer> mcb) {
+ 
+diff --git a/MoltenVK/CMakeLists.txt b/MoltenVK/CMakeLists.txt
+--- a/MoltenVK/CMakeLists.txt
++++ b/MoltenVK/CMakeLists.txt
+@@ -24,21 +24,26 @@
+ )
+ 
+ # Record the MoltenVK GIT revision as a derived header file suitable for including in a build
+-find_package(Git)
+-if(GIT_FOUND)
+-	execute_process(
+-		COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
+-		OUTPUT_VARIABLE MVK_GIT_REV
+-		ERROR_QUIET
+-		OUTPUT_STRIP_TRAILING_WHITESPACE
+-	)
+-	configure_file(
+-		"${CMAKE_CURRENT_SOURCE_DIR}/../Templates/cmake/mvkGitRevDerived.h.in"
+-		"${CMAKE_CURRENT_BINARY_DIR}/mvkGitRevDerived.h"
+-	)
+-else()
+-	message(FATAL_ERROR "GIT not found")
++# Archive builds supply the locked upstream revision plus their patch suffix.
++# Do not accidentally identify a parent workspace's unrelated Git checkout.
++if(NOT DEFINED MVK_GIT_REV)
++	find_package(Git)
++	if(GIT_FOUND)
++		execute_process(
++			COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
++			WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
++			OUTPUT_VARIABLE MVK_GIT_REV
++			ERROR_QUIET
++			OUTPUT_STRIP_TRAILING_WHITESPACE
++		)
++	else()
++		message(FATAL_ERROR "GIT not found and MVK_GIT_REV was not supplied")
++	endif()
+ endif()
++configure_file(
++	"${CMAKE_CURRENT_SOURCE_DIR}/../Templates/cmake/mvkGitRevDerived.h.in"
++	"${CMAKE_CURRENT_BINARY_DIR}/mvkGitRevDerived.h"
++)
+ 
+ target_compile_definitions(MoltenVK PUBLIC
+ 	"MVK_FRAMEWORK_VERSION=${PROJECT_VERSION}"
+diff --git a/MoltenVK/MoltenVK/GPUObjects/MVKQueue.mm b/MoltenVK/MoltenVK/GPUObjects/MVKQueue.mm
+--- a/MoltenVK/MoltenVK/GPUObjects/MVKQueue.mm
++++ b/MoltenVK/MoltenVK/GPUObjects/MVKQueue.mm
+@@ -219,0 +220,15 @@
++// ForgePlay opt-in error diagnostics, Copyright 2026 Facta-Leopard, Apache-2.0.
++// Identifiers only: bound output and replace non-printable/non-ASCII characters
++// so an NSError key or domain cannot inject additional log lines.
++template<size_t N>
++static void mvkForgePlayCopyErrorIdentifier(NSString* identifier, char (&buffer)[N]) {
++	if (!identifier) { identifier = @"<none>"; }
++	NSUInteger count = identifier.length;
++	if (count >= N) { count = N - 1; }
++	for (NSUInteger idx = 0; idx < count; idx++) {
++		unichar ch = [identifier characterAtIndex: idx];
++		buffer[idx] = ch >= 0x20 && ch <= 0x7e ? (char)ch : '?';
++	}
++	buffer[count] = 0;
++}
++
+@@ -221,0 +237,30 @@
++
++	const bool forgePlayErrorDiagnostics = getMVKConfig().debugMode;
++	if (forgePlayErrorDiagnostics) {
++		NSError* error = mtlCmdBuff.error;
++		NSDictionary* userInfo = error.userInfo;
++		id encoderInfo = userInfo[MTLCommandBufferEncoderInfoErrorKey];
++		bool hasEncoderArray = [encoderInfo isKindOfClass: [NSArray class]];
++		NSUInteger encoderCount = hasEncoderArray ? [encoderInfo count] : 0;
++		const char* encoderState = !encoderInfo ? "absent" : !hasEncoderArray ? "unexpected-type" : encoderCount ? "present" : "empty";
++		id underlyingValue = userInfo[NSUnderlyingErrorKey];
++		NSError* underlying = [underlyingValue isKindOfClass: [NSError class]] ? (NSError*)underlyingValue : nil;
++		const char* underlyingState = !underlyingValue ? "absent" : underlying ? "present" : "unexpected-type";
++		char domain[128], underlyingDomain[128];
++		mvkForgePlayCopyErrorIdentifier(error.domain, domain);
++		mvkForgePlayCopyErrorIdentifier(underlying.domain, underlyingDomain);
++		MVKLogInfo("ForgePlay GPU failure diagnostics: errorOptions=0x%lx retainedReferences=%u errorDomain=%s errorCode=%li userInfoKeyCount=%lu encoderInfo=%s encoderCount=%lu underlyingError=%s underlyingDomain=%s underlyingCode=%li",
++				   (unsigned long)mtlCmdBuff.errorOptions, (unsigned)mtlCmdBuff.retainedReferences,
++				   domain, (long)error.code, (unsigned long)userInfo.count, encoderState, (unsigned long)encoderCount,
++				   underlyingState, underlyingDomain, (long)underlying.code);
++		NSUInteger shownKeys = 0;
++		for (id key in userInfo) {
++			if (shownKeys == 16) { break; }
++			char keyName[96];
++			mvkForgePlayCopyErrorIdentifier([key isKindOfClass: [NSString class]] ? (NSString*)key : @"<non-string-key>", keyName);
++			MVKLogInfo(" - NSError userInfo key[%lu]=%s", (unsigned long)shownKeys++, keyName);
++		}
++		if (userInfo.count > shownKeys) {
++			MVKLogInfo(" - NSError userInfo keys omitted=%lu", (unsigned long)(userInfo.count - shownKeys));
++		}
++	}
+@@ -279,0 +325,3 @@
++	}
++	if (forgePlayErrorDiagnostics && isFirstMsg) {
++		MVKLogInfo("ForgePlay GPU failure diagnostics: shaderLogs=none");
+diff --git a/MoltenVK/MoltenVK/GPUObjects/MVKDevice.h b/MoltenVK/MoltenVK/GPUObjects/MVKDevice.h
+--- a/MoltenVK/MoltenVK/GPUObjects/MVKDevice.h
++++ b/MoltenVK/MoltenVK/GPUObjects/MVKDevice.h
+@@ -609,7 +609,7 @@
+ 	uint32_t size() const { return _halfSize * 2; }
+ 	bool isFirstWithCurrentFence() const { return _currentOffset == _halfSize || _currentOffset == 0; }
+ 	FenceSet currentFence() const {
+-		uint32_t idx = _currentOffset > _halfSize ? 1 : 0;
++		uint32_t idx = _currentOffset >= _halfSize ? 1 : 0;
+ 		return { _fences[0][idx], _fences[1][idx], _fences[2][idx] };
+ 	}
+ 	MVKVisibilityBuffer() = default;
+diff --git a/MoltenVK/MoltenVK/Commands/MVKCommandBuffer.mm b/MoltenVK/MoltenVK/Commands/MVKCommandBuffer.mm
+--- a/MoltenVK/MoltenVK/Commands/MVKCommandBuffer.mm
++++ b/MoltenVK/MoltenVK/Commands/MVKCommandBuffer.mm
+@@ -777,6 +777,9 @@
+ 		if (!_pEncodingContext->visibilityResultBuffer.buffer()) {
+ 			_pEncodingContext->visibilityResultBuffer = _device->getVisibilityBuffer();
+ 		}
++		// Track the starting visibility offset for this Metal render pass so wrap detection compares
++		// against the correct baseline even when the buffer was already partially consumed.
++		_pEncodingContext->firstVisibilityResultOffsetInRenderPass = _pEncodingContext->visibilityResultBuffer.offset();
+ 		mtlRPDesc.visibilityResultBuffer = _pEncodingContext->visibilityResultBuffer.buffer();
+ 	}
+ 
+diff --git a/MoltenVK/MoltenVK/Commands/MVKCommandEncoderState.mm b/MoltenVK/MoltenVK/Commands/MVKCommandEncoderState.mm
+--- a/MoltenVK/MoltenVK/Commands/MVKCommandEncoderState.mm
++++ b/MoltenVK/MoltenVK/Commands/MVKCommandEncoderState.mm
+@@ -1842,9 +1842,7 @@
+ 	id<MTLComputeCommandEncoder> mtlAccumEncoder = cmdEncoder->getMTLComputeEncoder(kMVKCommandUseAccumOcclusionQuery);
+ 	for (uint32_t i = 0; i < _numCopyFences; i++) {
+ 		[mtlAccumEncoder waitForFence:_copyFences[i].write];
+-		[mtlAccumEncoder updateFence:_copyFences[i].read];
+-	}
+-	_numCopyFences = 0;
++	}
+ 	MVKMetalComputeCommandEncoderState& state = cmdEncoder->getMtlCompute();
+ 	state.bindPipeline(mtlAccumEncoder, mtlAccumState);
+ 	state.bindBuffer(mtlAccumEncoder, vizBuff.buffer(), 0, 2);
+@@ -1883,6 +1881,11 @@
+ 			}
+ 		}
+ 	}
++	// Readers must finish accumulating before the visibility slots can be overwritten.
++	for (uint32_t i = 0; i < _numCopyFences; i++) {
++		[mtlAccumEncoder updateFence:_copyFences[i].read];
++	}
++	_numCopyFences = 0;
+ 	_mtlRenderPassQueries.clear();
+ }
+ 

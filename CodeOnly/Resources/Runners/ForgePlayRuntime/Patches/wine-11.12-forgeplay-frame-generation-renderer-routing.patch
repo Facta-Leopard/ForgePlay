@@ -1,0 +1,205 @@
+diff --git a/dlls/winemac.drv/macdrv_cocoa.h b/dlls/winemac.drv/macdrv_cocoa.h
+--- a/dlls/winemac.drv/macdrv_cocoa.h
++++ b/dlls/winemac.drv/macdrv_cocoa.h
+@@ -529,6 +529,11 @@
+ extern macdrv_metal_view macdrv_view_create_metal_view(macdrv_view v, macdrv_metal_device d);
+ extern macdrv_metal_layer macdrv_view_get_metal_layer(macdrv_metal_view v);
+ extern void macdrv_view_release_metal_view(macdrv_metal_view v);
++/* Shared optional frame-generation lifecycle for renderer and Vulkan views. */
++extern macdrv_metal_view macdrv_framegen_create_metal_view(macdrv_view v, macdrv_metal_device d);
++extern macdrv_metal_layer macdrv_framegen_get_metal_layer(macdrv_metal_view v);
++extern void macdrv_framegen_release_metal_view(macdrv_metal_view v);
++extern void macdrv_framegen_report_offscreen_swapchain(void);
+ extern macdrv_metal_swapchain macdrv_create_view_swapchain(macdrv_view v);
+ extern macdrv_metal_swapchain macdrv_create_offscreen_swapchain(void* hwnd, CGRect bounds);
+ extern macdrv_metal_layer macdrv_swapchain_get_layer(macdrv_metal_swapchain swapchain);
+diff --git a/dlls/winemac.drv/metal_surface_contract.c b/dlls/winemac.drv/metal_surface_contract.c
+--- a/dlls/winemac.drv/metal_surface_contract.c
++++ b/dlls/winemac.drv/metal_surface_contract.c
+@@ -25,6 +25,7 @@
+ #include "config.h"
+ 
+ #include <dlfcn.h>
++#include <dispatch/dispatch.h>
+ #include <fcntl.h>
+ #include <limits.h>
+ #include <pthread.h>
+@@ -235,13 +236,41 @@
+      * sessions from this exact ABI can still be observed. */
+ }
+ 
++struct forgeplay_framegen_error_snapshot
++{
++    char path[PATH_MAX];
++    char record[512];
++    size_t length;
++};
++
++static void framegen_write_error_snapshot( void *context )
++{
++    struct forgeplay_framegen_error_snapshot *snapshot = context;
++    struct stat metadata;
++    int descriptor;
++
++    descriptor = open( snapshot->path, O_WRONLY | O_APPEND | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK );
++    if (descriptor < 0) goto done;
++    if (!fstat( descriptor, &metadata ) && S_ISREG( metadata.st_mode ) &&
++        metadata.st_nlink == 1 && metadata.st_uid == geteuid() &&
++        metadata.st_size >= 0 && metadata.st_size < FORGEPLAY_FRAMEGEN_OBSERVATION_LIMIT &&
++        (size_t)metadata.st_size + snapshot->length <= FORGEPLAY_FRAMEGEN_OBSERVATION_LIMIT)
++        (void)write( descriptor, snapshot->record, snapshot->length );
++    close( descriptor );
++done:
++    free( snapshot );
++}
++
+ static void framegen_record_error( uint32_t target, const char *reason )
+ {
++    struct forgeplay_framegen_error_snapshot *snapshot;
+     const char *path;
+-    char record[512];
+-    struct stat metadata;
+-    int descriptor, length;
+-
++    size_t path_length;
++    int length;
++
++    /* All callers execute on Wine's main executor. Mark the single process
++     * attempt before dispatch: an unavailable destination cannot grow a queue,
++     * retain a view/session, or block the rendering caller on file I/O. */
+     if (framegen_error_recorded)
+         return;
+     framegen_error_recorded = TRUE;
+@@ -250,15 +279,11 @@
+     if (!framegen_observation_path_is_valid( path ))
+         path = getenv( "FORGEPLAY_PROCESS_OBSERVATION_FILE" );
+     if (!framegen_observation_path_is_valid( path )) return;
+-    descriptor = open( path, O_WRONLY | O_APPEND | O_CLOEXEC | O_NOFOLLOW );
+-    if (descriptor < 0) return;
+-    if (fstat( descriptor, &metadata ) || !S_ISREG( metadata.st_mode ) ||
+-        metadata.st_nlink != 1 || metadata.st_uid != geteuid() ||
+-        metadata.st_size < 0 ||
+-        metadata.st_size >= FORGEPLAY_FRAMEGEN_OBSERVATION_LIMIT)
+-        goto done;
++    path_length = strnlen( path, PATH_MAX );
++    if (path_length >= PATH_MAX || !(snapshot = malloc( sizeof(*snapshot) ))) return;
++    memcpy( snapshot->path, path, path_length + 1 );
+     length = snprintf(
+-        record, sizeof(record),
++        snapshot->record, sizeof(snapshot->record),
+         "FORGEPLAY_D3DMETAL_FRAMEGEN_V1\t%ld\tstate=error"
+         "\ttarget_hz=%u\tepoch=0\tsource_present_seen=0"
+         "\tcapture_ready=0\tgenerated_submitted=0"
+@@ -266,12 +291,15 @@
+         "\tmidpoint=0\toutput_active=0\tdisplay_updates=0"
+         "\tcadence_hz=0.0\treason=%s\n",
+         (long)getpid(), target, reason ? reason : "runtime-error" );
+-    if (length > 0 && (size_t)length < sizeof(record) &&
+-        (size_t)metadata.st_size + (size_t)length <=
+-            FORGEPLAY_FRAMEGEN_OBSERVATION_LIMIT)
+-        (void)write( descriptor, record, (size_t)length );
+-done:
+-    close( descriptor );
++    if (length <= 0 || (size_t)length >= sizeof(snapshot->record))
++    {
++        free( snapshot );
++        return;
++    }
++    snapshot->length = length;
++    /* Best effort only: process exit need not wait for this diagnostic. */
++    dispatch_async_f( dispatch_get_global_queue( QOS_CLASS_UTILITY, 0 ), snapshot,
++                      framegen_write_error_snapshot );
+ }
+ 
+ static struct forgeplay_framegen_view *framegen_find_view(
+@@ -474,6 +502,39 @@
+     } );
+ }
+ 
++/* Both the exported renderer ABI and Wine's Vulkan view swapchain must use
++ * the same main-executor ownership transaction. Raw Cocoa functions remain
++ * private to the implementation above so this route cannot attach twice. */
++macdrv_metal_view macdrv_framegen_create_metal_view(
++    macdrv_view client_view, macdrv_metal_device device )
++{
++    return framegen_view_create_metal_view( client_view, device );
++}
++
++macdrv_metal_layer macdrv_framegen_get_metal_layer( macdrv_metal_view public_handle )
++{
++    return framegen_view_get_metal_layer( public_handle );
++}
++
++void macdrv_framegen_release_metal_view( macdrv_metal_view public_handle )
++{
++    framegen_view_release_metal_view( public_handle );
++}
++
++void macdrv_framegen_report_offscreen_swapchain(void)
++{
++    struct forgeplay_framegen_configuration_v1 configuration;
++    const char *failure = NULL;
++
++    if (!framegen_requested_configuration( &configuration, &failure )) return;
++    /* A remote CAContext layer has no owning local WineMetalView. Keep its
++     * existing presentation path and report that interpolation is unavailable. */
++    macdrv_on_main_thread( (void *)^{
++        framegen_record_error( configuration.target_frame_rate,
++            failure ? failure : "cross-process-surface-unsupported" );
++    } );
++}
++
+ static void metal_surface_init_display_devices(BOOL force)
+ {
+     UINT32 path_count, mode_count;
+@@ -521,8 +582,8 @@
+     macdrv_get_cocoa_window,
+     macdrv_create_metal_device,
+     macdrv_release_metal_device,
+-    framegen_view_create_metal_view,
+-    framegen_view_get_metal_layer,
+-    framegen_view_release_metal_view,
++    macdrv_framegen_create_metal_view,
++    macdrv_framegen_get_metal_layer,
++    macdrv_framegen_release_metal_view,
+     macdrv_on_main_thread,
+ };
+diff --git a/dlls/winemac.drv/cocoa_window.m b/dlls/winemac.drv/cocoa_window.m
+--- a/dlls/winemac.drv/cocoa_window.m
++++ b/dlls/winemac.drv/cocoa_window.m
+@@ -4070,7 +4070,7 @@
+         [self release];
+         return nil;
+     }
+-    if (!(metal_view = macdrv_view_create_metal_view(view, device)))
++    if (!(metal_view = macdrv_framegen_create_metal_view(view, device)))
+     {
+         macdrv_release_metal_device(device);
+         device = NULL;
+@@ -4082,12 +4082,12 @@
+ 
+ - (CAMetalLayer*) layer
+ {
+-    return (CAMetalLayer*)macdrv_view_get_metal_layer(metal_view);
++    return (CAMetalLayer*)macdrv_framegen_get_metal_layer(metal_view);
+ }
+ 
+ - (void) dealloc
+ {
+-    if (metal_view) macdrv_view_release_metal_view(metal_view);
++    if (metal_view) macdrv_framegen_release_metal_view(metal_view);
+     if (device) macdrv_release_metal_device(device);
+     [super dealloc];
+ }
+@@ -4188,7 +4188,10 @@
+ 
+ macdrv_metal_swapchain macdrv_create_offscreen_swapchain(void* hwnd, CGRect bounds)
+ {
+-    return (macdrv_metal_swapchain)[[CAContextSwapChain alloc] initWithHwnd:hwnd bounds:bounds];
++    macdrv_metal_swapchain swapchain = (macdrv_metal_swapchain)[[CAContextSwapChain alloc] initWithHwnd:hwnd bounds:bounds];
++
++    if (swapchain) macdrv_framegen_report_offscreen_swapchain();
++    return swapchain;
+ }
+ 
+ macdrv_metal_layer macdrv_swapchain_get_layer(macdrv_metal_swapchain swapchain)

@@ -1,0 +1,40 @@
+--- a/dlls/kernelbase/process.c
++++ b/dlls/kernelbase/process.c
+@@ -1033,7 +1033,7 @@
+     {
+         route->requested = wined3d;
+         route->applied = wined3d;
+-        route->reason = L"manual-session-wined3d-opengl";
++        route->reason = L"manual-session-wined3d-vulkan";
+         route->supported = TRUE;
+     }
+     else if (!wcscmp( policy, L"vulkan" ))
+@@ -1456,6 +1456,17 @@
+         goto failed;
+     for (i = 0; i < ARRAY_SIZE(variables); ++i)
+     {
++        if (!wcscmp( route->applied, L"wined3d" ) &&
++            !wcscmp( variables[i].target_name, L"WINE_D3D_CONFIG" ))
++        {
++            /* Builtin WineD3D owns its backend choice. Preserve the same
++             * projection for descendants; base-helper restoration is separate. */
++            if ((status = set_forgeplay_renderer_literal( result,
++                    variables[i].target_name, L"renderer=vulkan" ))) goto failed;
++            if ((status = set_forgeplay_renderer_literal( result,
++                    variables[i].source_name, L"renderer=vulkan" ))) goto failed;
++            continue;
++        }
+         status = set_forgeplay_renderer_environment_variable( result, variables[i].source_name,
+                                                               variables[i].target_name );
+         if (status) goto failed;
+--- a/dlls/ntdll/loader.c
++++ b/dlls/ntdll/loader.c
+@@ -3652,7 +3652,7 @@
+             status = renderer_path.Length ? STATUS_INVALID_PARAMETER : STATUS_SUCCESS;
+             RtlFreeHeap( GetProcessHeap(), 0, renderer_path.Buffer );
+         }
+-        if (!status) TRACE( "applied ForgePlay builtin WineD3D renderer policy\n" );
++        if (!status) TRACE( "applied ForgePlay builtin WineD3D Vulkan renderer policy\n" );
+         return status;
+     }
+     if (status) return status;

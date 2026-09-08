@@ -1,0 +1,7 @@
+{
+  "releaseCommit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+  "binarySourceTreeSHA256": "ef83e1a9c2c31db1c712b12a6253676f61e316f2c6373e0702ef57926291aa32",
+  "exportedCopyrightNormalizedSourceTreeSHA256": "5389cf9bf7dc2487ba0a45de75b88cb04a77dcdcdba3c61336d3e6a5e6868d30",
+  "exportedPatchSetSHA256": "a2a942633216cac183b1cb95c770d2ec05e10fd183244588b94a64e590ba05d6",
+  "changes": "Only copyright comment display names changed; all executable C statements match accepted source. Native-only project and source locks reflect delivered sources. RuntimeManifest is the actual shipped binary record, not a claim that normalized source was newly built."
+}

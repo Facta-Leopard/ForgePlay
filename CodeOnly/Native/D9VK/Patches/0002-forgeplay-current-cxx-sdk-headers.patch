@@ -1,0 +1,63 @@
+diff --git a/src/util/config/config.h b/src/util/config/config.h
+--- a/src/util/config/config.h
++++ b/src/util/config/config.h
+@@ -1,5 +1,6 @@
+ #pragma once
+ 
++#include <cstdint> // ForgePlay: direct fixed-width integer dependency (GCC 15).
+ #include <string>
+ #include <unordered_map>
+ 
+diff --git a/src/util/util_bit.h b/src/util/util_bit.h
+--- a/src/util/util_bit.h
++++ b/src/util/util_bit.h
+@@ -1,5 +1,6 @@
+ #pragma once
+ 
++#include <cstdint> // ForgePlay: direct fixed-width integer dependency (GCC 15).
+ #ifndef _MSC_VER
+ #if defined(__WINE__) && defined(__clang__)
+ #pragma push_macro("_WIN32")
+diff --git a/src/d3d9/d3d9_include.h b/src/d3d9/d3d9_include.h
+--- a/src/d3d9/d3d9_include.h
++++ b/src/d3d9/d3d9_include.h
+@@ -77,12 +77,14 @@
+ #define D3DPRESENT_FORCEIMMEDIATE              0x00000100L
+ #endif
+ 
+-// MinGW headers are broken. Who'dve guessed?
++// Retain the fallback only for SDKs that lack the real query payload.
+ #ifndef _MSC_VER
++#ifndef FORGEPLAY_HAVE_D3DDEVINFO_RESOURCEMANAGER
+ typedef struct _D3DDEVINFO_RESOURCEMANAGER
+ {
+   char dummy;
+ } D3DDEVINFO_RESOURCEMANAGER, * LPD3DDEVINFO_RESOURCEMANAGER;
++#endif
+ 
+ #ifndef __WINE__
+ extern "C" WINUSERAPI WINBOOL WINAPI SetProcessDPIAware(VOID);
+diff --git a/meson.build b/meson.build
+--- a/meson.build
++++ b/meson.build
+@@ -5,6 +5,9 @@
+ cpp = meson.get_compiler('cpp')
+ cc = meson.get_compiler('c')
+ dxvk_is_msvc = cpp.get_id() == 'msvc'
++
++# ForgePlay: newer SDKs already declare this legacy query payload.
++has_resource_manager_info = cpp.has_type('D3DDEVINFO_RESOURCEMANAGER', prefix : '#include <d3d9.h>')
+ 
+ compiler_args = [
+   '-DNOMINMAX',
+@@ -27,6 +30,10 @@
+   # work properly as well as avoiding a memcpy from the Wine loader.
+   '-Wl,--file-alignment=4096',
+ ]
++
++if has_resource_manager_info
++  compiler_args += [ '-DFORGEPLAY_HAVE_D3DDEVINFO_RESOURCEMANAGER=1' ]
++endif
+ 
+ # Wine's built-in back traces only work with dwarf2 symbols
+ if get_option('debug') and target_machine.system() == 'windows'

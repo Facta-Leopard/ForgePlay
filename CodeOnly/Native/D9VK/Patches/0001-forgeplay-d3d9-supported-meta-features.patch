@@ -1,0 +1,78 @@
+diff --git a/src/d3d9/d3d9_device.cpp b/src/d3d9/d3d9_device.cpp
+--- a/src/d3d9/d3d9_device.cpp
++++ b/src/d3d9/d3d9_device.cpp
+@@ -2593,17 +2593,18 @@
+     if (unlikely(pDestBuffer == nullptr || pVertexDecl == nullptr))
+       return D3DERR_INVALIDCALL;
+ 
++    // A valid zero-count request remains a no-op on every adapter.
++    if (!VertexCount)
++      return D3D_OK;
++
+     if (!SupportsSWVP()) {
+       static bool s_errorShown = false;
+ 
+       if (!std::exchange(s_errorShown, true))
+-        Logger::err("D3D9DeviceEx::ProcessVertices: SWVP emu unsupported (vertexPipelineStoresAndAtomics)");
+-
+-      return D3D_OK;
+-    }
+-
+-    if (!VertexCount)
+-      return D3D_OK;
++        Logger::err("D3D9DeviceEx::ProcessVertices: requires geometryShader and vertexPipelineStoresAndAtomics; no output was produced");
++
++      return D3DERR_INVALIDCALL;
++    }
+ 
+     D3D9CommonBuffer* dst  = static_cast<D3D9VertexBuffer*>(pDestBuffer)->GetCommonBuffer();
+     D3D9VertexDecl*   decl = static_cast<D3D9VertexDecl*>  (pVertexDecl);
+@@ -3878,7 +3879,10 @@
+ 
+ 
+   bool D3D9DeviceEx::SupportsSWVP() {
+-    return m_dxvkDevice->features().core.features.vertexPipelineStoresAndAtomics;
++    // ForgePlay: this GPU readback implementation writes vertex results from
++    // a geometry shader. The same predicate controls VB barrier stage flags.
++    const auto& features = m_dxvkDevice->features().core.features;
++    return features.geometryShader && features.vertexPipelineStoresAndAtomics;
+   }
+ 
+ 
+@@ -3891,8 +3895,9 @@
+     DxvkDeviceFeatures supported = adapter->features();
+     DxvkDeviceFeatures enabled = {};
+ 
+-    // Geometry shaders are used for some meta ops
+-    enabled.core.features.geometryShader = VK_TRUE;
++    // ForgePlay: layered meta ops already have a vertex-stage alternative.
++    // DxvkAdapter verifies that the alternative exists when GS is absent.
++    enabled.core.features.geometryShader = supported.core.features.geometryShader;
+     enabled.core.features.robustBufferAccess = VK_TRUE;
+     enabled.extRobustness2.robustBufferAccess2 = supported.extRobustness2.robustBufferAccess2;
+ 
+@@ -3921,7 +3926,8 @@
+     enabled.core.features.sampleRateShading = VK_TRUE;
+     enabled.core.features.samplerAnisotropy = supported.core.features.samplerAnisotropy;
+     enabled.core.features.shaderClipDistance = VK_TRUE;
+-    enabled.core.features.shaderCullDistance = VK_TRUE;
++    // D3D9/DXSO use ClipDistance for user clipping, not CullDistance.
++    enabled.core.features.shaderCullDistance = supported.core.features.shaderCullDistance;
+ 
+     // Ensure we support real BC formats and unofficial vendor ones.
+     enabled.core.features.textureCompressionBC = VK_TRUE;
+diff --git a/src/dxvk/dxvk_adapter.cpp b/src/dxvk/dxvk_adapter.cpp
+--- a/src/dxvk/dxvk_adapter.cpp
++++ b/src/dxvk/dxvk_adapter.cpp
+@@ -326,6 +326,11 @@
+           extensionsEnabled))
+       throw DxvkError("DxvkAdapter: Failed to create device");
+     
++    // ForgePlay: meta blit/copy/resolve select a layer-writing vertex shader
++    // when this extension is enabled. Never fall through to an unsupported GS.
++    if (!enabledFeatures.core.features.geometryShader && !devExtensions.extShaderViewportIndexLayer)
++      throw DxvkError("DxvkAdapter: Layered meta operations require geometryShader or VK_EXT_shader_viewport_index_layer");
++
+     // Enable additional extensions if necessary
+     extensionsEnabled.merge(m_extraExtensions);
+     DxvkNameList extensionNameList = extensionsEnabled.toNameList();

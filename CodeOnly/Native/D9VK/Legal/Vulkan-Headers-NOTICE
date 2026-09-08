@@ -1,0 +1,42 @@
+Vulkan header notices retained from DXVK v1.10.3 commit e4fd5e9e8d335e8a2c0814829207cbd421f7e40e.
+
+File: include/vulkan/vk_platform.h
+//
+// File: vk_platform.h
+//
+/*
+** Copyright 2014-2021 The Khronos Group Inc.
+**
+** SPDX-License-Identifier: Apache-2.0
+*/
+
+File: include/vulkan/vulkan.h
+#ifndef VULKAN_H_
+#define VULKAN_H_ 1
+
+/*
+** Copyright 2015-2021 The Khronos Group Inc.
+**
+** SPDX-License-Identifier: Apache-2.0
+*/
+
+File: include/vulkan/vulkan_core.h
+#ifndef VULKAN_CORE_H_
+#define VULKAN_CORE_H_ 1
+
+/*
+** Copyright 2015-2022 The Khronos Group Inc.
+**
+** SPDX-License-Identifier: Apache-2.0
+*/
+
+File: include/vulkan/vulkan_win32.h
+#ifndef VULKAN_WIN32_H_
+#define VULKAN_WIN32_H_ 1
+
+/*
+** Copyright 2015-2021 The Khronos Group Inc.
+**
+** SPDX-License-Identifier: Apache-2.0
+*/
+

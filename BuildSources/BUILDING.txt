@@ -1,0 +1,73 @@
+ForgePlay 1.3 (Build 4): essential native/Wine build-source supplement
+Baseline: a2165f50afe3964b238cb0cb9ecdc96787db9c4c
+Author: Facta-Leopard
+
+Assemble the provided source packages:
+1. Extract the three source archives beside one another. BuildSources is the
+   build root. Do not overwrite its exact patch/sidecar set with CodeOnly's
+   additional explanatory per-patch license sidecars.
+2. Merge CodeOnly/Upstream into BuildSources/Upstream, retaining the supplied
+   CPM.cmake archive. Copy ThirdPartyCodeOnly/*.tar.* into the new directory
+   BuildSources/ThirdPartyCorrespondingSource/archives.
+3. Extract Upstream/Wine/wine-11.12.tar.xz to a fresh source directory. Its SHA256
+   is d3bc091192d985846c9f20065cc81f21331f01e22b736b131e3449e1306671bc.
+   Apply all 40 entries of Config/ForgePlayRuntimePatchProvenance.lock.json's
+   patches array in order with patch -p1 --batch --forward --fuzz=0, using files
+   under Resources/Runners/ForgePlayRuntime/Patches.
+
+Only three copyright comments differ from the accepted Wine source; the author
+is displayed as Facta-Leopard. The source lock and patch fingerprints describe
+those supplied bytes. SOURCE-IDENTITY.json preserves both source identities.
+The exact reconstruction passed with source SHA256
+5389cf9bf7dc2487ba0a45de75b88cb04a77dcdcdba3c61336d3e6a5e6868d30.
+
+Validate it from BuildSources using:
+  FORGEPLAY_WINE_SOURCE=/absolute/path/to/wine-11.12 bash Scripts/package-forgeplay-runtime.sh --validate-wine-source
+
+Build Wine with the provided current-release Scripts/build-forgeplay-wine-runtime.sh
+and its source/build/install arguments. Supply your existing x86_64 toolchain,
+matching GStreamer 1.28.5 SDK and dependency prefix through the recipe's options.
+Use a fresh Artifacts/Builds output. Source archives and exact Cerbero/Homebrew
+recipes are provided; no private key is required to compile Wine.
+
+For packaging, use Scripts/package-forgeplay-runtime.sh with explicit
+FORGEPLAY_WINE_SOURCE, FORGEPLAY_RUNTIME_DEPENDENCY_PREFIX,
+FORGEPLAY_GSTREAMER_SDK_ROOT, FORGEPLAY_RENDERER_SOURCE and
+FORGEPLAY_RUNTIME_POLICY_SOURCE inputs. The separately licensed policy,
+renderer, font and SDL inputs can be obtained from the app's
+Contents/Resources/Runners/ForgePlayRuntime and the identified upstream providers
+under their own terms. This package grants no additional Apple permissions.
+Use the native/runtime recipes directly; the full private-application export
+or public-application-attestation workflow is outside this package.
+
+RuntimeManifest.json remains the exact deployed binary record, not a receipt
+for a new normalized-source build. The Wine build reads the supplied source
+lock; repackaging writes new actual source/core/build identities. Use those
+new records when rebuilding the Game Mode host for the rebuilt runtime.
+
+Native targets: run Scripts/generate-xcode-project.sh with XcodeGen available,
+then build ForgePlayNative.xcodeproj with Xcode 26/macOS SDK. It retains only
+GameModeProcessHost and D3DMetalFrameGenerationProxy with the release compile
+and link settings, including OpenGL and IOSurface. Defaults are 1.3 (4).
+Unsigned direct Release hosts are intentionally compile-only. Runnable hosts
+require your own valid signing/App Group overrides and a matching runtime.
+The original standalone build-game-mode-process-host.sh is sandbox-profile
+specific and takes explicit icon/profile/identity inputs. No author's key or
+profile is supplied; production validation remains enabled.
+
+MoltenVK: Scripts/build-forgeplay-moltenvk.sh accepts Upstream/MoltenVK and a
+fresh Artifacts/Builds output. The source lock matches the provided archives,
+including two omitted unused Swift demos and one unused Swift package manifest;
+C/C++ implementation and upstream licenses are unchanged. CPM.cmake is included
+here as its required build input. The Apache-2.0 patch remains separately licensed.
+
+Third-party replacement/relinking instructions are in
+ThirdPartyCorrespondingSource/relinking/ForgePlay-dynamic-library-relinking.md.
+Use the exact supplied Cerbero/Homebrew recipes. The baseline proxy-libintl
+consumer label 0.4 maps to actual source 0.5 from GStreamer 1.28.5's recipe;
+source archives keep their real upstream versions. Runtime bytes were not relabelled.
+
+Verification covers input hashes, native target projection, syntax, exact patch
+application, normalized source fingerprint and the current Wine source validator.
+No new full binary rebuild, reproducible-binary claim or in-game test is asserted.
+Swift, credentials, private project documents and internal test reports are excluded.

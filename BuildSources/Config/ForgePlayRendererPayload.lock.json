@@ -1,0 +1,67 @@
+{
+  "components": [
+    {
+      "fileCount": 22,
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "name": "d3dmetal",
+      "preservedSignatureFiles": [
+        {
+          "path": "external/D3DMetal.framework/Versions/A/_CodeSignature/CodeResources",
+          "sha256": "6a588e946d35ac02c53c0f1c62fe3b21f0e7709795f39e79c1d5afa3637a9416"
+        }
+      ],
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "treeSHA256": "08f32e5ed4d1ef8fc7ebd6117cfb7d3e50c42d24fefaccee6c9a4df937983f65",
+      "version": "4.0b1"
+    },
+    {
+      "fileCount": 13,
+      "licenseExpression": "MIT",
+      "licensePaths": [
+        "Legal/dxmt/LICENSE"
+      ],
+      "name": "dxmt",
+      "preservedSignatureFiles": [],
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/3Shain/dxmt",
+      "treeSHA256": "9bfcf8dd5c52a2d095fe7beb6376258fdf6d37fa3d9180aa859762210560dc61",
+      "version": "0.61"
+    },
+    {
+      "fileCount": 22,
+      "licenseExpression": "Zlib AND BSD-3-Clause AND Apache-2.0 AND LicenseRef-KhronosFreeUse AND ZPL-2.1 AND MIT AND (GPL-3.0-or-later WITH GCC-exception-3.1)",
+      "licensePaths": [
+        "Legal/dxvk/GCC-COPYING3",
+        "Legal/dxvk/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxvk/GLSL-std450-LICENSE",
+        "Legal/dxvk/LICENSE",
+        "Legal/dxvk/MinGW-w64-AUTHORS",
+        "Legal/dxvk/MinGW-w64-COPYING",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER-PD",
+        "Legal/dxvk/MinGW-w64-runtime-COPYING",
+        "Legal/dxvk/OpenVR-LICENSE",
+        "Legal/dxvk/PROVENANCE.txt",
+        "Legal/dxvk/SPIRV-Headers-LICENSE",
+        "Legal/dxvk/Vulkan-Headers-Apache-2.0",
+        "Legal/dxvk/Vulkan-Headers-NOTICE",
+        "Legal/dxvk/Winpthreads-COPYING"
+      ],
+      "name": "dxvk",
+      "preservedSignatureFiles": [],
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/Gcenx/DXVK-macOS/releases/tag/v1.10.3-20230507-repack",
+      "treeSHA256": "b8fc09744f1489a81cc5a8be510a7ab801e96057af0a5d4fbd20fb1b70e09ebe",
+      "version": "1.10.3-20230507-repack-builtin"
+    }
+  ],
+  "hashAlgorithm": "forgeplay-renderer-payload-tree-v3",
+  "provenancePolicy": "official-or-reviewed-source-build-v2",
+  "schemaVersion": 2
+}

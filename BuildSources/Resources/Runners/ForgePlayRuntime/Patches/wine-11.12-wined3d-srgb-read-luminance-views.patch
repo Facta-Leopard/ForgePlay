@@ -1,0 +1,263 @@
+--- a/dlls/wined3d/wined3d_vk.h
++++ b/dlls/wined3d/wined3d_vk.h
+@@ -966,6 +966,7 @@
+     uint32_t bind_mask;
+ 
+     VkDescriptorImageInfo default_image_info;
++    VkDescriptorImageInfo srgb_image_info;
+ };
+ 
+ static inline struct wined3d_texture_vk *wined3d_texture_vk(struct wined3d_texture *texture)
+@@ -977,6 +978,9 @@
+         struct wined3d_context_vk *context_vk, uint32_t bind_mask);
+ const VkDescriptorImageInfo *wined3d_texture_vk_get_default_image_info(struct wined3d_texture_vk *texture_vk,
+         struct wined3d_context_vk *context_vk);
++VkFormat wined3d_texture_vk_get_srgb_format(const struct wined3d_texture_vk *texture_vk);
++const VkDescriptorImageInfo *wined3d_texture_vk_get_srgb_image_info(struct wined3d_texture_vk *texture_vk,
++        struct wined3d_context_vk *context_vk, const struct wined3d_view_desc *desc);
+ HRESULT wined3d_texture_vk_init(struct wined3d_texture_vk *texture_vk, struct wined3d_device *device,
+         const struct wined3d_resource_desc *desc, unsigned int layer_count, unsigned int level_count,
+         uint32_t flags, void *parent, const struct wined3d_parent_ops *parent_ops);
+--- a/dlls/wined3d/texture_vk.c
++++ b/dlls/wined3d/texture_vk.c
+@@ -43,19 +43,21 @@
+     mapping->a = swizzle_source[fixup.w_source];
+ }
+ 
+-const VkDescriptorImageInfo *wined3d_texture_vk_get_default_image_info(struct wined3d_texture_vk *texture_vk,
+-        struct wined3d_context_vk *context_vk)
++static const VkDescriptorImageInfo *wined3d_texture_vk_get_image_info(struct wined3d_texture_vk *texture_vk,
++        struct wined3d_context_vk *context_vk, VkFormat view_format, VkDescriptorImageInfo *image_info,
++        const struct wined3d_view_desc *desc)
+ {
+     const struct wined3d_format_vk *format_vk;
+     const struct wined3d_vk_info *vk_info;
+     struct wined3d_device_vk *device_vk;
++    VkImageViewUsageCreateInfoKHR usage_info;
+     VkImageViewCreateInfo create_info;
+     struct color_fixup_desc fixup;
+     uint32_t flags = 0;
+     VkResult vr;
+ 
+-    if (texture_vk->default_image_info.imageView)
+-        return &texture_vk->default_image_info;
++    if (image_info->imageView)
++        return image_info;
+ 
+     format_vk = wined3d_format_vk(texture_vk->t.resource.format);
+     device_vk = wined3d_device_vk(texture_vk->t.resource.device);
+@@ -64,13 +66,14 @@
+     if (texture_vk->t.layer_count > 1)
+         flags |= WINED3D_VIEW_TEXTURE_ARRAY;
+ 
+-    wined3d_texture_vk_prepare_texture(texture_vk, context_vk);
++    if (!wined3d_texture_vk_prepare_texture(texture_vk, context_vk))
++        return NULL;
+     create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+     create_info.pNext = NULL;
+     create_info.flags = 0;
+     create_info.image = texture_vk->image.vk_image;
+     create_info.viewType = vk_image_view_type_from_wined3d(texture_vk->t.resource.type, flags);
+-    create_info.format = format_vk->vk_format;
++    create_info.format = view_format;
+     fixup = format_vk->f.color_fixup;
+     if (is_identity_fixup(fixup) || !can_use_texture_swizzle(context_vk->c.d3d_info, &format_vk->f))
+     {
+@@ -88,16 +91,32 @@
+     create_info.subresourceRange.levelCount = texture_vk->t.level_count;
+     create_info.subresourceRange.baseArrayLayer = 0;
+     create_info.subresourceRange.layerCount = texture_vk->t.layer_count;
++    if (desc)
++    {
++        create_info.viewType = vk_image_view_type_from_wined3d(texture_vk->t.resource.type, desc->flags);
++        create_info.subresourceRange.baseMipLevel = desc->u.texture.level_idx;
++        create_info.subresourceRange.levelCount = desc->u.texture.level_count;
++        create_info.subresourceRange.baseArrayLayer = desc->u.texture.layer_idx;
++        create_info.subresourceRange.layerCount = create_info.viewType == VK_IMAGE_VIEW_TYPE_3D
++                ? 1 : desc->u.texture.layer_count;
++        if (vk_info->supported[WINED3D_VK_KHR_MAINTENANCE2] || vk_info->api_version >= VK_API_VERSION_1_1)
++        {
++            usage_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_USAGE_CREATE_INFO_KHR;
++            usage_info.pNext = NULL;
++            usage_info.usage = VK_IMAGE_USAGE_SAMPLED_BIT;
++            create_info.pNext = &usage_info;
++        }
++    }
+     if ((vr = VK_CALL(vkCreateImageView(device_vk->vk_device, &create_info,
+-            NULL, &texture_vk->default_image_info.imageView))) < 0)
++            NULL, &image_info->imageView))) < 0)
+     {
+         ERR("Failed to create Vulkan image view, vr %s.\n", wined3d_debug_vkresult(vr));
+         return NULL;
+     }
+ 
+-    TRACE("Created image view 0x%s.\n", wine_dbgstr_longlong(texture_vk->default_image_info.imageView));
+-
+-    texture_vk->default_image_info.sampler = VK_NULL_HANDLE;
++    TRACE("Created image view 0x%s.\n", wine_dbgstr_longlong(image_info->imageView));
++
++    image_info->sampler = VK_NULL_HANDLE;
+ 
+     /* The default image view is used for SRVs, UAVs and RTVs when the d3d view encompasses the entire
+      * resource. Any UAV capable resource will always use VK_IMAGE_LAYOUT_GENERAL, so we can use the
+@@ -109,11 +128,55 @@
+      * place to store the VkDescriptorImageInfo. So returning onlky a VkImageView from this function
+      * would bring its own problems. */
+     if (texture_vk->layout == VK_IMAGE_LAYOUT_GENERAL)
+-        texture_vk->default_image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
++        image_info->imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+     else
+-        texture_vk->default_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+-
+-    return &texture_vk->default_image_info;
++        image_info->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
++
++    return image_info;
++}
++
++VkFormat wined3d_texture_vk_get_srgb_format(const struct wined3d_texture_vk *texture_vk)
++{
++    switch (wined3d_format_vk(texture_vk->t.resource.format)->vk_format)
++    {
++        case VK_FORMAT_R8G8B8A8_UNORM: return VK_FORMAT_R8G8B8A8_SRGB;
++        case VK_FORMAT_B8G8R8A8_UNORM: return VK_FORMAT_B8G8R8A8_SRGB;
++        case VK_FORMAT_BC1_RGB_UNORM_BLOCK: return VK_FORMAT_BC1_RGB_SRGB_BLOCK;
++        case VK_FORMAT_BC1_RGBA_UNORM_BLOCK: return VK_FORMAT_BC1_RGBA_SRGB_BLOCK;
++        case VK_FORMAT_BC2_UNORM_BLOCK: return VK_FORMAT_BC2_SRGB_BLOCK;
++        case VK_FORMAT_BC3_UNORM_BLOCK: return VK_FORMAT_BC3_SRGB_BLOCK;
++        case VK_FORMAT_BC7_UNORM_BLOCK: return VK_FORMAT_BC7_SRGB_BLOCK;
++        default: return VK_FORMAT_UNDEFINED;
++    }
++}
++
++const VkDescriptorImageInfo *wined3d_texture_vk_get_default_image_info(struct wined3d_texture_vk *texture_vk,
++        struct wined3d_context_vk *context_vk)
++{
++    return wined3d_texture_vk_get_image_info(texture_vk, context_vk,
++            wined3d_format_vk(texture_vk->t.resource.format)->vk_format, &texture_vk->default_image_info, NULL);
++}
++
++const VkDescriptorImageInfo *wined3d_texture_vk_get_srgb_image_info(struct wined3d_texture_vk *texture_vk,
++        struct wined3d_context_vk *context_vk, const struct wined3d_view_desc *desc)
++{
++    const struct wined3d_vk_info *vk_info = context_vk->vk_info;
++    VkFormat format = wined3d_texture_vk_get_srgb_format(texture_vk);
++    VkFormatProperties properties;
++
++    if (format == VK_FORMAT_UNDEFINED)
++        return NULL;
++    if (!texture_vk->srgb_image_info.imageView)
++    {
++        VK_CALL(vkGetPhysicalDeviceFormatProperties(wined3d_adapter_vk(texture_vk->t.resource.device->adapter)->physical_device,
++                format, &properties));
++        if (!(properties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT))
++        {
++            ERR("sRGB sampling format %u is not supported.\n", format);
++            return NULL;
++        }
++    }
++    return wined3d_texture_vk_get_image_info(texture_vk, context_vk, format, &texture_vk->srgb_image_info, desc);
+ }
+ 
+ static void wined3d_texture_vk_upload_plane(struct wined3d_context *context, VkImageAspectFlags vk_aspect,
+@@ -820,7 +883,9 @@
+ 
+     if (wined3d_format_is_typeless(&format_vk->f) || texture_vk->t.swapchain
+             || (texture_vk->t.resource.bind_flags & WINED3D_BIND_UNORDERED_ACCESS)
+-            || (format_vk->f.attrs & WINED3D_FORMAT_ATTR_PLANAR))
++            || (format_vk->f.attrs & WINED3D_FORMAT_ATTR_PLANAR)
++            || ((context_vk->c.d3d_info->wined3d_creation_flags & WINED3D_SRGB_READ_WRITE_CONTROL)
++            && wined3d_texture_vk_get_srgb_format(texture_vk) != VK_FORMAT_UNDEFINED))
+     {
+         /* For UAVs, we need this in case a clear necessitates creation of a new view
+          * with a different format. */
+@@ -997,6 +1062,13 @@
+                 texture_vk->default_image_info.imageView = VK_NULL_HANDLE;
+             }
+ 
++            if (texture_vk->srgb_image_info.imageView)
++            {
++                wined3d_context_vk_destroy_vk_image_view(context_vk,
++                        texture_vk->srgb_image_info.imageView, texture_vk->image.command_buffer_id);
++                texture_vk->srgb_image_info.imageView = VK_NULL_HANDLE;
++            }
++
+             if (texture_vk->image.vk_image)
+                 wined3d_context_vk_destroy_image(context_vk, &texture_vk->image);
+             break;
+@@ -1155,6 +1227,7 @@
+ 
+     texture_vk->layout = VK_IMAGE_LAYOUT_GENERAL;
+     texture_vk->default_image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
++    texture_vk->srgb_image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+ }
+ 
+ static void vk_blitter_destroy(struct wined3d_blitter *blitter, struct wined3d_context *context)
+--- a/dlls/wined3d/context_vk.c
++++ b/dlls/wined3d/context_vk.c
+@@ -3474,8 +3474,25 @@
+     else
+     {
+         struct wined3d_texture_vk *texture_vk = wined3d_texture_vk(texture_from_resource(resource));
+-
+-        if (view_vk->u.vk_image_info.imageView)
++        struct wined3d_sampler *sampler = NULL;
++
++        /* D3D9 pairs sN with texture N. Keep typed API views untouched and
++         * select per binding, so one image can be sampled both ways at once. */
++        if ((context_vk->c.d3d_info->wined3d_creation_flags & WINED3D_SRGB_READ_WRITE_CONTROL)
++                && srv == texture_vk->t.identity_srv
++                && !(resource->bind_flags & WINED3D_BIND_DEPTH_STENCIL)
++                && binding->resource_idx < ARRAY_SIZE(state->sampler[binding->shader_type]))
++        {
++            if (!(sampler = state->sampler[binding->shader_type][binding->resource_idx]))
++                sampler = context_vk->c.device->null_sampler;
++        }
++        if (sampler && sampler->desc.srgb_decode
++                && wined3d_texture_vk_get_srgb_format(texture_vk) != VK_FORMAT_UNDEFINED)
++        {
++            if (!(image_info = wined3d_texture_vk_get_srgb_image_info(texture_vk, context_vk, &srv->desc)))
++                return false;
++        }
++        else if (view_vk->u.vk_image_info.imageView)
+         {
+             image_info = &view_vk->u.vk_image_info;
+             if (image_info->imageLayout != texture_vk->layout)
+--- a/dlls/wined3d/sampler.c
++++ b/dlls/wined3d/sampler.c
+@@ -240,7 +240,6 @@
+     VkSamplerReductionModeCreateInfo reduction_desc;
+     struct wined3d_sampler_vk *sampler_vk = object;
+     const struct wined3d_sampler_desc *desc;
+-    const struct wined3d_d3d_info *d3d_info;
+     struct VkSamplerCreateInfo sampler_desc;
+     const struct wined3d_vk_info *vk_info;
+     struct wined3d_context_vk *context_vk;
+@@ -252,7 +251,6 @@
+ 
+     context_vk = wined3d_context_vk(context_acquire(sampler_vk->s.device, NULL, 0));
+     device_vk = wined3d_device_vk(context_vk->c.device);
+-    d3d_info = context_vk->c.d3d_info;
+     vk_info = context_vk->vk_info;
+ 
+     desc = &sampler_vk->s.desc;
+@@ -280,8 +278,7 @@
+         sampler_desc.borderColor = vk_border_colour_from_wined3d((const struct wined3d_color *)desc->border_color);
+     if (desc->mip_base_level)
+         FIXME("Unhandled mip_base_level %u.\n", desc->mip_base_level);
+-    if ((d3d_info->wined3d_creation_flags & WINED3D_SRGB_READ_WRITE_CONTROL) && !desc->srgb_decode)
+-        FIXME("Unhandled srgb_decode %#x.\n", desc->srgb_decode);
++    /* D3D9 sRGB decoding is selected by the image view at descriptor binding. */
+ 
+     reduction_desc.reductionMode = vk_reduction_mode_from_wined3d(desc->reduction_mode);
+     if (reduction_desc.reductionMode != VK_SAMPLER_REDUCTION_MODE_WEIGHTED_AVERAGE)
+--- a/dlls/wined3d/utils.c
++++ b/dlls/wined3d/utils.c
+@@ -4150,6 +4150,7 @@
+         {WINED3DFMT_R8_SNORM,                   VK_FORMAT_R8_SNORM,                },
+         {WINED3DFMT_R8_SINT,                    VK_FORMAT_R8_SINT,                 },
+         {WINED3DFMT_A8_UNORM,                   VK_FORMAT_R8_UNORM,                "000X"},
++        {WINED3DFMT_L8_UNORM,                   VK_FORMAT_R8_UNORM,                "XXX1"},
+         {WINED3DFMT_B8G8R8A8_UNORM,             VK_FORMAT_B8G8R8A8_UNORM,          },
+         {WINED3DFMT_B8G8R8A8_UNORM_SRGB,        VK_FORMAT_B8G8R8A8_SRGB,           },
+         {WINED3DFMT_B8G8R8X8_UNORM,             VK_FORMAT_B8G8R8A8_UNORM,          "XYZ1"},

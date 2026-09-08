@@ -1,0 +1,135 @@
+--- a/dlls/ntdll/unwind.c
++++ b/dlls/ntdll/unwind.c
+@@ -70,6 +70,15 @@
+ 
+ static struct list dynamic_unwind_list = LIST_INIT(dynamic_unwind_list);
+ 
++/* Cache only the selection of a live, non-callback registration for an exact
++ * PC. The existing lock protects its lifetime; every list/count mutation
++ * invalidates it before an entry can be freed or lookup precedence changes.
++ * Function entries and their caller-owned bytes are still searched afresh. */
++static struct dynamic_unwind_entry *dynamic_unwind_cache;
++static ULONG_PTR dynamic_unwind_cache_pc;
++/* 0: unread, 1: enabled, -1: disabled. Fixed after the first lookup. */
++static int dynamic_unwind_cache_state;
++
+ static RTL_CRITICAL_SECTION dynamic_unwind_section;
+ static RTL_CRITICAL_SECTION_DEBUG dynamic_unwind_debug =
+ {
+@@ -82,26 +91,56 @@
+ 
+ static RUNTIME_FUNCTION *lookup_dynamic_function_table( ULONG_PTR pc, ULONG_PTR *base, ULONG *count )
+ {
+-    struct dynamic_unwind_entry *entry;
++    struct dynamic_unwind_entry *entry, *cursor;
+     RUNTIME_FUNCTION *ret = NULL;
+ 
+     RtlEnterCriticalSection( &dynamic_unwind_section );
+-    LIST_FOR_EACH_ENTRY( entry, &dynamic_unwind_list, struct dynamic_unwind_entry, entry )
+-    {
+-        if (pc >= entry->base && pc < entry->end)
+-        {
+-            *base = entry->base;
+-            if (entry->callback)
+-            {
+-                ret = entry->callback( pc, entry->context );
+-                *count = 1;
+-            }
+-            else
+-            {
+-                ret = entry->table;
+-                *count = entry->count;
+-            }
+-            break;
++    if (!dynamic_unwind_cache_state)
++    {
++        UNICODE_STRING name = RTL_CONSTANT_STRING( L"FORGEPLAY_UNWIND_TABLE_CACHE" );
++        WCHAR buffer[2];
++        UNICODE_STRING value = {0, sizeof(buffer), buffer};
++        BOOL enabled;
++
++        /* The environment query takes the PEB lock. Do not add a dynamic-
++         * unwind -> PEB lock order. No registration pointer is fetched until
++         * we reacquire the lock; concurrent first callers adopt one result. */
++        RtlLeaveCriticalSection( &dynamic_unwind_section );
++        enabled = RtlQueryEnvironmentVariable_U( NULL, &name, &value ) != STATUS_SUCCESS ||
++                  value.Length != sizeof(WCHAR) || buffer[0] != '0';
++        RtlEnterCriticalSection( &dynamic_unwind_section );
++        if (!dynamic_unwind_cache_state) dynamic_unwind_cache_state = enabled ? 1 : -1;
++    }
++    entry = dynamic_unwind_cache_state > 0 ? dynamic_unwind_cache : NULL;
++    if (!entry || pc != dynamic_unwind_cache_pc)
++    {
++        entry = NULL;
++        LIST_FOR_EACH_ENTRY( cursor, &dynamic_unwind_list, struct dynamic_unwind_entry, entry )
++        {
++            if (pc >= cursor->base && pc < cursor->end)
++            {
++                entry = cursor;
++                break;
++            }
++        }
++    }
++    if (entry)
++    {
++        *base = entry->base;
++        if (entry->callback)
++        {
++            ret = entry->callback( pc, entry->context );
++            *count = 1;
++        }
++        else
++        {
++            ret = entry->table;
++            *count = entry->count;
++            if (dynamic_unwind_cache_state > 0)
++            {
++                dynamic_unwind_cache_pc = pc;
++                dynamic_unwind_cache = entry;
++            }
+         }
+     }
+     RtlLeaveCriticalSection( &dynamic_unwind_section );
+@@ -139,6 +178,7 @@
+     entry->context   = context;
+ 
+     RtlEnterCriticalSection( &dynamic_unwind_section );
++    dynamic_unwind_cache = NULL;
+     list_add_tail( &dynamic_unwind_list, &entry->entry );
+     RtlLeaveCriticalSection( &dynamic_unwind_section );
+ 
+@@ -169,6 +209,7 @@
+     entry->context   = NULL;
+ 
+     RtlEnterCriticalSection( &dynamic_unwind_section );
++    dynamic_unwind_cache = NULL;
+     list_add_tail( &dynamic_unwind_list, &entry->entry );
+     RtlLeaveCriticalSection( &dynamic_unwind_section );
+ 
+@@ -193,7 +234,10 @@
+         if (entry == table)
+         {
+             if (count > entry->count && count <= entry->max_count)
++            {
++                dynamic_unwind_cache = NULL;
+                 entry->count = count;
++            }
+             break;
+         }
+     }
+@@ -216,6 +260,7 @@
+         if (entry == table)
+         {
+             to_free = entry;
++            dynamic_unwind_cache = NULL;
+             list_remove( &entry->entry );
+             break;
+         }
+@@ -241,6 +286,7 @@
+         if (entry->table == table)
+         {
+             to_free = entry;
++            dynamic_unwind_cache = NULL;
+             list_remove( &entry->entry );
+             break;
+         }

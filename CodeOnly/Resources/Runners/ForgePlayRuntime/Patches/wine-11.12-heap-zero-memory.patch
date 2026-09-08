@@ -1,0 +1,51 @@
+diff --git a/dlls/ntdll/heap.c b/dlls/ntdll/heap.c
+--- a/dlls/ntdll/heap.c
++++ b/dlls/ntdll/heap.c
+@@ -329,4 +329,6 @@ C_ASSERT( HEAP_MIN_LARGE_BLOCK_SIZE <= HEAP_INITIAL_GROW_SIZE );
+ #define HEAP_CHECKING_ENABLED 0x80000000
+ 
++BOOL heap_zero_hack = FALSE;
++
+ static struct heap *process_heap;  /* main process heap */
+ 
+@@ -1508,6 +1510,9 @@ HANDLE WINAPI RtlCreateHeap( ULONG flags, void *addr, SIZE_T total_size, SIZE_T
+     TRACE( "flags %#lx, addr %p, total_size %#Ix, commit_size %#Ix, lock %p, params %p\n",
+            flags, addr, total_size, commit_size, lock, params );
+ 
++    if (heap_zero_hack)
++        flags |= HEAP_ZERO_MEMORY;
++
+     flags &= ~(HEAP_TAIL_CHECKING_ENABLED|HEAP_FREE_CHECKING_ENABLED);
+     if (process_heap) flags |= HEAP_PRIVATE;
+     if (!process_heap || !total_size || (flags & HEAP_SHARED)) flags |= HEAP_GROWABLE;
+diff --git a/dlls/ntdll/loader.c b/dlls/ntdll/loader.c
+--- a/dlls/ntdll/loader.c
++++ b/dlls/ntdll/loader.c
+@@ -4460,5 +4460,17 @@ void loader_init( CONTEXT *context, void **entry )
+         peb->TlsBitmap          = &tls_bitmap;
+         peb->TlsExpansionBitmap = &tls_expansion_bitmap;
+         peb->LoaderLock         = &loader_section;
++        {
++            WCHAR value[16];
++            SIZE_T value_length;
++
++            if (!RtlQueryEnvironmentVariable( NULL, L"WINE_HEAP_ZERO_MEMORY", 21,
++                                              value, ARRAY_SIZE(value), &value_length ) &&
++                value[0] == L'1')
++            {
++                ERR( "Enabling heap zero hack.\n" );
++                heap_zero_hack = TRUE;
++            }
++        }
+         peb->ProcessHeap        = RtlCreateHeap( HEAP_GROWABLE, NULL, 0, 0, NULL, NULL );
+ 
+diff --git a/dlls/ntdll/ntdll_misc.h b/dlls/ntdll/ntdll_misc.h
+--- a/dlls/ntdll/ntdll_misc.h
++++ b/dlls/ntdll/ntdll_misc.h
+@@ -52,4 +52,5 @@ static const USHORT current_machine = IMAGE_FILE_MACHINE_UNKNOWN;
+ static const UINT_PTR page_size = 0x1000;
+-
++extern BOOL heap_zero_hack;
++
+ /* exceptions */
+ extern NTSTATUS call_seh_handlers( EXCEPTION_RECORD *rec, CONTEXT *context );

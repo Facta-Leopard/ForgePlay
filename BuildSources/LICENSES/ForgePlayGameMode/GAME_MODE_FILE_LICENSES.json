@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "licenseExpression": "GPL-3.0-only",
+  "copyrightNotice": "Copyright (C) 2026 Facta-Leopard",
+  "scopeDocument": "LICENSE.txt",
+  "nativeFiles": [
+    "Native/GameModeProcessHost/GameModeApplicationGroup.h",
+    "Native/GameModeProcessHost/GameModeApplicationGroup.m",
+    "Native/GameModeProcessHost/GameModeBuildIdentity.h",
+    "Native/GameModeProcessHost/GameModeInheritedExecution.h",
+    "Native/GameModeProcessHost/GameModeInheritedExecution.m",
+    "Native/GameModeProcessHost/GameModeProcessHost-AppStore.entitlements",
+    "Native/GameModeProcessHost/GameModeProcessHost-Development.entitlements",
+    "Native/GameModeProcessHost/GameModeProcessHost-Distribution.entitlements",
+    "Native/GameModeProcessHost/GameModeProcessHost-Release.entitlements",
+    "Native/GameModeProcessHost/GameModeProcessHost.entitlements.in",
+    "Native/GameModeProcessHost/GameModeProcessHost.m",
+    "Native/GameModeProcessHost/GameModeRuntimeIdentity.h",
+    "Native/GameModeProcessHost/GameModeRuntimeIdentity.m",
+    "Native/GameModeProcessHost/Info.plist",
+    "Native/GameModeProcessHost/Info.plist.in",
+    "Native/GameModeProcessHost/PrefixExecutionLease.h",
+    "Native/GameModeProcessHost/PrefixExecutionLease.m",
+    "Native/GameModeProcessHost/SOURCE-CONTRACT.md",
+    "Native/GameModeProcessHost/build-game-mode-process-host.sh"
+  ],
+  "separateSwiftWrapperPermission": "LICENSE.txt section 3"
+}

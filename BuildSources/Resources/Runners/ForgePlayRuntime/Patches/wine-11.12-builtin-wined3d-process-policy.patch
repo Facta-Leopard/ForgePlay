@@ -1,0 +1,165 @@
+--- a/dlls/kernelbase/process.c
++++ b/dlls/kernelbase/process.c
+@@ -986,7 +986,7 @@
+     static const WCHAR d3dmetal_nvidia[] = L"d3dMetalNVIDIA";
+     static const WCHAR dxmt[] = L"dxmt";
+     static const WCHAR dxvk[] = L"dxvk";
+-    static const WCHAR d9vk[] = L"d9vk";
++    static const WCHAR wined3d[] = L"wined3d";
+     WCHAR policy[32];
+     DWORD policy_size, saved_error = GetLastError();
+     struct forgeplay_game_renderer_import_scan scan;
+@@ -1029,11 +1029,11 @@
+         route->reason = L"manual-session-dxmt";
+         route->supported = TRUE;
+     }
+-    else if (!wcscmp( policy, L"d9vk" ))
+-    {
+-        route->requested = d9vk;
+-        route->applied = d9vk;
+-        route->reason = L"manual-session-d9vk";
++    else if (!wcscmp( policy, L"wined3d" ))
++    {
++        route->requested = wined3d;
++        route->applied = wined3d;
++        route->reason = L"manual-session-wined3d-opengl";
+         route->supported = TRUE;
+     }
+     else if (!wcscmp( policy, L"vulkan" ))
+@@ -1468,9 +1468,27 @@
+     }
+     for (i = 0; i < ARRAY_SIZE(selected_control_variables); ++i)
+     {
+-        status = copy_forgeplay_renderer_variable( result, selected_control_variables[i].name,
+-                                                   selected_control_variables[i].name,
+-                                                   selected_control_variables[i].required );
++        if (!wcscmp( route->applied, L"wined3d" ))
++        {
++            /* The builtin route has no external payload or DLL directory.
++             * Accept absent/empty host controls, but reject a mixed policy
++             * instead of silently treating native payloads as Wine builtins.
++             * Clear explicit child values so a launcher cannot retain a stale
++             * external directory when the host control is absent. */
++            if (GetEnvironmentVariableW( selected_control_variables[i].name, NULL, 0 ) > 1)
++            {
++                status = STATUS_INVALID_PARAMETER;
++                record_forgeplay_renderer_environment_failure(
++                    L"builtin-external-control", selected_control_variables[i].name,
++                    selected_control_variables[i].name, status );
++                goto failed;
++            }
++            status = remove_forgeplay_renderer_variable( result, selected_control_variables[i].name );
++        }
++        else
++            status = copy_forgeplay_renderer_variable( result, selected_control_variables[i].name,
++                                                       selected_control_variables[i].name,
++                                                       selected_control_variables[i].required );
+         if (status) goto failed;
+     }
+     for (i = 0; i < ARRAY_SIZE(global_control_variables); ++i)
+--- a/dlls/ntdll/loader.c
++++ b/dlls/ntdll/loader.c
+@@ -3229,6 +3229,21 @@
+ }
+ 
+ 
++/* This is a host-selected builtin policy, not an inactive renderer. The
++ * active process marker is checked independently by each caller. */
++static BOOL forgeplay_game_renderer_is_wined3d(void)
++{
++    UNICODE_STRING policy = { 0 };
++    BOOL result;
++
++    if (get_env_var( L"FORGEPLAY_GAME_RENDERER_POLICY", 0, &policy )) return FALSE;
++    result = policy.Length == sizeof(L"wined3d") - sizeof(WCHAR) &&
++        !wcscmp( policy.Buffer, L"wined3d" );
++    RtlFreeHeap( GetProcessHeap(), 0, policy.Buffer );
++    return result;
++}
++
++
+ static const WCHAR *forgeplay_renderer_module_basename( const WCHAR *name )
+ {
+     const WCHAR *cursor, *basename = name;
+@@ -3237,6 +3252,23 @@
+     for (cursor = name; *cursor; ++cursor)
+         if (*cursor == L'\\' || *cursor == L'/') basename = cursor + 1;
+     return basename;
++}
++
++
++static BOOL forgeplay_is_wined3d_module( const WCHAR *name )
++{
++    static const WCHAR *builtin_modules[] =
++    {
++        L"ddraw.dll", L"d3d8.dll", L"d3d9.dll", L"d3d10.dll", L"d3d10_1.dll",
++        L"d3d10core.dll", L"d3d11.dll", L"dxgi.dll", L"wined3d.dll", L"opengl32.dll",
++    };
++    const WCHAR *basename = forgeplay_renderer_module_basename( name );
++    unsigned int i;
++
++    if (!basename || !*basename) return FALSE;
++    for (i = 0; i < ARRAY_SIZE(builtin_modules); ++i)
++        if (!wcsicmp( basename, builtin_modules[i] )) return TRUE;
++    return FALSE;
+ }
+ 
+ 
+@@ -3253,6 +3285,7 @@
+     unsigned int i;
+ 
+     if (!basename || !*basename) return FALSE;
++    if (forgeplay_is_wined3d_module( basename )) return TRUE;
+     for (i = 0; i < ARRAY_SIZE(renderer_modules); ++i)
+         if (!wcsicmp( basename, renderer_modules[i] )) return TRUE;
+     return FALSE;
+@@ -3445,6 +3478,12 @@
+ 
+     if (!module || !module->ldr.FullDllName.Buffer || !module->ldr.FullDllName.Length)
+         return "unavailable";
++    /* Wine records a logical Windows module path for a builtin. The loader
++     * flag is evidence of a builtin image, not an external allowlist match or
++     * a hash verification of that prefix path. Keep these evidence classes
++     * distinct; the host authenticates the bundled runtime independently. */
++    if (forgeplay_game_renderer_is_wined3d() && forgeplay_is_wined3d_module( basename ))
++        return module->ldr.Flags & LDR_WINE_INTERNAL ? "builtin" : "mismatch";
+     actual_length = module->ldr.FullDllName.Length / sizeof(WCHAR);
+     if ((!wcsicmp( basename, L"nvngx.dll" ) ||
+          !wcsicmp( basename, L"_nvngx.dll" )) &&
+@@ -3486,8 +3525,10 @@
+  * record_forgeplay_game_renderer_module_load
+  *
+  * Record the loader's resolved module path separately from the route-time
+- * plan. Only a successful path-owner=verified record proves that a Direct3D
+- * renderer DLL loaded from the active process-scoped renderer allowlist.
++ * plan. A successful path-owner=verified record identifies a match against
++ * the external renderer allowlist. path-owner=builtin instead reports a Wine
++ * builtin image for the explicit WineD3D policy; it makes no prefix-file hash
++ * or external-payload ownership claim.
+  */
+ static void record_forgeplay_game_renderer_module_load( const WCHAR *requested,
+                                                         const WINE_MODREF *module,
+@@ -3599,7 +3640,22 @@
+     }
+     RtlFreeHeap( GetProcessHeap(), 0, active.Buffer );
+ 
+-    if ((status = get_env_var( renderer_path_name, 0, &renderer_path ))) return status;
++    status = get_env_var( renderer_path_name, 0, &renderer_path );
++    if (forgeplay_game_renderer_is_wined3d())
++    {
++        /* Builtin WineD3D resolves through the normal Wine runtime path. A
++         * missing or empty external directory is legal only for this exact
++         * policy; a nonempty external path is a malformed mixed policy. */
++        if (status == STATUS_VARIABLE_NOT_FOUND) status = STATUS_SUCCESS;
++        else if (!status)
++        {
++            status = renderer_path.Length ? STATUS_INVALID_PARAMETER : STATUS_SUCCESS;
++            RtlFreeHeap( GetProcessHeap(), 0, renderer_path.Buffer );
++        }
++        if (!status) TRACE( "applied ForgePlay builtin WineD3D renderer policy\n" );
++        return status;
++    }
++    if (status) return status;
+     renderer_length = renderer_path.Length / sizeof(WCHAR);
+     if (!renderer_length)
+     {

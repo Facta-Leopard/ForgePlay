@@ -1,0 +1,38 @@
+diff --git a/dlls/kernelbase/process.c b/dlls/kernelbase/process.c
+--- a/dlls/kernelbase/process.c
++++ b/dlls/kernelbase/process.c
+@@ -1300,6 +1300,7 @@
+         { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_LOG_PATH", L"DXVK_LOG_PATH" },
+         { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_LOG_LEVEL", L"DXVK_LOG_LEVEL" },
+         { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_CONFIG", L"DXVK_CONFIG" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_WINE_D3D_CONFIG", L"WINE_D3D_CONFIG" },
+     };
+     static const WCHAR *renderer_state_variables[] =
+     {
+@@ -1383,6 +1384,7 @@
+         { L"FORGEPLAY_GAME_RENDERER_ENV_DXVK_LOG_PATH", L"DXVK_LOG_PATH" },
+         { L"FORGEPLAY_GAME_RENDERER_ENV_DXVK_LOG_LEVEL", L"DXVK_LOG_LEVEL" },
+         { L"FORGEPLAY_GAME_RENDERER_ENV_DXVK_CONFIG", L"DXVK_CONFIG" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_WINE_D3D_CONFIG", L"WINE_D3D_CONFIG" },
+     };
+     static const struct
+     {
+@@ -1431,6 +1433,7 @@
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_LOG_PATH",
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_LOG_LEVEL",
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_CONFIG",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_WINE_D3D_CONFIG",
+         L"FORGEPLAY_NETWORK_PROFILE_REQUESTED",
+         L"FORGEPLAY_AUDIO_INPUT_MODE",
+         L"FORGEPLAY_GAME_RENDERER_BASE_HELPER_SUFFIX_RULES_V1",
+diff --git a/dlls/ntdll/unix/process.c b/dlls/ntdll/unix/process.c
+--- a/dlls/ntdll/unix/process.c
++++ b/dlls/ntdll/unix/process.c
+@@ -587,6 +587,7 @@
+         "DXVK_LOG_PATH",
+         "DXVK_LOG_LEVEL",
+         "DXVK_CONFIG",
++        "WINE_D3D_CONFIG",
+     };
+     const WCHAR *game_identity;
+     BOOL eligible_game_target;

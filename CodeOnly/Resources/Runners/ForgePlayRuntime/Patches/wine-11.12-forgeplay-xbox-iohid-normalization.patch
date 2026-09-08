@@ -1,0 +1,325 @@
+diff --git a/dlls/winebus.sys/bus_iohid.c b/dlls/winebus.sys/bus_iohid.c
+--- a/dlls/winebus.sys/bus_iohid.c
++++ b/dlls/winebus.sys/bus_iohid.c
+@@ -98,6 +98,7 @@
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(hid);
+ #ifdef __APPLE__
++#include "forgeplay_xbox_iohid.h"
+ 
+ static pthread_mutex_t iohid_cs = PTHREAD_MUTEX_INITIALIZER;
+ 
+@@ -112,6 +113,8 @@
+     struct unix_device unix_device;
+     IOHIDDeviceRef device;
+     uint8_t *buffer;
++    uint8_t *xbox_report_desc;
++    size_t xbox_report_desc_length;
+ };
+ 
+ static inline struct iohid_device *impl_from_unix_device(struct unix_device *iface)
+@@ -149,11 +152,25 @@
+         uint32_t reportID, uint8_t *report, CFIndex report_length)
+ {
+     struct unix_device *iface = (struct unix_device *)context;
++    struct iohid_device *impl = impl_from_unix_device(iface);
++    uint8_t normalized[17];
++
++    if (impl->xbox_report_desc && reportID == 1)
++    {
++        if (!forgeplay_xbox_iohid_report(normalized, report, report_length))
++        {
++            WARN("Ignoring malformed Xbox Series input report, length %ld\n", (long)report_length);
++            return;
++        }
++        report = normalized;
++    }
+     bus_event_queue_input_report(&event_queue, iface, report, report_length);
+ }
+ 
+ static void iohid_device_destroy(struct unix_device *iface)
+ {
++    struct iohid_device *impl = impl_from_unix_device(iface);
++    free(impl->xbox_report_desc);
+ }
+ 
+ static NTSTATUS iohid_device_start(struct unix_device *iface)
+@@ -189,12 +206,15 @@
+     int data_length = CFDataGetLength(data);
+     const UInt8 *ptr;
+ 
+-    *out_length = data_length;
+-    if (length < data_length)
++    *out_length = impl->xbox_report_desc ? impl->xbox_report_desc_length : data_length;
++    if (length < *out_length)
+         return STATUS_BUFFER_TOO_SMALL;
+ 
+     ptr = CFDataGetBytePtr(data);
+-    memcpy(buffer, ptr, data_length);
++    if (impl->xbox_report_desc)
++        memcpy(buffer, impl->xbox_report_desc, impl->xbox_report_desc_length);
++    else
++        memcpy(buffer, ptr, data_length);
+     return STATUS_SUCCESS;
+ }
+ 
+@@ -276,6 +296,8 @@
+     struct iohid_device *impl;
+     USAGE_AND_PAGE usages;
+     CFStringRef str;
++    CFDataRef report_desc;
++    size_t input_prefix;
+ 
+     usages.UsagePage = CFNumberToDWORD(IOHIDDeviceGetProperty(IOHIDDevice, CFSTR(kIOHIDPrimaryUsagePageKey)));
+     usages.Usage = CFNumberToDWORD(IOHIDDeviceGetProperty(IOHIDDevice, CFSTR(kIOHIDPrimaryUsageKey)));
+@@ -332,6 +354,26 @@
+     list_add_tail(&device_list, &impl->unix_device.entry);
+     impl->device = IOHIDDevice;
+     impl->buffer = NULL;
++    impl->xbox_report_desc = NULL;
++    impl->xbox_report_desc_length = 0;
++    if ((report_desc = IOHIDDeviceGetProperty(IOHIDDevice, CFSTR(kIOHIDReportDescriptorKey))) &&
++        forgeplay_xbox_iohid_selected(desc.vid, desc.pid, desc.bus_type == BUS_TYPE_BLUETOOTH,
++                                      CFDataGetBytePtr(report_desc), CFDataGetLength(report_desc), &input_prefix))
++    {
++        size_t raw_length = CFDataGetLength(report_desc);
++        size_t length = sizeof(forgeplay_xbox_iohid_input_desc) + raw_length - input_prefix;
++
++        /* Publish the descriptor and input transform together. Allocation
++         * failure retains the original passthrough, never a half-mapped device. */
++        if ((impl->xbox_report_desc = malloc(length)))
++        {
++            forgeplay_xbox_iohid_descriptor(impl->xbox_report_desc, CFDataGetBytePtr(report_desc),
++                                            raw_length, input_prefix);
++            impl->xbox_report_desc_length = length;
++            TRACE("Normalizing Xbox Series Bluetooth input for %p\n", IOHIDDevice);
++        }
++        else WARN("Could not allocate Xbox Series descriptor, keeping IOHID passthrough\n");
++    }
+ 
+     bus_event_queue_device_created(&event_queue, &impl->unix_device, &desc);
+ }
+diff --git a/dlls/winebus.sys/forgeplay_xbox_iohid.h b/dlls/winebus.sys/forgeplay_xbox_iohid.h
+new file mode 100644
+--- /dev/null
++++ b/dlls/winebus.sys/forgeplay_xbox_iohid.h
+@@ -0,0 +1,219 @@
++/*
++ * ForgePlay Xbox Series Bluetooth IOHID input normalization.
++ * Copyright 2026 Facta-Leopard
++ * SPDX-License-Identifier: LGPL-2.1-or-later
++ *
++ * The Series Bluetooth HID layout and Wine's XInput HID layout differ in
++ * axis usages, Y polarity and button ordering. Normalize before the XI / IG
++ * split, only after checking the complete input report schema. XInput uses
++ * positive Y for up; HID Generic Desktop / Bluetooth uses positive Y down.
++ * Unknown layouts and USB / GIP devices keep their original IOHID route.
++ * Output and feature reports retain their descriptor bytes and transport.
++ */
++#ifndef __FORGEPLAY_XBOX_IOHID_H
++#define __FORGEPLAY_XBOX_IOHID_H
++
++#include <stddef.h>
++#include <stdint.h>
++#include <string.h>
++
++/* Same 17-byte report packing as the Bluetooth input. The right stick is
++ * Rx/Ry, triggers Z/Rz and the ten standard buttons have Wine's ordering.
++ * Guide gets the vendor usage consumed by Wine XInput; Share remains the
++ * original Consumer Record usage, outside the standard XInput button set.
++ * The final global state matches the accepted source descriptor boundary. */
++static const uint8_t forgeplay_xbox_iohid_input_desc[] =
++{
++    0x05,0x01, 0x09,0x05, 0xa1,0x01, 0x85,0x01,
++    0x09,0x30, 0x09,0x31, 0x09,0x33, 0x09,0x34,
++    0x15,0x00, 0x27,0xff,0xff,0x00,0x00, 0x75,0x10, 0x95,0x04, 0x81,0x02,
++    0x09,0x32, 0x26,0xff,0x03, 0x75,0x0a, 0x95,0x01, 0x81,0x02,
++    0x25,0x00, 0x75,0x06, 0x81,0x03,
++    0x09,0x35, 0x26,0xff,0x03, 0x75,0x0a, 0x81,0x02,
++    0x25,0x00, 0x75,0x06, 0x81,0x03,
++    0x09,0x39, 0x15,0x01, 0x25,0x08, 0x35,0x00, 0x46,0x3b,0x01,
++    0x66,0x14,0x00, 0x75,0x04, 0x81,0x42,
++    0x15,0x00, 0x25,0x00, 0x45,0x00, 0x65,0x00, 0x81,0x03,
++    0x05,0x09, 0x19,0x01, 0x29,0x0a, 0x25,0x01, 0x75,0x01, 0x95,0x0a, 0x81,0x02,
++    0x06,0x00,0xff, 0x09,0x01, 0x95,0x01, 0x81,0x02,
++    0x25,0x00, 0x75,0x05, 0x81,0x03,
++    0x05,0x0c, 0x0a,0xb2,0x00, 0x25,0x01, 0x75,0x01, 0x81,0x02,
++    0x25,0x00, 0x75,0x07, 0x81,0x03
++};
++
++struct forgeplay_xbox_hid_globals
++{
++    uint32_t page, report_id, size, count, unit;
++    int32_t logical_min, logical_max, physical_min, physical_max, exponent;
++};
++
++static int32_t forgeplay_xbox_hid_signed(uint32_t value, unsigned int size)
++{
++    if (size && size < 4 && (value & (1u << (size * 8 - 1))))
++        value |= ~((1u << (size * 8)) - 1);
++    return (int32_t)value;
++}
++
++static int forgeplay_xbox_hid_field(unsigned int bit, uint32_t usage,
++                                    const struct forgeplay_xbox_hid_globals *g, uint32_t flags)
++{
++    unsigned int size = 0;
++    uint32_t expected_usage = 0;
++    int32_t min = 0, max = 0;
++    uint32_t expected_flags = 2;
++
++    switch (bit)
++    {
++    case 0:  size = 16; max = 65535; expected_usage = 0x10030; break;
++    case 16: size = 16; max = 65535; expected_usage = 0x10031; break;
++    case 32: size = 16; max = 65535; expected_usage = 0x10032; break;
++    case 48: size = 16; max = 65535; expected_usage = 0x10035; break;
++    case 64: size = 10; max = 1023; expected_usage = 0x200c5; break;
++    case 80: size = 10; max = 1023; expected_usage = 0x200c4; break;
++    case 96: size = 4; min = 1; max = 8; expected_usage = 0x10039; expected_flags = 0x42; break;
++    case 74: case 90: size = 6; expected_flags = 3; break;
++    case 100: size = 4; expected_flags = 3; break;
++    case 119: size = 1; expected_flags = 3; break;
++    case 120: size = 1; max = 1; expected_usage = 0xc00b2; break;
++    case 121: size = 7; expected_flags = 3; break;
++    default:
++        if (bit < 104 || bit > 118) return 0;
++        size = 1; max = 1; expected_usage = 0x90001 + bit - 104;
++        break;
++    }
++    return g->size == size && g->logical_min == min && g->logical_max == max &&
++           flags == expected_flags && ((flags & 1) || usage == expected_usage);
++}
++
++/* Return the end of the raw input prefix, or zero for an unsupported schema.
++ * This is deliberately a recognizer, not a general HID parser: unsupported
++ * long items, global stacks, arrays, collections or report layouts bypass it.
++ * The original suffix must contain only output / feature reports and close
++ * the same application collection; its globals are inherited unchanged. */
++static size_t forgeplay_xbox_iohid_match(const uint8_t *desc, size_t length)
++{
++    struct forgeplay_xbox_hid_globals g = {0};
++    uint32_t usages[16], usage_min = 0, usage_max = 0;
++    unsigned int usage_count = 0, have_min = 0, have_max = 0;
++    unsigned int depth = 0, root_seen = 0, bit = 0, suffix_started = 0;
++    size_t i = 0, input_end = 0;
++
++    if (!desc || length > 4096) return 0;
++    while (i < length)
++    {
++        unsigned int item = desc[i++], size = item & 3, type = (item >> 2) & 3, tag = item >> 4;
++        uint32_t value = 0, usage;
++        unsigned int n;
++        if (item == 0xfe || type == 3) return 0;
++        if (size == 3) size = 4;
++        if (size > length - i) return 0;
++        for (n = 0; n < size; ++n) value |= (uint32_t)desc[i++] << (n * 8);
++        if (type == 1)
++        {
++            switch (tag)
++            {
++            case 0: if (value > 0xffff) return 0; g.page = value; break;
++            case 1: g.logical_min = forgeplay_xbox_hid_signed(value, size); break;
++            case 2: g.logical_max = g.logical_min < 0 ? forgeplay_xbox_hid_signed(value, size) : value; break;
++            case 3: g.physical_min = forgeplay_xbox_hid_signed(value, size); break;
++            case 4: g.physical_max = g.physical_min < 0 ? forgeplay_xbox_hid_signed(value, size) : value; break;
++            case 5: g.exponent = forgeplay_xbox_hid_signed(value, size); break;
++            case 6: g.unit = value; break;
++            case 7: g.size = value; break;
++            case 8: if (!value || value > 255) return 0; g.report_id = value; break;
++            case 9: g.count = value; break;
++            default: return 0;
++            }
++        }
++        else if (type == 2)
++        {
++            usage = size == 4 ? value : (g.page << 16) | value;
++            if (tag == 0 && usage_count < 16) usages[usage_count++] = usage;
++            else if (tag == 1 && !have_min) { usage_min = usage; have_min = 1; }
++            else if (tag == 2 && !have_max) { usage_max = usage; have_max = 1; }
++            else return 0;
++        }
++        else
++        {
++            if (tag == 10) /* Collection */
++            {
++                if (!depth)
++                {
++                    if (root_seen || value != 1 || usage_count != 1 || usages[0] != 0x10005) return 0;
++                    root_seen = 1;
++                }
++                else if (!input_end && (depth != 1 || value != 0 || usage_count != 1 || usages[0] != 0x10001))
++                    return 0;
++                if (++depth > 8) return 0;
++            }
++            else if (tag == 12) /* End Collection */
++            {
++                if (!depth || size) return 0;
++                if (!--depth && i != length) return 0;
++            }
++            else if (tag == 8) /* Input */
++            {
++                if (!depth || suffix_started || g.report_id != 1 || !g.count || g.count > 16 || !g.size) return 0;
++                if (have_min != have_max || (have_min && (usage_max < usage_min || usage_max - usage_min + 1 != g.count))) return 0;
++                /* Wine resets ranges when a later explicit Usage arrives.
++                 * Mixed local forms are outside this exact-schema recognizer. */
++                if (have_min && usage_count) return 0;
++                if (!(value & 1) && !have_min && usage_count != g.count) return 0;
++                for (n = 0; n < g.count; ++n)
++                {
++                    usage = have_min ? usage_min + n : n < usage_count ? usages[n] : 0;
++                    if (!forgeplay_xbox_hid_field(bit, usage, &g, value)) return 0;
++                    bit += g.size;
++                }
++                if (bit == 128)
++                {
++                    /* Preserve the global state inherited by the raw suffix. */
++                    if (depth != 1 || g.page != 0x0c || g.count != 1 || g.physical_min || g.physical_max || g.unit || g.exponent)
++                        return 0;
++                    input_end = i;
++                }
++            }
++            else if (tag == 9 || tag == 11) /* Output / Feature */
++            {
++                if (!input_end || !depth || g.report_id == 1) return 0;
++                suffix_started = 1;
++            }
++            else return 0;
++            usage_count = have_min = have_max = 0;
++        }
++    }
++    return root_seen && !depth && bit == 128 && input_end ? input_end : 0;
++}
++
++static int forgeplay_xbox_iohid_selected(unsigned int vid, unsigned int pid, int bluetooth,
++                                         const uint8_t *desc, size_t length, size_t *input_end)
++{
++    *input_end = 0;
++    if (vid != 0x045e || pid != 0x0b13 || !bluetooth) return 0;
++    return !!(*input_end = forgeplay_xbox_iohid_match(desc, length));
++}
++
++static void forgeplay_xbox_iohid_descriptor(uint8_t *target, const uint8_t *source,
++                                           size_t length, size_t input_end)
++{
++    memcpy(target, forgeplay_xbox_iohid_input_desc, sizeof(forgeplay_xbox_iohid_input_desc));
++    memcpy(target + sizeof(forgeplay_xbox_iohid_input_desc), source + input_end, length - input_end);
++}
++
++static int forgeplay_xbox_iohid_report(uint8_t target[17], const uint8_t *source, size_t length)
++{
++    /* Source usages for A B X Y LB RB View Menu L3 R3 and Guide. */
++    static const unsigned int source_bits[] = {0, 1, 3, 4, 6, 7, 10, 11, 13, 14, 12};
++    unsigned int buttons, mapped = 0, i;
++    if (length != 17 || source[0] != 1) return 0;
++    memcpy(target, source, 17);
++    target[3] = ~target[3]; target[4] = ~target[4];
++    target[7] = ~target[7]; target[8] = ~target[8];
++    buttons = source[14] | (source[15] << 8);
++    for (i = 0; i < sizeof(source_bits) / sizeof(source_bits[0]); ++i)
++        if (buttons & (1u << source_bits[i])) mapped |= 1u << i;
++    target[14] = mapped; target[15] = mapped >> 8;
++    return 1;
++}
++
++#endif

@@ -1,0 +1,204 @@
+{
+  "release": "1.3_Release",
+  "releaseCommit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+  "scope": "unchanged upstream source archives only; project build/relinking tools excluded",
+  "sources": [
+    {
+      "fileName": "gstreamer-1.28.5.tar.xz",
+      "sha256": "a5a9f783809b17a8eb774f4a7695b2cb8cba6b15520129906f87eaf30e7f8469",
+      "version": "1.28.5",
+      "consumerBindings": [
+        {
+          "authority": "gstreamer",
+          "component": "GStreamer",
+          "version": "1.28.5"
+        }
+      ]
+    },
+    {
+      "fileName": "gst-plugins-base-1.28.5.tar.xz",
+      "sha256": "776f19228f91fd25bbf54d9850597e158507f594872a52b9b6814e2429b43eaa",
+      "version": "1.28.5",
+      "consumerBindings": [
+        {
+          "authority": "gstreamer",
+          "component": "GStreamer Base Plug-ins",
+          "version": "1.28.5"
+        }
+      ]
+    },
+    {
+      "fileName": "gst-plugins-good-1.28.5.tar.xz",
+      "sha256": "58b45d24a1d77b39d7bb7d9ccc6e2d76bbf28618998c335c163f18e6f94a9324",
+      "version": "1.28.5",
+      "consumerBindings": [
+        {
+          "authority": "gstreamer",
+          "component": "GStreamer Good Plug-ins",
+          "version": "1.28.5"
+        }
+      ]
+    },
+    {
+      "fileName": "gst-plugins-bad-1.28.5.tar.xz",
+      "sha256": "d8af55faef2958c1a8663751475ee46f5164877cf4d8c5913ea906ef180aeb71",
+      "version": "1.28.5",
+      "consumerBindings": [
+        {
+          "authority": "gstreamer",
+          "component": "GStreamer Bad Plug-ins",
+          "version": "1.28.5"
+        }
+      ]
+    },
+    {
+      "fileName": "gst-plugins-ugly-1.28.5.tar.xz",
+      "sha256": "0ef4cf9c3c9a5e776a6ca8d190a31863391b681980252143b822b29aa831e120",
+      "version": "1.28.5",
+      "consumerBindings": [
+        {
+          "authority": "gstreamer",
+          "component": "GStreamer Ugly Plug-ins",
+          "version": "1.28.5"
+        }
+      ]
+    },
+    {
+      "fileName": "gst-libav-1.28.5.tar.xz",
+      "sha256": "452854656056f0b16511a1d9ad4f2679ff5e5a87c89f90cf7ee5dec005ddb1e4",
+      "version": "1.28.5",
+      "consumerBindings": [
+        {
+          "authority": "gstreamer",
+          "component": "GStreamer libav",
+          "version": "1.28.5"
+        }
+      ]
+    },
+    {
+      "fileName": "ffmpeg-7.1.tar.xz",
+      "sha256": "40973d44970dbc83ef302b0609f2e74982be2d85916dd2ee7472d30678a7abe6",
+      "version": "7.1",
+      "consumerBindings": [
+        {
+          "authority": "gstreamer",
+          "component": "FFmpeg",
+          "version": "libavcodec-61.19.100"
+        },
+        {
+          "authority": "gstreamer",
+          "component": "GStreamer libav",
+          "version": "1.28.5"
+        }
+      ]
+    },
+    {
+      "fileName": "glib-2.82.4.tar.xz",
+      "sha256": "37dd0877fe964cd15e9a2710b044a1830fb1bd93652a6d0cb6b8b2dff187c709",
+      "version": "2.82.4",
+      "consumerBindings": [
+        {
+          "authority": "gstreamer",
+          "component": "GLib",
+          "version": "2.82.4"
+        }
+      ]
+    },
+    {
+      "fileName": "proxy-libintl-0.5.tar.gz",
+      "sha256": "f7a1cbd7579baaf575c66f9d99fb6295e9b0684a28b095967cfda17857595303",
+      "version": "0.5",
+      "consumerBindings": [
+        {
+          "authority": "gstreamer",
+          "component": "proxy-libintl",
+          "version": "0.4"
+        }
+      ]
+    },
+    {
+      "fileName": "gnutls-3.8.13.tar.xz",
+      "sha256": "ffed8ec1bf09c2426d4f14aae377de4753b53e537d685e604e99a8b16ca9c97e",
+      "version": "3.8.13",
+      "consumerBindings": [
+        {
+          "authority": "homebrew",
+          "component": "gnutls",
+          "version": "3.8.13_2"
+        }
+      ]
+    },
+    {
+      "fileName": "gettext-1.0.tar.gz",
+      "sha256": "85d99b79c981a404874c02e0342176cf75c7698e2b51fe41031cf6526d974f1a",
+      "version": "1.0",
+      "consumerBindings": [
+        {
+          "authority": "homebrew",
+          "component": "gettext",
+          "version": "1.0"
+        }
+      ]
+    },
+    {
+      "fileName": "gmp-6.3.0.tar.xz",
+      "sha256": "a3c2b80201b89e68616f4ad30bc66aee4927c3ce50e33929ca819d5c43538898",
+      "version": "6.3.0",
+      "consumerBindings": [
+        {
+          "authority": "homebrew",
+          "component": "gmp",
+          "version": "6.3.0"
+        }
+      ]
+    },
+    {
+      "fileName": "libidn2-2.3.8.tar.gz",
+      "sha256": "f557911bf6171621e1f72ff35f5b1825bb35b52ed45325dcdee931e5d3c0787a",
+      "version": "2.3.8",
+      "consumerBindings": [
+        {
+          "authority": "homebrew",
+          "component": "libidn2",
+          "version": "2.3.8"
+        }
+      ]
+    },
+    {
+      "fileName": "libtasn1-4.21.0.tar.gz",
+      "sha256": "1d8a444a223cc5464240777346e125de51d8e6abf0b8bac742ac84609167dc87",
+      "version": "4.21.0",
+      "consumerBindings": [
+        {
+          "authority": "homebrew",
+          "component": "libtasn1",
+          "version": "4.21.0"
+        }
+      ]
+    },
+    {
+      "fileName": "libunistring-1.4.2.tar.gz",
+      "sha256": "e82664b170064e62331962126b259d452d53b227bb4a93ab20040d846fec01d8",
+      "version": "1.4.2",
+      "consumerBindings": [
+        {
+          "authority": "homebrew",
+          "component": "libunistring",
+          "version": "1.4.2"
+        }
+      ]
+    },
+    {
+      "fileName": "nettle-4.0.tar.gz",
+      "sha256": "3addbc00da01846b232fb3bc453538ea5468da43033f21bb345cb1e9073f5094",
+      "version": "4.0",
+      "consumerBindings": [
+        {
+          "authority": "homebrew",
+          "component": "nettle",
+          "version": "4.0"
+        }
+      ]
+    }
+  ]
+}

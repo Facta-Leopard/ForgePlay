@@ -1,0 +1,1400 @@
+{
+  "release": "1.3_Release",
+  "releaseCommit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+  "scope": "source-code-only publication",
+  "swiftIncluded": false,
+  "projectToolsIncluded": false,
+  "internalDocumentsIncluded": false,
+  "orderedWinePatches": [
+    "wine-11.12-steam-cef-other-process-opengl-surface.patch",
+    "wine-11.12-forgeplay-d3dmetal-bridge.patch",
+    "wine-11.12-forgeplay-metal-window-surface-contract.patch",
+    "wine-11.12-moltenvk-portability-enumeration.patch",
+    "wine-11.12-prefix-scoped-wineserver-root.patch",
+    "wine-11.12-app-group-mach-service.patch",
+    "wine-11.12-app-sandbox-server-lock.patch",
+    "wine-11.12-app-sandbox-executable-mappings.patch",
+    "wine-11.12-macos-bundled-runtime-loading.patch",
+    "wine-11.12-executable-scoped-process-observation.patch",
+    "wine-11.12-steam-game-renderer-process-policy.patch",
+    "wine-11.12-d3dmetal-native-thread-context.patch",
+    "wine-11.12-d3dmetal-native-thread-state-sync.patch",
+    "wine-11.12-game-mode-process-host-routing.patch",
+    "wine-11.12-game-mode-direct-target-scope.patch",
+    "wine-11.12-external-storage-grant-activation.patch",
+    "wine-11.12-manual-steam-renderer-selection.patch",
+    "wine-11.12-steam-renderer-control-plane-persistence.patch",
+    "wine-11.12-managed-darwin-process-journal.patch",
+    "wine-11.12-forced-font-family-replacements.patch",
+    "wine-11.12-steam-game-cef-browser-process-policy.patch",
+    "wine-11.12-steam-session-compatibility-controls.patch",
+    "wine-11.12-helldivers2-process-policy.patch",
+    "wine-11.12-heap-zero-memory.patch",
+    "wine-11.12-media-foundation-video-output-negotiation.patch",
+    "wine-11.12-forgeplay-xbox-iohid-normalization.patch",
+    "wine-11.12-forgeplay-frame-generation-renderer-routing.patch",
+    "wine-11.12-vulkan-renderer-wined3d-query-policy.patch",
+    "wine-11.12-wow64-vulkan-host-memory-ownership.patch",
+    "wine-11.12-xinput-capability-resolution.patch",
+    "wine-11.12-dynamic-unwind-registration-cache.patch",
+    "wine-11.12-builtin-wined3d-process-policy.patch",
+    "wine-11.12-wined3d-opengl-frame-generation-hooks.patch",
+    "wine-11.12-macos-opengl-profile-sharing.patch",
+    "wine-11.12-builtin-wined3d-vulkan-policy.patch",
+    "wine-11.12-wined3d-vulkan-reset-shader-metadata.patch",
+    "wine-11.12-vkd3d-partial-varying-initialization.patch",
+    "wine-11.12-wined3d-legacy-vertex-interface.patch",
+    "wine-11.12-wined3d-srgb-read-luminance-views.patch",
+    "wine-11.12-wined3d-srgb-read-capability.patch"
+  ],
+  "entries": [
+    {
+      "path": "LICENSE.txt",
+      "sha256": "320c2269db5dba6a961423f3417e2e7923b8035142cce51e248ade97cd20d1eb",
+      "bytes": 8087,
+      "origin": {
+        "type": "owner-approved-current-release-license"
+      }
+    },
+    {
+      "path": "LICENSES/GPL-3.0-only.txt",
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+      "bytes": 35149,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "LICENSES/GPL-3.0-only.txt",
+        "gitBlob": "f288702d2fa16d3cdf0035b15a9fcbc552cd88e7",
+        "originalSHA256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+      }
+    },
+    {
+      "path": "LICENSES/LGPL-2.1-or-later.txt",
+      "sha256": "e237fa56668030e928551ddd60f05df5fe957f75eab874bbd017e085ed722e7c",
+      "bytes": 26434,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "LICENSES/LGPL-2.1-or-later.txt",
+        "gitBlob": "732811e4f1faf71870b7350f211b26e00d7bfbe9",
+        "originalSHA256": "e237fa56668030e928551ddd60f05df5fe957f75eab874bbd017e085ed722e7c"
+      }
+    },
+    {
+      "path": "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.exports",
+      "sha256": "da5a1126aa9b4a34d7d7853358104775557e6984b370b24351f3707e201f8811",
+      "bytes": 138,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.exports",
+        "gitBlob": "bacff7eec6f00680fbb1d4970285f22d5e09e34a",
+        "originalSHA256": "da5a1126aa9b4a34d7d7853358104775557e6984b370b24351f3707e201f8811"
+      }
+    },
+    {
+      "path": "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.h",
+      "sha256": "382d671440db03729aec4ad9804055bfe3f4f1f90516c59f21c243ed8e740063",
+      "bytes": 3331,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.h",
+        "gitBlob": "d0571cb3c1f14b0ba43f18ac42ea86b7cceab8bc",
+        "originalSHA256": "382d671440db03729aec4ad9804055bfe3f4f1f90516c59f21c243ed8e740063"
+      }
+    },
+    {
+      "path": "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.m",
+      "sha256": "c6e043e54d3e184d43682896404764cb319e0daccc3fb73f59c670d9d78891c3",
+      "bytes": 170935,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.m",
+        "gitBlob": "82ea543f045267cc3993e583ca9e4574a40c9659",
+        "originalSHA256": "c6e043e54d3e184d43682896404764cb319e0daccc3fb73f59c670d9d78891c3"
+      }
+    },
+    {
+      "path": "Native/D3DMetalFrameGenerationProxy/FrameGenerationStateMachine.c",
+      "sha256": "4018fe86cdf412f3bb78a83bf7857676a5ff18b50400dc6339f94a8f3f8844d5",
+      "bytes": 74013,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D3DMetalFrameGenerationProxy/FrameGenerationStateMachine.c",
+        "gitBlob": "4b0c246e85c753776f8a61c167bd7caa8e28134b",
+        "originalSHA256": "4018fe86cdf412f3bb78a83bf7857676a5ff18b50400dc6339f94a8f3f8844d5"
+      }
+    },
+    {
+      "path": "Native/D3DMetalFrameGenerationProxy/FrameGenerationStateMachine.h",
+      "sha256": "8fa8f9bda19f510f021a13c304b395c2e79561e92a6ceb8b936d201c980e28a0",
+      "bytes": 13873,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D3DMetalFrameGenerationProxy/FrameGenerationStateMachine.h",
+        "gitBlob": "1fd192d4005d5632e0006608bc4a994b7c526998",
+        "originalSHA256": "8fa8f9bda19f510f021a13c304b395c2e79561e92a6ceb8b936d201c980e28a0"
+      }
+    },
+    {
+      "path": "Native/D3DMetalFrameGenerationProxy/WineD3DOpenGLFrameGeneration.inc",
+      "sha256": "b6d666f41bcb476199aec508ee57ae9458bcfda561f3af2ac5bb0ae2aeb14569",
+      "bytes": 36146,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D3DMetalFrameGenerationProxy/WineD3DOpenGLFrameGeneration.inc",
+        "gitBlob": "8c350a111a6438307d15f4b3a61c74e8c137b5b6",
+        "originalSHA256": "b6d666f41bcb476199aec508ee57ae9458bcfda561f3af2ac5bb0ae2aeb14569"
+      }
+    },
+    {
+      "path": "Native/D9VK/Legal/GCC-COPYING3",
+      "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+      "bytes": 35147,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D9VK/Legal/GCC-COPYING3",
+        "gitBlob": "94a9ed024d3859793618152ea559a168bbcbb5e2",
+        "originalSHA256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+      }
+    },
+    {
+      "path": "Native/D9VK/Legal/GCC-RUNTIME-EXCEPTION",
+      "sha256": "9d6b43ce4d8de0c878bf16b54d8e7a10d9bd42b75178153e3af6a815bdc90f74",
+      "bytes": 3324,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D9VK/Legal/GCC-RUNTIME-EXCEPTION",
+        "gitBlob": "e1b3c69c179dfaff5744ea4bf853e6b0d90c9ef9",
+        "originalSHA256": "9d6b43ce4d8de0c878bf16b54d8e7a10d9bd42b75178153e3af6a815bdc90f74"
+      }
+    },
+    {
+      "path": "Native/D9VK/Legal/GLSL-std450-LICENSE",
+      "sha256": "e6fa4907fe38df2392c2196b50a8ea4664d802003d99ef44f948b87e1bc2b18a",
+      "bytes": 1377,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D9VK/Legal/GLSL-std450-LICENSE",
+        "gitBlob": "454ccc265633df0def2fa26ac723b208ed995570",
+        "originalSHA256": "e6fa4907fe38df2392c2196b50a8ea4664d802003d99ef44f948b87e1bc2b18a"
+      }
+    },
+    {
+      "path": "Native/D9VK/Legal/LICENSE",
+      "sha256": "240101b852af584ded719e7335a36f9a3aae3ac816774cf3f460c00d2c88c161",
+      "bytes": 980,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D9VK/Legal/LICENSE",
+        "gitBlob": "a9d4337ea9b4f3695c4f7fbb7032c27d31ea5e2a",
+        "originalSHA256": "240101b852af584ded719e7335a36f9a3aae3ac816774cf3f460c00d2c88c161"
+      }
+    },
+    {
+      "path": "Native/D9VK/Legal/MinGW-w64-AUTHORS",
+      "sha256": "8f308316e7a94b8410f871868bd3948f126526dc1775aeee97a0e365f9a0fd9f",
+      "bytes": 2398,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D9VK/Legal/MinGW-w64-AUTHORS",
+        "gitBlob": "4b40f2beb3cac255a09ff12616c22aa89aa9d80f",
+        "originalSHA256": "8f308316e7a94b8410f871868bd3948f126526dc1775aeee97a0e365f9a0fd9f"
+      }
+    },
+    {
+      "path": "Native/D9VK/Legal/MinGW-w64-COPYING",
+      "sha256": "99a69660981156c21336fdb5661f89341b013c94e4bf9e1c7467b4745718397f",
+      "bytes": 2326,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D9VK/Legal/MinGW-w64-COPYING",
+        "gitBlob": "28fa9514c036c2ae6a545fc9fe75c37baecf596d",
+        "originalSHA256": "99a69660981156c21336fdb5661f89341b013c94e4bf9e1c7467b4745718397f"
+      }
+    },
+    {
+      "path": "Native/D9VK/Legal/MinGW-w64-DISCLAIMER",
+      "sha256": "039ed6b4f31bb7fb97e733170b58cc435335352e4745734fcfd113877fdaf340",
+      "bytes": 2245,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D9VK/Legal/MinGW-w64-DISCLAIMER",
+        "gitBlob": "51261a8ec4b5c5b6b074317fab1d7f506eb30425",
+        "originalSHA256": "039ed6b4f31bb7fb97e733170b58cc435335352e4745734fcfd113877fdaf340"
+      }
+    },
+    {
+      "path": "Native/D9VK/Legal/MinGW-w64-DISCLAIMER-PD",
+      "sha256": "87f33608570312a0f2a9745edcb2527275df813b13982e8c3b3f893d88a4141a",
+      "bytes": 454,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D9VK/Legal/MinGW-w64-DISCLAIMER-PD",
+        "gitBlob": "91fb0d6dc9d1f65394cbec575a857e635868ed74",
+        "originalSHA256": "87f33608570312a0f2a9745edcb2527275df813b13982e8c3b3f893d88a4141a"
+      }
+    },
+    {
+      "path": "Native/D9VK/Legal/MinGW-w64-runtime-COPYING",
+      "sha256": "1db8da07b436c68833c0673ffee3d9fcb2526047f3820b81661865dfedc79a1f",
+      "bytes": 12155,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D9VK/Legal/MinGW-w64-runtime-COPYING",
+        "gitBlob": "776d5f1034240f6dae0ce59d592f9c6f4ad29e7d",
+        "originalSHA256": "1db8da07b436c68833c0673ffee3d9fcb2526047f3820b81661865dfedc79a1f"
+      }
+    },
+    {
+      "path": "Native/D9VK/Legal/NOTICE-ForgePlay.md",
+      "sha256": "ecebf317147a81477423879aa606cb12645a98fdb33b1f4b822b4cd03c9be5d1",
+      "bytes": 4779,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D9VK/Legal/NOTICE-ForgePlay.md",
+        "gitBlob": "e225208f965d1381f17d9c08d26c71389a76c1fd",
+        "originalSHA256": "0031e91ac6b9bb48ecdb3c8f93740e21f2ce1bdcf3b3906a41b052bd2b30a762",
+        "privacyChange": "author copyright display name replaced by project pseudonym; no executable statements changed",
+        "authorIdentifierNormalization": "Facta-Leopard; author/copyright text only"
+      }
+    },
+    {
+      "path": "Native/D9VK/Legal/OpenVR-LICENSE",
+      "sha256": "db64bcf32be090ca9d1ea7e3df5541a07f4cf5729206b44e57a1182f05554f3f",
+      "bytes": 1487,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D9VK/Legal/OpenVR-LICENSE",
+        "gitBlob": "acf1c011fc675ed983a5a93a2a0e71787b8ff644",
+        "originalSHA256": "db64bcf32be090ca9d1ea7e3df5541a07f4cf5729206b44e57a1182f05554f3f"
+      }
+    },
+    {
+      "path": "Native/D9VK/Legal/SPIRV-Headers-LICENSE",
+      "sha256": "93a442f4fa56b9ff35af3a9c8f7056b41f01c8832cd65a1d7dafaa9c8eb78edd",
+      "bytes": 1376,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D9VK/Legal/SPIRV-Headers-LICENSE",
+        "gitBlob": "10c0df453de2c3a612450a7be14f9aba247143ac",
+        "originalSHA256": "93a442f4fa56b9ff35af3a9c8f7056b41f01c8832cd65a1d7dafaa9c8eb78edd"
+      }
+    },
+    {
+      "path": "Native/D9VK/Legal/Vulkan-Headers-Apache-2.0",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "bytes": 11358,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D9VK/Legal/Vulkan-Headers-Apache-2.0",
+        "gitBlob": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+        "originalSHA256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+      }
+    },
+    {
+      "path": "Native/D9VK/Legal/Vulkan-Headers-NOTICE",
+      "sha256": "92346b1198408b4ed81341e989ea103acc044ddf036e15bcd9813a39f0f7d33f",
+      "bytes": 783,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D9VK/Legal/Vulkan-Headers-NOTICE",
+        "gitBlob": "0946a7017ab4e232906d97a041ea2fc361c04693",
+        "originalSHA256": "92346b1198408b4ed81341e989ea103acc044ddf036e15bcd9813a39f0f7d33f"
+      }
+    },
+    {
+      "path": "Native/D9VK/Legal/Winpthreads-COPYING",
+      "sha256": "63263614cdd29f2f93cba85e992f041b31f9fc7b4033692f31269489a8a1b177",
+      "bytes": 2883,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D9VK/Legal/Winpthreads-COPYING",
+        "gitBlob": "3507701238b798b1ddbf4d5ffe16f285f4458963",
+        "originalSHA256": "63263614cdd29f2f93cba85e992f041b31f9fc7b4033692f31269489a8a1b177"
+      }
+    },
+    {
+      "path": "Native/D9VK/Patches/0001-forgeplay-d3d9-supported-meta-features.patch",
+      "sha256": "ac9209a7c45ad46618c94c91b93056713d297cc552786871b8d9af0cdf5f3b65",
+      "bytes": 3499,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D9VK/Patches/0001-forgeplay-d3d9-supported-meta-features.patch",
+        "gitBlob": "21a373a6db65c4111d87420bbaf023d2dbaaf54f",
+        "originalSHA256": "ac9209a7c45ad46618c94c91b93056713d297cc552786871b8d9af0cdf5f3b65"
+      }
+    },
+    {
+      "path": "Native/D9VK/Patches/0002-forgeplay-current-cxx-sdk-headers.patch",
+      "sha256": "4745cba77f58a341385f3c09a105f2ba6d2236bd9fc3f0fd86db83bb5254a2fb",
+      "bytes": 1986,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D9VK/Patches/0002-forgeplay-current-cxx-sdk-headers.patch",
+        "gitBlob": "6d44354da5dc50ec09af274f2efe169cfe98eb42",
+        "originalSHA256": "4745cba77f58a341385f3c09a105f2ba6d2236bd9fc3f0fd86db83bb5254a2fb"
+      }
+    },
+    {
+      "path": "Native/D9VK/Patches/0003-forgeplay-source-version.patch",
+      "sha256": "e9f1dd1756e5d06700fc8c618b8dbdf242ccb698c2e6052a21ec46be72f7b557",
+      "bytes": 390,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D9VK/Patches/0003-forgeplay-source-version.patch",
+        "gitBlob": "2717ba1721070550a2772f678aee28fb2be52551",
+        "originalSHA256": "e9f1dd1756e5d06700fc8c618b8dbdf242ccb698c2e6052a21ec46be72f7b557"
+      }
+    },
+    {
+      "path": "Native/D9VK/Patches/0004-moltenvk-dealiased-samplers.patch",
+      "sha256": "5193f24127cc2259e63144795ea68de827f2e65456ce19cef6188db1a8035740",
+      "bytes": 15212,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D9VK/Patches/0004-moltenvk-dealiased-samplers.patch",
+        "gitBlob": "39984080d72e2a67c1c466e665bdb0afc533ddaf",
+        "originalSHA256": "26cda2d07e33661f9da80d9667dbcbd88f9756e817419861ac95621fb0a7c25c",
+        "privacyChange": "author copyright display name replaced by project pseudonym; no executable statements changed"
+      }
+    },
+    {
+      "path": "Native/D9VK/Patches/0005-forgeplay-shader-push-constant-size.patch",
+      "sha256": "521413e960b8f45b2c569c21fa13f1ff2799737369963b3e5e4b8d896f0ef776",
+      "bytes": 870,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/D9VK/Patches/0005-forgeplay-shader-push-constant-size.patch",
+        "gitBlob": "a1e36219817b97e2033ad002ca61a799c5a49169",
+        "originalSHA256": "521413e960b8f45b2c569c21fa13f1ff2799737369963b3e5e4b8d896f0ef776"
+      }
+    },
+    {
+      "path": "Native/GameModeProcessHost/GameModeApplicationGroup.h",
+      "sha256": "fb92af794724e1cb661913bb35c344a776fe79190185f7c6bb4d19b14e8aec7a",
+      "bytes": 1136,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/GameModeProcessHost/GameModeApplicationGroup.h",
+        "gitBlob": "b72081cbd43b2ea3df4025bae4e71c19a2c4f935",
+        "originalSHA256": "fb92af794724e1cb661913bb35c344a776fe79190185f7c6bb4d19b14e8aec7a"
+      }
+    },
+    {
+      "path": "Native/GameModeProcessHost/GameModeApplicationGroup.m",
+      "sha256": "312f4b8967b832a0f0663a150eec19c0a7acbbc25bacc49077760bf1485e0bd3",
+      "bytes": 15409,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/GameModeProcessHost/GameModeApplicationGroup.m",
+        "gitBlob": "20241f32a9e4684653171a58149c06b5dc585d4f",
+        "originalSHA256": "312f4b8967b832a0f0663a150eec19c0a7acbbc25bacc49077760bf1485e0bd3"
+      }
+    },
+    {
+      "path": "Native/GameModeProcessHost/GameModeBuildIdentity.h",
+      "sha256": "c0b4dfddb2eec7988cf6ec17b1711a3e0d458aea48e6c8ff453d2ee52f282b99",
+      "bytes": 3181,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/GameModeProcessHost/GameModeBuildIdentity.h",
+        "gitBlob": "cca237050c58c1352c8646824ed0233be4e5c9c6",
+        "originalSHA256": "c0b4dfddb2eec7988cf6ec17b1711a3e0d458aea48e6c8ff453d2ee52f282b99"
+      }
+    },
+    {
+      "path": "Native/GameModeProcessHost/GameModeInheritedExecution.h",
+      "sha256": "0e85deb0870d7d0ae2e21fd18a999f498f3941f1aa7b3e8928638fa4e2413d22",
+      "bytes": 917,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/GameModeProcessHost/GameModeInheritedExecution.h",
+        "gitBlob": "f5d6485ae33af5db64f372b4d49eb361e4e75a3c",
+        "originalSHA256": "0e85deb0870d7d0ae2e21fd18a999f498f3941f1aa7b3e8928638fa4e2413d22"
+      }
+    },
+    {
+      "path": "Native/GameModeProcessHost/GameModeInheritedExecution.m",
+      "sha256": "7cea90a6adc8c6572f11da264d039323b9c42224cd89fb55fff5f059422db9d7",
+      "bytes": 8598,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/GameModeProcessHost/GameModeInheritedExecution.m",
+        "gitBlob": "fa62e825fe5f71c2e1ada6978e258fcc12805a63",
+        "originalSHA256": "7cea90a6adc8c6572f11da264d039323b9c42224cd89fb55fff5f059422db9d7"
+      }
+    },
+    {
+      "path": "Native/GameModeProcessHost/GameModeProcessHost.m",
+      "sha256": "c3bf16d9edc7615593ce2bef1b3da73240f8cffa8c56c8dbe1aca61813a3bad7",
+      "bytes": 9855,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/GameModeProcessHost/GameModeProcessHost.m",
+        "gitBlob": "824fce16164928c8d6325de4a2373c97cff81878",
+        "originalSHA256": "c3bf16d9edc7615593ce2bef1b3da73240f8cffa8c56c8dbe1aca61813a3bad7"
+      }
+    },
+    {
+      "path": "Native/GameModeProcessHost/GameModeRuntimeIdentity.h",
+      "sha256": "8b86d8599244468243d3573626e9e9fdc7f6bc77fa6614674b1997a1cf155d9b",
+      "bytes": 1557,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/GameModeProcessHost/GameModeRuntimeIdentity.h",
+        "gitBlob": "92f36d83ae4a4f118beebf841ced77e3d7ac9f53",
+        "originalSHA256": "8b86d8599244468243d3573626e9e9fdc7f6bc77fa6614674b1997a1cf155d9b"
+      }
+    },
+    {
+      "path": "Native/GameModeProcessHost/GameModeRuntimeIdentity.m",
+      "sha256": "7aefd174e721725bd67e6393d4e04b3ec33647bdc9b3cd348d259be348975b51",
+      "bytes": 33927,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/GameModeProcessHost/GameModeRuntimeIdentity.m",
+        "gitBlob": "3214508a758e623ac31f62d8b70c26ceb5a6017c",
+        "originalSHA256": "7aefd174e721725bd67e6393d4e04b3ec33647bdc9b3cd348d259be348975b51"
+      }
+    },
+    {
+      "path": "Native/GameModeProcessHost/PrefixExecutionLease.h",
+      "sha256": "42b728706ee8b3c6f7b20db281138d9cb5a9f994901a29e72355af296d3101f0",
+      "bytes": 711,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/GameModeProcessHost/PrefixExecutionLease.h",
+        "gitBlob": "b68b1db7e52fd1099b2b5608b894cc97f5661777",
+        "originalSHA256": "42b728706ee8b3c6f7b20db281138d9cb5a9f994901a29e72355af296d3101f0"
+      }
+    },
+    {
+      "path": "Native/GameModeProcessHost/PrefixExecutionLease.m",
+      "sha256": "a09799ec252fcfde59b485c6ea1be2e63a42e806ca2df615e539335039052794",
+      "bytes": 8849,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/GameModeProcessHost/PrefixExecutionLease.m",
+        "gitBlob": "3d1f28382cf0bd70d33125faa4740e2ae41bdf80",
+        "originalSHA256": "a09799ec252fcfde59b485c6ea1be2e63a42e806ca2df615e539335039052794"
+      }
+    },
+    {
+      "path": "Native/MoltenVKFrameGeneration/moltenvk-1.4.1-frame-generation-capture.patch",
+      "sha256": "5124774c741c3bbf0248bd2a24be2789dc51ff5396422f3623cacb20a0cafa75",
+      "bytes": 9903,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Native/MoltenVKFrameGeneration/moltenvk-1.4.1-frame-generation-capture.patch",
+        "gitBlob": "dcbe7cb367f9ff48d2024895223d418b4ec87fd6",
+        "originalSHA256": "eee44b69a42f9899053d432b8735c61d7682f5c1f1ba5eed7e7075b888026a83",
+        "authorIdentifierNormalization": "Facta-Leopard; author/copyright text only"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Legal/Wine/AUTHORS",
+      "sha256": "4a9e55d54283adc384cd342ba9350715dec8dc89f155c5ff29f71467e53d5019",
+      "bytes": 30790,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Legal/Wine/AUTHORS",
+        "gitBlob": "54f93cd01591cd51585411a4cbacefb47654e5a5",
+        "originalSHA256": "4a9e55d54283adc384cd342ba9350715dec8dc89f155c5ff29f71467e53d5019"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Legal/Wine/COPYING.LIB",
+      "sha256": "e237fa56668030e928551ddd60f05df5fe957f75eab874bbd017e085ed722e7c",
+      "bytes": 26434,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Legal/Wine/COPYING.LIB",
+        "gitBlob": "732811e4f1faf71870b7350f211b26e00d7bfbe9",
+        "originalSHA256": "e237fa56668030e928551ddd60f05df5fe957f75eab874bbd017e085ed722e7c"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Legal/Wine/FORGEPLAY-MODIFICATIONS.md",
+      "sha256": "705e55bfee14516a1873db385d366ad787be693edd8eecd5cd5e9c2fd858044b",
+      "bytes": 10582,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Legal/Wine/FORGEPLAY-MODIFICATIONS.md",
+        "gitBlob": "13e0b9807f5f6936171f38ee403eb891b504d7fe",
+        "originalSHA256": "705e55bfee14516a1873db385d366ad787be693edd8eecd5cd5e9c2fd858044b"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Legal/Wine/LICENSE",
+      "sha256": "ae025f125a5d639f0f7abe5146efa1e3d7453cc10b744b2910806fa3f46626ef",
+      "bytes": 824,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Legal/Wine/LICENSE",
+        "gitBlob": "3909c6e050cd238630e2bb9baa7de3ea199bf61e",
+        "originalSHA256": "ae025f125a5d639f0f7abe5146efa1e3d7453cc10b744b2910806fa3f46626ef"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-app-group-mach-service.patch",
+      "sha256": "8f8963304b2a0990a913df830f86bbe26ff5d67a9066b96128cf04b9edda50e6",
+      "bytes": 2645,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-app-group-mach-service.patch",
+        "gitBlob": "4905451285a84738697e16d5360921c63c1c30ec",
+        "originalSHA256": "8f8963304b2a0990a913df830f86bbe26ff5d67a9066b96128cf04b9edda50e6"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-app-group-mach-service.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-app-sandbox-executable-mappings.patch",
+      "sha256": "d35c3cffe53855540600e8ec293df64ffbc68c2350af45e4273ee25e98a6b0ad",
+      "bytes": 978,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-app-sandbox-executable-mappings.patch",
+        "gitBlob": "8bfe05723b1309cda1b754cdcff8d4912ff744e7",
+        "originalSHA256": "d35c3cffe53855540600e8ec293df64ffbc68c2350af45e4273ee25e98a6b0ad"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-app-sandbox-executable-mappings.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-app-sandbox-server-lock.patch",
+      "sha256": "06858be8735b5ab6f2fc498d49ff61adb1d68d194b54e7a4bb0e35032226c449",
+      "bytes": 569,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-app-sandbox-server-lock.patch",
+        "gitBlob": "0d4840b1d647f7620d90ed396940c4a919da761c",
+        "originalSHA256": "06858be8735b5ab6f2fc498d49ff61adb1d68d194b54e7a4bb0e35032226c449"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-app-sandbox-server-lock.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-builtin-wined3d-process-policy.patch",
+      "sha256": "2a1b9d40317e73cfdea2a32d970e26951c7fb82f9394071763604d7fe4b153de",
+      "bytes": 7172,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-builtin-wined3d-process-policy.patch",
+        "gitBlob": "4c139acb58d564a5572f9a6148b07cdf2d99eeeb",
+        "originalSHA256": "2a1b9d40317e73cfdea2a32d970e26951c7fb82f9394071763604d7fe4b153de"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-builtin-wined3d-process-policy.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-builtin-wined3d-vulkan-policy.patch",
+      "sha256": "f5a12f2a4c1fa351674958c08aeb5eeb5b606312ce12ddabfd87bd4ab83e0fde",
+      "bytes": 1805,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-builtin-wined3d-vulkan-policy.patch",
+        "gitBlob": "653640fa4adbe6c367ffda619bbb33676877b9ba",
+        "originalSHA256": "f5a12f2a4c1fa351674958c08aeb5eeb5b606312ce12ddabfd87bd4ab83e0fde"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-builtin-wined3d-vulkan-policy.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-d3dmetal-native-thread-context.patch",
+      "sha256": "1538ffcaee16c2ac5f040bfa46a994091cae5c39d62096cacec2e0ceb8b21475",
+      "bytes": 14376,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-d3dmetal-native-thread-context.patch",
+        "gitBlob": "c396a649ac98efe831fd60dbccf6787654618693",
+        "originalSHA256": "1538ffcaee16c2ac5f040bfa46a994091cae5c39d62096cacec2e0ceb8b21475"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-d3dmetal-native-thread-context.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-d3dmetal-native-thread-state-sync.patch",
+      "sha256": "46bcbaea5049c4efb03ea78c74b117eee84360947792c595cb9051c3be1f31cd",
+      "bytes": 9683,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-d3dmetal-native-thread-state-sync.patch",
+        "gitBlob": "796014d01195122e6a6782b544e0966cfab3b0e1",
+        "originalSHA256": "46bcbaea5049c4efb03ea78c74b117eee84360947792c595cb9051c3be1f31cd"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-d3dmetal-native-thread-state-sync.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-dynamic-unwind-registration-cache.patch",
+      "sha256": "00a9ebeee36525d8c2b6c00806a9dead227c2abf5da23a75dd0da0ead4c1c7fb",
+      "bytes": 4643,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-dynamic-unwind-registration-cache.patch",
+        "gitBlob": "30c53bf1ae02b437e925875632a7f70f9ac1dbbf",
+        "originalSHA256": "00a9ebeee36525d8c2b6c00806a9dead227c2abf5da23a75dd0da0ead4c1c7fb"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-dynamic-unwind-registration-cache.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-executable-scoped-process-observation.patch",
+      "sha256": "8c016fa6d6524e0cecf30ac6a6e4858fae84517d01c263e10df48cda193c2f11",
+      "bytes": 9187,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-executable-scoped-process-observation.patch",
+        "gitBlob": "ab350e955f0c63bb2294de1332974dd77018e23e",
+        "originalSHA256": "8c016fa6d6524e0cecf30ac6a6e4858fae84517d01c263e10df48cda193c2f11"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-executable-scoped-process-observation.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-external-storage-grant-activation.patch",
+      "sha256": "2f86bb591df35d5833d4010623283f178956d5e7661d9087feb734f7a97a817d",
+      "bytes": 6014,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-external-storage-grant-activation.patch",
+        "gitBlob": "89cc1b811ed9335625d0d6fc65f34e002e844f83",
+        "originalSHA256": "2f86bb591df35d5833d4010623283f178956d5e7661d9087feb734f7a97a817d"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-external-storage-grant-activation.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forced-font-family-replacements.patch",
+      "sha256": "b12c5b80e18cea93e8116704a759e08b7a2af4ffe731ddd9dd6a16228617afe8",
+      "bytes": 7567,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forced-font-family-replacements.patch",
+        "gitBlob": "ab90d7be2f473a2d23835667a7a689aeb9fd11e7",
+        "originalSHA256": "b12c5b80e18cea93e8116704a759e08b7a2af4ffe731ddd9dd6a16228617afe8"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forced-font-family-replacements.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forgeplay-d3dmetal-bridge.patch",
+      "sha256": "f9d934cb7a56226246fc789ed1e833b28c71026f1c60272ca0777fa6a79ed219",
+      "bytes": 9777,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forgeplay-d3dmetal-bridge.patch",
+        "gitBlob": "1ec2d4cdd4f780af68a14c892df8e026651c9fce",
+        "originalSHA256": "4c841c7efbf515e57fe2b3fd24a40796beeff5be8120ebd80a48a8a1c40754f1",
+        "authorIdentifierNormalization": "Facta-Leopard; author/copyright text only"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forgeplay-d3dmetal-bridge.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forgeplay-frame-generation-renderer-routing.patch",
+      "sha256": "12ca79e5fba29a42e8295edbf98475802b4b4f94c15e6ecbcc211a25db8c9980",
+      "bytes": 8161,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forgeplay-frame-generation-renderer-routing.patch",
+        "gitBlob": "cf10d7b341780fc1c35fa04b2763fdff7d2ce899",
+        "originalSHA256": "12ca79e5fba29a42e8295edbf98475802b4b4f94c15e6ecbcc211a25db8c9980"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forgeplay-frame-generation-renderer-routing.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forgeplay-metal-window-surface-contract.patch",
+      "sha256": "620fa2104f8dc09083ed6daabbf375e9d1ec6ee93ee7469257214831a816dc84",
+      "bytes": 23484,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forgeplay-metal-window-surface-contract.patch",
+        "gitBlob": "a454a9f0f4e771fa1892621114a7d6538681db3d",
+        "originalSHA256": "5bd899aba26eb2ac64ce0943eb7c1ea2ce2510c0242d70c40dac6967e158087e",
+        "authorIdentifierNormalization": "Facta-Leopard; author/copyright text only"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forgeplay-metal-window-surface-contract.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forgeplay-xbox-iohid-normalization.patch",
+      "sha256": "3247b11c8b74a97b743f58814fc0550b1244cfdecef3a71d827cc29cd42fd040",
+      "bytes": 14184,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forgeplay-xbox-iohid-normalization.patch",
+        "gitBlob": "d51e4ff5be228ede7fc01d3ed3cc5e03d18468f5",
+        "originalSHA256": "479b2ca9b2c47c703c45ea80bea99aac896ce42feceea821bee335266f76dfdc",
+        "privacyChange": "author copyright display name replaced by project pseudonym; no executable statements changed"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-forgeplay-xbox-iohid-normalization.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-game-mode-direct-target-scope.patch",
+      "sha256": "b09e09eebb6ac91e287ebdff1314fa8302644942c6ce0a8f3f8107ea6ee656e6",
+      "bytes": 6927,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-game-mode-direct-target-scope.patch",
+        "gitBlob": "a6e0c9e1161b92d76de07e839db791b823c6d198",
+        "originalSHA256": "b09e09eebb6ac91e287ebdff1314fa8302644942c6ce0a8f3f8107ea6ee656e6"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-game-mode-direct-target-scope.patch.license",
+      "sha256": "e56089e6d7ceab6286dfc74b26e8444d39372b93d2f8bf3add6a41849de519bd",
+      "bytes": 112,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-game-mode-process-host-routing.patch",
+      "sha256": "977c445aae295206ebf7d24c1250f84d47a65a0b9d0320c35313b799e9be193b",
+      "bytes": 11626,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-game-mode-process-host-routing.patch",
+        "gitBlob": "b731e83eb8cdced7afbcded00340c18cd19239f0",
+        "originalSHA256": "977c445aae295206ebf7d24c1250f84d47a65a0b9d0320c35313b799e9be193b"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-game-mode-process-host-routing.patch.license",
+      "sha256": "e56089e6d7ceab6286dfc74b26e8444d39372b93d2f8bf3add6a41849de519bd",
+      "bytes": 112,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-heap-zero-memory.patch",
+      "sha256": "4da9e7cf71bb7b1c32e6ab5786118e2c64aabc30e767a0c30cc851e7c90d00bd",
+      "bytes": 2087,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-heap-zero-memory.patch",
+        "gitBlob": "e5ced48578c6076f040c748caa486d659043d730",
+        "originalSHA256": "4da9e7cf71bb7b1c32e6ab5786118e2c64aabc30e767a0c30cc851e7c90d00bd"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-heap-zero-memory.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-helldivers2-process-policy.patch",
+      "sha256": "a526ed3decd4d47e307485c6711591ac3811b752183682487cec53f74963ab8b",
+      "bytes": 18425,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-helldivers2-process-policy.patch",
+        "gitBlob": "992f6aa457c9ab79322a8840a32c3f9a35ae6785",
+        "originalSHA256": "a526ed3decd4d47e307485c6711591ac3811b752183682487cec53f74963ab8b"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-helldivers2-process-policy.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-macos-bundled-runtime-loading.patch",
+      "sha256": "7e1e6f4daa5d6cc6b3b30d2cce9e9833985bbbf43edca7df036522213b030c68",
+      "bytes": 2864,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-macos-bundled-runtime-loading.patch",
+        "gitBlob": "dc1162fe594ad3bea8114ac473485ac55eb73968",
+        "originalSHA256": "7e1e6f4daa5d6cc6b3b30d2cce9e9833985bbbf43edca7df036522213b030c68"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-macos-bundled-runtime-loading.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-macos-opengl-profile-sharing.patch",
+      "sha256": "0cc642cc01ff3c8eabe72fb4f58148eeb561bdcdc3c1f55f854a97bb3466d295",
+      "bytes": 15326,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-macos-opengl-profile-sharing.patch",
+        "gitBlob": "7d5e1614cafaf50d53cc7a3ef834600bbde49332",
+        "originalSHA256": "0cc642cc01ff3c8eabe72fb4f58148eeb561bdcdc3c1f55f854a97bb3466d295"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-macos-opengl-profile-sharing.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-managed-darwin-process-journal.patch",
+      "sha256": "011799aa3aba31a6f7059e3bfff737ad544ff7413251b4da6fe9422201a48e7b",
+      "bytes": 16140,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-managed-darwin-process-journal.patch",
+        "gitBlob": "f1524049ee50ac20a368000f52a23e72ccaa4c35",
+        "originalSHA256": "011799aa3aba31a6f7059e3bfff737ad544ff7413251b4da6fe9422201a48e7b"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-managed-darwin-process-journal.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-manual-steam-renderer-selection.patch",
+      "sha256": "a578b144e4ca77068d745224a472e86ddd786b4afaaa01b57caddaf69c287d0d",
+      "bytes": 35625,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-manual-steam-renderer-selection.patch",
+        "gitBlob": "4c30551beb961365342e206c74f0a79bd5953287",
+        "originalSHA256": "a578b144e4ca77068d745224a472e86ddd786b4afaaa01b57caddaf69c287d0d"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-manual-steam-renderer-selection.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-media-foundation-video-output-negotiation.patch",
+      "sha256": "9b39e66b6a5f4a649f09393d0095eee48ae8328c52ffadd01537a265203c523d",
+      "bytes": 5207,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-media-foundation-video-output-negotiation.patch",
+        "gitBlob": "d189908ad924e50b7ceaced1b698cf2e9a8f745f",
+        "originalSHA256": "9b39e66b6a5f4a649f09393d0095eee48ae8328c52ffadd01537a265203c523d"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-media-foundation-video-output-negotiation.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-moltenvk-portability-enumeration.patch",
+      "sha256": "49f14a5ee63dc0c17d7303c8219e54fdb1c695510213c8ccc9a2846f08887d2e",
+      "bytes": 915,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-moltenvk-portability-enumeration.patch",
+        "gitBlob": "10a6a575a7e6fa30c3bc614b19bdbaa2e821a51e",
+        "originalSHA256": "49f14a5ee63dc0c17d7303c8219e54fdb1c695510213c8ccc9a2846f08887d2e"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-moltenvk-portability-enumeration.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-prefix-scoped-wineserver-root.patch",
+      "sha256": "f96c1207f1a6b334ffdec1b290f8d159b68fe29139839fa2f2cb0d0a6a56d4fd",
+      "bytes": 2624,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-prefix-scoped-wineserver-root.patch",
+        "gitBlob": "4206ab9c5ba412ce3255c2ca0b1f768f0397bddf",
+        "originalSHA256": "f96c1207f1a6b334ffdec1b290f8d159b68fe29139839fa2f2cb0d0a6a56d4fd"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-prefix-scoped-wineserver-root.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-cef-other-process-opengl-surface.patch",
+      "sha256": "b2408e5fe640e51dc6c14647802e17641c3e54b38ac6abe6ba3e2debbf1a29b6",
+      "bytes": 1770,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-cef-other-process-opengl-surface.patch",
+        "gitBlob": "2686fbee3921fbb1e5245f91d04270d1074d5da5",
+        "originalSHA256": "b2408e5fe640e51dc6c14647802e17641c3e54b38ac6abe6ba3e2debbf1a29b6"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-cef-other-process-opengl-surface.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-game-cef-browser-process-policy.patch",
+      "sha256": "392ad5ae54a76470e355c2229751637737f312099c0b9ab6bddd56f6201d49d1",
+      "bytes": 7706,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-game-cef-browser-process-policy.patch",
+        "gitBlob": "804e745d7ac5a7bee7d07d5f975ac2f45ef8272c",
+        "originalSHA256": "392ad5ae54a76470e355c2229751637737f312099c0b9ab6bddd56f6201d49d1"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-game-cef-browser-process-policy.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-game-renderer-process-policy.patch",
+      "sha256": "2088919884d0997738aac195ed896754f684134c68a019743c84c7c7031f755a",
+      "bytes": 100010,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-game-renderer-process-policy.patch",
+        "gitBlob": "8809fe7a2ad1c438268c292f444cb3cffeed1d92",
+        "originalSHA256": "2088919884d0997738aac195ed896754f684134c68a019743c84c7c7031f755a"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-game-renderer-process-policy.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-renderer-control-plane-persistence.patch",
+      "sha256": "bf4f8f20a7b69e8b57e3a46e367cbe95cd8d049f5b00ad989ace1ea5a1a04694",
+      "bytes": 2477,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-renderer-control-plane-persistence.patch",
+        "gitBlob": "a664de7ef3df522ae3034ed0361d7dd405ee8cbb",
+        "originalSHA256": "bf4f8f20a7b69e8b57e3a46e367cbe95cd8d049f5b00ad989ace1ea5a1a04694"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-renderer-control-plane-persistence.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-session-compatibility-controls.patch",
+      "sha256": "969247505447baba41f002262462dc19d48c2851ec2eaf6f8fd6f94673453a44",
+      "bytes": 30207,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-session-compatibility-controls.patch",
+        "gitBlob": "5a8674a30d09b761ce62ebb3c3871159dbf2c0e3",
+        "originalSHA256": "969247505447baba41f002262462dc19d48c2851ec2eaf6f8fd6f94673453a44"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-steam-session-compatibility-controls.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-vkd3d-partial-varying-initialization.patch",
+      "sha256": "d356227df04c79969ea2b155225aa431b3e25cc47f7cc13e723449b2b96d9bf5",
+      "bytes": 2686,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-vkd3d-partial-varying-initialization.patch",
+        "gitBlob": "e12022ca16ef8b50c4ce07f977d3a6e58fdee396",
+        "originalSHA256": "d356227df04c79969ea2b155225aa431b3e25cc47f7cc13e723449b2b96d9bf5"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-vkd3d-partial-varying-initialization.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-vulkan-renderer-wined3d-query-policy.patch",
+      "sha256": "56c744d4114707a8e864837697cf35bd7f4e74945f8f4fb6d5da53db017e8bf9",
+      "bytes": 1670,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-vulkan-renderer-wined3d-query-policy.patch",
+        "gitBlob": "ea6cde0e1c3b0f9dbcafaaef7a306801ab5f7331",
+        "originalSHA256": "56c744d4114707a8e864837697cf35bd7f4e74945f8f4fb6d5da53db017e8bf9"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-vulkan-renderer-wined3d-query-policy.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-wined3d-legacy-vertex-interface.patch",
+      "sha256": "0851274d84bd246d82a92b34f7fe04c2466bae687f33fb465fb5000589a90a34",
+      "bytes": 5518,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-wined3d-legacy-vertex-interface.patch",
+        "gitBlob": "7c3f720227dbcd8e03439cd9688e001771a81a90",
+        "originalSHA256": "0851274d84bd246d82a92b34f7fe04c2466bae687f33fb465fb5000589a90a34"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-wined3d-legacy-vertex-interface.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-wined3d-opengl-frame-generation-hooks.patch",
+      "sha256": "4c84d6f21c7cb53015b3c366c2faa368da5a43dec92d6abef8c7af5aeaa1a55f",
+      "bytes": 7495,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-wined3d-opengl-frame-generation-hooks.patch",
+        "gitBlob": "ef6c01c7ee42b47175578d4f039c6fd55afc3918",
+        "originalSHA256": "4c84d6f21c7cb53015b3c366c2faa368da5a43dec92d6abef8c7af5aeaa1a55f"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-wined3d-opengl-frame-generation-hooks.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-wined3d-srgb-read-capability.patch",
+      "sha256": "6e79fab79590f3d3e5a0c277caa16850ec60cb49023ba854d09d563e979a7e24",
+      "bytes": 4134,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-wined3d-srgb-read-capability.patch",
+        "gitBlob": "cfa1d1d3bec980345e1e8d96e38385830c8db8d5",
+        "originalSHA256": "6e79fab79590f3d3e5a0c277caa16850ec60cb49023ba854d09d563e979a7e24"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-wined3d-srgb-read-capability.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-wined3d-srgb-read-luminance-views.patch",
+      "sha256": "2bc616e4b7d4c3ec4ba3d336774e9002180ec4ac7f264dd444e9c79938670664",
+      "bytes": 12910,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-wined3d-srgb-read-luminance-views.patch",
+        "gitBlob": "967ac2377e02d2ab392006c59f2f9bbc2e2810a5",
+        "originalSHA256": "2bc616e4b7d4c3ec4ba3d336774e9002180ec4ac7f264dd444e9c79938670664"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-wined3d-srgb-read-luminance-views.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-wined3d-vulkan-reset-shader-metadata.patch",
+      "sha256": "ef9e3ab524048891fe606c101682d461304e6be791ffe2e801dc8cd02b3e2c5b",
+      "bytes": 4691,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-wined3d-vulkan-reset-shader-metadata.patch",
+        "gitBlob": "3caf1f86c851d01502d89d6c76b0d933a6c9c042",
+        "originalSHA256": "ef9e3ab524048891fe606c101682d461304e6be791ffe2e801dc8cd02b3e2c5b"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-wined3d-vulkan-reset-shader-metadata.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-wow64-vulkan-host-memory-ownership.patch",
+      "sha256": "4b11fa559e4faebeefe703f2e4b4d9a8c24a25ab3f0af2a31edf382e1e52e371",
+      "bytes": 4182,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-wow64-vulkan-host-memory-ownership.patch",
+        "gitBlob": "97047d7949c2234e8e9157875bd84548d4e2958a",
+        "originalSHA256": "4b11fa559e4faebeefe703f2e4b4d9a8c24a25ab3f0af2a31edf382e1e52e371"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-wow64-vulkan-host-memory-ownership.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-xinput-capability-resolution.patch",
+      "sha256": "a8b168a5aaba6615c561f52eba1f82ff841900d1567d1c60b49144f53ba12bb7",
+      "bytes": 1500,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-xinput-capability-resolution.patch",
+        "gitBlob": "710d1566b31832dbda9ec193f0cc53dd9995d2b7",
+        "originalSHA256": "a8b168a5aaba6615c561f52eba1f82ff841900d1567d1c60b49144f53ba12bb7"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-xinput-capability-resolution.patch.license",
+      "sha256": "4dc281a227a31573daa7ad36c3c5179b3ea8c623b8865bb6f31332a6fb0adb35",
+      "bytes": 117,
+      "origin": {
+        "type": "release-license-sidecar"
+      }
+    },
+    {
+      "path": "Resources/Runners/ForgePlayRuntime/Sources/forgeplay_steam_launcher.c",
+      "sha256": "5e12ea2d4cdcd242e99d3f6418c1bedb27b81297caea564a7cf7a59e6aea9239",
+      "bytes": 5855,
+      "origin": {
+        "commit": "a2165f50afe3964b238cb0cb9ecdc96787db9c4c",
+        "path": "Resources/Runners/ForgePlayRuntime/Sources/forgeplay_steam_launcher.c",
+        "gitBlob": "137539f55160b857b48a516f50cfaf18d530d9c5",
+        "originalSHA256": "5e12ea2d4cdcd242e99d3f6418c1bedb27b81297caea564a7cf7a59e6aea9239"
+      }
+    },
+    {
+      "path": "Upstream/D9VK/dxvk-1.10.3-source.tar.gz",
+      "sha256": "c39ba4750a68b6e70c00d5306740b15112f3326779f5727f1e688284c5e55031",
+      "bytes": 1203837,
+      "origin": {
+        "type": "unchanged-upstream-source",
+        "sha256": "c39ba4750a68b6e70c00d5306740b15112f3326779f5727f1e688284c5e55031"
+      }
+    },
+    {
+      "path": "Upstream/MoltenVK/MoltenVK-db445ff-source-noswift.tar.gz",
+      "sha256": "8e940a2f88e85e2d67c9059ed6aab63be6e6cd24cf58f96512d9e03222c697cf",
+      "bytes": 1244004,
+      "origin": {
+        "type": "upstream-source-with-unused-Swift-files-omitted",
+        "originalArchiveSHA256": "54e1881e8f10c7dcc4828c14d3e0fc699a6f6c563a78ba8a631c626c836ae429",
+        "omittedFiles": [
+          "MoltenVK-db445ff2042d9ce348c439ad8451112f354b8d2a/Demos/Cube/VisionOS/ContentView.swift",
+          "MoltenVK-db445ff2042d9ce348c439ad8451112f354b8d2a/Demos/Cube/VisionOS/VisionOSApp.swift"
+        ],
+        "note": "No C/C++/Objective-C implementation or upstream license text changed"
+      }
+    },
+    {
+      "path": "Upstream/MoltenVK/SPIRV-Cross-adec7acbf41a-source-noswift.tar.gz",
+      "sha256": "c8672eff0b5ed9906e46ba45d9f0250cddbe834cf7c0e2c69aca738abfa7b946",
+      "bytes": 2025172,
+      "origin": {
+        "type": "upstream-source-with-unused-Swift-files-omitted",
+        "originalArchiveSHA256": "1bed78fb2c43c877058c21bf1d9bfa2332df935960c6901bb141f4ef34cd9f03",
+        "omittedFiles": [
+          "SPIRV-Cross-adec7acbf41a988713cdb85f93f26c8ca5ea863e/Package.swift"
+        ],
+        "note": "No C/C++/Objective-C implementation or upstream license text changed"
+      }
+    },
+    {
+      "path": "Upstream/MoltenVK/SPIRV-Headers-b824a462d425.tar.gz",
+      "sha256": "c693867f10a7760ef1bcf85419d51783586768cc2c601d03841bc6a8b2554b9c",
+      "bytes": 558965,
+      "origin": {
+        "type": "unchanged-upstream-source",
+        "sha256": "c693867f10a7760ef1bcf85419d51783586768cc2c601d03841bc6a8b2554b9c"
+      }
+    },
+    {
+      "path": "Upstream/MoltenVK/SPIRV-Tools-262bdab48146.tar.gz",
+      "sha256": "8f830936b057003be77e90d37068ff6066eb87a1bab0033f8f2f5feaa966ce56",
+      "bytes": 3428734,
+      "origin": {
+        "type": "unchanged-upstream-source",
+        "sha256": "8f830936b057003be77e90d37068ff6066eb87a1bab0033f8f2f5feaa966ce56"
+      }
+    },
+    {
+      "path": "Upstream/MoltenVK/Vulkan-Headers-6aefb8eb95c8.tar.gz",
+      "sha256": "f7e54b9e95a3da54802d62ce7b4995cbad03ae2e4325c26377ea4ec04d0429f1",
+      "bytes": 2855412,
+      "origin": {
+        "type": "unchanged-upstream-source",
+        "sha256": "f7e54b9e95a3da54802d62ce7b4995cbad03ae2e4325c26377ea4ec04d0429f1"
+      }
+    },
+    {
+      "path": "Upstream/MoltenVK/cereal-a56bad8bbb77.tar.gz",
+      "sha256": "12e10fb541270632f6683286ce8c7e8c321fe4addb53fa91ed498b95c1758f93",
+      "bytes": 386830,
+      "origin": {
+        "type": "unchanged-upstream-source",
+        "sha256": "12e10fb541270632f6683286ce8c7e8c321fe4addb53fa91ed498b95c1758f93"
+      }
+    },
+    {
+      "path": "Upstream/Wine/wine-11.12.tar.xz",
+      "sha256": "d3bc091192d985846c9f20065cc81f21331f01e22b736b131e3449e1306671bc",
+      "bytes": 46514188,
+      "origin": {
+        "type": "unchanged-upstream-source",
+        "sha256": "d3bc091192d985846c9f20065cc81f21331f01e22b736b131e3449e1306671bc"
+      }
+    },
+    {
+      "path": "WINE-GAME-MODE-NOTICE.txt",
+      "sha256": "bae593ed74c51a43387289ea3094aa1529c9fb35d777165fa695065aeb858300",
+      "bytes": 2113,
+      "origin": {
+        "type": "owner-approved-current-release-license"
+      }
+    }
+  ]
+}

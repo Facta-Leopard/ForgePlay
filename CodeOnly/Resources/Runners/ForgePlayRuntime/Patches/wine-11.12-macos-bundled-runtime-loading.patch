@@ -1,0 +1,54 @@
+diff --git a/configure b/configure
+--- a/configure
++++ b/configure
+@@ -12359,7 +12359,7 @@ printf "%s\n" "$ac_cv_lib_soname_Metal" >&6; }
+     SYSTEMCONFIGURATION_LIBS="-framework SystemConfiguration"
+
+
+-    WINELOADER_LDFLAGS="-Wl,-segalign,0x1000,-pagezero_size,0x1000,-sectcreate,__TEXT,__info_plist,loader/wine_info.plist"
++    WINELOADER_LDFLAGS="-Wl,-segalign,0x1000,-pagezero_size,0x1000,-sectcreate,__TEXT,__info_plist,loader/wine_info.plist -Wl,-headerpad_max_install_names -Wl,-rpath,@loader_path/../lib -Wl,-rpath,@loader_path/../.."
+
+     case $HOST_ARCH in
+       i386) wine_use_preloader=yes ;;
+@@ -12781,6 +12781,6 @@ printf '%s\n' "#define HAVE_MTLDEVICE_REGISTRYID 1" >>confdefs.h
+
+
+-    UNIXLDFLAGS="-dynamiclib -install_name @rpath/\$(UNIXLIB) -Wl,-rpath,@loader_path\/"
++    UNIXLDFLAGS="-dynamiclib -install_name @rpath/\$(UNIXLIB) -Wl,-headerpad_max_install_names -Wl,-rpath,@loader_path\/ -Wl,-rpath,@loader_path\/..\/.."
+     WINELOADER_DEPENDS="wine_info.plist"
+
+     ;;
+diff --git a/configure.ac b/configure.ac
+--- a/configure.ac
++++ b/configure.ac
+@@ -989,7 +989,7 @@ case $host_os in
+     AC_SUBST(SECURITY_LIBS,"-framework Security -framework CoreFoundation")
+     AC_SUBST(SYSTEMCONFIGURATION_LIBS,"-framework SystemConfiguration")
+
+-    WINELOADER_LDFLAGS="-Wl,-segalign,0x1000,-pagezero_size,0x1000,-sectcreate,__TEXT,__info_plist,loader/wine_info.plist"
++    WINELOADER_LDFLAGS="-Wl,-segalign,0x1000,-pagezero_size,0x1000,-sectcreate,__TEXT,__info_plist,loader/wine_info.plist -Wl,-headerpad_max_install_names -Wl,-rpath,@loader_path/../lib -Wl,-rpath,@loader_path/../.."
+
+     case $HOST_ARCH in
+       i386) wine_use_preloader=yes ;;
+@@ -1040,7 +1040,7 @@ case $host_os in
+     AC_LANG_POP([Objective C])
+     test $ac_cv_mtldevice_registryid != yes || AC_DEFINE(HAVE_MTLDEVICE_REGISTRYID, 1, [Define if MTLDevice protocol has registryID property.])
+
+-    UNIXLDFLAGS="-dynamiclib -install_name @rpath/\$(UNIXLIB) -Wl,-rpath,@loader_path\/"
++    UNIXLDFLAGS="-dynamiclib -install_name @rpath/\$(UNIXLIB) -Wl,-headerpad_max_install_names -Wl,-rpath,@loader_path\/ -Wl,-rpath,@loader_path\/..\/.."
+     AC_SUBST(WINELOADER_DEPENDS,"wine_info.plist")
+     ;;
+
+diff --git a/dlls/secur32/schannel_gnutls.c b/dlls/secur32/schannel_gnutls.c
+--- a/dlls/secur32/schannel_gnutls.c
++++ b/dlls/secur32/schannel_gnutls.c
+@@ -1474,6 +1474,8 @@ static NTSTATUS process_attach( void *args )
+     libgnutls_handle = dlopen(SONAME_LIBGNUTLS, RTLD_NOW);
+     if (!libgnutls_handle)
+     {
+-        ERR_(winediag)("Failed to load libgnutls, secure connections will not be available.\n");
++        const char *error = dlerror();
++        ERR_(winediag)("Failed to load %s: %s; secure connections will not be available.\n",
++                      SONAME_LIBGNUTLS, error ? error : "unknown loader error");
+         return STATUS_DLL_NOT_FOUND;
+     }

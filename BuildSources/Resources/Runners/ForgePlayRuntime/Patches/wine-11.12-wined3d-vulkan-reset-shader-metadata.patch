@@ -1,0 +1,137 @@
+--- a/dlls/wined3d/shader_spirv.c
++++ b/dlls/wined3d/shader_spirv.c
+@@ -24,6 +24,8 @@
+ 
+ static const struct wined3d_shader_backend_ops spirv_shader_backend_vk;
+ 
++static void shader_spirv_precompile(void *shader_priv, struct wined3d_shader *shader);
++
+ struct shader_spirv_resource_bindings
+ {
+     struct vkd3d_shader_resource_binding *bindings;
+@@ -745,6 +747,13 @@
+         if (!(shader_mask & (1u << shader_type)) || !(shader = state->shader[shader_type]))
+             continue;
+ 
++        /* Reset releases backend programs while the shader objects survive.
++         * Recreate their scan metadata before deriving descriptor bindings. */
++        if (!shader->backend_data)
++            shader_spirv_precompile(shader->device->shader_priv, shader);
++        if (!shader->backend_data)
++            return false;
++
+         if (shader_type == WINED3D_SHADER_TYPE_COMPUTE)
+         {
+             descriptor_info = &((struct shader_spirv_compute_program_vk *)shader->backend_data)->descriptor_info;
+@@ -828,7 +837,7 @@
+     return true;
+ }
+ 
+-static void shader_spirv_scan_shader(struct wined3d_shader *shader,
++static bool shader_spirv_scan_shader(struct wined3d_shader *shader,
+         struct vkd3d_shader_scan_descriptor_info *descriptor_info,
+         struct vkd3d_shader_scan_signature_info *signature_info)
+ {
+@@ -882,20 +891,25 @@
+         FIXME("\n");
+     }
+     vkd3d_shader_free_messages(messages);
++    return ret >= 0;
+ }
+ 
+ static void shader_spirv_precompile_compute(struct wined3d_shader *shader)
+ {
+     struct shader_spirv_compute_program_vk *program_vk;
+ 
+-    if (!(program_vk = shader->backend_data))
+-    {
+-        if (!(program_vk = calloc(1, sizeof(*program_vk))))
+-            ERR("Failed to allocate program.\n");
+-        shader->backend_data = program_vk;
+-    }
+-
+-    shader_spirv_scan_shader(shader, &program_vk->descriptor_info, NULL);
++    if (!(program_vk = calloc(1, sizeof(*program_vk))))
++    {
++        ERR("Failed to allocate program.\n");
++        return;
++    }
++    if (!shader_spirv_scan_shader(shader, &program_vk->descriptor_info, NULL))
++    {
++        /* vkd3d-shader frees scan outputs when the scan fails. */
++        free(program_vk);
++        return;
++    }
++    shader->backend_data = program_vk;
+ }
+ 
+ static void shader_spirv_precompile(void *shader_priv, struct wined3d_shader *shader)
+@@ -903,6 +917,9 @@
+     struct shader_spirv_graphics_program_vk *program_vk;
+ 
+     TRACE("shader_priv %p, shader %p.\n", shader_priv, shader);
++
++    if (shader->backend_data)
++        return;
+ 
+     if (shader->reg_maps.shader_version.type == WINED3D_SHADER_TYPE_COMPUTE)
+     {
+@@ -910,14 +927,18 @@
+         return;
+     }
+ 
+-    if (!(program_vk = shader->backend_data))
+-    {
+-        if (!(program_vk = calloc(1, sizeof(*program_vk))))
+-            ERR("Failed to allocate program.\n");
+-        shader->backend_data = program_vk;
+-    }
+-
+-    shader_spirv_scan_shader(shader, &program_vk->descriptor_info, &program_vk->signature_info);
++    if (!(program_vk = calloc(1, sizeof(*program_vk))))
++    {
++        ERR("Failed to allocate program.\n");
++        return;
++    }
++    if (!shader_spirv_scan_shader(shader, &program_vk->descriptor_info, &program_vk->signature_info))
++    {
++        /* vkd3d-shader frees scan outputs when the scan fails. */
++        free(program_vk);
++        return;
++    }
++    shader->backend_data = program_vk;
+ }
+ 
+ static void shader_spirv_apply_draw_state(void *shader_priv, struct wined3d_context *context,
+@@ -984,7 +1005,10 @@
+ 
+     if (!shader_spirv_resource_bindings_init(&priv->bindings,
+             &context_vk->compute.bindings, state, 1u << WINED3D_SHADER_TYPE_COMPUTE))
++    {
+         ERR("Failed to initialise shader resource bindings.\n");
++        goto fail;
++    }
+ 
+     if ((shader = state->shader[WINED3D_SHADER_TYPE_COMPUTE]))
+         program = shader_spirv_find_compute_program_vk(priv, context_vk, shader, &priv->bindings);
+@@ -996,13 +1020,13 @@
+         context_vk->compute.vk_pipeline = program->vk_pipeline;
+         context_vk->compute.vk_set_layout = program->vk_set_layout;
+         context_vk->compute.vk_pipeline_layout = program->vk_pipeline_layout;
+-    }
+-    else
+-    {
+-        context_vk->compute.vk_pipeline = VK_NULL_HANDLE;
+-        context_vk->compute.vk_set_layout = VK_NULL_HANDLE;
+-        context_vk->compute.vk_pipeline_layout = VK_NULL_HANDLE;
+-    }
++        return;
++    }
++
++fail:
++    context_vk->compute.vk_pipeline = VK_NULL_HANDLE;
++    context_vk->compute.vk_set_layout = VK_NULL_HANDLE;
++    context_vk->compute.vk_pipeline_layout = VK_NULL_HANDLE;
+ }
+ 
+ static void shader_spirv_disable(void *shader_priv, struct wined3d_context *context)

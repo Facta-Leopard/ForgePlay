@@ -1,0 +1,127 @@
+{
+  "architecture": "x86_64",
+  "buildSettings": {
+    "configuration": "Release",
+    "metalPrivateAPI": false,
+    "pipelineCache": true,
+    "shaderConverterTool": false,
+    "spirvTools": true
+  },
+  "components": [
+    {
+      "archiveFile": "MoltenVK-db445ff-source-noswift.tar.gz",
+      "archiveSHA256": "8e940a2f88e85e2d67c9059ed6aab63be6e6cd24cf58f96512d9e03222c697cf",
+      "archiveURL": "https://codeload.github.com/KhronosGroup/MoltenVK/tar.gz/db445ff2042d9ce348c439ad8451112f354b8d2a",
+      "copyright": "The Brenwill Workshop Ltd. and contributors",
+      "licenseExpression": "Apache-2.0",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "name": "MoltenVK",
+      "repository": "https://github.com/KhronosGroup/MoltenVK",
+      "revision": "db445ff2042d9ce348c439ad8451112f354b8d2a",
+      "sourceDirectory": "MoltenVK-db445ff2042d9ce348c439ad8451112f354b8d2a",
+      "version": "1.4.1"
+    },
+    {
+      "archiveFile": "SPIRV-Cross-adec7acbf41a-source-noswift.tar.gz",
+      "archiveSHA256": "c8672eff0b5ed9906e46ba45d9f0250cddbe834cf7c0e2c69aca738abfa7b946",
+      "archiveURL": "https://codeload.github.com/KhronosGroup/SPIRV-Cross/tar.gz/adec7acbf41a988713cdb85f93f26c8ca5ea863e",
+      "copyright": "Arm Limited, Khronos Group and contributors",
+      "licenseExpression": "Apache-2.0",
+      "licenseFiles": [
+        "LICENSE",
+        "LICENSES/Apache-2.0.txt",
+        "LICENSES/CC-BY-4.0.txt",
+        "LICENSES/LicenseRef-KhronosFreeUse.txt",
+        "LICENSES/MIT.txt"
+      ],
+      "name": "SPIRV-Cross",
+      "repository": "https://github.com/KhronosGroup/SPIRV-Cross",
+      "revision": "adec7acbf41a988713cdb85f93f26c8ca5ea863e",
+      "sourceDirectory": "SPIRV-Cross-adec7acbf41a988713cdb85f93f26c8ca5ea863e"
+    },
+    {
+      "archiveFile": "SPIRV-Headers-b824a462d425.tar.gz",
+      "archiveSHA256": "c693867f10a7760ef1bcf85419d51783586768cc2c601d03841bc6a8b2554b9c",
+      "archiveURL": "https://codeload.github.com/KhronosGroup/SPIRV-Headers/tar.gz/b824a462d4256d720bebb40e78b9eb8f78bbb305",
+      "copyright": "The Khronos Group Inc. and contributors",
+      "licenseExpression": "MIT AND LicenseRef-KhronosFreeUse AND CC-BY-4.0",
+      "licenseFiles": [
+        "LICENSE",
+        "LICENSES/CC-BY-4.0.txt",
+        "LICENSES/MIT.txt"
+      ],
+      "name": "SPIRV-Headers",
+      "repository": "https://github.com/KhronosGroup/SPIRV-Headers",
+      "revision": "b824a462d4256d720bebb40e78b9eb8f78bbb305",
+      "sourceDirectory": "SPIRV-Headers-b824a462d4256d720bebb40e78b9eb8f78bbb305"
+    },
+    {
+      "archiveFile": "SPIRV-Tools-262bdab48146.tar.gz",
+      "archiveSHA256": "8f830936b057003be77e90d37068ff6066eb87a1bab0033f8f2f5feaa966ce56",
+      "archiveURL": "https://codeload.github.com/KhronosGroup/SPIRV-Tools/tar.gz/262bdab48146c937467f826699a40da0fdfc0f1a",
+      "copyright": "The Khronos Group Inc. and contributors",
+      "licenseExpression": "Apache-2.0",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "name": "SPIRV-Tools",
+      "repository": "https://github.com/KhronosGroup/SPIRV-Tools",
+      "revision": "262bdab48146c937467f826699a40da0fdfc0f1a",
+      "sourceDirectory": "SPIRV-Tools-262bdab48146c937467f826699a40da0fdfc0f1a"
+    },
+    {
+      "archiveFile": "Vulkan-Headers-6aefb8eb95c8.tar.gz",
+      "archiveSHA256": "f7e54b9e95a3da54802d62ce7b4995cbad03ae2e4325c26377ea4ec04d0429f1",
+      "archiveURL": "https://codeload.github.com/KhronosGroup/Vulkan-Headers/tar.gz/6aefb8eb95c8e170d0805fd0f2d02832ec1e099a",
+      "copyright": "The Khronos Group Inc. and contributors",
+      "licenseExpression": "Apache-2.0 OR MIT",
+      "licenseFiles": [
+        "LICENSE.md",
+        "LICENSES/Apache-2.0.txt",
+        "LICENSES/MIT.txt"
+      ],
+      "name": "Vulkan-Headers",
+      "repository": "https://github.com/KhronosGroup/Vulkan-Headers",
+      "revision": "6aefb8eb95c8e170d0805fd0f2d02832ec1e099a",
+      "sourceDirectory": "Vulkan-Headers-6aefb8eb95c8e170d0805fd0f2d02832ec1e099a"
+    },
+    {
+      "archiveFile": "cereal-a56bad8bbb77.tar.gz",
+      "archiveSHA256": "12e10fb541270632f6683286ce8c7e8c321fe4addb53fa91ed498b95c1758f93",
+      "archiveURL": "https://codeload.github.com/USCiLab/cereal/tar.gz/a56bad8bbb770ee266e930c95d37fff2a5be7fea",
+      "copyright": "Randolph Voorhies, Shane Grant and contributors",
+      "licenseExpression": "BSD-3-Clause",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "name": "cereal",
+      "repository": "https://github.com/USCiLab/cereal",
+      "revision": "a56bad8bbb770ee266e930c95d37fff2a5be7fea",
+      "sourceDirectory": "cereal-a56bad8bbb770ee266e930c95d37fff2a5be7fea"
+    },
+    {
+      "archiveFile": "CPM.cmake-v0.40.8.tar.gz",
+      "archiveSHA256": "d2c42818e748e2bfad983b485beeb228e4271eb5167ba3e1ea9a64f6542c3e14",
+      "archiveURL": "https://codeload.github.com/cpm-cmake/CPM.cmake/tar.gz/v0.40.8",
+      "copyright": "Lars Melchior and contributors",
+      "licenseExpression": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "name": "CPM.cmake",
+      "repository": "https://github.com/cpm-cmake/CPM.cmake",
+      "revision": "v0.40.8",
+      "sourceDirectory": "CPM.cmake-0.40.8"
+    }
+  ],
+  "deploymentTarget": "11.0",
+  "patch": {
+    "licenseExpression": "Apache-2.0",
+    "path": "Native/MoltenVKFrameGeneration/moltenvk-1.4.1-frame-generation-capture.patch",
+    "sha256": "5124774c741c3bbf0248bd2a24be2789dc51ff5396422f3623cacb20a0cafa75"
+  },
+  "schemaVersion": 1,
+  "sourcePolicy": "Official upstream archives at the listed revisions; no build-time downloads."
+}

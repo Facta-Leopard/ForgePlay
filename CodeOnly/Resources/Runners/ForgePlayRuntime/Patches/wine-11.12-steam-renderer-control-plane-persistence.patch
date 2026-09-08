@@ -1,0 +1,54 @@
+diff --git a/dlls/kernelbase/process.c b/dlls/kernelbase/process.c
+index 4575b78e993..2d9ed44f3c9 100644
+--- a/dlls/kernelbase/process.c
++++ b/dlls/kernelbase/process.c
+@@ -267,6 +267,23 @@ static const WCHAR *forgeplay_path_basename( const WCHAR *path )
+ }
+ 
+ 
++/* Steam's standard redistributable installers live below steamapps/common,
++ * but they are infrastructure rather than game renderer processes. */
++static BOOL is_forgeplay_steam_common_redistributable_path( const WCHAR *path )
++{
++    const WCHAR *cursor;
++
++    if (!path) return FALSE;
++    for (cursor = path; *cursor; ++cursor)
++    {
++        if (*cursor != L'\\' && *cursor != L'/') continue;
++        if (!wcsnicmp( cursor + 1, L"_CommonRedist", 13 ) &&
++            (cursor[14] == L'\\' || cursor[14] == L'/')) return TRUE;
++    }
++    return FALSE;
++}
++
++
+ /* Infrastructure processes must never receive a game renderer even if a
+  * game launcher starts one while carrying the game-lineage token. */
+ static BOOL is_forgeplay_game_renderer_excluded_role( const WCHAR *path )
+@@ -974,10 +989,10 @@ static NTSTATUS create_forgeplay_base_renderer_environment( const void *environm
+         L"FORGEPLAY_D3DMETAL_NATIVE_THREAD_CONTEXT",
+         L"FORGEPLAY_GAME_RENDERER_ROUTE_REASON",
+         L"FORGEPLAY_GAME_RENDERER_ROUTE_EVIDENCE",
+-        L"FORGEPLAY_GAME_RENDERER_COMPONENTS_X64",
+-        L"FORGEPLAY_GAME_RENDERER_COMPONENTS_X86",
+-        L"FORGEPLAY_GAME_RENDERER_DLL_PATH_X64",
+-        L"FORGEPLAY_GAME_RENDERER_DLL_PATH_X86",
++        /* Remove only active renderer state. Host-owned manual selection,
++         * component and DLL-path controls must survive a Steam self-reexec so
++         * the relaunched client can still construct the selected environment
++         * for its later game children. */
+         L"FORGEPLAY_D3DMETAL_BRIDGE",
+         L"FORGEPLAY_D3DMETAL_TARGET",
+         L"D3DMETAL_SHARED_LIBRARY",
+@@ -1673,7 +1688,9 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR *
+     }
+ 
+     if (forgeplay_game_renderer_policy_enabled() &&
+-        is_forgeplay_game_renderer_excluded_role( app_name ))
++        (is_forgeplay_game_renderer_excluded_role( app_name ) ||
++         is_forgeplay_steam_common_redistributable_path( app_name ) ||
++         is_forgeplay_steam_common_redistributable_path( cur_dir )))
+     {
+         renderer_status = create_forgeplay_base_renderer_environment(
+             env, flags, &game_renderer_environment );

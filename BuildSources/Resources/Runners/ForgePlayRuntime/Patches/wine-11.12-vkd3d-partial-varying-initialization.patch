@@ -1,0 +1,69 @@
+--- a/libs/vkd3d/libs/vkd3d-shader/ir.c
++++ b/libs/vkd3d/libs/vkd3d-shader/ir.c
+@@ -4000,6 +4000,39 @@
+     }
+ }
+ 
++static enum vkd3d_result vsir_program_init_unwritten_output_components(struct vsir_program *program,
++        const struct signature_element *e, unsigned int mask)
++{
++    struct vsir_program_iterator it = vsir_program_iterator(&program->instructions);
++    struct vkd3d_shader_instruction *ins;
++    struct vkd3d_shader_location loc;
++
++    for (ins = vsir_program_iterator_head(&it); ins; ins = vsir_program_iterator_next(&it))
++    {
++        if (ins->opcode != VSIR_OP_RET)
++            continue;
++
++        loc = ins->location;
++        if (!(ins = vsir_program_iterator_insert_before_and_move(&it, 1)))
++            return VKD3D_ERROR_OUT_OF_MEMORY;
++        if (!vsir_instruction_init_with_params(program, ins, &loc, VSIR_OP_MOV, 1, 1))
++        {
++            vkd3d_shader_instruction_make_nop(ins);
++            return VKD3D_ERROR_OUT_OF_MEMORY;
++        }
++
++        vsir_dst_operand_init_output(&ins->dst[0], VSIR_DATA_F32, e->register_index, mask);
++        vsir_src_operand_init(&ins->src[0], VKD3DSPR_IMMCONST, VSIR_DATA_F32, 0);
++        ins->src[0].reg.dimension = VSIR_DIMENSION_VEC4;
++        ins->src[0].swizzle = VKD3D_SHADER_NO_SWIZZLE;
++
++        /* Advance past the inserted instruction to the original ret. */
++        vsir_program_iterator_next(&it);
++    }
++
++    return VKD3D_OK;
++}
++
+ static enum vkd3d_result vsir_program_remap_output_signature(struct vsir_program *program,
+         struct vsir_transformation_context *ctx)
+ {
+@@ -4037,6 +4070,26 @@
+ 
+             if ((input_mask & e->mask) == input_mask)
+             {
++                ++subset_varying_count;
++                if (!allows_subset_masks)
++                {
++                    e->mask = input_mask;
++                    e->used_mask &= input_mask;
++                }
++            }
++            else if (input_mask && input_mask != e->mask && program->shader_version.major < 4)
++            {
++                unsigned int missing_mask = input_mask & ~e->mask;
++                enum vkd3d_result ret;
++
++                /* Use the same zero value as wholly uninitialized SM1-3
++                 * varyings, without overwriting components the shader writes.
++                 * SM1-2 diffuse defaults are handled before this transform. */
++                if ((ret = vsir_program_init_unwritten_output_components(program, e, missing_mask)) < 0)
++                    return ret;
++
++                e->mask |= missing_mask;
++                e->used_mask |= missing_mask;
+                 ++subset_varying_count;
+                 if (!allows_subset_masks)
+                 {

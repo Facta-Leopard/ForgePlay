@@ -1,0 +1,87 @@
+--- a/dlls/wined3d/utils.c
++++ b/dlls/wined3d/utils.c
+@@ -4093,6 +4093,21 @@
+     return FALSE;
+ }
+ 
++VkFormat wined3d_vk_get_srgb_format(VkFormat format)
++{
++    switch (format)
++    {
++        case VK_FORMAT_R8G8B8A8_UNORM: return VK_FORMAT_R8G8B8A8_SRGB;
++        case VK_FORMAT_B8G8R8A8_UNORM: return VK_FORMAT_B8G8R8A8_SRGB;
++        case VK_FORMAT_BC1_RGB_UNORM_BLOCK: return VK_FORMAT_BC1_RGB_SRGB_BLOCK;
++        case VK_FORMAT_BC1_RGBA_UNORM_BLOCK: return VK_FORMAT_BC1_RGBA_SRGB_BLOCK;
++        case VK_FORMAT_BC2_UNORM_BLOCK: return VK_FORMAT_BC2_SRGB_BLOCK;
++        case VK_FORMAT_BC3_UNORM_BLOCK: return VK_FORMAT_BC3_SRGB_BLOCK;
++        case VK_FORMAT_BC7_UNORM_BLOCK: return VK_FORMAT_BC7_SRGB_BLOCK;
++        default: return VK_FORMAT_UNDEFINED;
++    }
++}
++
+ static void init_vulkan_format_info(struct wined3d_adapter *adapter, struct wined3d_format_vk *format,
+         const struct wined3d_vk_info *vk_info, VkPhysicalDevice vk_physical_device)
+ {
+@@ -4278,6 +4293,21 @@
+     if (texture_flags & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT)
+     {
+         caps |= WINED3D_FORMAT_CAP_TEXTURE | WINED3D_FORMAT_CAP_VTF;
++    }
++    if ((d3d_info->wined3d_creation_flags & WINED3D_SRGB_READ_WRITE_CONTROL)
++            && (properties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT))
++    {
++        VkFormat srgb_format = wined3d_vk_get_srgb_format(vk_format);
++        VkFormatProperties srgb_properties;
++
++        /* Advertise only the same mutable-view formats used by D3D9 sampling.
++         * Typed sRGB views and formats without a counterpart are unchanged. */
++        if (srgb_format != VK_FORMAT_UNDEFINED)
++        {
++            VK_CALL(vkGetPhysicalDeviceFormatProperties(vk_physical_device, srgb_format, &srgb_properties));
++            if (srgb_properties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT)
++                caps |= WINED3D_FORMAT_CAP_SRGB_READ;
++        }
+     }
+     if (texture_flags & VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT)
+     {
+--- a/dlls/wined3d/texture_vk.c
++++ b/dlls/wined3d/texture_vk.c
+@@ -137,17 +137,7 @@
+ 
+ VkFormat wined3d_texture_vk_get_srgb_format(const struct wined3d_texture_vk *texture_vk)
+ {
+-    switch (wined3d_format_vk(texture_vk->t.resource.format)->vk_format)
+-    {
+-        case VK_FORMAT_R8G8B8A8_UNORM: return VK_FORMAT_R8G8B8A8_SRGB;
+-        case VK_FORMAT_B8G8R8A8_UNORM: return VK_FORMAT_B8G8R8A8_SRGB;
+-        case VK_FORMAT_BC1_RGB_UNORM_BLOCK: return VK_FORMAT_BC1_RGB_SRGB_BLOCK;
+-        case VK_FORMAT_BC1_RGBA_UNORM_BLOCK: return VK_FORMAT_BC1_RGBA_SRGB_BLOCK;
+-        case VK_FORMAT_BC2_UNORM_BLOCK: return VK_FORMAT_BC2_SRGB_BLOCK;
+-        case VK_FORMAT_BC3_UNORM_BLOCK: return VK_FORMAT_BC3_SRGB_BLOCK;
+-        case VK_FORMAT_BC7_UNORM_BLOCK: return VK_FORMAT_BC7_SRGB_BLOCK;
+-        default: return VK_FORMAT_UNDEFINED;
+-    }
++    return wined3d_vk_get_srgb_format(wined3d_format_vk(texture_vk->t.resource.format)->vk_format);
+ }
+ 
+ const VkDescriptorImageInfo *wined3d_texture_vk_get_default_image_info(struct wined3d_texture_vk *texture_vk,
+--- a/dlls/wined3d/adapter_vk.c
++++ b/dlls/wined3d/adapter_vk.c
+@@ -528,7 +528,6 @@
+     caps->PrimitiveMiscCaps |= WINED3DPMISCCAPS_BLENDOP
+             | WINED3DPMISCCAPS_INDEPENDENTWRITEMASKS
+             | WINED3DPMISCCAPS_MRTINDEPENDENTBITDEPTHS
+-            | WINED3DPMISCCAPS_POSTBLENDSRGBCONVERT
+             | WINED3DPMISCCAPS_SEPARATEALPHABLEND;
+ 
+     caps->RasterCaps |= WINED3DPRASTERCAPS_MIPMAPLODBIAS;
+--- a/dlls/wined3d/wined3d_vk.h
++++ b/dlls/wined3d/wined3d_vk.h
+@@ -978,6 +978,7 @@
+         struct wined3d_context_vk *context_vk, uint32_t bind_mask);
+ const VkDescriptorImageInfo *wined3d_texture_vk_get_default_image_info(struct wined3d_texture_vk *texture_vk,
+         struct wined3d_context_vk *context_vk);
++VkFormat wined3d_vk_get_srgb_format(VkFormat format);
+ VkFormat wined3d_texture_vk_get_srgb_format(const struct wined3d_texture_vk *texture_vk);
+ const VkDescriptorImageInfo *wined3d_texture_vk_get_srgb_image_info(struct wined3d_texture_vk *texture_vk,
+         struct wined3d_context_vk *context_vk, const struct wined3d_view_desc *desc);

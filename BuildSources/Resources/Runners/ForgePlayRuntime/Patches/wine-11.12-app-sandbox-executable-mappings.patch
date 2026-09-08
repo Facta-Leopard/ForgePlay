@@ -1,0 +1,25 @@
+diff --git a/server/mapping.c b/server/mapping.c
+--- a/server/mapping.c
++++ b/server/mapping.c
+@@ -358,11 +358,20 @@ static int check_current_dir_for_exec(void)
+     fd = make_temp_file( tmpfn );
+     if (fd == -1) return 0;
++    /* App Sandbox quarantines named files before an executable mapping is attempted.
++     * The real anonymous mapping path unlinks its backing file before clients receive
++     * the descriptor, so keep the capability probe pathless as well. */
++    if (unlink( tmpfn ) == -1)
++    {
++        close( fd );
++        return 0;
++    }
++    if (getenv( "FORGEPLAY_TRACE_PATHLESS_EXEC_MAPPING" ))
++        fprintf( stderr, "wineserver: using pathless executable mapping probe\n" );
+     if (grow_file( fd, 1 ))
+     {
+         ret = mmap( NULL, get_page_size(), PROT_READ | PROT_EXEC, MAP_PRIVATE, fd, 0 );
+         if (ret != MAP_FAILED) munmap( ret, get_page_size() );
+     }
+     close( fd );
+-    unlink( tmpfn );
+     return (ret != MAP_FAILED);
+ }

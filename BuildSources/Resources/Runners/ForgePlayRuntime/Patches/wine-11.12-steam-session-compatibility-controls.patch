@@ -1,0 +1,669 @@
+diff --git a/dlls/kernelbase/process.c b/dlls/kernelbase/process.c
+index 046a44c..318bf4f 100644
+--- a/dlls/kernelbase/process.c
++++ b/dlls/kernelbase/process.c
+@@ -332,6 +332,97 @@ static BOOL forgeplay_game_renderer_policy_enabled(void)
+ }
+ 
+ 
++static BOOL forgeplay_renderer_path_separator( WCHAR character )
++{
++    return character == L'\\' || character == L'/';
++}
++
++
++static BOOL forgeplay_renderer_path_suffix_character_equal( WCHAR left, WCHAR right )
++{
++    return RtlUpcaseUnicodeChar( left ) == RtlUpcaseUnicodeChar( right );
++}
++
++
++static BOOL forgeplay_renderer_path_has_exact_suffix( const WCHAR *path,
++                                                       const WCHAR *suffix,
++                                                       SIZE_T suffix_length )
++{
++    SIZE_T path_index, suffix_index;
++
++    if (!path || !suffix || !suffix_length ||
++        !forgeplay_renderer_path_separator( suffix[0] )) return FALSE;
++
++    path_index = wcslen( path );
++    suffix_index = suffix_length;
++    while (suffix_index)
++    {
++        if (!path_index) return FALSE;
++        if (forgeplay_renderer_path_separator( path[path_index - 1] ) &&
++            forgeplay_renderer_path_separator( suffix[suffix_index - 1] ))
++        {
++            while (path_index &&
++                   forgeplay_renderer_path_separator( path[path_index - 1] ))
++                --path_index;
++            while (suffix_index &&
++                   forgeplay_renderer_path_separator( suffix[suffix_index - 1] ))
++                --suffix_index;
++            continue;
++        }
++        if (!forgeplay_renderer_path_suffix_character_equal(
++                path[path_index - 1], suffix[suffix_index - 1] )) return FALSE;
++        --path_index;
++        --suffix_index;
++    }
++    return TRUE;
++}
++
++
++/* The host owns a bounded list of exact executable suffixes whose helper
++ * processes must remain on base Wine while their game keeps the selected
++ * renderer. This is used for architecture-incompatible service helpers, not
++ * for game-specific renderer selection or wildcard process suppression. */
++static BOOL is_forgeplay_game_renderer_base_helper( const WCHAR *path )
++{
++    static const WCHAR rules_name[] =
++        L"FORGEPLAY_GAME_RENDERER_BASE_HELPER_SUFFIX_RULES_V1";
++    WCHAR *rules, *cursor, *end, *rule;
++    DWORD size;
++    BOOL matched = FALSE;
++
++    if (!path || !*path) return FALSE;
++    size = GetEnvironmentVariableW( rules_name, NULL, 0 );
++    if (!size || size > 32767) return FALSE;
++    if (!(rules = RtlAllocateHeap(
++            GetProcessHeap(), 0, size * sizeof(WCHAR) ))) return FALSE;
++    if (!GetEnvironmentVariableW( rules_name, rules, size )) goto done;
++
++    cursor = rules;
++    end = rules + wcslen( rules );
++    while (cursor <= end)
++    {
++        SIZE_T rule_length;
++
++        rule = cursor;
++        while (cursor < end && *cursor != L';') ++cursor;
++        rule_length = cursor - rule;
++        if (rule_length && rule_length <= 1024 &&
++            forgeplay_renderer_path_has_exact_suffix(
++                path, rule, rule_length ))
++        {
++            matched = TRUE;
++            break;
++        }
++        if (cursor == end) break;
++        ++cursor;
++    }
++
++done:
++    RtlFreeHeap( GetProcessHeap(), 0, rules );
++    return matched;
++}
++
++
+ static BOOL forgeplay_steam_game_cef_browser_policy_enabled(void)
+ {
+     WCHAR value[8];
+@@ -1112,6 +1203,19 @@ static NTSTATUS create_forgeplay_base_renderer_environment( const void *environm
+         { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_WINE_UNIX_CALL", L"D3DM_WINE_UNIX_CALL" },
+         { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_ENABLE_METALFX", L"D3DM_ENABLE_METALFX" },
+         { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_NVNGX_PATH", L"D3DM_NVNGX_PATH" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_VENDOR_ID", L"D3DM_VENDOR_ID" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NETWORK_PROFILE", L"FORGEPLAY_NETWORK_PROFILE" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NVIDIA_IDENTITY_PROFILE", L"FORGEPLAY_NVIDIA_IDENTITY_PROFILE" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NVIDIA_IDENTITY_VENDOR_ID", L"FORGEPLAY_NVIDIA_IDENTITY_VENDOR_ID" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NVIDIA_IDENTITY_DEVICE_ID", L"FORGEPLAY_NVIDIA_IDENTITY_DEVICE_ID" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NVIDIA_IDENTITY_DEVICE_NAME", L"FORGEPLAY_NVIDIA_IDENTITY_DEVICE_NAME" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NVIDIA_IDENTITY_DRIVER_VERSION", L"FORGEPLAY_NVIDIA_IDENTITY_DRIVER_VERSION" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NVIDIA_IDENTITY_DISPLAY_DRIVER_VERSION", L"FORGEPLAY_NVIDIA_IDENTITY_DISPLAY_DRIVER_VERSION" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_D3DMETAL_FRAME_GENERATION", L"FORGEPLAY_D3DMETAL_FRAME_GENERATION" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_D3DMETAL_FRAME_GENERATION_TARGET_HZ", L"FORGEPLAY_D3DMETAL_FRAME_GENERATION_TARGET_HZ" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_D3DMETAL_FRAME_CHECK", L"FORGEPLAY_D3DMETAL_FRAME_CHECK" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_D3DMETAL_FRAME_GENERATION_PROXY", L"FORGEPLAY_D3DMETAL_FRAME_GENERATION_PROXY" },
++        { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_D3DMETAL_FRAME_GENERATION_OBSERVATION_FILE", L"FORGEPLAY_D3DMETAL_FRAME_GENERATION_OBSERVATION_FILE" },
+         { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_VK_ICD_FILENAMES", L"VK_ICD_FILENAMES" },
+         { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_VK_DRIVER_FILES", L"VK_DRIVER_FILES" },
+         { L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_LOG_PATH", L"DXVK_LOG_PATH" },
+@@ -1182,6 +1286,19 @@ static NTSTATUS create_forgeplay_game_renderer_environment( const void *environm
+         { L"FORGEPLAY_GAME_RENDERER_ENV_D3DM_WINE_UNIX_CALL", L"D3DM_WINE_UNIX_CALL" },
+         { L"FORGEPLAY_GAME_RENDERER_ENV_D3DM_ENABLE_METALFX", L"D3DM_ENABLE_METALFX" },
+         { L"FORGEPLAY_GAME_RENDERER_ENV_D3DM_NVNGX_PATH", L"D3DM_NVNGX_PATH" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_D3DM_VENDOR_ID", L"D3DM_VENDOR_ID" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NETWORK_PROFILE", L"FORGEPLAY_NETWORK_PROFILE" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_PROFILE", L"FORGEPLAY_NVIDIA_IDENTITY_PROFILE" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_VENDOR_ID", L"FORGEPLAY_NVIDIA_IDENTITY_VENDOR_ID" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_DEVICE_ID", L"FORGEPLAY_NVIDIA_IDENTITY_DEVICE_ID" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_DEVICE_NAME", L"FORGEPLAY_NVIDIA_IDENTITY_DEVICE_NAME" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_DRIVER_VERSION", L"FORGEPLAY_NVIDIA_IDENTITY_DRIVER_VERSION" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_DISPLAY_DRIVER_VERSION", L"FORGEPLAY_NVIDIA_IDENTITY_DISPLAY_DRIVER_VERSION" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_D3DMETAL_FRAME_GENERATION", L"FORGEPLAY_D3DMETAL_FRAME_GENERATION" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_D3DMETAL_FRAME_GENERATION_TARGET_HZ", L"FORGEPLAY_D3DMETAL_FRAME_GENERATION_TARGET_HZ" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_D3DMETAL_FRAME_CHECK", L"FORGEPLAY_D3DMETAL_FRAME_CHECK" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_D3DMETAL_FRAME_GENERATION_PROXY", L"FORGEPLAY_D3DMETAL_FRAME_GENERATION_PROXY" },
++        { L"FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_D3DMETAL_FRAME_GENERATION_OBSERVATION_FILE", L"FORGEPLAY_D3DMETAL_FRAME_GENERATION_OBSERVATION_FILE" },
+         { L"FORGEPLAY_GAME_RENDERER_ENV_VK_ICD_FILENAMES", L"VK_ICD_FILENAMES" },
+         { L"FORGEPLAY_GAME_RENDERER_ENV_VK_DRIVER_FILES", L"VK_DRIVER_FILES" },
+         { L"FORGEPLAY_GAME_RENDERER_ENV_DXVK_LOG_PATH", L"DXVK_LOG_PATH" },
+@@ -1216,11 +1314,27 @@ static NTSTATUS create_forgeplay_game_renderer_environment( const void *environm
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_WINE_UNIX_CALL",
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_ENABLE_METALFX",
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_NVNGX_PATH",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_D3DM_VENDOR_ID",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NVIDIA_IDENTITY_PROFILE",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NVIDIA_IDENTITY_VENDOR_ID",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NVIDIA_IDENTITY_DEVICE_ID",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NVIDIA_IDENTITY_DEVICE_NAME",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NVIDIA_IDENTITY_DRIVER_VERSION",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NVIDIA_IDENTITY_DISPLAY_DRIVER_VERSION",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_D3DMETAL_FRAME_GENERATION",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_D3DMETAL_FRAME_GENERATION_TARGET_HZ",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_D3DMETAL_FRAME_CHECK",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_D3DMETAL_FRAME_GENERATION_PROXY",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_D3DMETAL_FRAME_GENERATION_OBSERVATION_FILE",
++        L"FORGEPLAY_GAME_RENDERER_BASE_ENV_FORGEPLAY_NETWORK_PROFILE",
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_VK_ICD_FILENAMES",
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_VK_DRIVER_FILES",
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_LOG_PATH",
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_LOG_LEVEL",
+         L"FORGEPLAY_GAME_RENDERER_BASE_ENV_DXVK_CONFIG",
++        L"FORGEPLAY_NETWORK_PROFILE_REQUESTED",
++        L"FORGEPLAY_AUDIO_INPUT_MODE",
++        L"FORGEPLAY_GAME_RENDERER_BASE_HELPER_SUFFIX_RULES_V1",
+         L"FORGEPLAY_STEAM_GAME_CEF_BROWSER_POLICY_ENABLED",
+     };
+     const WCHAR *target_name, *cursor;
+@@ -1355,6 +1459,28 @@ static void record_forgeplay_game_renderer_fallback( const WCHAR *stage, const W
+ }
+ 
+ 
++static void record_forgeplay_game_renderer_base_helper(
++    const WCHAR *filename, DWORD process_id )
++{
++    WCHAR *text;
++    SIZE_T text_size;
++
++    if (!filename) filename = L"<unknown>";
++    text_size = wcslen( filename ) + 96;
++    if (!(text = HeapAlloc(
++            GetProcessHeap(), 0, text_size * sizeof(WCHAR) ))) return;
++    swprintf(
++        text, text_size,
++        L"route=base-runtime | reason=host-owned-exact-suffix-rule | %s",
++        filename );
++    record_process_observation(
++        "FORGEPLAY_GAME_RENDERER_BASE_HELPER_V1\t",
++        text,
++        process_id );
++    HeapFree( GetProcessHeap(), 0, text );
++}
++
++
+ static void record_forgeplay_game_renderer_observation(
+     const WCHAR *filename, DWORD process_id,
+     const struct forgeplay_game_renderer_route *route )
+@@ -1787,6 +1913,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
+     USHORT machine = 0;
+     NTSTATUS status, renderer_status;
+     BOOL game_renderer_route_observed = FALSE;
++    BOOL game_renderer_base_helper_observed = FALSE;
+     BOOL observe_process_arguments = FALSE;
+ 
+     /* Process the AppName and/or CmdLine to get module name and path */
+@@ -1862,6 +1989,31 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
+                    debugstr_w(app_name) );
+         }
+     }
++    else if (forgeplay_game_renderer_policy_enabled() &&
++             is_forgeplay_game_renderer_base_helper( app_name ))
++    {
++        renderer_status = create_forgeplay_base_renderer_environment(
++            env, flags, &game_renderer_environment );
++        if (renderer_status)
++        {
++            if (game_renderer_environment)
++                RtlDestroyEnvironment( game_renderer_environment );
++            game_renderer_environment = NULL;
++            record_forgeplay_game_renderer_fallback(
++                L"base-helper-environment", app_name, renderer_status,
++                L"original-environment" );
++            TRACE( "could not scrub the ForgePlay renderer environment from %s; "
++                   "continuing with its original environment\n", debugstr_w(app_name) );
++        }
++        else
++        {
++            env = game_renderer_environment;
++            flags |= CREATE_UNICODE_ENVIRONMENT;
++            game_renderer_base_helper_observed = TRUE;
++            TRACE( "applied ForgePlay base runtime helper policy for %s\n",
++                   debugstr_w(app_name) );
++        }
++    }
+     else if (forgeplay_game_renderer_policy_enabled() &&
+              (is_forgeplay_steam_game_path( app_name ) ||
+               is_forgeplay_steam_game_path( cur_dir ) ||
+@@ -2039,6 +2185,9 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateProcessInternalW( HANDLE token, const WCHAR
+         if (game_renderer_route_observed)
+             record_forgeplay_game_renderer_observation( app_name, info->dwProcessId,
+                                                         &game_renderer_route );
++        if (game_renderer_base_helper_observed)
++            record_forgeplay_game_renderer_base_helper(
++                app_name, info->dwProcessId );
+     }
+ 
+  done:
+diff --git a/dlls/nsi/nsi.c b/dlls/nsi/nsi.c
+index 14be842..ddfd67e 100644
+--- a/dlls/nsi/nsi.c
++++ b/dlls/nsi/nsi.c
+@@ -21,8 +21,10 @@
+ #include "winternl.h"
+ #include "ws2ipdef.h"
+ #include "iphlpapi.h"
++#include "ntddndis.h"
+ #include "netioapi.h"
+ #include "iptypes.h"
++#define __WINE_INIT_NPI_MODULEID
+ #include "netiodef.h"
+ #include "wine/nsi.h"
+ #include "wine/debug.h"
+@@ -32,6 +34,44 @@ WINE_DEFAULT_DEBUG_CHANNEL(nsi);
+ static HANDLE nsi_device = INVALID_HANDLE_VALUE;
+ static HANDLE nsi_device_async = INVALID_HANDLE_VALUE;
+ 
++static UINT forgeplay_network_adapter_type(void)
++{
++    char profile[32];
++    DWORD length;
++
++    length = GetEnvironmentVariableA( "FORGEPLAY_NETWORK_PROFILE", profile, ARRAY_SIZE(profile) );
++    if (!length || length >= ARRAY_SIZE(profile) || !strcmp( profile, "standard" )) return 0;
++    if (!strcmp( profile, "wifi-identity" )) return IF_TYPE_IEEE80211;
++    if (!strcmp( profile, "ethernet-identity" )) return IF_TYPE_ETHERNET_CSMACD;
++    WARN( "Ignoring unsupported ForgePlay network profile.\n" );
++    return 0;
++}
++
++static void forgeplay_normalize_network_adapter_types(
++    const NPI_MODULEID *module, DWORD table, void *static_data,
++    DWORD static_size, DWORD count )
++{
++    struct nsi_ndis_ifinfo_static *entry;
++    UINT type = forgeplay_network_adapter_type();
++    DWORD i;
++
++    if (!type || !module || table != NSI_NDIS_IFINFO_TABLE ||
++        !NmrIsEqualNpiModuleId( module, &NPI_MS_NDIS_MODULEID ) ||
++        !static_data || static_size < sizeof(*entry))
++        return;
++
++    for (i = 0; i < count; ++i)
++    {
++        entry = (struct nsi_ndis_ifinfo_static *)((BYTE *)static_data + i * static_size);
++        if (entry->type == IF_TYPE_SOFTWARE_LOOPBACK || !entry->conn_present) continue;
++        entry->type = type;
++        entry->media_type = NdisMedium802_3;
++        entry->phys_medium_type = type == IF_TYPE_IEEE80211
++            ? NdisPhysicalMediumNative802_11
++            : NdisPhysicalMedium802_3;
++    }
++}
++
+ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, void *reserved)
+ {
+     switch (reason)
+@@ -199,6 +239,9 @@ DWORD WINAPI NsiEnumerateObjectsAllParametersEx( struct nsi_enumerate_all_ex *pa
+         if (params->dynamic_size) memcpy( params->dynamic_data, ptr, params->dynamic_size * params->count );
+         ptr += params->dynamic_size * in.count;
+         if (params->static_size) memcpy( params->static_data, ptr, params->static_size * params->count );
++        forgeplay_normalize_network_adapter_types(
++            params->module, params->table, params->static_data,
++            params->static_size, params->count );
+     }
+ 
+     free( out );
+@@ -280,6 +323,9 @@ DWORD WINAPI NsiGetAllParametersEx( struct nsi_get_all_parameters_ex *params )
+         if (params->dynamic_size) memcpy( params->dynamic_data, ptr, params->dynamic_size );
+         ptr += params->dynamic_size;
+         if (params->static_size) memcpy( params->static_data, ptr, params->static_size );
++        forgeplay_normalize_network_adapter_types(
++            params->module, params->table, params->static_data,
++            params->static_size, 1 );
+     }
+ 
+ err:
+diff --git a/dlls/ntdll/loader.c b/dlls/ntdll/loader.c
+index 02f0b56..9fba824 100644
+--- a/dlls/ntdll/loader.c
++++ b/dlls/ntdll/loader.c
+@@ -3246,7 +3397,7 @@ static BOOL forgeplay_is_renderer_module( const WCHAR *name )
+     {
+         L"d3d8.dll", L"d3d9.dll", L"d3d10.dll", L"d3d10_1.dll",
+         L"d3d10core.dll", L"d3d11.dll", L"d3d12.dll", L"d3d12core.dll",
+-        L"dxgi.dll", L"winemetal.dll", L"nvapi64.dll", L"nvngx.dll",
++        L"dxgi.dll", L"winemetal.dll", L"_nvngx.dll", L"nvapi.dll", L"nvapi64.dll", L"nvngx.dll",
+         L"nvngx-on-metalfx.dll",
+     };
+     const WCHAR *basename = forgeplay_renderer_module_basename( name );
+diff --git a/dlls/ntdll/unix/process.c b/dlls/ntdll/unix/process.c
+index f30aa79..e2f5b39 100644
+--- a/dlls/ntdll/unix/process.c
++++ b/dlls/ntdll/unix/process.c
+@@ -562,6 +562,22 @@ static BOOL apply_forgeplay_steam_game_process_unix_environment(
+         "FORGEPLAY_D3DMETAL_BRIDGE",
+         "FORGEPLAY_D3DMETAL_TARGET",
+         "D3DM_WINE_UNIX_CALL",
++        "D3DM_ENABLE_METALFX",
++        "D3DM_NVNGX_PATH",
++        "D3DM_VENDOR_ID",
++        "FORGEPLAY_NETWORK_PROFILE",
++        "FORGEPLAY_AUDIO_INPUT_MODE",
++        "FORGEPLAY_NVIDIA_IDENTITY_PROFILE",
++        "FORGEPLAY_NVIDIA_IDENTITY_VENDOR_ID",
++        "FORGEPLAY_NVIDIA_IDENTITY_DEVICE_ID",
++        "FORGEPLAY_NVIDIA_IDENTITY_DEVICE_NAME",
++        "FORGEPLAY_NVIDIA_IDENTITY_DRIVER_VERSION",
++        "FORGEPLAY_NVIDIA_IDENTITY_DISPLAY_DRIVER_VERSION",
++        "FORGEPLAY_D3DMETAL_FRAME_GENERATION",
++        "FORGEPLAY_D3DMETAL_FRAME_GENERATION_TARGET_HZ",
++        "FORGEPLAY_D3DMETAL_FRAME_CHECK",
++        "FORGEPLAY_D3DMETAL_FRAME_GENERATION_PROXY",
++        "FORGEPLAY_D3DMETAL_FRAME_GENERATION_OBSERVATION_FILE",
+         "VK_ICD_FILENAMES",
+         "VK_DRIVER_FILES",
+         "DXVK_LOG_PATH",
+diff --git a/dlls/winecoreaudio.drv/coreaudio.c b/dlls/winecoreaudio.drv/coreaudio.c
+index c7e0dc2..fe05cbb 100644
+--- a/dlls/winecoreaudio.drv/coreaudio.c
++++ b/dlls/winecoreaudio.drv/coreaudio.c
+@@ -220,6 +220,23 @@ static NTSTATUS unix_get_endpoint_ids(void *args)
+     params->num = 0;
+     params->default_idx = 0;
+ 
++    if (params->flow == eCapture)
++    {
++        const char *input_mode = getenv("FORGEPLAY_AUDIO_INPUT_MODE");
++
++        if (input_mode && !strcmp(input_mode, "disabled"))
++        {
++            params->result = S_OK;
++            return STATUS_SUCCESS;
++        }
++        if (input_mode && strcmp(input_mode, "enabled"))
++        {
++            WARN("Unsupported ForgePlay audio input mode.\n");
++            params->result = E_INVALIDARG;
++            return STATUS_SUCCESS;
++        }
++    }
++
+     addr.mScope = kAudioObjectPropertyScopeGlobal;
+     addr.mElement = kAudioObjectPropertyElementMain;
+     if(params->flow == eRender) addr.mSelector = kAudioHardwarePropertyDefaultOutputDevice;
+diff --git a/dlls/ntdll/unix/socket.c b/dlls/ntdll/unix/socket.c
+--- a/dlls/ntdll/unix/socket.c
++++ b/dlls/ntdll/unix/socket.c
+@@ -426,16 +426,21 @@ static int convert_control_headers(struct msghdr *hdr, WSABUF *control)
+                     }
+ #endif /* IP_PKTINFO */
+-
++
++#if defined(IP_RECVTOS) && (!defined(IP_TOS) || IP_RECVTOS != IP_TOS)
++                    case IP_RECVTOS:
++#endif
+ #if defined(IP_TOS)
+                     case IP_TOS:
++#endif
++#if defined(IP_RECVTOS) || defined(IP_TOS)
+                     {
+                         INT tos = *(unsigned char *)CMSG_DATA(cmsg_unix);
+                         ptr = fill_control_message( WS_IPPROTO_IP, WS_IP_TOS, ptr, &ctlsize,
+                                                     &tos, sizeof(INT) );
+                         if (!ptr) goto error;
+                         break;
+                     }
+-#endif /* IP_TOS */
++#endif /* IP_RECVTOS || IP_TOS */
+-
++
+ #if defined(IP_TTL)
+                     case IP_TTL:
+diff --git a/dlls/win32u/sysparams.c b/dlls/win32u/sysparams.c
+index 239d13df..c5a9b2d1 100644
+--- a/dlls/win32u/sysparams.c
++++ b/dlls/win32u/sysparams.c
+@@ -26,6 +26,7 @@
+ 
+ #include <pthread.h>
+ #include <assert.h>
++#include <stdlib.h>
+ 
+ #include "ntstatus.h"
+ #include "ntgdi_private.h"
+@@ -1108,6 +1109,149 @@ static BOOL read_gpu_from_registry( struct gpu *gpu )
+     return TRUE;
+ }
+ 
++struct forgeplay_nvidia_identity
++{
++    UINT16 vendor;
++    UINT16 device;
++    const char *profile;
++    const char *device_name;
++    const char *user_mode_driver_version;
++    const char *display_driver_version;
++    UINT64 packed_display_driver_version;
++};
++
++static BOOL forgeplay_identity_value_is_bounded( const char *value, SIZE_T maximum )
++{
++    SIZE_T index;
++
++    if (!value) return FALSE;
++    for (index = 0; index <= maximum; ++index)
++    {
++        unsigned char character = value[index];
++
++        if (!character) return index != 0;
++        if (character < 0x20 || character > 0x7e) return FALSE;
++    }
++    return FALSE;
++}
++
++static BOOL forgeplay_parse_pci_identifier( const char *value, UINT16 *result )
++{
++    unsigned int parsed = 0;
++    SIZE_T index;
++
++    if (!value || !result || strlen( value ) != 6 || value[0] != '0' ||
++        (value[1] != 'x' && value[1] != 'X')) return FALSE;
++    for (index = 2; index < 6; ++index)
++    {
++        unsigned int digit;
++
++        if (value[index] >= '0' && value[index] <= '9') digit = value[index] - '0';
++        else if (value[index] >= 'a' && value[index] <= 'f') digit = value[index] - 'a' + 10;
++        else if (value[index] >= 'A' && value[index] <= 'F') digit = value[index] - 'A' + 10;
++        else return FALSE;
++        parsed = (parsed << 4) | digit;
++    }
++    *result = parsed;
++    return TRUE;
++}
++
++static BOOL forgeplay_parse_driver_version( const char *value, unsigned int components,
++                                            UINT64 *packed )
++{
++    const char *cursor = value;
++    UINT64 result = 0;
++    unsigned int component;
++
++    if (!value || !components || components > 4) return FALSE;
++    for (component = 0; component < components; ++component)
++    {
++        unsigned int part = 0;
++
++        if (*cursor < '0' || *cursor > '9') return FALSE;
++        do
++        {
++            unsigned int digit = *cursor++ - '0';
++            if (part > (0xffffu - digit) / 10u) return FALSE;
++            part = part * 10u + digit;
++        } while (*cursor >= '0' && *cursor <= '9');
++
++        result = (result << 16) | part;
++        if (component + 1 < components)
++        {
++            if (*cursor++ != '.') return FALSE;
++        }
++        else if (*cursor) return FALSE;
++    }
++    if (packed) *packed = result;
++    return TRUE;
++}
++
++/*
++ * ForgePlay owns one NVIDIA identity tuple.  A routed game child receives the
++ * direct variables; the Steam base process receives the same tuple through
++ * the renderer control plane so its early display enumeration cannot rewrite
++ * the shared prefix back to the Apple host identity.  Never mix the two sets:
++ * a partial tuple is an inactive policy, not permission to synthesize fields.
++ */
++static BOOL forgeplay_get_nvidia_identity( struct forgeplay_nvidia_identity *identity )
++{
++    static const char *actual_names[] =
++    {
++        "FORGEPLAY_NVIDIA_IDENTITY_PROFILE",
++        "FORGEPLAY_NVIDIA_IDENTITY_VENDOR_ID",
++        "FORGEPLAY_NVIDIA_IDENTITY_DEVICE_ID",
++        "FORGEPLAY_NVIDIA_IDENTITY_DEVICE_NAME",
++        "FORGEPLAY_NVIDIA_IDENTITY_DRIVER_VERSION",
++        "FORGEPLAY_NVIDIA_IDENTITY_DISPLAY_DRIVER_VERSION",
++    };
++    static const char *projected_names[] =
++    {
++        "FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_PROFILE",
++        "FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_VENDOR_ID",
++        "FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_DEVICE_ID",
++        "FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_DEVICE_NAME",
++        "FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_DRIVER_VERSION",
++        "FORGEPLAY_GAME_RENDERER_ENV_FORGEPLAY_NVIDIA_IDENTITY_DISPLAY_DRIVER_VERSION",
++    };
++    const char *values[ARRAY_SIZE(actual_names)] = {0};
++    const char *requested = getenv( "FORGEPLAY_GAME_RENDERER_REQUESTED" );
++    BOOL any_actual = FALSE;
++    unsigned int index;
++
++    if (!identity) return FALSE;
++    memset( identity, 0, sizeof(*identity) );
++    for (index = 0; index < ARRAY_SIZE(actual_names); ++index)
++        if ((values[index] = getenv( actual_names[index] ))) any_actual = TRUE;
++    if (!any_actual)
++    {
++        if (!requested || strcmp( requested, "d3dMetalNVIDIA" )) return FALSE;
++        for (index = 0; index < ARRAY_SIZE(projected_names); ++index)
++            values[index] = getenv( projected_names[index] );
++    }
++
++    if (!forgeplay_identity_value_is_bounded( values[0], 64 ) ||
++        !forgeplay_parse_pci_identifier( values[1], &identity->vendor ) ||
++        !forgeplay_parse_pci_identifier( values[2], &identity->device ) ||
++        !forgeplay_identity_value_is_bounded( values[3], 127 ) ||
++        !forgeplay_identity_value_is_bounded( values[4], 31 ) ||
++        !forgeplay_identity_value_is_bounded( values[5], 31 ) ||
++        !forgeplay_parse_driver_version( values[4], 2, NULL ) ||
++        !forgeplay_parse_driver_version(
++            values[5], 4, &identity->packed_display_driver_version ))
++    {
++        WARN( "Ignoring incomplete or invalid ForgePlay NVIDIA identity policy.\n" );
++        memset( identity, 0, sizeof(*identity) );
++        return FALSE;
++    }
++
++    identity->profile = values[0];
++    identity->device_name = values[3];
++    identity->user_mode_driver_version = values[4];
++    identity->display_driver_version = values[5];
++    return TRUE;
++}
++
+ static const char* driver_vendor_to_version( UINT16 vendor )
+ {
+     /* The last seven digits are the driver number. */
+@@ -1470,9 +1614,12 @@ const char *gpu_device_name( UINT16 vendor, UINT16 device, const char *default_n
+ };
+ 
+ static BOOL write_gpu_to_registry( const struct gpu *gpu, const struct pci_id *pci,
+-                                   ULONGLONG memory_size )
++                                   ULONGLONG memory_size,
++                                   const struct forgeplay_nvidia_identity *identity )
+ {
+     unsigned int size, name_size = (wcslen( gpu->name ) + 1) * sizeof(WCHAR);
++    const char *driver_version = identity ? identity->display_driver_version :
++        driver_vendor_to_version( pci->vendor );
+     char buffer[4096], *tmp;
+     WCHAR bufferW[512];
+     HKEY subkey;
+@@ -1540,7 +1687,7 @@ static BOOL write_gpu_to_registry( const struct gpu *gpu, const struct pci_id *p
+     if ((subkey = reg_create_ascii_key( hkey, devpkey_device_driver_version, 0, NULL )))
+     {
+         set_reg_value( subkey, NULL, 0xffff0000 | DEVPROP_TYPE_STRING, bufferW,
+-                       asciiz_to_unicode( bufferW, driver_vendor_to_version( pci->vendor ) ));
++                       asciiz_to_unicode( bufferW, driver_version ));
+         NtClose( subkey );
+     }
+ 
+@@ -1622,7 +1769,7 @@ static BOOL write_gpu_to_registry( const struct gpu *gpu, const struct pci_id *p
+     value = (ULONG)min( memory_size, (ULONGLONG)ULONG_MAX );
+     set_reg_value( hkey, memory_sizeW, REG_DWORD, &value, sizeof(value) );
+ 
+-    set_reg_ascii_value( hkey, "DriverVersion", driver_vendor_to_version( pci->vendor ) );
++    set_reg_ascii_value( hkey, "DriverVersion", driver_version );
+     NtClose( hkey );
+ 
+ 
+@@ -1633,7 +1780,8 @@ static BOOL write_gpu_to_registry( const struct gpu *gpu, const struct pci_id *p
+     hkey = reg_create_ascii_key( NULL, buffer, REG_OPTION_VOLATILE, NULL );
+     if (hkey)
+     {
+-        UINT64 ver = 0x230000000f1ff4; /* Some version in the future. */
++        UINT64 ver = identity ? identity->packed_display_driver_version :
++            0x230000000f1ff4; /* Some version in the future. */
+ 
+         asciiz_to_unicode( bufferW, "AdapterLuid" );
+         set_reg_value( hkey, bufferW, REG_QWORD, &gpu->luid, sizeof(gpu->luid) );
+@@ -1708,6 +1856,9 @@ static void free_gpu_info( struct gpu_info *info )
+ static void add_gpu( const char *name, const struct pci_id *pci_id, const GUID *uuid, void *param )
+ {
+     struct device_manager_ctx *ctx = param;
++    struct forgeplay_nvidia_identity identity;
++    const struct forgeplay_nvidia_identity *active_identity = NULL;
++    struct pci_id identity_pci;
+     char buffer[4096];
+     KEY_VALUE_PARTIAL_INFORMATION *value = (void *)buffer;
+     struct gpu_info *vulkan_gpu = NULL, *opengl_gpu = NULL;
+@@ -1744,6 +1895,20 @@ static void add_gpu( const char *name, const struct pci_id *pci_id, const GUID *
+     if (!pci_id->vendor && !pci_id->device && vulkan_gpu) pci_id = &vulkan_gpu->pci_id;
+     if (!pci_id->vendor && !pci_id->device && opengl_gpu) pci_id = &opengl_gpu->pci_id;
+ 
++    if (!ctx->gpu_count && forgeplay_get_nvidia_identity( &identity ))
++    {
++        identity_pci = *pci_id;
++        identity_pci.vendor = identity.vendor;
++        identity_pci.device = identity.device;
++        identity_pci.subsystem = 0;
++        identity_pci.revision = 0;
++        pci_id = &identity_pci;
++        name = identity.device_name;
++        active_identity = &identity;
++        TRACE( "using ForgePlay NVIDIA identity profile %s, user-mode driver %s\n",
++               debugstr_a(identity.profile), debugstr_a(identity.user_mode_driver_version) );
++    }
++
+     name = gpu_device_name( pci_id->vendor, pci_id->device, name );
+     if (!strcmp( name, "Wine Adapter" ) && vulkan_gpu) name = vulkan_gpu->name;
+     if (!strcmp( name, "Wine Adapter" ) && opengl_gpu) name = opengl_gpu->name;
+@@ -1794,7 +1959,7 @@ static void add_gpu( const char *name, const struct pci_id *pci_id, const GUID *
+     if (!memory && opengl_gpu) memory = opengl_gpu->memory;
+     if (!memory) memory = 1024 * 1024 * 1024;
+ 
+-    if (!write_gpu_to_registry( gpu, pci_id, memory ))
++    if (!write_gpu_to_registry( gpu, pci_id, memory, active_identity ))
+     {
+         WARN( "Failed to write gpu %p to registry\n", gpu );
+         gpu_release( gpu );

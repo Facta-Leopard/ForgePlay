@@ -1,0 +1,284 @@
+diff --git a/dlls/ntdll/loader.c b/dlls/ntdll/loader.c
+index a1524dc..02f0b56 100644
+--- a/dlls/ntdll/loader.c
++++ b/dlls/ntdll/loader.c
+@@ -1322,6 +1322,26 @@ static BOOL is_dll_native_subsystem( LDR_DATA_TABLE_ENTRY *mod, const IMAGE_NT_H
+     return TRUE;
+ }
+ 
++
++static TEB *forgeplay_native_thread_context_base( TEB *teb )
++{
++#if defined(__x86_64__) && !defined(__arm64ec__)
++    return teb->Instrumentation[0];
++#else
++    return NULL;
++#endif
++}
++
++
++static void forgeplay_sync_native_static_tls( TEB *teb )
++{
++    TEB *native_context = forgeplay_native_thread_context_base( teb );
++
++    if (native_context)
++        native_context->ThreadLocalStoragePointer = teb->ThreadLocalStoragePointer;
++}
++
++
+ /*************************************************************************
+  *		alloc_tls_slot
+  *
+@@ -1393,6 +1413,7 @@ static BOOL alloc_tls_slot( LDR_DATA_TABLE_ENTRY *mod )
+             if (!new) return FALSE;
+             if (old) memcpy( new, old, old_module_count * sizeof(*new) );
+             teb->ThreadLocalStoragePointer = new;
++            forgeplay_sync_native_static_tls( teb );
+             TRACE( "thread %04lx tls block %p -> %p\n", HandleToULong(teb->ClientId.UniqueThread), old, new );
+             /* FIXME: can't free old block here, should be freed at thread exit */
+         }
+@@ -1638,6 +1659,7 @@ static NTSTATUS alloc_thread_tls(void)
+         TRACE( "slot %u: %u/%lu bytes at %p\n", i, size, dir->SizeOfZeroFill, pointers[i] );
+     }
+     NtCurrentTeb()->ThreadLocalStoragePointer = pointers;
++    forgeplay_sync_native_static_tls( NtCurrentTeb() );
+     return STATUS_SUCCESS;
+ }
+ 
+@@ -4383,6 +4405,7 @@ void WINAPI LdrShutdownThread(void)
+     if ((pointers = NtCurrentTeb()->ThreadLocalStoragePointer))
+     {
+         NtCurrentTeb()->ThreadLocalStoragePointer = NULL;
++        forgeplay_sync_native_static_tls( NtCurrentTeb() );
+         for (i = 0; i < tls_module_count; i++) RtlFreeHeap( GetProcessHeap(), 0, pointers[i] );
+         RtlFreeHeap( GetProcessHeap(), 0, pointers );
+     }
+diff --git a/dlls/ntdll/unix/signal_x86_64.c b/dlls/ntdll/unix/signal_x86_64.c
+index 162a0a7..b8ac5d8 100644
+--- a/dlls/ntdll/unix/signal_x86_64.c
++++ b/dlls/ntdll/unix/signal_x86_64.c
+@@ -2945,6 +2945,9 @@ void init_syscall_frame( LPTHREAD_START_ROUTINE entry, void *arg, TEB *teb )
+         __asm__ volatile ("movq %0,%%gs:%c1" ::
+                           "r" (teb->Peb),
+                           "n" (FIELD_OFFSET(TEB, Peb)));
++        /* The PE loader uses this otherwise-unused slot to synchronize
++         * mutable TLS pointers into Darwin's retained GS base. */
++        teb->Instrumentation[0] = thread_data->pthread_teb;
+     }
+ #else
+ # error Please define setting %gs for your architecture
+diff --git a/dlls/ntdll/unix/system.c b/dlls/ntdll/unix/system.c
+index cf2883f..50ad8b5 100644
+--- a/dlls/ntdll/unix/system.c
++++ b/dlls/ntdll/unix/system.c
+@@ -2668,6 +2668,62 @@ static void get_cpu_idle_cycle_times( ULONG64 *times )
+ #endif
+ 
+ 
++static struct tm *forgeplay_localtime( const time_t *value, struct tm *result )
++{
++#ifdef __APPLE__
++    return localtime_r( value, result );
++#else
++    struct tm *converted = localtime( value );
++
++    if (!converted) return NULL;
++    *result = *converted;
++    return result;
++#endif
++}
++
++
++static struct tm *forgeplay_gmtime( const time_t *value, struct tm *result )
++{
++#ifdef __APPLE__
++    return gmtime_r( value, result );
++#else
++    struct tm *converted = gmtime( value );
++
++    if (!converted) return NULL;
++    *result = *converted;
++    return result;
++#endif
++}
++
++
++static char *forgeplay_ctime( const time_t *value, char result[26] )
++{
++#ifdef __APPLE__
++    return ctime_r( value, result );
++#else
++    const char *converted = ctime( value );
++
++    if (!converted) return NULL;
++    memcpy( result, converted, 26 );
++    return result;
++#endif
++}
++
++
++static char *forgeplay_asctime( const struct tm *value, char result[26] )
++{
++#ifdef __APPLE__
++    return asctime_r( value, result );
++#else
++    const char *converted = asctime( value );
++
++    if (!converted) return NULL;
++    memcpy( result, converted, 26 );
++    return result;
++#endif
++}
++
++
+ /* calculate the mday of dst change date, so that for instance Sun 5 Oct 2007
+  * (last Sunday in October of 2007) becomes Sun Oct 28 2007
+  *
+@@ -2675,7 +2731,7 @@ static void get_cpu_idle_cycle_times( ULONG64 *times )
+  */
+ static int weekday_to_mday(int year, int day, int mon, int day_of_week)
+ {
+-    struct tm date;
++    struct tm date, converted;
+     time_t tmp;
+     int wday, mday;
+ 
+@@ -2703,7 +2759,8 @@ static int weekday_to_mday(int year, int day, int mon, int day_of_week)
+         date.tm_mday += 7;
+         date.tm_isdst = -1;
+         tmp = mktime(&date);
+-        tm = localtime(&tmp);
++        tm = forgeplay_localtime( &tmp, &converted );
++        if (!tm) break;
+         if (tm->tm_mon != mon)
+             break;
+         mday = tm->tm_mday;
+@@ -2883,18 +2940,21 @@ static void find_reg_tz_info(RTL_DYNAMIC_TIME_ZONE_INFORMATION *tzi, int year)
+ 
+ static time_t find_dst_change(time_t start, time_t end, int *is_dst)
+ {
+-    struct tm *tm;
++    struct tm *tm, converted;
++    char time_string[26];
+     ULONGLONG min = (sizeof(time_t) == sizeof(int)) ? (ULONG)start : start;
+     ULONGLONG max = (sizeof(time_t) == sizeof(int)) ? (ULONG)end : end;
+     time_t pos;
+ 
+-    tm = localtime(&start);
++    tm = forgeplay_localtime( &start, &converted );
++    if (!tm) return end;
+     *is_dst = !tm->tm_isdst;
+-    TRACE("starting date isdst %d, %s", !*is_dst, ctime(&start));
++    TRACE("starting date isdst %d, %s", !*is_dst, forgeplay_ctime( &start, time_string ));
+ 
+     for (pos = min; pos <= max; pos += 30 * 24 * 3600)
+     {
+-        tm = localtime(&pos);
++        tm = forgeplay_localtime( &pos, &converted );
++        if (!tm) return end;
+         if (tm->tm_isdst == *is_dst)
+         {
+             max = pos;
+@@ -2905,7 +2965,8 @@ static time_t find_dst_change(time_t start, time_t end, int *is_dst)
+     while (min <= max)
+     {
+         pos = (min + max) / 2;
+-        tm = localtime(&pos);
++        tm = forgeplay_localtime( &pos, &converted );
++        if (!tm) return end;
+ 
+         if (tm->tm_isdst != *is_dst)
+             min = pos + 1;
+@@ -3004,7 +3065,8 @@ static void get_timezone_info( RTL_DYNAMIC_TIME_ZONE_INFORMATION *tzi )
+     static RTL_DYNAMIC_TIME_ZONE_INFORMATION cached_tzi;
+     static int current_year = -1, current_bias = 65535;
+     RTL_DYNAMIC_TIME_ZONE_INFORMATION reg_tzi;
+-    struct tm *tm, tm1, tm2;
++    struct tm *tm, converted, tm1, tm2;
++    char time_string[26];
+     time_t year_start, year_end, tmp, dlt = 0, std = 0;
+     int is_dst, bias;
+     BOOL inverted_dst;
+@@ -3012,10 +3074,20 @@ static void get_timezone_info( RTL_DYNAMIC_TIME_ZONE_INFORMATION *tzi )
+     mutex_lock( &timezone_mutex );
+ 
+     year_start = time(NULL);
+-    tm = gmtime(&year_start);
++    tm = forgeplay_gmtime( &year_start, &converted );
++    if (!tm)
++    {
++        mutex_unlock( &timezone_mutex );
++        return;
++    }
+     bias = (LONG)(mktime(tm) - year_start) / 60;
+ 
+-    tm = localtime(&year_start);
++    tm = forgeplay_localtime( &year_start, &converted );
++    if (!tm)
++    {
++        mutex_unlock( &timezone_mutex );
++        return;
++    }
+     if (current_year == tm->tm_year && current_bias == bias)
+     {
+         *tzi = cached_tzi;
+@@ -3040,7 +3112,7 @@ static void get_timezone_info( RTL_DYNAMIC_TIME_ZONE_INFORMATION *tzi )
+     tm->tm_mday = 1;
+     tm->tm_mon = tm->tm_hour = tm->tm_min = tm->tm_sec = tm->tm_wday = tm->tm_yday = 0;
+     year_start = mktime(tm);
+-    TRACE("year_start: %s", ctime(&year_start));
++    TRACE("year_start: %s", forgeplay_ctime( &year_start, time_string ));
+ 
+     tm->tm_isdst = inverted_dst;
+     tm->tm_mday = tm->tm_wday = tm->tm_yday = 0;
+@@ -3048,7 +3120,7 @@ static void get_timezone_info( RTL_DYNAMIC_TIME_ZONE_INFORMATION *tzi )
+     tm->tm_hour = 23;
+     tm->tm_min = tm->tm_sec = 59;
+     year_end = mktime(tm);
+-    TRACE("year_end: %s", ctime(&year_end));
++    TRACE("year_end: %s", forgeplay_ctime( &year_end, time_string ));
+ 
+     tmp = find_dst_change(year_start, year_end, &is_dst);
+     if (inverted_dst) is_dst = !is_dst;
+@@ -3064,16 +3136,21 @@ static void get_timezone_info( RTL_DYNAMIC_TIME_ZONE_INFORMATION *tzi )
+     else
+         std = tmp;
+ 
+-    TRACE("std: %s", ctime(&std));
+-    TRACE("dlt: %s", ctime(&dlt));
++    TRACE("std: %s", forgeplay_ctime( &std, time_string ));
++    TRACE("dlt: %s", forgeplay_ctime( &dlt, time_string ));
+ 
+     if (dlt == std || !dlt || !std)
+         TRACE("there is no daylight saving rules in this time zone\n");
+     else
+     {
+         tmp = dlt - tzi->Bias * 60;
+-        tm = gmtime(&tmp);
+-        TRACE("dlt gmtime: %s", asctime(tm));
++        tm = forgeplay_gmtime( &tmp, &converted );
++        if (!tm)
++        {
++            mutex_unlock( &timezone_mutex );
++            return;
++        }
++        TRACE("dlt gmtime: %s", forgeplay_asctime( tm, time_string ));
+ 
+         tzi->DaylightBias = -60;
+         tzi->DaylightDate.wYear = tm->tm_year + 1900;
+@@ -3093,8 +3170,13 @@ static void get_timezone_info( RTL_DYNAMIC_TIME_ZONE_INFORMATION *tzi )
+             tzi->DaylightBias);
+ 
+         tmp = std - tzi->Bias * 60 - tzi->DaylightBias * 60;
+-        tm = gmtime(&tmp);
+-        TRACE("std gmtime: %s", asctime(tm));
++        tm = forgeplay_gmtime( &tmp, &converted );
++        if (!tm)
++        {
++            mutex_unlock( &timezone_mutex );
++            return;
++        }
++        TRACE("std gmtime: %s", forgeplay_asctime( tm, time_string ));
+ 
+         tzi->StandardBias = 0;
+         tzi->StandardDate.wYear = tm->tm_year + 1900;

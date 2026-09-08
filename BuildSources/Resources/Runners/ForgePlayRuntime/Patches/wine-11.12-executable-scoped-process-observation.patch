@@ -1,0 +1,229 @@
+--- a/dlls/kernelbase/process.c
++++ b/dlls/kernelbase/process.c
+@@ -19,6 +19,7 @@
+  */
+ 
+ #include <stdarg.h>
++#include <stdio.h>
+ #include <string.h>
+ 
+ #include "ntstatus.h"
+@@ -131,6 +132,179 @@
+  done:
+     RtlFreeHeap( GetProcessHeap(), 0, name );
+     return ret;
++}
++
++
++static BOOL process_argument_is_command_line_space( WCHAR value )
++{
++    return value == L' ' || value == L'\t' || value == L'\r' || value == L'\n';
++}
++
++
++/* Chromium identifies subprocess roles with a standalone --type= argument.
++ * Parse only argument starts, including a quoted argument start, so unrelated
++ * values containing that text do not change the selected root-process scope. */
++static BOOL process_command_line_has_chromium_type_argument( const WCHAR *cmdline )
++{
++    static const WCHAR type_prefix[] = L"--type=";
++    const WCHAR *cursor = cmdline;
++
++    while (cursor && *cursor)
++    {
++        BOOL quoted = FALSE;
++
++        while (process_argument_is_command_line_space( *cursor )) ++cursor;
++        if (!*cursor) break;
++        while (*cursor == L'"')
++        {
++            quoted = !quoted;
++            ++cursor;
++        }
++        if (!wcsnicmp( cursor, type_prefix, ARRAY_SIZE(type_prefix) - 1 )) return TRUE;
++
++        while (*cursor)
++        {
++            if (*cursor == L'"') quoted = !quoted;
++            else if (!quoted && process_argument_is_command_line_space( *cursor )) break;
++            ++cursor;
++        }
++    }
++    return FALSE;
++}
++
++
++static BOOL process_argument_root_scope_allows( const WCHAR *cmdline )
++{
++    static const WCHAR root_only_variable[] = L"FORGEPLAY_PROCESS_ARGUMENT_ROOT_ONLY";
++    WCHAR value[8];
++    DWORD size;
++
++    size = GetEnvironmentVariableW( root_only_variable, value, ARRAY_SIZE(value) );
++    if (size >= ARRAY_SIZE(value)) return FALSE;
++    if (size != 1 || value[0] != L'1') return TRUE;
++    return !process_command_line_has_chromium_type_argument( cmdline );
++}
++
++
++/***********************************************************************
++ *           append_process_arguments_from_environment
++ *
++ * Apply one executable-scoped compatibility rule supplied by the host.
++ * The arguments stay outside application-managed files, so an updater
++ * replacing the target executable cannot remove the launch policy.
++ */
++static WCHAR *append_process_arguments_from_environment( const WCHAR *filename, const WCHAR *cmdline )
++{
++    static const WCHAR target_variable[] = L"FORGEPLAY_PROCESS_ARGUMENT_TARGET";
++    static const WCHAR arguments_variable[] = L"FORGEPLAY_PROCESS_ARGUMENT_APPEND";
++    WCHAR target[MAX_PATH], *arguments = NULL, *result = NULL;
++    const WCHAR *basename, *separator;
++    DWORD arguments_size, target_size;
++    SIZE_T result_size;
++
++    target_size = GetEnvironmentVariableW( target_variable, target, ARRAY_SIZE(target) );
++    if (!target_size || target_size >= ARRAY_SIZE(target)) return NULL;
++
++    basename = filename;
++    if ((separator = wcsrchr( basename, L'\\' ))) basename = separator + 1;
++    if ((separator = wcsrchr( basename, L'/' ))) basename = separator + 1;
++    if (wcsicmp( basename, target )) return NULL;
++    if (!process_argument_root_scope_allows( cmdline )) return NULL;
++
++    arguments_size = GetEnvironmentVariableW( arguments_variable, NULL, 0 );
++    if (!arguments_size || arguments_size > 32767) return NULL;
++    if (!(arguments = HeapAlloc( GetProcessHeap(), 0, arguments_size * sizeof(WCHAR) ))) return NULL;
++    if (!GetEnvironmentVariableW( arguments_variable, arguments, arguments_size )) goto done;
++
++    result_size = lstrlenW( cmdline ) + lstrlenW( arguments ) + 2;
++    if (result_size > 32767) goto done;
++    if (!(result = HeapAlloc( GetProcessHeap(), 0, result_size * sizeof(WCHAR) ))) goto done;
++
++    swprintf( result, result_size, L"%s %s", cmdline, arguments );
++    TRACE( "appended host compatibility arguments for %s: %s\n",
++           debugstr_w(filename), debugstr_w(arguments) );
++
++done:
++    HeapFree( GetProcessHeap(), 0, arguments );
++    return result;
++}
++
++
++/***********************************************************************
++ *           process_argument_observation_target_matches
++ *
++ * Select one executable role for host observation without changing its
++ * command line. The host creates a unique observation file per launch.
++ */
++static BOOL process_argument_observation_target_matches( const WCHAR *filename )
++{
++    static const WCHAR target_variable[] = L"FORGEPLAY_PROCESS_OBSERVATION_TARGET";
++    WCHAR target[MAX_PATH];
++    const WCHAR *basename, *separator;
++    DWORD target_size;
++
++    target_size = GetEnvironmentVariableW( target_variable, target, ARRAY_SIZE(target) );
++    if (!target_size || target_size >= ARRAY_SIZE(target)) return FALSE;
++
++    basename = filename;
++    if ((separator = wcsrchr( basename, L'\\' ))) basename = separator + 1;
++    if ((separator = wcsrchr( basename, L'/' ))) basename = separator + 1;
++    return !wcsicmp( basename, target );
++}
++
++
++/***********************************************************************
++ *           record_process_argument_observation
++ *
++ * Record the final command line only for the selected executable role.
++ */
++static void record_process_argument_observation( const WCHAR *cmdline, DWORD process_id )
++{
++    static const WCHAR observation_variable[] = L"FORGEPLAY_PROCESS_OBSERVATION_FILE";
++    static const char record_prefix[] = "FORGEPLAY_PROCESS_V1\t";
++    WCHAR *observation_path = NULL;
++    char process_id_text[16], *record = NULL;
++    DWORD bytes_written, path_size;
++    HANDLE file = INVALID_HANDLE_VALUE;
++    int command_size, process_id_size;
++    SIZE_T i, record_size;
++
++    path_size = GetEnvironmentVariableW( observation_variable, NULL, 0 );
++    if (!path_size || path_size > 32767) return;
++    if (!(observation_path = HeapAlloc( GetProcessHeap(), 0, path_size * sizeof(WCHAR) ))) return;
++    if (!GetEnvironmentVariableW( observation_variable, observation_path, path_size )) goto done;
++
++    command_size = WideCharToMultiByte( CP_UTF8, 0, cmdline, -1, NULL, 0, NULL, NULL );
++    if (command_size <= 1) goto done;
++    process_id_size = snprintf( process_id_text, sizeof(process_id_text), "%lu\t", process_id );
++    if (process_id_size <= 0 || (SIZE_T)process_id_size >= sizeof(process_id_text)) goto done;
++
++    record_size = sizeof(record_prefix) - 1 + process_id_size + command_size - 1 + 1;
++    if (!(record = HeapAlloc( GetProcessHeap(), 0, record_size ))) goto done;
++    memcpy( record, record_prefix, sizeof(record_prefix) - 1 );
++    memcpy( record + sizeof(record_prefix) - 1, process_id_text, process_id_size );
++    if (!WideCharToMultiByte( CP_UTF8, 0, cmdline, -1,
++                              record + sizeof(record_prefix) - 1 + process_id_size,
++                              command_size, NULL, NULL )) goto done;
++
++    for (i = sizeof(record_prefix) - 1 + process_id_size;
++         i < record_size - 1; ++i)
++    {
++        if (record[i] == '\r' || record[i] == '\n' || record[i] == '\t') record[i] = ' ';
++    }
++    record[record_size - 1] = '\n';
++
++    file = CreateFileW( observation_path, FILE_APPEND_DATA,
++                        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
++                        NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
++    if (file == INVALID_HANDLE_VALUE) goto done;
++    if (WriteFile( file, record, (DWORD)record_size, &bytes_written, NULL ) &&
++        bytes_written == (DWORD)record_size) FlushFileBuffers( file );
++
++done:
++    if (file != INVALID_HANDLE_VALUE) CloseHandle( file );
++    HeapFree( GetProcessHeap(), 0, record );
++    HeapFree( GetProcessHeap(), 0, observation_path );
+ }
+ 
+ 
+@@ -513,13 +687,14 @@
+ {
+     const struct proc_thread_attr *handle_list = NULL, *job_list = NULL;
+     WCHAR name[MAX_PATH];
+-    WCHAR *p, *tidy_cmdline = cmd_line;
++    WCHAR *p, *policy_cmdline, *tidy_cmdline = cmd_line;
+     RTL_USER_PROCESS_PARAMETERS *params = NULL;
+     RTL_USER_PROCESS_INFORMATION rtl_info = { 0 };
+     HANDLE parent = 0, debug = 0;
+     ULONG nt_flags = 0;
+     USHORT machine = 0;
+     NTSTATUS status;
++    BOOL observe_process_arguments = FALSE;
+ 
+     /* Process the AppName and/or CmdLine to get module name and path */
+ 
+@@ -542,6 +717,13 @@
+         app_name = name;
+     }
+ 
++    observe_process_arguments = process_argument_observation_target_matches( app_name );
++    if ((policy_cmdline = append_process_arguments_from_environment( app_name, tidy_cmdline )))
++    {
++        if (tidy_cmdline != cmd_line) HeapFree( GetProcessHeap(), 0, tidy_cmdline );
++        tidy_cmdline = policy_cmdline;
++    }
++
+     /* Warn if unsupported features are used */
+ 
+     if (flags & (IDLE_PRIORITY_CLASS | HIGH_PRIORITY_CLASS | REALTIME_PRIORITY_CLASS |
+@@ -681,6 +863,8 @@
+         info->dwThreadId  = HandleToUlong( rtl_info.ClientId.UniqueThread );
+         if (!(flags & CREATE_SUSPENDED)) NtResumeThread( rtl_info.Thread, NULL );
+         TRACE( "started process pid %04lx tid %04lx\n", info->dwProcessId, info->dwThreadId );
++        if (observe_process_arguments)
++            record_process_argument_observation( tidy_cmdline, info->dwProcessId );
+     }
+ 
+  done:

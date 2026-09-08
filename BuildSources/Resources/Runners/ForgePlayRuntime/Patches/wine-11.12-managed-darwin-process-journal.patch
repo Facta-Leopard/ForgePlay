@@ -1,0 +1,448 @@
+diff --git a/include/forgeplay_process_journal.h b/include/forgeplay_process_journal.h
+new file mode 100644
+--- /dev/null
++++ b/include/forgeplay_process_journal.h
+@@ -0,0 +1,349 @@
++/*
++ * Project-owned Darwin process lifecycle journal for the ForgePlay runtime.
++ *
++ * The host creates an owner-private file and supplies a per-launch UUID,
++ * prefix scope, and runtime fingerprint. Wine only appends bounded,
++ * path-free records. ForgePlay revalidates each PID's executable and start
++ * identity before sending a signal.
++ */
++
++#ifndef __FORGEPLAY_PROCESS_JOURNAL_H
++#define __FORGEPLAY_PROCESS_JOURNAL_H
++
++#ifdef __APPLE__
++
++#include <errno.h>
++#include <fcntl.h>
++#include <libproc.h>
++#include <limits.h>
++#include <pthread.h>
++#include <signal.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <stdint.h>
++#include <sys/event.h>
++#include <sys/file.h>
++#include <sys/proc_info.h>
++#include <sys/stat.h>
++#include <sys/time.h>
++#include <time.h>
++#include <unistd.h>
++
++#define FORGEPLAY_PROCESS_JOURNAL_MAX_BYTES (4 * 1024 * 1024)
++
++static int forgeplay_process_journal_hex_is_valid( const char *value, size_t length )
++{
++    size_t i;
++
++    if (!value || strlen( value ) != length) return 0;
++    for (i = 0; i < length; ++i)
++        if (!((value[i] >= '0' && value[i] <= '9') ||
++              (value[i] >= 'a' && value[i] <= 'f'))) return 0;
++    return 1;
++}
++
++static int forgeplay_process_journal_uuid_is_valid( const char *value )
++{
++    size_t i;
++
++    if (!value || strlen( value ) != 36) return 0;
++    for (i = 0; i < 36; ++i)
++    {
++        if (i == 8 || i == 13 || i == 18 || i == 23)
++        {
++            if (value[i] != '-') return 0;
++        }
++        else if (!((value[i] >= '0' && value[i] <= '9') ||
++                   (value[i] >= 'a' && value[i] <= 'f'))) return 0;
++    }
++    return 1;
++}
++
++static void forgeplay_record_managed_wine_process( const char *role )
++{
++    const char *evidence =
++        getenv( "FORGEPLAY_MANAGED_WINE_PROCESS_EVIDENCE_FILE" );
++    const char *run_id =
++        getenv( "FORGEPLAY_MANAGED_WINE_PROCESS_RUN_ID" );
++    const char *prefix_scope =
++        getenv( "FORGEPLAY_MANAGED_WINE_PREFIX_SCOPE" );
++    const char *runtime_fingerprint =
++        getenv( "FORGEPLAY_MANAGED_WINE_RUNTIME_FINGERPRINT" );
++    struct proc_bsdinfo process_info;
++    struct timeval recorded_at;
++    struct stat status;
++    char record[768];
++    long long recorded_at_milliseconds;
++    unsigned long long process_started_at_microseconds;
++    size_t evidence_length, offset;
++    ssize_t written;
++    int descriptor, length;
++
++    if (!role || (strcmp( role, "wine-loader" ) &&
++                  strcmp( role, "wineserver" ))) return;
++    if (!evidence || evidence[0] != '/' ||
++        (evidence_length = strnlen( evidence, PATH_MAX )) == 0 ||
++        evidence_length >= PATH_MAX ||
++        !forgeplay_process_journal_uuid_is_valid( run_id ) ||
++        !forgeplay_process_journal_hex_is_valid( prefix_scope, 64 ) ||
++        !forgeplay_process_journal_hex_is_valid( runtime_fingerprint, 64 ))
++        return;
++    if (gettimeofday( &recorded_at, NULL ) == -1 ||
++        proc_pidinfo( getpid(), PROC_PIDTBSDINFO, 0, &process_info,
++                      sizeof(process_info) ) != sizeof(process_info))
++        return;
++
++    recorded_at_milliseconds =
++        (long long)recorded_at.tv_sec * 1000 +
++        recorded_at.tv_usec / 1000;
++    process_started_at_microseconds =
++        (unsigned long long)process_info.pbi_start_tvsec * 1000000 +
++        process_info.pbi_start_tvusec;
++    length = snprintf(
++        record, sizeof(record),
++        "{\"schema_version\":1,\"producer\":\"forgeplay-wine-runtime\","
++        "\"event_code\":\"darwin_process_started\",\"role\":\"%s\","
++        "\"run_identifier\":\"%s\",\"prefix_scope\":\"%s\","
++        "\"runtime_fingerprint\":\"%s\",\"darwin_pid\":%ld,"
++        "\"recorded_at_unix_milliseconds\":%lld,"
++        "\"process_started_at_unix_microseconds\":%llu}\n",
++        role, run_id, prefix_scope, runtime_fingerprint, (long)getpid(),
++        recorded_at_milliseconds, process_started_at_microseconds );
++    if (length <= 0 || (size_t)length >= sizeof(record)) return;
++
++    descriptor = open( evidence,
++                       O_WRONLY | O_APPEND | O_CLOEXEC | O_NOFOLLOW );
++    if (descriptor == -1) return;
++    if (flock( descriptor, LOCK_EX ) == -1 ||
++        fstat( descriptor, &status ) == -1 ||
++        !S_ISREG( status.st_mode ) || status.st_nlink != 1 ||
++        status.st_uid != geteuid() ||
++        (status.st_mode & 0777) != (S_IRUSR | S_IWUSR) ||
++        status.st_size < 0 ||
++        status.st_size > FORGEPLAY_PROCESS_JOURNAL_MAX_BYTES - length)
++    {
++        flock( descriptor, LOCK_UN );
++        close( descriptor );
++        return;
++    }
++
++    offset = 0;
++    while (offset < (size_t)length)
++    {
++        written = write( descriptor, record + offset, length - offset );
++        if (written > 0) offset += written;
++        else if (written == -1 && errno == EINTR) continue;
++        else break;
++    }
++    if (offset == (size_t)length) fsync( descriptor );
++    flock( descriptor, LOCK_UN );
++    close( descriptor );
++}
++
++#ifdef FORGEPLAY_PROCESS_JOURNAL_ENABLE_OWNER_MONITOR
++
++static int forgeplay_process_owner_decimal_is_valid( const char *value )
++{
++    const unsigned char *cursor = (const unsigned char *)value;
++
++    if (!cursor || !*cursor) return 0;
++    while (*cursor)
++    {
++        if (*cursor < '0' || *cursor > '9') return 0;
++        ++cursor;
++    }
++    return 1;
++}
++
++static int forgeplay_process_owner_identity(
++    pid_t process_id, unsigned long long *started_at_microseconds )
++{
++    struct proc_bsdinfo process_info;
++    unsigned long long seconds, microseconds;
++
++    if (process_id <= 1 ||
++        proc_pidinfo( process_id, PROC_PIDTBSDINFO, 0, &process_info,
++                      sizeof(process_info) ) != sizeof(process_info) ||
++        process_info.pbi_uid != geteuid())
++        return 0;
++    seconds = (unsigned long long)process_info.pbi_start_tvsec;
++    microseconds = (unsigned long long)process_info.pbi_start_tvusec;
++    if (microseconds >= 1000000 ||
++        seconds > (ULLONG_MAX - microseconds) / 1000000)
++        return 0;
++    *started_at_microseconds = seconds * 1000000 + microseconds;
++    return 1;
++}
++
++static void forgeplay_terminate_managed_wine_process(void)
++{
++    struct timespec delay = {2, 0}, remaining;
++
++    /*
++     * This runs in the dedicated monitor thread, never in a signal handler.
++     * Ask Wine's normal SIGTERM path to flush state first. If its main loop is
++     * wedged, hard-stop this exact managed Wine process after two seconds. No
++     * foreign PID is ever accepted or signalled by this watchdog.
++     */
++    if (kill( getpid(), SIGTERM ) == -1) _exit(1);
++    while (nanosleep( &delay, &remaining ) == -1 && errno == EINTR)
++        delay = remaining;
++    _exit(1);
++}
++
++static void *forgeplay_monitor_application_owner( void *context )
++{
++    const int queue = (int)(intptr_t)context;
++    static const char signal_mask_failure[] =
++        "FORGEPLAY_MANAGED_WINE_OWNER_V1 status=monitor-failed reason=signal-mask action=hard-stop\n";
++    struct kevent event;
++    sigset_t blocked_signals;
++    int result;
++
++    /* Keep the watchdog independent from Wine's graceful SIGTERM path. */
++    if (sigemptyset( &blocked_signals ) == -1 ||
++        sigaddset( &blocked_signals, SIGTERM ) == -1 ||
++        pthread_sigmask( SIG_BLOCK, &blocked_signals, NULL ))
++    {
++        (void)write( STDERR_FILENO, signal_mask_failure,
++                     sizeof(signal_mask_failure) - 1 );
++        close( queue );
++        _exit(1);
++    }
++
++    do result = kevent( queue, NULL, 0, &event, 1, NULL );
++    while (result == -1 && errno == EINTR);
++    close( queue );
++    if (result == 1 && event.filter == EVFILT_PROC &&
++        (event.fflags & NOTE_EXIT))
++    {
++        static const char message[] =
++            "FORGEPLAY_MANAGED_WINE_OWNER_V1 status=owner-exited action=graceful-then-hard-watchdog\n";
++        (void)write( STDERR_FILENO, message, sizeof(message) - 1 );
++    }
++    else
++    {
++        static const char message[] =
++            "FORGEPLAY_MANAGED_WINE_OWNER_V1 status=monitor-failed action=graceful-then-hard-watchdog\n";
++        (void)write( STDERR_FILENO, message, sizeof(message) - 1 );
++    }
++    forgeplay_terminate_managed_wine_process();
++    return NULL; /* unreachable */
++}
++
++static int forgeplay_start_application_owner_monitor(void)
++{
++    const char *process_id_value =
++        getenv( "FORGEPLAY_MANAGED_APPLICATION_OWNER_PID" );
++    const char *started_at_value =
++        getenv( "FORGEPLAY_MANAGED_APPLICATION_OWNER_START_US" );
++    unsigned long long expected_started_at, actual_started_at;
++    unsigned long parsed_process_id;
++    struct kevent change;
++    pthread_attr_t attributes;
++    pthread_t thread;
++    char *end;
++    int queue, descriptor_flags, error;
++
++    if (!process_id_value && !started_at_value) return 1;
++    if (!process_id_value || !started_at_value)
++    {
++        fprintf( stderr,
++                 "FORGEPLAY_MANAGED_WINE_OWNER_V1 status=failed reason=partial-environment\n" );
++        return 0;
++    }
++    if (!forgeplay_process_owner_decimal_is_valid( process_id_value ) ||
++        !forgeplay_process_owner_decimal_is_valid( started_at_value ))
++        goto invalid_identity;
++    errno = 0;
++    parsed_process_id = strtoul( process_id_value, &end, 10 );
++    if (errno || *end || parsed_process_id <= 1 || parsed_process_id > INT_MAX)
++        goto invalid_identity;
++    errno = 0;
++    expected_started_at = strtoull( started_at_value, &end, 10 );
++    if (errno || *end || !expected_started_at)
++        goto invalid_identity;
++    if (!forgeplay_process_owner_identity( (pid_t)parsed_process_id,
++                                            &actual_started_at ) ||
++        actual_started_at != expected_started_at)
++        goto owner_unavailable;
++
++    if ((queue = kqueue()) == -1)
++        goto monitor_unavailable;
++    if ((descriptor_flags = fcntl( queue, F_GETFD )) == -1 ||
++        fcntl( queue, F_SETFD, descriptor_flags | FD_CLOEXEC ) == -1 ||
++        (descriptor_flags = fcntl( queue, F_GETFD )) == -1 ||
++        !(descriptor_flags & FD_CLOEXEC))
++    {
++        close( queue );
++        goto monitor_unavailable;
++    }
++    EV_SET( &change, (uintptr_t)parsed_process_id, EVFILT_PROC,
++            EV_ADD | EV_ENABLE | EV_ONESHOT, NOTE_EXIT, 0, NULL );
++    if (kevent( queue, &change, 1, NULL, 0, NULL ) == -1)
++    {
++        close( queue );
++        goto owner_unavailable;
++    }
++    if (!forgeplay_process_owner_identity( (pid_t)parsed_process_id,
++                                            &actual_started_at ) ||
++        actual_started_at != expected_started_at)
++    {
++        close( queue );
++        goto owner_unavailable;
++    }
++    if ((error = pthread_attr_init( &attributes )))
++    {
++        close( queue );
++        goto monitor_unavailable;
++    }
++    error = pthread_attr_setdetachstate( &attributes, PTHREAD_CREATE_DETACHED );
++    if (!error)
++        error = pthread_create( &thread, &attributes,
++                                forgeplay_monitor_application_owner,
++                                (void *)(intptr_t)queue );
++    pthread_attr_destroy( &attributes );
++    if (error)
++    {
++        close( queue );
++        goto monitor_unavailable;
++    }
++    fprintf( stderr,
++             "FORGEPLAY_MANAGED_WINE_OWNER_V1 status=active owner_pid=%lu\n",
++             parsed_process_id );
++    return 1;
++
++invalid_identity:
++    fprintf( stderr,
++             "FORGEPLAY_MANAGED_WINE_OWNER_V1 status=failed reason=invalid-identity\n" );
++    return 0;
++owner_unavailable:
++    fprintf( stderr,
++             "FORGEPLAY_MANAGED_WINE_OWNER_V1 status=failed reason=owner-unavailable\n" );
++    return 0;
++monitor_unavailable:
++    fprintf( stderr,
++             "FORGEPLAY_MANAGED_WINE_OWNER_V1 status=failed reason=monitor-unavailable\n" );
++    return 0;
++}
++
++#endif /* FORGEPLAY_PROCESS_JOURNAL_ENABLE_OWNER_MONITOR */
++
++#else
++
++static inline void forgeplay_record_managed_wine_process( const char *role )
++{
++    (void)role;
++}
++
++#ifdef FORGEPLAY_PROCESS_JOURNAL_ENABLE_OWNER_MONITOR
++static inline int forgeplay_start_application_owner_monitor(void)
++{
++    return 1;
++}
++#endif
++
++#endif /* __APPLE__ */
++
++#endif /* __FORGEPLAY_PROCESS_JOURNAL_H */
+diff --git a/include/Makefile.in b/include/Makefile.in
+--- a/include/Makefile.in
++++ b/include/Makefile.in
+@@ -345,6 +345,7 @@ SOURCES = \
+ 	fileapi.h \
+ 	filter.idl \
+ 	fltdefs.h \
++	forgeplay_process_journal.h \
+ 	fontsub.h \
+ 	fusion.idl \
+ 	gameinput.idl \
+diff --git a/dlls/ntdll/unix/server.c b/dlls/ntdll/unix/server.c
+--- a/dlls/ntdll/unix/server.c
++++ b/dlls/ntdll/unix/server.c
+@@ -77,6 +77,8 @@
+ #include "wine/server.h"
+ #include "wine/debug.h"
+ #include "unix_private.h"
++#define FORGEPLAY_PROCESS_JOURNAL_ENABLE_OWNER_MONITOR 1
++#include "forgeplay_process_journal.h"
+ #include "ddk/wdm.h"
+
+ WINE_DEFAULT_DEBUG_CHANNEL(server);
+@@ -1785,6 +1787,9 @@ void server_init_process_done(void)
+     SERVER_END_REQ;
+
+     assert( !status );
++    forgeplay_record_managed_wine_process( "wine-loader" );
++    if (!forgeplay_start_application_owner_monitor())
++        fatal_error( "ForgePlay managed application owner monitor failed\n" );
+     signal_start_thread( main_image_info.TransferAddress, peb, data->teb );
+ }
+
+diff --git a/dlls/ntdll/unix/process.c b/dlls/ntdll/unix/process.c
+--- a/dlls/ntdll/unix/process.c
++++ b/dlls/ntdll/unix/process.c
+@@ -438,6 +438,20 @@ static BOOL set_forgeplay_unix_environment_variable( const WCHAR *environment,
+     SIZE_T value_length, buffer_size;
+     char *buffer;
+ 
++    /*
++     * The managed-process identity belongs to the trusted Unix launch, not to
++     * the mutable Windows environment. fork/exec already preserves these six
++     * values. Never let a child that supplies a custom Windows environment
++     * clear or rebind the journal used for termination ownership.
++     */
++    if (!strcmp( name, "FORGEPLAY_MANAGED_WINE_PROCESS_EVIDENCE_FILE" ) ||
++        !strcmp( name, "FORGEPLAY_MANAGED_WINE_PROCESS_RUN_ID" ) ||
++        !strcmp( name, "FORGEPLAY_MANAGED_WINE_PREFIX_SCOPE" ) ||
++        !strcmp( name, "FORGEPLAY_MANAGED_WINE_RUNTIME_FINGERPRINT" ) ||
++        !strcmp( name, "FORGEPLAY_MANAGED_APPLICATION_OWNER_PID" ) ||
++        !strcmp( name, "FORGEPLAY_MANAGED_APPLICATION_OWNER_START_US" ))
++        return TRUE;
++
+     if (!value) return unsetenv( name ) != -1;
+     value_length = wcslen( value );
+     buffer_size = value_length * 3 + 1;
+@@ -470,6 +484,12 @@ static BOOL apply_forgeplay_steam_game_process_unix_environment(
+         "FORGEPLAY_D3DMETAL_NATIVE_THREAD_CONTEXT",
+         "FORGEPLAY_GAME_RENDERER_ROUTE_REASON",
+         "FORGEPLAY_GAME_RENDERER_ROUTE_EVIDENCE",
++        "FORGEPLAY_MANAGED_WINE_PROCESS_EVIDENCE_FILE",
++        "FORGEPLAY_MANAGED_WINE_PROCESS_RUN_ID",
++        "FORGEPLAY_MANAGED_WINE_PREFIX_SCOPE",
++        "FORGEPLAY_MANAGED_WINE_RUNTIME_FINGERPRINT",
++        "FORGEPLAY_MANAGED_APPLICATION_OWNER_PID",
++        "FORGEPLAY_MANAGED_APPLICATION_OWNER_START_US",
+         "WINEDLLOVERRIDES",
+         "WINEDLLPATH",
+         "DYLD_LIBRARY_PATH",
+diff --git a/server/main.c b/server/main.c
+--- a/server/main.c
++++ b/server/main.c
+@@ -37,6 +37,8 @@
+ #include "thread.h"
+ #include "request.h"
+ #include "unicode.h"
++#define FORGEPLAY_PROCESS_JOURNAL_ENABLE_OWNER_MONITOR 1
++#include "forgeplay_process_journal.h"
+ 
+ /* command-line options */
+ int debug_level = 0;
+@@ -321,9 +323,11 @@ int main( int argc, char *argv[] )
+     sock_init();
+     open_master_socket();
+ 
++    forgeplay_record_managed_wine_process( "wineserver" );
+     if (debug_level) fprintf( stderr, "wineserver: starting (pid=%ld)\n", (long) getpid() );
+     set_current_time();
+     init_signals();
++    if (!forgeplay_start_application_owner_monitor()) exit(1);
+     init_memory();
+     init_directories( load_intl_file() );
+     init_threading();

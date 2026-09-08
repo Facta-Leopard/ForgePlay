@@ -1,0 +1,15 @@
+ForgePlay native/Wine build-source supplement
+Copyright (C) 2026 Facta-Leopard
+Original source: https://github.com/Facta-Leopard/ForgePlay
+
+The ForgePlay-authored build scripts, native project/configuration projection,
+source-identity records and assembly instructions in this supplement are
+provided under GPL-3.0-only as build material for the covered native/Wine
+components. Preserve the attribution, modified-origin and trademark terms in
+LICENSE.txt. Unmodified GPLv3 text is included under LICENSES/.
+
+This grant applies only to copyright held by Facta-Leopard. Wine-derived code,
+Cerbero/Homebrew recipes, CPM.cmake and all other upstream material retain
+their own applicable licenses and notices; this notice does not relicense
+those third-party contributions. The separately authorized Swift wrapper is
+not included and retains the separate permission described in LICENSE.txt.

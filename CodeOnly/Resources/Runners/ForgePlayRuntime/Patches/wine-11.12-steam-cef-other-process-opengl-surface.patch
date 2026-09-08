@@ -1,0 +1,47 @@
+--- a/dlls/winemac.drv/opengl.c
++++ b/dlls/winemac.drv/opengl.c
+@@ -1463,13 +1463,15 @@
+
+     TRACE("client %s, format %d, drawable %p\n", debugstr_client_surface(client), format, drawable);
+
+-    if (!(data = get_win_data(hwnd)))
++    if ((data = get_win_data(hwnd)))
+     {
+-        FIXME("DC for window %p of other process: not implemented\n", hwnd);
+-        return FALSE;
++        data->pixel_format = format;
++        release_win_data(data);
++    }
++    else
++    {
++        TRACE("DC for window %p of other process; using client surface pixel format %d\n", hwnd, format);
+     }
+-    data->pixel_format = format;
+-    release_win_data(data);
+
+     if (!(gl = opengl_drawable_create(sizeof(*gl), &macdrv_surface_funcs, format, client))) return FALSE;
+     *drawable = &gl->base;
+--- a/dlls/winemac.drv/window.c
++++ b/dlls/winemac.drv/window.c
+@@ -1186,16 +1186,16 @@
+     }
+     else
+     {
++        HWND host = hwnd;
+         RECT rect;
+
++        if (!NtUserGetClientRect(hwnd, &rect, NtUserGetWinMonitorDpi(hwnd, MDT_RAW_DPI))) return FALSE;
+         if (NtUserGetAncestor(hwnd, GA_ROOT) != hwnd)
+         {
+-            FIXME("Cross-process child window Metal swapchains are not implemented\n");
+-            return FALSE;
++            host = NtUserGetAncestor(hwnd, GA_ROOT);
++            NtUserMapWindowPoints(hwnd, host, (POINT *)&rect, 2, NtUserGetWinMonitorDpi(host, MDT_RAW_DPI));
+         }
+-
+-        if (!NtUserGetClientRect(hwnd, &rect, NtUserGetWinMonitorDpi(hwnd, MDT_RAW_DPI))) return FALSE;
+-        surface->metal_swapchain = macdrv_create_offscreen_swapchain(hwnd, cgrect_from_rect(rect));
++        surface->metal_swapchain = macdrv_create_offscreen_swapchain(host, cgrect_from_rect(rect));
+     }
+
+     return surface->metal_swapchain != NULL;

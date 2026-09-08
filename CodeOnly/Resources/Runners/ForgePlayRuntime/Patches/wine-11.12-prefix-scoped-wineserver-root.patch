@@ -1,0 +1,61 @@
+diff --git a/dlls/ntdll/unix/server.c b/dlls/ntdll/unix/server.c
+index 00000000000..00000000000 100644
+--- a/dlls/ntdll/unix/server.c
++++ b/dlls/ntdll/unix/server.c
+@@ -1303,12 +1303,22 @@ int server_pipe( int fd[2] )
+  */
+ static const char *init_server_dir( dev_t dev, ino_t ino )
+ {
++    const char *server_root = getenv( "WINE_SERVER_ROOT" );
+     char *dir = NULL;
+
++    if (server_root && server_root[0])
++    {
++        if (server_root[0] != '/')
++            fatal_error( "invalid directory %s in WINE_SERVER_ROOT: not an absolute path\n", server_root );
++        asprintf( &dir, "%s/server-%llx-%llx", server_root,
++                  (unsigned long long)dev, (unsigned long long)ino );
++    }
+ #ifdef __ANDROID__  /* there's no /tmp dir on Android */
+-    asprintf( &dir, "%s/.wineserver/server-%llx-%llx", config_dir, (unsigned long long)dev, (unsigned long long)ino );
++    else asprintf( &dir, "%s/.wineserver/server-%llx-%llx", config_dir,
++                   (unsigned long long)dev, (unsigned long long)ino );
+ #else
+-    asprintf( &dir, "/tmp/.wine-%u/server-%llx-%llx", getuid(), (unsigned long long)dev, (unsigned long long)ino );
++    else asprintf( &dir, "/tmp/.wine-%u/server-%llx-%llx", getuid(),
++                   (unsigned long long)dev, (unsigned long long)ino );
+ #endif
+     return dir;
+ }
+diff --git a/server/request.c b/server/request.c
+index 00000000000..00000000000 100644
+--- a/server/request.c
++++ b/server/request.c
+@@ -597,6 +597,7 @@ static void create_dir( const char *name, struct stat *st )
+ static char *create_server_dir( int force )
+ {
+     const char *prefix = getenv( "WINEPREFIX" );
++    const char *server_root = getenv( "WINE_SERVER_ROOT" );
+     char *p, *config_dir, *base_dir;
+     struct stat st, st2;
+
+@@ -641,11 +642,17 @@ static char *create_server_dir( int force )
+
+     /* create the base directory if needed */
+
++    if (server_root && server_root[0])
++    {
++        if (server_root[0] != '/')
++            fatal_error( "invalid directory %s in WINE_SERVER_ROOT: not an absolute path\n", server_root );
++        if (!(base_dir = strdup( server_root ))) fatal_error( "out of memory\n" );
++    }
+ #ifdef __ANDROID__  /* there's no /tmp dir on Android */
+-    if (asprintf( &base_dir, "%s/.wineserver", config_dir ) == -1)
++    else if (asprintf( &base_dir, "%s/.wineserver", config_dir ) == -1)
+         fatal_error( "out of memory\n" );
+ #else
+-    if (asprintf( &base_dir, "/tmp/.wine-%u", getuid() ) == -1)
++    else if (asprintf( &base_dir, "/tmp/.wine-%u", getuid() ) == -1)
+         fatal_error( "out of memory\n" );
+ #endif
+     create_dir( base_dir, &st2 );
