@@ -15,6 +15,12 @@
 
   const localeData = {
     en: {
+      "posters.title": "Version posters",
+      "posters.hint": "Select a poster to view it full size.",
+      "posters.open": "View ForgePlay {version} poster",
+      "posters.imageAlt": "ForgePlay {version} poster",
+      "posters.previous": "Previous poster",
+      "posters.next": "Next poster",
       "refresh.eyebrow": "OPEN-SOURCE GAMING FOR APPLE SILICON",
       "refresh.heroLine1": "Windows games.",
       "refresh.heroLine2": "At home on your Mac.",
@@ -331,6 +337,12 @@
       "support.updated": "Updated 28 July 2026."
     },
     ko: {
+      "posters.title": "버전별 포스터",
+      "posters.hint": "포스터를 누르면 크게 볼 수 있습니다.",
+      "posters.open": "ForgePlay {version} 포스터 크게 보기",
+      "posters.imageAlt": "ForgePlay {version} 포스터",
+      "posters.previous": "이전 포스터",
+      "posters.next": "다음 포스터",
       "refresh.eyebrow": "APPLE SILICON을 위한 오픈소스 게임 환경",
       "refresh.heroLine1": "Windows 게임.",
       "refresh.heroLine2": "Mac에서도, 제대로.",
@@ -647,6 +659,12 @@
       "support.updated": "2026년 7월 28일 기준."
     },
     ja: {
+      "posters.title": "バージョン別ポスター",
+      "posters.hint": "ポスターを選択すると拡大表示できます。",
+      "posters.open": "ForgePlay {version}のポスターを拡大表示",
+      "posters.imageAlt": "ForgePlay {version}のポスター",
+      "posters.previous": "前のポスター",
+      "posters.next": "次のポスター",
       "refresh.eyebrow": "APPLE SILICONのためのオープンソースゲーム環境",
       "refresh.heroLine1": "Windowsゲームを。",
       "refresh.heroLine2": "Macでも、心地よく。",
@@ -963,6 +981,12 @@
       "support.updated": "2026年7月28日更新。"
     },
     "zh-Hans": {
+      "posters.title": "版本海报",
+      "posters.hint": "选择海报可放大查看。",
+      "posters.open": "放大查看 ForgePlay {version} 海报",
+      "posters.imageAlt": "ForgePlay {version} 海报",
+      "posters.previous": "上一张海报",
+      "posters.next": "下一张海报",
       "refresh.eyebrow": "为 APPLE SILICON 打造的开源游戏环境",
       "refresh.heroLine1": "Windows 游戏。",
       "refresh.heroLine2": "在 Mac 上，也能尽兴。",
@@ -1279,6 +1303,12 @@
       "support.updated": "更新于 2026 年 7 月 28 日。"
     },
     "zh-Hant": {
+      "posters.title": "版本海報",
+      "posters.hint": "選取海報可放大檢視。",
+      "posters.open": "放大檢視 ForgePlay {version} 海報",
+      "posters.imageAlt": "ForgePlay {version} 海報",
+      "posters.previous": "上一張海報",
+      "posters.next": "下一張海報",
       "refresh.eyebrow": "為 APPLE SILICON 打造的開源遊戲環境",
       "refresh.heroLine1": "Windows 遊戲。",
       "refresh.heroLine2": "在 Mac 上，也能盡興。",
@@ -1595,6 +1625,12 @@
       "support.updated": "更新於 2026 年 7 月 28 日。"
     },
     de: {
+      "posters.title": "Versionsposter",
+      "posters.hint": "Poster auswählen, um es groß anzusehen.",
+      "posters.open": "ForgePlay {version} Poster vergrößern",
+      "posters.imageAlt": "ForgePlay {version} Poster",
+      "posters.previous": "Vorheriges Poster",
+      "posters.next": "Nächstes Poster",
       "refresh.eyebrow": "OPEN-SOURCE-GAMING FÜR APPLE SILICON",
       "refresh.heroLine1": "Windows-Spiele.",
       "refresh.heroLine2": "Auf deinem Mac zu Hause.",
@@ -1911,6 +1947,12 @@
       "support.updated": "Aktualisiert am 28. Juli 2026."
     },
     es: {
+      "posters.title": "Pósteres por versión",
+      "posters.hint": "Selecciona un póster para verlo ampliado.",
+      "posters.open": "Ampliar póster de ForgePlay {version}",
+      "posters.imageAlt": "Póster de ForgePlay {version}",
+      "posters.previous": "Póster anterior",
+      "posters.next": "Póster siguiente",
       "refresh.eyebrow": "UN ENTORNO DE JUEGO DE CÓDIGO ABIERTO PARA APPLE SILICON",
       "refresh.heroLine1": "Juegos de Windows.",
       "refresh.heroLine2": "Como en casa, en tu Mac.",
@@ -2227,6 +2269,12 @@
       "support.updated": "Actualizado el 28 de julio de 2026."
     },
     fr: {
+      "posters.title": "Affiches par version",
+      "posters.hint": "Sélectionnez une affiche pour l’agrandir.",
+      "posters.open": "Agrandir l’affiche de ForgePlay {version}",
+      "posters.imageAlt": "Affiche de ForgePlay {version}",
+      "posters.previous": "Affiche précédente",
+      "posters.next": "Affiche suivante",
       "refresh.eyebrow": "UN ENVIRONNEMENT DE JEU OPEN SOURCE POUR APPLE SILICON",
       "refresh.heroLine1": "Les jeux Windows.",
       "refresh.heroLine2": "Chez eux sur votre Mac.",

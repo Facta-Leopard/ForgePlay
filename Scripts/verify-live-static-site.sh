@@ -14,6 +14,7 @@ PAGES=(
   updates.html
   site.css
   site-assets/home-experience.css
+  site-assets/version-posters.css
   site-assets/site-shell.css
   site-assets/page-experience.css
   site-assets/why-story.css
@@ -26,6 +27,11 @@ PAGES=(
   announcements.js
   developer-apps.js
   site-assets/home-experience.js
+  site-assets/version-posters.js
+  site-assets/version-posters/forgeplay-1.0.png
+  site-assets/version-posters/forgeplay-1.1.png
+  site-assets/version-posters/forgeplay-1.2.png
+  site-assets/version-posters/forgeplay-1.3.png
   site-assets/site-shell.js
   site-data/compatibility-games.json
   site-data/compatibility.schema.json

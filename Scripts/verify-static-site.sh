@@ -12,6 +12,7 @@ PAGES=(
   updates.html
   site.css
   site-assets/home-experience.css
+  site-assets/version-posters.css
   site-assets/site-shell.css
   site-assets/page-experience.css
   site-assets/why-story.css
@@ -24,6 +25,11 @@ PAGES=(
   announcements.js
   developer-apps.js
   site-assets/home-experience.js
+  site-assets/version-posters.js
+  site-assets/version-posters/forgeplay-1.0.png
+  site-assets/version-posters/forgeplay-1.1.png
+  site-assets/version-posters/forgeplay-1.2.png
+  site-assets/version-posters/forgeplay-1.3.png
   site-assets/site-shell.js
   site-data/compatibility-games.json
   site-data/compatibility.schema.json
@@ -1542,7 +1548,7 @@ for html in index.html why.html license.html privacy.html support.html compatibi
   else
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-14"'
   fi
-  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260908-1"'
+  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260908-2"'
   require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.css?v=20260905-7'
   require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.js?v=20260905-2'
   if [[ "$html" != "index.html" ]]; then
@@ -1622,7 +1628,7 @@ require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.logLabel"'
 require_snippet "$ROOT_DIR/compatibility.html" 'issues/new?template=compatibility-report.yml'
 require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/compatibility.html" 'href="site.css?v=20260811-22"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260908-1"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260908-2"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/current-release.js?v=20260905-7"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20260907-1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260908-1"'
