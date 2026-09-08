@@ -29,7 +29,7 @@ PAGES=(
   site-assets/version-posters/forgeplay-1.0.png
   site-assets/version-posters/forgeplay-1.1.png
   site-assets/version-posters/forgeplay-1.2.png
-  site-assets/version-posters/forgeplay-1.3.png
+  site-assets/version-posters/forgeplay-1.3.jpg
   site-assets/site-shell.js
   site-data/compatibility-games.json
   site-data/compatibility.schema.json
