@@ -1,7 +1,7 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-09-08",
+  "updatedAt": "2026-09-11",
   "testProfiles": [
     {
       "id": "apple-silicon-m4-pro-24gb",
@@ -1161,6 +1161,27 @@
         "fr": "Selon le signalement, le jeu fonctionne normalement. Le passage au coréen ne fonctionnait toutefois pas jusqu’à ce que les polices Windows par défaut Malgun.ttf (Regular), Malgunbd.ttf (Bold) et Malgunsl.ttf (Semilight) soient téléchargées séparément et placées dans C:\\\\Windows\\\\Fonts."
       },
       "blocker": null
+    },
+    {
+      "id": "overwatch-2-forgeplay-1-3-project-test-20260911",
+      "gameId": "overwatch",
+      "testProfileId": null,
+      "forgePlayVersion": "1.3",
+      "gameVersion": null,
+      "status": "blocked",
+      "source": "project-test",
+      "testedAt": "2026-09-11",
+      "notes": {
+        "en": "On ForgePlay 1.3, Overwatch 2 enters an infinite loading state and cannot be played. This symptom was observed after the 1.3 update, and the compatibility issue is under investigation. It has not yet been confirmed whether the update itself is the cause.",
+        "ko": "ForgePlay 1.3에서 오버워치 2 실행 시 무한 로딩이 발생해 플레이할 수 없습니다. 1.3 업데이트 이후 확인된 증상이며, 호환성 문제를 확인 중입니다. 업데이트 자체가 원인인지는 추가 확인이 필요합니다.",
+        "ja": "ForgePlay 1.3では、Overwatch 2の起動時に無限ロードが発生し、プレイできません。この症状は1.3アップデート後に確認されており、互換性の問題を確認中です。アップデート自体が原因かどうかは、まだ確認できていません。",
+        "zh-Hans": "在 ForgePlay 1.3 中启动 Overwatch 2 时会进入无限加载状态，无法进行游戏。该症状在 1.3 更新后被发现，目前正在确认兼容性问题。尚未确认问题是否由更新本身导致。",
+        "zh-Hant": "在 ForgePlay 1.3 中啟動 Overwatch 2 時會進入無限載入狀態，無法進行遊戲。此症狀在 1.3 更新後被發現，目前正在確認相容性問題。尚未確認問題是否由更新本身造成。",
+        "de": "Unter ForgePlay 1.3 gerät Overwatch 2 beim Start in eine Endlosschleife beim Laden und kann nicht gespielt werden. Dieses Verhalten wurde nach dem 1.3-Update festgestellt; die Kompatibilitätsprobleme werden derzeit untersucht. Ob das Update selbst die Ursache ist, wurde noch nicht bestätigt.",
+        "es": "En ForgePlay 1.3, Overwatch 2 entra en un estado de carga infinita al iniciarse y no se puede jugar. El síntoma se observó después de la actualización 1.3 y estamos investigando el problema de compatibilidad. Todavía no se ha confirmado si la propia actualización es la causa.",
+        "fr": "Avec ForgePlay 1.3, Overwatch 2 reste bloqué dans un chargement infini au lancement et ne peut pas être joué. Ce symptôme a été observé après la mise à jour 1.3 et le problème de compatibilité est en cours d’analyse. Il n’est pas encore confirmé que la mise à jour elle-même en soit la cause."
+      },
+      "blocker": "unknown"
     }
   ]
 }
