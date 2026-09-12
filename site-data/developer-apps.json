@@ -1,7 +1,7 @@
 {
   "$schema": "./developer-apps.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-08-21",
+  "updatedAt": "2026-09-13",
   "sourceRevision": "566e4f4530d489175c512e7e431a343192d510b1",
   "apps": [
     {
@@ -290,6 +290,16 @@
       "name": "Leporis Ascendant",
       "platform": "ipad",
       "kind": "game",
+      "summaries": {
+        "ko": "다양한 동물 종족의 유닛을 모아 배치하고, 병과와 특성의 시너지를 조합해 라운드를 돌파하는 전략 오토배틀 게임입니다.",
+        "en": "A strategic auto-battler where you recruit and position units from different animal species, combining class and trait synergies to advance through rounds.",
+        "de": "Ein strategischer Auto-Battler, in dem du Einheiten verschiedener Tierarten rekrutierst und platzierst und Klassen- und Eigenschaftssynergien kombinierst, um Runde für Runde zu bestehen.",
+        "es": "Un juego de combate automático y estrategia en el que reclutas y colocas unidades de distintas especies animales, combinando sinergias de clases y rasgos para superar cada ronda.",
+        "fr": "Un jeu de stratégie à combats automatiques où vous recrutez et placez des unités de différentes espèces animales, en combinant les synergies de classes et de traits pour progresser de manche en manche.",
+        "ja": "さまざまな動物種族のユニットを集めて配置し、兵種と特性のシナジーを組み合わせてラウンドを突破する戦略オートバトルゲームです。",
+        "zh-Hans": "一款策略自动战斗游戏：招募并部署不同动物种族的单位，搭配兵种与特性的协同效果，逐轮迎接挑战。",
+        "zh-Hant": "一款策略自動戰鬥遊戲：招募並部署不同動物種族的單位，搭配兵種與特性的協同效果，逐輪迎接挑戰。"
+      },
       "artwork": "site-assets/developer-apps/leporis-ascendant.png"
     },
     {
@@ -297,6 +307,16 @@
       "name": "Hazel&Peanut",
       "platform": "iphone",
       "kind": "game",
+      "summaries": {
+        "ko": "기관총을 다루는 피넛과 정밀 저격을 맡는 헤이즐을 전환하며 밀려오는 적을 막아내는 2.5D 참호 방어 슈팅 게임입니다.",
+        "en": "A 2.5D trench-defense shooter where you switch between Peanut’s machine-gun fire and Hazel’s precision sniping to hold back advancing enemies.",
+        "de": "Ein 2,5D-Shooter zur Verteidigung von Schützengräben: Wechsle zwischen Peanuts Maschinengewehr und Hazels Präzisionsschüssen, um anrückende Feinde aufzuhalten.",
+        "es": "Un juego de disparos y defensa de trincheras en 2,5D donde alternas entre la ametralladora de Peanut y los disparos de precisión de Hazel para frenar el avance enemigo.",
+        "fr": "Un jeu de tir et de défense de tranchées en 2,5D où vous alternez entre la mitrailleuse de Peanut et les tirs de précision de Hazel pour repousser les ennemis.",
+        "ja": "機関銃を扱うピーナッツと精密狙撃を担うヘイゼルを切り替え、押し寄せる敵を食い止める2.5D塹壕防衛シューティングゲームです。",
+        "zh-Hans": "一款2.5D战壕防御射击游戏：在操纵机枪的Peanut与负责精准狙击的Hazel之间切换，抵御不断逼近的敌人。",
+        "zh-Hant": "一款2.5D戰壕防禦射擊遊戲：在操縱機槍的Peanut與負責精準狙擊的Hazel之間切換，抵禦不斷逼近的敵人。"
+      },
       "artwork": "site-assets/developer-apps/hazel-and-peanut.png"
     },
     {
@@ -304,6 +324,16 @@
       "name": "GrayLine",
       "platform": "iphone",
       "kind": "game",
+      "summaries": {
+        "ko": "토끼 정찰수 보니와 늑대 잠입 전문가 클라이드를 번갈아 조작하며, 잠입과 증거 수집으로 전쟁 뒤편의 음모를 추적하는 2D 횡스크롤 액션 게임입니다.",
+        "en": "A 2D side-scrolling action game where you alternate between Bonnie, a rabbit scout, and Clyde, a wolf infiltration specialist, using stealth and evidence gathering to uncover a conspiracy behind the war.",
+        "de": "Ein 2D-Sidescrolling-Actionspiel, in dem du zwischen der Kaninchen-Späherin Bonnie und dem Wolf und Infiltrationsspezialisten Clyde wechselst, um durch Schleichen und Beweissuche einer Verschwörung hinter dem Krieg auf die Spur zu kommen.",
+        "es": "Un juego de acción 2D de desplazamiento lateral donde alternas entre Bonnie, una exploradora coneja, y Clyde, un lobo experto en infiltración, usando el sigilo y las pruebas para descubrir una conspiración tras la guerra.",
+        "fr": "Un jeu d’action 2D à défilement horizontal où vous alternez entre Bonnie, une éclaireuse lapine, et Clyde, un loup spécialiste de l’infiltration, pour déjouer une conspiration derrière la guerre grâce à la discrétion et à la collecte de preuves.",
+        "ja": "ウサギの斥候ボニーとオオカミの潜入専門家クライドを切り替えて操作し、潜入と証拠集めで戦争の裏にある陰謀を追う2D横スクロールアクションゲームです。",
+        "zh-Hans": "一款2D横版动作游戏：交替操控兔族侦察员Bonnie与狼族潜入专家Clyde，通过潜行与收集证据，追查战争背后的阴谋。",
+        "zh-Hant": "一款2D橫向卷軸動作遊戲：交替操控兔族偵察員Bonnie與狼族潛入專家Clyde，透過潛行與蒐集證據，追查戰爭背後的陰謀。"
+      },
       "artwork": "site-assets/developer-apps/grayline.png"
     }
   ]

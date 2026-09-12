@@ -1496,6 +1496,8 @@ for project in development_projects:
         raise SystemExit(f"developer project {identifier} has an invalid kind")
     development_projection[identifier] = (project.get("name"), platform, kind)
     summaries = project.get("summaries")
+    if identifier in {"leporis-ascendant", "hazel-and-peanut", "grayline"} and summaries is None:
+        raise SystemExit(f"developer game {identifier} requires a localized introduction")
     if summaries is not None:
         if not isinstance(summaries, dict) or set(summaries) != set(locale_names):
             raise SystemExit(

@@ -10,7 +10,7 @@
   const button=(text,action,cls="")=>{const b=el("button",cls,text);b.type="button";b.addEventListener("click",action);return b;};
   const link=(text,href)=>{const a=el("a","sim-link",text);a.href=href;return a;};
   let map,translations,demos,catalog,release,appCatalog;
-  let view="steam",mode="demo",photo=0,lastFocus,appPlatform="mac";
+  let view="steam",mode="demo",photo=0,lastFocus,appPlatform="mac",appCollection="apps";
   const initial=()=>({renderer:"D3DMetal - NVIDIA",fg:false,frameCheck:false,gameMode:true,microphone:false,network:"Ethernet",vram:"auto",pointer:false,mapping:false,command:"Ctrl",option:"Alt",control:"Ctrl",quitKeys:false,switchKeys:false,spaces:false,screenshots:false,awdl:true,library:null,exe:null,exeRenderer:"Wine",profileRoot:false,setup:0,analysis:null,theme:"system",retention:"30",sync:"auto"});
   let state=initial();
   const T=key=>translations[locale()]?.[key]??translations.en?.[key]??key;
@@ -58,6 +58,11 @@
   const componentsView=parent=>{const c=card(T("필수 구성요소 설치 도구"));note(c,T(map.views.components.notes[0]));const choices=el('div','sim-actions');['VC++','DirectX','.NET','OpenAL','XNA','PhysX'].forEach(label=>choices.append(button(label,()=>show(label,`${D('fileHint')} ${T(map.views.components.notes[0])}`))));c.append(choices);parent.append(c);};
   const appsView=parent=>{
     const c=card(name('apps'));
+    const collections=el('div','sim-actions');
+    for(const [id,key] of [['apps','developerApps.catalog'],['inDevelopment','developerApps.inDevelopment']]){
+      const b=button(W(key),()=>{appCollection=id;render();},appCollection===id?'sim-selected':'');
+      b.setAttribute('aria-pressed',String(appCollection===id));collections.append(b);
+    }
     const platforms=el('div','sim-actions');
     for(const [id,label] of [['mac','Mac'],['ipad','iPad'],['iphone','iPhone']]){
       const b=button(label,()=>{appPlatform=id;render();},appPlatform===id?'sim-selected':'');
@@ -67,16 +72,18 @@
     const list=el('div','sim-apps');
     const populate=()=>{
       list.replaceChildren();
-      for(const app of appCatalog?.apps||[]){
+      for(const app of appCatalog?.[appCollection]||[]){
         const summary=app.summaries?.[locale()]||app.summaries?.en||'';
         if(app.platform!==appPlatform||!(app.name+' '+summary).toLocaleLowerCase().includes(search.value.toLocaleLowerCase()))continue;
         const item=el('article');const icon=el('img');icon.src=app.artwork;icon.alt='';icon.width=36;icon.height=36;icon.loading='lazy';
-        item.append(icon,el('strong','',app.name));note(item,summary);
-        item.append(link(W(app.appStoreID?'developerApps.appStoreLink':'developerApps.homepageLink'),app.href));list.append(item);
+        item.append(icon,el('strong','',app.name));
+        if(appCollection==='inDevelopment')note(item,`${W('developerApps.inDevelopment')} · ${W(app.kind==='game'?'developerApps.kindGame':app.kind==='utility'?'developerApps.kindUtility':'developerApps.kindApp')}`);
+        if(summary)note(item,summary);
+        if(app.href)item.append(link(W(app.appStoreID?'developerApps.appStoreLink':'developerApps.homepageLink'),app.href));list.append(item);
       }
     };
     search.addEventListener('input',populate);populate();
-    c.append(platforms,search,list,link(D('more'),'index.html?lang='+locale()+'#other-apps'));parent.append(c);
+    c.append(collections,platforms,search,list,link(D('more'),'index.html?lang='+locale()+'#other-apps'));parent.append(c);
   };
   const infoView=parent=>{if(view==='apps'){appsView(parent);return;}const c=card(name(view));(map.views[view].notes||[]).forEach(k=>note(c,T(k)));if(view==='about'){note(c,`ForgePlay ${release?.marketingVersion||'1.3.1'} (${release?.buildNumber||5})`);actionRow(c,button(T("업데이트 확인"),()=>explain('updated')));c.append(link(D('more'),release?.releaseURL||'https://github.com/Facta-Leopard/ForgePlay/releases/latest'));}if(view==='why')c.append(link(D('more'),'why.html?lang='+locale()));if(view==='sponsors')c.append(link('GitHub Sponsors','https://github.com/sponsors/facta-leopard'));parent.append(c);};
   const visionView=parent=>{const c=card(D('visionTitle'));const img=el('img');img.src=`site-assets/guide/vision/ultrawide-${photo+1}.jpg`;img.alt=D('visionBody');c.append(img);actionRow(c,button('1',()=>{photo=0;render();}),button('2',()=>{photo=1;render();}));note(c,D('visionBody'));note(c,D('visionWarning'),'sim-important');toggle(c,'AWDL','awdl');if(!state.awdl)note(c,D('visionWarning'),'sim-important');actionRow(c,button(D('visionLink'),()=>change('awdl')));parent.append(c);};

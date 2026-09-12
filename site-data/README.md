@@ -181,6 +181,13 @@ groups MajorDex, ForgeKit, HareWatch, WarrenNet, Leporis Ascendant,
 Hazel&Peanut, and GrayLine by Mac, iPad, and iPhone and uses the same bundled
 first-party artwork as the app catalog.
 
+Website introductions for Leporis Ascendant, Hazel&Peanut, and GrayLine are
+based on their project documentation and source. Their Xcode device families
+were checked on 2026-09-13: Leporis Ascendant targets iPad; Hazel&Peanut and
+GrayLine target iPhone. All three remain in-development games, without release
+or download links. These localized website descriptions do not modify the
+bundled ForgePlay app catalog.
+
 Keep this catalog synchronized with
 `Sources/ForgePlay/Models/DeveloperAppCatalog.swift` and validate structural
 changes against `developer-apps.schema.json`.
