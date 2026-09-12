@@ -4,6 +4,20 @@ set -euo pipefail
 ROOT_DIR="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 PAGES=(
   index.html
+  site-assets/guide.html
+  site-assets/guide.css
+  site-assets/guide.js
+  site-assets/guide-app.css
+  site-assets/guide-app.js
+  site-data/guide.json
+  site-data/guide-app-map.json
+  site-data/guide-ui.json
+  site-data/guide-demo.json
+  site-assets/guide/setup.jpg
+  site-assets/guide/steam.jpg
+  site-assets/guide/profiles.jpg
+  site-assets/guide/vision/ultrawide-1.jpg
+  site-assets/guide/vision/ultrawide-2.jpg
   why.html
   license.html
   privacy.html
@@ -233,6 +247,7 @@ PY
 
 python3 - "$ROOT_DIR" \
   "$ROOT_DIR/index.html" \
+  "$ROOT_DIR/site-assets/guide.html" \
   "$ROOT_DIR/why.html" \
   "$ROOT_DIR/license.html" \
   "$ROOT_DIR/privacy.html" \
@@ -264,8 +279,14 @@ class Parser(HTMLParser):
         self.scripts = []
         self.ids = []
         self.i18n_keys = []
+        self.base_href = None
 
     def handle_starttag(self, tag, attrs):
+        if tag == "base":
+            if self.base_href is not None:
+                raise SystemExit("duplicate HTML base element")
+            self.base_href = dict(attrs).get("href", "")
+            return
         for key, value in attrs:
             if key == "id" and value:
                 self.ids.append(value)
@@ -290,6 +311,14 @@ def parse_page(path):
         with open(path, "r", encoding="utf-8") as handle:
             parser.feed(handle.read())
         parser.close()
+        if parser.base_href is not None:
+            base = urlsplit(parser.base_href)
+            if base.scheme or base.netloc or base.query or base.fragment or base.path.startswith("/"):
+                raise SystemExit(f"{path}: HTML base must be a local site-root directory")
+            if (path.parent / base.path).resolve() != root_resolved:
+                raise SystemExit(f"{path}: HTML base does not resolve to the site root")
+        elif path.parent.resolve() != root_resolved:
+            raise SystemExit(f"{path}: nested page requires a site-root HTML base")
     except Exception as exc:
         raise SystemExit(f"{path}: HTML parse failed: {exc}")
     ids = set()
@@ -375,6 +404,40 @@ for path in paths:
 
 site_js = (root / "site.js").read_text(encoding="utf-8")
 locale_names = ["ko", "en", "de", "es", "fr", "ja", "zh-Hans", "zh-Hant"]
+
+# The guide combines translated instruction data with real captures for each UI language.
+guide = json.loads((root / "site-data/guide.json").read_text(encoding="utf-8"))
+guide_demo = json.loads((root / "site-data/guide-demo.json").read_text(encoding="utf-8"))
+guide_ui = json.loads((root / "site-data/guide-ui.json").read_text(encoding="utf-8"))
+guide_map = json.loads((root / "site-data/guide-app-map.json").read_text(encoding="utf-8"))
+for name, data in (("guide", guide), ("guide-demo", guide_demo), ("guide-ui", guide_ui)):
+    if set(data) != set(locale_names):
+        raise SystemExit(f"{name}: all eight locales are required")
+    for locale, values in data.items():
+        if set(values) != set(data["en"]):
+            raise SystemExit(f"{name}: translation keys differ in {locale}")
+        for key, value in values.items():
+            if key not in {"chapters", "faq"} and (not isinstance(value, str) or not value.strip()):
+                raise SystemExit(f"{name}: empty text {locale}/{key}")
+for locale in locale_names:
+    if len(guide[locale]["chapters"]) != len(guide["en"]["chapters"]):
+        raise SystemExit(f"guide: chapter count differs in {locale}")
+    for chapter in guide[locale]["chapters"]:
+        if not chapter.get("name") or not chapter.get("title") or len(chapter.get("points", [])) != 3:
+            raise SystemExit(f"guide: incomplete chapter in {locale}")
+        if any(len(point) != 2 or not all(isinstance(s, str) and s.strip() for s in point) for point in chapter["points"]):
+            raise SystemExit(f"guide: incomplete point in {locale}")
+    for view_id, view in guide_map["views"].items():
+        if not re.fullmatch(r"[a-z]+", view_id):
+            raise SystemExit("guide: invalid screenshot view identifier")
+        for key in [view["title"], *view["notes"]]:
+            if not guide_ui[locale].get(key):
+                raise SystemExit(f"guide: missing app text {locale}/{view_id}")
+        screenshot = root / "site-assets/guide/screens" / locale / f"{view_id}.jpg"
+        if screenshot.is_symlink() or not screenshot.is_file():
+            raise SystemExit(f"guide: missing regular screenshot {locale}/{view_id}")
+        if not screenshot.read_bytes().startswith(b"\xff\xd8\xff"):
+            raise SystemExit(f"guide: invalid JPEG screenshot {locale}/{view_id}")
 markers = []
 for match in re.finditer(
     r'^\s{4}(?:"(zh-Hans|zh-Hant)"|(ko|en|de|es|fr|ja)):\s*\{$',
@@ -1939,6 +2002,8 @@ for script in \
   locale-bootstrap.js \
   site.js \
   site-assets/current-release.js \
+  site-assets/guide.js \
+  site-assets/guide-app.js \
   site-assets/website-compatibility.js \
   compatibility.js \
   announcements.js \

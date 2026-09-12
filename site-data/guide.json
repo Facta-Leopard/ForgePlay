@@ -1,0 +1,250 @@
+{
+  "ko": {
+    "nav":"사용 가이드", "eyebrow":"화면으로 만나는 FORGEPLAY", "title1":"처음 실행부터,", "title2":"게임이 켜질 때까지.",
+    "intro":"ForgePlay는 Apple Silicon Mac에서 Windows용 Steam 게임과 별도의 .exe 프로그램을 실행하는 앱입니다. Steam 게임에는 macOS의 네이티브 Game Mode를 연결할 수 있습니다.",
+    "walkthrough":"빠른 시작 · 화면으로 따라가기", "instruction":"화면의 번호를 누르면 해당 기능의 설명이 열립니다.", "captureLabel":"선택한 언어의 실제 앱 화면", "captureNote":"ForgePlay 1.3.1의 실제 SwiftUI 화면입니다. 준비 상태와 선택값은 사용 환경에 따라 다를 수 있습니다.",
+    "zoom":"화면 크게 보기", "close":"닫기", "previous":"이전", "next":"다음 화면", "flow1":"ForgePlay에서 Steam 열기", "flow2":"Steam 라이브러리로 이동", "flow3":"게임 실행",
+    "faqEyebrow":"처음이라면, 이 정도만", "faqTitle":"헷갈리는 부분을 짚어볼까요?", "support":"지원 안내 보기", "finishTitle":"이제, 첫 게임을 켜볼까요?", "finishBody":"처음에는 일반 Steam 실행으로 시작하세요. 필요한 순간에 이 가이드를 다시 펼치면 됩니다.",
+    "teaserTitle":"앱을 열고, 무엇부터 할까요?", "teaserBody":"설정부터 첫 게임 실행까지. 실제 앱 화면을 보면서 핵심 버튼을 하나씩 따라가세요.", "teaserLink":"앱 화면으로 사용법 보기",
+    "chapters":[
+      {"name":"처음 준비", "title":"Steam이 실행될 환경부터 준비합니다.", "points":[
+        ["사이드바 아래에서 설정 열기","처음 준비하거나 필요한 항목을 다시 확인할 때, 사이드바 아래의 상태 버튼으로 설정 화면을 엽니다."],
+        ["노란색 ‘현재 단계’ 따라가기","앱 데이터, Runtime, Steam 프리픽스, Steam 설치를 순서대로 준비합니다. 현재 단계에 표시된 버튼을 눌러 진행하세요."],
+        ["완료한 항목 확인하기","완료 표시를 확인하고 다음 단계로 이동합니다. Steam 로그인은 열리는 Windows용 Steam에서 직접 진행하세요."]
+      ]},
+      {"name":"Steam 실행", "title":"그래픽을 고르고, Steam을 엽니다.", "points":[
+        ["게임에 맞는 그래픽 백엔드","64비트 DX11/12는 D3DMetal - NVIDIA, DX10/11은 DXMT 또는 DXVK, 32비트 D3D9는 WineD3D를 기준으로 선택합니다. 게임별 결과는 호환성 DB에서도 확인하세요."],
+        ["Game Mode와 프레임 생성","새 구성의 Game Mode 기본값은 켬, Frame Generation(베타)은 꺼짐입니다. 기본 실행을 확인한 뒤 필요할 때 프레임 생성을 시험하고, 오히려 느려지면 꺼주세요."],
+        ["설정을 저장하고 실행하기","‘설정 저장’으로 구성을 다음에도 재사용할 수 있습니다. ‘Steam 실행’을 누른 뒤, 열린 Windows용 Steam의 라이브러리에서 게임을 실행하세요."]
+      ]},
+      {"name":"게임별 프로필", "title":"특정 게임에는 별도 설정을 씁니다.", "points":[
+        ["호환성 실행은 별도의 경로","‘Steam 호환성 실행(베타)’은 지정된 게임 프로필을 위한 화면입니다. 일반 Steam 실행 설정과 별도로 저장됩니다."],
+        ["준비된 게임 프로필 선택","앱의 목록에서 해당 게임 프로필을 고릅니다. 캡처 화면은 HELLDIVERS 2 프로필의 예시입니다."],
+        ["게임의 설치 위치 연결","‘루트 선택’으로 프로필에 맞는 Steam 설치 위치를 연결합니다. 필요한 항목이 준비되면 이 화면에서 설정을 저장하고 Steam을 실행하세요."]
+      ]}
+    ],
+    "faq":[
+      ["게임은 ForgePlay에서 바로 실행하나요?","일반 Steam 실행은 Windows용 Steam을 먼저 엽니다. 로그인한 뒤 Steam 라이브러리에서 게임을 설치하고 실행하세요. 별도의 Windows 실행 파일은 ‘EXE 실행(베타)’에서 선택할 수 있습니다."],
+      ["‘프리픽스’가 뭔가요? 업데이트마다 다시 만드나요?","Steam과 Windows용 구성요소를 보관하는 실행 환경 폴더입니다. 1.3.1은 업데이트한 앱에서 Steam 실행을 누를 때 기존 환경을 자동 갱신합니다. 정상적인 환경을 단순 업데이트 때문에 재생성할 필요는 없습니다."],
+      ["프레임 생성을 켜면 언제나 더 빨라지나요?","게임과 기기, 디스플레이에 따라 결과가 다릅니다. 일부 게임에서는 오히려 병목이나 입력 지연이 생길 수 있으니, 먼저 끈 상태로 실행을 확인하고 비교해 보세요."],
+      ["게임이 열리지 않으면 어디부터 보나요?","‘문제 진단’에서 최근 실행 기록과 안내를 확인하고, 호환성 DB에서 같은 게임의 버전별 결과를 찾아보세요. 지원 번들을 공유할 때는 먼저 내용을 검토해 주세요."]
+    ]
+  },
+  "de": {
+    "nav":"Anleitung", "eyebrow":"FORGEPLAY AUF DEM BILDSCHIRM", "title1":"Vom ersten Start", "title2":"zum ersten Spiel.",
+    "intro":"ForgePlay führt Windows-Steam-Spiele und eigenständige .exe-Programme auf Apple-Silicon-Macs aus. Steam-Spiele können den nativen macOS-Spielmodus nutzen.",
+    "walkthrough":"Schnellstart · Schritt für Schritt", "instruction":"Wählen Sie eine Nummer im Screenshot, um die Erklärung zu öffnen.", "captureLabel":"Echte App-Ansicht in Ihrer Sprache", "captureNote":"Echte SwiftUI-Ansichten von ForgePlay 1.3.1. Einrichtungsfortschritt und Auswahl können je nach Umgebung abweichen.",
+    "zoom":"Größer anzeigen", "close":"Schließen", "previous":"Zurück", "next":"Nächste Ansicht", "flow1":"Steam in ForgePlay öffnen", "flow2":"Zur Steam-Bibliothek", "flow3":"Spiel starten",
+    "faqEyebrow":"GUT ZU WISSEN", "faqTitle":"Ein paar Fragen vor dem Start.", "support":"Zur Hilfe", "finishTitle":"Bereit für das erste Spiel?", "finishBody":"Beginnen Sie mit dem regulären Steam-Start. Diese Anleitung steht bei Bedarf wieder bereit.",
+    "teaserTitle":"App geöffnet. Was kommt jetzt?", "teaserBody":"Von der Einrichtung zum ersten Spiel. Folgen Sie den wichtigsten Bedienelementen auf echten App-Ansichten.", "teaserLink":"Zur bebilderten Anleitung",
+    "chapters":[
+      {"name":"Ersteinrichtung", "title":"Bereiten Sie die Umgebung für Steam vor.", "points":[
+        ["Einrichtung über die Seitenleiste öffnen","Öffnen Sie mit der Statusschaltfläche unten in der Seitenleiste die Einrichtung, um die App vorzubereiten oder erforderliche Punkte zu prüfen."],
+        ["Dem gelben aktuellen Schritt folgen","Bereiten Sie App-Daten, Runtime, Steam-Präfix und Steam-Installation der Reihe nach vor. Verwenden Sie die Schaltfläche des aktuellen Schritts."],
+        ["Erledigte Schritte prüfen","Prüfen Sie die Abschlussmarkierungen und fahren Sie fort. Melden Sie sich direkt in der Windows-Version von Steam an, sobald sie geöffnet wird."]
+      ]},
+      {"name":"Steam starten", "title":"Grafik auswählen, dann Steam öffnen.", "points":[
+        ["Das passende Grafik-Backend","Orientieren Sie sich an D3DMetal - NVIDIA für 64-Bit-DX11/12, DXMT oder DXVK für DX10/11 und WineD3D für 32-Bit-D3D9. Prüfen Sie spielbezogene Ergebnisse in der Kompatibilitätsdatenbank."],
+        ["Game Mode und Frame-Generierung","Bei neuen Konfigurationen ist Game Mode eingeschaltet und Frame Generation (Beta) ausgeschaltet. Prüfen Sie zunächst den normalen Betrieb und testen Sie die Frame-Generierung bei Bedarf. Schalten Sie sie bei Verlangsamungen wieder aus."],
+        ["Einstellungen speichern und starten","Speichern Sie die Konfiguration zur späteren Wiederverwendung. Klicken Sie auf Steam starten und starten Sie das Spiel anschließend in der Bibliothek von Windows-Steam."]
+      ]},
+      {"name":"Spielprofile", "title":"Eigene Einstellungen für bestimmte Spiele.", "points":[
+        ["Ein separater Kompatibilitätsstart","Steam-Kompatibilitätsstart (Beta) ist für bestimmte Spielprofile vorgesehen. Die Einstellungen werden getrennt vom regulären Steam-Start gespeichert."],
+        ["Ein verfügbares Profil auswählen","Wählen Sie das passende Spielprofil aus der Liste. Der Screenshot zeigt das Profil für HELLDIVERS 2 als Beispiel."],
+        ["Den Installationsort verbinden","Verbinden Sie über die Auswahl des Stammordners den zum Profil passenden Steam-Installationsort. Sind alle erforderlichen Punkte bereit, speichern Sie hier die Einstellungen und starten Steam."]
+      ]}
+    ],
+    "faq":[
+      ["Starte ich Spiele direkt in ForgePlay?","Der reguläre Steam-Start öffnet zunächst Windows-Steam. Melden Sie sich an und installieren oder starten Sie Spiele in der Steam-Bibliothek. Separate Windows-Programme können unter EXE-Start (Beta) ausgewählt werden."],
+      ["Was ist ein Präfix? Muss ich es nach jedem Update neu erstellen?","Das ist der Laufzeitordner für Steam und Windows-Komponenten. In 1.3.1 aktualisiert die neue App die bestehende Umgebung beim Steam-Start. Eine funktionierende Umgebung muss für gewöhnliche Updates nicht neu erstellt werden."],
+      ["Macht Frame-Generierung Spiele immer schneller?","Das Ergebnis hängt von Spiel, Hardware und Display ab. Manche Spiele können dadurch Engpässe oder zusätzliche Eingabelatenz aufweisen. Prüfen Sie zuerst den Betrieb ohne diese Funktion und vergleichen Sie anschließend."],
+      ["Wo beginne ich, wenn ein Spiel nicht startet?","Prüfen Sie die letzten Startaufzeichnungen und Hinweise unter Diagnose und suchen Sie in der Kompatibilitätsdatenbank nach Ergebnissen für das Spiel und die ForgePlay-Version. Prüfen Sie ein Support-Paket vor dem Teilen."]
+    ]
+  },
+  "es": {
+    "nav":"Guía", "eyebrow":"CONOCE FORGEPLAY EN PANTALLA", "title1":"Del primer inicio", "title2":"a tu primer juego.",
+    "intro":"ForgePlay ejecuta juegos de Steam para Windows y programas .exe independientes en Mac con Apple Silicon. Los juegos de Steam pueden utilizar el modo Juego nativo de macOS.",
+    "walkthrough":"Inicio rápido · Paso a paso", "instruction":"Selecciona un número en la captura para ver su explicación.", "captureLabel":"Pantalla real en tu idioma", "captureNote":"Pantallas SwiftUI reales de ForgePlay 1.3.1. El progreso y las opciones pueden variar según el entorno.",
+    "zoom":"Ver más grande", "close":"Cerrar", "previous":"Anterior", "next":"Siguiente pantalla", "flow1":"Abrir Steam en ForgePlay", "flow2":"Ir a la biblioteca de Steam", "flow3":"Iniciar el juego",
+    "faqEyebrow":"CONVIENE SABER", "faqTitle":"Aclaremos algunas dudas.", "support":"Obtener ayuda", "finishTitle":"¿Listo para tu primer juego?", "finishBody":"Empieza con el inicio normal de Steam. Vuelve a esta guía cuando lo necesites.",
+    "teaserTitle":"Ya abriste la app. ¿Y ahora?", "teaserBody":"De la configuración al primer juego. Sigue los controles principales en pantallas reales, paso a paso.", "teaserLink":"Explorar la guía visual",
+    "chapters":[
+      {"name":"Primeros pasos", "title":"Prepara el entorno para Steam.", "points":[
+        ["Abrir la configuración desde la barra lateral","Usa el botón de estado al pie de la barra lateral para preparar la app por primera vez o revisar los requisitos."],
+        ["Seguir el paso actual en amarillo","Prepara los datos de la app, el entorno de ejecución, el prefijo de Steam y la instalación de Steam en ese orden. Usa el botón del paso actual."],
+        ["Revisar los pasos completados","Comprueba las marcas de finalización y continúa. Inicia sesión directamente en la versión de Steam para Windows cuando se abra."]
+      ]},
+      {"name":"Iniciar Steam", "title":"Elige los gráficos y abre Steam.", "points":[
+        ["El backend gráfico adecuado","Como punto de partida, usa D3DMetal - NVIDIA para DX11/12 de 64 bits, DXMT o DXVK para DX10/11 y WineD3D para D3D9 de 32 bits. Consulta los resultados de cada juego en la base de compatibilidad."],
+        ["Game Mode y generación de fotogramas","Las configuraciones nuevas tienen Game Mode activado y Frame Generation (beta) desactivado. Comprueba primero el funcionamiento normal y prueba la generación si la necesitas. Desactívala si empeora el rendimiento."],
+        ["Guardar e iniciar","Guarda la configuración para volver a usarla. Pulsa Iniciar Steam y ejecuta el juego desde la biblioteca de la ventana de Steam para Windows."]
+      ]},
+      {"name":"Perfiles por juego", "title":"Ajustes independientes para juegos concretos.", "points":[
+        ["Un inicio de compatibilidad separado","El inicio de Steam en modo de compatibilidad (beta) utiliza perfiles de juegos específicos. Sus ajustes se guardan por separado de los del inicio normal."],
+        ["Elegir un perfil disponible","Selecciona el perfil del juego en la lista de la app. La captura muestra HELLDIVERS 2 como ejemplo."],
+        ["Conectar la ubicación de instalación","Usa la selección de carpeta raíz para conectar la instalación de Steam correspondiente al perfil. Cuando esté todo listo, guarda los ajustes e inicia Steam desde esta pantalla."]
+      ]}
+    ],
+    "faq":[
+      ["¿Inicio los juegos directamente en ForgePlay?","El inicio normal abre primero Steam para Windows. Inicia sesión y utiliza la biblioteca de Steam para instalar y ejecutar juegos. Puedes seleccionar un ejecutable de Windows independiente en Inicio de EXE (beta)."],
+      ["¿Qué es un prefijo? ¿Debo recrearlo con cada actualización?","Es la carpeta del entorno de ejecución que contiene Steam y los componentes de Windows. En 1.3.1, la app actualizada renueva el entorno existente al iniciar Steam. No hace falta recrear un entorno funcional para una actualización normal."],
+      ["¿La generación de fotogramas siempre mejora el rendimiento?","Depende del juego, del equipo y de la pantalla. En algunos juegos puede provocar cuellos de botella o más latencia de entrada. Comprueba primero el juego con la función desactivada y luego compara."],
+      ["¿Dónde miro si un juego no se abre?","Consulta los registros recientes y las indicaciones de Diagnóstico. Busca también resultados del juego y de la versión de ForgePlay en la base de compatibilidad. Revisa cualquier paquete de soporte antes de compartirlo."]
+    ]
+  },
+  "fr": {
+    "nav":"Guide", "eyebrow":"DÉCOUVRIR FORGEPLAY À L’ÉCRAN", "title1":"Du premier lancement", "title2":"à votre premier jeu.",
+    "intro":"ForgePlay exécute les jeux Steam pour Windows et les programmes .exe autonomes sur Mac Apple Silicon. Les jeux Steam peuvent bénéficier du mode Jeu natif de macOS.",
+    "walkthrough":"Démarrage rapide · Étape par étape", "instruction":"Sélectionnez un numéro sur la capture pour afficher son explication.", "captureLabel":"Écran réel dans votre langue", "captureNote":"Écrans SwiftUI réels de ForgePlay 1.3.1. La progression et les réglages peuvent différer selon votre environnement.",
+    "zoom":"Agrandir", "close":"Fermer", "previous":"Précédent", "next":"Écran suivant", "flow1":"Ouvrir Steam dans ForgePlay", "flow2":"Aller à la bibliothèque Steam", "flow3":"Lancer le jeu",
+    "faqEyebrow":"QUELQUES REPÈRES", "faqTitle":"Éclaircissons quelques points.", "support":"Obtenir de l’aide", "finishTitle":"Prêt pour votre premier jeu ?", "finishBody":"Commencez par le lancement normal de Steam. Retrouvez ce guide dès que vous en avez besoin.",
+    "teaserTitle":"L’application est ouverte. Et ensuite ?", "teaserBody":"De la configuration au premier jeu. Suivez les commandes essentielles sur les vrais écrans de l’application.", "teaserLink":"Explorer le guide visuel",
+    "chapters":[
+      {"name":"Première préparation", "title":"Préparez l’environnement de Steam.", "points":[
+        ["Ouvrir la configuration dans la barre latérale","Utilisez le bouton d’état au bas de la barre latérale pour préparer l’application ou vérifier les éléments requis."],
+        ["Suivre l’étape actuelle en jaune","Préparez dans l’ordre les données de l’app, l’environnement d’exécution, le préfixe Steam et l’installation de Steam. Utilisez le bouton de l’étape actuelle."],
+        ["Vérifier les étapes terminées","Vérifiez les marques de validation et passez à la suite. Connectez-vous directement dans la version Windows de Steam lorsqu’elle s’ouvre."]
+      ]},
+      {"name":"Lancer Steam", "title":"Choisissez les graphismes, puis ouvrez Steam.", "points":[
+        ["Choisir le backend adapté au jeu","Partez de D3DMetal - NVIDIA pour DX11/12 64 bits, DXMT ou DXVK pour DX10/11 et WineD3D pour D3D9 32 bits. Consultez les résultats propres au jeu dans la base de compatibilité."],
+        ["Game Mode et génération d’images","Les nouvelles configurations activent Game Mode et désactivent Frame Generation (bêta). Vérifiez d’abord le fonctionnement normal, puis essayez la génération si nécessaire. Désactivez-la si elle ralentit le jeu."],
+        ["Enregistrer et lancer","Enregistrez la configuration pour la réutiliser. Cliquez sur Lancer Steam, puis lancez votre jeu depuis la bibliothèque de la fenêtre Steam pour Windows."]
+      ]},
+      {"name":"Profils par jeu", "title":"Des réglages distincts pour un jeu précis.", "points":[
+        ["Un lancement de compatibilité séparé","Le lancement de compatibilité Steam (bêta) utilise des profils de jeux désignés. Ses réglages sont enregistrés séparément de ceux du lancement normal."],
+        ["Choisir un profil disponible","Sélectionnez le profil du jeu dans la liste de l’application. La capture montre HELLDIVERS 2 à titre d’exemple."],
+        ["Relier l’emplacement d’installation","Utilisez la sélection du dossier racine pour relier l’installation Steam correspondant au profil. Quand les éléments requis sont prêts, enregistrez les réglages et lancez Steam ici."]
+      ]}
+    ],
+    "faq":[
+      ["Est-ce que je lance les jeux directement dans ForgePlay ?","Le lancement normal ouvre d’abord Steam pour Windows. Connectez-vous, puis installez et lancez vos jeux dans la bibliothèque Steam. Un exécutable Windows distinct peut être sélectionné sous Lancement EXE (bêta)."],
+      ["Qu’est-ce qu’un préfixe ? Faut-il le recréer à chaque mise à jour ?","C’est le dossier d’exécution qui contient Steam et les composants Windows. Avec 1.3.1, l’application actualise l’environnement existant au lancement de Steam. Une mise à jour ordinaire ne nécessite pas de recréer un environnement fonctionnel."],
+      ["La génération d’images améliore-t-elle toujours les performances ?","Les résultats varient selon le jeu, le matériel et l’écran. Certains jeux peuvent présenter des goulots d’étranglement ou une latence supplémentaire. Vérifiez d’abord le jeu sans cette fonction, puis comparez."],
+      ["Où chercher si un jeu ne s’ouvre pas ?","Consultez les derniers lancements et les conseils dans Diagnostic, puis les résultats pour ce jeu et cette version de ForgePlay dans la base de compatibilité. Vérifiez le contenu d’un dossier de support avant de le partager."]
+    ]
+  },
+  "ja": {
+    "nav":"使い方", "eyebrow":"画面でわかる FORGEPLAY", "title1":"初回起動から、", "title2":"ゲームを始めるまで。",
+    "intro":"ForgePlayはApple Silicon MacでWindows版Steamのゲームや独立した.exeプログラムを実行するアプリです。SteamのゲームではmacOSネイティブのゲームモードを利用できます。",
+    "walkthrough":"クイックスタート · 画面で確認", "instruction":"画面の番号を選ぶと、その機能の説明が開きます。", "captureLabel":"選択言語の実際のアプリ画面", "captureNote":"ForgePlay 1.3.1の実際のSwiftUI画面です。準備状況や選択内容は環境により異なります。",
+    "zoom":"大きく表示", "close":"閉じる", "previous":"前へ", "next":"次の画面", "flow1":"ForgePlayでSteamを開く", "flow2":"Steamライブラリへ", "flow3":"ゲームを起動",
+    "faqEyebrow":"最初に知っておきたいこと", "faqTitle":"気になる点を確認しましょう。", "support":"サポートを見る", "finishTitle":"最初のゲームを始めましょう。", "finishBody":"まずは通常のSteam起動から。必要なときに、このガイドをまた開いてください。",
+    "teaserTitle":"アプリを開いたら、何から始める？", "teaserBody":"設定から最初のゲーム起動まで。実際のアプリ画面で主要なボタンを一つずつ確認できます。", "teaserLink":"画面で使い方を見る",
+    "chapters":[
+      {"name":"初回の準備", "title":"Steamを動かす環境を準備します。", "points":[
+        ["サイドバーの下から設定を開く","初回の準備や必要な項目の確認は、サイドバー下部の状態ボタンから設定画面を開いて行います。"],
+        ["黄色の「現在の手順」に沿って進む","アプリデータ、Runtime、Steamプレフィックス、Steamのインストールを順に準備します。現在の手順に表示されたボタンで進めてください。"],
+        ["完了した項目を確認する","完了マークを確認して次へ進みます。Steamへのログインは、開いたWindows版Steamで直接行ってください。"]
+      ]},
+      {"name":"Steamを起動", "title":"グラフィックスを選び、Steamを開きます。", "points":[
+        ["ゲームに合うバックエンド","64ビットDX11/12はD3DMetal - NVIDIA、DX10/11はDXMTまたはDXVK、32ビットD3D9はWineD3Dを目安に選びます。ゲーム別の結果は互換性DBでも確認できます。"],
+        ["Game Modeとフレーム生成","新しい構成ではGame Modeはオン、Frame Generation（ベータ）はオフが初期値です。通常動作を確認してから必要に応じてフレーム生成を試し、遅くなる場合はオフにしてください。"],
+        ["設定を保存して起動","設定を保存すると次回も再利用できます。「Steamを起動」を押し、開いたWindows版Steamのライブラリからゲームを実行してください。"]
+      ]},
+      {"name":"ゲーム別プロファイル", "title":"特定のゲームには個別の設定を使います。", "points":[
+        ["互換性起動は別の経路","Steam互換性起動（ベータ）は指定されたゲームプロファイル用です。通常のSteam起動とは別に設定を保存します。"],
+        ["用意されたプロファイルを選ぶ","アプリの一覧から対象ゲームのプロファイルを選びます。画像はHELLDIVERS 2プロファイルの例です。"],
+        ["ゲームのインストール先を接続","ルート選択でプロファイルに合うSteamのインストール先を接続します。必要な項目が揃ったら、この画面で設定を保存してSteamを起動します。"]
+      ]}
+    ],
+    "faq":[
+      ["ゲームはForgePlayから直接起動しますか？","通常のSteam起動では、まずWindows版Steamを開きます。ログイン後、Steamライブラリでゲームをインストールして起動してください。個別のWindows実行ファイルはEXE起動（ベータ）から選択できます。"],
+      ["プレフィックスとは？更新のたびに作り直しますか？","SteamやWindows用の構成要素を保存する実行環境フォルダーです。1.3.1では更新したアプリでSteamを起動すると既存環境を自動更新します。通常のアップデートのために正常な環境を作り直す必要はありません。"],
+      ["フレーム生成をオンにすると必ず速くなりますか？","結果はゲーム、機器、ディスプレイで異なります。一部のゲームではボトルネックや入力遅延が増えることもあります。まずオフで動作を確認してから比較してください。"],
+      ["ゲームが開かない場合はどこを確認しますか？","問題診断で最近の起動記録と案内を確認し、互換性DBで同じゲームとForgePlayバージョンの結果を調べてください。サポートバンドルを共有する前に内容を確認しましょう。"]
+    ]
+  },
+  "zh-Hans": {
+    "nav":"使用指南", "eyebrow":"通过画面认识 FORGEPLAY", "title1":"从首次启动，", "title2":"到开始游戏。",
+    "intro":"ForgePlay可在Apple Silicon Mac上运行Windows版Steam游戏和独立的.exe程序。Steam游戏可以使用macOS原生游戏模式。",
+    "walkthrough":"快速开始 · 跟随画面操作", "instruction":"点击截图中的数字，即可打开对应说明。", "captureLabel":"所选语言的实际应用画面", "captureNote":"这些是ForgePlay 1.3.1的实际SwiftUI画面。准备进度与选项可能因环境而异。",
+    "zoom":"放大查看", "close":"关闭", "previous":"上一步", "next":"下一个画面", "flow1":"在ForgePlay中打开Steam", "flow2":"进入Steam游戏库", "flow3":"启动游戏",
+    "faqEyebrow":"开始前了解这些", "faqTitle":"解答几个常见疑问。", "support":"查看支持说明", "finishTitle":"准备好开始第一个游戏了吗？", "finishBody":"先从常规Steam启动开始。需要时，随时回来查看这份指南。",
+    "teaserTitle":"打开应用后，该从哪里开始？", "teaserBody":"从设置到首次启动游戏，对照实际应用画面，逐步认识主要按钮。", "teaserLink":"查看图解使用指南",
+    "chapters":[
+      {"name":"首次准备", "title":"先准备好Steam的运行环境。", "points":[
+        ["从侧边栏下方打开设置","首次准备或重新检查必需项目时，点击侧边栏底部的状态按钮，打开设置画面。"],
+        ["按照黄色的当前步骤操作","依次准备应用数据、Runtime、Steam前缀和Steam安装。点击当前步骤显示的按钮继续。"],
+        ["确认已完成的项目","确认完成标记后进入下一步。Steam打开后，请直接在Windows版Steam中登录。"]
+      ]},
+      {"name":"启动Steam", "title":"选择图形设置，然后打开Steam。", "points":[
+        ["选择适合游戏的图形后端","可从这些对应关系入手：64位DX11/12使用D3DMetal - NVIDIA，DX10/11使用DXMT或DXVK，32位D3D9使用WineD3D。也请在兼容性数据库中查看具体游戏的结果。"],
+        ["Game Mode与帧生成","新配置默认开启Game Mode、关闭Frame Generation（测试版）。先确认游戏正常运行，再按需尝试帧生成；如果反而变慢，请关闭它。"],
+        ["保存设置并启动","保存配置后，下次可以继续使用。点击启动Steam，再从打开的Windows版Steam游戏库中运行游戏。"]
+      ]},
+      {"name":"游戏专用配置", "title":"为特定游戏使用独立设置。", "points":[
+        ["兼容性启动是独立路径","Steam兼容性启动（测试版）用于指定的游戏配置，其设置与常规Steam启动分别保存。"],
+        ["选择已有的游戏配置","从应用列表中选择对应游戏的配置。截图以HELLDIVERS 2配置为例。"],
+        ["连接游戏安装位置","通过选择根目录，连接配置所需的Steam安装位置。必需项目准备完成后，在此画面保存设置并启动Steam。"]
+      ]}
+    ],
+    "faq":[
+      ["我是在ForgePlay中直接启动游戏吗？","常规Steam启动会先打开Windows版Steam。登录后，在Steam游戏库中安装和运行游戏。独立的Windows可执行文件可在EXE启动（测试版）中选择。"],
+      ["什么是前缀？每次更新都要重建吗？","前缀是保存Steam和Windows组件的运行环境文件夹。在1.3.1中，更新后的应用会在启动Steam时自动更新现有环境。正常环境无需为常规更新而重建。"],
+      ["开启帧生成一定会更快吗？","效果取决于游戏、设备和显示器。有些游戏可能出现瓶颈或增加输入延迟。请先在关闭状态下确认运行情况，再进行比较。"],
+      ["游戏打不开时，该先看哪里？","在问题诊断中查看最近的启动记录和说明，并在兼容性数据库中查找同一游戏和ForgePlay版本的结果。分享支持包前，请先检查其中的内容。"]
+    ]
+  },
+  "zh-Hant": {
+    "nav":"使用指南", "eyebrow":"透過畫面認識 FORGEPLAY", "title1":"從首次啟動，", "title2":"到開始遊戲。",
+    "intro":"ForgePlay可在Apple Silicon Mac上執行Windows版Steam遊戲與獨立的.exe程式。Steam遊戲可以使用macOS原生遊戲模式。",
+    "walkthrough":"快速開始 · 跟隨畫面操作", "instruction":"點選截圖中的數字，即可開啟對應說明。", "captureLabel":"所選語言的實際應用程式畫面", "captureNote":"這些是ForgePlay 1.3.1的實際SwiftUI畫面。準備進度與選項可能因環境而異。",
+    "zoom":"放大檢視", "close":"關閉", "previous":"上一步", "next":"下一個畫面", "flow1":"在ForgePlay中開啟Steam", "flow2":"前往Steam收藏庫", "flow3":"啟動遊戲",
+    "faqEyebrow":"開始前了解這些", "faqTitle":"解答幾個常見疑問。", "support":"查看支援說明", "finishTitle":"準備好開始第一個遊戲了嗎？", "finishBody":"先從一般Steam啟動開始。需要時，隨時回來查看這份指南。",
+    "teaserTitle":"開啟應用程式後，該從哪裡開始？", "teaserBody":"從設定到首次啟動遊戲，對照實際應用程式畫面，逐步認識主要按鈕。", "teaserLink":"查看圖解使用指南",
+    "chapters":[
+      {"name":"首次準備", "title":"先準備好Steam的執行環境。", "points":[
+        ["從側邊欄下方開啟設定","首次準備或重新檢查必要項目時，點選側邊欄底部的狀態按鈕，開啟設定畫面。"],
+        ["按照黃色的目前步驟操作","依序準備應用程式資料、Runtime、Steam前綴與Steam安裝。點選目前步驟顯示的按鈕繼續。"],
+        ["確認已完成的項目","確認完成標記後前往下一步。Steam開啟後，請直接在Windows版Steam中登入。"]
+      ]},
+      {"name":"啟動Steam", "title":"選擇繪圖設定，然後開啟Steam。", "points":[
+        ["選擇適合遊戲的繪圖後端","可從這些對應關係開始：64位元DX11/12使用D3DMetal - NVIDIA，DX10/11使用DXMT或DXVK，32位元D3D9使用WineD3D。也請在相容性資料庫查看個別遊戲的結果。"],
+        ["Game Mode與影格生成","新設定預設開啟Game Mode、關閉Frame Generation（測試版）。先確認遊戲正常執行，再依需要嘗試影格生成；如果反而變慢，請將它關閉。"],
+        ["儲存設定並啟動","儲存設定後，下次可以繼續使用。點選啟動Steam，再從開啟的Windows版Steam收藏庫執行遊戲。"]
+      ]},
+      {"name":"遊戲專用設定", "title":"為特定遊戲使用獨立設定。", "points":[
+        ["相容性啟動是獨立路徑","Steam相容性啟動（測試版）用於指定的遊戲設定檔，與一般Steam啟動的設定分開儲存。"],
+        ["選擇現有的遊戲設定檔","從應用程式清單選擇對應遊戲的設定檔。截圖以HELLDIVERS 2設定檔為例。"],
+        ["連接遊戲安裝位置","透過選擇根目錄，連接設定檔所需的Steam安裝位置。必要項目準備完成後，在此畫面儲存設定並啟動Steam。"]
+      ]}
+    ],
+    "faq":[
+      ["我是在ForgePlay中直接啟動遊戲嗎？","一般Steam啟動會先開啟Windows版Steam。登入後，在Steam收藏庫安裝及執行遊戲。獨立的Windows執行檔可在EXE啟動（測試版）中選擇。"],
+      ["什麼是前綴？每次更新都要重建嗎？","前綴是儲存Steam及Windows元件的執行環境資料夾。在1.3.1中，更新後的應用程式會於啟動Steam時自動更新既有環境。正常環境無需為一般更新而重建。"],
+      ["開啟影格生成一定會更快嗎？","效果取決於遊戲、裝置和顯示器。有些遊戲可能出現瓶頸或增加輸入延遲。請先在關閉狀態下確認執行情況，再進行比較。"],
+      ["遊戲打不開時，該先看哪裡？","在問題診斷查看最近的啟動紀錄與說明，並在相容性資料庫查找同一遊戲和ForgePlay版本的結果。分享支援套件前，請先檢查其中內容。"]
+    ]
+  },
+  "en": {
+    "nav":"Guide", "eyebrow":"MEET FORGEPLAY ON SCREEN", "title1":"From the first launch", "title2":"to your first game.",
+    "intro":"ForgePlay runs Windows Steam games and standalone .exe programs on Apple Silicon Mac. Steam games can use native macOS Game Mode integration.",
+    "walkthrough":"Quick start · Follow the screens", "instruction":"Select a number on the screenshot to open its explanation.", "captureLabel":"Actual app screen in your language", "captureNote":"Real SwiftUI screens from ForgePlay 1.3.1. Setup progress and selections may differ in your environment.",
+    "zoom":"View larger", "close":"Close", "previous":"Previous", "next":"Next screen", "flow1":"Open Steam in ForgePlay", "flow2":"Go to your Steam library", "flow3":"Launch your game",
+    "faqEyebrow":"A FEW THINGS TO KNOW", "faqTitle":"Let’s clear up the details.", "support":"Get support", "finishTitle":"Ready for your first game?", "finishBody":"Start with the standard Steam launch. Come back to this guide whenever you need it.",
+    "teaserTitle":"Opened the app. What next?", "teaserBody":"From setup to your first game. Follow the key controls on real app screens, one step at a time.", "teaserLink":"Explore the visual guide",
+    "chapters":[
+      {"name":"First-time setup", "title":"Prepare the environment for Steam.", "points":[
+        ["Open setup from the sidebar","Use the status button at the bottom of the sidebar to prepare the app for the first time or review required items."],
+        ["Follow the yellow current step","Prepare app data, the runtime, the Steam prefix, and Steam installation in order. Use the button shown for the current step."],
+        ["Check the completed items","Check completion marks and move to the next step. Sign in directly in the Windows version of Steam when it opens."]
+      ]},
+      {"name":"Launch Steam", "title":"Choose your graphics, then open Steam.", "points":[
+        ["Match the graphics backend to the game","Use D3DMetal - NVIDIA for 64-bit DX11/12, DXMT or DXVK for DX10/11, and WineD3D for 32-bit D3D9 as a starting point. Check the compatibility DB for game-specific results."],
+        ["Game Mode and frame generation","New configurations default to Game Mode on and Frame Generation (beta) off. Confirm normal operation first, then try frame generation when needed. Turn it off if it makes the game slower."],
+        ["Save the settings and launch","Save the configuration to reuse it next time. Click Launch Steam, then launch your game from the library in the Windows Steam window."]
+      ]},
+      {"name":"Per-game profiles", "title":"Use separate settings for a specific game.", "points":[
+        ["A separate compatibility launch","Steam Compatibility Launch (beta) is for designated game profiles. Its settings are saved separately from the standard Steam launch."],
+        ["Choose an available game profile","Select the game’s profile from the app’s list. The screenshot shows the HELLDIVERS 2 profile as an example."],
+        ["Connect the game’s install location","Use Select Root to connect the Steam installation location required by the profile. Once the required items are ready, save the settings and launch Steam here."]
+      ]}
+    ],
+    "faq":[
+      ["Do I launch games directly in ForgePlay?","The standard Steam launch opens Windows Steam first. Sign in, then install and launch games in the Steam library. A separate Windows executable can be selected under EXE Launch (beta)."],
+      ["What is a prefix? Do I recreate it after every update?","It is the runtime folder holding Steam and Windows components. In 1.3.1, the updated app refreshes the existing environment when you launch Steam. A working environment does not need to be recreated for a routine update."],
+      ["Does frame generation always make a game faster?","Results vary by game, hardware and display. Some games may develop bottlenecks or additional input latency. First check the game with the feature off, then compare."],
+      ["Where should I look if a game will not open?","Check recent launch records and guidance in Diagnostics, and look up results for the same game and ForgePlay version in the compatibility DB. Review the contents of a support bundle before sharing it."]
+    ]
+  }
+}

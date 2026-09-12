@@ -6,6 +6,20 @@ STATIC_SITE_VERIFIER="$ROOT_DIR/Scripts/verify-static-site.sh"
 BASE_URL="${FORGEPLAY_PAGES_BASE_URL:-https://facta-leopard.github.io/ForgePlay}"
 PAGES=(
   index.html
+  site-assets/guide.html
+  site-assets/guide.css
+  site-assets/guide.js
+  site-assets/guide-app.css
+  site-assets/guide-app.js
+  site-data/guide.json
+  site-data/guide-app-map.json
+  site-data/guide-ui.json
+  site-data/guide-demo.json
+  site-assets/guide/setup.jpg
+  site-assets/guide/steam.jpg
+  site-assets/guide/profiles.jpg
+  site-assets/guide/vision/ultrawide-1.jpg
+  site-assets/guide/vision/ultrawide-2.jpg
   why.html
   license.html
   privacy.html
@@ -87,6 +101,12 @@ PAGES=(
   LICENSES/LGPL-2.1-or-later.txt
 )
 DOWNLOAD_ROOT=""
+
+for locale in ko en de es fr ja zh-Hans zh-Hant; do
+  for view in general setup steam fg storage components profiles exe catalog dashboard diagnostics why sponsors apps input awdl prefix data about; do
+    PAGES+=("site-assets/guide/screens/$locale/$view.jpg")
+  done
+done
 
 fail() {
   printf 'error: invalid live static site: %s\n' "$*" >&2

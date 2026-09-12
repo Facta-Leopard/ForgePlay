@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <base href="../">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0e1013">
+  <title>ForgePlay — Visual guide</title>
+  <meta name="description" content="Get to know ForgePlay and follow its real app screens from setup to playing a Windows game on Mac.">
+  <link rel="icon" type="image/png" href="site-assets/forgeplay-favicon.png">
+  <script src="locale-bootstrap.js?v=20260729-14"></script>
+  <link rel="stylesheet" href="site.css?v=20260821-2">
+  <link rel="stylesheet" href="site-assets/site-shell.css?v=20260905-7">
+  <link rel="stylesheet" href="site-assets/guide.css?v=20260913-1">
+  <link rel="stylesheet" href="site-assets/guide-app.css?v=20260913-1">
+  <script src="site.js?v=20260908-2" defer></script>
+  <script src="site-assets/site-shell.js?v=20260905-2" defer></script>
+  <script src="site-assets/current-release.js?v=20260905-7" defer></script>
+  <script src="site-assets/website-compatibility.js?v=20260907-1" defer></script>
+  <script src="site-assets/guide.js?v=20260913-1" defer></script>
+  <script src="site-assets/guide-app.js?v=20260913-1" defer></script>
+</head>
+<body class="fp-site guide-page" data-page="guide">
+  <a class="skip-link" href="site-assets/guide.html#main" data-locale-link data-i18n="shared.skip">Skip to content</a>
+  <header class="fp-header">
+    <nav class="fp-nav fp-wrap" aria-label="Primary navigation" data-i18n-aria-label="shared.primaryNav">
+      <a class="fp-brand" href="index.html" data-locale-link><img src="site-assets/forgeplay-icon.png" width="36" height="36" alt=""><span>ForgePlay</span></a>
+      <div class="nav-links fp-links" id="fp-navigation">
+        <a href="index.html#game-mode" data-locale-link data-i18n="shared.navGameMode">Game Mode</a>
+        <a href="site-assets/guide.html" data-locale-link data-guide-text="nav" data-guide-nav>Guide</a>
+        <a href="compatibility.html" data-locale-link data-i18n="shared.navCompatibility">Compatibility</a>
+        <a href="updates.html" data-locale-link data-i18n="shared.navUpdates">Updates</a>
+        <a href="why.html" data-locale-link data-i18n="shared.navWhy">Why</a>
+        <a href="support.html" data-locale-link data-i18n="shared.navSupport">Support</a>
+      </div>
+      <div class="fp-nav-tools">
+        <label class="fp-language"><span class="visually-hidden" data-i18n="shared.language">Language</span><select data-language-select aria-label="Language"><option value="ko">한국어</option><option value="en">English</option><option value="de">Deutsch</option><option value="es">Español</option><option value="fr">Français</option><option value="ja">日本語</option><option value="zh-Hans">简体中文</option><option value="zh-Hant">繁體中文</option></select></label>
+        <button class="fp-menu" type="button" aria-expanded="false" aria-controls="fp-navigation" data-i18n-aria-label="refresh.menu" aria-label="Menu"><span></span><span></span></button>
+      </div>
+    </nav>
+  </header>
+  <main id="main" class="fp-wrap guide-main">
+    <header class="guide-hero">
+      <div>
+        <p class="fp-eyebrow" data-guide-text="eyebrow">THE VISUAL GUIDE</p>
+        <h1><span data-guide-text="title1">From the first launch</span><span data-guide-text="title2">to your first game.</span></h1>
+      </div>
+      <div class="guide-intro">
+        <p data-guide-text="intro">ForgePlay runs Windows Steam games on Apple Silicon Mac, with Wine, graphics translation, and native macOS Game Mode integration.</p>
+        <p class="guide-platform">Apple Silicon <span>·</span> macOS 26+</p>
+      </div>
+    </header>
+    <span id="app-awdl" aria-hidden="true"></span>
+    <section class="guide-app-experience" id="app" data-guide-app aria-label="ForgePlay interactive guide"></section>
+    <section class="guide-walkthrough" aria-labelledby="guide-walkthrough-title">
+      <div class="guide-section-label"><h2 id="guide-walkthrough-title" data-guide-text="walkthrough">Follow the app, one screen at a time.</h2><span>ForgePlay 1.3.1</span></div>
+      <div class="guide-tabs" role="tablist" data-guide-tabs aria-label="Guide chapters"></div>
+      <div class="guide-stage" id="guide-panel" role="tabpanel" tabindex="0">
+        <div class="guide-visual">
+          <div class="guide-image-shell">
+            <img id="guide-screen" src="site-assets/guide/setup.jpg" width="1020" height="752" alt="ForgePlay setup screen" fetchpriority="high">
+            <div class="guide-highlight" aria-hidden="true"></div>
+            <div class="guide-pins" data-guide-pins></div>
+          </div>
+          <div class="guide-image-footer"><span data-guide-text="captureLabel">Captured from the actual app · Korean UI</span><button type="button" class="guide-zoom" data-guide-zoom><span data-guide-text="zoom">View larger</span><span aria-hidden="true">↗</span></button></div>
+        </div>
+        <div class="guide-explanation">
+          <p class="guide-counter" aria-hidden="true"><span data-guide-count>01</span> / 03</p>
+          <h3 data-guide-chapter-title></h3>
+          <p class="guide-instruction" data-guide-text="instruction">Select a number on the screenshot to see what to do.</p>
+          <ol class="guide-point-list" data-guide-points></ol>
+          <div class="guide-step-nav"><button type="button" data-guide-prev><span aria-hidden="true">←</span><span data-guide-text="previous">Previous</span></button><button type="button" data-guide-next><span data-guide-text="next">Next screen</span><span aria-hidden="true">→</span></button></div>
+        </div>
+      </div>
+      <p class="guide-capture-note" data-guide-text="captureNote">Screenshots show an existing setup. Your progress and selections may differ.</p>
+      <p class="guide-error" data-guide-error role="alert" hidden></p>
+    </section>
+    <section class="guide-flow">
+      <span data-guide-text="flow1">Open Steam in ForgePlay</span><span aria-hidden="true">→</span><span data-guide-text="flow2">Open your Steam library</span><span aria-hidden="true">→</span><strong data-guide-text="flow3">Launch your game</strong>
+    </section>
+    <section class="guide-vision" id="vision" data-vision-experience>
+      <div class="guide-vision-heading"><div><p class="fp-eyebrow">VISION PRO · MAC VIRTUAL DISPLAY</p><h2 data-demo-text="visionTitle">Ultrawide play that fills your view.</h2></div><div><p data-demo-text="visionBody">Real gameplay through Mac Virtual Display on Vision Pro.</p><p class="guide-vision-warning" data-demo-text="visionWarning">Keep AWDL on while using Mac Virtual Display.</p></div></div>
+      <div class="guide-vision-media"><img src="site-assets/guide/vision/ultrawide-1.jpg" width="1280" height="720" loading="lazy" alt="Vision Pro ultrawide gameplay" data-vision-photo><img src="site-assets/guide/vision/ultrawide-2.jpg" width="1280" height="720" loading="lazy" alt="Vision Pro ultrawide gameplay" data-vision-photo></div>
+      <div class="guide-vision-footer"><p data-demo-text="visionCredit">User-provided gameplay photos.</p><a class="fp-text-link" href="site-assets/guide.html#app-awdl" data-locale-link data-demo-text="visionLink">Explore AWDL settings</a></div>
+    </section>
+    <section class="guide-faq" aria-labelledby="guide-faq-title">
+      <div class="guide-faq-heading"><p class="fp-eyebrow" data-guide-text="faqEyebrow">GOOD TO KNOW</p><h2 id="guide-faq-title" data-guide-text="faqTitle">A few things<br>worth knowing.</h2><a class="fp-text-link" href="support.html" data-locale-link><span data-guide-text="support">More help</span> ↗</a></div>
+      <div data-guide-faq></div>
+    </section>
+    <section class="guide-finish">
+      <div><p class="fp-eyebrow" data-current-release-label>CURRENT RELEASE</p><h2 data-guide-text="finishTitle">Ready for your first game?</h2><p data-guide-text="finishBody">Start with the standard Steam launch. Keep the guide nearby when you need it.</p></div>
+      <a class="guide-download" href="https://github.com/Facta-Leopard/ForgePlay/releases/latest" data-current-release-download><span data-current-release-download-label>Download ForgePlay</span><span aria-hidden="true">↗</span></a>
+    </section>
+  </main>
+  <footer class="fp-footer fp-wrap"><div class="fp-footer-top"><a class="fp-brand" href="index.html" data-locale-link>ForgePlay</a><div class="fp-footer-links"><a href="compatibility.html" data-locale-link data-i18n="shared.navCompatibility">Compatibility</a><a href="updates.html" data-locale-link data-i18n="shared.navUpdates">Updates</a><a href="license.html" data-locale-link data-i18n="shared.navLicense">License</a><a href="support.html" data-locale-link data-i18n="shared.navSupport">Support</a></div></div><p data-i18n="shared.footerNote">Apple, macOS, Steam, Windows and Wine belong to their respective owners.</p></footer>
+  <dialog class="guide-lightbox" data-guide-dialog aria-labelledby="guide-dialog-title">
+    <div class="guide-lightbox-bar"><strong id="guide-dialog-title" data-guide-dialog-title></strong><button type="button" data-guide-close><span data-guide-text="close">Close</span> <span aria-hidden="true">×</span></button></div>
+    <img data-guide-dialog-image src="site-assets/guide/setup.jpg" width="1020" height="752" alt="ForgePlay setup screen">
+  </dialog>
+</body>
+</html>
