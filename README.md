@@ -1,505 +1,173 @@
-# ForgePlay Source — 한국어
+# ForgePlay
 
-[English](#forgeplay-source--english) | [한국어 별도 문서](README_KO.md) | [English standalone](README_EN.md) | [Release v1.0.0](https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0)
+[![Copyright](.github/assets/readme-copyright.svg)](https://github.com/Facta-Leopard)
+[![Native Game Mode and Frame Generation license](.github/assets/readme-native-gpl.svg)](https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.3.0)
+[![Source distribution](.github/assets/readme-source-archives.svg)](https://github.com/Facta-Leopard/ForgePlay/releases)
 
-## 공개 경로 / Published paths
+[한국어](#한국어) · [English](#english)
 
-- 공개 소스(`main`) / current source: [repository tree](https://github.com/Facta-Leopard/ForgePlay/tree/main)
-- `v1.0.0` 소스 스냅샷 / source snapshot: [tagged source](https://github.com/Facta-Leopard/ForgePlay/tree/v1.0.0)
-- 정식 릴리스 / release: [ForgePlay 1.0 (build 1)](https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0)
-- Apple 공증 DMG / notarized DMG: [ForgePlay-1.0-1.dmg](https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.0.0/ForgePlay-1.0-1.dmg)
-- 검증 자료 / verification: [SHA-256](https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.0.0/ForgePlay-1.0-1.dmg.sha256) · [공증·서명 증빙 JSON](https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.0.0/ForgePlay-1.0-1.dmg.release.json)
+[최신 버전 다운로드 / Download](https://github.com/Facta-Leopard/ForgePlay/releases/latest) · [홈페이지 / Website](https://facta-leopard.github.io/ForgePlay/) · [문제 제보 / Issues](https://github.com/Facta-Leopard/ForgePlay/issues)
 
-`main`에는 기존 GitHub Pages 홈페이지 파일과 공개 소스가 함께 있다. DMG와
-공증 증빙은 소스 트리에 커밋하지 않고 GitHub Releases에서 별도로 배포한다.
+## 한국어
 
-The `main` branch keeps the existing GitHub Pages files alongside the published
-source. The DMG and notarization evidence remain release assets rather than
-committed source files.
+**macOS에서 Windows 게임을 실행하고 즐기는 경험을 개선합니다.**
 
-## 먼저 밝히는 입장
+ForgePlay는 Wine을 기반으로 Windows 게임 실행 환경을 관리하는 macOS 앱입니다. 게임 실행뿐 아니라 프레임 생성, 네트워크 관련 제어, 단축키와 입력 설정까지 사용자가 직접 조정할 수 있도록 설계했습니다.
 
-CodeWeavers가 Wine 생태계에 기여한 사실과 그 공로는 존중받아야 한다.
-그러나 그 기여가 Wine의 공개 소스, macOS의 공개 동작, 또는 Windows
-게임 호환 계층을 설계할 권리에 대한 독점권을 뜻하지는 않는다.
+### ForgePlay를 만든 이유
 
-ForgePlay가 출발한 문제의식은 단순하다. macOS에서 Windows 게임을
-실행하는 상용 제품군에는 오랫동안 CrossOver와 실질적으로 견줄 만한
-경쟁자가 거의 없었다. 경쟁이 부족하면 다른 구조가 가능한지 검증할
-압력도 약해진다. ForgePlay는 “CrossOver와 다른 구현 경로도 실제로
-동작할 수 있다”는 주장을 말이 아니라 공개된 소스와 재현 가능한
-구조로 입증하기 위해 만들었다.
+Wine 생태계에 대한 CodeWeavers의 기여와 공로를 존중합니다. 다만 그 기여가 Wine의 공개 소스나 Windows 게임 호환 계층을 설계할 권리를 독점한다는 뜻은 아닙니다. **과거의 기여와 현재의 사용자 경험에 대한 요구는 별개입니다.**
 
-같은 문제를 해결한다는 사실만으로 한 제품이 다른 제품의 복제품이
-되지는 않는다. 판단할 것은 이름이나 인상이 아니라 실제 출처,
-코드의 경계, 빌드 구조, 포함된 구성요소와 각 라이선스다. 그래서
-ForgePlay는 핵심 구현을 비공개로 감추지 않고 이 소스 트리로 공개한다.
-누구든 코드를 읽고, 비교하고, 포크하고, 주장에 반박할 수 있다.
+ForgePlay는 macOS에서 Windows 게임을 즐길 때, CrossOver와 실질적으로 비교하고 선택할 수 있는 대안이 부족하다는 문제의식에서 출발했습니다. 선택지가 적으면 기존 방식을 돌아보거나 다른 구조의 가능성을 검증할 기회도 줄어듭니다. 이미 자리 잡은 제품이 있다는 이유로 새로운 시도가 멈춰서는 안 된다고 생각했습니다.
 
-## ForgePlay가 아닌 것
+그래서 **“CrossOver와 다른 구현 경로도 실제로 동작할 수 있다”는 것을 직접 보여주기 위해 ForgePlay를 만들었습니다.** 실제로 사용할 수 있는 앱과 라이선스에 따라 공개하는 소스를 통해, 그 가능성을 누구나 확인할 수 있도록 하고자 합니다.
 
-- 설치된 CrossOver를 실행하거나 감싸는 프런트엔드가 아니다.
-- CrossOver의 bottle 디렉터리, 제품 번들, 실행 파일 또는 비공개
-  패치에 의존하는 구조가 아니다.
-- CodeWeavers의 비공개 구현을 ForgePlay의 독자 코드라고 주장하지
-  않는다.
-- Wine, D3DMetal 또는 제3자 구성요소의 권리까지 ForgePlay가
-  소유한다고 주장하지 않는다.
+같은 문제를 해결한다는 사실만으로 한 제품이 다른 제품의 복제품이 되지는 않습니다. 판단의 기준은 이름이나 인상이 아니라 코드의 출처, 구현의 경계, 빌드 구조, 배포하는 구성요소와 각각의 라이선스입니다. 공개 대상 구현은 릴리스에 첨부한 소스 압축파일로 제공합니다. 누구나 해당 코드를 읽고 비교하며, 설명과 실제 구현이 일치하는지 확인할 수 있습니다.
 
-ForgePlay는 Wine을 기반으로 한다. 사용한 Wine 소스와 패치는
-버전·해시·출처와 함께 공개한다. D3DMetal은 별도 제3자 구성요소이며
-이 소스 배포본에 바이너리로 포함되지 않는다. 공개 소스와 별도
-라이선스 구성요소를 함께 배포하는 것, 그리고 그 결과물을 유료로
-판매하는 것은 서로 모순되지 않는다. CrossOver의 판매 방식 자체가
-다른 구현에 대한 독점 권원을 증명하지도 않는다. 각 프로젝트는
-자신이 실제로 배포하는 구성요소와 그 조건으로 평가되어야 한다.
+ForgePlay가 지향하는 차이는 게임을 실행시키는 데서 끝나지 않습니다. “이미 실행되니 충분하다”는 기준에 머물지 않고, 사용 중 겪는 불편과 추가로 필요한 기능을 제품에 반영하는 것이 목표입니다.
 
-## Steam 연동은 실제로 어떻게 동작하는가
+프레임 생성, AWDL 제어, 게임용 단축키 설정은 실제 사용 과정에서 직접 구상하고 구현한 기능입니다. Wine과 macOS의 기반 기술 위에 ForgePlay만의 설계와 제어 기능을 더했습니다. 독자적으로 더한 기능의 가치는 실제 구현과 사용자 피드백으로 보여드리고자 합니다.
 
-정확히 말하면 ForgePlay는 Steamworks SDK를 링크하거나
-`steam_api.dll`/`steam_api64.dll`을 후킹하는 방식이 아니다. 또한
-비공개 Steam API를 가장하지 않는다. ForgePlay가 사용하는 것은
-Steam의 로컬 설치 메타데이터, 실제 Steam 클라이언트, 그리고 Steam이
-만드는 정상적인 프로세스 계보다.
+### ForgePlay가 아닌 것
 
-1. `SteamLibraryScanner.swift`가 Steam의 `libraryfolders.vdf`와
-   `appmanifest_*.acf`를 읽어 설치된 라이브러리와 게임 메타데이터를
-   찾는다.
-2. ForgePlay가 관리하는 Wine prefix에서 실제 `steam.exe`를 실행한다.
-   ForgePlay가 게임 실행 파일을 Steam인 것처럼 대신 실행하지 않는다.
-3. Steam이 Windows 쪽의 정식 부모 프로세스로 남아 게임 또는
-   런처 자식을 생성한다.
-4. ForgePlay의 Wine 패치는 프로세스 생성 경계에서 선택된 렌더러
-   정책과 Steam 게임 계보를 자식에게 전달한다.
-5. Game Mode 대상 여부는 명령행, 게임 제목, 계정명, 볼륨명 또는
-   Steam App ID를 신뢰해서 정하지 않는다. Wine이 해석한
-   `RTL_USER_PROCESS_PARAMETERS.ImagePathName`을 Unix 쪽에서 검사한다.
-6. 경로 구성요소가 `steamapps/common` 아래에 있는 실제 실행 파일만
-   대상으로 인정한다. `_CommonRedist`와 그 밖의 인프라 프로세스는
-   제외한다. 런처가 나중에 장시간 실행될 진짜 게임 자식을 만들면
-   그 자식도 독립적으로 다시 판정한다.
+- 설치된 CrossOver를 실행하거나 감싸는 프런트엔드가 아닙니다.
+- CrossOver의 bottle 디렉터리, 제품 번들, 실행 파일 또는 비공개 패치에 의존하는 구조가 아닙니다.
+- CodeWeavers의 비공개 구현을 ForgePlay가 작성한 코드라고 주장하지 않습니다.
+- Wine, D3DMetal 또는 제3자 구성요소의 권리까지 ForgePlay가 소유한다고 주장하지 않습니다.
 
-이 방식에서 Steam은 로그인, 업데이트, 소유권 확인, 게임 선택과
-자식 프로세스 생성을 계속 담당한다. ForgePlay는 그 정상 실행
-계보를 보존하면서 Wine 내부의 프로세스 경계에서 호환성 정책만
-적용한다.
+ForgePlay는 Wine을 기반으로 합니다. Wine의 공개 코드를 해당 라이선스에 따라 사용·수정하는 것과 CrossOver의 비공개 구현을 복제하는 것은 서로 다른 일입니다. Game Mode 호스트에도 Wine에서 유래한 부분이 있으며, 이를 전부 새로 작성한 Wine 로더라고 주장하지 않습니다. 해당 부분의 출처와 저작권, 라이선스 경계는 공개 소스에 포함된 고지에 명시합니다.
 
-## 렌더러 선택과 Game Mode는 분리되어 있다
+### ForgePlay가 추가로 구현한 기능
 
-Steam 세션을 시작하기 전에 사용자는 D3DMetal, DXMT, D9VK, DXVK 중
-정확히 하나를 선택한다. Steam 클라이언트와 Steam WebHelper는 기본
-Wine 렌더러 경로에 남고, 선택된 렌더러는 `steamapps/common`에 속한
-게임 자식에만 적용된다. 선택이 없거나 잘못되면 다른 렌더러로
-조용히 대체하지 않고 실행을 거부한다.
+| 기능 | ForgePlay의 설계와 구현 |
+| --- | --- |
+| Game Mode 연동 | Wine 게임 프로세스가 macOS Game Mode의 대상이 될 수 있도록 네이티브 호스트와 실행 경로를 구성합니다. 실제 활성화는 macOS가 판단합니다. |
+| Frame Generation · Frame Check | Metal 기반의 자체 프레임 생성 파이프라인과 원본·생성·표시 FPS 확인 기능을 제공합니다. 현재 프레임 생성은 베타 기능입니다. |
+| AWDL 제어 | AWDL 상태 확인과 켜기·끄기 제어를 앱에 통합해 사용자가 게임 환경에 맞게 선택할 수 있도록 합니다. |
+| 단축키 설정 · 입력 보호 | 보조키 매핑과 macOS 단축키 차단 설정을 통해 게임 조작과 시스템 동작 사이의 충돌을 줄일 수 있도록 합니다. |
 
-렌더러 선택과 Game Mode 대상 판정은 독립적이다. D3DMetal을
-선택했다고 Game Mode가 자동으로 켜지는 것도 아니고, Game Mode를
-선택했다고 렌더러가 바뀌는 것도 아니다.
+이 기능들은 ForgePlay의 추가 구현을 설명합니다. Wine, Apple의 기반 기술, 제3자 렌더러 자체에 대한 소유권을 주장하는 것은 아닙니다.
 
-## Game Mode 구현
+### Wine 라이선스에 따른 소스 공개
 
-일반 Steam 세션은 표준 Wine loader를 사용한다. Game Mode 경로는
-사용자가 명시적으로 선택하는 beta 기능이다.
+**ForgePlay는 Wine의 오픈소스 라이선스에 따른 배포 의무를 준수하기 위해, 배포물에 대응하는 Wine 소스와 수정 패치, 필요한 빌드 자료 및 라이선스·저작권 고지를 공개합니다.** 이 자료는 참고용 코드가 아니라, 실제 배포한 Wine 구성요소에 대응하는 소스입니다.
 
-```mermaid
-flowchart LR
-    A["ForgePlay (arm64)"] --> B["Wine에서 steam.exe 실행"]
-    B --> C["Steam이 Windows 자식 생성"]
-    C --> D{"Wine이 해석한 ImagePathName이<br/>steamapps/common 아래인가?"}
-    D -- "아니오 또는 Game Mode 미선택" --> E["표준 Wine loader"]
-    D -- "예 + Game Mode 선택" --> F["고정 서명된 GameModeProcessHost.app (x86_64)"]
-    F --> G["Runtime·서명·sandbox·prefix lease 검증"]
-    G --> H["같은 PID에서 정확한 ntdll.so와 __wine_main 진입"]
-    H --> I["macOS가 Game Mode 활성화 여부 판단"]
-```
+Wine 원본의 기본 라이선스는 [GNU LGPL 2.1 이상(`LGPL-2.1-or-later`)](https://github.com/wine-mirror/wine/blob/master/LICENSE)입니다. ForgePlay의 네이티브 Game Mode·프레임 생성에는 별도의 `GPL-3.0-only` 범위를 명시하며, Game Mode의 Wine 유래 코드와 지정 변경본에 적용되는 GPL 조건도 함께 고지합니다. 구성요소별 적용 범위는 해당 소스 압축본의 라이선스 원문과 고지를 따릅니다.
 
-구현 흐름은 다음과 같다.
+#### 공개 소스는 어디에서 받나요?
 
-1. ForgePlay 본체가 고정된 host bundle과 정확한 runtime identity를
-   먼저 검사한다.
-2. Steam이 만든 대상 자식이 PE mapping을 시작하기 전에, Wine loader가
-   그 프로세스를 앱 내부의 고정 경로
-   `Contents/Helpers/GameModeProcessHost.app`으로 `exec`한다.
-3. 이 전환은 새 게임별 앱을 생성하지 않는다. 기존 Darwin PID,
-   `argv`, 현재 디렉터리, 상속 handle과 Wine server 문맥을 유지한다.
-4. `GameModeProcessHost`는 ForgePlay 본체와 별도로 빌드되는 고정
-   `x86_64` Mach-O application target이다. Apple Silicon에서는
-   Rosetta를 통해 실행된다.
-5. host는 자신의 bundle identity, 코드·runtime identity, app-group
-   sandbox 경계, 고정 IPC/evidence 경로, Wine loader 경로와 해시,
-   prefix execution lease를 다시 검증한다.
-6. 검증이 끝나면 정확히 번들된 `x86_64-unix/ntdll.so`를 열고 같은
-   PID에서 `__wine_main`으로 진입한다.
-7. host 또는 필수 계약 검증이 실패하면 일반 Wine 경로로 몰래
-   fallback하지 않고 해당 자식을 실패시킨다.
-8. host는 `LSSupportsGameMode=true`와 games category를 선언한다.
-   실제 Game Mode 활성화 여부는 ForgePlay가 강제로 결정하는 것이
-   아니라 macOS가 실행 문맥을 보고 판단한다.
+**공개 대상 소스는 [GitHub Releases](https://github.com/Facta-Leopard/ForgePlay/releases)에 별도 압축파일로 제공합니다.** 특정 버전의 소스를 확인·수정하거나 재구축하려면, 해당 릴리스에 직접 첨부한 소스 아카이브와 라이선스 고지를 참고해 주세요.
 
-따라서 “독자 바이너리”라는 표현은 정확히 다음을 뜻한다.
-`GameModeProcessHost`는 ForgePlay 프로젝트가 별도 target으로
-컴파일·서명하는 고정 Mach-O 실행 파일이다. CrossOver의 host
-바이너리를 실행하거나 이름만 바꾼 것이 아니다. 다만 그 바이너리가
-Wine과 무관한 완전 신규 loader라는 뜻은 아니다.
+- 공개 대상인 네이티브 코드, Wine 원본 소스와 패치, 해당 제3자 소스를 제공합니다.
+- 바이너리 배포에 필요한 필수 빌드 소스와 재링크 자료를 함께 제공합니다.
+- Swift 앱 래퍼, 개인 키·계정 정보, 내부 개발·검토 문서는 공개 대상에 포함하지 않습니다.
+- 공개 대상 소스가 바뀌지 않은 유지보수 릴리스는 기존 공개 아카이브를 그대로 사용합니다. 같은 파일을 매번 중복 첨부하지 않습니다.
 
-## 클린룸 구현과 Wine 유래 부분의 정확한 경계
+현재 공개 소스 기준은 [1.3 소스 배포](https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.3.0)입니다. 1.3.1은 해당 네이티브·Wine 코드를 변경하지 않아 같은 소스를 사용합니다.
 
-ForgePlay는 강한 주장을 하되 출처를 흐리지 않는다.
+[네이티브·Wine 코드](https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.3.0/ForgePlay-1.3-Native-Wine-Code.tar.gz) · [제3자 소스](https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.3.0/ForgePlay-1.3-ThirdParty-Code.tar.gz) · [필수 빌드 소스](https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.3.0/ForgePlay-1.3-Build-Sources.tar.gz)
 
-| 영역 | 구현 및 출처 | ForgePlay의 주장 |
-| --- | --- | --- |
-| Steam 탐색·세션 오케스트레이션 | ForgePlay 소스. VDF/ACF 메타데이터와 실제 Steam 실행 경로 사용 | 독자 구현 |
-| Game Mode control plane | 공개된 macOS 동작과 프로젝트가 정의한 실행 계약을 바탕으로 작성한 target 판정, 고정 host routing, identity·sandbox·lease 검증, evidence 및 lifecycle | CrossOver 비공개 코드에 의존하지 않은 클린룸 오케스트레이션 |
-| `GameModeProcessHost` 산출물 | `project.yml`의 별도 application target으로 빌드되는 고정 `x86_64` Mach-O | 독자적으로 구축·서명되는 바이너리 target |
-| 같은 PID의 Wine 진입부 | Wine 11.12 `loader/main.c`에서 유래한 주소 예약, `wine_main_preload_info`, `ntdll.so` 로딩과 `__wine_main` 호출 | 클린룸이라고 주장하지 않으며 Wine 유래를 명시·귀속 |
-| D3DMetal bridge | 공개된 Apple 인터페이스와 관찰 가능한 ABI 계약을 바탕으로 작성한 ForgePlay Wine patch | 공개 경계에 대한 독자 adapter이며 D3DMetal 자체의 소유권 주장이 아님 |
-| D3DMetal payload | Apple 조건이 적용되는 별도 제3자 바이너리 | 이 소스 트리에 포함하지 않으며 재라이선스하지 않음 |
+이 저장소의 기본 브랜치는 버전별 배포 소스의 기준이 아닙니다. GitHub가 자동 표시하는 `Source code (zip/tar.gz)`도 태그 스냅샷이므로, 배포 소스를 확인할 때에는 위의 직접 첨부된 아카이브를 사용해 주세요.
 
-특히 `GameModeProcessHost.m`의 낮은 수준 Wine loader 진입부는
-Wine 11.12에서 유래했다. 이 부분을 숨기거나 “100% 클린룸 Wine
-loader”라고 부르지 않는다. 상세한 유래, 원본 해시와 라이선스
-처리는 `Native/GameModeProcessHost/SOURCE-CONTRACT.md`에 기록되어
-있다. 반대로 target 판정, 고정 host 계약, runtime identity,
-app-group 경계, prefix lease, fail-closed 정책과 evidence 체계는
-ForgePlay가 작성한 Game Mode 오케스트레이션이다.
+공개 소스의 복사·수정·재배포 권리는 각 구성요소의 라이선스에 따릅니다. 압축파일로 제공하는 방식이 이러한 권리를 제한하지는 않습니다.
 
-이 구분이 중요한 이유는 간단하다. Wine 공개 코드를 적법한 조건으로
-수정해 쓰는 것과 CrossOver의 비공개 구현을 복제하는 것은 같은 말이
-아니다. ForgePlay는 전자를 공개적으로 밝히며, 후자를 했다고
-주장하지 않는다.
+### 저작권과 라이선스
 
-## 소스로 직접 확인할 위치
+ForgePlay가 작성한 코드의 저작자: **[Facta-Leopard](https://github.com/Facta-Leopard)**<br>
+**Copyright © 2026 Facta-Leopard**
 
-- Steam 설치 탐색:
-  `Sources/ForgePlay/Services/SteamLibraryScanner.swift`
-- Steam 실행 환경과 host preflight:
-  `Sources/ForgePlay/Services/SafeProcessRunner.swift`
-- Game Mode 직접 대상 판정:
-  `Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-game-mode-direct-target-scope.patch`
-- 고정 process host routing:
-  `Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-game-mode-process-host-routing.patch`
-- 별도 host target:
-  `project.yml`
-- host 구현 계약:
-  `Native/GameModeProcessHost/README.md`
-- Wine 유래 코드의 정확한 범위:
-  `Native/GameModeProcessHost/SOURCE-CONTRACT.md`
-- Wine 11.12 원본 URL, 해시, patch 및 재구축 정보:
-  `Resources/Runners/ForgePlayRuntime/SOURCE-AVAILABILITY.md`
-- patch provenance lock:
-  `Config/ForgePlayRuntimePatchProvenance.lock.json`
+- **네이티브 Game Mode·프레임 생성 구현:** `GPL-3.0-only`. 정확한 범위와 추가 고지는 소스 압축본의 `LICENSE.txt`와 관련 고지에 명시합니다.
+- **Swift 앱 래퍼:** 저작자 소유 코드에 대한 별도 배포 허용을 적용합니다. 상단 GPL 배지는 앱 전체를 일괄 GPL로 지정하는 표시가 아닙니다.
+- **Wine 및 Wine 유래 코드:** 해당 LGPL/GPL 조건에 따라 소스와 필수 빌드 자료를 제공하고, Wine 저작자의 저작권과 출처 고지를 보존합니다. Swift 래퍼의 별도 배포 허용은 이 의무를 면제하지 않습니다.
+- **MoltenVK·DXVK·폰트·Apple 구성요소 등:** 각각의 라이선스와 원래 저작권 고지를 보존합니다. ForgePlay의 표시는 제3자 권리를 대체하지 않습니다.
 
-주장은 위 파일들로 검증할 수 있다. 코드와 맞지 않는 설명이 있다면
-문서의 권위가 아니라 코드·해시·빌드 결과를 기준으로 지적하면 된다.
+실제 적용 조건은 해당 배포본의 라이선스 원문과 구성요소별 고지를 기준으로 합니다.
 
-## 이 공개본에 포함되는 것과 제외되는 것
+### 실행 결과를 알려주세요
 
-포함되는 항목:
+**잘 되는 게임과 실행되지 않는 게임 모두 도움이 됩니다.**
 
-- ForgePlay Swift 및 Objective-C 소스
-- Game Mode process host의 소스와 build contract
-- Game Mode unit/routing test
-- ForgePlay가 작성한 Wine patch와 Windows launcher 소스
-- XcodeGen project specification과 비개인 build setting
-- 라이선스 원문, scope 기록, localized notice
-- runtime provenance와 재구축 도구
-
-의도적으로 제외되는 항목:
-
-- `ForgePlay.app`, DMG, archive, notarization 자료
-- 빌드된 Wine, D3DMetal, renderer, GStreamer, SDL 및 기타 바이너리
-- 개인 Xcode 설정, signing team override, 인증서, 개인키와 credential
-- 내부 계획 문서, QA evidence, 배포 세션 자료
-
-`Resources/CompatibilityDBPublicKey.base64`는 선택적 compatibility DB
-업데이트를 검증하는 공개키이며 개인 서명키가 아니다.
-
-## Xcode project 생성
-
-XcodeGen을 설치한 뒤 저장소 루트에서 다음을 실행한다.
-
-```sh
-Scripts/generate-xcode-project.sh
-```
-
-서명 없는 source-only build 확인:
-
-```sh
-xcodebuild build \
-  -project ForgePlay.xcodeproj \
-  -scheme ForgePlay \
-  -configuration Release \
-  -destination 'platform=macOS' \
-  CODE_SIGNING_ALLOWED=NO
-```
-
-이 source-only export에는 Windows compatibility runtime 바이너리가
-없으므로 이것만으로 Windows 게임을 실행할 수는 없다. runtime
-재구축 정보는 `Resources/Runners/ForgePlayRuntime/`에, 관련 도구는
-`Scripts/`에 있다.
-
-## 라이선스
-
-ForgePlay는 여러 라이선스가 적용되는 프로젝트다. 복사·수정·배포
-전에 `LICENSE.md`를 읽어야 한다. `SOURCE-LICENSES.md`는 파일별 SPDX,
-혼합 파일의 symbol scope, 두 Game Mode Wine patch의 `.license`
-sidecar가 권위 있는 정책과 어떻게 연결되는지 설명한다.
-
-ForgePlay Game Mode의 정확한 GPL-3.0-only 범위는
-`LICENSES/ForgePlayGameMode/GAME_MODE_LICENSE_SCOPE.md`에 기록되어
-있다. 수정되지 않은 GPL/LGPL 원문은 `LICENSES/`에 포함되어 있다.
-디렉터리 이름만으로 모든 파일이 하나의 라이선스로 일괄 변경됐다고
-추정해서는 안 된다. 제3자 구성요소는 각각의 조건을 그대로 따른다.
+[GitHub Issues](https://github.com/Facta-Leopard/ForgePlay/issues)에 ForgePlay 버전, Mac 사양, 게임명, 그래픽 백엔드와 FG 사용 여부를 함께 알려주세요. 실제 사용 환경에서 보내주시는 피드백을 바탕으로 호환성과 사용성을 개선하겠습니다.
 
 ---
 
-ForgePlay Game Mode  
-Copyright (C) 2026 Facta-Leopard  
-Original source: https://github.com/Facta-Leopard/ForgePlay
+## English
 
+**A better Windows gaming experience on macOS—from launching to playing.**
 
-# ForgePlay Source — English
+ForgePlay is a macOS app that manages Windows gaming environments built on Wine. It gives users control over game launching, frame generation, network-related settings, keyboard shortcuts, and input behavior.
 
-[한국어](#forgeplay-source--한국어) | [Korean standalone](README_KO.md) | [English standalone](README_EN.md) | [Release v1.0.0](https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0)
+### Why ForgePlay was created
 
-## The position, stated plainly
+We respect CodeWeavers' contributions to the Wine ecosystem. Those contributions do not confer exclusive ownership of Wine's public source or an exclusive right to design a Windows-game compatibility layer. **Past contributions and present-day user expectations are separate matters.**
 
-CodeWeavers' contributions to the Wine ecosystem are real and deserve credit.
-Those contributions do not create exclusive ownership of Wine's public source,
-public macOS behavior, or the right to design a Windows-game compatibility
-layer.
+ForgePlay began with a concern that macOS users had too few alternatives they could meaningfully compare with CrossOver for Windows gaming. Limited choice also means fewer opportunities to question established approaches or test a different architecture. The existence of an established product should not be a reason to stop exploring alternatives.
 
-ForgePlay started from a simple premise. For a long time, CrossOver had very
-few like-for-like competitors in the macOS Windows-gaming market. When there
-is little competition, there is also less pressure to test whether a different
-architecture is possible. ForgePlay was built to demonstrate, in inspectable
-source rather than rhetoric, that an implementation path distinct from
-CrossOver can work.
+**ForgePlay was created to demonstrate that an implementation path different from CrossOver can actually work.** A working app and source published under the applicable licenses allow others to see that possibility for themselves.
 
-Solving the same problem does not by itself make one product a copy of another.
-The relevant evidence is provenance, code boundaries, build structure, shipped
-components, and the license attached to each component. That is why ForgePlay
-is publishing the implementation instead of hiding it. Anyone can inspect,
-compare, fork, or challenge the claims against the code.
+Solving the same problem does not by itself make one product a copy of another. What matters is code provenance, implementation boundaries, build structure, shipped components, and their respective licenses—not names or impressions. The published implementation is available in source archives attached to releases. Anyone can inspect and compare that code and check the descriptions against the implementation.
 
-## What ForgePlay is not
+ForgePlay's goals extend beyond getting a game to launch. It aims to address practical frustrations and add useful features, rather than treating “the game already launches” as the finish line.
+
+Frame generation, AWDL controls, and game-oriented shortcut settings were conceived and implemented in response to needs encountered during actual use. ForgePlay adds its own design and controls on top of Wine and macOS technologies. We aim to demonstrate the value of these additions through the implementation and user feedback.
+
+### What ForgePlay is not
 
 - It is not a front end that launches or wraps an installed copy of CrossOver.
-- It does not depend on CrossOver bottle directories, product bundles,
-  executables, or private patches.
-- It does not present CodeWeavers' private implementation as ForgePlay-authored
-  code.
-- It does not claim ownership of Wine, D3DMetal, or other third-party
-  components.
+- It does not depend on CrossOver bottle directories, product bundles, executables, or private patches.
+- It does not present CodeWeavers' private implementation as ForgePlay-authored code.
+- It does not claim ownership of Wine, D3DMetal, or other third-party components.
 
-ForgePlay is based on Wine. The exact Wine source and ForgePlay patch set are
-published with versions, hashes, and provenance. D3DMetal is a separately
-licensed third-party component and its binary is not included in this source
-export. Bundling open-source and separately licensed components—and selling
-the resulting product—is not inherently contradictory. CrossOver's commercial
-distribution model does not establish exclusive authority over another
-implementation. Each project must be evaluated by what it actually ships,
-where those components came from, and the terms that govern them.
+ForgePlay is based on Wine. Using and modifying Wine's public source under its license is different from copying a private CrossOver implementation. The Game Mode host also contains Wine-derived material; we do not present it as a Wine loader written entirely from scratch. Notices in the published source identify that material's provenance, copyrights, and license boundaries.
 
-## How the Steam integration actually works
+### Features implemented in ForgePlay
 
-Precisely stated, ForgePlay does not link the Steamworks SDK and does not hook
-`steam_api.dll` or `steam_api64.dll`. It does not pretend to use a private
-Steam API. It uses Steam's local installation metadata, the real Steam client,
-and the normal process lineage created by Steam.
+| Feature | ForgePlay's design and implementation |
+| --- | --- |
+| Game Mode integration | A native host and launch path allow Wine game processes to be considered for macOS Game Mode. macOS determines whether it activates. |
+| Frame Generation · Frame Check | ForgePlay's own Metal-based frame-generation pipeline, with original, generated, and displayed FPS reporting. Frame generation is currently a beta feature. |
+| AWDL controls | Built-in status checks and on/off controls let users choose a setting that suits their gaming environment. |
+| Shortcut settings · Input protection | Modifier-key mapping and configurable macOS shortcut blocking help reduce conflicts between game controls and system actions. |
 
-1. `SteamLibraryScanner.swift` reads `libraryfolders.vdf` and
-   `appmanifest_*.acf` to discover installed libraries and game metadata.
-2. ForgePlay launches the real `steam.exe` inside its managed Wine prefix. It
-   does not impersonate Steam by directly substituting a game executable.
-3. Steam remains the canonical Windows parent and creates the game or launcher
-   child.
-4. ForgePlay's Wine patches carry the selected renderer policy and Steam-game
-   lineage across the process-creation boundary.
-5. Game Mode eligibility does not trust a command line, game title, account
-   name, volume name, or Steam App ID. It is derived on the Unix side from
-   Wine's resolved `RTL_USER_PROCESS_PARAMETERS.ImagePathName`.
-6. Only an actual executable structurally located below
-   `steamapps/common` is eligible. `_CommonRedist` and other infrastructure
-   processes are excluded. If a launcher later creates the long-lived game
-   process, that child is evaluated independently.
+These describe ForgePlay's added implementation. They do not claim ownership of Wine, Apple's underlying technologies, or third-party renderers.
 
-Steam therefore continues to own login, updates, entitlement checks, game
-selection, and child-process creation. ForgePlay preserves that normal launch
-lineage and applies compatibility policy at Wine's process boundary.
+### Source publication under Wine's license
 
-## Renderer selection is separate from Game Mode
+**To comply with the distribution obligations of Wine's open-source license, ForgePlay publishes the corresponding Wine source, modification patches, required build materials, and license and copyright notices.** These are the sources for the Wine components actually distributed with ForgePlay, not merely reference code.
 
-Before a Steam session begins, the user selects exactly one of D3DMetal, DXMT,
-D9VK, or DXVK. Steam and Steam WebHelper remain on the base Wine renderer path.
-The selected renderer is applied only to game children under
-`steamapps/common`. A missing or invalid selection is rejected instead of
-silently falling back to another renderer.
+Upstream Wine's baseline license is [GNU LGPL version 2.1 or later (`LGPL-2.1-or-later`)](https://github.com/wine-mirror/wine/blob/master/LICENSE). ForgePlay separately identifies the `GPL-3.0-only` scope of its native Game Mode and Frame Generation implementation, and preserves the GPL terms applicable to the identified Wine-derived Game Mode code and modifications. The license texts and notices in each source archive define the applicable component boundaries.
 
-Renderer selection and Game Mode eligibility are independent. Selecting
-D3DMetal does not automatically enable Game Mode, and selecting Game Mode does
-not replace the chosen renderer.
+#### Where can I get the source?
 
-## How Game Mode is implemented
+**Published source materials are available as separate archives in [GitHub Releases](https://github.com/Facta-Leopard/ForgePlay/releases).** To inspect, modify, or rebuild a particular version, use the source archives attached directly to its release and the accompanying license notices.
 
-A standard Steam session uses Wine's normal loader. The Game Mode route is an
-explicitly selected beta feature.
+- The published materials include covered native code, original Wine sources and patches, and the corresponding third-party sources.
+- The archives also include the essential build sources and relinking materials required for the binary distribution.
+- The Swift app wrapper, personal keys and account information, and internal development/review documents are excluded.
+- When a maintenance release does not change the covered sources, the existing archives remain applicable. Identical source files are not reattached to every release.
 
-```mermaid
-flowchart LR
-    A["ForgePlay (arm64)"] --> B["Run steam.exe under Wine"]
-    B --> C["Steam creates a Windows child"]
-    C --> D{"Wine-resolved ImagePathName<br/>under steamapps/common?"}
-    D -- "No, or Game Mode not selected" --> E["Normal Wine loader"]
-    D -- "Yes + Game Mode selected" --> F["Fixed signed GameModeProcessHost.app (x86_64)"]
-    F --> G["Validate runtime, signature, sandbox, and prefix lease"]
-    G --> H["Enter exact ntdll.so and __wine_main in the same PID"]
-    H --> I["macOS evaluates Game Mode activation"]
-```
+The current published source baseline is the [1.3 source release](https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.3.0). Version 1.3.1 reuses those native/Wine sources without changing them.
 
-The implementation flow is:
+[Native/Wine code](https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.3.0/ForgePlay-1.3-Native-Wine-Code.tar.gz) · [Third-party sources](https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.3.0/ForgePlay-1.3-ThirdParty-Code.tar.gz) · [Essential build sources](https://github.com/Facta-Leopard/ForgePlay/releases/download/v1.3.0/ForgePlay-1.3-Build-Sources.tar.gz)
 
-1. The outer ForgePlay app preflights the fixed host bundle and exact runtime
-   identity.
-2. Before PE mapping begins for an accepted Steam child, the Wine loader
-   `exec`s that process into the fixed in-app path
-   `Contents/Helpers/GameModeProcessHost.app`.
-3. This does not generate one application per game. The transition preserves
-   the existing Darwin PID, `argv`, current directory, inherited handles, and
-   Wine server context.
-4. `GameModeProcessHost` is a fixed `x86_64` Mach-O application target built
-   separately from the outer ForgePlay executable. It runs through Rosetta on
-   Apple Silicon.
-5. The host revalidates its bundle identity, code and runtime identity, the
-   app-group sandbox boundary, fixed IPC/evidence paths, Wine loader path and
-   hash, and the prefix execution lease.
-6. After validation, it loads the exact bundled `x86_64-unix/ntdll.so` and
-   enters `__wine_main` in the same PID.
-7. A required host or contract failure is fail-closed. The accepted game child
-   does not silently fall back to the normal Wine loader.
-8. The host declares `LSSupportsGameMode=true` and the games category. macOS,
-   not ForgePlay, ultimately decides whether Game Mode activates for the
-   observed execution context.
+This repository's default branch is not the authoritative source snapshot for a binary release. GitHub's automatically displayed `Source code (zip/tar.gz)` links are tag snapshots; use the directly attached archives above for the release sources.
 
-“Independent binary” has a specific meaning here:
-`GameModeProcessHost` is a fixed Mach-O executable compiled and signed as its
-own target by the ForgePlay project. It does not run a renamed CrossOver host
-binary. It does not mean that every byte in the host is an original loader
-unrelated to Wine.
+Rights to copy, modify, and redistribute published source follow each component's license. Providing that source in archives does not restrict those rights.
 
-## The exact clean-room and Wine-derived boundary
+### Copyright and licensing
 
-ForgePlay makes a strong claim without obscuring provenance.
+Author of ForgePlay's own code: **[Facta-Leopard](https://github.com/Facta-Leopard)**<br>
+**Copyright © 2026 Facta-Leopard**
 
-| Area | Implementation and source | ForgePlay claim |
-| --- | --- | --- |
-| Steam discovery and session orchestration | ForgePlay source using VDF/ACF metadata and the real Steam launch path | Independently authored |
-| Game Mode control plane | Target classification, fixed-host routing, identity/sandbox/lease validation, evidence, and lifecycle written from public macOS behavior and the project's execution contract | Clean-room orchestration with no dependency on CrossOver private code |
-| `GameModeProcessHost` artifact | A fixed `x86_64` Mach-O built as a separate application target in `project.yml` | Independently built and signed binary target |
-| Same-PID Wine entry | Address reservations, `wine_main_preload_info`, `ntdll.so` loading, and the `__wine_main` call derived from Wine 11.12 `loader/main.c` | Explicitly attributed Wine-derived code, not claimed as clean-room |
-| D3DMetal bridge | A ForgePlay Wine patch written against a public Apple interface and an observable ABI contract | Independent adapter at the published boundary; no claim to D3DMetal itself |
-| D3DMetal payload | A separately licensed Apple third-party binary | Excluded from this source tree and not relicensed |
+- **Native Game Mode and Frame Generation:** `GPL-3.0-only`. The exact scope and additional terms are specified in `LICENSE.txt` and the accompanying source-archive notices.
+- **Swift app wrapper:** Separate distribution permission applies to the author's own code. The GPL badge is not a blanket GPL designation for the entire app.
+- **Wine and Wine-derived code:** Source and required build materials are provided under the applicable LGPL/GPL terms, with Wine authorship and provenance notices preserved. The separate Swift wrapper permission does not waive these obligations.
+- **MoltenVK, DXVK, fonts, Apple components, and other third-party material:** Their respective licenses and original copyright notices remain in force. ForgePlay's notices do not replace third-party rights.
 
-In particular, the low-level Wine-loader entry in
-`GameModeProcessHost.m` is derived from Wine 11.12. ForgePlay does not hide
-that fact or describe it as a “100% clean-room Wine loader.” Exact lineage,
-upstream hashes, and license treatment are recorded in
-`Native/GameModeProcessHost/SOURCE-CONTRACT.md`. The target classifier, fixed
-host contract, runtime identity, app-group boundary, prefix lease, fail-closed
-policy, and evidence system are the ForgePlay-authored Game Mode
-orchestration.
+The actual terms are the license texts and component notices accompanying the relevant distribution.
 
-The distinction matters. Modifying public Wine source under its license is not
-the same claim as copying a private CrossOver implementation. ForgePlay
-discloses the former and does not claim to have done the latter.
+### Share your game results
 
-## Where to verify the claims in source
+**Reports of both working and non-working games are useful.**
 
-- Steam installation discovery:
-  `Sources/ForgePlay/Services/SteamLibraryScanner.swift`
-- Steam launch environment and host preflight:
-  `Sources/ForgePlay/Services/SafeProcessRunner.swift`
-- Direct Game Mode target classification:
-  `Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-game-mode-direct-target-scope.patch`
-- Fixed process-host routing:
-  `Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-game-mode-process-host-routing.patch`
-- Separate host target:
-  `project.yml`
-- Host implementation contract:
-  `Native/GameModeProcessHost/README.md`
-- Exact boundary of Wine-derived host code:
-  `Native/GameModeProcessHost/SOURCE-CONTRACT.md`
-- Wine 11.12 source URL, hashes, patches, and reconstruction record:
-  `Resources/Runners/ForgePlayRuntime/SOURCE-AVAILABILITY.md`
-- Patch provenance lock:
-  `Config/ForgePlayRuntimePatchProvenance.lock.json`
-
-These claims are verifiable against those files. If documentation and code
-ever disagree, the code, hashes, and reproducible build record are the evidence
-to test.
-
-## Included and intentionally excluded
-
-Included:
-
-- ForgePlay Swift and Objective-C source
-- Game Mode process-host source and build contract
-- Game Mode unit and routing tests
-- ForgePlay-authored Wine patches and Windows launcher source
-- XcodeGen project specification and non-personal build settings
-- Canonical license texts, scope records, and localized notices
-- Runtime provenance and reconstruction tools
-
-Intentionally excluded:
-
-- `ForgePlay.app`, DMGs, archives, and notarization material
-- built Wine, D3DMetal, renderer, GStreamer, SDL, and other binaries
-- personal Xcode settings, signing-team overrides, certificates, private keys,
-  and credentials
-- internal planning documents, QA evidence, and release-session material
-
-`Resources/CompatibilityDBPublicKey.base64` is a public verification key for
-optional compatibility-database updates. It is not a private signing key.
-
-## Generate the Xcode project
-
-Install XcodeGen and run this from the repository root:
-
-```sh
-Scripts/generate-xcode-project.sh
-```
-
-To check a source-only build without signing:
-
-```sh
-xcodebuild build \
-  -project ForgePlay.xcodeproj \
-  -scheme ForgePlay \
-  -configuration Release \
-  -destination 'platform=macOS' \
-  CODE_SIGNING_ALLOWED=NO
-```
-
-This source-only export does not contain the Windows compatibility runtime
-binaries, so it cannot launch Windows games by itself. Runtime reconstruction
-records are under `Resources/Runners/ForgePlayRuntime/`; relevant tools are
-under `Scripts/`.
-
-## Licensing
-
-ForgePlay is a multi-license project. Read `LICENSE.md` before copying,
-modifying, or distributing material. `SOURCE-LICENSES.md` explains how
-per-file SPDX identifiers, mixed-file symbol scope, and `.license` sidecars
-for the two Game Mode Wine patches map to the authoritative policy.
-
-The exact `GPL-3.0-only` scope for ForgePlay Game Mode is recorded in
-`LICENSES/ForgePlayGameMode/GAME_MODE_LICENSE_SCOPE.md`. Unmodified GPL and
-LGPL texts are included under `LICENSES/`. Do not infer that every file has
-been blanket-relicensed merely because it appears in this directory.
-Third-party components remain under their respective terms.
-
----
-
-ForgePlay Game Mode  
-Copyright (C) 2026 Facta-Leopard  
-Original source: https://github.com/Facta-Leopard/ForgePlay
+Please include your ForgePlay version, Mac specifications, game title, graphics backend, and whether FG was enabled when reporting through [GitHub Issues](https://github.com/Facta-Leopard/ForgePlay/issues). Feedback from real-world use helps us improve compatibility and usability.
