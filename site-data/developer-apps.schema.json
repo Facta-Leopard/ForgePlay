@@ -147,6 +147,11 @@
         "artwork": {
           "type": "string",
           "pattern": "^site-assets/developer-apps/[a-z0-9-]+\\.png$"
+        },
+        "href": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://[^\\s]+$"
         }
       }
     }

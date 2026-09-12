@@ -1468,6 +1468,9 @@ expected_development_projects = {
     "hazel-and-peanut": ("Hazel&Peanut", "iphone", "game"),
     "grayline": ("GrayLine", "iphone", "game"),
 }
+expected_project_homepages = {
+    "forgekit": "https://facta-leopard.github.io/ForgeKit/",
+}
 expected_development_artwork_hashes = {
     "majordex": "3455a1b4ff3afe34df01db3aa6ef187bed7edd57fb670a8629be381aad17bd52",
     "forgekit": "03e6dfc77bf72e442ed85e036997ca340ec00d8e22636d7c9f7117e6b35461c9",
@@ -1495,6 +1498,8 @@ for project in development_projects:
     if kind not in {"app", "utility", "game"}:
         raise SystemExit(f"developer project {identifier} has an invalid kind")
     development_projection[identifier] = (project.get("name"), platform, kind)
+    if project.get("href") != expected_project_homepages.get(identifier):
+        raise SystemExit(f"developer project {identifier} has an unexpected homepage URL")
     summaries = project.get("summaries")
     if identifier in {"leporis-ascendant", "hazel-and-peanut", "grayline"} and summaries is None:
         raise SystemExit(f"developer game {identifier} requires a localized introduction")
@@ -1668,7 +1673,7 @@ require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-li
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
 require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260908-1"'
 require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260905-2"'
-require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260821-3"'
+require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260913-1"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
 require_snippet "$ROOT_DIR/index.html" 'data-announcement-summary'
 require_snippet "$ROOT_DIR/index.html" 'data-announcement-date'

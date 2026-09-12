@@ -269,7 +269,8 @@
         "zh-Hans": "一款 Apple 平台专用游戏引擎，可借助基于 Apple Intelligence 的 AI 制作 2D 和 3D 游戏。",
         "zh-Hant": "一款 Apple 平台專用遊戲引擎，可運用以 Apple Intelligence 為基礎的 AI 製作 2D 與 3D 遊戲。"
       },
-      "artwork": "site-assets/developer-apps/forgekit.png"
+      "artwork": "site-assets/developer-apps/forgekit.png",
+      "href": "https://facta-leopard.github.io/ForgeKit/"
     },
     {
       "id": "harewatch",

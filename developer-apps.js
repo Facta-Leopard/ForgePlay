@@ -177,6 +177,18 @@
       appendTextElement(article, "p", "developer-app-summary", summary);
     }
 
+    if (project.href) {
+      const link = appendTextElement(
+        article,
+        "a",
+        "developer-app-link",
+        message("developerApps.homepageLink", "Open homepage ↗")
+      );
+      link.href = project.href;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+    }
+
     return article;
   };
 
