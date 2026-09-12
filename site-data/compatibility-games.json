@@ -1,7 +1,7 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-09-11",
+  "updatedAt": "2026-09-12",
   "testProfiles": [
     {
       "id": "apple-silicon-m4-pro-24gb",
@@ -114,6 +114,13 @@
       "chip": "M2 Pro",
       "unifiedMemoryGB": 16,
       "macOSVersion": "Tahoe 26.6.2"
+    },
+    {
+      "id": "macbook-pro-m4-pro-12-core-24gb-macos-26-6-2-25g83",
+      "platform": "MacBook Pro",
+      "chip": "M4 Pro",
+      "unifiedMemoryGB": 24,
+      "macOSVersion": "26.6.2 (25G83)"
     }
   ],
   "games": [
@@ -1182,6 +1189,27 @@
         "fr": "Avec ForgePlay 1.3, Overwatch 2 reste bloqué dans un chargement infini au lancement et ne peut pas être joué. Ce symptôme a été observé après la mise à jour 1.3 et le problème de compatibilité est en cours d’analyse. Il n’est pas encore confirmé que la mise à jour elle-même en soit la cause."
       },
       "blocker": "unknown"
+    },
+    {
+      "id": "overwatch-2-forgeplay-1-3-1-build-5-project-test-20260912",
+      "gameId": "overwatch",
+      "testProfileId": "macbook-pro-m4-pro-12-core-24gb-macos-26-6-2-25g83",
+      "forgePlayVersion": "1.3.1",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": "2026-09-12",
+      "notes": {
+        "en": "Pre-release test of ForgePlay 1.3.1 (build 5): the compatibility issue associated with infinite loading in ForgePlay 1.3 has been resolved, and the game was confirmed to launch normally and run smoothly in the test environment. Tested on a MacBook Pro with M4 Pro (12-core CPU), 24GB of memory, and macOS 26.6.2 (25G83).",
+        "ko": "ForgePlay 1.3.1(빌드 5) 출시 전 테스트: 기존 1.3에서 발생했던 무한 로딩 관련 호환성 문제를 해결했으며, 테스트 환경에서 게임의 정상 실행과 원활한 동작을 확인했습니다. 테스트 기기는 MacBook Pro·M4 Pro(12코어 CPU)·메모리 24GB이며, macOS 26.6.2(25G83) 환경입니다.",
+        "ja": "ForgePlay 1.3.1（ビルド5）のリリース前テスト：ForgePlay 1.3で発生していた無限ロードに関する互換性の問題を解決し、テスト環境でゲームが正常に起動して快適に動作することを確認しました。テスト機器はM4 Pro（12コアCPU）と24GBメモリを搭載したMacBook Pro、macOSは26.6.2（25G83）です。",
+        "zh-Hans": "ForgePlay 1.3.1（构建5）发布前测试：已解决 ForgePlay 1.3 中导致无限加载的兼容性问题，并在测试环境中确认游戏可正常启动、流畅运行。测试设备为 MacBook Pro，搭载 M4 Pro（12核CPU）和24GB内存，运行 macOS 26.6.2（25G83）。",
+        "zh-Hant": "ForgePlay 1.3.1（組建5）發布前測試：已解決 ForgePlay 1.3 中造成無限載入的相容性問題，並在測試環境中確認遊戲可正常啟動、順暢執行。測試裝置為 MacBook Pro，搭載 M4 Pro（12核心CPU）與24GB記憶體，執行 macOS 26.6.2（25G83）。",
+        "de": "Vorabtest von ForgePlay 1.3.1 (Build 5): Das Kompatibilitätsproblem im Zusammenhang mit dem endlosen Laden unter ForgePlay 1.3 wurde behoben. In der Testumgebung ließ sich das Spiel normal starten und lief flüssig. Getestet auf einem MacBook Pro mit M4 Pro (12 CPU-Kerne), 24GB Arbeitsspeicher und macOS 26.6.2 (25G83).",
+        "es": "Prueba previa al lanzamiento de ForgePlay 1.3.1 (compilación 5): se ha resuelto el problema de compatibilidad relacionado con la carga infinita en ForgePlay 1.3 y se ha confirmado que el juego se inicia correctamente y funciona con fluidez en el entorno de prueba. Probado en un MacBook Pro con M4 Pro (CPU de 12 núcleos), 24GB de memoria y macOS 26.6.2 (25G83).",
+        "fr": "Test avant publication de ForgePlay 1.3.1 (build 5) : le problème de compatibilité lié au chargement infini dans ForgePlay 1.3 a été résolu. Le lancement normal et le fonctionnement fluide du jeu ont été confirmés dans l’environnement de test : MacBook Pro avec M4 Pro (CPU à 12 cœurs), 24Go de mémoire et macOS 26.6.2 (25G83)."
+      },
+      "blocker": null
     }
   ]
 }
