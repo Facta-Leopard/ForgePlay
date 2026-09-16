@@ -1988,7 +1988,8 @@ require_snippet "$ROOT_DIR/site.js" '"home.releaseStatus": "지금 다운로드 
 require_snippet "$ROOT_DIR/site.js" '"home.releaseStatusVersioned": "지금 다운로드 가능 · {tag}"'
 require_snippet "$ROOT_DIR/site.js" '"home.releaseStatus": "AVAILABLE NOW"'
 require_snippet "$ROOT_DIR/site.js" '"home.releaseStatusVersioned": "AVAILABLE NOW · {tag}"'
-require_snippet "$ROOT_DIR/site.js" '"home.releaseButtonVersioned": "Download {product} {version}"'
+require_snippet "$ROOT_DIR/site.js" '"home.releaseButtonVersioned": "Download {product} {version} · Apple-notarized DMG"'
+require_snippet "$ROOT_DIR/site.js" '"home.releaseButtonVersioned": "{product} {version} · Apple 공증 DMG 다운로드"'
 require_snippet "$ROOT_DIR/site.js" '"compat.currentReleaseLabel": "현재 릴리스"'
 require_snippet "$ROOT_DIR/site.js" '"compat.currentReleaseUnavailable": "릴리스 정보를 일시적으로 불러올 수 없습니다."'
 
