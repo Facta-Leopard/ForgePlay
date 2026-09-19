@@ -9,7 +9,7 @@
   const development = dialog.querySelector("[data-poster-development]");
   const posters = buttons.map((button) => {
     const thumbnail = button.querySelector("img");
-    return {version:button.dataset.posterVersion, src:thumbnail.getAttribute("src"), width:Number(thumbnail.getAttribute("width")), height:Number(thumbnail.getAttribute("height"))};
+    return {version:button.dataset.posterVersion, preview:button.hasAttribute("data-poster-preview"), src:thumbnail.getAttribute("src"), width:Number(thumbnail.getAttribute("width")), height:Number(thumbnail.getAttribute("height"))};
   });
   const message = (key, version) => (window.ForgePlaySite?.message(key) || key)
     .replace("{version}", version);
@@ -25,7 +25,7 @@
     image.alt = message("posters.imageAlt", poster.version);
     title.textContent = "ForgePlay " + poster.version;
     position.textContent = (currentIndex + 1) + " / " + posters.length;
-    development.hidden = poster.version !== "1.3";
+    development.hidden = !poster.preview;
   };
 
   buttons.forEach((button, index) => {
@@ -58,8 +58,9 @@
   });
   const localize = () => {
     buttons.forEach((button, index) => {
-      button.setAttribute("aria-label", message("posters.open", posters[index].version));
-      button.querySelector("img").alt = message("posters.imageAlt", posters[index].version);
+      const label = posters[index].version + (posters[index].preview ? " · " + message("posters.preview", "") : "");
+      button.setAttribute("aria-label", message("posters.open", label));
+      button.querySelector("img").alt = message("posters.imageAlt", label);
     });
     if (dialog.open) showPoster(currentIndex);
   };

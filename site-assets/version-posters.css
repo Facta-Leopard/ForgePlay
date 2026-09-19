@@ -21,6 +21,7 @@
 }
 .fp-poster-version { display:block; margin-top:7px; text-align:center; font-size:10px; font-weight:500; line-height:1.4; }
 .fp-poster-version>span { display:none; }
+.fp-poster-preview-label { display:block; text-align:center; font-size:8px; line-height:1.4; color:var(--fp-accent); }
 .fp-poster-card:focus-visible { z-index:5; outline:0; }
 .fp-poster-card:focus-visible .fp-poster-frame { transform:translateY(-4px) scale(2.2); }
 .fp-poster-card:focus-visible img { outline:2px solid var(--fp-accent); outline-offset:4px; }
@@ -41,6 +42,7 @@
 .fp-poster-toolbar { display:flex; align-items:center; justify-content:space-between; gap:20px; }
 .fp-poster-toolbar h2 { font-size:17px; font-weight:600; letter-spacing:-.025em; line-height:1.5; }
 .fp-poster-toolbar [data-poster-development] { display:block; margin-top:2px; color:#e2b094; font-size:10px; }
+.fp-poster-toolbar [data-poster-development][hidden] { display:none; }
 .fp-poster-stage { min-width:0; min-height:0; display:flex; justify-content:center; align-items:center; }
 .fp-poster-stage img { width:100%; height:100%; object-fit:contain; min-height:0; filter:drop-shadow(0 10px 30px #0008); }
 .fp-poster-controls { display:flex; justify-content:center; align-items:center; gap:25px; }

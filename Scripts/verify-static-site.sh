@@ -44,6 +44,7 @@ PAGES=(
   site-assets/version-posters/forgeplay-1.1.png
   site-assets/version-posters/forgeplay-1.2.png
   site-assets/version-posters/forgeplay-1.3.jpg
+  site-assets/version-posters/forgeplay-dlss5-preview.png
   site-assets/site-shell.js
   site-data/compatibility-games.json
   site-data/compatibility.schema.json
@@ -1636,7 +1637,11 @@ for html in index.html why.html license.html privacy.html support.html compatibi
   else
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-14"'
   fi
-  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260908-2"'
+  if [[ "$html" == "index.html" ]]; then
+    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260908-2&posters=20260920"'
+  else
+    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260908-2"'
+  fi
   require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.css?v=20260905-7'
   require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.js?v=20260905-2'
   if [[ "$html" != "index.html" ]]; then

@@ -16,6 +16,7 @@
   const localeData = {
     en: {
       "posters.title": "Version posters",
+      "posters.preview": "Preview",
       "posters.hint": "Select a poster to view it full size.",
       "posters.open": "View ForgePlay {version} poster",
       "posters.imageAlt": "ForgePlay {version} poster",
@@ -338,6 +339,7 @@
     },
     ko: {
       "posters.title": "버전별 포스터",
+      "posters.preview": "미리보기",
       "posters.hint": "포스터를 누르면 크게 볼 수 있습니다.",
       "posters.open": "ForgePlay {version} 포스터 크게 보기",
       "posters.imageAlt": "ForgePlay {version} 포스터",
@@ -660,6 +662,7 @@
     },
     ja: {
       "posters.title": "バージョン別ポスター",
+      "posters.preview": "プレビュー",
       "posters.hint": "ポスターを選択すると拡大表示できます。",
       "posters.open": "ForgePlay {version}のポスターを拡大表示",
       "posters.imageAlt": "ForgePlay {version}のポスター",
@@ -982,6 +985,7 @@
     },
     "zh-Hans": {
       "posters.title": "版本海报",
+      "posters.preview": "预览",
       "posters.hint": "选择海报可放大查看。",
       "posters.open": "放大查看 ForgePlay {version} 海报",
       "posters.imageAlt": "ForgePlay {version} 海报",
@@ -1304,6 +1308,7 @@
     },
     "zh-Hant": {
       "posters.title": "版本海報",
+      "posters.preview": "預覽",
       "posters.hint": "選取海報可放大檢視。",
       "posters.open": "放大檢視 ForgePlay {version} 海報",
       "posters.imageAlt": "ForgePlay {version} 海報",
@@ -1626,6 +1631,7 @@
     },
     de: {
       "posters.title": "Versionsposter",
+      "posters.preview": "Vorschau",
       "posters.hint": "Poster auswählen, um es groß anzusehen.",
       "posters.open": "ForgePlay {version} Poster vergrößern",
       "posters.imageAlt": "ForgePlay {version} Poster",
@@ -1948,6 +1954,7 @@
     },
     es: {
       "posters.title": "Pósteres por versión",
+      "posters.preview": "Vista previa",
       "posters.hint": "Selecciona un póster para verlo ampliado.",
       "posters.open": "Ampliar póster de ForgePlay {version}",
       "posters.imageAlt": "Póster de ForgePlay {version}",
@@ -2270,6 +2277,7 @@
     },
     fr: {
       "posters.title": "Affiches par version",
+      "posters.preview": "Aperçu",
       "posters.hint": "Sélectionnez une affiche pour l’agrandir.",
       "posters.open": "Agrandir l’affiche de ForgePlay {version}",
       "posters.imageAlt": "Affiche de ForgePlay {version}",
