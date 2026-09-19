@@ -449,6 +449,13 @@
   .fp-site .legal-shell .language-section li { padding-left: 34px; }
 }
 
+.fp-site .update-images { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:24px 0; }
+.fp-site .update-images figure { margin:0; min-width:0; }
+.fp-site .update-images a { display:block; cursor:zoom-in; border-radius:8px; overflow:hidden; }
+.fp-site .update-images img { display:block; width:100%; height:auto; }
+.fp-site .update-images figcaption { padding:10px 0; color:var(--page-copy); font-size:.85rem; line-height:1.5; }
+@media (max-width:600px) { .fp-site .update-images { grid-template-columns:1fr; } }
+
 @media (prefers-reduced-motion: reduce) {
   .fp-site .update-card-toggle { transition: none; }
 }

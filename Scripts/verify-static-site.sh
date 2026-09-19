@@ -52,6 +52,8 @@ PAGES=(
   site-data/current-release.json
   site-data/current-release.schema.json
   site-data/announcements.json
+  site-assets/announcements/dlss5-before.jpg
+  site-assets/announcements/dlss5-after.jpg
   site-data/announcements.schema.json
   site-data/developer-apps.json
   site-data/developer-apps.schema.json
@@ -1266,7 +1268,7 @@ for announcement in announcements:
     require_object_shape(
         announcement,
         {"id", "type", "publishedAt", "featured", "titles", "summaries", "href"},
-        {"id", "type", "publishedAt", "featured", "titles", "summaries", "paragraphs", "href"},
+        {"id", "type", "publishedAt", "featured", "titles", "summaries", "paragraphs", "images", "href"},
         f"announcement {identifier}",
     )
     if announcement.get("type") not in {"project", "release"}:
@@ -1338,6 +1340,22 @@ for announcement in announcements:
         if not all(isinstance(value, str) and value.strip() for value in values.values()):
             raise SystemExit(f"announcement {identifier} {field} contains an empty translation")
 
+    if "images" in announcement:
+        images = announcement["images"]
+        if not isinstance(images, list) or not images:
+            raise SystemExit(f"announcement {identifier}: images must be a non-empty list")
+        for asset in images:
+            if not isinstance(asset, dict) or set(asset) != {"src", "caption"}:
+                raise SystemExit(f"announcement {identifier}: invalid image fields")
+            src = asset["src"]
+            if not isinstance(src, str) or not re.fullmatch(r"site-assets/announcements/[a-z0-9-]+\.jpg", src):
+                raise SystemExit(f"announcement {identifier}: invalid image path")
+            image = root / src
+            if image.is_symlink() or not image.is_file() or not image.read_bytes().startswith(b"\xff\xd8\xff"):
+                raise SystemExit(f"announcement {identifier}: missing or invalid image")
+            captions = asset["caption"]
+            if not isinstance(captions, dict) or set(captions) != set(locale_names) or not all(isinstance(v, str) and v.strip() for v in captions.values()):
+                raise SystemExit(f"announcement {identifier}: image captions must cover eight locales")
     paragraphs = announcement.get("paragraphs")
     if paragraphs is not None:
         expected_detail_href = f"updates.html#update-{identifier}"
@@ -1672,7 +1690,7 @@ require_snippet "$ROOT_DIR/index.html" 'data-home-games'
 require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
 require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260908-1"'
-require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260905-2"'
+require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260919-1"'
 require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260913-1"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
 require_snippet "$ROOT_DIR/index.html" 'data-announcement-summary'
@@ -1810,7 +1828,7 @@ require_snippet "$ROOT_DIR/site-data/README.md" 'Routine compatibility database 
 require_snippet "$ROOT_DIR/site-data/README.md" 'No raw HTML or Markdown is rendered.'
 require_snippet "$ROOT_DIR/updates.html" 'data-announcement-list'
 require_snippet "$ROOT_DIR/updates.html" 'data-nav-page="updates"'
-require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260905-2"'
+require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260919-1"'
 require_snippet "$ROOT_DIR/updates.html" 'Releases, project notices, and development updates in one place.'
 require_snippet "$ROOT_DIR/announcements.js" 'site-data/announcements.json'
 require_snippet "$ROOT_DIR/announcements.js" 'forgeplay:localechange'

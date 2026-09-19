@@ -123,6 +123,19 @@
         "paragraphs": {
           "$ref": "#/$defs/localizedParagraphs"
         },
+        "images": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["src", "caption"],
+            "properties": {
+              "src": {"type": "string", "pattern": "^site-assets/announcements/[a-z0-9-]+\\.jpg$"},
+              "caption": {"$ref": "#/$defs/localizedText"}
+            }
+          }
+        },
         "href": {
           "type": "string",
           "minLength": 1

@@ -5,6 +5,34 @@
   "announcements": [
     {
       "id": "next-update-golden-gate-dlss5",
+      "images": [
+        {
+          "src": "site-assets/announcements/dlss5-before.jpg",
+          "caption": {
+            "ko": "DLSS5 에뮬레이팅 전",
+            "en": "Before DLSS5 emulation",
+            "de": "Vor der DLSS5-Emulation",
+            "es": "Antes de la emulación de DLSS5",
+            "fr": "Avant l’émulation de DLSS5",
+            "ja": "DLSS5エミュレーション適用前",
+            "zh-Hans": "DLSS5 模拟应用前",
+            "zh-Hant": "DLSS5 模擬套用前"
+          }
+        },
+        {
+          "src": "site-assets/announcements/dlss5-after.jpg",
+          "caption": {
+            "ko": "DLSS5 에뮬레이팅 후",
+            "en": "After DLSS5 emulation",
+            "de": "Nach der DLSS5-Emulation",
+            "es": "Después de la emulación de DLSS5",
+            "fr": "Après l’émulation de DLSS5",
+            "ja": "DLSS5エミュレーション適用後",
+            "zh-Hans": "DLSS5 模拟应用后",
+            "zh-Hant": "DLSS5 模擬套用後"
+          }
+        }
+      ],
       "type": "project",
       "publishedAt": "2026-09-19",
       "featured": true,

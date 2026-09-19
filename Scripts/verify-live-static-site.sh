@@ -54,6 +54,8 @@ PAGES=(
   site-data/current-release.json
   site-data/current-release.schema.json
   site-data/announcements.json
+  site-assets/announcements/dlss5-before.jpg
+  site-assets/announcements/dlss5-after.jpg
   site-data/announcements.schema.json
   site-data/developer-apps.json
   site-data/developer-apps.schema.json

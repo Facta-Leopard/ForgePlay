@@ -238,6 +238,30 @@
         content.append(body);
       }
 
+      if (announcement.images?.length) {
+        const gallery = document.createElement("div");
+        gallery.className = "update-images";
+        announcement.images.forEach((asset) => {
+          const figure = document.createElement("figure");
+          const caption = localizedText(asset.caption, selectedLocale);
+          const link = document.createElement("a");
+          link.href = asset.src;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          const image = document.createElement("img");
+          image.src = asset.src;
+          image.alt = caption;
+          image.loading = "lazy";
+          image.width = 1280;
+          image.height = 831;
+          link.append(image);
+          figure.append(link);
+          appendTextElement(figure, "figcaption", "", caption);
+          gallery.append(figure);
+        });
+        content.append(gallery);
+      }
+
       if (announcement.href !== announcementDetailHref(announcement.id)) {
         const link = appendTextElement(
           content,

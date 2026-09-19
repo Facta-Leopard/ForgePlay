@@ -157,6 +157,10 @@ line-oriented markers for structured notices: `## ` for a section heading,
 `- ` for a list item, two leading spaces before `- ` for a nested list item,
 and an exact `---` item for a divider. No raw HTML or Markdown is rendered.
 
+Notices may also include an optional `images` array. Each item has a local
+`site-assets/announcements/*.jpg` source and a `caption` in all eight locales.
+Images appear below the body; selecting an image opens the original in a new tab.
+
 Routine compatibility database additions and result changes must not create
 project notices. They belong in the app-shared `compatibility-games.json` or,
 for website-only reports, `website-compatibility-reports.json`, and appear on
