@@ -1,8 +1,29 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-09-12",
+  "updatedAt": "2026-09-19",
   "testProfiles": [
+    {
+      "id": "apple-silicon-m5-pro-24gb-macos-27-0",
+      "platform": "Apple Silicon Mac",
+      "chip": "M5 Pro",
+      "unifiedMemoryGB": 24,
+      "macOSVersion": "27.0"
+    },
+    {
+      "id": "apple-silicon-m4-pro-24gb-macos-27-0",
+      "platform": "Apple Silicon Mac",
+      "chip": "M4 Pro",
+      "unifiedMemoryGB": 24,
+      "macOSVersion": "27.0"
+    },
+    {
+      "id": "imac-m4-10-core-24gb-macos-27",
+      "platform": "iMac",
+      "chip": "M4 (10-core)",
+      "unifiedMemoryGB": 24,
+      "macOSVersion": "27"
+    },
     {
       "id": "apple-silicon-m4-pro-24gb",
       "platform": "Apple Silicon Mac",
@@ -1208,6 +1229,71 @@
         "de": "Vorabtest von ForgePlay 1.3.1 (Build 5): Das Kompatibilitätsproblem im Zusammenhang mit dem endlosen Laden unter ForgePlay 1.3 wurde behoben. In der Testumgebung ließ sich das Spiel normal starten und lief flüssig. Getestet auf einem MacBook Pro mit M4 Pro (12 CPU-Kerne), 24GB Arbeitsspeicher und macOS 26.6.2 (25G83).",
         "es": "Prueba previa al lanzamiento de ForgePlay 1.3.1 (compilación 5): se ha resuelto el problema de compatibilidad relacionado con la carga infinita en ForgePlay 1.3 y se ha confirmado que el juego se inicia correctamente y funciona con fluidez en el entorno de prueba. Probado en un MacBook Pro con M4 Pro (CPU de 12 núcleos), 24GB de memoria y macOS 26.6.2 (25G83).",
         "fr": "Test avant publication de ForgePlay 1.3.1 (build 5) : le problème de compatibilité lié au chargement infini dans ForgePlay 1.3 a été résolu. Le lancement normal et le fonctionnement fluide du jeu ont été confirmés dans l’environnement de test : MacBook Pro avec M4 Pro (CPU à 12 cœurs), 24Go de mémoire et macOS 26.6.2 (25G83)."
+      },
+      "blocker": null
+    },
+    {
+      "id": "pragmata-m5-pro-24gb-community-nyungnyung-20260919",
+      "gameId": "pragmata",
+      "testProfileId": "apple-silicon-m5-pro-24gb-macos-27-0",
+      "forgePlayVersion": "1.3.1",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "늉늉",
+      "testedAt": null,
+      "notes": {
+        "ko": "커뮤니티 제보: M5 Pro·메모리 24GB·macOS 27.0 환경에서 프라그마타가 잘 실행된다고 합니다.",
+        "en": "Community report: Pragmata runs well on an M5 Pro Mac with 24GB memory and macOS 27.0.",
+        "de": "Community-Bericht: Pragmata läuft gut auf einem Mac mit M5 Pro, 24GB Arbeitsspeicher und macOS 27.0.",
+        "es": "Informe de la comunidad: Pragmata funciona bien en un Mac con M5 Pro, 24GB de memoria y macOS 27.0.",
+        "fr": "Retour de la communauté : Pragmata fonctionne bien sur un Mac M5 Pro avec 24Go de mémoire et macOS 27.0.",
+        "ja": "コミュニティからの報告：M5 Pro、メモリ24GB、macOS 27.0のMacでPragmataが正常に動作するとのことです。",
+        "zh-Hans": "社区反馈：Pragmata 在配备 M5 Pro、24GB 内存并运行 macOS 27.0 的 Mac 上运行良好。",
+        "zh-Hant": "社群回報：Pragmata 在配備 M5 Pro、24GB 記憶體並執行 macOS 27.0 的 Mac 上運作良好。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "pragmata-m4-pro-24gb-project-test-20260919",
+      "gameId": "pragmata",
+      "testProfileId": "apple-silicon-m4-pro-24gb-macos-27-0",
+      "forgePlayVersion": "1.3.1",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": {
+        "ko": "프로젝트 테스트: M4 Pro·메모리 24GB·macOS 27.0 환경에서 프라그마타의 정상 실행을 확인했습니다.",
+        "en": "Project test: Pragmata was confirmed to run successfully on an M4 Pro Mac with 24GB memory and macOS 27.0.",
+        "de": "Projekttest: Pragmata wurde auf einem Mac mit M4 Pro, 24GB Arbeitsspeicher und macOS 27.0 erfolgreich ausgeführt.",
+        "es": "Prueba del proyecto: se confirmó que Pragmata se ejecuta correctamente en un Mac con M4 Pro, 24GB de memoria y macOS 27.0.",
+        "fr": "Test du projet : le bon fonctionnement de Pragmata a été confirmé sur un Mac M4 Pro avec 24Go de mémoire et macOS 27.0.",
+        "ja": "プロジェクトテスト：M4 Pro、メモリ24GB、macOS 27.0のMacでPragmataの正常動作を確認しました。",
+        "zh-Hans": "项目测试：已确认 Pragmata 在配备 M4 Pro、24GB 内存并运行 macOS 27.0 的 Mac 上正常运行。",
+        "zh-Hant": "專案測試：已確認 Pragmata 在配備 M4 Pro、24GB 記憶體並執行 macOS 27.0 的 Mac 上正常運作。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "inzoi-m4-imac-24gb-github-issue-18-20260917",
+      "gameId": "inzoi",
+      "testProfileId": "imac-m4-10-core-24gb-macos-27",
+      "forgePlayVersion": "1.3.1",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "github-issue",
+      "reporter": "bkpwvktz4f-hash",
+      "testedAt": null,
+      "notes": {
+        "ko": "GitHub 이슈 #18 제보: M4 iMac(10코어)·메모리 24GB·macOS 27에서 인조이가 실행되며 CrossOver보다 원활하다고 합니다. 다만 CrossOver에서도 겪었던 영상 처리 문제로 로딩이 막힐 수 있고, 게임 파일 내 'movie' 항목의 이름을 변경하면 실행할 수 있었다고 합니다. 변경 대상의 정확한 경로와 파일·폴더 여부는 아직 확인되지 않았습니다. 원문: https://github.com/Facta-Leopard/ForgePlay/issues/18",
+        "en": "GitHub issue #18: inZOI runs on an M4 iMac (10-core), 24GB memory, macOS 27, reportedly more smoothly than in CrossOver. A video-processing issue also encountered in CrossOver may block loading; the reporter says renaming the 'movie' item within the game files allowed it to run. The exact path and whether this is a file or folder remain unconfirmed. Source: https://github.com/Facta-Leopard/ForgePlay/issues/18",
+        "de": "GitHub-Issue #18: inZOI läuft auf einem M4 iMac (10 Kerne) mit 24GB Arbeitsspeicher und macOS 27 laut Bericht flüssiger als mit CrossOver. Ein auch in CrossOver auftretendes Problem bei der Videoverarbeitung kann das Laden blockieren. Laut Melder ließ sich das Spiel nach dem Umbenennen des Elements 'movie' in den Spieldateien ausführen. Der genaue Pfad und ob es sich um eine Datei oder einen Ordner handelt, sind noch unbestätigt. Quelle: https://github.com/Facta-Leopard/ForgePlay/issues/18",
+        "es": "Incidencia #18 de GitHub: inZOI funciona en un iMac M4 (10 núcleos), con 24GB de memoria y macOS 27; según el informe, con más fluidez que en CrossOver. Un problema de procesamiento de vídeo, también observado en CrossOver, puede bloquear la carga. La persona indica que pudo ejecutar el juego al cambiar el nombre del elemento 'movie' dentro de los archivos del juego. Aún no se ha confirmado la ruta exacta ni si es un archivo o una carpeta. Fuente: https://github.com/Facta-Leopard/ForgePlay/issues/18",
+        "fr": "Ticket GitHub nº18 : inZOI fonctionne sur un iMac M4 (10 cœurs), avec 24Go de mémoire et macOS 27, selon le rapport plus fluidement qu’avec CrossOver. Un problème de traitement vidéo également rencontré avec CrossOver peut bloquer le chargement. La personne indique avoir pu lancer le jeu en renommant l’élément 'movie' dans les fichiers du jeu. Le chemin exact et la nature de cet élément, fichier ou dossier, restent à confirmer. Source : https://github.com/Facta-Leopard/ForgePlay/issues/18",
+        "ja": "GitHubイシュー#18：M4 iMac（10コア）、メモリ24GB、macOS 27でinZOIが動作し、CrossOverより快適との報告です。ただし、CrossOverでも発生した動画処理の問題で読み込みが止まる場合があり、ゲームファイル内の'movie'項目の名前を変更すると起動できたとのことです。正確なパスと、ファイルかフォルダかは未確認です。原文：https://github.com/Facta-Leopard/ForgePlay/issues/18",
+        "zh-Hans": "GitHub 问题 #18：反馈者称 inZOI 在 M4 iMac（10核）、24GB 内存、macOS 27 上可以运行，且比 CrossOver 更流畅。不过，CrossOver 中也出现过的视频处理问题可能导致加载卡住；反馈者称更改游戏文件内 'movie' 项目的名称后可以运行。具体路径及其属于文件还是文件夹尚未确认。原文：https://github.com/Facta-Leopard/ForgePlay/issues/18",
+        "zh-Hant": "GitHub 問題 #18：回報者稱 inZOI 在 M4 iMac（10核心）、24GB 記憶體、macOS 27 上可以執行，且比 CrossOver 更流暢。不過，CrossOver 中也出現過的影片處理問題可能導致載入卡住；回報者稱更改遊戲檔案內 'movie' 項目的名稱後即可執行。確切路徑及其屬於檔案還是資料夾尚未確認。原文：https://github.com/Facta-Leopard/ForgePlay/issues/18"
       },
       "blocker": null
     }
