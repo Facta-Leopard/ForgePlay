@@ -1,13 +1,106 @@
 {
   "$schema": "./announcements.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-09-15",
+  "updatedAt": "2026-09-19",
   "announcements": [
+    {
+      "id": "next-update-golden-gate-dlss5",
+      "type": "project",
+      "publishedAt": "2026-09-19",
+      "featured": true,
+      "titles": {
+        "ko": "다음 업데이트(DLSS5 등)를 준비하고 있습니다.",
+        "en": "Preparing the next update, including DLSS5.",
+        "de": "Das nächste Update mit DLSS5 und weiteren Neuerungen ist in Vorbereitung.",
+        "es": "Estamos preparando la próxima actualización, con DLSS5 y más.",
+        "fr": "Nous préparons la prochaine mise à jour, avec DLSS5 et d’autres nouveautés.",
+        "ja": "次のアップデート（DLSS5など）を準備しています。",
+        "zh-Hans": "我们正在准备下一次更新（DLSS5 等）。",
+        "zh-Hant": "我們正在準備下一次更新（DLSS5 等）。"
+      },
+      "summaries": {
+        "ko": "macOS 27 Golden Gate 최적화와 DLSS5 관련 기능 등을 준비하고 있습니다. 예상 권장 사양과 프레임 저하·입력 지연 가능성을 안내합니다.",
+        "en": "We are preparing macOS 27 Golden Gate optimizations and DLSS5-related features. Here are the anticipated hardware recommendations and possible effects on frame rate and input latency.",
+        "de": "Wir bereiten Optimierungen für macOS 27 Golden Gate und Funktionen rund um DLSS5 vor. Hier finden Sie die voraussichtlichen Hardwareempfehlungen und mögliche Auswirkungen auf Bildrate und Eingabeverzögerung.",
+        "es": "Preparamos optimizaciones para macOS 27 Golden Gate y funciones relacionadas con DLSS5. Presentamos las recomendaciones de hardware previstas y los posibles efectos sobre los FPS y la latencia de entrada.",
+        "fr": "Nous préparons des optimisations pour macOS 27 Golden Gate et des fonctions liées à DLSS5. Voici les recommandations matérielles envisagées et les effets possibles sur la fréquence d’images et la latence d’entrée.",
+        "ja": "macOS 27 Golden Gate向けの最適化とDLSS5関連機能などを準備しています。現時点で想定する推奨仕様と、フレームレート低下・入力遅延の可能性をご案内します。",
+        "zh-Hans": "我们正在准备 macOS 27 Golden Gate 优化及 DLSS5 相关功能。本文介绍预计推荐配置，以及帧率下降和输入延迟的可能性。",
+        "zh-Hant": "我們正在準備 macOS 27 Golden Gate 最佳化及 DLSS5 相關功能。本文說明預計建議規格，以及影格率下降與輸入延遲的可能性。"
+      },
+      "paragraphs": {
+        "ko": [
+          "macOS 27 Golden Gate에 맞춘 최적화와 함께, DLSS5 관련 기능 추가 및 여러 개선 사항을 준비하고 있습니다.",
+          "DLSS5 관련 기능의 권장 사양은 현재 다음과 같이 예상하고 있습니다.",
+          "- M1~M4 세대: Max 칩 이상\n- M5 세대: Pro 풀칩 이상",
+          "해당 기능을 사용하면 게임과 설정에 따라 프레임이 낮아질 수 있습니다. 이를 보완하기 위해 프레임 생성(FG) 기능을 함께 사용해야 할 수 있으며, 이 과정에서 입력 지연(인풋렉)이 발생할 가능성도 있습니다. 권장 사양과 실제 성능은 개발 및 테스트 결과에 따라 조정될 수 있습니다.",
+          "이 밖에도 다양한 기능 개선을 준비하고 있으니 기대해 주세요. 기다리시는 동안 GitHub에서 ForgePlay에 Star를 눌러주시면 개발에 큰 힘이 됩니다. 감사합니다!",
+          "GitHub: https://github.com/Facta-Leopard/ForgePlay"
+        ],
+        "en": [
+          "We are preparing optimizations for macOS 27 Golden Gate, alongside DLSS5-related features and other improvements.",
+          "Our current anticipated hardware recommendations for the DLSS5-related features are:",
+          "- M1–M4 generations: Max chip or higher\n- M5 generation: full-configuration Pro chip or higher",
+          "Using these features may reduce the frame rate depending on the game and settings. You may need to enable frame generation (FG) to compensate, which may also introduce input latency. Hardware recommendations and actual performance may change as development and testing progress.",
+          "We are also working on a range of other improvements, so stay tuned. While you wait, giving ForgePlay a Star on GitHub would be a great encouragement for development. Thank you!",
+          "GitHub: https://github.com/Facta-Leopard/ForgePlay"
+        ],
+        "de": [
+          "Wir bereiten Optimierungen für macOS 27 Golden Gate sowie Funktionen rund um DLSS5 und weitere Verbesserungen vor.",
+          "Für die Funktionen rund um DLSS5 gehen wir derzeit von folgenden Hardwareempfehlungen aus:",
+          "- Generationen M1–M4: Max-Chip oder höher\n- Generation M5: Pro-Chip im Vollausbau oder höher",
+          "Je nach Spiel und Einstellungen kann die Nutzung dieser Funktionen die Bildrate verringern. Zum Ausgleich muss möglicherweise die Frame-Generation (FG) aktiviert werden, wodurch auch Eingabeverzögerungen entstehen können. Die Hardwareempfehlungen und die tatsächliche Leistung können sich im Laufe der Entwicklung und Tests noch ändern.",
+          "Wir arbeiten außerdem an verschiedenen weiteren Verbesserungen. Bleiben Sie gespannt! Wenn Sie ForgePlay während der Wartezeit auf GitHub einen Star geben, unterstützen Sie damit unsere Motivation für die Entwicklung. Vielen Dank!",
+          "GitHub: https://github.com/Facta-Leopard/ForgePlay"
+        ],
+        "es": [
+          "Estamos preparando optimizaciones para macOS 27 Golden Gate, junto con funciones relacionadas con DLSS5 y otras mejoras.",
+          "Por ahora, estas son las recomendaciones de hardware previstas para las funciones relacionadas con DLSS5:",
+          "- Generaciones M1–M4: chip Max o superior\n- Generación M5: chip Pro en su configuración completa o superior",
+          "Estas funciones pueden reducir los FPS según el juego y los ajustes. Para compensarlo, puede ser necesario activar la generación de fotogramas (FG), lo que también podría introducir latencia de entrada. Las recomendaciones de hardware y el rendimiento real pueden cambiar según los resultados del desarrollo y las pruebas.",
+          "También estamos preparando otras mejoras. ¡Permanece atento! Mientras esperas, darle una Star a ForgePlay en GitHub sería un gran apoyo para seguir desarrollándolo. ¡Gracias!",
+          "GitHub: https://github.com/Facta-Leopard/ForgePlay"
+        ],
+        "fr": [
+          "Nous préparons des optimisations pour macOS 27 Golden Gate, ainsi que des fonctions liées à DLSS5 et plusieurs autres améliorations.",
+          "Voici les recommandations matérielles que nous envisageons actuellement pour les fonctions liées à DLSS5 :",
+          "- Générations M1 à M4 : puce Max ou supérieure\n- Génération M5 : puce Pro dans sa configuration complète ou supérieure",
+          "L’utilisation de ces fonctions peut réduire la fréquence d’images selon le jeu et les réglages. Il peut être nécessaire d’activer la génération d’images (FG) pour compenser cette baisse, ce qui peut aussi entraîner une latence d’entrée. Les recommandations matérielles et les performances réelles pourront évoluer en fonction du développement et des tests.",
+          "Nous préparons également diverses autres améliorations. Restez à l’écoute ! En attendant, attribuer une Star à ForgePlay sur GitHub serait un bel encouragement pour le développement. Merci !",
+          "GitHub: https://github.com/Facta-Leopard/ForgePlay"
+        ],
+        "ja": [
+          "macOS 27 Golden Gateに合わせた最適化とともに、DLSS5関連機能の追加やさまざまな改善を準備しています。",
+          "DLSS5関連機能の推奨仕様は、現時点では次のとおり想定しています。",
+          "- M1〜M4世代：Maxチップ以上\n- M5世代：フル構成のProチップ以上",
+          "これらの機能を使用すると、ゲームや設定によってフレームレートが低下する場合があります。その補完のためにフレーム生成（FG）を有効にする必要が生じる可能性があり、その過程で入力遅延が発生する場合もあります。推奨仕様と実際の性能は、開発やテストの結果に応じて調整される可能性があります。",
+          "このほかにもさまざまな機能改善を準備していますので、ご期待ください。お待ちいただく間にGitHubでForgePlayにStarを付けていただけると、開発の大きな励みになります。ありがとうございます！",
+          "GitHub: https://github.com/Facta-Leopard/ForgePlay"
+        ],
+        "zh-Hans": [
+          "我们正在准备针对 macOS 27 Golden Gate 的优化，同时新增 DLSS5 相关功能并进行多项改进。",
+          "目前，DLSS5 相关功能的预计推荐配置如下：",
+          "- M1–M4 代：Max 芯片或更高配置\n- M5 代：满血版 Pro 芯片或更高配置",
+          "使用这些功能时，帧率可能会因游戏和设置而下降。为弥补这一点，可能需要同时启用帧生成（FG），而这一过程也可能产生输入延迟。推荐配置和实际性能可能会根据开发与测试结果调整。",
+          "我们也在准备其他功能改进，敬请期待。等待期间，如果您愿意在 GitHub 上给 ForgePlay 点一颗 Star，将为开发带来很大的鼓励。谢谢！",
+          "GitHub: https://github.com/Facta-Leopard/ForgePlay"
+        ],
+        "zh-Hant": [
+          "我們正在準備針對 macOS 27 Golden Gate 的最佳化，同時新增 DLSS5 相關功能並進行多項改善。",
+          "目前，DLSS5 相關功能的預計建議規格如下：",
+          "- M1–M4 世代：Max 晶片或更高規格\n- M5 世代：完整配置的 Pro 晶片或更高規格",
+          "使用這些功能時，影格率可能會因遊戲和設定而下降。為彌補這一點，可能需要同時啟用影格生成（FG），而這個過程也可能產生輸入延遲。建議規格與實際效能可能會依開發和測試結果調整。",
+          "我們也在準備其他功能改善，敬請期待。等待期間，如果您願意在 GitHub 上為 ForgePlay 點一顆 Star，將為開發帶來很大的鼓勵。謝謝！",
+          "GitHub: https://github.com/Facta-Leopard/ForgePlay"
+        ]
+      },
+      "href": "updates.html#update-next-update-golden-gate-dlss5"
+    },
     {
       "id": "macos-27-rosetta-reinstall",
       "type": "project",
       "publishedAt": "2026-09-15",
-      "featured": true,
+      "featured": false,
       "titles": {
         "en": "[Notice] Reinstall Rosetta after upgrading to macOS 27 Golden Gate",
         "ko": "[공지] macOS 27 Golden Gate 업데이트 후 Rosetta 재설치 안내",
