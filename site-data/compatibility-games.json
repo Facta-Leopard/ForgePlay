@@ -1,7 +1,7 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-09-19",
+  "updatedAt": "2026-09-22",
   "testProfiles": [
     {
       "id": "apple-silicon-m5-pro-24gb-macos-27-0",
@@ -23,6 +23,20 @@
       "chip": "M4 (10-core)",
       "unifiedMemoryGB": 24,
       "macOSVersion": "27"
+    },
+    {
+      "id": "macbook-air-m3-8gb-tahoe-26-5-1",
+      "platform": "MacBook Air",
+      "chip": "M3",
+      "unifiedMemoryGB": 8,
+      "macOSVersion": "Tahoe 26.5.1 (25F80)"
+    },
+    {
+      "id": "apple-silicon-m5-pro-24gb-macos-26-6-2",
+      "platform": "Apple Silicon Mac",
+      "chip": "M5 Pro",
+      "unifiedMemoryGB": 24,
+      "macOSVersion": "macOS 26.6.2 (25G83)"
     },
     {
       "id": "apple-silicon-m4-pro-24gb",
@@ -145,6 +159,20 @@
     }
   ],
   "games": [
+    {
+      "id": "vrchat",
+      "titles": {
+        "en": "VRChat",
+        "ko": "VRChat (브이알챗)"
+      }
+    },
+    {
+      "id": "zenless-zone-zero",
+      "titles": {
+        "en": "Zenless Zone Zero",
+        "ko": "젠레스 존 제로"
+      }
+    },
     {
       "id": "stellar-blade",
       "titles": {
@@ -1296,6 +1324,50 @@
         "zh-Hant": "GitHub 問題 #18：回報者稱 inZOI 在 M4 iMac（10核心）、24GB 記憶體、macOS 27 上可以執行，且比 CrossOver 更流暢。不過，CrossOver 中也出現過的影片處理問題可能導致載入卡住；回報者稱更改遊戲檔案內 'movie' 項目的名稱後即可執行。確切路徑及其屬於檔案還是資料夾尚未確認。原文：https://github.com/Facta-Leopard/ForgePlay/issues/18"
       },
       "blocker": null
+    },
+    {
+      "id": "vrchat-m3-air-8gb-community-kreamsoup-sh-20260922",
+      "gameId": "vrchat",
+      "testProfileId": "macbook-air-m3-8gb-tahoe-26-5-1",
+      "forgePlayVersion": "1.3.1",
+      "gameVersion": null,
+      "status": "blocked",
+      "source": "github-issue",
+      "reporter": "kreamsoup-SH",
+      "testedAt": null,
+      "notes": {
+        "ko": "GitHub 제보자 @kreamsoup-SH: M3 Air·메모리 8GB·macOS Tahoe 26.5.1(25F80) 환경에서 VRChat이 실행되지 않습니다.",
+        "en": "GitHub report by @kreamsoup-SH: VRChat does not launch on an M3 MacBook Air with 8GB memory and macOS Tahoe 26.5.1 (25F80).",
+        "de": "GitHub-Bericht von @kreamsoup-SH: VRChat startet auf einem M3 MacBook Air mit 8GB Arbeitsspeicher und macOS Tahoe 26.5.1 (25F80) nicht.",
+        "es": "Informe de GitHub de @kreamsoup-SH: VRChat no se inicia en un MacBook Air M3 con 8GB de memoria y macOS Tahoe 26.5.1 (25F80).",
+        "fr": "Signalement GitHub de @kreamsoup-SH : VRChat ne se lance pas sur un MacBook Air M3 avec 8Go de mémoire et macOS Tahoe 26.5.1 (25F80).",
+        "ja": "@kreamsoup-SHによるGitHub報告：M3 MacBook Air（メモリ8GB、macOS Tahoe 26.5.1（25F80））でVRChatが起動しません。",
+        "zh-Hans": "GitHub 用户 @kreamsoup-SH 反馈：VRChat 在配备 M3、8GB 内存并运行 macOS Tahoe 26.5.1（25F80）的 MacBook Air 上无法启动。",
+        "zh-Hant": "GitHub 使用者 @kreamsoup-SH 回報：VRChat 在配備 M3、8GB 記憶體並執行 macOS Tahoe 26.5.1（25F80）的 MacBook Air 上無法啟動。"
+      },
+      "blocker": "runtime"
+    },
+    {
+      "id": "zenless-zone-zero-m5-pro-24gb-github-sleeeppy-20260922",
+      "gameId": "zenless-zone-zero",
+      "testProfileId": "apple-silicon-m5-pro-24gb-macos-26-6-2",
+      "forgePlayVersion": "1.3.1",
+      "gameVersion": null,
+      "status": "blocked",
+      "source": "github-issue",
+      "reporter": "sleeeppy",
+      "testedAt": null,
+      "notes": {
+        "ko": "GitHub 제보자 @sleeeppy: Steam의 Windows용 Zenless Zone Zero(젠레스 존 제로, App ID 4162040)를 HoYoPlay를 통해 실행했습니다. ForgePlay 내부의 Windows Steam은 게임을 실행하지만, 세션이 플레이 가능한 화면에 도달하지 않습니다. 테스트 환경은 Mac17,9·Apple M5 Pro·통합 메모리 24GB·macOS 26.6.2(25G83)입니다.",
+        "en": "GitHub report by @sleeeppy: The official Windows Steam build of Zenless Zone Zero (App ID 4162040), launched through HoYoPlay, can be started by Windows Steam inside ForgePlay, but the session never reaches a playable frame. Test environment: Mac17,9 with Apple M5 Pro, 24GB unified memory, and macOS 26.6.2 (25G83).",
+        "de": "GitHub-Bericht von @sleeeppy: Die offizielle Windows-Steam-Version von Zenless Zone Zero (App-ID 4162040), gestartet über HoYoPlay, kann von Windows-Steam in ForgePlay gestartet werden, erreicht jedoch nie ein spielbares Bild. Testumgebung: Mac17,9 mit Apple M5 Pro, 24GB Unified Memory und macOS 26.6.2 (25G83).",
+        "es": "Informe de GitHub de @sleeeppy: La versión oficial de Zenless Zone Zero para Windows en Steam (App ID 4162040), iniciada mediante HoYoPlay, puede iniciarse desde Windows Steam dentro de ForgePlay, pero la sesión nunca llega a mostrar una imagen jugable. Entorno de prueba: Mac17,9 con Apple M5 Pro, 24GB de memoria unificada y macOS 26.6.2 (25G83).",
+        "fr": "Signalement GitHub de @sleeeppy : la version Windows officielle de Zenless Zone Zero sur Steam (App ID 4162040), lancée via HoYoPlay, peut être démarrée par Windows Steam dans ForgePlay, mais la session n’atteint jamais une image jouable. Environnement de test : Mac17,9 avec Apple M5 Pro, 24Go de mémoire unifiée et macOS 26.6.2 (25G83).",
+        "ja": "@sleeeppyによるGitHub報告：HoYoPlay経由で起動するWindows版Steam公式ビルドのZenless Zone Zero（Steam App ID 4162040）は、ForgePlay内のWindows Steamから起動できますが、プレイ可能な画面まで到達しません。テスト環境はMac17,9、Apple M5 Pro、ユニファイドメモリ24GB、macOS 26.6.2（25G83）です。",
+        "zh-Hans": "GitHub 用户 @sleeeppy 反馈：通过 HoYoPlay 启动的官方 Windows Steam 版《绝区零》（Steam App ID 4162040）可以由 ForgePlay 内的 Windows Steam 启动，但会话始终无法到达可游玩的画面。测试环境为 Mac17,9、Apple M5 Pro、24GB 统一内存、macOS 26.6.2（25G83）。",
+        "zh-Hant": "GitHub 使用者 @sleeeppy 回報：透過 HoYoPlay 啟動的官方 Windows Steam 版《絕區零》（Steam App ID 4162040）可由 ForgePlay 內的 Windows Steam 啟動，但工作階段始終無法到達可遊玩的畫面。測試環境為 Mac17,9、Apple M5 Pro、24GB 統一記憶體、macOS 26.6.2（25G83）。"
+      },
+      "blocker": "launcher"
     }
   ]
 }
