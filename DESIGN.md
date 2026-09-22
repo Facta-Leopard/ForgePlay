@@ -670,6 +670,26 @@ The only "imagery" in the system is in-product Raycast UI screenshots and small 
 
 ## ForgePlay adaptation — 2026-09-05
 
+### Layered motion design — 2026-09-23 (approved for publication)
+
+Extend the accepted ForgePlay identity with copper light and slate-blue metal.
+Reference the visual movement of OriginKit's Ribbon Glow and Reflect Shader
+previews, using original local canvas/CSS implementations, not copied code or
+assets. Keep the existing content, localization, release links, catalogs,
+announcement disclosures, poster dialog, and app-guide behaviors.
+
+Build the forge panorama from three independently generated layers: painted
+workshop, transparent rabbit/anvil group, and transparent foreground tools.
+Apply small depth offsets and locally drawn embers. DirectX/Metal typographic
+plates receive a slow reflection. No cursor replacement or scroll hijacking.
+Use the existing Avenir/Apple SD Gothic Neo stack, controlled warm highlights,
+readable matte panels, and the original green/yellow/red compatibility cues.
+Support reduced motion; stop canvas loops offscreen and in hidden documents.
+The original design is available locally with `?preview=original`.
+The user approved publication after reviewing the preview. The founder section
+also uses three coordinated layers: distant valley, rabbit carrying a hammer,
+and open forge doorway. The same layers are shared by the homepage and Why page.
+
 This site design borrows the continuous dark surface scale and
 restrained controls from the reference above. ForgePlay uses its own artwork,
 warm ember accents and Avenir/Apple SD Gothic Neo font stack; no Raycast logos,

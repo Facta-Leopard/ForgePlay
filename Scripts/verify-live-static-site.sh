@@ -5,6 +5,14 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 STATIC_SITE_VERIFIER="$ROOT_DIR/Scripts/verify-static-site.sh"
 BASE_URL="${FORGEPLAY_PAGES_BASE_URL:-https://facta-leopard.github.io/ForgePlay}"
 PAGES=(
+  site-assets/forge-motion.css
+  site-assets/forge-motion.js
+  site-assets/forge-scene/workshop.jpg
+  site-assets/forge-scene/smith.png
+  site-assets/forge-scene/tools.png
+  site-assets/forge-scene/outlook-landscape.jpg
+  site-assets/forge-scene/outlook-rabbit.png
+  site-assets/forge-scene/outlook-door.png
   index.html
   site-assets/guide.html
   site-assets/guide.css

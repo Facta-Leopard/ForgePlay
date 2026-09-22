@@ -3,6 +3,14 @@ set -euo pipefail
 
 ROOT_DIR="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 PAGES=(
+  site-assets/forge-motion.css
+  site-assets/forge-motion.js
+  site-assets/forge-scene/workshop.jpg
+  site-assets/forge-scene/smith.png
+  site-assets/forge-scene/tools.png
+  site-assets/forge-scene/outlook-landscape.jpg
+  site-assets/forge-scene/outlook-rabbit.png
+  site-assets/forge-scene/outlook-door.png
   index.html
   site-assets/guide.html
   site-assets/guide.css
@@ -2039,6 +2047,7 @@ for script in \
   site-assets/current-release.js \
   site-assets/guide.js \
   site-assets/guide-app.js \
+  site-assets/forge-motion.js \
   site-assets/website-compatibility.js \
   compatibility.js \
   announcements.js \
