@@ -11,9 +11,9 @@
   <link rel="stylesheet" href="site.css?v=20260729-14">
   <link rel="stylesheet" href="site-assets/site-shell.css?v=20260905-7">
   <link rel="stylesheet" href="site-assets/page-experience.css?v=20260905-7">
-  <script src="site.js?v=20260908-2" defer></script>
+  <script src="site.js?v=20260923-copy1" defer></script>
   <script src="site-assets/site-shell.js?v=20260905-2" defer></script>
-  <link rel="stylesheet" href="site-assets/forge-motion.css?v=20260923-1">
+  <link rel="stylesheet" href="site-assets/forge-motion.css?v=20260923-copy1">
   <script src="site-assets/forge-motion.js?v=20260923-1" defer></script>
 </head>
 <body class="fp-site license-page" data-page="license">
@@ -49,9 +49,9 @@
     <div class="license-shell">
       <article id="license-ko" class="language-section license-language" lang="ko">
         <header class="license-intro">
-          <p class="section-label">FORGEPLAY 라이선스, 쉽게 보기</p>
+          <p class="section-label">FORGEPLAY 라이선스 안내</p>
           <h1>게임 모드 코드는 GPLv3로 공개합니다. 나머지 구성 요소는 각자의 조건을 따릅니다.</h1>
-          <p>ForgePlay는 구성 요소별로 다른 라이선스를 따릅니다. 적용 범위 문서에 명시된 게임 모드 코드는 <code>GPL-3.0-only</code>이며, Wine·D3DMetal을 비롯한 제3자 구성 요소에는 각자의 조건이 적용됩니다. 이 페이지는 핵심만 풀어쓴 안내이고, 실제 권리와 의무는 아래 공식 문서가 정합니다.</p>
+          <p>ForgePlay는 구성 요소별로 서로 다른 라이선스를 따릅니다. 적용 범위 문서에 명시된 게임 모드 코드는 <code>GPL-3.0-only</code>이며, Wine·D3DMetal을 비롯한 제3자 구성 요소에는 각자의 조건이 적용됩니다. 이 페이지는 주요 내용을 정리한 안내입니다. 실제 권리와 의무는 아래 공식 문서에 따릅니다.</p>
           <a class="button primary" href="#license-files">공식 라이선스 문서 보기</a>
         </header>
         <div class="license-principles">
@@ -106,7 +106,7 @@
           </section>
           <section class="license-principle">
             <span>03 / WHERE IT APPLIES</span>
-            <h2>The named source scope is narrow; distribution duties can reach the combined executable</h2>
+            <h2>The license covers specified code; distribution obligations may also apply to the combined executable</h2>
             <p>The direct scope covers Game Mode-specific code, identified parts of mixed files, <code>GameModeProcessHost</code>, and two Wine patches. It is not a blanket relicensing of the repository, but distributing the current combined executable requires the GPLv3 rights and Corresponding Source applicable to that combined work.</p>
           </section>
           <section class="license-principle">
@@ -141,7 +141,7 @@
           <section class="license-principle">
             <span>02 / WAS DU BEACHTEN MUSST</span>
             <h2>Mit der Binärdatei müssen auch Quellcode und Rechte weitergegeben werden</h2>
-            <p>Wer abgedeckten Code oder ein damit kombiniertes Werk verbreitet, muss erforderliche Hinweise erhalten, Änderungen kennzeichnen und den zugehörigen Quellcode samt den von GPLv3 verlangten Build- und Paketierungsunterlagen bereitstellen.</p>
+            <p>Wer unter diese Lizenz fallenden Code oder ein damit kombiniertes Werk verbreitet, muss erforderliche Hinweise erhalten, Änderungen kennzeichnen und den zugehörigen Quellcode samt den von GPLv3 verlangten Build- und Paketierungsunterlagen bereitstellen.</p>
           </section>
           <section class="license-principle">
             <span>03 / GELTUNGSBEREICH</span>
@@ -205,7 +205,7 @@
 
       <article id="license-fr" class="language-section license-language" lang="fr">
         <header class="license-intro">
-          <p class="section-label">LES LICENCES FORGEPLAY, EN CLAIR</p>
+          <p class="section-label">LES LICENCES DE FORGEPLAY, EN CLAIR</p>
           <h1>Le code du mode Jeu est sous GPLv3. Les autres composants conservent leurs propres conditions.</h1>
           <p>ForgePlay n’est pas régi par une licence unique. Le code du mode Jeu nommé dans le document de périmètre est sous <code>GPL-3.0-only</code> ; Wine, D3DMetal et les autres éléments tiers conservent leurs propres conditions. Cette page résume l’essentiel. Les fichiers faisant foi, accessibles plus bas, déterminent les droits et obligations.</p>
           <a class="button primary" href="#license-files">Voir les fichiers de licence faisant foi</a>
@@ -267,7 +267,7 @@
           </section>
           <section class="license-principle">
             <span>04 / 第三者コンポーネント</span>
-            <h2>その他のコンポーネントには、それぞれのライセンスが残ります</h2>
+            <h2>その他のコンポーネントには、それぞれのライセンスが適用されます</h2>
             <p>変更していない Wine 素材には、適用される LGPL の権利が残ります。D3DMetal、他のレンダラー、フォント、アートワーク、商標にはそれぞれの条件が適用され、D3DMetal は Apple の条件に基づく別コンポーネントとして配布されます。</p>
           </section>
           <section class="license-principle">
@@ -362,8 +362,8 @@
       <section id="license-files" class="license-files" aria-labelledby="license-files-title">
         <div class="section-heading">
           <p class="section-label" data-i18n="license.filesLabel">AUTHORITATIVE LICENSE FILES</p>
-          <h2 id="license-files-title" data-i18n="license.filesTitle">Download the license files.</h2>
-          <p data-i18n="license.filesLead">These files—not this summary—define the exact policy and scope.</p>
+          <h2 id="license-files-title" data-i18n="license.filesTitle">View or download the license files.</h2>
+          <p data-i18n="license.filesLead">These files—not this summary—govern the exact rights, obligations, and scope.</p>
         </div>
         <div class="license-file-grid">
           <a href="LICENSE.md" download>

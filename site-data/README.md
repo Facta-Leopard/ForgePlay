@@ -143,6 +143,17 @@ only in Latin characters.
 
 ## Project notices
 
+Website copy uses direct, consistent instructions in all eight languages.
+The Korean forging slogan remains part of the brand; instructional headings
+describe the task rather than using rhetorical questions. German uses `du`,
+French uses `vous`, and Korean and Japanese use polite instructions. The
+founder's statement retains its deliberately assertive voice.
+
+`guide-ui.json` preserves app control names so they match screenshots, while
+explanatory prose may be edited for the website. The localization exporter is
+a source of app strings; review and merge future exports so they do not
+overwrite website editorial improvements.
+
 `announcements.json` is the single source for the latest notice shown on the
 homepage and the full project timeline on `updates.html`. Each notice carries a
 stable ID, publication date, category, destination, and title/summary text for

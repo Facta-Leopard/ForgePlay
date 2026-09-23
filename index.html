@@ -29,7 +29,7 @@
   <link rel="stylesheet" href="site-assets/version-posters.css?v=20260920-1">
   <link rel="stylesheet" href="site-assets/guide.css?v=20260913-1">
   <link rel="stylesheet" href="site-assets/guide-app.css?v=20260913-1">
-  <script src="site.js?v=20260908-2&posters=20260920" defer></script>
+  <script src="site.js?v=20260923-copy1" defer></script>
   <script src="site-assets/site-shell.js?v=20260905-2" defer></script>
   <script src="site-assets/current-release.js?v=20260905-7" defer></script>
   <script src="site-assets/website-compatibility.js?v=20260907-1" defer></script>
@@ -40,7 +40,7 @@
   <script src="site-assets/version-posters.js?v=20260920-1" defer></script>
   <script src="site-assets/guide.js?v=20260913-1" defer></script>
   <script src="site-assets/guide-app.js?v=20260913-2" defer></script>
-  <link rel="stylesheet" href="site-assets/forge-motion.css?v=20260923-1">
+  <link rel="stylesheet" href="site-assets/forge-motion.css?v=20260923-copy1">
   <script src="site-assets/forge-motion.js?v=20260923-1" defer></script>
 </head>
 <body class="fp-site fp-home" data-page="home">
@@ -72,18 +72,25 @@
       <aside class="fp-news-preview" data-latest-announcement aria-labelledby="fp-news-title">
         <div class="fp-news-meta"><span class="fp-eyebrow" data-i18n="home.latestLabel">LATEST</span><span data-announcement-date></span></div>
         <h2 id="fp-news-title" data-announcement-title data-i18n="shared.navUpdates">Updates</h2>
-        <p class="fp-news-summary" data-announcement-summary data-i18n="updates.lead">Releases, project notices, and development updates in one place.</p>
+        <p class="fp-news-summary" data-announcement-summary data-i18n="updates.lead">Read release notes, project announcements, and progress updates.</p>
         <div class="fp-news-links"><a class="fp-text-link" href="updates.html" data-announcement-link data-i18n="updates.openLink">Open update ↗</a><a class="fp-text-link" href="updates.html" data-locale-link data-i18n="home.latestAll">All updates ↗</a></div>
       </aside>
       <div class="fp-hero-details">
       <p class="fp-hero-lead fp-first-lead" data-i18n="refresh.firstLead">The world’s first app to run Windows games in native macOS Game Mode.*</p>
-      <a class="fp-scope-link" href="#difference" data-open-evidence data-i18n="refresh.firstScope">*Read the scope and basis of the first-of-its-kind claim</a>
+      <a class="fp-scope-link" href="#difference" data-open-evidence data-i18n="refresh.firstScope">*View the basis and sources for this claim</a>
       <div class="fp-actions">
-        <a class="fp-button fp-primary" href="https://github.com/Facta-Leopard/ForgePlay/releases/latest" data-current-release-download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 17v4h14v-4"/></svg><span data-current-release-download-label data-i18n="home.releaseButton">Download ForgePlay</span></a>
-        <a class="fp-button fp-secondary" href="#library"><span data-i18n="refresh.explore">Find your game</span><span aria-hidden="true">→</span></a>
+        <a class="fp-button fp-primary" href="https://github.com/Facta-Leopard/ForgePlay/releases/latest" data-current-release-download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 17v4h14v-4"/></svg><span data-current-release-download-label data-i18n="home.releaseButton">Download Apple-notarized DMG</span></a>
+        <a class="fp-button fp-secondary" href="#library"><span data-i18n="refresh.explore">Find your games</span><span aria-hidden="true">→</span></a>
       </div>
-      <p class="fp-requirements" data-i18n="refresh.requirements">Apple Silicon · macOS 26+ · Rosetta required</p>
+      <p class="fp-requirements" data-i18n="refresh.requirements">Apple Silicon · macOS 26 or later · Rosetta required</p>
       <a class="guide-home-link" href="site-assets/guide.html" data-locale-link><span data-guide-text="teaserLink">Explore the visual guide</span> ↗</a>
+      <div class="fp-community-hero">
+        <p data-i18n="community.hero">Enjoying ForgePlay? Show your support with a Star or sponsorship.</p>
+        <div class="fp-community-actions">
+          <a href="https://github.com/Facta-Leopard/ForgePlay" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">☆</span><span data-i18n="community.star">Star on GitHub</span></a>
+          <a class="fp-community-sponsor" href="https://github.com/sponsors/facta-leopard" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">♡</span><span data-i18n="community.sponsor">Sponsor development</span></a>
+        </div>
+      </div>
       </div>
     </section>
 
@@ -91,7 +98,7 @@
       <figure class="fp-panorama">
         <img src="site-assets/forgeplay-hero.jpg" srcset="site-assets/forgeplay-hero.jpg 1600w, site-assets/forgeplay-hero-3200.jpg 3200w" sizes="(min-width: 1240px) 1180px, 95vw" alt="" width="1600" height="1000" fetchpriority="high">
         <div class="fp-panorama-shade"></div>
-        <figcaption><span class="fp-stage-caption" data-i18n="refresh.artCaption">Forging Windows games for Mac.</span><span class="fp-stage-route" aria-hidden="true">DIRECTX <i>→</i> METAL <i>→</i> macOS</span></figcaption>
+        <figcaption><span class="fp-stage-caption" data-i18n="refresh.artCaption">Windows games, forged for Mac.</span><span class="fp-stage-route" aria-hidden="true">DIRECTX <i>→</i> METAL <i>→</i> macOS</span></figcaption>
         <span class="fp-art-brand" aria-hidden="true">ForgePlay<span> SILICON</span></span>
       </figure>
       <div class="fp-poster-strip" role="group" aria-label="Version posters" data-i18n-aria-label="posters.title">
@@ -139,7 +146,7 @@
 
     <section class="fp-library fp-wrap fp-section" id="library" aria-labelledby="compatibility-teaser-title">
       <header class="fp-section-head">
-        <div><p class="fp-eyebrow" data-i18n="refresh.libraryLabel">COMPATIBILITY LIBRARY</p><h2 id="compatibility-teaser-title" data-i18n="refresh.libraryTitle">Start with your game.</h2><p class="fp-section-lead" data-i18n="refresh.libraryLead">Explore real play reports. Select a game to see test hardware and community notes.</p></div>
+        <div><p class="fp-eyebrow" data-i18n="refresh.libraryLabel">GAME COMPATIBILITY</p><h2 id="compatibility-teaser-title" data-i18n="refresh.libraryTitle">See how your games run.</h2><p class="fp-section-lead" data-i18n="refresh.libraryLead">See how games play in real tests. Select a game to explore the test setup and submitted reports.</p></div>
         <div class="fp-count"><strong data-compatibility-count aria-live="polite">—</strong><span data-i18n="refresh.playable">Playable</span></div>
       </header>
       <div class="fp-library-toolbar">
@@ -147,43 +154,55 @@
         <div class="fp-filters" role="group" data-i18n-aria-label="shared.navCompatibility" aria-label="Compatibility">
           <button type="button" data-home-filter="all" aria-pressed="true" data-i18n="refresh.all">All</button>
           <button type="button" data-home-filter="playable" aria-pressed="false" data-i18n="refresh.playable">Playable</button>
-          <button type="button" data-home-filter="blocked" aria-pressed="false" data-i18n="refresh.blocked">Blocked</button>
+          <button type="button" data-home-filter="blocked" aria-pressed="false" data-i18n="refresh.blocked">Won’t launch</button>
         </div>
       </div>
-      <p class="fp-catalog-scope" data-website-reports-scope data-i18n="compat.webReportsScope">Additional community reports are shown on the website separately from the in-app compatibility database.</p>
-      <div class="fp-game-grid" data-home-games aria-busy="true"><p data-i18n="refresh.loading">Loading play reports…</p></div>
+      <p class="fp-catalog-scope" data-website-reports-scope data-i18n="compat.webReportsScope">Community reports added to the website. Displayed separately from the in-app compatibility database.</p>
+      <div class="fp-game-grid" data-home-games aria-busy="true"><p data-i18n="refresh.loading">Loading play records…</p></div>
       <div class="fp-library-footer"><span data-home-result-count role="status"></span><button type="button" class="fp-text-button" data-home-more hidden data-i18n="refresh.more">Show more games</button><a class="fp-text-link" href="compatibility.html" data-locale-link><span data-i18n="home.compatibilityButton">Explore compatibility</span> <span aria-hidden="true">↗</span></a></div>
     </section>
 
     <section class="fp-feature-section" id="game-mode" aria-labelledby="game-mode-title">
       <div class="fp-wrap fp-section">
-        <header class="fp-section-head"><div><p class="fp-eyebrow" data-i18n="refresh.featuresLabel">THE FORGEPLAY ENVIRONMENT</p><h2 id="game-mode-title" data-i18n="refresh.featuresTitle">Focus on the game.</h2></div></header>
+        <header class="fp-section-head"><div><p class="fp-eyebrow" data-i18n="refresh.featuresLabel">FORGEPLAY FEATURES</p><h2 id="game-mode-title" data-i18n="refresh.featuresTitle">Everything you need to get playing.</h2></div></header>
         <div class="fp-feature-shell">
           <div class="fp-feature-tabs" role="tablist" data-i18n-aria-label="home.gameModePathLabel" aria-label="ForgePlay Game Mode path">
             <button id="feature-tab-0" type="button" role="tab" aria-selected="true" aria-controls="feature-panel-0" data-feature-tab="0"><span>01</span><span data-i18n="refresh.featureTab1">Game Mode</span></button>
-            <button id="feature-tab-1" type="button" role="tab" aria-selected="false" aria-controls="feature-panel-1" data-feature-tab="1" tabindex="-1"><span>02</span><span data-i18n="refresh.featureTab2">One environment</span></button>
+            <button id="feature-tab-1" type="button" role="tab" aria-selected="false" aria-controls="feature-panel-1" data-feature-tab="1" tabindex="-1"><span>02</span><span data-i18n="refresh.featureTab2">Runtime management</span></button>
             <button id="feature-tab-2" type="button" role="tab" aria-selected="false" aria-controls="feature-panel-2" data-feature-tab="2" tabindex="-1"><span>03</span><span data-i18n="refresh.featureTab3">Open source</span></button>
           </div>
           <div class="fp-feature-panel" id="feature-panel-0" role="tabpanel" aria-labelledby="feature-tab-0" data-feature-panel="0" tabindex="0">
-            <div class="fp-feature-copy"><h3 data-i18n="refresh.feature1Title">Your Mac gives the game priority.</h3><p data-i18n="refresh.feature1Body">ForgePlay brings Windows games into macOS Game Mode, prioritizing CPU and GPU access and reducing background activity.</p><a class="fp-text-link" href="https://support.apple.com/105118" target="_blank" rel="noopener noreferrer" data-i18n="home.gameModeAppleLink">Apple’s Game Mode guide ↗</a></div>
+            <div class="fp-feature-copy"><h3 data-i18n="refresh.feature1Title">macOS gives your game priority.</h3><p data-i18n="refresh.feature1Body">ForgePlay connects Windows games to the macOS Game Mode environment. Priority CPU and GPU access and reduced background activity help you focus on the game.</p><a class="fp-text-link" href="https://support.apple.com/105118" target="_blank" rel="noopener noreferrer" data-i18n="home.gameModeAppleLink">Apple’s Game Mode guide ↗</a></div>
             <div class="fp-mode-visual" aria-hidden="true"><div class="fp-orbit"></div><div class="fp-core"><img src="site-assets/forgeplay-icon.png" alt="" width="88" height="88"></div><span class="fp-orbit-chip fp-chip-cpu">CPU</span><span class="fp-orbit-chip fp-chip-gpu">GPU</span><span class="fp-mode-badge"><i></i>macOS <span data-i18n="refresh.featureTab1">Game Mode</span></span></div>
             <div class="fp-metric-row"><div><strong>CPU + GPU</strong><span data-i18n="home.gameModeMetric1">Highest-priority access</span></div><div><strong>2×</strong><span data-i18n="home.gameModeMetric2">Bluetooth sampling rate</span></div><div><strong>↓</strong><span data-i18n="home.gameModeMetric3">Background activity</span></div></div>
           </div>
           <div class="fp-feature-panel" id="feature-panel-1" role="tabpanel" aria-labelledby="feature-tab-1" data-feature-panel="1" tabindex="0" hidden>
-            <div class="fp-feature-copy"><h3 data-i18n="refresh.feature2Title">From setup to play, in one place.</h3><p data-i18n="refresh.feature2Body">Manage the Wine runtime, graphics backends, per-game settings and sessions together in ForgePlay.</p><a class="fp-text-link" href="support.html" data-locale-link data-i18n="shared.navSupport">Support</a></div>
+            <div class="fp-feature-copy"><h3 data-i18n="refresh.feature2Title">Manage setup and launch in one place.</h3><p data-i18n="refresh.feature2Body">Manage the Wine runtime, graphics backends, per-game settings, and play sessions together in ForgePlay.</p><a class="fp-text-link" href="support.html" data-locale-link data-i18n="shared.navSupport">Support</a></div>
             <div class="fp-runtime-visual" aria-hidden="true"><span>Wine</span><span>DirectX</span><span>Metal</span><div class="fp-runtime-hub"><img src="site-assets/forgeplay-icon.png" width="48" height="48" alt=""><strong>ForgePlay</strong></div><span>Steam</span><span>macOS</span><span>Game Host</span></div>
           </div>
           <div class="fp-feature-panel" id="feature-panel-2" role="tabpanel" aria-labelledby="feature-tab-2" data-feature-panel="2" tabindex="0" hidden>
-            <div class="fp-feature-copy"><h3 data-i18n="refresh.feature3Title">Source disclosure is not discretionary.</h3><p data-i18n="refresh.feature3Body">ForgePlay publishes all source it develops or modifies under the applicable component licenses. Changes kept outside upstream are accompanied by their rationale, complete patch sets, and build materials. We will not use “mostly public” to obscure important exceptions.</p><a class="fp-text-link" href="https://github.com/Facta-Leopard/ForgePlay/tree/main" target="_blank" rel="noopener noreferrer" data-i18n="home.sourceLink">Browse the published source ↗</a></div>
+            <div class="fp-feature-copy"><h3 data-i18n="refresh.feature3Title">We publish all the code we develop or modify.</h3><p data-i18n="refresh.feature3Body">ForgePlay publishes all source it develops or modifies under the applicable component licenses. Changes kept outside upstream are accompanied by their rationale, complete patch sets, and build materials. We will not use “mostly public” to obscure important exceptions.</p><a class="fp-text-link" href="https://github.com/Facta-Leopard/ForgePlay/tree/main" target="_blank" rel="noopener noreferrer" data-i18n="home.sourceLink">Browse the published source ↗</a></div>
             <div class="fp-source-visual" aria-hidden="true"><span class="fp-source-address">Facta-Leopard / <strong>ForgePlay</strong></span><span>⌑ &nbsp; Sources/</span><span>⌑ &nbsp; Native/</span><span>⌑ &nbsp; LICENSES/</span><span>⌑ &nbsp; Scripts/</span><div><i class="fp-live-dot"></i> GPLv3 · LGPL · Open source</div></div>
           </div>
         </div>
-        <details class="fp-evidence" id="difference"><summary><span data-i18n="home.worldFirstLabel">THE WORLD’S FIRST*</span><span aria-hidden="true">+</span></summary><p data-i18n="home.worldFirstScope">To our knowledge, the first publicly documented open-source Windows gaming platform designed to carry a live Wine game session through a native macOS Game Mode-capable host.</p><p data-i18n="home.sourceNote">The published source includes ForgePlay, the Game Mode host, Wine patches, build records, and license notices.</p><span class="fp-evidence-route">DIRECTX → METAL → <span data-i18n="home.worldFirstRouteGameMode">macOS GAME MODE</span></span></details>
+        <details class="fp-evidence" id="difference"><summary><span data-i18n="home.worldFirstLabel">THE WORLD’S FIRST*</span><span aria-hidden="true">+</span></summary><p data-i18n="home.worldFirstScope">*To our knowledge, the first publicly documented open-source Windows gaming platform designed to carry a live Wine game session through a native macOS Game Mode-capable host, as of 28 July 2026.</p><p data-i18n="home.sourceNote">The published source includes ForgePlay, the Game Mode host, Wine patches, build records, and license notices.</p><span class="fp-evidence-route">DIRECTX → METAL → <span data-i18n="home.worldFirstRouteGameMode">macOS GAME MODE</span></span></details>
+      </div>
+    </section>
+
+    <section class="fp-community fp-wrap" id="support-project" aria-labelledby="fp-community-title">
+      <div>
+        <p class="fp-eyebrow" data-i18n="community.label">SUPPORT FORGEPLAY</p>
+        <h2 id="fp-community-title" data-i18n="community.title">Help bring more games to Mac.</h2>
+        <p class="fp-community-copy" data-i18n="community.body">A GitHub Star helps others discover ForgePlay. Sponsorship supports compatibility testing, more test hardware, and continued development.</p>
+      </div>
+      <div class="fp-community-actions">
+        <a href="https://github.com/Facta-Leopard/ForgePlay" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">☆</span><span data-i18n="community.star">Star on GitHub</span></a>
+        <a class="fp-community-sponsor" href="https://github.com/sponsors/facta-leopard" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">♡</span><span data-i18n="community.sponsor">Sponsor development</span></a>
       </div>
     </section>
 
     <section id="other-apps" class="fp-apps fp-wrap fp-section" aria-labelledby="developer-apps-title">
-      <header class="fp-section-head"><div><p class="fp-eyebrow" data-i18n="refresh.otherAppsLabel">MORE FROM THE SAME DEVELOPER</p><h2 id="developer-apps-title" data-i18n="refresh.otherApps">Small tools. New worlds.</h2></div><p data-i18n="developerApps.lead">Explore released apps and projects in development.</p></header>
+      <header class="fp-section-head"><div><p class="fp-eyebrow" data-i18n="refresh.otherAppsLabel">OTHER PROJECTS</p><h2 id="developer-apps-title" data-i18n="refresh.otherApps">More apps and games by the same developer</h2></div><p data-i18n="developerApps.lead">Explore released apps and projects in development.</p></header>
       <div class="fp-app-controls">
         <div class="fp-segments" role="tablist" data-i18n-aria-label="developerApps.viewLabel" aria-label="Developer app view"><button type="button" role="tab" aria-selected="true" aria-controls="developer-app-grid" data-developer-view="catalog" data-i18n="developerApps.catalog">App Catalog</button><button type="button" role="tab" aria-selected="false" aria-controls="developer-app-grid" data-developer-view="development" data-i18n="developerApps.inDevelopment">In Development</button></div>
         <div class="fp-segments fp-platforms" role="tablist" data-i18n-aria-label="developerApps.platformLabel" aria-label="App platform"><button type="button" role="tab" aria-selected="true" aria-controls="developer-app-grid" data-developer-platform="mac">Mac</button><button type="button" role="tab" aria-selected="false" aria-controls="developer-app-grid" data-developer-platform="ipad">iPad</button><button type="button" role="tab" aria-selected="false" aria-controls="developer-app-grid" data-developer-platform="iphone">iPhone</button></div>
@@ -195,22 +214,21 @@
 
     <section class="fp-download" id="release" aria-labelledby="fp-download-title">
       <div class="fp-wrap fp-download-grid">
-        <div><p class="fp-eyebrow" data-current-release-label data-i18n="home.releaseLabel">CURRENT STABLE RELEASE</p><h2 id="fp-download-title" data-i18n="refresh.downloadTitle">Time to play.</h2><p data-i18n="refresh.downloadLead">Get the current stable release and start on your Mac.</p><div class="fp-actions"><a class="fp-button fp-primary" href="https://github.com/Facta-Leopard/ForgePlay/releases/latest" data-release-download data-current-release-download data-current-release-download-label data-i18n="home.releaseButton">Download ForgePlay</a><a class="fp-text-link" href="https://github.com/Facta-Leopard/ForgePlay/releases/latest" data-current-release-link target="_blank" rel="noopener noreferrer" data-i18n="home.releaseNotesButton">Release notes &amp; verification ↗</a></div><p class="fp-release-status"><i class="fp-live-dot"></i><span data-current-release-status data-i18n="home.releaseStatus">Available now</span></p></div>
+        <div><p class="fp-eyebrow" data-current-release-label data-i18n="home.releaseLabel">CURRENT STABLE RELEASE</p><h2 id="fp-download-title" data-i18n="refresh.downloadTitle">Start playing with ForgePlay.</h2><p data-i18n="refresh.downloadLead">Download the latest stable release to run Windows games on your Mac.</p><div class="fp-actions"><a class="fp-button fp-primary" href="https://github.com/Facta-Leopard/ForgePlay/releases/latest" data-release-download data-current-release-download data-current-release-download-label data-i18n="home.releaseButton">Download Apple-notarized DMG</a><a class="fp-text-link" href="https://github.com/Facta-Leopard/ForgePlay/releases/latest" data-current-release-link target="_blank" rel="noopener noreferrer" data-i18n="home.releaseNotesButton">Release notes &amp; verification ↗</a></div><p class="fp-release-status"><i class="fp-live-dot"></i><span data-current-release-status data-i18n="home.releaseStatus">AVAILABLE NOW</span></p></div>
         <aside class="fp-trust"><img src="site-assets/forgeplay-icon.png" width="64" height="64" alt=""><p class="release-evidence-copy" data-i18n="home.releaseBody">Download the Apple-notarized DMG, inspect the version-matched source, and verify the release on GitHub.</p><a class="fp-text-link" href="license.html" data-locale-link data-i18n="home.licensePageLink">Read the license guide</a></aside>
       </div>
     </section>
     <section class="fp-purpose fp-wrap" id="purpose" aria-labelledby="fp-purpose-title">
       <div class="fp-purpose-art"><img src="site-assets/forgeplay-manifesto.jpg" srcset="site-assets/forgeplay-manifesto.jpg 1935w, site-assets/forgeplay-manifesto-3200.jpg 3200w" sizes="(max-width: 700px) 90vw, 40vw" width="1935" height="812" alt="" loading="lazy"><span aria-hidden="true">ForgePlay<br><small data-i18n="home.sponsorMark">OPEN</small></span></div>
-      <div class="fp-purpose-copy"><p class="fp-eyebrow" data-i18n="refresh.purposeLabel">WHY FORGEPLAY EXISTS</p><h2 id="fp-purpose-title" data-i18n="refresh.purposeTitle">Open source belongs to no one exclusively.</h2><p data-i18n="refresh.purposeBody">ForgePlay was created to confront CodeWeavers’ complacency and de facto privatization of open-source Wine in the public interest. CodeWeavers builds its business on the community’s work, yet keeps some improvements and compatibility knowledge as advantages exclusive to its own products and does not clearly explain its authorization for commercial distribution. It nevertheless touts its contributions to Wine, but that credit is no absolution for these problems.
+      <div class="fp-purpose-copy"><p class="fp-eyebrow" data-i18n="refresh.purposeLabel">WHY FORGEPLAY WAS CREATED</p><h2 id="fp-purpose-title" data-i18n="refresh.purposeTitle">Open source belongs to no one exclusively.</h2><p data-i18n="refresh.purposeBody">ForgePlay was created to confront CodeWeavers’ complacency and de facto privatization of open-source Wine in the public interest. CodeWeavers builds its business on the community’s work, yet keeps some improvements and compatibility knowledge as advantages exclusive to its own products and does not clearly explain its authorization for commercial distribution. It nevertheless touts its contributions to Wine, but that credit is no absolution for these problems.
 
 Moreover, why has a company with years of experience and resources not made improvements that an individual developer can conceive and implement? With so much room for progress, has it not simply grown complacent in the absence of real competition? That is why ForgePlay does not stop at criticism. By implementing improvements they have not made, it demonstrates that an individual developer can build technology and features better than what already exists.
 
 And to keep those results from being fenced off yet again, ForgePlay publishes all the source code it develops or modifies. For changes not incorporated upstream, it also provides the reasons, complete patch sets, and build materials. It does not hide critical exceptions behind claims that ‘most of the source is public’; anyone can examine, modify, and build on the work.
 
-Creating competition through better implementations and public results, so that existing products can no longer coast on their current position—that is why ForgePlay is developed and made public.</p><blockquote data-i18n="home.whyQuote">“If progress stalled because no one could challenge it, we’ll build the challenger ourselves!”</blockquote><a class="fp-text-link" href="why.html" data-locale-link data-i18n="refresh.purposeLink">Read the developer’s statement and references</a></div>
+Creating competition through better implementations and public results, so that existing products can no longer coast on their current position—that is why ForgePlay is developed and made public.</p><blockquote data-i18n="home.whyQuote">“If progress stalled because no one could challenge it, we’ll build the challenger ourselves!”</blockquote><a class="fp-text-link" href="why.html" data-locale-link data-i18n="refresh.purposeLink">Read the developer’s statement and supporting evidence</a></div>
     </section>
 
-    <aside class="fp-support fp-wrap" id="support-project"><div><span class="fp-open" data-i18n="home.sponsorMark">OPEN</span><p data-i18n="home.sponsorLead">Sponsorship supports compatibility testing, hardware coverage, documentation, and long-term open-source maintenance.</p></div><a class="fp-text-link" href="https://github.com/sponsors/facta-leopard" target="_blank" rel="noopener noreferrer" data-i18n="home.sponsorButton">Sponsor ForgePlay on GitHub ↗</a></aside>
   </main>
   <dialog class="fp-poster-dialog" id="fp-poster-dialog" aria-labelledby="fp-poster-dialog-title">
     <div class="fp-poster-toolbar">

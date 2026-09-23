@@ -171,6 +171,25 @@
 .fp-motion .fp-purpose-copy>p:not(.fp-eyebrow) { font-size:14px; line-height:2; color:#c1c8d1; }
 .fp-motion .fp-footer { border-top:1px solid #46536155; margin-top:18px; }
 
+/* Community actions are visible beside the introduction and again mid-page. */
+.fp-community-hero { margin-top:24px; padding-top:18px; border-top:1px solid #69757e3d; }
+.fp-community-hero>p { color:#bcc6cf; font-size:12px; line-height:1.7; }
+.fp-community-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
+.fp-community-actions a { display:inline-flex; align-items:center; justify-content:center; gap:9px; min-height:43px; padding:9px 15px; border:1px solid #667e925c; border-radius:8px; background:#17232edb; color:#f1eee6; font-size:12px; line-height:1.5; transition:background .2s,border-color .2s,transform .2s; }
+.fp-community-actions a>span[aria-hidden] { font-size:20px; line-height:1; }
+.fp-community-actions a.fp-community-sponsor { border-color:#c8976d8c; background:#3c2d2280; color:#ffddbc; }
+.fp-community-actions a:hover { border-color:#d5c7b5; background:#283640; transform:translateY(-2px); }
+.fp-community-actions a.fp-community-sponsor:hover { background:#62402c; border-color:#f5bd89; }
+.fp-community { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(240px,.75fr); gap:35px; align-items:center; margin-block:64px 0; padding:38px; border:1px solid #ac825758; border-radius:14px; background:linear-gradient(120deg,#252b30,#292319); }
+.fp-community h2 { margin-top:12px; font-size:clamp(24px,2.8vw,34px); line-height:1.4; }
+.fp-community-copy { color:#c4c6c6; font-size:14px; line-height:1.85; margin-top:14px!important; }
+.fp-community>.fp-community-actions { margin:0; flex-direction:column; align-items:stretch; }
+.fp-community>.fp-community-actions a { min-height:49px; font-size:14px; }
+@media(max-width:760px) {
+  .fp-community { grid-template-columns:1fr; gap:23px; padding:25px; margin-top:40px; }
+  .fp-community-hero .fp-community-actions a { flex:1 1 auto; }
+}
+
 /* Pointer light is a paint layer, never an input target. */
 .fp-motion .motion-surface { position:relative; isolation:isolate; }
 .fp-motion .motion-surface::after {

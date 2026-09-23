@@ -1,7 +1,7 @@
 {
   "$schema": "./developer-apps.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-09-13",
+  "updatedAt": "2026-09-23",
   "sourceRevision": "566e4f4530d489175c512e7e431a343192d510b1",
   "apps": [
     {
@@ -11,7 +11,7 @@
       "platform": "mac",
       "kind": "app",
       "summaries": {
-        "ko": "세계최초, Apple Silicon Mac에서 Windows 게임을 맥 네이티브 게임모드로 실행하는 앱입니다.",
+        "ko": "Apple Silicon Mac에서 Windows 게임을 macOS 네이티브 게임 모드로 실행하는 세계 최초의 앱입니다.",
         "en": "The world’s first app to run Windows games in native macOS Game Mode on Apple Silicon Macs.",
         "de": "Die weltweit erste App, die Windows-Spiele auf Apple-Silicon-Macs im nativen macOS-Spielmodus ausführt.",
         "es": "La primera app del mundo que ejecuta juegos de Windows en el modo Juego nativo de macOS en equipos Mac con Apple Silicon.",
@@ -328,7 +328,7 @@
       "summaries": {
         "ko": "토끼 정찰수 보니와 늑대 잠입 전문가 클라이드를 번갈아 조작하며, 잠입과 증거 수집으로 전쟁 뒤편의 음모를 추적하는 2D 횡스크롤 액션 게임입니다.",
         "en": "A 2D side-scrolling action game where you alternate between Bonnie, a rabbit scout, and Clyde, a wolf infiltration specialist, using stealth and evidence gathering to uncover a conspiracy behind the war.",
-        "de": "Ein 2D-Sidescrolling-Actionspiel, in dem du zwischen der Kaninchen-Späherin Bonnie und dem Wolf und Infiltrationsspezialisten Clyde wechselst, um durch Schleichen und Beweissuche einer Verschwörung hinter dem Krieg auf die Spur zu kommen.",
+        "de": "Ein 2D-Sidescrolling-Actionspiel, in dem du zwischen der Kaninchen-Späherin Bonnie und Clyde, einem Wolf und Spezialisten für Infiltration wechselst, um durch Schleichen und Beweissuche einer Verschwörung hinter dem Krieg auf die Spur zu kommen.",
         "es": "Un juego de acción 2D de desplazamiento lateral donde alternas entre Bonnie, una exploradora coneja, y Clyde, un lobo experto en infiltración, usando el sigilo y las pruebas para descubrir una conspiración tras la guerra.",
         "fr": "Un jeu d’action 2D à défilement horizontal où vous alternez entre Bonnie, une éclaireuse lapine, et Clyde, un loup spécialiste de l’infiltration, pour déjouer une conspiration derrière la guerre grâce à la discrétion et à la collecte de preuves.",
         "ja": "ウサギの斥候ボニーとオオカミの潜入専門家クライドを切り替えて操作し、潜入と証拠集めで戦争の裏にある陰謀を追う2D横スクロールアクションゲームです。",

@@ -1,7 +1,7 @@
 {
   "$schema": "./announcements.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-09-19",
+  "updatedAt": "2026-09-23",
   "announcements": [
     {
       "id": "next-update-golden-gate-dlss5",
@@ -1502,9 +1502,9 @@
         "ko": [
           "## ForgePlay 업데이트 내용",
           "※ 출시된 1.1 버전(빌드 2) 기준입니다.",
-          "- Game Mode 본 기능 정식 편입\n- 그래픽 백엔드 선택 추가(베타)\n  - D3DMetal NVIDIA 베타: NVIDIA GPU 식별 및 MetalFX NGX 브리지를 통한 DLSS -> MetalFX 에뮬레이팅\n- 게임에 전달되는 네트워크 유형 선택(베타)\n  - Wi‑Fi 호환성\n  - Ethernet 호환성\n- 마이크 입력 켜기·끄기(베타)\n- 게임 비디오 메모리 설정(베타)\n  - 자동\n  - 2GB\n  - 4GB\n  - 8GB\n  - 12GB\n  - 16GB\n- 표준 Steam 실행 설정 저장 및 재사용\n- 게임별 독립 호환성 프로필(베타)\n  - HELLDIVERS 2 전용 호환성 프로필\n  - 렌더러·네트워크·마이크·비디오 메모리·Game Mode 설정\n  - Heap Zero Memory 설정\n  - GameGuard 보조 프로세스 자동 렌더러 제외 정책\n- 사용자가 선택한 .exe 파일 직접 실행(베타)\n  - EXE별 실행 백엔드 선택\n- 게임 입력 및 macOS 단축키 보호(베타)\n- 게임이 전면에 있을 때 macOS 마우스 포인터 숨기기(베타)\n- 게임용 보조키 바인딩을 통한 매핑(베타)\n  - Command 키를 Ctrl 또는 Alt로\n  - Option 키를 Ctrl 또는 Alt로\n  - Control 키를 Ctrl 또는 Alt로\n- 게임 중 앱 종료·창 관리 단축키 차단(베타)\n  - Command-Q·W·H·M\n- 게임 중 앱 전환·검색 단축키 차단(베타)\n  - Command-Tab\n  - Shift-Command-Tab\n  - Command-Space\n- Mission Control·Spaces 키보드 단축키 차단(베타)\n- macOS 스크린샷 단축키 차단(베타)\n- Steam 실행 전 컨트롤러 감지 상태 확인(베타)\n- AWDL 켜기·끄기(베타)\n- Apple Intelligence 기반 AI 문제 진단(베타)\n- 게임 호환성 DB 업데이트 기능(베타)\n- ForgePlay 업데이트 확인 기능(베타)\n- 앱 언어\n  - 키릴 문자 폰트 추가(베타)\n- 앱 색상 스타일\n  - 닫기 버튼 등 MacOS 스타일 적용",
+          "- Game Mode 본 기능 정식 편입\n- 그래픽 백엔드 선택 추가(베타)\n  - D3DMetal NVIDIA 베타: NVIDIA GPU 식별 및 MetalFX NGX 브리지를 통한 DLSS -> MetalFX 에뮬레이팅\n- 게임에 전달되는 네트워크 유형 선택(베타)\n  - Wi‑Fi 호환성\n  - Ethernet 호환성\n- 마이크 입력 켜기·끄기(베타)\n- 게임 비디오 메모리 설정(베타)\n  - 자동\n  - 2GB\n  - 4GB\n  - 8GB\n  - 12GB\n  - 16GB\n- 표준 Steam 실행 설정 저장 및 재사용\n- 게임별 독립 호환성 프로필(베타)\n  - HELLDIVERS 2 전용 호환성 프로필\n  - 렌더러·네트워크·마이크·비디오 메모리·Game Mode 설정\n  - Heap Zero Memory 설정\n  - GameGuard 보조 프로세스 자동 렌더러 제외 정책\n- 사용자가 선택한 .exe 파일 직접 실행(베타)\n  - EXE별 실행 백엔드 선택\n- 게임 입력 및 macOS 단축키 보호(베타)\n- 게임이 전면에 있을 때 macOS 마우스 포인터 숨기기(베타)\n- 게임용 보조키 바인딩을 통한 매핑(베타)\n  - Command 키를 Ctrl 또는 Alt로\n  - Option 키를 Ctrl 또는 Alt로\n  - Control 키를 Ctrl 또는 Alt로\n- 게임 중 앱 종료·창 관리 단축키 차단(베타)\n  - Command-Q·W·H·M\n- 게임 중 앱 전환·검색 단축키 차단(베타)\n  - Command-Tab\n  - Shift-Command-Tab\n  - Command-Space\n- Mission Control·Spaces 키보드 단축키 차단(베타)\n- macOS 스크린샷 단축키 차단(베타)\n- Steam 실행 전 컨트롤러 감지 상태 확인(베타)\n- AWDL 켜기·끄기(베타)\n- Apple Intelligence 기반 AI 문제 진단(베타)\n- 게임 호환성 DB 업데이트 기능(베타)\n- ForgePlay 업데이트 확인 기능(베타)\n- 앱 언어\n  - 키릴 문자 폰트 추가(베타)\n- 앱 색상 스타일\n  - 닫기 버튼 등 macOS 스타일 적용",
           "## 버그 수정",
-          "- 스팀 내 외장 드라이브 선택 후, 게임 설치시 라이브러리 생성 불가 문제 수정\n- Rosseta AVX 적용이 되지 않던 문제 수정\n- DirectX12 적용이 되지 않던 문제 수정",
+          "- Steam에서 외장 드라이브를 선택한 뒤 게임을 설치할 때 라이브러리를 만들 수 없던 문제 수정\n- Rosetta AVX 적용이 되지 않던 문제 수정\n- DirectX 12가 적용되지 않던 문제 수정",
           "## 주의사항",
           "- 게임별 Wine 및 그래픽 백엔드 호환성은 다를 수 있습니다.\n- D3DMetal NVIDIA 베타는 게임별 DLSS 동작을 Metal Bridge를 이용하여 에뮬레이팅 하는 것으로 일부 게임에서는 작동하지 않을 수 있습니다.\n- Unity 계열 게임의 경우 게임 실행시 셰이더 생성으로 인하여 로딩이 늦을 수 있으나, 실제 게임 플레이에는 영향이 없습니다.\n- 일부 게임(카운터 스트라이크 2, 오버워치)의 경우 처음 플레이 시에는 셰이더 캐싱으로 인하여 프리징이 있을 수 있습니다.\n- 격투게임 등 일부 게임의 경우 네트워크 유형을 Wi-Fi로 하면 해결될 수 있습니다.\n- Windows 커널 드라이버를 요구하는 안티치트는 실행되지 않을 수 있습니다.\n- Steam Overlay와 이를 사용하는 게임 내 팝업창은 현재 정상 동작을 보장하지 않습니다.",
           "## 다음 업데이트시 기능 추가(예정)",
