@@ -4,8 +4,8 @@
     "intro":"ForgePlay는 Apple Silicon Mac에서 Windows용 Steam 게임과 별도의 .exe 프로그램을 실행하는 앱입니다. Steam 게임에는 macOS의 네이티브 Game Mode를 연결할 수 있습니다.",
     "walkthrough":"빠른 시작 · 화면으로 따라가기", "instruction":"화면의 번호를 누르면 해당 기능의 설명을 볼 수 있습니다.", "captureLabel":"선택한 언어의 실제 앱 화면", "captureNote":"ForgePlay 1.3.1의 실제 앱 화면입니다. 준비 상태와 설정값은 사용 환경에 따라 다를 수 있습니다.",
     "zoom":"화면 크게 보기", "close":"닫기", "previous":"이전", "next":"다음 화면", "flow1":"ForgePlay에서 Steam 열기", "flow2":"Steam 라이브러리로 이동", "flow3":"게임 실행",
-    "faqEyebrow":"도움말", "faqTitle":"자주 묻는 질문", "support":"지원 안내 보기", "finishTitle":"ForgePlay를 시작하세요.", "finishBody":"처음 사용하는 경우 일반 Steam 실행부터 시작하세요. 설정이 필요할 때 이 가이드를 참고하면 됩니다.",
-    "teaserTitle":"ForgePlay 사용 가이드", "teaserBody":"실제 앱 화면으로 초기 설정과 게임 실행 방법을 확인하세요.", "teaserLink":"사용 가이드 보기",
+    "faqEyebrow":"도움말", "faqTitle":"자주 묻는 질문", "support":"지원 안내 보기", "finishTitle":"게임 실행하기", "finishBody":"Steam 게임은 ‘Steam 실행’, 별도의 Windows 프로그램은 ‘EXE 실행’에서 시작하세요. 문제가 생기면 ‘문제 진단’과 게임 호환성 목록을 확인하세요.",
+    "teaserTitle":"ForgePlay 사용 가이드", "teaserBody":"초기 설정부터 Steam·EXE 실행, 프레임 생성, 환경설정과 문제 진단까지 실제 앱 화면으로 안내합니다.", "teaserLink":"사용 가이드 보기",
     "chapters":[
       {"name":"초기 설정", "title":"Steam 실행 환경을 준비하세요.", "points":[
         ["사이드바 아래에서 설정 열기","처음 준비하거나 필요한 항목을 다시 확인할 때, 사이드바 아래의 상태 버튼으로 설정 화면을 엽니다."],
@@ -35,8 +35,8 @@
     "intro":"ForgePlay führt Windows-Steam-Spiele und eigenständige .exe-Programme auf Apple-Silicon-Macs aus. Steam-Spiele können den nativen macOS-Spielmodus nutzen.",
     "walkthrough":"Schnellstart · Schritt für Schritt", "instruction":"Wähle eine Nummer im Screenshot, um die Anleitung dazu zu lesen.", "captureLabel":"App-Screenshot in deiner Sprache", "captureNote":"Die Screenshots stammen aus ForgePlay 1.3.1. Einrichtungsstand und Einstellungen können auf deinem Mac abweichen.",
     "zoom":"Größer anzeigen", "close":"Schließen", "previous":"Zurück", "next":"Nächste Ansicht", "flow1":"Steam in ForgePlay öffnen", "flow2":"Zur Steam-Bibliothek", "flow3":"Spiel starten",
-    "faqEyebrow":"HILFE", "faqTitle":"Häufige Fragen", "support":"Zur Hilfe", "finishTitle":"Starte mit ForgePlay.", "finishBody":"Beginne mit dem regulären Steam-Start. Bei Fragen zu den Einstellungen hilft dir diese Anleitung weiter.",
-    "teaserTitle":"So startest du mit ForgePlay", "teaserBody":"Echte App-Ansichten zeigen dir, wie du ForgePlay einrichtest und ein Spiel startest.", "teaserLink":"Zur Anleitung",
+    "faqEyebrow":"HILFE", "faqTitle":"Häufige Fragen", "support":"Zur Hilfe", "finishTitle":"Ein Spiel starten", "finishBody":"Starte Steam-Spiele über den Steam-Start und eigenständige Windows-Programme über den EXE-Start. Bei Problemen helfen die Diagnose und die Spielekompatibilitätsliste.",
+    "teaserTitle":"So startest du mit ForgePlay", "teaserBody":"Lerne Einrichtung, Steam- und EXE-Start, Frame-Generierung, Einstellungen und Diagnose anhand echter App-Ansichten kennen.", "teaserLink":"Zur Anleitung",
     "chapters":[
       {"name":"Ersteinrichtung", "title":"Bereite die Umgebung für Steam vor.", "points":[
         ["Einrichtung über die Seitenleiste öffnen","Öffne mit der Statusschaltfläche unten in der Seitenleiste die Einrichtung, um die App vorzubereiten oder erforderliche Punkte zu prüfen."],
@@ -66,8 +66,8 @@
     "intro":"ForgePlay ejecuta juegos de Steam para Windows y programas .exe independientes en Mac con Apple Silicon. Los juegos de Steam pueden utilizar el modo Juego nativo de macOS.",
     "walkthrough":"Inicio rápido · Paso a paso", "instruction":"Selecciona un número en la captura para leer las instrucciones.", "captureLabel":"Pantalla real en tu idioma", "captureNote":"Capturas de ForgePlay 1.3.1. El progreso de la configuración y los ajustes pueden variar en tu Mac.",
     "zoom":"Ver más grande", "close":"Cerrar", "previous":"Anterior", "next":"Siguiente pantalla", "flow1":"Abrir Steam en ForgePlay", "flow2":"Ir a la biblioteca de Steam", "flow3":"Iniciar el juego",
-    "faqEyebrow":"AYUDA", "faqTitle":"Preguntas frecuentes", "support":"Obtener ayuda", "finishTitle":"Empieza a usar ForgePlay.", "finishBody":"Empieza con el inicio normal de Steam y consulta esta guía si necesitas ayuda con los ajustes.",
-    "teaserTitle":"Primeros pasos con ForgePlay", "teaserBody":"Sigue las pantallas de la app para configurar ForgePlay e iniciar un juego.", "teaserLink":"Ver la guía",
+    "faqEyebrow":"AYUDA", "faqTitle":"Preguntas frecuentes", "support":"Obtener ayuda", "finishTitle":"Inicia un juego", "finishBody":"Usa el inicio de Steam para los juegos de Steam y el inicio de EXE para los programas independientes de Windows. Si algo falla, consulta el diagnóstico y la lista de compatibilidad.",
+    "teaserTitle":"Primeros pasos con ForgePlay", "teaserBody":"Aprende a configurar la app, iniciar Steam y archivos EXE, usar la generación de fotogramas, ajustar las preferencias y consultar el diagnóstico con pantallas reales.", "teaserLink":"Ver la guía",
     "chapters":[
       {"name":"Primeros pasos", "title":"Prepara el entorno para Steam.", "points":[
         ["Abrir la configuración desde la barra lateral","Usa el botón de estado al pie de la barra lateral para preparar la app por primera vez o revisar los requisitos."],
@@ -97,8 +97,8 @@
     "intro":"ForgePlay exécute les jeux Steam pour Windows et les programmes .exe autonomes sur Mac Apple Silicon. Les jeux Steam peuvent bénéficier du mode Jeu natif de macOS.",
     "walkthrough":"Démarrage rapide · Étape par étape", "instruction":"Sélectionnez un numéro sur la capture pour lire les instructions.", "captureLabel":"Écran réel dans votre langue", "captureNote":"Captures de ForgePlay 1.3.1. L’avancement de la configuration et les réglages peuvent varier sur votre Mac.",
     "zoom":"Agrandir", "close":"Fermer", "previous":"Précédent", "next":"Écran suivant", "flow1":"Ouvrir Steam dans ForgePlay", "flow2":"Aller à la bibliothèque Steam", "flow3":"Lancer le jeu",
-    "faqEyebrow":"AIDE", "faqTitle":"Questions fréquentes", "support":"Obtenir de l’aide", "finishTitle":"Commencez avec ForgePlay.", "finishBody":"Commencez par le lancement normal de Steam et consultez ce guide si vous avez besoin d’aide pour les réglages.",
-    "teaserTitle":"Bien démarrer avec ForgePlay", "teaserBody":"Suivez les écrans de l’application pour configurer ForgePlay et lancer un jeu.", "teaserLink":"Consulter le guide",
+    "faqEyebrow":"AIDE", "faqTitle":"Questions fréquentes", "support":"Obtenir de l’aide", "finishTitle":"Lancer un jeu", "finishBody":"Utilisez le lancement de Steam pour les jeux Steam et le lancement d’EXE pour les programmes Windows indépendants. En cas de problème, consultez le diagnostic et la liste de compatibilité.",
+    "teaserTitle":"Bien démarrer avec ForgePlay", "teaserBody":"Découvrez la configuration, le lancement de Steam et d’EXE, la génération d’images, les préférences et le diagnostic à partir de véritables écrans de l’app.", "teaserLink":"Consulter le guide",
     "chapters":[
       {"name":"Configuration initiale", "title":"Préparez l’environnement de Steam.", "points":[
         ["Ouvrir la configuration dans la barre latérale","Utilisez le bouton d’état au bas de la barre latérale pour préparer l’application ou vérifier les éléments requis."],
@@ -128,8 +128,8 @@
     "intro":"ForgePlayはApple Silicon MacでWindows版Steamのゲームや独立した.exeプログラムを実行するアプリです。SteamのゲームではmacOSネイティブのゲームモードを利用できます。",
     "walkthrough":"クイックスタート · 画面で確認", "instruction":"画面の番号を選ぶと、その機能の説明が表示されます。", "captureLabel":"選択言語の実際のアプリ画面", "captureNote":"ForgePlay 1.3.1の実際の画面です。準備状況や設定値は環境によって異なる場合があります。",
     "zoom":"大きく表示", "close":"閉じる", "previous":"前へ", "next":"次の画面", "flow1":"ForgePlayでSteamを開く", "flow2":"Steamライブラリへ", "flow3":"ゲームを起動",
-    "faqEyebrow":"ヘルプ", "faqTitle":"よくある質問", "support":"サポートを見る", "finishTitle":"ForgePlayを始めましょう。", "finishBody":"初めて使う場合は、通常のSteam起動から始めてください。設定に迷ったときは、このガイドを参照できます。",
-    "teaserTitle":"ForgePlayの使い方", "teaserBody":"実際のアプリ画面で、初期設定とゲームの起動方法を確認できます。", "teaserLink":"使い方を見る",
+    "faqEyebrow":"ヘルプ", "faqTitle":"よくある質問", "support":"サポートを見る", "finishTitle":"ゲームを起動する", "finishBody":"SteamのゲームはSteam起動画面から、単体のWindowsプログラムはEXE起動画面から実行してください。問題が起きたら、診断とゲームの互換性一覧を確認してください。",
+    "teaserTitle":"ForgePlayの使い方", "teaserBody":"初期設定からSteam・EXEの起動、フレーム生成、環境設定、診断まで、実際のアプリ画面で説明します。", "teaserLink":"使い方を見る",
     "chapters":[
       {"name":"初回の準備", "title":"Steamを動かす環境を準備します。", "points":[
         ["サイドバーの下から設定を開く","初回の準備や必要な項目の確認は、サイドバー下部の状態ボタンから設定画面を開いて行います。"],
@@ -159,8 +159,8 @@
     "intro":"ForgePlay可在Apple Silicon Mac上运行Windows版Steam游戏和独立的.exe程序。Steam游戏可以使用macOS原生游戏模式。",
     "walkthrough":"快速开始 · 跟随画面操作", "instruction":"点击画面上的编号，查看对应功能的说明。", "captureLabel":"所选语言的实际应用画面", "captureNote":"截图来自 ForgePlay 1.3.1，设置进度和选项可能因使用环境而不同。",
     "zoom":"放大查看", "close":"关闭", "previous":"上一步", "next":"下一个画面", "flow1":"在ForgePlay中打开Steam", "flow2":"进入Steam游戏库", "flow3":"启动游戏",
-    "faqEyebrow":"帮助", "faqTitle":"常见问题", "support":"查看支持说明", "finishTitle":"开始使用 ForgePlay。", "finishBody":"初次使用时，先选择常规 Steam 启动。需要调整设置时，可随时参考本指南。",
-    "teaserTitle":"ForgePlay 使用入门", "teaserBody":"通过实际应用画面，了解初次设置和游戏启动方法。", "teaserLink":"查看使用指南",
+    "faqEyebrow":"帮助", "faqTitle":"常见问题", "support":"查看支持说明", "finishTitle":"开始运行游戏", "finishBody":"Steam 游戏从 Steam 启动页面运行，独立 Windows 程序从 EXE 启动页面运行。如遇问题，请查看诊断页面和游戏兼容性列表。",
+    "teaserTitle":"ForgePlay 使用入门", "teaserBody":"通过真实应用界面，了解初始设置、Steam 与 EXE 启动、帧生成、偏好设置和问题诊断。", "teaserLink":"查看使用指南",
     "chapters":[
       {"name":"首次准备", "title":"先准备好Steam的运行环境。", "points":[
         ["从侧边栏下方打开设置","首次准备或重新检查必需项目时，点击侧边栏底部的状态按钮，打开设置画面。"],
@@ -190,8 +190,8 @@
     "intro":"ForgePlay可在Apple Silicon Mac上執行Windows版Steam遊戲與獨立的.exe程式。Steam遊戲可以使用macOS原生遊戲模式。",
     "walkthrough":"快速開始 · 跟隨畫面操作", "instruction":"點選畫面上的編號，查看對應功能的說明。", "captureLabel":"所選語言的實際應用程式畫面", "captureNote":"截圖來自 ForgePlay 1.3.1，設定進度與選項可能因使用環境而異。",
     "zoom":"放大檢視", "close":"關閉", "previous":"上一步", "next":"下一個畫面", "flow1":"在ForgePlay中開啟Steam", "flow2":"前往Steam收藏庫", "flow3":"啟動遊戲",
-    "faqEyebrow":"說明", "faqTitle":"常見問題", "support":"查看支援說明", "finishTitle":"開始使用 ForgePlay。", "finishBody":"初次使用時，先選擇一般 Steam 啟動。需要調整設定時，可隨時參考本指南。",
-    "teaserTitle":"ForgePlay 使用入門", "teaserBody":"透過實際 App 畫面，了解初次設定與遊戲啟動方式。", "teaserLink":"查看使用指南",
+    "faqEyebrow":"說明", "faqTitle":"常見問題", "support":"查看支援說明", "finishTitle":"開始執行遊戲", "finishBody":"Steam 遊戲請從 Steam 啟動頁面執行，獨立 Windows 程式請從 EXE 啟動頁面執行。如遇問題，請查看診斷頁面與遊戲相容性清單。",
+    "teaserTitle":"ForgePlay 使用入門", "teaserBody":"透過實際 App 畫面，了解初始設定、Steam 與 EXE 啟動、影格生成、偏好設定與問題診斷。", "teaserLink":"查看使用指南",
     "chapters":[
       {"name":"首次準備", "title":"先準備好Steam的執行環境。", "points":[
         ["從側邊欄下方開啟設定","首次準備或重新檢查必要項目時，點選側邊欄底部的狀態按鈕，開啟設定畫面。"],
@@ -221,8 +221,8 @@
     "intro":"ForgePlay runs Windows Steam games and standalone .exe programs on Apple Silicon Mac. Steam games can use native macOS Game Mode integration.",
     "walkthrough":"Quick start · Follow the screens", "instruction":"Select a number on the screenshot to read the instructions.", "captureLabel":"Actual app screen in your language", "captureNote":"Screenshots from ForgePlay 1.3.1. Setup progress and settings may differ on your Mac.",
     "zoom":"View larger", "close":"Close", "previous":"Previous", "next":"Next screen", "flow1":"Open Steam in ForgePlay", "flow2":"Go to your Steam library", "flow3":"Launch your game",
-    "faqEyebrow":"HELP", "faqTitle":"Frequently asked questions", "support":"Get support", "finishTitle":"Get started with ForgePlay.", "finishBody":"Start with the standard Steam launch and refer to this guide whenever you need help with the settings.",
-    "teaserTitle":"Get started with ForgePlay", "teaserBody":"Follow real app screens to set up ForgePlay and launch a game.", "teaserLink":"Read the guide",
+    "faqEyebrow":"HELP", "faqTitle":"Frequently asked questions", "support":"Get support", "finishTitle":"Launch a game", "finishBody":"Use Steam Launch for Steam games and EXE Launch for standalone Windows programs. If something goes wrong, check Diagnostics and the game compatibility list.",
+    "teaserTitle":"Get started with ForgePlay", "teaserBody":"Learn setup, Steam and EXE launch, frame generation, preferences, and diagnostics with real app screens.", "teaserLink":"Read the guide",
     "chapters":[
       {"name":"First-time setup", "title":"Prepare the environment for Steam.", "points":[
         ["Open setup from the sidebar","Use the status button at the bottom of the sidebar to prepare the app for the first time or review required items."],

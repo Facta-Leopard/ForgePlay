@@ -143,11 +143,18 @@ only in Latin characters.
 
 ## Project notices
 
-Website copy uses direct, consistent instructions in all eight languages.
-The Korean forging slogan remains part of the brand; instructional headings
-describe the task rather than using rhetorical questions. German uses `du`,
-French uses `vous`, and Korean and Japanese use polite instructions. The
-founder's statement retains its deliberately assertive voice.
+Website copy must describe each section's actual purpose in all eight languages.
+ForgePlay runs Windows games on Mac; do not describe the games themselves as
+forged, rebuilt, or native Mac ports. The compatibility catalog helps visitors
+find playable games and known issues; it is not their personal play history.
+Support appeals must reflect the founder's purpose: independent implementation,
+full disclosure of project-developed or modified source, and competition that
+challenges stagnation. Do not reduce that purpose to increasing a game count.
+Preserve the founder's deliberately assertive voice and existing distinctions
+between the project's source and third-party components. Use natural language
+without changing feature behavior or promising universal compatibility.
+German uses `du`, French uses `vous`, and Korean and Japanese use polite
+instructions outside the founder's statement.
 
 `guide-ui.json` preserves app control names so they match screenshots, while
 explanatory prose may be edited for the website. The localization exporter is
