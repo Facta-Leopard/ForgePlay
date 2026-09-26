@@ -5,8 +5,9 @@
     {id:"steam", points:[{pin:[94,55.7],rect:[28.8,51.8,65.4,7.8]},{pin:[94,71.7],rect:[28.8,60.7,65.4,14.8]},{pin:[44,35.8],rect:[28.8,32.5,30.3,7]}]},
     {id:"profiles", points:[{pin:[23,23],rect:[1.5,20.5,22,5.3]},{pin:[94,61.5],rect:[28.5,58,65.5,9]},{pin:[94,73],rect:[28.5,69.5,65.5,13.5]}]}
   ];
-  const page = document.body.dataset.page === "guide";
+  const page = document.body.dataset.page === "guide" && Boolean(document.querySelector("#guide-screen"));
   let dictionary;
+  let interactiveCopy;
   let currentChapter = 0;
   let currentPoint = 0;
   let lastFocus;
@@ -71,7 +72,8 @@
     const text=copy();
     document.querySelectorAll("[data-guide-text]").forEach(node=>{const value=text[node.dataset.guideText];if(typeof value==="string")node.textContent=value;});
     document.querySelectorAll("[data-guide-image-link]").forEach(node=>node.setAttribute("aria-label",text.teaserLink));
-    document.querySelectorAll("[data-guide-teaser-image]").forEach(node=>{node.alt=`ForgePlay — ${text.chapters[1].name}`;node.src=`site-assets/guide/screens/${locale()}/steam.jpg`;});
+    document.querySelectorAll("[data-guide-teaser-image]").forEach(node=>{node.alt="ForgePlay 2.0.0";node.src="site-assets/guide/launcher/forge-banner.jpg";});
+    if(interactiveCopy){const c=interactiveCopy[locale()]||interactiveCopy.en;for(const [key,value]of [["teaserTitle",c.title],["teaserBody",c.pageIntro],["teaserLink",c.lessonFirst]])document.querySelectorAll(`[data-guide-text="${key}"]`).forEach(n=>n.textContent=value);}
     if(!page)return;
     document.title=`ForgePlay — ${text.nav}`;
     document.querySelector('meta[name="description"]').content=text.intro;
@@ -113,6 +115,7 @@
     dialog.addEventListener("close",()=>lastFocus?.focus());
   }
   document.addEventListener("forgeplay:localechange",render);
+  if(document.querySelector('[data-guide-teaser-image]'))fetch('site-data/guide-v2-copy.json').then(r=>{if(!r.ok)throw Error(r.status);return r.json();}).then(data=>{interactiveCopy=data;render();}).catch(()=>{});
   fetch("site-data/guide.json",{cache:"no-store"}).then(response=>{if(!response.ok)throw Error(response.status);return response.json();}).then(data=>{dictionary=data;render();}).catch(()=>{
     const error=document.querySelector("[data-guide-error]");
     if(error){

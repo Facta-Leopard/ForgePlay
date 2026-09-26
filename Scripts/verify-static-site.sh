@@ -19,6 +19,19 @@ PAGES=(
   site-assets/guide.js
   site-assets/guide-app.css
   site-assets/guide-app.js
+  site-assets/guide-v2.js
+  site-assets/guide-v2-icons.js
+  site-assets/guide-v2.css
+  site-data/guide-v2-map.json
+  site-data/guide-v2-ui.json
+  site-data/guide-v2-copy.json
+  site-assets/guide/launcher/gate-portrait.jpg
+  site-assets/guide/launcher/vr-tile.jpg
+  site-assets/guide/launcher/retro-tile.jpg
+  site-assets/guide/launcher/library-tile.jpg
+  site-assets/guide/launcher/world-banner.jpg
+  site-assets/guide/launcher/forge-banner.jpg
+  site-assets/guide/launcher/mark.png
   site-data/guide.json
   site-data/guide-app-map.json
   site-data/guide-ui.json
@@ -430,7 +443,7 @@ for path in paths:
 site_js = (root / "site.js").read_text(encoding="utf-8")
 locale_names = ["ko", "en", "de", "es", "fr", "ja", "zh-Hans", "zh-Hant"]
 
-# The guide combines translated instruction data with real captures for each UI language.
+# Legacy captures remain archived; the active 2.0 guide uses HTML controls only.
 guide = json.loads((root / "site-data/guide.json").read_text(encoding="utf-8"))
 guide_demo = json.loads((root / "site-data/guide-demo.json").read_text(encoding="utf-8"))
 guide_ui = json.loads((root / "site-data/guide-ui.json").read_text(encoding="utf-8"))
@@ -463,6 +476,29 @@ for locale in locale_names:
             raise SystemExit(f"guide: missing regular screenshot {locale}/{view_id}")
         if not screenshot.read_bytes().startswith(b"\xff\xd8\xff"):
             raise SystemExit(f"guide: invalid JPEG screenshot {locale}/{view_id}")
+guide_v2_ui = json.loads((root / "site-data/guide-v2-ui.json").read_text(encoding="utf-8"))
+guide_v2_copy = json.loads((root / "site-data/guide-v2-copy.json").read_text(encoding="utf-8"))
+guide_v2_map = json.loads((root / "site-data/guide-v2-map.json").read_text(encoding="utf-8"))
+for name, data in (("guide-v2-ui", guide_v2_ui), ("guide-v2-copy", guide_v2_copy)):
+    if set(data) != set(locale_names):
+        raise SystemExit(f"{name}: all eight locales required")
+    for locale, values in data.items():
+        if set(values) != set(data["en"]) or any(not isinstance(v, str) or not v.strip() for v in values.values()):
+            raise SystemExit(f"{name}: incomplete locale {locale}")
+for locale in locale_names:
+    for view in guide_v2_map["views"].values():
+        for key in [view["title"], *view["notes"]]:
+            if not guide_v2_ui[locale].get(key):
+                raise SystemExit(f"guide-v2: missing native text {locale}/{key}")
+guide_v2_js = (root / "site-assets/guide-v2.js").read_text(encoding="utf-8")
+for key in re.findall(r'\bC\("([^"]+)"\)', guide_v2_js):
+    if key not in guide_v2_copy["en"]:
+        raise SystemExit(f"guide-v2: missing explanation {key}")
+guide_html = (root / "site-assets/guide.html").read_text(encoding="utf-8")
+if "data-guide-v2" not in guide_html or "data-guide-app " in guide_html or "guide/screens/" in guide_html or "1.3.1" in guide_html:
+    raise SystemExit("guide-v2: active page must use the 2.0 web experience, not legacy captures")
+if any(api in guide_v2_js for api in ("innerHTML", "localStorage", "showOpenFilePicker", "getUserMedia", "sendBeacon", "XMLHttpRequest")):
+    raise SystemExit("guide-v2: unsafe or persistent simulation API")
 markers = []
 for match in re.finditer(
     r'^\s{4}(?:"(zh-Hans|zh-Hant)"|(ko|en|de|es|fr|ja)):\s*\{$',
@@ -2092,6 +2128,8 @@ for script in \
   site-assets/current-release.js \
   site-assets/guide.js \
   site-assets/guide-app.js \
+  site-assets/guide-v2.js \
+  site-assets/guide-v2-icons.js \
   site-assets/forge-motion.js \
   site-assets/website-compatibility.js \
   compatibility.js \

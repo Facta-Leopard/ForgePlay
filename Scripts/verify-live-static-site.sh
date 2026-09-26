@@ -23,6 +23,19 @@ PAGES=(
   site-assets/guide.js
   site-assets/guide-app.css
   site-assets/guide-app.js
+  site-assets/guide-v2.js
+  site-assets/guide-v2-icons.js
+  site-assets/guide-v2.css
+  site-data/guide-v2-map.json
+  site-data/guide-v2-ui.json
+  site-data/guide-v2-copy.json
+  site-assets/guide/launcher/gate-portrait.jpg
+  site-assets/guide/launcher/vr-tile.jpg
+  site-assets/guide/launcher/retro-tile.jpg
+  site-assets/guide/launcher/library-tile.jpg
+  site-assets/guide/launcher/world-banner.jpg
+  site-assets/guide/launcher/forge-banner.jpg
+  site-assets/guide/launcher/mark.png
   site-data/guide.json
   site-data/guide-app-map.json
   site-data/guide-ui.json
