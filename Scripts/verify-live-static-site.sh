@@ -34,6 +34,12 @@ PAGES=(
   site-assets/guide/vision/ultrawide-2.jpg
   why.html
   license.html
+  site-assets/license-scope.css
+  site-data/licenses/2.0.0/LICENSE.txt
+  site-data/licenses/2.0.0/SOURCE-SCOPE.json
+  site-data/licenses/2.0.0/WINE-GAME-MODE-NOTICE.txt
+  site-data/licenses/2.0.0/HyPER-GAN-LICENSE.txt
+  site-data/licenses/2.0.0/MODEL-BUILDING.md
   privacy.html
   support.html
   compatibility.html

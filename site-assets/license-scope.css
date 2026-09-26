@@ -1,0 +1,30 @@
+/* Release-specific rights and source boundaries in the existing page palette. */
+.license-current-actions { display:flex; flex-wrap:wrap; gap:14px 22px; align-items:center; margin-block:20px; }
+.license-current-actions a,.license-language a { overflow-wrap:anywhere; }
+.license-author { border-left:2px solid var(--page-accent); padding-left:18px; }
+.license-author strong { color:var(--page-ink); }
+.license-page .license-masthead-copy small { font-size:12px; line-height:1.7; }
+.license-compliance { padding:24px 28px; border:1px solid #aa805744; border-radius:12px; background:linear-gradient(120deg,#252623,#151b22); }
+.license-language>section { scroll-margin-top:110px; margin-block:42px; }
+.license-language>section h2 { font-size:clamp(23px,2.6vw,31px); line-height:1.45; margin-bottom:18px; }
+.license-language>section p { color:var(--page-copy); font-size:15px; line-height:1.9; margin-block:14px; }
+.license-scope-cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+.license-scope-cards>section { min-width:0; padding:23px; border:1px solid var(--page-line); border-radius:10px; background:var(--page-surface); }
+.license-scope-number { color:var(--page-accent); font:12px/1.6 ui-monospace,monospace; }
+.license-scope-cards h3 { font-size:21px; line-height:1.4; margin-block:15px; }
+.license-scope-cards p { font-size:14px!important; }
+.license-scope-cards code,.license-archive-paths code { font-size:12px; overflow-wrap:anywhere; white-space:normal; }
+.license-boundaries table { width:100%; table-layout:fixed; border-collapse:collapse; font-size:14px; line-height:1.8; }
+.license-boundaries th,.license-boundaries td { padding:18px; border-bottom:1px solid var(--page-line); text-align:left; vertical-align:top; overflow-wrap:anywhere; }
+.license-boundaries th { width:26%; color:var(--page-ink); font-weight:550; }
+.license-boundaries thead th { background:var(--page-surface); color:var(--page-accent); }
+.license-boundaries td { color:var(--page-copy); }
+.license-explanation,.license-legacy { margin-top:22px; padding:18px; border:1px solid var(--page-line); border-radius:8px; }
+.license-explanation summary,.license-legacy summary { cursor:pointer; font-size:15px; color:var(--page-ink); line-height:1.6; min-height:28px; }
+.license-legacy p { font-size:14px; line-height:1.8; margin-top:15px; }
+.license-language .license-boundary-note { border-left:2px solid var(--page-line); padding-left:16px; font-size:14px; }
+.license-attribution { display:grid; gap:7px; padding:22px; border:1px solid var(--page-line); border-radius:10px; background:var(--page-surface); font-size:14px; }
+.license-attribution strong { color:var(--page-accent); margin-top:8px; }
+.license-archive-paths { margin:18px 0; padding-left:20px; line-height:1.9; }
+#license-scopes,#license-files { scroll-margin-top:110px; }
+@media(max-width:800px) { .license-scope-cards { grid-template-columns:1fr; }.license-compliance { padding:21px; }.license-boundaries th,.license-boundaries td { padding:12px 9px; }.license-boundaries th { width:31%; }.license-language>section p { font-size:14px; } }

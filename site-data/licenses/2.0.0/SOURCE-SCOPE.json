@@ -1,0 +1,251 @@
+{
+  "copyright": "Copyright (C) 2026 Facta-Leopard",
+  "files": {
+    "Config/ForgePlayD3DMetalFrameGenerationProxy.xcconfig": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "6c58d39ca7e79077f399c465ea070158782803ba55328e64f03e273b86ca0768"
+    },
+    "Config/ForgePlayDefaults.xcconfig": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "7c0361869295ba930b7bdf481afb74738e73040025bf21db78bc413b730e0dac"
+    },
+    "Config/ForgePlayGameModeProcessHost.xcconfig": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "07ca89e00b368a83fb54a5d3cc25b60a564d144840eacdabf3ac2fc5992fae8d"
+    },
+    "Config/ForgePlayGameModeProcessHostAppStore.xcconfig": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "51ff3114f86f979c11556c6837eb6da23abe02c29b6aecb8d37d94439d087282"
+    },
+    "Config/ForgePlayGameModeProcessHostDistribution.xcconfig": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "1a9d23e2f7dc6d33aecdcbea869c9fe0207dda7d3a9ec014e6f21f237d618a0c"
+    },
+    "Config/ForgePlayGameModeProcessHostRelease.xcconfig": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "d8821efe06ae1cf9ba5ea59b944838cbe4cec7409723a3aef154295ac626dcff"
+    },
+    "Config/ForgePlayNeuralWorker.xcconfig": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "734e377b9898cffbe66cf91574dbcf7e3c3d8ae47377bf3f78ff6cc400a02c96"
+    },
+    "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.exports": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "da5a1126aa9b4a34d7d7853358104775557e6984b370b24351f3707e201f8811"
+    },
+    "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.h": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "382d671440db03729aec4ad9804055bfe3f4f1f90516c59f21c243ed8e740063"
+    },
+    "Native/D3DMetalFrameGenerationProxy/ForgePlayD3DMetalFrameGenerationProxy.m": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "bd9948ea227d7fa690df5b3a2fed95f10c0d57f3800f5240681e1761d9e29c97"
+    },
+    "Native/D3DMetalFrameGenerationProxy/FrameGenerationBudget.h": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "ec1363ca181de1d37bfd1516957a88234838ec66f4ddea220f8afc8e997aeedf"
+    },
+    "Native/D3DMetalFrameGenerationProxy/FrameGenerationMotion.h": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "cb2aa947adda6117c77e1cf0fbffec0a128703f2bba4356fa7f90d017f095f6a"
+    },
+    "Native/D3DMetalFrameGenerationProxy/FrameGenerationMotion.m": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "6ae69e5be1b8a6a45c5133f4146901f0b867a7ab0eec616400c9be9d12d76873"
+    },
+    "Native/D3DMetalFrameGenerationProxy/FrameGenerationMotion.metal": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "70377e4a38ba999f32d45934c83381b8f0b417463347c47418f423552f59b62c"
+    },
+    "Native/D3DMetalFrameGenerationProxy/FrameGenerationMotionShader.h": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "a101494afe0e79a91d7705672db8a02437f606e9632d7ee8161469610b324560"
+    },
+    "Native/D3DMetalFrameGenerationProxy/FrameGenerationMotionTesting.h": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "f8aaebf95e2ef5fb3266a3c41919069cb7e0460f16a0ccbe7f9166e06460ed06"
+    },
+    "Native/D3DMetalFrameGenerationProxy/FrameGenerationStateMachine.c": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "acb34fd735cb6f0e7f6491d427cd1bec10d8a747013962a1cf600613c44f34bb"
+    },
+    "Native/D3DMetalFrameGenerationProxy/FrameGenerationStateMachine.h": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "8226c6b812e383fae206deb5232b8c44968af20322f01b038ca88e609871759b"
+    },
+    "Native/D3DMetalFrameGenerationProxy/WineD3DOpenGLFrameGeneration.inc": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "60136e972713a772244439461ddce93431fe1873ebe045eed526632c78bcf199"
+    },
+    "Native/GameModeProcessHost/GameModeApplicationGroup.h": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "fb92af794724e1cb661913bb35c344a776fe79190185f7c6bb4d19b14e8aec7a"
+    },
+    "Native/GameModeProcessHost/GameModeApplicationGroup.m": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "312f4b8967b832a0f0663a150eec19c0a7acbbc25bacc49077760bf1485e0bd3"
+    },
+    "Native/GameModeProcessHost/GameModeBuildIdentity.h": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "c0b4dfddb2eec7988cf6ec17b1711a3e0d458aea48e6c8ff453d2ee52f282b99"
+    },
+    "Native/GameModeProcessHost/GameModeInheritedExecution.h": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "0e85deb0870d7d0ae2e21fd18a999f498f3941f1aa7b3e8928638fa4e2413d22"
+    },
+    "Native/GameModeProcessHost/GameModeInheritedExecution.m": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "7cea90a6adc8c6572f11da264d039323b9c42224cd89fb55fff5f059422db9d7"
+    },
+    "Native/GameModeProcessHost/GameModeProcessHost-AppStore.entitlements": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "5d5e955e9505ab1b3e69290485b2318e05c61e9d2e136f92bf63f8d60c4494d3"
+    },
+    "Native/GameModeProcessHost/GameModeProcessHost-Development.entitlements": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "5d5e955e9505ab1b3e69290485b2318e05c61e9d2e136f92bf63f8d60c4494d3"
+    },
+    "Native/GameModeProcessHost/GameModeProcessHost-Distribution.entitlements": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "887340b1ca045d5eb4cae07b47238dd385f1731582a9a31ae5a1192ecaf8e0c8"
+    },
+    "Native/GameModeProcessHost/GameModeProcessHost-Release.entitlements": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "22de15eac889408fbd6b99e5ae898349a0266c2fcd3fd81c545887c3aca1b2b7"
+    },
+    "Native/GameModeProcessHost/GameModeProcessHost.entitlements.in": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "3d50db5f32bf831748caa95f954d4c1fd205b391f5ce96f3f208726b874e2e04"
+    },
+    "Native/GameModeProcessHost/GameModeProcessHost.m": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "c3bf16d9edc7615593ce2bef1b3da73240f8cffa8c56c8dbe1aca61813a3bad7"
+    },
+    "Native/GameModeProcessHost/GameModeRuntimeIdentity.h": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "8b86d8599244468243d3573626e9e9fdc7f6bc77fa6614674b1997a1cf155d9b"
+    },
+    "Native/GameModeProcessHost/GameModeRuntimeIdentity.m": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "7aefd174e721725bd67e6393d4e04b3ec33647bdc9b3cd348d259be348975b51"
+    },
+    "Native/GameModeProcessHost/Info.plist": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "88415a927c87fc9a5114854100182821f4afdeff7fa4be8f55ca77d3b2b42c27"
+    },
+    "Native/GameModeProcessHost/Info.plist.in": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "e26cb3f33c96ccade4b944d0affa50f2f5b5931e2bd8c63df38e843b58780cd3"
+    },
+    "Native/GameModeProcessHost/PrefixExecutionLease.h": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "42b728706ee8b3c6f7b20db281138d9cb5a9f994901a29e72355af296d3101f0"
+    },
+    "Native/GameModeProcessHost/PrefixExecutionLease.m": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "a09799ec252fcfde59b485c6ea1be2e63a42e806ca2df615e539335039052794"
+    },
+    "Native/GameModeProcessHost/README.md": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "50554519fe923045c2ea54b8851a443f4891cd09a5fa40657d619ce8edf2558f"
+    },
+    "Native/GameModeProcessHost/SOURCE-CONTRACT.md": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "947f6e4abb30264f323b1806f9f023cc89e4a3bfc844b898b0aab3d34b2b9510"
+    },
+    "Native/GameModeProcessHost/build-game-mode-process-host.sh": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "edd9b460246cfd1d1f40e34e19607db8f738e70da72251ce84f53a6ba48cfe9f"
+    },
+    "Native/NeuralRendering/NeuralCapturePool.c": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "b9f8cec233aa1cccbd4858d27fb825dd26b4b93720878fbec83d7834f622fc13"
+    },
+    "Native/NeuralRendering/NeuralCapturePool.h": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "df02e52302f41dde4d6f6f6eb62ff2399b4590ab198322a3e1f24bfdea720ae9"
+    },
+    "Native/NeuralRendering/NeuralFrameBridge.h": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "efa640702576147d3217d74ef473b17d5ed5edbf13d0dce7fb25eea9f485127b"
+    },
+    "Native/NeuralRendering/NeuralFrameBridge.m": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "51f0e2275d371642395bf216b71d24ff8b319dc6d9151a40201573d278000181"
+    },
+    "Native/NeuralRendering/NeuralFrameProcessor.h": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "b28f2e1b7af93e2da98c38d20016d0603ed5f08d06b051e6556d3b42027dead8"
+    },
+    "Native/NeuralRendering/NeuralFrameProcessor.m": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "af3c7ac03fda571e4a620837a56d1dab3830acd1f5d2def834bc30c0c80928ae"
+    },
+    "Native/NeuralRendering/NeuralRenderingStage.h": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "5d15d6ee7f2354d4d0f26784c8b3b43e824126c777d368ebf76ae8341090671f"
+    },
+    "Native/NeuralRendering/NeuralRenderingStage.m": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "04b969bceada49e8347ddfcd0529f15b5b1e8815b79b2d81159b27c73e46dbd9"
+    },
+    "Native/NeuralRendering/NeuralResolution.h": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "d145b702cbff660911a48eae8f32c2f010d03a37e6b94ae88902416de55ebc2f"
+    },
+    "Native/NeuralRendering/NeuralWorker.swift": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "4512d2e27cac1c24e7ffd85baf595789ba8080e5064db340039ec9802a13623b"
+    },
+    "Scripts/generate-frame-generation-shader.py": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "1fd317a65741878a46c49da682b4638d36b34a3dff5c83fca7b48aac6dad059f"
+    },
+    "Scripts/generate-xcode-project.sh": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "772bdd0f464fb3d7e273cc1d8096afb19238d0b4db55e36d656f5daef31cbc41"
+    },
+    "Tools/NeuralRendering/coreai_adapter.py": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "f0475859102669e7b4ad1785a1ad7d4f6c5c4115914376ae29ec5a77f47be602"
+    },
+    "Tools/NeuralRendering/export_coreai.py": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "93fbe0bdbe6e8a317f2af20ea4ea2eb1a9a4c375479522ec96f1ca394599ac47"
+    },
+    "Tools/NeuralRendering/import_weights.py": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "e3212ee05bc5abd19fbf1179386658606be2ddca72364c5f91ebaa5e5b7901aa"
+    },
+    "Tools/NeuralRendering/mlx_reference.py": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "3d6b0ee3cecb0e75e73edfcf2ec38d6867ced45f64677426b001efdcec1ce166"
+    },
+    "Tools/NeuralRendering/model_spec.py": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "9c4e21c0272d8422f6d8df6b3eac7c2de206b6ca23dd606a27f0740cdda743b5"
+    },
+    "Tools/NeuralRendering/package_model.py": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "5080e58e868602c6a231ed8f374aee0fd4a8bd2e010ead3e8fe967cbf821c78f"
+    },
+    "Tools/NeuralRendering/parity.py": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "35beb5097bf5905081ba196753aeb0103bf978828fe9dde3420e6694d7e849ca"
+    },
+    "Tools/NeuralRendering/probe_coreai.py": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "71fa4b0dce76b625189f5cb5267e1c10543eb3f761377fb81e1435dcaa7b76f3"
+    },
+    "Tools/NeuralRendering/requirements.txt": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "0ddc80c38ac7cc5c49415fe8c192e4a0015dffb39a5e6dbc68d8edf09f68a279"
+    },
+    "project.yml": {
+      "authorContributionLicense": "GPL-3.0-only",
+      "sha256": "6aa4890aa9f0abef862bff105a1fdc6a53d29518d6b3086201426190d7071b3f"
+    }
+  },
+  "license": "GPL-3.0-only",
+  "upstreamNotice": "Wine-derived and HyPER-GAN-derived material retains the attribution and terms in LICENSE.md; this map covers author-owned contributions only."
+}

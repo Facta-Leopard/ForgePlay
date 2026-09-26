@@ -1,5 +1,27 @@
 # ForgePlay compatibility data
 
+## Release license evidence
+
+The current license page follows the 2.0.0 (Build 6) source archive and the
+README update at `719afe24dcd1b4ec37e37d46a739ce9db55f73d8`.
+`licenses/2.0.0/` contains byte-for-byte notice copies from the public asset
+`ForgePlay-2.0.0-6-OpenSource.tar.gz` (SHA-256
+`7a4901ed02da712f522e54e528e9f19f6b75824626fa933cfcc4f08ff2b16aa3`).
+
+- `LICENSE.txt` and `SOURCE-SCOPE.json`: `LICENSES/ForgePlayRelease20/`.
+- `WINE-GAME-MODE-NOTICE.txt`: `LICENSES/ForgePlayRelease13/`.
+- `HyPER-GAN-LICENSE.txt`: `LICENSES/HyPERGAN/LICENSE`.
+- `MODEL-BUILDING.md`: archive root.
+
+Do not edit these copies to create new grants. Update from the applicable
+release archive and recheck their hashes. The 61 files named by SOURCE-SCOPE
+were checked against their archive hashes on 2026-09-27; this verifies the
+recorded source scope, not an independent legal certification or a rebuild.
+The source package identifies the public DMG by SHA-256
+`98338f3358a4ebbd1442a5bf4fdb59df0a6b6942694466f7293d05b61c101c1c`.
+Preserve the GPL/MIT/LGPL/Apple boundaries and the GPL inference-helper versus
+private Swift UI distinction when editing localized summaries.
+
 `compatibility-games.json` is the public compatibility database shared by the
 app and website. Games, test devices, and test reports are separate records so
 one game can accumulate results from multiple Macs without changing the page

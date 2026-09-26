@@ -1,0 +1,118 @@
+ForgePlay 2.0.0 (6) — native source license and separate wrapper permission
+Copyright (C) 2026 Facta-Leopard
+Original project: https://github.com/Facta-Leopard/ForgePlay
+
+1. Scope of the author-owned GPL grant
+
+Facta-Leopard supplies its contributions in the following source areas under
+the GNU General Public License, version 3 only (GPL-3.0-only):
+
+  Native/GameModeProcessHost/
+  Native/D3DMetalFrameGenerationProxy/
+  Native/NeuralRendering/
+
+This includes the current frame-motion implementation, the neural capture,
+bridge, processing and presentation integration, and the standalone native
+inference helper Native/NeuralRendering/NeuralWorker.swift.
+
+The same grant covers Facta-Leopard's contributions in these model build files:
+
+  Tools/NeuralRendering/model_spec.py
+  Tools/NeuralRendering/import_weights.py
+  Tools/NeuralRendering/mlx_reference.py
+  Tools/NeuralRendering/coreai_adapter.py
+  Tools/NeuralRendering/export_coreai.py
+  Tools/NeuralRendering/parity.py
+  Tools/NeuralRendering/probe_coreai.py
+  Tools/NeuralRendering/package_model.py
+  Tools/NeuralRendering/requirements.txt
+
+SOURCE-SCOPE.json next to this notice enumerates the files actually supplied
+and their hashes. Files copied unchanged from the binary's source snapshot
+are not edited merely to insert headers. This external notice identifies
+their current author-owned license scope. Required build configuration and
+scripts are supplied with the sources; their existing notices are retained.
+This grant also covers Facta-Leopard's contributions in the projected native
+project.yml, the three covered native targets' Config/*.xcconfig files,
+Config/ForgePlayDefaults.xcconfig, Scripts/generate-xcode-project.sh and
+Scripts/generate-frame-generation-shader.py. It does not relicense unrelated
+build tools or replace any third-party notice.
+
+Upstream Wine-derived material and MIT-derived model definitions are not
+claimed as solely authored by Facta-Leopard. Their rights and attribution
+remain as described in sections 4 and 5. No unrelated file, third-party
+component, or complete private application is blanket-relicensed.
+
+2. Attribution and modified versions
+
+For Facta-Leopard's covered contributions, preserve the applicable component
+name, copyright and source attribution in source distributions and legal
+notices accompanying non-source distributions, under GPLv3 section 7:
+
+  ForgePlay Game Mode
+  ForgePlay Frame Generation
+  ForgePlay Neural Rendering
+  Copyright (C) 2026 Facta-Leopard
+  Original project: https://github.com/Facta-Leopard/ForgePlay
+
+Use the names relevant to the material being conveyed. Where an interactive
+distribution has an About, Legal, Credits or equivalent Appropriate Legal
+Notices interface, preserve the attribution there as well. Reasonably mark
+modified versions and do not misrepresent them as an official ForgePlay
+release or imply endorsement by Facta-Leopard. No trademark rights are
+granted; truthful identification of origin is not prohibited.
+
+Compliant use, including commercial use, requires no separate permission.
+The unmodified GPLv3 warranty disclaimer and liability terms apply.
+
+3. Separate author-owned Swift UI permission
+
+The separate permission recorded for author-owned Swift wrapper contributions
+in LICENSES/ForgePlayRelease13/LICENSE.txt continues for the corresponding
+Facta-Leopard-owned application and launcher UI in 2.0.0. Those UI/wrapper
+contributions may be used, copied and distributed in compiled binary form
+without providing their Swift source. This permission is not limited to
+noncommercial distribution and does not revoke earlier GPL grants.
+
+This permission does NOT cover the GPL native inference helper
+Native/NeuralRendering/NeuralWorker.swift, native Game Mode/Frame Generation/
+Neural Rendering, Wine-derived work, or another rights holder's material.
+The programming language or an IPC/process boundary does not by itself
+establish legal independence. Independent third-party obligations remain.
+
+4. Wine boundary
+
+Wine 11.12 loader-derived parts in GameModeProcessHost.m and these current
+patch copies retain the GPL-3.0-only conversion under LGPL 2.1 section 3:
+
+  Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-game-mode-process-host-routing.patch
+  Resources/Runners/ForgePlayRuntime/Patches/wine-11.12-game-mode-direct-target-scope.patch
+
+Preserve the Wine authors' copyrights and the accompanying Wine-derived
+notice. Wine containing those modifications must be distributed consistently
+with GPLv3 as a combined derivative; licensing only the patch files is not
+enough. Unmodified Wine and other non-converted copies retain their LGPL
+permissions and applicable per-file notices. The complete version-matched
+source, patches and necessary build/installation-control material are provided.
+
+5. Third-party model and graphics boundaries
+
+HyPER-GAN source and checkpoints at commit
+5a7e8afb802e2f28e78a29884d5164b805a05e49 retain the MIT license and
+Copyright (c) 2026 Stefanos Pasios. Preserve that notice for upstream and
+derived model material, including converted weights/graphs. The GPL grant
+for ForgePlay contributions does not erase the original MIT grant or give
+rights to datasets or NVIDIA technology. No new training was performed.
+
+MoltenVK's capture patch remains Apache-2.0; DXVK/D9VK and other libraries
+retain their existing licenses. Apple D3DMetal and the Metal/Core AI SDKs
+remain separate Apple material. Nothing here expands Apple's terms or
+relicenses Apple payloads. Original third-party copyrights, licenses and
+applicable patent terms must remain with their respective components.
+
+6. Distribution identity
+
+SOURCE-FILES.json binds this source package to the notarized 2.0.0 (6) DMG
+and to the original source snapshot by SHA-256. The historical Git base
+alone does not reproduce this release. These notices and build additions do
+not modify, resign or replace the separately supplied notarized application.

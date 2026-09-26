@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0e1013">
   <title>ForgePlay — License Guide</title>
-  <meta name="description" content="A plain-language guide to ForgePlay’s GPLv3 Game Mode code, third-party terms, distribution duties, and authoritative license files.">
+  <meta name="description" content="ForgePlay 2.0.0 licenses: three GPL native implementations, Wine and HyPER-GAN attribution, private UI boundaries, and corresponding source.">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="ForgePlay">
   <meta property="og:title" content="ForgePlay — License Guide">
-  <meta property="og:description" content="A plain-language guide to ForgePlay’s GPLv3 Game Mode code, third-party terms, distribution duties, and authoritative license files.">
+  <meta property="og:description" content="ForgePlay 2.0.0 licenses: three GPL native implementations, Wine and HyPER-GAN attribution, private UI boundaries, and corresponding source.">
   <meta property="og:url" content="https://facta-leopard.github.io/ForgePlay/license.html">
   <meta property="og:image" content="https://facta-leopard.github.io/ForgePlay/site-assets/forgeplay-icon.png?v=20260927-share1">
   <meta property="og:image:type" content="image/png">
@@ -18,7 +18,7 @@
   <meta property="og:image:alt" content="ForgePlay app icon">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="ForgePlay — License Guide">
-  <meta name="twitter:description" content="A plain-language guide to ForgePlay’s GPLv3 Game Mode code, third-party terms, distribution duties, and authoritative license files.">
+  <meta name="twitter:description" content="ForgePlay 2.0.0 licenses: three GPL native implementations, Wine and HyPER-GAN attribution, private UI boundaries, and corresponding source.">
   <meta name="twitter:image" content="https://facta-leopard.github.io/ForgePlay/site-assets/forgeplay-icon.png?v=20260927-share1">
   <meta name="twitter:image:alt" content="ForgePlay app icon">
   <link rel="icon" type="image/png" href="site-assets/forgeplay-favicon.png">
@@ -26,7 +26,8 @@
   <link rel="stylesheet" href="site.css?v=20260729-14">
   <link rel="stylesheet" href="site-assets/site-shell.css?v=20260905-7">
   <link rel="stylesheet" href="site-assets/page-experience.css?v=20260905-7">
-  <script src="site.js?v=20260927-firsts1" defer></script>
+  <link rel="stylesheet" href="site-assets/license-scope.css?v=20260927-1">
+  <script src="site.js?v=20260927-license1" defer></script>
   <script src="site-assets/site-shell.js?v=20260905-2" defer></script>
   <link rel="stylesheet" href="site-assets/forge-motion.css?v=20260923-copy1">
   <script src="site-assets/forge-motion.js?v=20260923-1" defer></script>
@@ -58,321 +59,289 @@
       <div class="license-masthead-copy">
         <span data-i18n="license.mastheadLabel">FORGEPLAY / LICENSES</span>
         <strong>GPL-3.0-only</strong>
-        <small data-i18n="license.mastheadScope">GAME MODE CODE SCOPE</small>
+        <small data-i18n="license.mastheadScope">THREE NATIVE IMPLEMENTATIONS</small>
       </div>
     </section>
 
-    <div class="license-shell">
+    <div class="license-shell" id="license-scopes">
       <article id="license-ko" class="language-section license-language" lang="ko">
         <header class="license-intro">
-          <p class="section-label">FORGEPLAY 라이선스 안내</p>
-          <h1>게임 모드 코드는 GPLv3로 공개합니다. 나머지 구성 요소는 각자의 조건을 따릅니다.</h1>
-          <p>ForgePlay는 구성 요소별로 서로 다른 라이선스를 따릅니다. 적용 범위 문서에 명시된 게임 모드 코드는 <code>GPL-3.0-only</code>이며, Wine·D3DMetal을 비롯한 제3자 구성 요소에는 각자의 조건이 적용됩니다. 이 페이지는 주요 내용을 정리한 안내입니다. 실제 권리와 의무는 아래 공식 문서에 따릅니다.</p>
-          <a class="button primary" href="#license-files">공식 라이선스 문서 보기</a>
+          <p class="section-label">FORGEPLAY 2.0.0 · BUILD 6</p><h1>게임 모드·프레임 생성·DLSS5 에뮬레이팅은 GPLv3로 공개합니다.</h1><p>ForgePlay 2.0.0 (빌드 6)은 여러 라이선스가 적용되는 배포물입니다. 아래 세 구현의 작성자 소유 코드와 명시된 빌드 자료는 GPL-3.0-only로 공개합니다. 이 선언은 앱 전체나 Wine·HyPER-GAN·Apple 구성요소의 권리를 ForgePlay 소유로 바꾸지 않습니다.</p>
+          <p class="license-author">ForgePlay 작성 부분의 저작자: <a href="https://github.com/Facta-Leopard" target="_blank" rel="noopener noreferrer">Facta-Leopard</a><br><strong>Copyright © 2026 Facta-Leopard</strong></p>
+          <div class="license-current-actions"><a class="button primary" href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-OpenSource.tar.gz">2.0.0 대응 소스 다운로드 ↗</a><a class="button ghost" href="#license-files">고지 원문 보기</a></div>
         </header>
-        <div class="license-principles">
-          <section class="license-principle">
-            <span>01 / 할 수 있는 것</span>
-            <h2>GPLv3를 따르면 누구나 사용할 수 있습니다</h2>
-            <p>적용 범위 문서가 ForgePlay 게임 모드 코드로 지정한 부분은 <code>GPL-3.0-only</code>를 따릅니다. GPLv3 조건을 지키면 별도 허락 없이 사용·연구·수정·재배포하거나 상업적으로 이용할 수 있습니다.</p>
-          </section>
-          <section class="license-principle">
-            <span>02 / 지켜야 할 것</span>
-            <h2>배포할 때는 소스와 권리도 함께 제공해야 합니다</h2>
-            <p>대상 코드나 이를 포함한 결합물을 배포할 때는 필요한 고지를 보존하고 수정 사실을 밝혀야 합니다. GPLv3가 요구하는 대응 소스와 빌드·패키징 자료도 함께 제공해야 합니다.</p>
-          </section>
-          <section class="license-principle">
-            <span>03 / 적용 범위</span>
-            <h2>직접 지정된 코드는 일부지만, 결합 배포물의 의무는 더 넓을 수 있습니다</h2>
-            <p>게임 모드 전용 코드와 지정된 혼합 파일 부분, <code>GameModeProcessHost</code>, 두 Wine 패치가 직접 대상입니다. 저장소 전체를 하나의 라이선스로 바꾸는 것은 아니지만, 현재 앱처럼 대상 코드를 하나의 실행 파일에 결합해 배포하면 그 결합물에 필요한 GPLv3 권리와 대응 소스를 제공해야 합니다.</p>
-          </section>
-          <section class="license-principle">
-            <span>04 / 제3자 구성 요소</span>
-            <h2>구성 요소마다 각자의 라이선스를 따릅니다</h2>
-            <p>수정하지 않은 Wine 자료에는 해당 LGPL 조건이 유지됩니다. D3DMetal과 다른 렌더러, 글꼴, 아트워크, 상표에는 각각의 조건이 적용되며, D3DMetal은 Apple의 조건에 따라 별도 구성 요소로 배포됩니다.</p>
-          </section>
-          <section class="license-principle">
-            <span>05 / ForgePlay 릴리스</span>
-            <h2>바이너리와 일치하는 소스를 동시에 공개합니다</h2>
-            <p>적용 대상인 목적 코드를 담은 GitHub Release에는 버전이 일치하는 대응 소스와 필요한 고지를 동시에 올립니다. 바이너리를 먼저 공개한 뒤 소스를 나중에 덧붙이는 방식은 사용하지 않습니다.</p>
-          </section>
-        </div>
-        <aside class="license-policy-note">
-          공식 저장소는 현재 외부 코드 기여를 받지 않습니다. 하지만 이는 프로젝트 운영 방침일 뿐, GPLv3가 허용하는 포크·수정·재배포 권리를 제한하지 않습니다. 수정판은 공식 ForgePlay 릴리스로 오인되게 표시할 수 없으며, ForgePlay의 이름·로고·아트워크에는 별도의 권리가 적용됩니다.
-        </aside>
+        <section class="license-compliance"><h2>라이선스 조건을 준수하고, 그 근거를 공개합니다.</h2><p>ForgePlay는 라이선스를 준수하며 개발·배포하기 위해 사용한 코드와 모델의 출처, 수정 내역, 적용 범위를 구분하고 저작권·라이선스 고지를 보존합니다. 배포물에 대응하는 소스, 패치, 필수 빌드 자료와 재링크 안내를 함께 공개합니다. 타인의 성과를 자체 개발로 포장하거나, 자체 코드의 권리를 주장하며 제3자 조건을 지우지 않습니다.</p></section>
+        <section class="license-release-scopes"><h2>각각 구분한 세 가지 GPL 공개 구현</h2><div class="license-scope-cards">
+<section><span class="license-scope-number">01 / GPL-3.0-only</span><h3>ForgePlay Game Mode</h3><p>작성자 소유 네이티브 호스트와 지정 빌드 설정·스크립트가 대상입니다. Windows 프로세스를 네이티브 호스트에 연결하고 같은 프로세스에서 Wine으로 진입합니다. Wine 11.12 로더 유래 부분의 저작권과 GPL 전환 고지는 별도로 보존하며, 로더 전체를 새로 작성했다고 주장하지 않습니다.</p><code>Native/GameModeProcessHost/</code></section>
+<section><span class="license-scope-number">02 / GPL-3.0-only</span><h3>ForgePlay Frame Generation</h3><p>작성자 소유 캡처·보간·대기열·표시 상태 관리와 지정 빌드 자료가 대상입니다. Simple, Motion Lite, Motion Quality, Motion Repair 구현과 관련 검증 코드를 공개합니다. Wine·MoltenVK 쪽 연동 변경은 각 구성요소의 라이선스 경계를 따릅니다.</p><code>Native/D3DMetalFrameGenerationProxy/</code></section>
+<section><span class="license-scope-number">03 / GPL-3.0-only</span><h3>ForgePlay DLSS5 Emulation</h3><p>작성자 소유 네이티브 추론 통합, 고지에 열거된 모델 변환·검증 코드와 빌드 자료가 대상입니다. Metal 전후처리, 프레임 버퍼 연결, Core AI 추론 helper와 화면 표시 연동을 포함합니다. 소스의 구성요소 이름은 ForgePlay Neural Rendering입니다.</p><code>Native/NeuralRendering/ · Tools/NeuralRendering/</code></section>
+        </div><p class="license-boundary-note">NeuralWorker.swift는 비공개 UI가 아니라 실행에 필요한 GPL 공개 추론 helper입니다. Swift 파일이라는 이유로 공개 범위에서 제외하지 않습니다.</p><a class="fp-text-link" href="site-data/licenses/2.0.0/SOURCE-SCOPE.json">GPL 대상 파일·해시 ↗</a></section>
+        <section class="license-boundaries"><h2>제3자 자료와 비공개 UI의 경계</h2>
+          <table><thead><tr><th scope="col">구성요소</th><th scope="col">적용 조건과 보존하는 권리</th></tr></thead><tbody>
+<tr><th scope="row">Wine</th><td>원본 Wine은 LGPL-2.1-or-later와 원저작권을 유지합니다. 지정된 Wine 유래 호스트 사본과 게임 모드 패치 사본에는 LGPL 2.1 제3항에 따른 GPL-3.0-only 전환 고지를 적용합니다.</td></tr>
+<tr><th scope="row">HyPER-GAN</th><td>원본 모델·사전 학습 가중치·변환된 가중치와 파생 모델 자료의 MIT 고지 및 Copyright (c) 2026 Stefanos Pasios를 보존합니다. ForgePlay의 GPL 선언이 이를 대체하지 않습니다.</td></tr>
+<tr><th scope="row">MoltenVK · DXVK · Fonts</th><td>MoltenVK와 지정 캡처 패치는 Apache-2.0을 유지합니다. DXVK·글꼴·그 밖의 라이브러리에는 각 구성요소의 원래 라이선스, 저작권과 적용 조건이 유지됩니다.</td></tr>
+<tr><th scope="row">Apple D3DMetal · Metal · Core AI</th><td>D3DMetal·Metal·Core AI에는 Apple의 별도 조건이 적용됩니다. Apple 구현 자체를 GPL로 재라이선스하거나 Apple이 부여하지 않은 권리를 주장하지 않습니다.</td></tr>
+<tr><th scope="row">Swift App / Launcher UI</th><td>작성자 소유 Swift 앱·런처 UI는 별도의 바이너리 배포 허용에 따라 소스 공개 대상에서 제외됩니다. 네이티브 GPL 구현, NeuralWorker.swift, Wine 유래 코드 및 다른 권리자의 자료는 이 제외 대상이 아닙니다.</td></tr>
+          </tbody></table>
+          <details class="license-explanation"><summary>Wine · LGPL / GPL</summary><p>GPL로 전환한 변경을 포함한 Wine 결합 파생물의 배포 의무는 패치 두 개에만 한정되지 않습니다. 해당 파생물은 GPLv3에 맞게 배포하며, 원본 Wine과 전환하지 않은 별도 사본의 LGPL 권리도 보존합니다. 대응 Wine 소스·수정 패치·필수 빌드 자료와 고지를 제공합니다.</p><a href="site-data/licenses/2.0.0/WINE-GAME-MODE-NOTICE.txt">고지 원문 보기 ↗</a></details>
+          <details class="license-explanation"><summary>HyPER-GAN · MIT</summary><p>HyPER-GAN 원본과 가중치를 새로 발명하거나 학습한 것으로 주장하지 않습니다. 원본 파라미터를 Core AI 그래프와 FP16 배포 형식으로 변환한 내역·출처·해시는 모델 빌드 문서에 기록합니다. MIT 고지는 변환된 자료에도 유지되며, 데이터셋이나 NVIDIA 기술의 권리를 새로 부여하지 않습니다.</p><div class="license-current-actions"><a href="site-data/licenses/2.0.0/HyPER-GAN-LICENSE.txt">고지 원문 보기 ↗</a><a href="site-data/licenses/2.0.0/MODEL-BUILDING.md">MODEL-BUILDING.md ↗</a></div></details>
+          <p class="license-boundary-note">별도 UI 허용은 저작자 소유 기여분의 컴파일된 바이너리를 Swift 소스 없이 사용·복사·배포할 수 있도록 한 것으로, 비상업적 배포에만 한정되지 않습니다. 프로그래밍 언어나 프로세스 분리만으로 GPL·LGPL 또는 제3자 의무가 면제되지는 않습니다.</p>
+        </section>
+        <section class="license-source-evidence"><h2>실제 배포물에 대응하는 공개 소스</h2><p>현재 기준은 2.0.0 (빌드 6) 릴리스에 직접 첨부한 OpenSource 아카이브입니다. GitHub 기본 브랜치나 자동 생성되는 Source code (zip/tar.gz)를 배포물의 대응 소스로 대신 안내하지 않습니다.</p>
+          <div class="license-current-actions"><a href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-OpenSource.tar.gz">2.0.0 대응 소스 다운로드 ↗</a><a href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-SHA256SUMS.txt" target="_blank" rel="noopener noreferrer">공개 체크섬 ↗</a></div><p>이 공개본은 빌드 당시 미커밋 변경을 포함한 스냅샷입니다. 과거 Git 기준 커밋 하나만으로 같은 바이너리를 재현한다고 주장하지 않으며, SOURCE-FILES.json의 파일별 해시와 DMG 대응 정보를 기준으로 합니다.</p>
+          <ul class="license-archive-paths"><li><code>SOURCE-FILES.json</code></li><li><code>LICENSES/ForgePlayRelease20/SOURCE-SCOPE.json</code></li><li><code>Upstream/HyPERGAN/manifest.json</code></li><li><code>BUILDING.md · MODEL-BUILDING.md</code></li><li><code>ThirdPartyCorrespondingSource/relinking/</code></li></ul>
+          <p class="license-boundary-note">위 구현 경로와 아래 문서 내부 경로는 소스 압축본 기준입니다. 웹에서 제공하는 고지는 해당 압축본의 원문 사본이며, 요약 문구가 원래 라이선스를 변경하지 않습니다.</p>
+        </section>
+        <section class="license-rights"><h2>저작권·출처 표시와 재배포</h2><p>GPL 조건을 준수하면 공개 대상 구현을 사용·연구·수정·재배포할 수 있고 상업적 이용도 가능합니다. 압축파일로 소스를 제공하는 방식은 이러한 권리를 제한하지 않습니다. 기존 공개본이 부여한 권리도 철회하지 않습니다.</p><p>재배포 시 해당하는 구성요소명, Copyright © 2026 Facta-Leopard, 원본 프로젝트 주소와 제3자 고지를 보존해 주세요. About·Legal·Credits 등에 적용되는 고지도 유지해야 합니다. 수정 사실을 밝히고, 수정판을 공식 ForgePlay 배포물이나 저작자가 보증하는 배포물로 오인하게 표시하지 마세요.</p>
+          <div class="license-attribution"><span>ForgePlay Game Mode</span><span>ForgePlay Frame Generation</span><span>ForgePlay Neural Rendering</span><strong>Copyright © 2026 Facta-Leopard</strong><a href="https://github.com/Facta-Leopard/ForgePlay" target="_blank" rel="noopener noreferrer">github.com/Facta-Leopard/ForgePlay</a></div>
+          <p>상표권을 새로 부여하지 않으며, 출처를 사실대로 밝히는 행위는 금지하지 않습니다. 보증 부인·책임 제한 등 실제 조건은 원문을 따릅니다.</p><p class="license-boundary-note">공식 저장소가 외부 코드 기여를 받지 않는 운영 방침과, 라이선스가 허용하는 포크·수정·재배포 권리는 별개입니다. 이 페이지는 준수 방식과 범위를 안내하며 새로운 라이선스나 제3자 권리를 부여하지 않습니다.</p>
+        </section>
       </article>
 
       <article id="license-en" class="language-section license-language" lang="en">
         <header class="license-intro">
-          <p class="section-label">FORGEPLAY LICENSES, IN PLAIN LANGUAGE</p>
-          <h1>Game Mode code is GPLv3. Every other component keeps its own terms.</h1>
-          <p>ForgePlay does not have a single license. Game Mode code named in the scope document is <code>GPL-3.0-only</code>; Wine, D3DMetal, and other third-party material keep their own terms. This page explains the essentials. The authoritative files below govern the actual rights and obligations.</p>
-          <a class="button primary" href="#license-files">View the authoritative license files</a>
+          <p class="section-label">FORGEPLAY 2.0.0 · BUILD 6</p><h1>Game Mode, Frame Generation, and DLSS5 Emulation are published under GPLv3.</h1><p>ForgePlay 2.0.0 (Build 6) is a multi-license distribution. Author-owned code in the three implementations below and the identified build materials are published under GPL-3.0-only. This does not make the whole app GPL or transfer rights in Wine, HyPER-GAN, or Apple components to ForgePlay.</p>
+          <p class="license-author">Author of ForgePlay-authored material: <a href="https://github.com/Facta-Leopard" target="_blank" rel="noopener noreferrer">Facta-Leopard</a><br><strong>Copyright © 2026 Facta-Leopard</strong></p>
+          <div class="license-current-actions"><a class="button primary" href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-OpenSource.tar.gz">Download 2.0.0 corresponding source ↗</a><a class="button ghost" href="#license-files">Read the original notice</a></div>
         </header>
-        <div class="license-principles">
-          <section class="license-principle">
-            <span>01 / WHAT YOU MAY DO</span>
-            <h2>GPLv3 already gives you permission</h2>
-            <p>Code identified as ForgePlay Game Mode code by the scope document is licensed under <code>GPL-3.0-only</code>. If you follow GPLv3, you may use, study, modify, redistribute, and use it commercially without asking for separate permission.</p>
-          </section>
-          <section class="license-principle">
-            <span>02 / WHAT YOU MUST DO</span>
-            <h2>Distribute the source and the rights with the binary</h2>
-            <p>When distributing covered code or a combined work containing it, preserve the required notices, mark modifications, and provide the Corresponding Source and build or packaging material GPLv3 requires.</p>
-          </section>
-          <section class="license-principle">
-            <span>03 / WHERE IT APPLIES</span>
-            <h2>The license covers specified code; distribution obligations may also apply to the combined executable</h2>
-            <p>The direct scope covers Game Mode-specific code, identified parts of mixed files, <code>GameModeProcessHost</code>, and two Wine patches. It is not a blanket relicensing of the repository, but distributing the current combined executable requires the GPLv3 rights and Corresponding Source applicable to that combined work.</p>
-          </section>
-          <section class="license-principle">
-            <span>04 / THIRD-PARTY TERMS</span>
-            <h2>Other components keep their own licenses</h2>
-            <p>Unmodified Wine material retains its applicable LGPL permissions. D3DMetal, other renderers, fonts, artwork, and trademarks keep their own terms; D3DMetal is distributed as a separate component under Apple’s terms.</p>
-          </section>
-          <section class="license-principle">
-            <span>05 / FORGEPLAY RELEASES</span>
-            <h2>The binary and its matching source ship together</h2>
-            <p>Every GitHub Release conveying covered object code publishes version-matched Corresponding Source and the required notices at the same time. ForgePlay does not use a binary-first, source-later release pattern.</p>
-          </section>
-        </div>
-        <aside class="license-policy-note">
-          The official repository currently does not accept external code contributions. That maintenance policy does not narrow rights to fork, modify, or redistribute under the applicable licenses. Modified versions may not present themselves as official ForgePlay releases, and the licenses grant no rights to the ForgePlay name, logo, or artwork.
-        </aside>
+        <section class="license-compliance"><h2>We follow the applicable licenses and publish the evidence.</h2><p>To develop and distribute in compliance with the applicable licenses, ForgePlay identifies the provenance, modifications, and scope of the code and models it uses, and preserves copyright and license notices. Corresponding source, patches, required build materials, and relinking instructions are provided with the distribution. We do not present others’ work as our own or erase third-party terms when asserting rights in our contributions.</p></section>
+        <section class="license-release-scopes"><h2>Three separately identified GPL implementations</h2><div class="license-scope-cards">
+<section><span class="license-scope-number">01 / GPL-3.0-only</span><h3>ForgePlay Game Mode</h3><p>Covers the author-owned native host and identified build settings and scripts. It routes Windows processes through a native host and enters Wine in the same process. Copyright and GPL-conversion notices for the Wine 11.12-derived loader portions are preserved; we do not claim to have written the entire loader from scratch.</p><code>Native/GameModeProcessHost/</code></section>
+<section><span class="license-scope-number">02 / GPL-3.0-only</span><h3>ForgePlay Frame Generation</h3><p>Covers author-owned capture, interpolation, queue and presentation-state management, and identified build materials. Simple, Motion Lite, Motion Quality, Motion Repair, and related verification code are published. Integration changes in Wine and MoltenVK follow their respective license boundaries.</p><code>Native/D3DMetalFrameGenerationProxy/</code></section>
+<section><span class="license-scope-number">03 / GPL-3.0-only</span><h3>ForgePlay DLSS5 Emulation</h3><p>Covers author-owned native inference integration, model-conversion and verification files enumerated in the notice, and build materials. It includes Metal preprocessing and post-processing, frame-buffer bridging, the Core AI inference helper, and presentation integration. The source component is named ForgePlay Neural Rendering.</p><code>Native/NeuralRendering/ · Tools/NeuralRendering/</code></section>
+        </div><p class="license-boundary-note">NeuralWorker.swift is the GPL-published inference helper required at runtime, not the private UI. It is not excluded merely because it is a Swift file.</p><a class="fp-text-link" href="site-data/licenses/2.0.0/SOURCE-SCOPE.json">GPL files and hashes ↗</a></section>
+        <section class="license-boundaries"><h2>Third-party and private-UI boundaries</h2>
+          <table><thead><tr><th scope="col">Component</th><th scope="col">Applicable terms and preserved rights</th></tr></thead><tbody>
+<tr><th scope="row">Wine</th><td>Upstream Wine retains LGPL-2.1-or-later and original copyrights. Identified Wine-derived host and Game Mode patch copies carry GPL-3.0-only conversion notices under LGPL 2.1 section 3.</td></tr>
+<tr><th scope="row">HyPER-GAN</th><td>Preserves the MIT notice and Copyright (c) 2026 Stefanos Pasios for the original model, pretrained weights, converted weights, and derived model material. ForgePlay’s GPL notice does not replace these rights.</td></tr>
+<tr><th scope="row">MoltenVK · DXVK · Fonts</th><td>MoltenVK and the identified capture patch retain Apache-2.0. DXVK, fonts, and other libraries retain their original licenses, copyrights, and applicable conditions.</td></tr>
+<tr><th scope="row">Apple D3DMetal · Metal · Core AI</th><td>Separate Apple terms govern D3DMetal, Metal, and Core AI. Apple’s implementations are not relicensed under GPL, and no rights beyond those Apple grants are claimed.</td></tr>
+<tr><th scope="row">Swift App / Launcher UI</th><td>Author-owned Swift application and launcher UI are excluded from source publication under separate binary-distribution permission. This exclusion does not cover native GPL implementations, NeuralWorker.swift, Wine-derived code, or another rights holder’s material.</td></tr>
+          </tbody></table>
+          <details class="license-explanation"><summary>Wine · LGPL / GPL</summary><p>Obligations for a combined Wine derivative containing the GPL-converted changes are not limited to two patch files. That derivative is distributed consistently with GPLv3, while preserving LGPL rights in upstream Wine and other non-converted copies. Corresponding Wine source, modification patches, required build material, and notices are provided.</p><a href="site-data/licenses/2.0.0/WINE-GAME-MODE-NOTICE.txt">Read the original notice ↗</a></details>
+          <details class="license-explanation"><summary>HyPER-GAN · MIT</summary><p>We do not claim to have invented HyPER-GAN or trained new weights. Conversion of the original parameters into a Core AI graph and FP16 deployment format, with provenance and hashes, is documented in MODEL-BUILDING.md. MIT notices remain on converted material; no new rights to datasets or NVIDIA technology are granted.</p><div class="license-current-actions"><a href="site-data/licenses/2.0.0/HyPER-GAN-LICENSE.txt">Read the original notice ↗</a><a href="site-data/licenses/2.0.0/MODEL-BUILDING.md">MODEL-BUILDING.md ↗</a></div></details>
+          <p class="license-boundary-note">The separate UI permission allows the author’s compiled UI contributions to be used, copied, and distributed without their Swift source; it is not limited to noncommercial distribution. Language choice or process separation alone does not waive GPL, LGPL, or third-party obligations.</p>
+        </section>
+        <section class="license-source-evidence"><h2>Corresponding Source for the actual distribution</h2><p>The current reference is the OpenSource archive attached directly to the 2.0.0 (Build 6) release. The default branch and GitHub’s automatic Source code (zip/tar.gz) snapshots are not substitutes for the distribution’s corresponding source.</p>
+          <div class="license-current-actions"><a href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-OpenSource.tar.gz">Download 2.0.0 corresponding source ↗</a><a href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-SHA256SUMS.txt" target="_blank" rel="noopener noreferrer">Published checksums ↗</a></div><p>This package is a snapshot that includes changes uncommitted at build time. No historical Git base alone is claimed to reproduce the binary. File hashes and the DMG identity in SOURCE-FILES.json establish the recorded correspondence.</p>
+          <ul class="license-archive-paths"><li><code>SOURCE-FILES.json</code></li><li><code>LICENSES/ForgePlayRelease20/SOURCE-SCOPE.json</code></li><li><code>Upstream/HyPERGAN/manifest.json</code></li><li><code>BUILDING.md · MODEL-BUILDING.md</code></li><li><code>ThirdPartyCorrespondingSource/relinking/</code></li></ul>
+          <p class="license-boundary-note">Implementation paths above and paths inside these documents refer to the source archive. The notices hosted here are unmodified copies from that archive; this summary does not change their terms.</p>
+        </section>
+        <section class="license-rights"><h2>Copyright, attribution, and redistribution</h2><p>Compliance with the GPL permits use, study, modification, redistribution, and commercial use of the covered implementations. Delivering source as an archive does not restrict those rights, and earlier grants are not revoked.</p><p>When redistributing, preserve the relevant component name, Copyright © 2026 Facta-Leopard, the original project address, and third-party notices. Preserve applicable attribution in About, Legal, or Credits interfaces. Mark changes and do not misrepresent modified builds as official ForgePlay releases or author-endorsed distributions.</p>
+          <div class="license-attribution"><span>ForgePlay Game Mode</span><span>ForgePlay Frame Generation</span><span>ForgePlay Neural Rendering</span><strong>Copyright © 2026 Facta-Leopard</strong><a href="https://github.com/Facta-Leopard/ForgePlay" target="_blank" rel="noopener noreferrer">github.com/Facta-Leopard/ForgePlay</a></div>
+          <p>No new trademark rights are granted; truthful identification of origin is not prohibited. The original texts govern warranty disclaimers, liability, and other conditions.</p><p class="license-boundary-note">The official repository’s policy to not accept external code contributions is separate from rights to fork, modify, or redistribute under the applicable licenses. This page explains compliance practices and scope; it grants no new license or third-party rights.</p>
+        </section>
       </article>
 
       <article id="license-de" class="language-section license-language" lang="de">
         <header class="license-intro">
-          <p class="section-label">FORGEPLAY-LIZENZEN, EINFACH ERKLÄRT</p>
-          <h1>Der Spielmodus-Code steht unter GPLv3. Für alle anderen Komponenten gelten ihre eigenen Bedingungen.</h1>
-          <p>ForgePlay steht nicht unter einer einzigen Lizenz. Der im Geltungsbereichsdokument benannte Spielmodus-Code ist <code>GPL-3.0-only</code>; für Wine, D3DMetal und anderes Drittmaterial gelten weiterhin die jeweiligen Bedingungen. Diese Seite fasst das Wesentliche zusammen. Maßgeblich für Rechte und Pflichten sind die unten verlinkten Dateien.</p>
-          <a class="button primary" href="#license-files">Maßgebliche Lizenzdateien ansehen</a>
+          <p class="section-label">FORGEPLAY 2.0.0 · BUILD 6</p><h1>Spielmodus, Frame-Generierung und DLSS5-Emulation stehen unter GPLv3.</h1><p>ForgePlay 2.0.0 (Build 6) ist eine Distribution mit mehreren Lizenzen. Der Code des Autors in den drei folgenden Implementierungen und die benannten Build-Unterlagen stehen unter GPL-3.0-only. Das stellt weder die gesamte App unter GPL noch überträgt es Rechte an Wine, HyPER-GAN oder Apple-Komponenten auf ForgePlay.</p>
+          <p class="license-author">Autor der von ForgePlay verfassten Bestandteile: <a href="https://github.com/Facta-Leopard" target="_blank" rel="noopener noreferrer">Facta-Leopard</a><br><strong>Copyright © 2026 Facta-Leopard</strong></p>
+          <div class="license-current-actions"><a class="button primary" href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-OpenSource.tar.gz">Zugehörige Quellen für 2.0.0 herunterladen ↗</a><a class="button ghost" href="#license-files">Originalhinweis lesen</a></div>
         </header>
-        <div class="license-principles">
-          <section class="license-principle">
-            <span>01 / WAS DU DARFST</span>
-            <h2>GPLv3 erteilt die Erlaubnis bereits</h2>
-            <p>Der im Geltungsbereichsdokument als ForgePlay-Spielmodus-Code ausgewiesene Teil steht unter <code>GPL-3.0-only</code>. Wer GPLv3 einhält, darf ihn ohne gesonderte Genehmigung nutzen, untersuchen, verändern, weitergeben und kommerziell verwenden.</p>
-          </section>
-          <section class="license-principle">
-            <span>02 / WAS DU BEACHTEN MUSST</span>
-            <h2>Mit der Binärdatei müssen auch Quellcode und Rechte weitergegeben werden</h2>
-            <p>Wer unter diese Lizenz fallenden Code oder ein damit kombiniertes Werk verbreitet, muss erforderliche Hinweise erhalten, Änderungen kennzeichnen und den zugehörigen Quellcode samt den von GPLv3 verlangten Build- und Paketierungsunterlagen bereitstellen.</p>
-          </section>
-          <section class="license-principle">
-            <span>03 / GELTUNGSBEREICH</span>
-            <h2>Der benannte Quellumfang ist eng; Pflichten können das kombinierte Programm erfassen</h2>
-            <p>Direkt erfasst sind spielmodusspezifischer Code, benannte Teile gemischter Dateien, <code>GameModeProcessHost</code> und zwei Wine-Patches. Das Repository wird nicht pauschal neu lizenziert; bei der Weitergabe des derzeit kombinierten Programms müssen jedoch die dafür geltenden GPLv3-Rechte und der zugehörige Quellcode bereitgestellt werden.</p>
-          </section>
-          <section class="license-principle">
-            <span>04 / DRITTANBIETER</span>
-            <h2>Andere Komponenten behalten ihre eigenen Lizenzen</h2>
-            <p>Unverändertes Wine-Material behält seine anwendbaren LGPL-Rechte. D3DMetal, andere Renderer, Schriften, Grafiken und Marken unterliegen ihren eigenen Bedingungen; D3DMetal wird separat nach Apples Bedingungen vertrieben.</p>
-          </section>
-          <section class="license-principle">
-            <span>05 / FORGEPLAY-VERÖFFENTLICHUNGEN</span>
-            <h2>Binärdatei und passender Quellcode erscheinen gleichzeitig</h2>
-            <p>Jedes GitHub Release mit abgedecktem Objektcode veröffentlicht gleichzeitig den versionsgleichen zugehörigen Quellcode und die erforderlichen Hinweise. Eine spätere Nachlieferung des Quellcodes ist nicht vorgesehen.</p>
-          </section>
-        </div>
-        <aside class="license-policy-note">
-          Das offizielle Repository nimmt derzeit keine externen Codebeiträge an. Diese Wartungsregel beschränkt keine Rechte zum Forken, Ändern oder Weitergeben aus den anwendbaren Lizenzen. Veränderte Fassungen dürfen nicht als offizielle ForgePlay-Releases auftreten; Rechte am Namen, Logo oder an den Grafiken werden nicht eingeräumt.
-        </aside>
+        <section class="license-compliance"><h2>Wir halten die geltenden Lizenzen ein und veröffentlichen die Nachweise.</h2><p>Für eine lizenzkonforme Entwicklung und Verbreitung benennt ForgePlay Herkunft, Änderungen und Geltungsbereich verwendeter Codes und Modelle und erhält Urheberrechts- und Lizenzhinweise. Zugehöriger Quellcode, Patches, erforderliche Build-Unterlagen und Relinking-Anleitungen werden bereitgestellt. Fremde Arbeit wird nicht als eigene ausgegeben; eigene Rechte verdrängen keine Bedingungen Dritter.</p></section>
+        <section class="license-release-scopes"><h2>Drei getrennt ausgewiesene GPL-Implementierungen</h2><div class="license-scope-cards">
+<section><span class="license-scope-number">01 / GPL-3.0-only</span><h3>ForgePlay Game Mode</h3><p>Erfasst den nativen Host des Autors sowie benannte Build-Einstellungen und Skripte. Windows-Prozesse werden durch einen nativen Host geführt, der im selben Prozess in Wine eintritt. Urheberrechte und GPL-Umstellungshinweise für Wine-11.12-Loaderanteile bleiben erhalten. Es wird nicht behauptet, den gesamten Loader neu geschrieben zu haben.</p><code>Native/GameModeProcessHost/</code></section>
+<section><span class="license-scope-number">02 / GPL-3.0-only</span><h3>ForgePlay Frame Generation</h3><p>Erfasst eigene Implementierungen für Erfassung, Interpolation, Warteschlangen und Ausgabestatus sowie benannte Build-Unterlagen. Simple, Motion Lite, Motion Quality, Motion Repair und zugehöriger Prüfcode sind veröffentlicht. Änderungen auf Wine- und MoltenVK-Seite folgen deren Lizenzgrenzen.</p><code>Native/D3DMetalFrameGenerationProxy/</code></section>
+<section><span class="license-scope-number">03 / GPL-3.0-only</span><h3>ForgePlay DLSS5 Emulation</h3><p>Erfasst die native Inferenzintegration des Autors, die im Hinweis aufgezählten Modellkonvertierungs- und Prüffiles sowie Build-Unterlagen. Dazu gehören Metal-Vor- und Nachbearbeitung, Frame-Puffer, der Core-AI-Inferenzhelfer und die Bildausgabe. Der Komponentenname im Quellcode lautet ForgePlay Neural Rendering.</p><code>Native/NeuralRendering/ · Tools/NeuralRendering/</code></section>
+        </div><p class="license-boundary-note">NeuralWorker.swift ist der zur Laufzeit benötigte, unter GPL veröffentlichte Inferenzhelfer, nicht die private UI. Die Dateisprache Swift ist kein Ausschlussgrund.</p><a class="fp-text-link" href="site-data/licenses/2.0.0/SOURCE-SCOPE.json">GPL-Dateien und Hashes ↗</a></section>
+        <section class="license-boundaries"><h2>Abgrenzung zu Drittmaterial und privater UI</h2>
+          <table><thead><tr><th scope="col">Komponente</th><th scope="col">Bedingungen und erhaltene Rechte</th></tr></thead><tbody>
+<tr><th scope="row">Wine</th><td>Upstream-Wine behält LGPL-2.1-or-later und die ursprünglichen Urheberrechte. Benannte Wine-basierte Host- und Spielmodus-Patchkopien tragen Hinweise zur Umstellung auf GPL-3.0-only gemäß LGPL 2.1 Abschnitt 3.</td></tr>
+<tr><th scope="row">HyPER-GAN</th><td>MIT-Hinweis und Copyright (c) 2026 Stefanos Pasios bleiben für Originalmodell, vortrainierte und konvertierte Gewichte sowie abgeleitetes Modellmaterial erhalten. ForgePlays GPL-Hinweis ersetzt diese Rechte nicht.</td></tr>
+<tr><th scope="row">MoltenVK · DXVK · Fonts</th><td>MoltenVK und der benannte Capture-Patch behalten Apache-2.0. DXVK, Schriftarten und andere Bibliotheken behalten ihre ursprünglichen Lizenzen, Urheberrechte und Bedingungen.</td></tr>
+<tr><th scope="row">Apple D3DMetal · Metal · Core AI</th><td>Für D3DMetal, Metal und Core AI gelten gesonderte Apple-Bedingungen. Apples Implementierungen werden nicht unter GPL neu lizenziert; es werden keine über Apples Erlaubnis hinausgehenden Rechte beansprucht.</td></tr>
+<tr><th scope="row">Swift App / Launcher UI</th><td>Die eigene Swift-App- und Launcher-UI ist aufgrund einer gesonderten Binärverteilungserlaubnis von der Quellveröffentlichung ausgenommen. Nicht erfasst sind native GPL-Implementierungen, NeuralWorker.swift, Wine-basierter Code und Material anderer Rechteinhaber.</td></tr>
+          </tbody></table>
+          <details class="license-explanation"><summary>Wine · LGPL / GPL</summary><p>Pflichten für ein kombiniertes Wine-Derivat mit den auf GPL umgestellten Änderungen beschränken sich nicht auf zwei Patchdateien. Das Derivat wird GPLv3-konform verbreitet; LGPL-Rechte am ursprünglichen Wine und anderen nicht umgestellten Kopien bleiben erhalten. Zugehörige Wine-Quellen, Patches, Build-Unterlagen und Hinweise werden mitgeliefert.</p><a href="site-data/licenses/2.0.0/WINE-GAME-MODE-NOTICE.txt">Originalhinweis lesen ↗</a></details>
+          <details class="license-explanation"><summary>HyPER-GAN · MIT</summary><p>Wir beanspruchen weder die Erfindung von HyPER-GAN noch das Training neuer Gewichte. Die Umwandlung ursprünglicher Parameter in einen Core-AI-Graphen und das FP16-Auslieferungsformat ist mit Herkunft und Hashes in MODEL-BUILDING.md dokumentiert. MIT-Hinweise bleiben erhalten; Rechte an Datensätzen oder NVIDIA-Technik werden nicht neu eingeräumt.</p><div class="license-current-actions"><a href="site-data/licenses/2.0.0/HyPER-GAN-LICENSE.txt">Originalhinweis lesen ↗</a><a href="site-data/licenses/2.0.0/MODEL-BUILDING.md">MODEL-BUILDING.md ↗</a></div></details>
+          <p class="license-boundary-note">Die gesonderte UI-Erlaubnis gestattet Nutzung, Kopieren und Verbreitung der kompilierten UI-Beiträge des Autors ohne deren Swift-Quellen, auch kommerziell. Programmiersprache oder Prozessgrenze allein heben GPL-, LGPL- oder Drittpflichten nicht auf.</p>
+        </section>
+        <section class="license-source-evidence"><h2>Quellcode zur tatsächlich verbreiteten Version</h2><p>Maßgeblich ist das direkt an Release 2.0.0 (Build 6) angehängte OpenSource-Archiv. Der Standardbranch und GitHubs automatische Source code (zip/tar.gz)-Snapshots ersetzen den zugehörigen Distributionsquellcode nicht.</p>
+          <div class="license-current-actions"><a href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-OpenSource.tar.gz">Zugehörige Quellen für 2.0.0 herunterladen ↗</a><a href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-SHA256SUMS.txt" target="_blank" rel="noopener noreferrer">Veröffentlichte Prüfsummen ↗</a></div><p>Das Paket ist ein Snapshot mit Änderungen, die beim Build noch nicht committet waren. Kein historischer Git-Basisstand allein wird als Reproduktion der Binärdatei dargestellt. Dateihashes und DMG-Identität in SOURCE-FILES.json dokumentieren die Zuordnung.</p>
+          <ul class="license-archive-paths"><li><code>SOURCE-FILES.json</code></li><li><code>LICENSES/ForgePlayRelease20/SOURCE-SCOPE.json</code></li><li><code>Upstream/HyPERGAN/manifest.json</code></li><li><code>BUILDING.md · MODEL-BUILDING.md</code></li><li><code>ThirdPartyCorrespondingSource/relinking/</code></li></ul>
+          <p class="license-boundary-note">Die Implementierungspfade oben und die Pfade in diesen Dokumenten beziehen sich auf das Quellarchiv. Die hier angebotenen Hinweise sind unveränderte Kopien daraus; diese Zusammenfassung ändert ihre Bedingungen nicht.</p>
+        </section>
+        <section class="license-rights"><h2>Urheberrecht, Herkunftsangaben und Weitergabe</h2><p>Bei Einhaltung der GPL sind Nutzung, Untersuchung, Änderung, Weitergabe und kommerzielle Nutzung der erfassten Implementierungen erlaubt. Die Bereitstellung als Archiv schränkt diese Rechte nicht ein; frühere Erlaubnisse werden nicht widerrufen.</p><p>Bei Weitergabe sind der relevante Komponentenname, Copyright © 2026 Facta-Leopard, die ursprüngliche Projektadresse und Hinweise Dritter zu erhalten. Das gilt auch für erforderliche Angaben in About-, Legal- oder Credits-Ansichten. Änderungen sind zu kennzeichnen; veränderte Builds dürfen nicht als offizielle oder vom Autor gebilligte ForgePlay-Versionen ausgegeben werden.</p>
+          <div class="license-attribution"><span>ForgePlay Game Mode</span><span>ForgePlay Frame Generation</span><span>ForgePlay Neural Rendering</span><strong>Copyright © 2026 Facta-Leopard</strong><a href="https://github.com/Facta-Leopard/ForgePlay" target="_blank" rel="noopener noreferrer">github.com/Facta-Leopard/ForgePlay</a></div>
+          <p>Es werden keine neuen Markenrechte gewährt; wahrheitsgemäße Herkunftsangaben sind nicht untersagt. Für Gewährleistungsausschluss, Haftung und weitere Bedingungen gelten die Originaltexte.</p><p class="license-boundary-note">Die Entscheidung des offiziellen Repositorys, keine externen Codebeiträge anzunehmen, ist von den Lizenzrechten zum Forken, Ändern und Weitergeben zu trennen. Diese Seite erläutert Vorgehen und Umfang, erteilt aber keine neue Lizenz oder Rechte Dritter.</p>
+        </section>
       </article>
 
       <article id="license-es" class="language-section license-language" lang="es">
         <header class="license-intro">
-          <p class="section-label">LICENCIAS DE FORGEPLAY, SIN RODEOS</p>
-          <h1>El código del modo Juego usa GPLv3. Los demás componentes conservan sus propias condiciones.</h1>
-          <p>ForgePlay no tiene una única licencia. El código del modo Juego indicado en el documento de alcance usa <code>GPL-3.0-only</code>; Wine, D3DMetal y los demás materiales de terceros conservan sus propias condiciones. Esta página resume lo esencial. Los archivos oficiales enlazados más abajo determinan los derechos y las obligaciones.</p>
-          <a class="button primary" href="#license-files">Ver los archivos de licencia oficiales</a>
+          <p class="section-label">FORGEPLAY 2.0.0 · BUILD 6</p><h1>El modo Juego, la generación de fotogramas y la emulación de DLSS5 se publican bajo GPLv3.</h1><p>ForgePlay 2.0.0 (compilación 6) es una distribución con varias licencias. El código propiedad del autor de las tres implementaciones siguientes y los materiales de compilación identificados se publican bajo GPL-3.0-only. Esto no convierte toda la app en GPL ni transfiere a ForgePlay los derechos de Wine, HyPER-GAN o los componentes de Apple.</p>
+          <p class="license-author">Autor del material escrito para ForgePlay: <a href="https://github.com/Facta-Leopard" target="_blank" rel="noopener noreferrer">Facta-Leopard</a><br><strong>Copyright © 2026 Facta-Leopard</strong></p>
+          <div class="license-current-actions"><a class="button primary" href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-OpenSource.tar.gz">Descargar fuentes correspondientes a 2.0.0 ↗</a><a class="button ghost" href="#license-files">Leer el aviso original</a></div>
         </header>
-        <div class="license-principles">
-          <section class="license-principle">
-            <span>01 / LO QUE PUEDES HACER</span>
-            <h2>GPLv3 ya te concede el permiso</h2>
-            <p>El código que el documento de alcance identifica como código del modo Juego de ForgePlay usa <code>GPL-3.0-only</code>. Si cumples GPLv3, puedes usarlo, estudiarlo, modificarlo, redistribuirlo y utilizarlo comercialmente sin pedir otro permiso.</p>
-          </section>
-          <section class="license-principle">
-            <span>02 / LO QUE DEBES CUMPLIR</span>
-            <h2>Distribuye el código fuente y los derechos junto con el binario</h2>
-            <p>Al distribuir código cubierto o una obra combinada que lo contenga, conserva los avisos exigidos, identifica las modificaciones y proporciona el Código Fuente Correspondiente y los materiales de compilación o empaquetado que exige GPLv3.</p>
-          </section>
-          <section class="license-principle">
-            <span>03 / DÓNDE SE APLICA</span>
-            <h2>El alcance directo es limitado; las obligaciones pueden llegar al ejecutable combinado</h2>
-            <p>El alcance directo incluye el código específico del modo Juego, partes identificadas de archivos mixtos, <code>GameModeProcessHost</code> y dos parches de Wine. No cambia la licencia de todo el repositorio, pero distribuir el ejecutable combinado actual exige los derechos y el Código Fuente Correspondiente aplicables a esa obra.</p>
-          </section>
-          <section class="license-principle">
-            <span>04 / TERCEROS</span>
-            <h2>Los demás componentes conservan sus propias licencias</h2>
-            <p>El material de Wine sin modificar conserva los permisos LGPL aplicables. D3DMetal, los demás renderizadores, las fuentes, las ilustraciones y las marcas mantienen sus propias condiciones; D3DMetal se distribuye por separado bajo las condiciones de Apple.</p>
-          </section>
-          <section class="license-principle">
-            <span>05 / PUBLICACIONES DE FORGEPLAY</span>
-            <h2>El binario y su código fuente correspondiente se publican juntos</h2>
-            <p>Cada GitHub Release con código objeto cubierto publica al mismo tiempo el Código Fuente Correspondiente de la misma versión y los avisos necesarios. ForgePlay no publica primero el binario y después el código.</p>
-          </section>
-        </div>
-        <aside class="license-policy-note">
-          El repositorio oficial no acepta actualmente contribuciones externas de código. Esa política de mantenimiento no limita los derechos de bifurcar, modificar o redistribuir que conceden las licencias aplicables. Las versiones modificadas no pueden presentarse como lanzamientos oficiales ni usar el nombre, el logotipo o las ilustraciones de ForgePlay como marca propia.
-        </aside>
+        <section class="license-compliance"><h2>Cumplimos las licencias aplicables y publicamos los documentos que lo respaldan.</h2><p>Para desarrollar y distribuir conforme a las licencias aplicables, ForgePlay identifica la procedencia, las modificaciones y el alcance del código y los modelos que usa, y conserva los avisos de copyright y licencia. Proporciona el código fuente correspondiente, parches, materiales de compilación y guías de reenlazado. No presenta trabajo ajeno como propio ni elimina condiciones de terceros al reivindicar sus aportaciones.</p></section>
+        <section class="license-release-scopes"><h2>Tres implementaciones GPL con ámbitos diferenciados</h2><div class="license-scope-cards">
+<section><span class="license-scope-number">01 / GPL-3.0-only</span><h3>ForgePlay Game Mode</h3><p>Incluye el host nativo del autor y los ajustes y scripts de compilación identificados. Encauza los procesos de Windows por un host nativo que entra en Wine dentro del mismo proceso. Conserva los avisos de autoría y conversión a GPL de las partes derivadas del cargador de Wine 11.12; no se afirma haber escrito todo el cargador desde cero.</p><code>Native/GameModeProcessHost/</code></section>
+<section><span class="license-scope-number">02 / GPL-3.0-only</span><h3>ForgePlay Frame Generation</h3><p>Incluye el código propio de captura, interpolación, colas y estado de presentación, junto con los materiales de compilación identificados. Se publican Simple, Motion Lite, Motion Quality, Motion Repair y su código de verificación. Los cambios de integración en Wine y MoltenVK siguen sus propias licencias.</p><code>Native/D3DMetalFrameGenerationProxy/</code></section>
+<section><span class="license-scope-number">03 / GPL-3.0-only</span><h3>ForgePlay DLSS5 Emulation</h3><p>Incluye la integración nativa de inferencia del autor, los archivos de conversión y verificación enumerados en el aviso y los materiales de compilación. Comprende el preprocesamiento y posprocesamiento Metal, los búferes, el auxiliar de inferencia Core AI y la presentación. En el código, el componente se llama ForgePlay Neural Rendering.</p><code>Native/NeuralRendering/ · Tools/NeuralRendering/</code></section>
+        </div><p class="license-boundary-note">NeuralWorker.swift es el auxiliar de inferencia necesario en ejecución y publicado bajo GPL, no la interfaz privada. No queda excluido por estar escrito en Swift.</p><a class="fp-text-link" href="site-data/licenses/2.0.0/SOURCE-SCOPE.json">Archivos GPL y hashes ↗</a></section>
+        <section class="license-boundaries"><h2>Límites de los componentes de terceros y de la interfaz privada</h2>
+          <table><thead><tr><th scope="col">Componente</th><th scope="col">Condiciones y derechos conservados</th></tr></thead><tbody>
+<tr><th scope="row">Wine</th><td>Wine original mantiene LGPL-2.1-or-later y sus copyrights. Las copias identificadas del host derivado de Wine y de los parches de Game Mode conservan avisos de conversión a GPL-3.0-only conforme a la sección 3 de LGPL 2.1.</td></tr>
+<tr><th scope="row">HyPER-GAN</th><td>Se conservan el aviso MIT y Copyright (c) 2026 Stefanos Pasios para el modelo original, pesos preentrenados y convertidos, y material de modelo derivado. El aviso GPL de ForgePlay no sustituye esos derechos.</td></tr>
+<tr><th scope="row">MoltenVK · DXVK · Fonts</th><td>MoltenVK y el parche de captura identificado mantienen Apache-2.0. DXVK, las fuentes tipográficas y otras bibliotecas conservan sus licencias, copyrights y condiciones originales.</td></tr>
+<tr><th scope="row">Apple D3DMetal · Metal · Core AI</th><td>D3DMetal, Metal y Core AI están sujetos a condiciones separadas de Apple. Sus implementaciones no se relicencian bajo GPL ni se reivindican derechos que Apple no haya concedido.</td></tr>
+<tr><th scope="row">Swift App / Launcher UI</th><td>La interfaz Swift de la app y del lanzador, propiedad del autor, se excluye de la publicación de fuentes mediante un permiso separado de distribución binaria. Esto no incluye implementaciones GPL nativas, NeuralWorker.swift, código derivado de Wine ni material de otros titulares.</td></tr>
+          </tbody></table>
+          <details class="license-explanation"><summary>Wine · LGPL / GPL</summary><p>Las obligaciones de un derivado combinado de Wine que contenga los cambios convertidos a GPL no se limitan a dos parches. Se distribuye conforme a GPLv3, preservando los derechos LGPL del Wine original y de otras copias no convertidas. Se proporcionan las fuentes correspondientes, parches, materiales de compilación y avisos.</p><a href="site-data/licenses/2.0.0/WINE-GAME-MODE-NOTICE.txt">Leer el aviso original ↗</a></details>
+          <details class="license-explanation"><summary>HyPER-GAN · MIT</summary><p>No se reivindica haber inventado HyPER-GAN ni entrenado nuevos pesos. MODEL-BUILDING.md documenta la conversión de los parámetros originales a un grafo Core AI y al formato FP16, con procedencia y hashes. El aviso MIT se conserva en los derivados; no se conceden nuevos derechos sobre conjuntos de datos o tecnología NVIDIA.</p><div class="license-current-actions"><a href="site-data/licenses/2.0.0/HyPER-GAN-LICENSE.txt">Leer el aviso original ↗</a><a href="site-data/licenses/2.0.0/MODEL-BUILDING.md">MODEL-BUILDING.md ↗</a></div></details>
+          <p class="license-boundary-note">El permiso separado de la interfaz permite usar, copiar y distribuir las aportaciones compiladas del autor sin sus fuentes Swift, también con fines comerciales. El lenguaje o la separación de procesos no eximen por sí solos de obligaciones GPL, LGPL o de terceros.</p>
+        </section>
+        <section class="license-source-evidence"><h2>Fuentes correspondientes a la distribución real</h2><p>La referencia actual es el archivo OpenSource adjunto directamente a la versión 2.0.0 (compilación 6). La rama principal y las instantáneas automáticas Source code (zip/tar.gz) de GitHub no sustituyen las fuentes de esa distribución.</p>
+          <div class="license-current-actions"><a href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-OpenSource.tar.gz">Descargar fuentes correspondientes a 2.0.0 ↗</a><a href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-SHA256SUMS.txt" target="_blank" rel="noopener noreferrer">Sumas de comprobación publicadas ↗</a></div><p>El paquete es una instantánea con cambios sin confirmar en Git en el momento de la compilación. No se afirma que una revisión histórica por sí sola reproduzca el binario. Los hashes y la identidad del DMG en SOURCE-FILES.json registran la correspondencia.</p>
+          <ul class="license-archive-paths"><li><code>SOURCE-FILES.json</code></li><li><code>LICENSES/ForgePlayRelease20/SOURCE-SCOPE.json</code></li><li><code>Upstream/HyPERGAN/manifest.json</code></li><li><code>BUILDING.md · MODEL-BUILDING.md</code></li><li><code>ThirdPartyCorrespondingSource/relinking/</code></li></ul>
+          <p class="license-boundary-note">Las rutas de implementación y las indicadas en estos documentos son internas al archivo de fuentes. Los avisos alojados aquí son copias sin modificar de ese archivo; este resumen no altera sus condiciones.</p>
+        </section>
+        <section class="license-rights"><h2>Copyright, atribución y redistribución</h2><p>Cumpliendo la GPL, las implementaciones cubiertas pueden usarse, estudiarse, modificarse, redistribuirse y utilizarse comercialmente. Entregar las fuentes en un archivo comprimido no restringe esos derechos ni revoca permisos anteriores.</p><p>Al redistribuir, conserva el nombre del componente correspondiente, Copyright © 2026 Facta-Leopard, la dirección del proyecto original y los avisos de terceros. Mantén la atribución aplicable en Acerca de, Avisos legales o Créditos. Identifica las modificaciones y no presentes versiones modificadas como oficiales o avaladas por el autor.</p>
+          <div class="license-attribution"><span>ForgePlay Game Mode</span><span>ForgePlay Frame Generation</span><span>ForgePlay Neural Rendering</span><strong>Copyright © 2026 Facta-Leopard</strong><a href="https://github.com/Facta-Leopard/ForgePlay" target="_blank" rel="noopener noreferrer">github.com/Facta-Leopard/ForgePlay</a></div>
+          <p>No se conceden nuevos derechos de marca ni se prohíbe identificar verazmente el origen. Los textos originales rigen la exención de garantías, la responsabilidad y las demás condiciones.</p><p class="license-boundary-note">La política de no aceptar contribuciones externas de código es distinta de los derechos de bifurcar, modificar y redistribuir. Esta página explica el cumplimiento y sus límites; no concede nuevas licencias ni derechos de terceros.</p>
+        </section>
       </article>
 
       <article id="license-fr" class="language-section license-language" lang="fr">
         <header class="license-intro">
-          <p class="section-label">LES LICENCES DE FORGEPLAY, EN CLAIR</p>
-          <h1>Le code du mode Jeu est sous GPLv3. Les autres composants conservent leurs propres conditions.</h1>
-          <p>ForgePlay n’est pas régi par une licence unique. Le code du mode Jeu nommé dans le document de périmètre est sous <code>GPL-3.0-only</code> ; Wine, D3DMetal et les autres éléments tiers conservent leurs propres conditions. Cette page résume l’essentiel. Les fichiers faisant foi, accessibles plus bas, déterminent les droits et obligations.</p>
-          <a class="button primary" href="#license-files">Voir les fichiers de licence faisant foi</a>
+          <p class="section-label">FORGEPLAY 2.0.0 · BUILD 6</p><h1>Le mode Jeu, la génération d’images et l’émulation DLSS5 sont publiés sous GPLv3.</h1><p>ForgePlay 2.0.0 (build 6) est une distribution à licences multiples. Le code appartenant à l’auteur dans les trois implémentations ci-dessous et les éléments de compilation désignés sont publiés sous GPL-3.0-only. Cela ne place pas toute l’app sous GPL et ne transfère à ForgePlay aucun droit sur Wine, HyPER-GAN ou les composants Apple.</p>
+          <p class="license-author">Auteur des éléments créés pour ForgePlay: <a href="https://github.com/Facta-Leopard" target="_blank" rel="noopener noreferrer">Facta-Leopard</a><br><strong>Copyright © 2026 Facta-Leopard</strong></p>
+          <div class="license-current-actions"><a class="button primary" href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-OpenSource.tar.gz">Télécharger les sources correspondantes de 2.0.0 ↗</a><a class="button ghost" href="#license-files">Lire la notice originale</a></div>
         </header>
-        <div class="license-principles">
-          <section class="license-principle">
-            <span>01 / CE QUE VOUS POUVEZ FAIRE</span>
-            <h2>GPLv3 vous accorde déjà l’autorisation</h2>
-            <p>Le code que le document de périmètre identifie comme code du mode Jeu de ForgePlay est sous <code>GPL-3.0-only</code>. Si vous respectez GPLv3, vous pouvez l’utiliser, l’étudier, le modifier, le redistribuer et en faire un usage commercial sans demander d’autre autorisation.</p>
-          </section>
-          <section class="license-principle">
-            <span>02 / CE QUE VOUS DEVEZ RESPECTER</span>
-            <h2>Distribuez le code source et les droits avec le binaire</h2>
-            <p>Si vous distribuez du code couvert ou une œuvre combinée qui l’intègre, conservez les mentions requises, signalez les modifications et fournissez le Code source correspondant ainsi que les éléments de compilation ou de paquetage exigés par GPLv3.</p>
-          </section>
-          <section class="license-principle">
-            <span>03 / PÉRIMÈTRE</span>
-            <h2>Le périmètre direct est limité ; les obligations peuvent atteindre l’exécutable combiné</h2>
-            <p>Le périmètre direct couvre le code propre au mode Jeu, les parties identifiées de fichiers mixtes, <code>GameModeProcessHost</code> et deux correctifs Wine. Il ne s’agit pas d’un changement global de licence, mais distribuer l’exécutable combiné actuel exige les droits GPLv3 et le Code source correspondant applicables à cette œuvre.</p>
-          </section>
-          <section class="license-principle">
-            <span>04 / COMPOSANTS TIERS</span>
-            <h2>Les autres composants conservent leurs propres licences</h2>
-            <p>Le code Wine non modifié conserve les autorisations LGPL applicables. D3DMetal, les autres moteurs de rendu, les polices, les illustrations et les marques restent soumis à leurs propres conditions; D3DMetal est distribué séparément selon les conditions d’Apple.</p>
-          </section>
-          <section class="license-principle">
-            <span>05 / PUBLICATIONS FORGEPLAY</span>
-            <h2>Le binaire et le code source correspondant paraissent ensemble</h2>
-            <p>Chaque GitHub Release contenant du code objet couvert publie en même temps le Code source correspondant de même version et les mentions requises. ForgePlay ne publie pas le binaire avant son code source.</p>
-          </section>
-        </div>
-        <aside class="license-policy-note">
-          Le dépôt officiel n’accepte actuellement aucune contribution externe de code. Cette politique de maintenance ne réduit pas les droits de forker, modifier ou redistribuer accordés par les licences applicables. Une version modifiée ne peut se présenter comme une release officielle, ni revendiquer des droits sur le nom, le logo ou les illustrations de ForgePlay.
-        </aside>
+        <section class="license-compliance"><h2>Nous respectons les licences applicables et publions les éléments qui le montrent.</h2><p>Pour développer et distribuer conformément aux licences applicables, ForgePlay identifie la provenance, les modifications et le périmètre du code et des modèles utilisés, et conserve les mentions de droit d’auteur et de licence. Le code source correspondant, les correctifs, les éléments de compilation nécessaires et les instructions de réédition des liens sont fournis. Nous ne présentons pas le travail d’autrui comme le nôtre et n’effaçons pas les conditions des tiers en revendiquant nos contributions.</p></section>
+        <section class="license-release-scopes"><h2>Trois implémentations GPL aux périmètres distincts</h2><div class="license-scope-cards">
+<section><span class="license-scope-number">01 / GPL-3.0-only</span><h3>ForgePlay Game Mode</h3><p>Couvre l’hôte natif de l’auteur ainsi que les réglages et scripts de compilation désignés. Les processus Windows passent par un hôte natif qui entre dans Wine au sein du même processus. Les droits d’auteur et les mentions de conversion en GPL des parties issues du chargeur Wine 11.12 sont préservés ; nous ne revendiquons pas la réécriture complète du chargeur.</p><code>Native/GameModeProcessHost/</code></section>
+<section><span class="license-scope-number">02 / GPL-3.0-only</span><h3>ForgePlay Frame Generation</h3><p>Couvre les contributions propres à la capture, à l’interpolation, aux files d’attente et à l’état de présentation, ainsi que les éléments de compilation désignés. Simple, Motion Lite, Motion Quality, Motion Repair et leur code de vérification sont publiés. Les modifications côté Wine et MoltenVK suivent leurs licences respectives.</p><code>Native/D3DMetalFrameGenerationProxy/</code></section>
+<section><span class="license-scope-number">03 / GPL-3.0-only</span><h3>ForgePlay DLSS5 Emulation</h3><p>Couvre l’intégration native d’inférence de l’auteur, les fichiers de conversion et de vérification énumérés dans la notice et les éléments de compilation. Cela comprend le pré/post-traitement Metal, les tampons, l’auxiliaire d’inférence Core AI et la présentation. Le composant source s’appelle ForgePlay Neural Rendering.</p><code>Native/NeuralRendering/ · Tools/NeuralRendering/</code></section>
+        </div><p class="license-boundary-note">NeuralWorker.swift est l’auxiliaire d’inférence GPL nécessaire à l’exécution, pas l’interface privée. Le fait d’être écrit en Swift ne l’exclut pas du périmètre publié.</p><a class="fp-text-link" href="site-data/licenses/2.0.0/SOURCE-SCOPE.json">Fichiers GPL et empreintes ↗</a></section>
+        <section class="license-boundaries"><h2>Limites entre tiers et interface privée</h2>
+          <table><thead><tr><th scope="col">Composant</th><th scope="col">Conditions applicables et droits préservés</th></tr></thead><tbody>
+<tr><th scope="row">Wine</th><td>Wine amont conserve LGPL-2.1-or-later et les droits d’auteur d’origine. Les copies désignées de l’hôte dérivé de Wine et des correctifs Game Mode portent les mentions de conversion en GPL-3.0-only au titre de l’article 3 de LGPL 2.1.</td></tr>
+<tr><th scope="row">HyPER-GAN</th><td>La mention MIT et Copyright (c) 2026 Stefanos Pasios sont conservés pour le modèle original, les poids préentraînés et convertis, ainsi que les éléments dérivés du modèle. La mention GPL de ForgePlay ne les remplace pas.</td></tr>
+<tr><th scope="row">MoltenVK · DXVK · Fonts</th><td>MoltenVK et le correctif de capture désigné restent sous Apache-2.0. DXVK, les polices et les autres bibliothèques conservent leurs licences, droits d’auteur et conditions d’origine.</td></tr>
+<tr><th scope="row">Apple D3DMetal · Metal · Core AI</th><td>D3DMetal, Metal et Core AI relèvent de conditions Apple distinctes. Les implémentations Apple ne sont pas relicenciées sous GPL et aucun droit qu’Apple n’a pas accordé n’est revendiqué.</td></tr>
+<tr><th scope="row">Swift App / Launcher UI</th><td>L’interface Swift de l’app et du lanceur appartenant à l’auteur est exclue de la publication des sources au titre d’une autorisation distincte de distribution binaire. Sont exclus de cette permission les implémentations GPL natives, NeuralWorker.swift, le code dérivé de Wine et les éléments d’autres ayants droit.</td></tr>
+          </tbody></table>
+          <details class="license-explanation"><summary>Wine · LGPL / GPL</summary><p>Les obligations d’un dérivé combiné de Wine contenant les modifications converties en GPL ne se limitent pas aux deux correctifs. Ce dérivé est distribué conformément à GPLv3, tout en préservant les droits LGPL de Wine amont et des autres copies non converties. Sources correspondantes, correctifs, éléments de compilation et mentions sont fournis.</p><a href="site-data/licenses/2.0.0/WINE-GAME-MODE-NOTICE.txt">Lire la notice originale ↗</a></details>
+          <details class="license-explanation"><summary>HyPER-GAN · MIT</summary><p>Nous ne revendiquons ni l’invention de HyPER-GAN ni l’entraînement de nouveaux poids. MODEL-BUILDING.md décrit la conversion des paramètres originaux en graphe Core AI et au format FP16, avec provenance et empreintes. Les mentions MIT restent sur les éléments convertis ; aucun nouveau droit sur les jeux de données ou la technologie NVIDIA n’est accordé.</p><div class="license-current-actions"><a href="site-data/licenses/2.0.0/HyPER-GAN-LICENSE.txt">Lire la notice originale ↗</a><a href="site-data/licenses/2.0.0/MODEL-BUILDING.md">MODEL-BUILDING.md ↗</a></div></details>
+          <p class="license-boundary-note">L’autorisation distincte de l’interface permet d’utiliser, copier et distribuer les contributions compilées de l’auteur sans leurs sources Swift, y compris commercialement. Le langage choisi ou la séparation en processus ne supprime pas à lui seul les obligations GPL, LGPL ou envers des tiers.</p>
+        </section>
+        <section class="license-source-evidence"><h2>Sources correspondant à la distribution réelle</h2><p>La référence actuelle est l’archive OpenSource jointe directement à la version 2.0.0 (build 6). La branche par défaut et les instantanés automatiques Source code (zip/tar.gz) de GitHub ne remplacent pas les sources correspondant à cette distribution.</p>
+          <div class="license-current-actions"><a href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-OpenSource.tar.gz">Télécharger les sources correspondantes de 2.0.0 ↗</a><a href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-SHA256SUMS.txt" target="_blank" rel="noopener noreferrer">Sommes de contrôle publiées ↗</a></div><p>Le paquet est un instantané comprenant des modifications non committées au moment de la compilation. Aucune révision Git historique ne suffit à elle seule à garantir la reproduction du binaire. Les empreintes et l’identité du DMG dans SOURCE-FILES.json documentent la correspondance.</p>
+          <ul class="license-archive-paths"><li><code>SOURCE-FILES.json</code></li><li><code>LICENSES/ForgePlayRelease20/SOURCE-SCOPE.json</code></li><li><code>Upstream/HyPERGAN/manifest.json</code></li><li><code>BUILDING.md · MODEL-BUILDING.md</code></li><li><code>ThirdPartyCorrespondingSource/relinking/</code></li></ul>
+          <p class="license-boundary-note">Les chemins d’implémentation ci-dessus et ceux cités dans ces documents sont internes à l’archive source. Les notices hébergées ici en sont des copies non modifiées ; ce résumé n’en change pas les conditions.</p>
+        </section>
+        <section class="license-rights"><h2>Droit d’auteur, attribution et redistribution</h2><p>Le respect de la GPL permet l’utilisation, l’étude, la modification, la redistribution et l’usage commercial des implémentations concernées. La fourniture des sources dans une archive ne limite pas ces droits et ne révoque pas les autorisations antérieures.</p><p>En cas de redistribution, conservez le nom du composant concerné, Copyright © 2026 Facta-Leopard, l’adresse du projet original et les mentions des tiers. Maintenez l’attribution applicable dans À propos, Informations légales ou Crédits. Signalez les modifications et ne présentez pas une version modifiée comme officielle ou approuvée par l’auteur.</p>
+          <div class="license-attribution"><span>ForgePlay Game Mode</span><span>ForgePlay Frame Generation</span><span>ForgePlay Neural Rendering</span><strong>Copyright © 2026 Facta-Leopard</strong><a href="https://github.com/Facta-Leopard/ForgePlay" target="_blank" rel="noopener noreferrer">github.com/Facta-Leopard/ForgePlay</a></div>
+          <p>Aucun nouveau droit de marque n’est accordé ; l’identification véridique de l’origine n’est pas interdite. Les textes originaux régissent l’absence de garantie, les limites de responsabilité et les autres conditions.</p><p class="license-boundary-note">La politique du dépôt officiel de ne pas accepter de contributions externes au code est distincte des droits de fork, de modification et de redistribution. Cette page décrit les pratiques et le périmètre ; elle n’accorde aucune nouvelle licence ni aucun droit de tiers.</p>
+        </section>
       </article>
 
       <article id="license-ja" class="language-section license-language" lang="ja">
         <header class="license-intro">
-          <p class="section-label">FORGEPLAY ライセンスをわかりやすく</p>
-          <h1>ゲームモードのコードは GPLv3。その他のコンポーネントには、それぞれの条件が適用されます。</h1>
-          <p>ForgePlay に単一のライセンスはありません。適用範囲文書で指定されたゲームモードのコードは <code>GPL-3.0-only</code> です。Wine、D3DMetal、その他の第三者素材には、それぞれの条件が適用されます。このページは要点をまとめたものです。実際の権利と義務は、下記の正式な文書に従います。</p>
-          <a class="button primary" href="#license-files">正式なライセンス文書を見る</a>
+          <p class="section-label">FORGEPLAY 2.0.0 · BUILD 6</p><h1>ゲームモード・フレーム生成・DLSS5エミュレーションをGPLv3で公開しています。</h1><p>ForgePlay 2.0.0（ビルド6）は複数のライセンスからなる配布物です。以下の3つの実装のうち作者が権利を持つコードと、指定されたビルド資料をGPL-3.0-onlyで公開します。アプリ全体をGPLにしたり、Wine・HyPER-GAN・Appleの権利をForgePlayに移したりするものではありません。</p>
+          <p class="license-author">ForgePlay作成部分の著作者: <a href="https://github.com/Facta-Leopard" target="_blank" rel="noopener noreferrer">Facta-Leopard</a><br><strong>Copyright © 2026 Facta-Leopard</strong></p>
+          <div class="license-current-actions"><a class="button primary" href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-OpenSource.tar.gz">2.0.0の対応ソースをダウンロード ↗</a><a class="button ghost" href="#license-files">告知原文を読む</a></div>
         </header>
-        <div class="license-principles">
-          <section class="license-principle">
-            <span>01 / できること</span>
-            <h2>GPLv3 が利用を認めています</h2>
-            <p>適用範囲文書で ForgePlay のゲームモードコードと指定された部分は <code>GPL-3.0-only</code> です。GPLv3 の条件を満たせば、別途許可を求めることなく利用、調査、変更、再配布、商用利用ができます。</p>
-          </section>
-          <section class="license-principle">
-            <span>02 / 守ること</span>
-            <h2>バイナリとともに、ソースと権利も提供します</h2>
-            <p>対象コード、またはそれを含む結合作品を配布する場合は、必要な通知を保ち、変更を明示し、GPLv3 が求める対応するソース（Corresponding Source）とビルド・パッケージ資料を提供してください。</p>
-          </section>
-          <section class="license-principle">
-            <span>03 / 適用範囲</span>
-            <h2>直接指定されるコードは一部でも、結合実行ファイルには広い義務が生じます</h2>
-            <p>直接の対象はゲームモード専用コード、混在ファイルの指定部分、<code>GameModeProcessHost</code>、2つの Wine パッチです。リポジトリ全体の一括再ライセンスではありませんが、現在の結合実行ファイルを配布する場合は、その作品に必要な GPLv3 の権利と対応するソースを提供する必要があります。</p>
-          </section>
-          <section class="license-principle">
-            <span>04 / 第三者コンポーネント</span>
-            <h2>その他のコンポーネントには、それぞれのライセンスが適用されます</h2>
-            <p>変更していない Wine 素材には、適用される LGPL の権利が残ります。D3DMetal、他のレンダラー、フォント、アートワーク、商標にはそれぞれの条件が適用され、D3DMetal は Apple の条件に基づく別コンポーネントとして配布されます。</p>
-          </section>
-          <section class="license-principle">
-            <span>05 / FORGEPLAY のリリース</span>
-            <h2>バイナリと対応するソースを同時に公開します</h2>
-            <p>対象オブジェクトコードを含む GitHub Release では、同一バージョンの対応するソースと必要な通知を同時に公開します。バイナリを先に出し、ソースを後から追加することはありません。</p>
-          </section>
-        </div>
-        <aside class="license-policy-note">
-          公式リポジトリは現在、外部からのコード提供を受け付けていません。これは保守方針であり、適用ライセンスが認めるフォーク、変更、再配布の権利を狭めるものではありません。変更版を公式 ForgePlay リリースとして表示することはできず、名称、ロゴ、アートワークの権利も許諾されません。
-        </aside>
+        <section class="license-compliance"><h2>ライセンス条件を守り、その根拠を公開します。</h2><p>ForgePlayは適用ライセンスに従って開発・配布するため、利用したコードとモデルの出典、変更内容、適用範囲を区別し、著作権・ライセンス告知を保持します。配布物に対応するソース、パッチ、必要なビルド資料と再リンク手順を提供します。他者の成果を自作と称したり、自分の権利を主張して第三者の条件を消したりしません。</p></section>
+        <section class="license-release-scopes"><h2>範囲を個別に明示した3つのGPL実装</h2><div class="license-scope-cards">
+<section><span class="license-scope-number">01 / GPL-3.0-only</span><h3>ForgePlay Game Mode</h3><p>作者が権利を持つネイティブホストと、指定のビルド設定・スクリプトが対象です。Windowsプロセスをネイティブホストに接続し、同一プロセス内でWineに入ります。Wine 11.12ローダー由来の部分の著作権とGPLへの切替告知を保持し、ローダー全体を新規開発したとは主張しません。</p><code>Native/GameModeProcessHost/</code></section>
+<section><span class="license-scope-number">02 / GPL-3.0-only</span><h3>ForgePlay Frame Generation</h3><p>作者によるキャプチャ・補間・キュー・表示状態管理と指定ビルド資料が対象です。Simple、Motion Lite、Motion Quality、Motion Repairと関連検証コードを公開します。Wine・MoltenVK側の連携変更は、それぞれのライセンス境界に従います。</p><code>Native/D3DMetalFrameGenerationProxy/</code></section>
+<section><span class="license-scope-number">03 / GPL-3.0-only</span><h3>ForgePlay DLSS5 Emulation</h3><p>作者によるネイティブ推論統合、告知に列挙したモデル変換・検証コードとビルド資料が対象です。Metal前後処理、フレームバッファ連携、Core AI推論ヘルパーと表示統合を含みます。ソース上の名称はForgePlay Neural Renderingです。</p><code>Native/NeuralRendering/ · Tools/NeuralRendering/</code></section>
+        </div><p class="license-boundary-note">NeuralWorker.swiftは実行に必要なGPL公開の推論ヘルパーであり、非公開UIではありません。Swiftファイルであることを理由に公開範囲から除外しません。</p><a class="fp-text-link" href="site-data/licenses/2.0.0/SOURCE-SCOPE.json">GPL対象ファイルとハッシュ ↗</a></section>
+        <section class="license-boundaries"><h2>第三者の素材と非公開UIの境界</h2>
+          <table><thead><tr><th scope="col">構成要素</th><th scope="col">適用条件と保持する権利</th></tr></thead><tbody>
+<tr><th scope="row">Wine</th><td>元のWineはLGPL-2.1-or-laterと元の著作権を保持します。指定のWine由来ホストとゲームモードパッチのコピーは、LGPL 2.1第3条に基づくGPL-3.0-onlyへの切替告知を保持します。</td></tr>
+<tr><th scope="row">HyPER-GAN</th><td>元モデル、学習済み・変換済み重み、派生モデル資料には、MIT告知とCopyright (c) 2026 Stefanos Pasiosを保持します。ForgePlayのGPL告知がこれらを置き換えることはありません。</td></tr>
+<tr><th scope="row">MoltenVK · DXVK · Fonts</th><td>MoltenVKと指定キャプチャパッチはApache-2.0を保持します。DXVK・フォント・その他のライブラリは、元のライセンス・著作権・適用条件を保持します。</td></tr>
+<tr><th scope="row">Apple D3DMetal · Metal · Core AI</th><td>D3DMetal・Metal・Core AIにはAppleの個別条件が適用されます。Appleの実装自体をGPLへ変更したり、Appleが許諾していない権利を主張したりしません。</td></tr>
+<tr><th scope="row">Swift App / Launcher UI</th><td>作者所有のSwiftアプリ・ランチャーUIは、個別のバイナリ配布許諾によりソース公開対象から除外されます。ネイティブGPL実装、NeuralWorker.swift、Wine由来コード、他の権利者の素材は、この除外に含まれません。</td></tr>
+          </tbody></table>
+          <details class="license-explanation"><summary>Wine · LGPL / GPL</summary><p>GPLへ切り替えた変更を含むWineの結合派生物の配布義務は、2つのパッチだけに限定されません。派生物はGPLv3に従って配布し、元のWineや切り替えていない別コピーのLGPL上の権利も保持します。対応するWineソース・パッチ・必要なビルド資料と告知を提供します。</p><a href="site-data/licenses/2.0.0/WINE-GAME-MODE-NOTICE.txt">告知原文を読む ↗</a></details>
+          <details class="license-explanation"><summary>HyPER-GAN · MIT</summary><p>HyPER-GANの発明や新しい重みの学習は主張しません。元のパラメータをCore AIグラフとFP16配布形式に変換した内容、出典、ハッシュはMODEL-BUILDING.mdに記載しています。MIT告知は変換済み資料にも保持し、データセットやNVIDIA技術の権利を新たに付与しません。</p><div class="license-current-actions"><a href="site-data/licenses/2.0.0/HyPER-GAN-LICENSE.txt">告知原文を読む ↗</a><a href="site-data/licenses/2.0.0/MODEL-BUILDING.md">MODEL-BUILDING.md ↗</a></div></details>
+          <p class="license-boundary-note">個別のUI許諾は、作者所有のコンパイル済みUIをSwiftソースなしで利用・コピー・配布できるとするもので、非商用に限定されません。使用言語やプロセスの分離だけでGPL・LGPL・第三者への義務が免除されることはありません。</p>
+        </section>
+        <section class="license-source-evidence"><h2>実際の配布物に対応する公開ソース</h2><p>現在の基準は2.0.0（ビルド6）リリースに直接添付したOpenSourceアーカイブです。既定ブランチやGitHubが自動生成するSource code (zip/tar.gz)は、その配布物の対応ソースの代わりではありません。</p>
+          <div class="license-current-actions"><a href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-OpenSource.tar.gz">2.0.0の対応ソースをダウンロード ↗</a><a href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-SHA256SUMS.txt" target="_blank" rel="noopener noreferrer">公開チェックサム ↗</a></div><p>公開パッケージはビルド時点の未コミット変更を含むスナップショットです。過去のGit基準コミット1つだけで同じバイナリを再現できるとは表示せず、SOURCE-FILES.jsonのファイル別ハッシュとDMG識別情報を基準とします。</p>
+          <ul class="license-archive-paths"><li><code>SOURCE-FILES.json</code></li><li><code>LICENSES/ForgePlayRelease20/SOURCE-SCOPE.json</code></li><li><code>Upstream/HyPERGAN/manifest.json</code></li><li><code>BUILDING.md · MODEL-BUILDING.md</code></li><li><code>ThirdPartyCorrespondingSource/relinking/</code></li></ul>
+          <p class="license-boundary-note">上記の実装パスと文書内のパスはソースアーカイブ内のものです。ここで提供する告知は、そのアーカイブから変更せずに複製した原文です。この要約が条件を変更することはありません。</p>
+        </section>
+        <section class="license-rights"><h2>著作権・出典表示と再配布</h2><p>GPLに従えば、対象実装の利用・研究・変更・再配布・商用利用ができます。ソースを圧縮ファイルで提供することは、これらの権利を制限せず、以前の許諾も取り消しません。</p><p>再配布時には該当する構成要素名、Copyright © 2026 Facta-Leopard、元プロジェクトのURL、第三者の告知を保持してください。About・Legal・Credits等で必要な出典表示も保持します。変更を明示し、改変版を公式ForgePlay配布物や作者が保証する配布物と誤認させないでください。</p>
+          <div class="license-attribution"><span>ForgePlay Game Mode</span><span>ForgePlay Frame Generation</span><span>ForgePlay Neural Rendering</span><strong>Copyright © 2026 Facta-Leopard</strong><a href="https://github.com/Facta-Leopard/ForgePlay" target="_blank" rel="noopener noreferrer">github.com/Facta-Leopard/ForgePlay</a></div>
+          <p>新たな商標権は付与しませんが、出所を事実どおり表示することは禁止しません。無保証・責任制限などの実際の条件は原文に従います。</p><p class="license-boundary-note">公式リポジトリが外部のコード貢献を受け付けない運営方針と、ライセンスによるフォーク・変更・再配布の権利は別です。このページは遵守方法と範囲の案内であり、新しいライセンスや第三者の権利を付与しません。</p>
+        </section>
       </article>
 
       <article id="license-zh-Hans" class="language-section license-language" lang="zh-Hans">
         <header class="license-intro">
-          <p class="section-label">FORGEPLAY 许可证简明说明</p>
-          <h1>游戏模式代码采用 GPLv3。其他组件各自遵循原有条款。</h1>
-          <p>ForgePlay 并非采用单一许可证。范围文档中指定的游戏模式代码采用 <code>GPL-3.0-only</code>；Wine、D3DMetal 和其他第三方材料仍遵循各自条款。本页仅概述要点，实际权利与义务以下方正式文件为准。</p>
-          <a class="button primary" href="#license-files">查看正式许可证文件</a>
+          <p class="section-label">FORGEPLAY 2.0.0 · BUILD 6</p><h1>游戏模式、帧生成与 DLSS5 模拟以 GPLv3 公开。</h1><p>ForgePlay 2.0.0（构建 6）是采用多种许可证的分发包。以下三项实现中作者拥有权利的代码，以及明确指定的构建资料，以 GPL-3.0-only 公开。这不代表整个应用都采用 GPL，也不将 Wine、HyPER-GAN 或 Apple 组件的权利转为 ForgePlay 所有。</p>
+          <p class="license-author">ForgePlay 自行编写部分的作者: <a href="https://github.com/Facta-Leopard" target="_blank" rel="noopener noreferrer">Facta-Leopard</a><br><strong>Copyright © 2026 Facta-Leopard</strong></p>
+          <div class="license-current-actions"><a class="button primary" href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-OpenSource.tar.gz">下载 2.0.0 对应源码 ↗</a><a class="button ghost" href="#license-files">查看声明原文</a></div>
         </header>
-        <div class="license-principles">
-          <section class="license-principle">
-            <span>01 / 你可以做什么</span>
-            <h2>GPLv3 已经授予这些权利</h2>
-            <p>范围文档中标识为 ForgePlay 游戏模式代码的部分采用 <code>GPL-3.0-only</code>。只要遵守 GPLv3，即可使用、研究、修改、再发行和商业使用，无需另行申请许可。</p>
-          </section>
-          <section class="license-principle">
-            <span>02 / 你必须做什么</span>
-            <h2>发行二进制文件时，也要提供源代码与相应权利</h2>
-            <p>发行适用范围内的代码或包含这些代码的结合作品时，须保留必要声明、标明修改，并提供 GPLv3 要求的对应源代码（Corresponding Source）以及构建和打包材料。</p>
-          </section>
-          <section class="license-principle">
-            <span>03 / 适用范围</span>
-            <h2>直接指定的代码有限，但义务可能延伸至组合可执行文件</h2>
-            <p>直接范围包括游戏模式专用代码、混合文件的指定部分、<code>GameModeProcessHost</code> 和两个 Wine 补丁。这并非对整个仓库统一重新许可；但发行当前组合可执行文件时，必须提供该结合作品所需的 GPLv3 权利与对应源代码。</p>
-          </section>
-          <section class="license-principle">
-            <span>04 / 第三方条款</span>
-            <h2>其他组件保留各自许可证</h2>
-            <p>未修改的 Wine 材料保留适用的 LGPL 权利。D3DMetal、其他渲染器、字体、美术素材和商标仍适用各自条款；D3DMetal 作为独立组件，按 Apple 的条款发行。</p>
-          </section>
-          <section class="license-principle">
-            <span>05 / FORGEPLAY 发布</span>
-            <h2>二进制文件与对应源代码同步发布</h2>
-            <p>任何包含适用范围内目标代码的 GitHub Release，都会同步发布同版本的对应源代码与必要声明。ForgePlay 不采用先发二进制文件、后补源代码的方式。</p>
-          </section>
-        </div>
-        <aside class="license-policy-note">
-          官方仓库目前不接受外部代码贡献。这只是维护政策，不会缩小适用许可证所赋予的派生、修改或再发行权利。修改版不得冒充 ForgePlay 官方版本；许可证也不授予对 ForgePlay 名称、徽标或美术素材的权利。
-        </aside>
+        <section class="license-compliance"><h2>遵守适用许可证，并公开依据。</h2><p>为遵守适用许可证进行开发与分发，ForgePlay 区分所用代码、模型的来源、修改内容及适用范围，并保留版权与许可声明。同时提供与分发包对应的源码、补丁、必要构建资料和重新链接说明。不将他人成果包装为自行开发，也不因主张自身贡献的权利而抹去第三方条件。</p></section>
+        <section class="license-release-scopes"><h2>分别明确范围的三项 GPL 实现</h2><div class="license-scope-cards">
+<section><span class="license-scope-number">01 / GPL-3.0-only</span><h3>ForgePlay Game Mode</h3><p>范围包括作者拥有权利的原生宿主、指定构建设置与脚本。通过原生宿主连接 Windows 进程，并在同一进程内进入 Wine。保留 Wine 11.12 加载器衍生部分的版权和 GPL 转换声明，不声称整个加载器都是重新编写的。</p><code>Native/GameModeProcessHost/</code></section>
+<section><span class="license-scope-number">02 / GPL-3.0-only</span><h3>ForgePlay Frame Generation</h3><p>范围包括作者的捕获、插值、队列及显示状态管理实现，以及指定构建资料。公开 Simple、Motion Lite、Motion Quality、Motion Repair 和相关验证代码。Wine、MoltenVK 侧的集成改动遵循各自许可边界。</p><code>Native/D3DMetalFrameGenerationProxy/</code></section>
+<section><span class="license-scope-number">03 / GPL-3.0-only</span><h3>ForgePlay DLSS5 Emulation</h3><p>范围包括作者的原生推理集成、声明中列举的模型转换与验证代码，以及构建资料。包含 Metal 前后处理、帧缓冲连接、Core AI 推理辅助程序和显示集成。源码中的组件名称为 ForgePlay Neural Rendering。</p><code>Native/NeuralRendering/ · Tools/NeuralRendering/</code></section>
+        </div><p class="license-boundary-note">NeuralWorker.swift 是运行所需、以 GPL 公开的推理辅助程序，不是私有 UI。不会因为它是 Swift 文件就排除在公开范围之外。</p><a class="fp-text-link" href="site-data/licenses/2.0.0/SOURCE-SCOPE.json">GPL 文件及哈希 ↗</a></section>
+        <section class="license-boundaries"><h2>第三方资料与私有 UI 的边界</h2>
+          <table><thead><tr><th scope="col">组件</th><th scope="col">适用条件与保留的权利</th></tr></thead><tbody>
+<tr><th scope="row">Wine</th><td>上游 Wine 保留 LGPL-2.1-or-later 和原始版权。指定的 Wine 衍生宿主副本与游戏模式补丁副本，保留依据 LGPL 2.1 第 3 条转换为 GPL-3.0-only 的声明。</td></tr>
+<tr><th scope="row">HyPER-GAN</th><td>原始模型、预训练权重、转换后的权重及衍生模型资料保留 MIT 声明与 Copyright (c) 2026 Stefanos Pasios。ForgePlay 的 GPL 声明不会替代这些权利。</td></tr>
+<tr><th scope="row">MoltenVK · DXVK · Fonts</th><td>MoltenVK 及指定捕获补丁保留 Apache-2.0。DXVK、字体与其他库保留各自原有许可证、版权及适用条件。</td></tr>
+<tr><th scope="row">Apple D3DMetal · Metal · Core AI</th><td>D3DMetal、Metal 和 Core AI 适用 Apple 的独立条款。不将 Apple 的实现本身重新许可为 GPL，也不主张 Apple 未授予的权利。</td></tr>
+<tr><th scope="row">Swift App / Launcher UI</th><td>作者拥有的 Swift 应用和启动器 UI，依据独立的二进制分发许可不在源码公开范围内。此排除不包含原生 GPL 实现、NeuralWorker.swift、Wine 衍生代码或其他权利人的资料。</td></tr>
+          </tbody></table>
+          <details class="license-explanation"><summary>Wine · LGPL / GPL</summary><p>包含已转换为 GPL 的改动的 Wine 组合衍生物，其分发义务不只限于两个补丁文件。该衍生物按 GPLv3 分发，并保留原始 Wine 及其他未转换副本的 LGPL 权利。提供对应 Wine 源码、修改补丁、必要构建资料与声明。</p><a href="site-data/licenses/2.0.0/WINE-GAME-MODE-NOTICE.txt">查看声明原文 ↗</a></details>
+          <details class="license-explanation"><summary>HyPER-GAN · MIT</summary><p>不声称发明了 HyPER-GAN，也未训练新权重。将原始参数转换为 Core AI 图和 FP16 分发格式的过程、来源与哈希记载于 MODEL-BUILDING.md。转换后的资料仍保留 MIT 声明，不因此授予数据集或 NVIDIA 技术的新权利。</p><div class="license-current-actions"><a href="site-data/licenses/2.0.0/HyPER-GAN-LICENSE.txt">查看声明原文 ↗</a><a href="site-data/licenses/2.0.0/MODEL-BUILDING.md">MODEL-BUILDING.md ↗</a></div></details>
+          <p class="license-boundary-note">独立 UI 许可允许使用、复制和分发作者的已编译 UI 贡献，而无需提供其 Swift 源码，且不限于非商业分发。编程语言或进程分离本身，不会免除 GPL、LGPL 或第三方义务。</p>
+        </section>
+        <section class="license-source-evidence"><h2>与实际分发包对应的公开源码</h2><p>当前依据是直接附于 2.0.0（构建 6）发行版的 OpenSource 压缩包。默认分支及 GitHub 自动生成的 Source code (zip/tar.gz) 快照，不能代替该分发包的对应源码。</p>
+          <div class="license-current-actions"><a href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-OpenSource.tar.gz">下载 2.0.0 对应源码 ↗</a><a href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-SHA256SUMS.txt" target="_blank" rel="noopener noreferrer">公开校验和 ↗</a></div><p>该源码包包含构建时尚未提交到 Git 的改动。不声称单靠某个历史 Git 基准提交即可复现二进制；以 SOURCE-FILES.json 的逐文件哈希和 DMG 标识确认记录的对应关系。</p>
+          <ul class="license-archive-paths"><li><code>SOURCE-FILES.json</code></li><li><code>LICENSES/ForgePlayRelease20/SOURCE-SCOPE.json</code></li><li><code>Upstream/HyPERGAN/manifest.json</code></li><li><code>BUILDING.md · MODEL-BUILDING.md</code></li><li><code>ThirdPartyCorrespondingSource/relinking/</code></li></ul>
+          <p class="license-boundary-note">上述实现路径与文档内路径均指源码压缩包内部。此处提供的声明是从压缩包原样复制的文本，本摘要不改变其条件。</p>
+        </section>
+        <section class="license-rights"><h2>版权、署名与再分发</h2><p>遵守 GPL 即可使用、研究、修改、再分发所涵盖的实现，也可商业使用。以压缩包提供源码不限制这些权利，也不撤销此前的授权。</p><p>再分发时，请保留相关组件名称、Copyright © 2026 Facta-Leopard、原项目地址及第三方声明，并保留“关于”“法律信息”“致谢”等界面中适用的署名。注明修改，不得让改版被误认为 ForgePlay 官方或作者背书的分发包。</p>
+          <div class="license-attribution"><span>ForgePlay Game Mode</span><span>ForgePlay Frame Generation</span><span>ForgePlay Neural Rendering</span><strong>Copyright © 2026 Facta-Leopard</strong><a href="https://github.com/Facta-Leopard/ForgePlay" target="_blank" rel="noopener noreferrer">github.com/Facta-Leopard/ForgePlay</a></div>
+          <p>不授予新的商标权，也不禁止如实标明来源。无担保、责任限制等实际条件以原文为准。</p><p class="license-boundary-note">官方仓库不接受外部代码贡献的维护政策，与许可证允许的分支、修改和再分发权利相互独立。本页说明遵守方式与范围，不授予新许可证或第三方权利。</p>
+        </section>
       </article>
 
       <article id="license-zh-Hant" class="language-section license-language" lang="zh-Hant">
         <header class="license-intro">
-          <p class="section-label">FORGEPLAY 授權條款簡明說明</p>
-          <h1>遊戲模式程式碼採用 GPLv3。其他元件各自遵循原有條款。</h1>
-          <p>ForgePlay 並非採用單一授權。範圍文件中指定的遊戲模式程式碼採用 <code>GPL-3.0-only</code>；Wine、D3DMetal 與其他第三方素材仍遵循各自條款。本頁只說明重點，實際權利與義務以下方正式文件為準。</p>
-          <a class="button primary" href="#license-files">查看正式授權文件</a>
+          <p class="section-label">FORGEPLAY 2.0.0 · BUILD 6</p><h1>遊戲模式、影格生成與 DLSS5 模擬以 GPLv3 公開。</h1><p>ForgePlay 2.0.0（組建 6）是採用多種授權的發行套件。以下三項實作中作者擁有權利的程式碼，以及明確指定的建置資料，以 GPL-3.0-only 公開。這不代表整個 App 都採用 GPL，也不會將 Wine、HyPER-GAN 或 Apple 元件的權利轉為 ForgePlay 所有。</p>
+          <p class="license-author">ForgePlay 自行編寫部分的作者: <a href="https://github.com/Facta-Leopard" target="_blank" rel="noopener noreferrer">Facta-Leopard</a><br><strong>Copyright © 2026 Facta-Leopard</strong></p>
+          <div class="license-current-actions"><a class="button primary" href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-OpenSource.tar.gz">下載 2.0.0 對應原始碼 ↗</a><a class="button ghost" href="#license-files">查看聲明原文</a></div>
         </header>
-        <div class="license-principles">
-          <section class="license-principle">
-            <span>01 / 你可以做什麼</span>
-            <h2>GPLv3 已經授予這些權利</h2>
-            <p>範圍文件中標示為 ForgePlay 遊戲模式程式碼的部分採用 <code>GPL-3.0-only</code>。只要遵循 GPLv3，即可使用、研究、修改、再發行與商業使用，不需另行申請許可。</p>
-          </section>
-          <section class="license-principle">
-            <span>02 / 你必須遵守什麼</span>
-            <h2>發行二進位檔時，也要提供原始碼與相應權利</h2>
-            <p>發行適用範圍內的程式碼，或包含這些程式碼的結合作品時，必須保留必要聲明、標示修改，並提供 GPLv3 要求的對應原始碼（Corresponding Source）以及建置和封裝資料。</p>
-          </section>
-          <section class="license-principle">
-            <span>03 / 適用範圍</span>
-            <h2>直接指定的程式碼有限，但義務可能延伸至組合執行檔</h2>
-            <p>直接範圍包括遊戲模式專用程式碼、混合檔案的指定部分、<code>GameModeProcessHost</code> 和兩個 Wine 修補檔。這不是替整個儲存庫統一重新授權；但發行目前的組合執行檔時，必須提供該結合作品所需的 GPLv3 權利與對應原始碼。</p>
-          </section>
-          <section class="license-principle">
-            <span>04 / 第三方條款</span>
-            <h2>其他元件保留各自授權</h2>
-            <p>未修改的 Wine 素材保留適用的 LGPL 權利。D3DMetal、其他渲染器、字型、美術素材與商標仍適用各自條款；D3DMetal 作為獨立元件，依 Apple 的條款發行。</p>
-          </section>
-          <section class="license-principle">
-            <span>05 / FORGEPLAY 發行版</span>
-            <h2>二進位檔與對應原始碼同步發行</h2>
-            <p>任何包含適用範圍內目的碼的 GitHub Release，都會同步發行相同版本的對應原始碼與必要聲明。ForgePlay 不採用先發二進位檔、之後再補原始碼的方式。</p>
-          </section>
-        </div>
-        <aside class="license-policy-note">
-          官方儲存庫目前不接受外部程式碼貢獻。這只是維護政策，不會限縮適用授權所賦予的分支、修改或再發行權利。修改版不得冒充 ForgePlay 官方版本；授權也不授予 ForgePlay 名稱、標誌或美術素材的權利。
-        </aside>
+        <section class="license-compliance"><h2>遵循適用授權，並公開依據。</h2><p>為依照適用授權開發與發行，ForgePlay 區分所用程式碼、模型的來源、修改內容與適用範圍，並保留著作權與授權聲明。同時提供與發行套件對應的原始碼、修補檔、必要建置資料與重新連結說明。不將他人成果包裝為自行開發，也不因主張自身貢獻的權利而抹去第三方條件。</p></section>
+        <section class="license-release-scopes"><h2>分別明示範圍的三項 GPL 實作</h2><div class="license-scope-cards">
+<section><span class="license-scope-number">01 / GPL-3.0-only</span><h3>ForgePlay Game Mode</h3><p>範圍包含作者擁有權利的原生宿主、指定建置設定與指令碼。透過原生宿主連接 Windows 程序，並在同一程序內進入 Wine。保留 Wine 11.12 載入器衍生部分的著作權與 GPL 轉換聲明，不聲稱整個載入器都是重新編寫的。</p><code>Native/GameModeProcessHost/</code></section>
+<section><span class="license-scope-number">02 / GPL-3.0-only</span><h3>ForgePlay Frame Generation</h3><p>範圍包含作者的擷取、插補、佇列與顯示狀態管理實作，以及指定建置資料。公開 Simple、Motion Lite、Motion Quality、Motion Repair 與相關驗證程式碼。Wine、MoltenVK 端的整合變更遵循各自授權邊界。</p><code>Native/D3DMetalFrameGenerationProxy/</code></section>
+<section><span class="license-scope-number">03 / GPL-3.0-only</span><h3>ForgePlay DLSS5 Emulation</h3><p>範圍包含作者的原生推論整合、聲明中列舉的模型轉換與驗證程式碼，以及建置資料。包含 Metal 前後處理、影格緩衝區連接、Core AI 推論輔助程式與顯示整合。原始碼中的元件名稱為 ForgePlay Neural Rendering。</p><code>Native/NeuralRendering/ · Tools/NeuralRendering/</code></section>
+        </div><p class="license-boundary-note">NeuralWorker.swift 是執行所需、以 GPL 公開的推論輔助程式，不是非公開 UI。不會因為它是 Swift 檔案就排除在公開範圍之外。</p><a class="fp-text-link" href="site-data/licenses/2.0.0/SOURCE-SCOPE.json">GPL 檔案與雜湊 ↗</a></section>
+        <section class="license-boundaries"><h2>第三方資料與非公開 UI 的邊界</h2>
+          <table><thead><tr><th scope="col">元件</th><th scope="col">適用條件與保留的權利</th></tr></thead><tbody>
+<tr><th scope="row">Wine</th><td>上游 Wine 保留 LGPL-2.1-or-later 與原始著作權。指定的 Wine 衍生宿主副本與遊戲模式修補副本，保留依 LGPL 2.1 第 3 條轉換為 GPL-3.0-only 的聲明。</td></tr>
+<tr><th scope="row">HyPER-GAN</th><td>原始模型、預訓練權重、轉換後權重與衍生模型資料保留 MIT 聲明及 Copyright (c) 2026 Stefanos Pasios。ForgePlay 的 GPL 聲明不會取代這些權利。</td></tr>
+<tr><th scope="row">MoltenVK · DXVK · Fonts</th><td>MoltenVK 與指定擷取修補檔保留 Apache-2.0。DXVK、字型及其他程式庫保留各自原有授權、著作權與適用條件。</td></tr>
+<tr><th scope="row">Apple D3DMetal · Metal · Core AI</th><td>D3DMetal、Metal 與 Core AI 適用 Apple 的個別條款。不將 Apple 的實作本身重新授權為 GPL，也不主張 Apple 未授予的權利。</td></tr>
+<tr><th scope="row">Swift App / Launcher UI</th><td>作者擁有的 Swift App 與啟動器 UI，依個別二進位發行許可不在原始碼公開範圍內。此排除不包含原生 GPL 實作、NeuralWorker.swift、Wine 衍生程式碼或其他權利人的資料。</td></tr>
+          </tbody></table>
+          <details class="license-explanation"><summary>Wine · LGPL / GPL</summary><p>包含已轉換為 GPL 之變更的 Wine 結合衍生物，其發行義務不只限於兩個修補檔。該衍生物依 GPLv3 發行，並保留原始 Wine 與其他未轉換副本的 LGPL 權利。提供對應 Wine 原始碼、修補檔、必要建置資料與聲明。</p><a href="site-data/licenses/2.0.0/WINE-GAME-MODE-NOTICE.txt">查看聲明原文 ↗</a></details>
+          <details class="license-explanation"><summary>HyPER-GAN · MIT</summary><p>不聲稱發明了 HyPER-GAN，也未訓練新權重。將原始參數轉換為 Core AI 圖與 FP16 發行格式的過程、來源與雜湊記載於 MODEL-BUILDING.md。轉換後的資料仍保留 MIT 聲明，不因此授予資料集或 NVIDIA 技術的新權利。</p><div class="license-current-actions"><a href="site-data/licenses/2.0.0/HyPER-GAN-LICENSE.txt">查看聲明原文 ↗</a><a href="site-data/licenses/2.0.0/MODEL-BUILDING.md">MODEL-BUILDING.md ↗</a></div></details>
+          <p class="license-boundary-note">個別 UI 許可允許使用、複製與發行作者已編譯的 UI 貢獻，而不必提供其 Swift 原始碼，且不限於非商業發行。程式語言或程序分離本身不會免除 GPL、LGPL 或第三方義務。</p>
+        </section>
+        <section class="license-source-evidence"><h2>與實際發行套件對應的公開原始碼</h2><p>目前依據是直接附於 2.0.0（組建 6）發行版的 OpenSource 壓縮檔。預設分支及 GitHub 自動產生的 Source code (zip/tar.gz) 快照，不能取代該發行套件的對應原始碼。</p>
+          <div class="license-current-actions"><a href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-OpenSource.tar.gz">下載 2.0.0 對應原始碼 ↗</a><a href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-SHA256SUMS.txt" target="_blank" rel="noopener noreferrer">公開檢查碼 ↗</a></div><p>原始碼套件包含建置當時尚未提交至 Git 的變更。不聲稱單靠某個歷史 Git 基準提交即可重現二進位檔；以 SOURCE-FILES.json 的逐檔雜湊與 DMG 識別資訊確認記錄的對應關係。</p>
+          <ul class="license-archive-paths"><li><code>SOURCE-FILES.json</code></li><li><code>LICENSES/ForgePlayRelease20/SOURCE-SCOPE.json</code></li><li><code>Upstream/HyPERGAN/manifest.json</code></li><li><code>BUILDING.md · MODEL-BUILDING.md</code></li><li><code>ThirdPartyCorrespondingSource/relinking/</code></li></ul>
+          <p class="license-boundary-note">上述實作路徑與文件內路徑均指原始碼壓縮檔內部。此處提供的聲明是從壓縮檔原樣複製的文字，本摘要不變更其條件。</p>
+        </section>
+        <section class="license-rights"><h2>著作權、署名與再發行</h2><p>遵循 GPL 即可使用、研究、修改與再發行涵蓋的實作，也可商業使用。以壓縮檔提供原始碼不限制這些權利，也不撤銷先前的授權。</p><p>再發行時，請保留相關元件名稱、Copyright © 2026 Facta-Leopard、原始專案網址與第三方聲明，並保留「關於」「法律資訊」「致謝」等介面中適用的署名。標明修改，不得讓修改版被誤認為 ForgePlay 官方或作者背書的發行套件。</p>
+          <div class="license-attribution"><span>ForgePlay Game Mode</span><span>ForgePlay Frame Generation</span><span>ForgePlay Neural Rendering</span><strong>Copyright © 2026 Facta-Leopard</strong><a href="https://github.com/Facta-Leopard/ForgePlay" target="_blank" rel="noopener noreferrer">github.com/Facta-Leopard/ForgePlay</a></div>
+          <p>不授予新的商標權，也不禁止如實標示來源。無擔保、責任限制等實際條件以原文為準。</p><p class="license-boundary-note">官方儲存庫不接受外部程式碼貢獻的維護政策，與授權允許的分支、修改與再發行權利相互獨立。本頁說明遵循方式與範圍，不授予新的授權或第三方權利。</p>
+        </section>
       </article>
 
       <section id="license-files" class="license-files" aria-labelledby="license-files-title">
@@ -382,6 +351,14 @@
           <p data-i18n="license.filesLead">These files—not this summary—govern the exact rights, obligations, and scope.</p>
         </div>
         <div class="license-file-grid">
+          <a href="site-data/licenses/2.0.0/LICENSE.txt" download><strong>ForgePlay 2.0.0 — LICENSE.txt</strong><span>↓</span></a>
+          <a href="site-data/licenses/2.0.0/SOURCE-SCOPE.json" download><strong>SOURCE-SCOPE.json</strong><span>↓</span></a>
+          <a href="site-data/licenses/2.0.0/WINE-GAME-MODE-NOTICE.txt" download><strong>Wine — WINE-GAME-MODE-NOTICE.txt</strong><span>↓</span></a>
+          <a href="site-data/licenses/2.0.0/HyPER-GAN-LICENSE.txt" download><strong>HyPER-GAN — MIT</strong><span>↓</span></a>
+          <a href="site-data/licenses/2.0.0/MODEL-BUILDING.md" download><strong>MODEL-BUILDING.md</strong><span>↓</span></a>
+          <a href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-OpenSource.tar.gz"><strong>ForgePlay-2.0.0-6-OpenSource.tar.gz</strong><span>↓</span></a>
+        </div>
+        <details class="license-legacy"><summary data-i18n="license.legacyTitle">Earlier Game Mode policy documents</summary><p data-i18n="license.legacyLead">Historical references. For 2.0.0, use the current release notices above.</p><div class="license-file-grid">
           <a href="LICENSE.md" download>
             <strong>LICENSE.md</strong>
             <span>↓ 01</span>
@@ -419,6 +396,7 @@
             <span>↓ 09</span>
           </a>
         </div>
+        </details>
       </section>
     </div>
   </main>

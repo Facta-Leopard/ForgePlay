@@ -30,6 +30,12 @@ PAGES=(
   site-assets/guide/vision/ultrawide-2.jpg
   why.html
   license.html
+  site-assets/license-scope.css
+  site-data/licenses/2.0.0/LICENSE.txt
+  site-data/licenses/2.0.0/SOURCE-SCOPE.json
+  site-data/licenses/2.0.0/WINE-GAME-MODE-NOTICE.txt
+  site-data/licenses/2.0.0/HyPER-GAN-LICENSE.txt
+  site-data/licenses/2.0.0/MODEL-BUILDING.md
   privacy.html
   support.html
   compatibility.html
@@ -1653,7 +1659,7 @@ for html in index.html why.html license.html privacy.html support.html compatibi
   else
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-14"'
   fi
-  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260927-firsts1"'
+  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260927-license1"'
   require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.css?v=20260905-7'
   require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.js?v=20260905-2'
   if [[ "$html" != "index.html" ]]; then
@@ -1691,8 +1697,8 @@ require_snippet "$ROOT_DIR/index.html" 'CPU + GPU'
 require_snippet "$ROOT_DIR/index.html" 'Bluetooth sampling rate'
 require_snippet "$ROOT_DIR/index.html" 'href="https://support.apple.com/105118"'
 require_snippet "$ROOT_DIR/index.html" 'macOS 27 or later · Rosetta required'
-require_snippet "$ROOT_DIR/index.html" 'The published source includes ForgePlay, the Game Mode host, Wine patches, build records, and license notices.'
-require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.sourceLink">Browse the published source ↗'
+require_snippet "$ROOT_DIR/index.html" 'The current reference is the OpenSource archive attached directly to the 2.0.0 (Build 6) release.'
+require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.sourceLink">Download 2.0.0 corresponding source ↗'
 require_snippet "$ROOT_DIR/index.html" 'href="why.html"'
 require_snippet "$ROOT_DIR/index.html" 'href="license.html"'
 require_snippet "$ROOT_DIR/index.html" 'CURRENT STABLE RELEASE'
@@ -1762,7 +1768,7 @@ require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.logLabel"'
 require_snippet "$ROOT_DIR/compatibility.html" 'issues/new?template=compatibility-report.yml'
 require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/compatibility.html" 'href="site.css?v=20260811-22"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260927-firsts1"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260927-license1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/current-release.js?v=20260905-7"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20260907-1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260908-1"'
@@ -1938,22 +1944,28 @@ if grep -Eq 'innerHTML|outerHTML|insertAdjacentHTML|document\\.write' "$ROOT_DIR
   fail "why-story.js must render the statement without unsafe HTML insertion"
 fi
 
-require_snippet "$ROOT_DIR/license.html" 'ForgePlay does not have a single license.'
+require_snippet "$ROOT_DIR/license.html" 'ForgePlay 2.0.0 (Build 6) is a multi-license distribution.'
 require_snippet "$ROOT_DIR/license.html" 'GPL-3.0-only'
 require_snippet "$ROOT_DIR/license.html" 'Corresponding Source'
+require_snippet "$ROOT_DIR/license.html" 'Native/NeuralRendering/'
+require_snippet "$ROOT_DIR/license.html" 'NeuralWorker.swift'
+require_snippet "$ROOT_DIR/license.html" 'Copyright © 2026 Facta-Leopard'
+require_snippet "$ROOT_DIR/license.html" 'Copyright (c) 2026 Stefanos Pasios'
+require_snippet "$ROOT_DIR/license.html" 'site-data/licenses/2.0.0/LICENSE.txt'
+require_snippet "$ROOT_DIR/license.html" 'site-data/licenses/2.0.0/HyPER-GAN-LICENSE.txt'
 require_snippet "$ROOT_DIR/license.html" 'not accept external code contributions'
 require_snippet "$ROOT_DIR/license.html" 'data-i18n="license.mastheadLabel"'
 require_snippet "$ROOT_DIR/license.html" 'data-i18n-aria-label="license.mastheadAria"'
 require_snippet "$ROOT_DIR/license.html" 'data-i18n="license.mastheadScope"'
 require_snippet "$ROOT_DIR/license.html" 'data-i18n="license.filesLabel"'
-require_snippet "$ROOT_DIR/license.html" '게임 모드 코드는 GPLv3로 공개합니다. 나머지 구성 요소는 각자의 조건을 따릅니다.'
-require_snippet "$ROOT_DIR/license.html" 'Game Mode code is GPLv3. Every other component keeps its own terms.'
-require_snippet "$ROOT_DIR/license.html" 'Der Spielmodus-Code steht unter GPLv3. Für alle anderen Komponenten gelten ihre eigenen Bedingungen.'
-require_snippet "$ROOT_DIR/license.html" 'El código del modo Juego usa GPLv3. Los demás componentes conservan sus propias condiciones.'
-require_snippet "$ROOT_DIR/license.html" 'Le code du mode Jeu est sous GPLv3. Les autres composants conservent leurs propres conditions.'
-require_snippet "$ROOT_DIR/license.html" 'ゲームモードのコードは GPLv3。その他のコンポーネントには、それぞれの条件が適用されます。'
-require_snippet "$ROOT_DIR/license.html" '游戏模式代码采用 GPLv3。其他组件各自遵循原有条款。'
-require_snippet "$ROOT_DIR/license.html" '遊戲模式程式碼採用 GPLv3。其他元件各自遵循原有條款。'
+require_snippet "$ROOT_DIR/license.html" '게임 모드·프레임 생성·DLSS5 에뮬레이팅은 GPLv3로 공개합니다.'
+require_snippet "$ROOT_DIR/license.html" 'Game Mode, Frame Generation, and DLSS5 Emulation are published under GPLv3.'
+require_snippet "$ROOT_DIR/license.html" 'Spielmodus, Frame-Generierung und DLSS5-Emulation stehen unter GPLv3.'
+require_snippet "$ROOT_DIR/license.html" 'El modo Juego, la generación de fotogramas y la emulación de DLSS5 se publican bajo GPLv3.'
+require_snippet "$ROOT_DIR/license.html" 'Le mode Jeu, la génération d’images et l’émulation DLSS5 sont publiés sous GPLv3.'
+require_snippet "$ROOT_DIR/license.html" 'ゲームモード・フレーム生成・DLSS5エミュレーションをGPLv3で公開しています。'
+require_snippet "$ROOT_DIR/license.html" '游戏模式、帧生成与 DLSS5 模拟以 GPLv3 公开。'
+require_snippet "$ROOT_DIR/license.html" '遊戲模式、影格生成與 DLSS5 模擬以 GPLv3 公開。'
 require_snippet "$ROOT_DIR/license.html" 'href="LICENSE.md" download'
 require_snippet "$ROOT_DIR/license.html" 'href="LICENSES/GPL-3.0-only.txt" download'
 
