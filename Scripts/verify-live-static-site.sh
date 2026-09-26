@@ -14,6 +14,10 @@ PAGES=(
   site-assets/forge-scene/outlook-rabbit.png
   site-assets/forge-scene/outlook-door.png
   index.html
+  site-assets/dlss5.html
+  site-assets/firsts.css
+  site-assets/firsts.js
+  site-assets/forge-scene/neural-artisan.jpg
   site-assets/guide.html
   site-assets/guide.css
   site-assets/guide.js

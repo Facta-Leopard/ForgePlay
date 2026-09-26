@@ -32,19 +32,21 @@
   <link rel="stylesheet" href="site-assets/version-posters.css?v=20260920-1">
   <link rel="stylesheet" href="site-assets/guide.css?v=20260913-1">
   <link rel="stylesheet" href="site-assets/guide-app.css?v=20260913-1">
-  <script src="site.js?v=20260927-release2" defer></script>
+  <script src="site.js?v=20260927-firsts1" defer></script>
   <script src="site-assets/site-shell.js?v=20260905-2" defer></script>
   <script src="site-assets/current-release.js?v=20260905-7" defer></script>
   <script src="site-assets/website-compatibility.js?v=20260907-1" defer></script>
   <script src="compatibility.js?v=20260908-1" defer></script>
   <script src="announcements.js?v=20260919-1" defer></script>
   <script src="developer-apps.js?v=20260913-1" defer></script>
-  <script src="site-assets/home-experience.js?v=20260908-1" defer></script>
+  <script src="site-assets/home-experience.js?v=20260927-firsts1" defer></script>
   <script src="site-assets/version-posters.js?v=20260920-1" defer></script>
   <script src="site-assets/guide.js?v=20260913-1" defer></script>
   <script src="site-assets/guide-app.js?v=20260913-2" defer></script>
   <link rel="stylesheet" href="site-assets/forge-motion.css?v=20260923-copy1">
   <script src="site-assets/forge-motion.js?v=20260923-1" defer></script>
+  <link rel="stylesheet" href="site-assets/firsts.css?v=20260927-1">
+  <script src="site-assets/firsts.js?v=20260927-1" defer></script>
 </head>
 <body class="fp-site fp-home" data-page="home">
   <a class="skip-link" href="#main" data-i18n="shared.skip">Skip to content</a>
@@ -53,6 +55,7 @@
       <a class="fp-brand" href="index.html" data-locale-link><img src="site-assets/forgeplay-icon.png?v=20260821-dark-1" width="36" height="36" alt=""><span>ForgePlay</span></a>
       <div class="nav-links fp-links" id="fp-navigation">
         <a href="index.html#game-mode" data-locale-link data-i18n="shared.navGameMode">Game Mode</a>
+        <a href="site-assets/dlss5.html" data-locale-link data-nav-page="dlss5" data-i18n-aria-label="firsts.title">DLSS5</a>
         <a href="compatibility.html" data-locale-link data-nav-page="compatibility" data-i18n="shared.navCompatibility">Compatibility</a>
         <a href="updates.html" data-locale-link data-nav-page="updates" data-i18n="shared.navUpdates">Updates</a>
         <a href="why.html" data-locale-link data-nav-page="why" data-i18n="shared.navWhy">Why</a>
@@ -69,7 +72,7 @@
   <main id="main">
     <section class="fp-hero fp-wrap" aria-labelledby="hero-title">
       <div class="fp-hero-heading">
-      <p class="fp-first-flag"><span class="fp-live-dot" aria-hidden="true"></span><strong data-i18n="home.worldFirstLabel">THE WORLD’S FIRST*</strong><span aria-hidden="true">/</span><span>macOS <span data-i18n="refresh.featureTab1">Game Mode</span></span></p>
+      <p class="fp-first-flag"><span class="fp-live-dot" aria-hidden="true"></span><strong data-i18n="firsts.badge">TWO WORLD FIRSTS*</strong><span><span data-i18n="refresh.featureTab1">Game Mode</span> <span aria-hidden="true">/</span> <span data-i18n="firsts.title">DLSS5 Emulation</span></span></p>
       <h1 id="hero-title"><span data-i18n="home.heroLine1">Run Windows games</span><span data-i18n="home.heroLine2">on your Mac.</span></h1>
       </div>
       <aside class="fp-news-preview" data-latest-announcement aria-labelledby="fp-news-title">
@@ -79,8 +82,11 @@
         <div class="fp-news-links"><a class="fp-text-link" href="updates.html" data-announcement-link data-i18n="updates.openLink">Open update ↗</a><a class="fp-text-link" href="updates.html" data-locale-link data-i18n="home.latestAll">All updates ↗</a></div>
       </aside>
       <div class="fp-hero-details">
-      <p class="fp-hero-lead fp-first-lead" data-i18n="refresh.firstLead">The world’s first app to run Windows games in native macOS Game Mode.*</p>
-      <a class="fp-scope-link" href="#difference" data-open-evidence data-i18n="refresh.firstScope">*View the basis and sources for this claim</a>
+      <p class="fp-hero-lead fp-first-lead" data-i18n="firsts.lead">Windows games on Mac, with native macOS Game Mode and real-time DLSS5 Emulation.</p>
+      <div class="fp-first-links">
+        <a href="#difference" data-open-evidence><span aria-hidden="true">01</span><span><b data-i18n="home.worldFirstRouteGameMode">macOS GAME MODE</b><span data-i18n="firsts.scopeLink">Scope &amp; evidence ↗</span></span></a>
+        <a href="site-assets/dlss5.html" data-locale-link><span aria-hidden="true">02</span><span><b data-i18n="firsts.title">DLSS5 Emulation</b><span data-i18n="dlss5.detailsLink">Features &amp; evidence ↗</span></span></a>
+      </div>
       <div class="fp-actions">
         <a class="fp-button fp-primary" href="https://github.com/Facta-Leopard/ForgePlay/releases/latest" data-current-release-download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 17v4h14v-4"/></svg><span data-current-release-download-label data-i18n="home.releaseButton">Download Apple-notarized DMG</span></a>
         <a class="fp-button fp-secondary" href="#library"><span data-i18n="refresh.explore">Check game compatibility</span><span aria-hidden="true">→</span></a>
@@ -135,6 +141,7 @@
     </div>
 
 
+
     <section class="guide-teaser fp-wrap" id="guide" aria-labelledby="guide-teaser-title">
       <div><p class="fp-eyebrow" data-guide-text="eyebrow">FORGEPLAY USER GUIDE</p><h2 id="guide-teaser-title" data-guide-text="teaserTitle">Get started with ForgePlay</h2><p data-guide-text="teaserBody">Learn setup, Steam and EXE launch, frame generation, preferences, and diagnostics with real app screens.</p><a class="fp-text-link" href="site-assets/guide.html" data-locale-link><span data-guide-text="teaserLink">Read the guide</span> ↗</a></div>
       <a href="site-assets/guide.html" data-locale-link data-guide-image-link aria-label="ForgePlay visual guide"><img src="site-assets/guide/steam.jpg" width="1020" height="752" data-guide-teaser-image alt="ForgePlay Steam launch screen" loading="lazy"></a>
@@ -187,7 +194,7 @@
             <div class="fp-source-visual" aria-hidden="true"><span class="fp-source-address">Facta-Leopard / <strong>ForgePlay</strong></span><span>⌑ &nbsp; Sources/</span><span>⌑ &nbsp; Native/</span><span>⌑ &nbsp; LICENSES/</span><span>⌑ &nbsp; Scripts/</span><div><i class="fp-live-dot"></i> GPLv3 · LGPL · Open source</div></div>
           </div>
         </div>
-        <details class="fp-evidence" id="difference"><summary><span data-i18n="home.worldFirstLabel">THE WORLD’S FIRST*</span><span aria-hidden="true">+</span></summary><p data-i18n="home.worldFirstScope">*To our knowledge, the first publicly documented open-source Windows gaming platform designed to carry a live Wine game session through a native macOS Game Mode-capable host, as of 28 July 2026.</p><p data-i18n="home.sourceNote">The published source includes ForgePlay, the Game Mode host, Wine patches, build records, and license notices.</p><span class="fp-evidence-route">DIRECTX → METAL → <span data-i18n="home.worldFirstRouteGameMode">macOS GAME MODE</span></span></details>
+        <details class="fp-evidence" id="difference"><summary><span>01 / macOS Game Mode — <span data-i18n="home.worldFirstLabel">THE WORLD’S FIRST*</span></span><span aria-hidden="true">+</span></summary><p data-i18n="home.worldFirstScope">*To our knowledge, the first publicly documented open-source Windows gaming platform designed to carry a live Wine game session through a native macOS Game Mode-capable host, as of 28 July 2026.</p><p data-i18n="home.sourceNote">The published source includes ForgePlay, the Game Mode host, Wine patches, build records, and license notices.</p><span class="fp-evidence-route">DIRECTX → METAL → <span data-i18n="home.worldFirstRouteGameMode">macOS GAME MODE</span></span><div class="fp-source-links"><a href="https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0" target="_blank" rel="noopener noreferrer" data-i18n="firsts.gameModeRecord">Game Mode: 1.0 release record ↗</a><a href="https://github.com/Facta-Leopard/ForgePlay/tree/main" target="_blank" rel="noopener noreferrer" data-i18n="home.sourceLink">Browse the published source ↗</a></div><button type="button" class="fp-text-button" data-close-evidence data-i18n="firsts.close">Close evidence</button></details>
       </div>
     </section>
 

@@ -12,6 +12,8 @@ PAGES=(
   site-assets/forge-scene/outlook-rabbit.png
   site-assets/forge-scene/outlook-door.png
   index.html
+  site-assets/dlss5.html
+  site-assets/firsts.js
   site-assets/guide.html
   site-assets/guide.css
   site-assets/guide.js
@@ -47,6 +49,8 @@ PAGES=(
   announcements.js
   developer-apps.js
   site-assets/home-experience.js
+  site-assets/firsts.css
+  site-assets/forge-scene/neural-artisan.jpg
   site-assets/version-posters.js
   site-assets/version-posters/forgeplay-1.0.png
   site-assets/version-posters/forgeplay-1.1.png
@@ -258,6 +262,7 @@ PY
 
 python3 - "$ROOT_DIR" \
   "$ROOT_DIR/index.html" \
+  "$ROOT_DIR/site-assets/dlss5.html" \
   "$ROOT_DIR/site-assets/guide.html" \
   "$ROOT_DIR/why.html" \
   "$ROOT_DIR/license.html" \
@@ -410,6 +415,9 @@ for path in paths:
             if local_path.suffix.lower() != ".html":
                 raise SystemExit(f"{path}: fragment reference target is not an HTML page: {reference}")
             _, target_ids, _ = parse_page(local_path)
+            if local_path == (root / "updates.html").resolve():
+                notices = json.loads((root / "site-data/announcements.json").read_text(encoding="utf-8"))
+                target_ids.update(f"update-{item['id']}" for item in notices["announcements"])
             if parsed.fragment not in target_ids:
                 raise SystemExit(f"{path}: missing fragment target #{parsed.fragment}: {reference}")
 
@@ -1645,7 +1653,7 @@ for html in index.html why.html license.html privacy.html support.html compatibi
   else
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-14"'
   fi
-  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260927-release2"'
+  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260927-firsts1"'
   require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.css?v=20260905-7'
   require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.js?v=20260905-2'
   if [[ "$html" != "index.html" ]]; then
@@ -1665,6 +1673,19 @@ done
 
 require_snippet "$ROOT_DIR/index.html" 'id="game-mode"'
 require_snippet "$ROOT_DIR/index.html" 'id="difference"'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'id="dlss5-evidence"'
+require_snippet "$ROOT_DIR/index.html" 'data-i18n="firsts.badge"'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'data-i18n="firsts.step2Title"'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'datetime="2026-09-19T10:16:04Z"'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'datetime="2026-09-19T14:35:00Z"'
+require_snippet "$ROOT_DIR/index.html" 'data-close-evidence'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'updates.html#update-next-update-golden-gate-dlss5'
+if grep -Eq 'dlss5-(before|after)\.jpg|fp-neural-compare' "$ROOT_DIR/site-assets/dlss5.html"; then
+  fail "DLSS5 detail page must link to the historical comparison instead of duplicating its images"
+fi
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'data-page="dlss5"'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'src="site-assets/firsts.js?v=20260927-1"'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/firsts.js?v=20260927-1"'
 require_snippet "$ROOT_DIR/index.html" 'id="release"'
 require_snippet "$ROOT_DIR/index.html" 'CPU + GPU'
 require_snippet "$ROOT_DIR/index.html" 'Bluetooth sampling rate'
@@ -1684,10 +1705,11 @@ require_snippet "$ROOT_DIR/index.html" 'data-current-release-link'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/current-release.js?v=20260905-7"'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/website-compatibility.js?v=20260907-1"'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/home-experience.css?v=20260905-8'
-require_snippet "$ROOT_DIR/index.html" 'src="site-assets/home-experience.js?v=20260908-1"'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/home-experience.js?v=20260927-firsts1"'
 require_snippet "$ROOT_DIR/index.html" 'data-release-download'
 require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.releaseNotesButton"'
-for html in index.html why.html license.html privacy.html support.html compatibility.html updates.html site-assets/guide.html; do
+for html in index.html why.html license.html privacy.html support.html compatibility.html updates.html site-assets/guide.html site-assets/dlss5.html; do
+  require_snippet "$ROOT_DIR/$html" 'data-nav-page="dlss5"'
   require_snippet "$ROOT_DIR/$html" 'property="og:image" content="https://facta-leopard.github.io/ForgePlay/site-assets/forgeplay-icon.png?v=20260927-share1"'
   require_snippet "$ROOT_DIR/$html" 'property="og:image:width" content="1254"'
   require_snippet "$ROOT_DIR/$html" 'property="og:image:height" content="1254"'
@@ -1740,7 +1762,7 @@ require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.logLabel"'
 require_snippet "$ROOT_DIR/compatibility.html" 'issues/new?template=compatibility-report.yml'
 require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/compatibility.html" 'href="site.css?v=20260811-22"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260927-release2"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260927-firsts1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/current-release.js?v=20260905-7"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20260907-1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260908-1"'

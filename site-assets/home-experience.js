@@ -8,12 +8,6 @@
   const localized = (texts) => texts?.[locale()] || texts?.en || texts?.ko || "";
   const format = (key, count) => message(key).replace("{count}", String(count));
 
-  document.querySelectorAll("[data-open-evidence]").forEach((link) => {
-    link.addEventListener("click", () => {
-      const evidence = document.querySelector("#difference");
-      if (evidence) evidence.open = true;
-    });
-  });
 
   const tabs = [...document.querySelectorAll("[data-feature-tab]")];
   const panels = [...document.querySelectorAll("[data-feature-panel]")];

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <base href="../">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0e1013">
+  <title>ForgePlay — DLSS5 Emulation</title>
+  <meta name="description" content="DLSS5 Emulation for Windows games on Mac: implementation, MVP results, development timeline, and sources.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="ForgePlay">
+  <meta property="og:title" content="ForgePlay — DLSS5 Emulation">
+  <meta property="og:description" content="DLSS5 Emulation for Windows games on Mac: implementation, MVP results, development timeline, and sources.">
+  <meta property="og:url" content="https://facta-leopard.github.io/ForgePlay/site-assets/dlss5.html">
+  <meta property="og:image" content="https://facta-leopard.github.io/ForgePlay/site-assets/forgeplay-icon.png?v=20260927-share1">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1254">
+  <meta property="og:image:height" content="1254">
+  <meta property="og:image:alt" content="ForgePlay app icon">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="ForgePlay — DLSS5 Emulation">
+  <meta name="twitter:description" content="DLSS5 Emulation for Windows games on Mac: implementation, MVP results, development timeline, and sources.">
+  <meta name="twitter:image" content="https://facta-leopard.github.io/ForgePlay/site-assets/forgeplay-icon.png?v=20260927-share1">
+  <meta name="twitter:image:alt" content="ForgePlay app icon">
+  <link rel="icon" type="image/png" href="site-assets/forgeplay-favicon.png">
+  <script src="locale-bootstrap.js?v=20260729-14"></script>
+  <link rel="stylesheet" href="site.css?v=20260821-2">
+  <link rel="stylesheet" href="site-assets/site-shell.css?v=20260905-7">
+  <link rel="stylesheet" href="site-assets/home-experience.css?v=20260905-8">
+  <link rel="stylesheet" href="site-assets/forge-motion.css?v=20260923-copy1">
+  <link rel="stylesheet" href="site-assets/firsts.css?v=20260927-1">
+  <script src="site.js?v=20260927-firsts1" defer></script>
+  <script src="site-assets/site-shell.js?v=20260905-2" defer></script>
+  <script src="site-assets/forge-motion.js?v=20260923-1" defer></script>
+  <script src="site-assets/firsts.js?v=20260927-1" defer></script>
+</head>
+<body class="fp-site dlss5-page" data-page="dlss5">
+  <a class="skip-link" href="site-assets/dlss5.html#main" data-locale-link data-i18n="shared.skip">Skip to content</a>
+  <header class="fp-header">
+    <nav class="fp-nav fp-wrap" aria-label="Primary navigation" data-i18n-aria-label="shared.primaryNav">
+      <a class="fp-brand" href="index.html" data-locale-link><img src="site-assets/forgeplay-icon.png?v=20260821-dark-1" width="36" height="36" alt=""><span>ForgePlay</span></a>
+      <div class="nav-links fp-links" id="fp-navigation">
+        <a href="index.html#game-mode" data-locale-link data-i18n="shared.navGameMode">Game Mode</a>
+        <a href="site-assets/dlss5.html" data-locale-link data-nav-page="dlss5" data-i18n-aria-label="firsts.title">DLSS5</a>
+        <a href="compatibility.html" data-locale-link data-nav-page="compatibility" data-i18n="shared.navCompatibility">Compatibility</a>
+        <a href="updates.html" data-locale-link data-nav-page="updates" data-i18n="shared.navUpdates">Updates</a>
+        <a href="why.html" data-locale-link data-nav-page="why" data-i18n="shared.navWhy">Why</a>
+        <a href="license.html" data-locale-link data-nav-page="license" data-i18n="shared.navLicense">License</a>
+        <a href="support.html" data-locale-link data-nav-page="support" data-i18n="shared.navSupport">Support</a>
+      </div>
+      <div class="fp-nav-tools">
+        <label class="fp-language"><span class="visually-hidden" data-i18n="shared.language">Language</span><select data-language-select aria-label="Language"><option value="ko">한국어</option><option value="en">English</option><option value="de">Deutsch</option><option value="es">Español</option><option value="fr">Français</option><option value="ja">日本語</option><option value="zh-Hans">简体中文</option><option value="zh-Hant">繁體中文</option></select></label>
+        <button class="fp-menu" type="button" aria-expanded="false" aria-controls="fp-navigation" data-i18n-aria-label="refresh.menu" aria-label="Menu"><span></span><span></span></button>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="fp-neural fp-wrap fp-section" id="dlss5" aria-labelledby="dlss5-title">
+      <header class="fp-neural-heading">
+        <div><p class="fp-eyebrow"><span data-i18n="firsts.second">02 / A SECOND WORLD FIRST*</span></p><h1 id="dlss5-title" data-i18n="firsts.title">DLSS5 Emulation</h1></div>
+        <span class="fp-neural-version">ForgePlay 2.0.0 <span>DLSS5 Emulation · <span data-i18n="firsts.beta">Beta</span></span></span>
+      </header>
+      <figure class="fp-neural-art"><img src="site-assets/forge-scene/neural-artisan.jpg" width="1860" height="845" alt="" loading="lazy"><figcaption data-i18n="firsts.artLabel">Concept illustration · not a gameplay capture</figcaption></figure>
+      <a class="fp-text-link fp-dlss5-scope" href="site-assets/dlss5.html#dlss5-evidence" data-locale-link data-open-evidence data-i18n="firsts.scopeLink">Scope &amp; evidence ↗</a>
+      <p class="fp-neural-lead" data-i18n="firsts.body">ForgePlay applies neural visual enhancement to completed RGB frames of Windows games running on Mac. It uses publicly available HyPER-GAN weights to approximate a DLSS 5-like appearance—not NVIDIA DLSS code or weights.</p>
+      <div class="fp-neural-context">
+        <p data-i18n="firsts.contribution">The contribution is the integration into the Windows-game execution and presentation path on Mac—not the invention of HyPER-GAN or a port of NVIDIA DLSS 5.</p>
+        <p data-i18n="firsts.current">In 2.0.0, DLSS5 Emulation and frame generation can run together and be switched independently. Both default to off in new configurations; saved choices are preserved. Performance varies by game, resolution, and settings.</p>
+      </div>
+      <a class="fp-text-link" href="updates.html#update-forgeplay-2-0-0-update" data-locale-link data-i18n="firsts.releaseGuide">Current features, recommended hardware, and setup ↗</a>
+
+      <details class="fp-evidence fp-neural-evidence" id="dlss5-evidence">
+        <summary><span data-i18n="firsts.evidenceTitle">02 / DLSS5 Emulation — scope, timeline, and sources</span><span aria-hidden="true">+</span></summary>
+        <div class="fp-neural-evidence-body">
+          <h3 data-i18n="firsts.scopeTitle">What “world first” means here</h3>
+          <p data-i18n="firsts.scope">The developer’s claim concerns real-time integration of HyPER-GAN-based photorealistic post-processing into completed frames of Windows games running on macOS, without NVIDIA DLSS code or weights. The public-source review dated 27 September 2026 found no earlier implementation within that scope. It does not certify every unpublished or unindexed implementation worldwide.</p>
+          <p class="fp-neural-note" data-i18n="firsts.datesNote">19 September is the MVP results publication date. 27 September is the prior-work review date. Neither is an inferred date for the original idea or the precise end of MVP testing.</p>
+          <h3 data-i18n="firsts.timelineTitle">From development to public release</h3>
+          <ol class="fp-neural-timeline">
+            <li><span class="fp-timeline-marker" aria-hidden="true">01</span><div><p class="fp-timeline-date" data-i18n="firsts.undated">Before the results publication · exact date not established</p><h4 data-i18n="firsts.step1Title">Concept and development</h4><p data-i18n="firsts.step1Body">The developer designed, implemented, and tested the MVP before publishing its results. No exact concept or test-completion timestamp is assigned without a separate record.</p></div></li>
+            <li class="fp-timeline-mvp"><span class="fp-timeline-marker" aria-hidden="true">02</span><div><p class="fp-timeline-date"><time datetime="2026-09-19">2026.09.19</time></p><h4 data-i18n="firsts.step2Title">MVP tested · results published</h4><p data-i18n="firsts.step2Body">The developer confirms that MVP testing was already complete when the notice was published. The update announcement and before-and-after images document the public disclosure of a working MVP, not only a development plan.</p>
+              <div class="fp-source-links"><a href="updates.html#update-next-update-golden-gate-dlss5" data-locale-link data-i18n="firsts.originalNotice">Original notice ↗</a><a href="https://github.com/Facta-Leopard/ForgePlay/commit/dba1472fd4cb14a713d061ac5e1cc1bf27113e9e" target="_blank" rel="noopener noreferrer" data-i18n="firsts.noticeCommit">Notice commit ↗</a><a href="https://github.com/Facta-Leopard/ForgePlay/commit/d9fd184569e3bf737438630e10e731284d516e0d" target="_blank" rel="noopener noreferrer" data-i18n="firsts.imageCommit">Results-image commit ↗</a></div>
+              <dl class="fp-timeline-times"><div><dt data-i18n="firsts.noticeTime">Notice commit</dt><dd><time datetime="2026-09-19T10:16:04Z">19:16:04 KST / 10:16:04 UTC</time></dd></div><div><dt data-i18n="firsts.imageTime">Results-image commit</dt><dd><time datetime="2026-09-19T14:35:00Z">23:35:00 KST / 14:35:00 UTC</time></dd></div></dl>
+              <p class="fp-neural-note" data-i18n="firsts.commitNote">These are publication-change timestamps, not the start or end of testing. The developer’s confirmation establishes the MVP’s status; the commits and successful deployments establish its publication history.</p>
+              <div class="fp-source-links"><a href="https://github.com/Facta-Leopard/ForgePlay/actions/runs/35436930859" target="_blank" rel="noopener noreferrer" data-i18n="firsts.deployNotice">Notice deployment ↗</a><a href="https://github.com/Facta-Leopard/ForgePlay/actions/runs/35449184351" target="_blank" rel="noopener noreferrer" data-i18n="firsts.deployImages">Image deployment ↗</a></div>
+            </div></li>
+            <li><span class="fp-timeline-marker" aria-hidden="true">03</span><div><p class="fp-timeline-date" data-i18n="firsts.afterMvp">After the MVP · before the release</p><h4 data-i18n="firsts.step3Title">Refinement and product integration</h4><p data-i18n="firsts.step3Body">The published MVP was refined into 2.0.0: color processing, configurable processing passes, and integration with frame generation. This does not move the completed MVP back to a planning stage.</p></div></li>
+            <li><span class="fp-timeline-marker" aria-hidden="true">04</span><div><p class="fp-timeline-date"><time datetime="2026-09-26T18:21:26Z">2026.09.27 KST</time></p><h4 data-i18n="firsts.step4Title">Public release · 2.0.0 (Build 6)</h4><p data-i18n="firsts.step4Body">Released on GitHub at 03:21:26 KST on 27 September 2026 (18:21:26 UTC on 26 September). The release date is distinct from the MVP results publication.</p><a href="https://github.com/Facta-Leopard/ForgePlay/releases/tag/v2.0.0" target="_blank" rel="noopener noreferrer" data-i18n="firsts.releaseRecord">Release record and downloads ↗</a></div></li>
+          </ol>
+          <h3 data-i18n="firsts.priorTitle">Related work and the scope of comparison</h3>
+          <p data-i18n="firsts.priorIntro">Photorealistic enhancement and HyPER-GAN integration already exist in other contexts. The claim is narrower: their integration into Windows games running on macOS. The following original sources should be read within their own scope.</p>
+          <dl class="fp-prior-work">
+            <div><dt><a href="https://github.com/stefanos50/HyPER-GAN" target="_blank" rel="noopener noreferrer">HyPER-GAN ↗</a></dt><dd data-i18n="firsts.hyperganPrior">The original model and pretrained weights, with CARLA real-time inference and Unreal Engine integration instructions. ForgePlay does not claim to have invented the model or its first real-time use.</dd></div>
+            <div><dt><a href="https://github.com/stefanos50/CARLA2Real" target="_blank" rel="noopener noreferrer">CARLA2Real ↗</a> / <a href="https://github.com/stefanos50/Hybrid-Sim2Real" target="_blank" rel="noopener noreferrer">Hybrid-Sim2Real ↗</a></dt><dd data-i18n="firsts.simPrior">Photorealism enhancement for CARLA simulation and game-engine synthetic datasets. This is a different application scope from integrating post-processing into Windows games on Mac.</dd></div>
+            <div><dt><a href="https://github.com/griffhurt/endolive" target="_blank" rel="noopener noreferrer">EndoLive ↗</a></dt><dd data-i18n="firsts.endoPrior">An endoscopic style-transfer project using ConStructS and HyPER-GAN that reports operation on Apple Vision Pro. It is not a Windows-game integration, and shows why “first HyPER-GAN use on Apple hardware” would be too broad a claim.</dd></div>
+          </dl>
+          <p data-i18n="firsts.forkNote">The supplied fork comparisons were also checked. On 27 September 2026, lastquest/main was identical to upstream/main; porom004/main was five commits behind with no ahead commits. These comparisons alone neither prove nor disprove worldwide priority.</p>
+          <div class="fp-source-links"><a href="https://github.com/stefanos50/HyPER-GAN/compare/main...lastquest:main" target="_blank" rel="noopener noreferrer">lastquest/main ↗</a><a href="https://github.com/stefanos50/HyPER-GAN/compare/main...porom004:main" target="_blank" rel="noopener noreferrer">porom004/main ↗</a></div>
+          <p class="fp-neural-note" data-i18n="firsts.historyNote">The 19 September notice, captions, and images remain unchanged historical records. They do not independently establish FPS, latency, NPU placement, or a model checkpoint. Current specifications belong to the 2.0.0 release notes.</p>
+          <button type="button" class="fp-text-button" data-close-evidence data-i18n="firsts.close">Close evidence</button>
+        </div>
+      </details>
+    </section>
+  </main>
+  <footer class="fp-footer fp-wrap">
+    <div class="fp-footer-top">
+      <a class="fp-brand" href="index.html" data-locale-link><img src="site-assets/forgeplay-icon.png?v=20260821-dark-1" width="30" height="30" alt=""><span>ForgePlay</span></a>
+      <div class="fp-footer-links"><a href="compatibility.html" data-locale-link data-i18n="shared.navCompatibility">Compatibility</a><a href="updates.html" data-locale-link data-i18n="shared.navUpdates">Updates</a><a href="why.html" data-locale-link data-i18n="shared.navWhy">Why</a><a href="license.html" data-locale-link data-i18n="shared.navLicense">License</a><a href="privacy.html" data-locale-link data-i18n="shared.navPrivacy">Privacy</a><a href="support.html" data-locale-link data-i18n="shared.navSupport">Support</a><a href="https://github.com/Facta-Leopard/ForgePlay/releases/latest" target="_blank" rel="noopener noreferrer" data-i18n="shared.navRelease">Release</a><a href="https://github.com/Facta-Leopard/ForgePlay/tree/main" target="_blank" rel="noopener noreferrer" data-i18n="shared.navSource">Source</a></div>
+    </div>
+    <p data-i18n="shared.footerNote">Apple, macOS, Game Mode, Steam, Windows, Wine, and renderer names belong to their respective owners. ForgePlay is not affiliated with them.</p>
+  </footer>
+</body>
+</html>
