@@ -52,7 +52,7 @@ PAGES=(
   site-assets/version-posters/forgeplay-1.1.png
   site-assets/version-posters/forgeplay-1.2.png
   site-assets/version-posters/forgeplay-1.3.jpg
-  site-assets/version-posters/forgeplay-dlss5-preview.png
+  site-assets/version-posters/forgeplay-2.0.0.png
   site-assets/site-shell.js
   site-data/compatibility-games.json
   site-data/compatibility.schema.json
@@ -1714,6 +1714,11 @@ require_snippet "$ROOT_DIR/index.html" 'macOS GAME MODE'
 require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.worldFirstRouteGameMode"'
 require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.sponsorMark"'
 require_snippet "$ROOT_DIR/index.html" 'THE WORLD’S FIRST*'
+require_snippet "$ROOT_DIR/index.html" 'data-poster-version="2.0.0"'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/version-posters/forgeplay-2.0.0.png"'
+if rg -q 'data-poster-version="DLSS5"|data-poster-preview' "$ROOT_DIR/index.html"; then
+  fail "versioned posters must not retain the old DLSS5 preview label"
+fi
 
 require_snippet "$ROOT_DIR/compatibility.html" 'data-compatibility-list'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n-placeholder="compat.searchPlaceholder"'
