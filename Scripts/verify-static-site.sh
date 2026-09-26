@@ -32,6 +32,7 @@ PAGES=(
   site-assets/guide/launcher/world-banner.jpg
   site-assets/guide/launcher/forge-banner.jpg
   site-assets/guide/launcher/mark.png
+  site-assets/guide/try-forgeplay.jpg
   site-data/guide.json
   site-data/guide-app-map.json
   site-data/guide-ui.json

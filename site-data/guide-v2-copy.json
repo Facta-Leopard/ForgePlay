@@ -1,5 +1,6 @@
 {
   "ko": {
+    "tryIllustrationAlt": "ForgePlay 토끼 캐릭터가 컴퓨터에서 앱 옵션을 직접 조작해 보는 모습",
     "launcherCompatibility": "호환성 DB",
     "launcherDiagnostics": "문제진단",
     "launcherNews": "공지사항",
@@ -111,6 +112,7 @@
     "hintStove": "플랫폼의 실행 버튼을 눌러 설치·실행 순서를 확인하세요. 설정 방식은 Steam과 같고, 각 플랫폼의 게임 호환성은 따로 확인해야 합니다."
   },
   "en": {
+    "tryIllustrationAlt": "The ForgePlay rabbit trying app controls on a computer",
     "launcherCompatibility": "Compatibility DB",
     "launcherDiagnostics": "Diagnostics",
     "launcherNews": "News",
@@ -222,6 +224,7 @@
     "hintStove": "Press the platform’s launch button to explore installation and launch. Settings work like Steam; game compatibility still varies by platform."
   },
   "de": {
+    "tryIllustrationAlt": "Der ForgePlay-Hase probiert die App-Steuerung am Computer aus",
     "launcherCompatibility": "Kompatibilitäts-DB",
     "launcherDiagnostics": "Diagnose",
     "launcherNews": "Neuigkeiten",
@@ -333,6 +336,7 @@
     "hintStove": "Drücke Start, um Installation und Ablauf zu erkunden. Die Einstellungen funktionieren wie bei Steam; Spielkompatibilität ist gesondert zu prüfen."
   },
   "es": {
+    "tryIllustrationAlt": "El conejo de ForgePlay prueba los controles de la app en un ordenador",
     "launcherCompatibility": "Base de compatibilidad",
     "launcherDiagnostics": "Diagnóstico",
     "launcherNews": "Noticias",
@@ -444,6 +448,7 @@
     "hintStove": "Pulsa iniciar para ver la instalación y ejecución. Los ajustes funcionan como en Steam, pero la compatibilidad se comprueba por juego y plataforma."
   },
   "fr": {
+    "tryIllustrationAlt": "Le lapin de ForgePlay essaie les commandes de l’app sur un ordinateur",
     "launcherCompatibility": "Base de compatibilité",
     "launcherDiagnostics": "Diagnostic",
     "launcherNews": "Actualités",
@@ -555,6 +560,7 @@
     "hintStove": "Cliquez sur le bouton de lancement pour découvrir l’installation et le démarrage. Les réglages suivent le même principe que Steam ; la compatibilité des jeux reste à vérifier."
   },
   "ja": {
+    "tryIllustrationAlt": "パソコンでアプリの設定を試すForgePlayのウサギ",
     "launcherCompatibility": "互換性DB",
     "launcherDiagnostics": "問題診断",
     "launcherNews": "お知らせ",
@@ -666,6 +672,7 @@
     "hintStove": "起動ボタンからインストールと起動の流れを確認できます。設定方法はSteamと同じですが、ゲームの互換性は別途確認してください。"
   },
   "zh-Hans": {
+    "tryIllustrationAlt": "ForgePlay 兔子角色在电脑上体验应用选项",
     "launcherCompatibility": "兼容性数据库",
     "launcherDiagnostics": "问题诊断",
     "launcherNews": "公告",
@@ -777,6 +784,7 @@
     "hintStove": "点击平台启动按钮体验安装与启动流程。设置方式与 Steam 类似，具体游戏兼容性仍需单独确认。"
   },
   "zh-Hant": {
+    "tryIllustrationAlt": "ForgePlay 兔子角色在電腦上體驗 App 選項",
     "launcherCompatibility": "相容性資料庫",
     "launcherDiagnostics": "問題診斷",
     "launcherNews": "公告",

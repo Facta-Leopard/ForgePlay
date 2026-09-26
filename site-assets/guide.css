@@ -70,8 +70,8 @@
 .guide-teaser { display:grid; grid-template-columns:1fr .95fr; gap:35px; align-items:center; margin-top:48px; border:1px solid #3f3833; border-radius:13px; background:#18191b; overflow:hidden; padding:32px 38px; }
 .guide-teaser h2 { font-size:30px; line-height:1.3; margin-top:10px; }
 .guide-teaser p:not(.fp-eyebrow) { font-size:13px; color:var(--fp-muted); margin:13px 0 22px; max-width:390px; }
-.guide-teaser>a:last-child { display:block; height:216px; overflow:hidden; border-radius:10px; border:1px solid #4b4b48; }
-.guide-teaser img { width:100%; height:auto; transition:transform .3s; }
+.guide-teaser>a:last-child { display:block; height:auto; aspect-ratio:1200 / 552; overflow:hidden; border-radius:10px; border:1px solid #4b4b48; }
+.guide-teaser img { display:block; width:100%; height:100%; object-fit:contain; transition:transform .3s; }
 .guide-teaser>a:last-child:hover img { transform:scale(1.025); }
 .guide-home-link { display:inline-block; margin-top:15px; color:#decabe; font-size:12px; }
 @media(max-width:1000px) {
@@ -97,7 +97,7 @@
   .guide-faq h2 { font-size:29px; }
   .guide-finish { flex-direction:column; align-items:start; padding:28px; }
   .guide-teaser { padding:26px; grid-template-columns:1fr; gap:20px; }
-  .guide-teaser>a:last-child { max-height:240px; height:auto; }
+  .guide-teaser>a:last-child { height:auto; }
 }
 @media(max-width:460px) {
   .guide-tabs { gap:2px; padding:4px; }
