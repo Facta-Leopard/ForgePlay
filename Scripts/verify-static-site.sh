@@ -1687,7 +1687,17 @@ require_snippet "$ROOT_DIR/index.html" 'site-assets/home-experience.css?v=202609
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/home-experience.js?v=20260908-1"'
 require_snippet "$ROOT_DIR/index.html" 'data-release-download'
 require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.releaseNotesButton"'
-require_snippet "$ROOT_DIR/index.html" 'site-assets/forgeplay-social.png'
+for html in index.html why.html license.html privacy.html support.html compatibility.html updates.html site-assets/guide.html; do
+  require_snippet "$ROOT_DIR/$html" 'property="og:image" content="https://facta-leopard.github.io/ForgePlay/site-assets/forgeplay-icon.png?v=20260927-share1"'
+  require_snippet "$ROOT_DIR/$html" 'property="og:image:width" content="1254"'
+  require_snippet "$ROOT_DIR/$html" 'property="og:image:height" content="1254"'
+  require_snippet "$ROOT_DIR/$html" 'property="og:image:alt" content="ForgePlay app icon"'
+  require_snippet "$ROOT_DIR/$html" 'name="twitter:card" content="summary"'
+  require_snippet "$ROOT_DIR/$html" 'name="twitter:image" content="https://facta-leopard.github.io/ForgePlay/site-assets/forgeplay-icon.png?v=20260927-share1"'
+  if grep -Fq 'site-assets/forgeplay-social.png' "$ROOT_DIR/$html"; then
+    fail "$html must use the current app icon for social previews"
+  fi
+done
 require_snippet "$ROOT_DIR/index.html" 'site-assets/forgeplay-manifesto.jpg'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/forgeplay-hero-3200.jpg 3200w'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/forgeplay-manifesto-3200.jpg 3200w'
