@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="22" role="img" aria-label="Native Frame Generation: GPL-3.0-only">
+  <title>ForgePlay native Frame Generation — GPL-3.0-only; see component scope</title>
+  <clipPath id="badge"><rect width="240" height="22" rx="3"/></clipPath>
+  <g clip-path="url(#badge)"><rect width="140" height="22" fill="#374151"/><rect x="140" width="100" height="22" fill="#2563eb"/></g>
+  <g fill="#fff" font-family="Verdana,DejaVu Sans,sans-serif" font-size="11" text-anchor="middle"><text x="70" y="15">Frame Generation</text><text x="190" y="15">GPL-3.0-only</text></g>
+</svg>
