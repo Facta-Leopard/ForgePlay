@@ -72,7 +72,7 @@
     const text=copy();
     document.querySelectorAll("[data-guide-text]").forEach(node=>{const value=text[node.dataset.guideText];if(typeof value==="string")node.textContent=value;});
     document.querySelectorAll("[data-guide-image-link]").forEach(node=>node.setAttribute("aria-label",text.teaserLink));
-    document.querySelectorAll("[data-guide-teaser-image]").forEach(node=>{node.alt=interactiveCopy?.[locale()]?.tryIllustrationAlt||interactiveCopy?.en?.tryIllustrationAlt||"The ForgePlay rabbit trying app controls on a computer";node.src="site-assets/guide/try-forgeplay.jpg";});
+    document.querySelectorAll("[data-guide-teaser-image]").forEach(node=>{node.alt=interactiveCopy?.[locale()]?.tryIllustrationAlt||interactiveCopy?.en?.tryIllustrationAlt||"The ForgePlay rabbit trying app controls on a computer";node.src="site-assets/arcade/launcher/forge-banner.png";});
     if(interactiveCopy){const c=interactiveCopy[locale()]||interactiveCopy.en;for(const [key,value]of [["teaserTitle",c.title],["teaserBody",c.pageIntro],["teaserLink",c.lessonFirst]])document.querySelectorAll(`[data-guide-text="${key}"]`).forEach(n=>n.textContent=value);}
     if(!page)return;
     document.title=`ForgePlay — ${text.nav}`;

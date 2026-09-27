@@ -23,9 +23,6 @@
   <meta name="twitter:image:alt" content="ForgePlay app icon">
   <link rel="icon" type="image/png" href="site-assets/forgeplay-favicon.png">
   <script src="locale-bootstrap.js?v=20260729-14"></script>
-  <link rel="preload" href="site-assets/forgeplay-hero.jpg" as="image"
-        imagesrcset="site-assets/forgeplay-hero.jpg 1600w, site-assets/forgeplay-hero-3200.jpg 3200w"
-        imagesizes="100vw" fetchpriority="high">
   <link rel="stylesheet" href="site.css?v=20260821-2">
   <link rel="stylesheet" href="site-assets/site-shell.css?v=20260905-7">
   <link rel="stylesheet" href="site-assets/home-experience.css?v=20260905-8">
@@ -43,14 +40,17 @@
   <script src="developer-apps.js?v=20260913-1" defer></script>
   <script src="site-assets/home-experience.js?v=20260927-firsts1" defer></script>
   <script src="site-assets/version-posters.js?v=20260920-1" defer></script>
-  <script src="site-assets/guide.js?v=20260927-try1" defer></script>
+  <script src="site-assets/guide.js?v=20260928-arcade1" defer></script>
   <script src="site-assets/guide-app.js?v=20260913-2" defer></script>
   <link rel="stylesheet" href="site-assets/forge-motion.css?v=20260927-try1">
-  <script src="site-assets/forge-motion.js?v=20260923-1" defer></script>
   <link rel="stylesheet" href="site-assets/firsts.css?v=20260927-1">
   <script src="site-assets/firsts.js?v=20260927-1" defer></script>
+  <link rel="stylesheet" href="site-assets/arcade/art.css?v=20260928-1">
+  <link rel="stylesheet" href="site-assets/arcade/arcade.css?v=20260928-1">
+  <script src="site-assets/arcade/art.js?v=20260928-1" defer></script>
+  <script src="site-assets/arcade/arcade.js?v=20260928-1" defer></script>
 </head>
-<body class="fp-site fp-home" data-page="home">
+<body class="fp-site fp-home fp-motion fp-pixel fp-retro" data-page="home">
   <a class="skip-link" href="#main" data-i18n="shared.skip">Skip to content</a>
   <header class="fp-header">
     <nav class="fp-nav fp-wrap" aria-label="Primary navigation" data-i18n-aria-label="shared.primaryNav">
@@ -73,46 +73,48 @@
   </header>
 
   <main id="main">
-    <section class="fp-hero fp-wrap" aria-labelledby="hero-title">
-      <div class="fp-hero-heading">
-      <p class="fp-first-flag"><span class="fp-live-dot" aria-hidden="true"></span><strong data-i18n="firsts.badge">TWO WORLD FIRSTS*</strong><span><span data-i18n="refresh.featureTab1">Game Mode</span> <span aria-hidden="true">/</span> <span data-i18n="firsts.title">DLSS5 Emulation</span></span></p>
-      <h1 id="hero-title"><span data-i18n="home.heroLine1">Run Windows games</span><span data-i18n="home.heroLine2">on your Mac.</span></h1>
-      </div>
-      <aside class="fp-news-preview" data-latest-announcement aria-labelledby="fp-news-title">
+<aside class="fp-news-preview arcade-newsboard fp-wrap" data-latest-announcement aria-labelledby="fp-news-title">
         <div class="fp-news-meta"><span class="fp-eyebrow" data-i18n="home.latestLabel">LATEST</span><span data-announcement-date></span></div>
         <h2 id="fp-news-title" data-announcement-title data-i18n="shared.navUpdates">Updates</h2>
         <p class="fp-news-summary" data-announcement-summary data-i18n="updates.lead">Release notes, important notices, and development news.</p>
         <div class="fp-news-links"><a class="fp-text-link" href="updates.html" data-announcement-link data-i18n="updates.openLink">Open update ↗</a><a class="fp-text-link" href="updates.html" data-locale-link data-i18n="home.latestAll">All updates ↗</a></div>
       </aside>
-      <div class="fp-hero-details">
-      <p class="fp-hero-lead fp-first-lead" data-i18n="firsts.lead">Windows games on Mac, with native macOS Game Mode and real-time DLSS5 Emulation.</p>
-      <div class="fp-first-links">
-        <a href="#difference" data-open-evidence><span aria-hidden="true">01</span><span><b data-i18n="home.worldFirstRouteGameMode">macOS GAME MODE</b><span data-i18n="firsts.scopeLink">Scope &amp; evidence ↗</span></span></a>
-        <a href="site-assets/dlss5.html" data-locale-link><span aria-hidden="true">02</span><span><b data-i18n="firsts.title">DLSS5 Emulation</b><span data-i18n="dlss5.detailsLink">Features &amp; evidence ↗</span></span></a>
+    <section class="arcade-cabinet fp-wrap" id="arcade-start" aria-labelledby="hero-title">
+      <div class="arcade-marquee" aria-hidden="true"><span class="arcade-marquee-brand">FORGEPLAY</span><span class="arcade-marquee-spec">WINDOWS GAMES / APPLE SILICON</span><span class="arcade-marquee-mark">✦</span></div>
+      <div class="arcade-cabinet-body">
+        <div class="arcade-intro"><div class="fp-hero-heading">
+      <p class="fp-first-flag"><span class="fp-live-dot" aria-hidden="true"></span><strong data-i18n="firsts.badge">TWO WORLD FIRSTS*</strong><span><span data-i18n="refresh.featureTab1">Game Mode</span> <span aria-hidden="true">/</span> <span data-i18n="firsts.title">DLSS5 Emulation</span></span></p>
+      <h1 id="hero-title"><span data-i18n="home.heroLine1">Run Windows games</span><span data-i18n="home.heroLine2">on your Mac.</span></h1>
       </div>
+<div class="fp-hero-details">
+      <p class="fp-hero-lead fp-first-lead" data-i18n="firsts.lead">Windows games on Mac, with native macOS Game Mode and real-time DLSS5 Emulation.</p>
+
       <div class="fp-actions">
         <a class="fp-button fp-primary" href="https://github.com/Facta-Leopard/ForgePlay/releases/latest" data-current-release-download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 17v4h14v-4"/></svg><span data-current-release-download-label data-i18n="home.releaseButton">Download Apple-notarized DMG</span></a>
         <a class="fp-button fp-secondary" href="#library"><span data-i18n="refresh.explore">Check game compatibility</span><span aria-hidden="true">→</span></a>
       </div>
       <p class="fp-requirements" data-i18n="refresh.requirements">Apple Silicon · macOS 27 or later · Rosetta required</p>
       <a class="guide-home-link" href="site-assets/guide.html" data-locale-link><span data-guide-text="teaserLink">Read the guide</span> ↗</a>
-      <div class="fp-community-hero">
-        <p data-i18n="community.hero">Support independent development and source disclosure with a GitHub Star or sponsorship.</p>
-        <div class="fp-community-actions">
-          <a href="https://github.com/Facta-Leopard/ForgePlay" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">☆</span><span data-i18n="community.star">Star on GitHub</span></a>
-          <a class="fp-community-sponsor" href="https://github.com/sponsors/facta-leopard" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">♡</span><span data-i18n="community.sponsor">Sponsor development</span></a>
-        </div>
-      </div>
-      </div>
-    </section>
 
-    <div class="fp-stage fp-wrap">
-      <figure class="fp-panorama">
-        <img src="site-assets/forgeplay-hero.jpg" srcset="site-assets/forgeplay-hero.jpg 1600w, site-assets/forgeplay-hero-3200.jpg 3200w" sizes="(min-width: 1240px) 1180px, 95vw" alt="" width="1600" height="1000" fetchpriority="high">
+      </div></div>
+        <div class="arcade-scene-bay">
+          <div class="arcade-scene-title"><span data-retro-text="stage">The forge</span><span class="arcade-status-lamp"></span></div>
+          <div class="fp-stage"><figure class="fp-panorama">
+        <img src="site-assets/arcade/launcher/forge-banner.png" alt="" width="2172" height="724" fetchpriority="high">
         <div class="fp-panorama-shade"></div>
         <figcaption><span class="fp-stage-caption" data-i18n="refresh.artCaption">Windows games on Mac.</span><span class="fp-stage-route" aria-hidden="true">DIRECTX <i>→</i> METAL <i>→</i> macOS</span></figcaption>
         <span class="fp-art-brand" aria-hidden="true">ForgePlay<span> SILICON</span></span>
-      </figure>
+      </figure></div>
+          <div class="arcade-scene-controls"><p data-retro-text="hint">Move the pointer or press the sparks button.</p><button type="button" class="arcade-light-switch" aria-pressed="true" data-retro-text="light">Lights</button></div>
+        </div>
+      </div>
+      <div class="fp-first-links arcade-firsts">
+        <a href="#difference" data-open-evidence><span aria-hidden="true">01</span><span><b data-i18n="home.worldFirstRouteGameMode">macOS GAME MODE</b><span data-i18n="firsts.scopeLink">Scope &amp; evidence ↗</span></span></a>
+        <a href="site-assets/dlss5.html" data-locale-link><span aria-hidden="true">02</span><span><b data-i18n="firsts.title">DLSS5 Emulation</b><span data-i18n="dlss5.detailsLink">Features &amp; evidence ↗</span></span></a>
+      </div>
+    </section>
+    <section class="arcade-release-shelf fp-wrap">
+      <div class="arcade-shelf-title"><h2 data-retro-text="shelf">The update collection</h2><p data-retro-text="shelfNote">Select a poster to see it full size.</p></div>
       <div class="fp-poster-strip" role="group" aria-label="Version posters" data-i18n-aria-label="posters.title">
         <span class="visually-hidden" data-i18n="posters.hint">Select a poster to view it full size.</span>
         <button class="fp-poster-card" type="button" data-poster-version="1.0" aria-label="View ForgePlay 1.0 poster" aria-haspopup="dialog" aria-controls="fp-poster-dialog">
@@ -141,13 +143,26 @@
         <a href="https://github.com/Facta-Leopard/ForgePlay/tree/main" target="_blank" rel="noopener noreferrer"><span data-i18n="shared.navSource">Source</span><span aria-hidden="true"> ↗</span></a>
         <a href="license.html" data-locale-link><span>GPLv3</span><span aria-hidden="true"> ↗</span></a>
       </div>
-    </div>
+    </section>
+    <div class="fp-community-hero arcade-support-row fp-wrap">
+        <p data-i18n="community.hero">Support independent development and source disclosure with a GitHub Star or sponsorship.</p>
+        <div class="fp-community-actions">
+          <a href="https://github.com/Facta-Leopard/ForgePlay" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">☆</span><span data-i18n="community.star">Star on GitHub</span></a>
+          <a class="fp-community-sponsor" href="https://github.com/sponsors/facta-leopard" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">♡</span><span data-i18n="community.sponsor">Sponsor development</span></a>
+        </div>
+      </div>
+    <nav class="arcade-shortcuts fp-wrap" aria-label="Explore sections" data-retro-aria="jump">
+      <a href="#guide"><span class="arcade-shortcut-number">01</span><strong data-retro-text="guide">Try on the web</strong><span class="arcade-shortcut-mark" aria-hidden="true">✚</span></a>
+      <a href="#library"><span class="arcade-shortcut-number">02</span><strong data-retro-text="games">Compatibility</strong><span class="arcade-shortcut-mark" aria-hidden="true">▦</span></a>
+      <a href="#game-mode"><span class="arcade-shortcut-number">03</span><strong data-retro-text="features">Features</strong><span class="arcade-shortcut-mark" aria-hidden="true">✦</span></a>
+      <a href="#purpose"><span class="arcade-shortcut-number">04</span><strong data-retro-text="why">Why ForgePlay</strong><span class="arcade-shortcut-mark" aria-hidden="true">↗</span></a>
+    </nav>
 
 
 
     <section class="guide-teaser fp-wrap" id="guide" aria-labelledby="guide-teaser-title">
       <div><p class="fp-eyebrow" data-guide-text="eyebrow">FORGEPLAY USER GUIDE</p><h2 id="guide-teaser-title" data-guide-text="teaserTitle">Get started with ForgePlay</h2><p data-guide-text="teaserBody">Learn setup, Steam and EXE launch, frame generation, preferences, and diagnostics with real app screens.</p><a class="fp-text-link" href="site-assets/guide.html" data-locale-link><span data-guide-text="teaserLink">Read the guide</span> ↗</a></div>
-      <a href="site-assets/guide.html" data-locale-link data-guide-image-link aria-label="ForgePlay interactive guide"><img src="site-assets/guide/try-forgeplay.jpg" width="1200" height="552" data-guide-teaser-image alt="The ForgePlay rabbit trying app controls on a computer" loading="lazy"></a>
+      <a href="site-assets/guide.html" data-locale-link data-guide-image-link aria-label="ForgePlay interactive guide"><img src="site-assets/arcade/launcher/forge-banner.png" width="2172" height="724" data-guide-teaser-image alt="The ForgePlay rabbit trying app controls on a computer" loading="lazy"></a>
     </section>
 
     <section class="guide-vision fp-wrap" data-vision-experience>
@@ -231,7 +246,7 @@
       </div>
     </section>
     <section class="fp-purpose fp-wrap" id="purpose" aria-labelledby="fp-purpose-title">
-      <div class="fp-purpose-art"><img src="site-assets/forgeplay-manifesto.jpg" srcset="site-assets/forgeplay-manifesto.jpg 1935w, site-assets/forgeplay-manifesto-3200.jpg 3200w" sizes="(max-width: 700px) 90vw, 40vw" width="1935" height="812" alt="" loading="lazy"><span aria-hidden="true">ForgePlay<br><small data-i18n="home.sponsorMark">OPEN</small></span></div>
+      <div class="fp-purpose-art"><img src="site-assets/arcade/launcher/gate-portrait.png" width="836" height="1881" alt="" loading="lazy"><span aria-hidden="true">ForgePlay<br><small data-i18n="home.sponsorMark">OPEN</small></span></div>
       <div class="fp-purpose-copy"><p class="fp-eyebrow" data-i18n="refresh.purposeLabel">WHY FORGEPLAY WAS CREATED</p><h2 id="fp-purpose-title" data-i18n="refresh.purposeTitle">Open source belongs to no one exclusively.</h2><p data-i18n="refresh.purposeBody">ForgePlay was created to confront CodeWeavers’ complacency and de facto privatization of open-source Wine in the public interest. CodeWeavers builds its business on the community’s work, yet keeps some improvements and compatibility knowledge as advantages exclusive to its own products and does not clearly explain its authorization for commercial distribution. It nevertheless touts its contributions to Wine, but that credit is no absolution for these problems.
 
 Moreover, why has a company with years of experience and resources not made improvements that an individual developer can conceive and implement? With so much room for progress, has it not simply grown complacent in the absence of real competition? That is why ForgePlay does not stop at criticism. By implementing improvements they have not made, it demonstrates that an individual developer can build technology and features better than what already exists.

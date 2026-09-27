@@ -1,8 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
-
 ROOT_DIR="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 PAGES=(
+  site-assets/arcade/art.js
+  site-assets/arcade/arcade.js
+  site-assets/arcade/art.css
+  site-assets/arcade/arcade.css
+  site-assets/arcade/assets/workshop.png
+  site-assets/arcade/assets/smith.png
+  site-assets/arcade/assets/tools.png
+  site-assets/arcade/assets/world.png
+  site-assets/arcade/assets/explorer.png
+  site-assets/arcade/assets/neural.png
   site-assets/forge-motion.css
   site-assets/forge-motion.js
   site-assets/forge-scene/workshop.jpg
@@ -1763,9 +1772,9 @@ for html in index.html why.html license.html privacy.html support.html compatibi
     fail "$html must use the current app icon for social previews"
   fi
 done
-require_snippet "$ROOT_DIR/index.html" 'site-assets/forgeplay-manifesto.jpg'
-require_snippet "$ROOT_DIR/index.html" 'site-assets/forgeplay-hero-3200.jpg 3200w'
-require_snippet "$ROOT_DIR/index.html" 'site-assets/forgeplay-manifesto-3200.jpg 3200w'
+require_snippet "$ROOT_DIR/index.html" 'site-assets/arcade/launcher/forge-banner.png'
+require_snippet "$ROOT_DIR/index.html" 'class="arcade-cabinet fp-wrap"'
+require_snippet "$ROOT_DIR/index.html" 'site-assets/arcade/launcher/gate-portrait.png'
 require_snippet "$ROOT_DIR/index.html" 'data-compatibility-count'
 require_snippet "$ROOT_DIR/index.html" 'href="compatibility.html"'
 require_snippet "$ROOT_DIR/index.html" 'data-i18n="refresh.playable"'
@@ -1954,7 +1963,7 @@ if grep -Eq 'innerHTML|outerHTML|insertAdjacentHTML|document\.write' \
 fi
 
 require_snippet "$ROOT_DIR/why.html" 'Why I Built ForgePlay'
-require_snippet "$ROOT_DIR/why.html" 'site-assets/forgeplay-manifesto-3200.jpg 3200w'
+require_snippet "$ROOT_DIR/why.html" 'site-assets/arcade/launcher/gate-portrait.png'
 require_snippet "$ROOT_DIR/why.html" 'iron rice bowl'
 require_snippet "$ROOT_DIR/why.html" 'CodeWeavers’ long contribution to Wine deserves recognition'
 require_snippet "$ROOT_DIR/why.html" 'If progress stalled because no one could challenge it'
