@@ -4,10 +4,115 @@
   "updatedAt": "2026-09-27",
   "announcements": [
     {
+      "id": "forgeplay-vr-development",
+      "type": "project",
+      "publishedAt": "2026-09-27",
+      "featured": true,
+      "titles": {
+        "ko": "ForgePlay VR을 준비하고 있습니다.",
+        "en": "ForgePlay VR is in development",
+        "de": "ForgePlay VR ist in Entwicklung",
+        "es": "Estamos desarrollando ForgePlay VR",
+        "fr": "ForgePlay VR est en cours de développement",
+        "ja": "ForgePlay VRを開発しています。",
+        "zh-Hans": "ForgePlay VR 正在开发中",
+        "zh-Hant": "ForgePlay VR 正在開發中"
+      },
+      "summaries": {
+        "ko": "VR맥앱과 VisionPro앱을 연동하는 PCVR 환경을 개발 중입니다. 핸드 트래킹과 시선 기반 영상 최적화를 적용하고 있습니다.",
+        "en": "We are developing a PCVR environment that connects the VR Mac app and Vision Pro app, with hand tracking and gaze-based video optimization being integrated.",
+        "de": "Wir entwickeln eine PCVR-Umgebung, die die VR-Mac-App mit der Vision-Pro-App verbindet. Hand-Tracking und blickabhängige Videooptimierung werden integriert.",
+        "es": "Estamos desarrollando un entorno PCVR que conecta la app VR para Mac con la app para Vision Pro, e integrando seguimiento de manos y optimización de vídeo según la mirada.",
+        "fr": "Nous développons un environnement PCVR reliant l’app VR pour Mac à l’app Vision Pro, avec le suivi des mains et l’optimisation vidéo selon le regard en cours d’intégration.",
+        "ja": "VR MacアプリとVision Proアプリを連携するPCVR環境を開発中です。ハンドトラッキングと視線に応じた映像最適化を組み込んでいます。",
+        "zh-Hans": "我们正在开发连接 VR Mac 应用与 Vision Pro 应用的 PCVR 环境，并集成手部追踪和基于视线的视频优化。",
+        "zh-Hant": "我們正在開發連接 VR Mac App 與 Vision Pro App 的 PCVR 環境，並整合手部追蹤與視線導向的影像最佳化。"
+      },
+      "paragraphs": {
+        "ko": [
+          "Mac에서 Windows VR 게임을 실행하고, Vision Pro에서 즐길 수 있도록 ForgePlay VR을 개발하고 있습니다. 평면 화면 전송이 아닌, 머리와 손의 움직임을 반영하는 PCVR 환경을 목표로 합니다.",
+          "주요 개발 내용은 다음과 같습니다.",
+          "- 독립 VR 실행 환경\n  - 별도 런타임을 사용하는 VR맥앱과 VisionPro앱을 연동합니다. 기존 데스크탑맥앱을 켜 둘 필요는 없으며, Steam과 게임은 Mac에서 실행합니다.\n- 기존 Steam 환경 재사용\n  - 호환되는 Steam·게임 데이터를 복사 없이 연결하고, 두 앱이 같은 환경을 동시에 변경하지 않도록 관리합니다.\n- 독자적인 VR 연동 개발\n  - Wine·DXMT·공개 OpenVR 헤더와 Apple API를 활용하되, 영상 전송과 추적·입력, 연결 관리는 직접 설계·구현하고 있습니다.\n- 핸드 트래킹과 입력·전송 최적화\n  - 핸드 트래킹(손 추적)과 Xbox·DualSense 입력을 적용 중입니다. GPU 처리와 하드웨어 인코딩을 활용해 영상 전송의 불필요한 복사와 대기를 줄이는 작업도 진행하고 있습니다.\n- 시선 기반 해상도 최적화\n  - 바라보는 영역은 선명하게 유지하고, 주변부의 전송 해상도를 조절하는 방식을 적용 중입니다. 헤드셋에서 화면을 그리는 최적화와는 별도로, 전송할 영상을 효율적으로 처리하기 위한 작업입니다.\n- 간단한 시작 흐름\n  - 기존 Steam 연결 → Vision Pro 연결 → VR 게임 실행 순서로 구성하고, 단계별 사용법과 문제 해결 안내를 제공합니다.",
+          "개발을 이어가며 새로운 소식을 전하겠습니다. ForgePlay의 새로운 VR 환경도 기대해 주세요!"
+        ],
+        "en": [
+          "We are developing ForgePlay VR so that Windows VR games can run on a Mac and be experienced on Vision Pro. The goal is PCVR that responds to head and hand movements, rather than streaming a flat game screen.",
+          "Here is what we are working on.",
+          "- Independent VR environment\n  - The VR Mac app uses its own runtime and works with the Vision Pro app. The existing Desktop Mac app does not need to remain open; Steam and the games run on the Mac.\n- Reusing an existing Steam environment\n  - Compatible Steam and game data can be connected without copying, with coordination to prevent both apps from changing the same environment at once.\n- Our own VR integration\n  - We use Wine, DXMT, public OpenVR headers, and Apple APIs as foundations, while designing and implementing the video transport, tracking/input integration, and connection management ourselves.\n- Hand tracking, input, and transport optimization\n  - We are integrating hand tracking and input from Xbox and DualSense controllers. GPU processing and hardware encoding are also being used to reduce unnecessary copies and waiting in the video transport path.\n- Gaze-based resolution optimization\n  - We are integrating a method that keeps the area you look at sharp while adjusting the transmission resolution in peripheral areas. This optimizes the video being transmitted and is separate from rendering optimizations on the headset.\n- A straightforward startup flow\n  - Connect existing Steam → connect Vision Pro → launch a VR game, with step-by-step instructions and troubleshooting.",
+          "We will share more news as development progresses. Stay tuned for ForgePlay's new VR environment!"
+        ],
+        "de": [
+          "Wir entwickeln ForgePlay VR, um Windows-VR-Spiele auf einem Mac auszuführen und auf Vision Pro zu erleben. Ziel ist PCVR, das auf Kopf- und Handbewegungen reagiert, statt lediglich ein flaches Spielbild zu übertragen.",
+          "An diesen Bereichen arbeiten wir derzeit.",
+          "- Eigenständige VR-Umgebung\n  - Die VR-Mac-App verwendet eine eigene Laufzeitumgebung und arbeitet mit der Vision-Pro-App zusammen. Die bestehende Desktop-Mac-App muss dabei nicht geöffnet bleiben; Steam und die Spiele laufen auf dem Mac.\n- Vorhandene Steam-Umgebung weiterverwenden\n  - Kompatible Steam- und Spieldaten werden ohne Kopieren eingebunden. Eine gemeinsame Zugriffskoordination verhindert, dass beide Apps dieselbe Umgebung gleichzeitig verändern.\n- Eigene VR-Anbindung\n  - Wine, DXMT, öffentliche OpenVR-Header und Apple-APIs bilden die Grundlage. Videoübertragung, die Anbindung von Tracking und Eingaben sowie die Verbindungsverwaltung entwerfen und implementieren wir selbst.\n- Hand-Tracking sowie Eingabe- und Übertragungsoptimierung\n  - Wir integrieren Hand-Tracking und Eingaben von Xbox- und DualSense-Controllern. GPU-Verarbeitung und Hardware-Encoding sollen unnötige Kopien und Wartezeiten bei der Videoübertragung verringern.\n- Blickabhängige Auflösungsoptimierung\n  - Wir integrieren ein Verfahren, das den betrachteten Bereich scharf hält und die Übertragungsauflösung am Rand anpasst. Dies betrifft das zu übertragende Video und ist von Rendering-Optimierungen auf dem Headset zu unterscheiden.\n- Einfacher Startablauf\n  - Vorhandenes Steam verbinden → Vision Pro verbinden → VR-Spiel starten, ergänzt durch Schritt-für-Schritt-Anleitungen und Hilfe bei Problemen.",
+          "Wir halten euch über die weitere Entwicklung auf dem Laufenden. Freut euch auf die neue VR-Umgebung von ForgePlay!"
+        ],
+        "es": [
+          "Estamos desarrollando ForgePlay VR para ejecutar juegos de realidad virtual de Windows en un Mac y disfrutarlos en Vision Pro. El objetivo es una experiencia PCVR que responda a los movimientos de la cabeza y las manos, no la transmisión de una pantalla de juego plana.",
+          "Estos son los principales puntos en desarrollo.",
+          "- Entorno VR independiente\n  - La app VR para Mac utiliza su propio entorno de ejecución y funciona junto con la app para Vision Pro. No es necesario mantener abierta la app de escritorio para Mac; Steam y los juegos se ejecutan en el Mac.\n- Reutilización del entorno Steam existente\n  - Se conectan los datos compatibles de Steam y de los juegos sin copiarlos, evitando que ambas apps modifiquen el mismo entorno al mismo tiempo.\n- Integración VR propia\n  - Utilizamos Wine, DXMT, cabeceras públicas de OpenVR y API de Apple como base, mientras diseñamos e implementamos la transmisión de vídeo, la integración del seguimiento y las entradas, y la gestión de conexiones.\n- Seguimiento de manos y optimización de entradas y transmisión\n  - Estamos integrando el seguimiento de manos y las entradas de mandos Xbox y DualSense. También usamos procesamiento en GPU y codificación por hardware para reducir copias y esperas innecesarias en la transmisión de vídeo.\n- Optimización de resolución según la mirada\n  - Estamos integrando un método que mantiene nítida la zona que miras y ajusta la resolución de transmisión de las zonas periféricas. Optimiza el vídeo transmitido y es independiente de las optimizaciones de renderizado en el visor.\n- Inicio sencillo\n  - Conectar Steam existente → conectar Vision Pro → iniciar un juego VR, con instrucciones paso a paso y ayuda para resolver problemas.",
+          "Seguiremos compartiendo novedades a medida que avance el desarrollo. ¡Estate atento al nuevo entorno VR de ForgePlay!"
+        ],
+        "fr": [
+          "Nous développons ForgePlay VR pour exécuter des jeux VR Windows sur un Mac et en profiter sur Vision Pro. L’objectif est une expérience PCVR qui réagit aux mouvements de la tête et des mains, plutôt que la simple diffusion d’un écran de jeu plat.",
+          "Voici les principaux travaux en cours.",
+          "- Environnement VR indépendant\n  - L’app VR pour Mac utilise son propre environnement d’exécution et fonctionne avec l’app Vision Pro. L’app de bureau pour Mac n’a pas besoin de rester ouverte ; Steam et les jeux s’exécutent sur le Mac.\n- Réutilisation de l’environnement Steam existant\n  - Les données Steam et les jeux compatibles sont reliés sans être copiés, avec une coordination empêchant les deux apps de modifier simultanément le même environnement.\n- Intégration VR conçue par ForgePlay\n  - Wine, DXMT, les en-têtes publics OpenVR et les API Apple servent de fondations. Nous concevons et implémentons la transmission vidéo, l’intégration du suivi et des entrées, ainsi que la gestion des connexions.\n- Suivi des mains et optimisation des entrées et de la transmission\n  - Nous intégrons le suivi des mains et les entrées des manettes Xbox et DualSense. Le traitement GPU et l’encodage matériel servent également à réduire les copies et attentes inutiles dans la transmission vidéo.\n- Optimisation de la résolution selon le regard\n  - Nous intégrons une méthode qui préserve la netteté de la zone regardée tout en ajustant la résolution de transmission en périphérie. Elle optimise la vidéo transmise, indépendamment des optimisations de rendu sur le casque.\n- Démarrage simplifié\n  - Relier Steam existant → connecter Vision Pro → lancer un jeu VR, avec des instructions pas à pas et une aide au dépannage.",
+          "Nous partagerons d’autres nouvelles au fil du développement. Restez à l’écoute du nouvel environnement VR de ForgePlay !"
+        ],
+        "ja": [
+          "WindowsのVRゲームをMacで実行し、Vision Proで楽しめるよう、ForgePlay VRを開発しています。平面のゲーム画面を転送するだけでなく、頭や手の動きを反映するPCVR環境を目指しています。",
+          "主な開発内容は次のとおりです。",
+          "- 独立したVR実行環境\n  - 専用の実行ランタイムを持つVR MacアプリとVision Proアプリを連携します。既存のデスクトップMacアプリを起動しておく必要はなく、SteamとゲームはMacで実行します。\n- 既存のSteam環境を再利用\n  - 互換性のあるSteam・ゲームデータをコピーせずに接続し、2つのアプリが同じ環境を同時に変更しないよう管理します。\n- 独自のVR連携開発\n  - Wine・DXMT・公開OpenVRヘッダー・Apple APIを基盤として利用しながら、映像転送、トラッキングと入力の連携、接続管理を独自に設計・実装しています。\n- ハンドトラッキングと入力・転送の最適化\n  - ハンドトラッキング（手の追跡）とXbox・DualSenseの入力を組み込んでいます。GPU処理とハードウェアエンコードで、映像転送時の不要なコピーや待ち時間を減らす作業も進めています。\n- 視線に応じた解像度の最適化\n  - 見ている領域の鮮明さを保ち、周辺部の転送解像度を調整する方式を組み込んでいます。ヘッドセット側の描画最適化とは別に、転送する映像を効率よく処理するための取り組みです。\n- 分かりやすい開始手順\n  - 既存のSteamを接続 → Vision Proを接続 → VRゲームを起動、という流れに沿って、手順ごとの説明と問題解決ガイドを用意しています。",
+          "開発を進めながら、新しい情報をお伝えしていきます。ForgePlayの新しいVR環境にもご期待ください！"
+        ],
+        "zh-Hans": [
+          "我们正在开发 ForgePlay VR，让 Windows VR 游戏在 Mac 上运行，并通过 Vision Pro 体验。目标不是仅传输平面游戏画面，而是构建能响应头部和手部动作的 PCVR 环境。",
+          "主要开发内容如下。",
+          "- 独立 VR 运行环境\n  - VR Mac 应用使用独立运行时，并与 Vision Pro 应用联动。无需保持现有桌面 Mac 应用运行；Steam 和游戏都在 Mac 上执行。\n- 复用现有 Steam 环境\n  - 无需复制即可连接兼容的 Steam 和游戏数据，并防止两个应用同时修改同一环境。\n- 自主开发 VR 集成\n  - 以 Wine、DXMT、公开 OpenVR 头文件及 Apple API 为基础，自行设计和实现视频传输、追踪与输入集成以及连接管理。\n- 手部追踪及输入、传输优化\n  - 正在集成手部追踪和 Xbox、DualSense 控制器输入，同时利用 GPU 处理和硬件编码，减少视频传输中不必要的复制与等待。\n- 基于视线的分辨率优化\n  - 正在集成一种保持注视区域清晰、调整周边区域传输分辨率的方法。这是对待传输视频的优化，与头显端的渲染优化分别处理。\n- 简明的启动流程\n  - 按照连接现有 Steam → 连接 Vision Pro → 启动 VR 游戏的顺序，提供分步说明和故障排查指南。",
+          "我们会随着开发进展继续分享新消息。敬请期待 ForgePlay 的新 VR 环境！"
+        ],
+        "zh-Hant": [
+          "我們正在開發 ForgePlay VR，讓 Windows VR 遊戲在 Mac 上執行，並透過 Vision Pro 體驗。目標不是僅傳輸平面遊戲畫面，而是建構能反映頭部與手部動作的 PCVR 環境。",
+          "主要開發內容如下。",
+          "- 獨立 VR 執行環境\n  - VR Mac App 使用獨立執行階段，並與 Vision Pro App 連動。無須保持既有桌面 Mac App 執行；Steam 與遊戲都在 Mac 上執行。\n- 沿用既有 Steam 環境\n  - 無須複製即可連接相容的 Steam 與遊戲資料，並防止兩個 App 同時修改同一環境。\n- 自主開發 VR 整合\n  - 以 Wine、DXMT、公開 OpenVR 標頭檔及 Apple API 為基礎，自行設計與實作影像傳輸、追蹤與輸入整合，以及連線管理。\n- 手部追蹤與輸入、傳輸最佳化\n  - 正在整合手部追蹤和 Xbox、DualSense 控制器輸入，同時利用 GPU 處理與硬體編碼，減少影像傳輸中不必要的複製與等待。\n- 視線導向的解析度最佳化\n  - 正在整合一種保持注視區域清晰、調整周邊區域傳輸解析度的方法。這是對待傳輸影像的最佳化，與頭戴裝置端的算圖最佳化分別處理。\n- 清楚的啟動流程\n  - 依照連接既有 Steam → 連接 Vision Pro → 啟動 VR 遊戲的順序，提供逐步說明與疑難排解指南。",
+          "我們會隨著開發進展持續分享新消息。敬請期待 ForgePlay 的新 VR 環境！"
+        ]
+      },
+      "images": [
+        {
+          "src": "site-assets/announcements/forgeplay-vr-development-mac.jpg",
+          "caption": {
+            "ko": "개발 중인 VR맥앱의 시작 화면",
+            "en": "Start screen of the VR Mac app in development",
+            "de": "Startansicht der VR-Mac-App in Entwicklung",
+            "es": "Pantalla de inicio de la app VR para Mac en desarrollo",
+            "fr": "Écran de démarrage de l’app VR pour Mac en développement",
+            "ja": "開発中のVR Macアプリの開始画面",
+            "zh-Hans": "开发中的 VR Mac 应用启动界面",
+            "zh-Hant": "開發中的 VR Mac App 啟動畫面"
+          }
+        },
+        {
+          "src": "site-assets/announcements/forgeplay-vr-development-vision.jpg",
+          "caption": {
+            "ko": "개발 중인 VisionPro앱의 Mac 연결 화면",
+            "en": "Mac connection screen of the Vision Pro app in development",
+            "de": "Mac-Verbindungsansicht der Vision-Pro-App in Entwicklung",
+            "es": "Pantalla de conexión al Mac de la app para Vision Pro en desarrollo",
+            "fr": "Écran de connexion au Mac de l’app Vision Pro en développement",
+            "ja": "開発中のVision ProアプリのMac接続画面",
+            "zh-Hans": "开发中的 Vision Pro 应用 Mac 连接界面",
+            "zh-Hant": "開發中的 Vision Pro App Mac 連線畫面"
+          }
+        }
+      ],
+      "href": "updates.html#update-forgeplay-vr-development"
+    },
+    {
       "id": "forgeplay-2-0-0-update",
       "type": "release",
       "publishedAt": "2026-09-27",
-      "featured": true,
+      "featured": false,
       "titles": {
         "ko": "ForgePlay 2.0.0 업데이트",
         "en": "ForgePlay 2.0.0 update",
