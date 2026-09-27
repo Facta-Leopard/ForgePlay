@@ -19,19 +19,20 @@
         "zh-Hant": "ForgePlay AI Coordinator 正在開發中"
       },
       "summaries": {
-        "ko": "화면 속 대상과 위협을 표시하고, 전투 상황의 주요 변화를 음성과 텍스트로 알려주는 AI Coordinator를 개발 중입니다.",
-        "en": "We are developing AI Coordinator to highlight on-screen entities and threats, and report key changes in combat through voice and text.",
-        "de": "Wir entwickeln AI Coordinator, um Figuren und Gefahren im Spielbild zu markieren und wichtige Veränderungen im Kampf per Sprache und Text zu melden.",
-        "es": "Estamos desarrollando AI Coordinator para señalar personajes y amenazas en pantalla y comunicar los cambios importantes del combate mediante voz y texto.",
-        "fr": "Nous développons AI Coordinator pour signaler les personnages et les menaces à l’écran et annoncer les changements importants du combat par la voix et le texte.",
-        "ja": "画面内のキャラクターや脅威を表示し、戦闘状況の主な変化を音声とテキストで知らせるAI Coordinatorを開発中です。",
-        "zh-Hans": "我们正在开发 AI Coordinator，用于标记画面中的角色和威胁，并通过语音和文字提示战斗中的重要变化。",
-        "zh-Hant": "我們正在開發 AI Coordinator，用於標示畫面中的角色與威脅，並透過語音和文字提示戰鬥中的重要變化。"
+        "ko": "스토리 중심의 오프라인 싱글플레이를 위한 AI Coordinator를 개발 중입니다. 화면 속 대상·위협 표시와 음성·텍스트 안내를 준비하고 있습니다.",
+        "en": "We are developing AI Coordinator for story-driven, offline single-player games, with on-screen entity and threat indicators and voice and text notifications.",
+        "de": "Wir entwickeln AI Coordinator für storybasierte Offline-Einzelspielerspiele, mit Markierungen für Figuren und Gefahren sowie Sprach- und Texthinweisen.",
+        "es": "Estamos desarrollando AI Coordinator para juegos de un solo jugador centrados en la historia y sin conexión, con indicadores de personajes y amenazas y avisos de voz y texto.",
+        "fr": "Nous développons AI Coordinator pour les jeux solo narratifs hors ligne, avec des repères pour les personnages et les menaces ainsi que des notifications vocales et textuelles.",
+        "ja": "ストーリー重視のオフライン・シングルプレイゲーム向けにAI Coordinatorを開発中です。画面内のキャラクターや脅威の表示と、音声・テキストによる案内を準備しています。",
+        "zh-Hans": "我们正在为注重剧情的离线单人游戏开发 AI Coordinator，准备提供画面中的角色与威胁标记，以及语音和文字提示。",
+        "zh-Hant": "我們正在為注重劇情的離線單人遊戲開發 AI Coordinator，準備提供畫面中的角色與威脅標示，以及語音和文字提示。"
       },
       "paragraphs": {
         "ko": [
           "전용 AI 코디네이터가 당신의 플레이와 함께합니다.",
           "ForgePlay 데스크탑 Mac 앱에 새로운 후처리 기능인 AI Coordinator를 개발하고 있습니다.",
+          "멀티플레이에서 악용될 우려를 고려해, 인터넷 연결이 없는 오프라인 환경에서만 작동하도록 개발할 예정입니다. 스토리 중심의 싱글플레이 게임을 위한 전용 옵션으로 준비하고 있습니다.",
           "- 화면 속 대상과 위협 표시\n  - 적·아군으로 추정되는 대상과 위협 요소를 화면에 표시해, 주변 상황을 파악하도록 돕습니다.\n- 음성·텍스트로 전하는 전투 상황\n  - 새로운 위협이나 중요한 상황 변화를 짧은 음성과 텍스트로 알려줍니다.",
           "게임에 집중하는 동안, 놓치기 쉬운 상황은 코디네이터가 짚어주는 경험을 목표로 합니다. 새로운 소식을 기대해 주세요!",
           "※ 관련 기능은 개발 과정에서 추가되거나 제외될 수 있습니다."
@@ -39,6 +40,7 @@
         "en": [
           "A dedicated AI coordinator joins you as you play.",
           "We are developing AI Coordinator, a new post-processing feature for the ForgePlay Desktop Mac app.",
+          "To address the risk of misuse in multiplayer, we plan to make this feature work only when there is no internet connection. It is being developed as a dedicated option for story-driven single-player games.",
           "- On-screen entity and threat indicators\n  - Highlights potential enemies, allies, and threats to help you understand what is happening around you.\n- Combat updates through voice and text\n  - Reports new threats and important changes with brief spoken and written notifications.",
           "The goal is to let you focus on the game while the coordinator points out situations you might otherwise miss. Stay tuned for more news!",
           "※ Features may be added or removed during development."
@@ -46,6 +48,7 @@
         "de": [
           "Ein eigener KI-Koordinator begleitet dich beim Spielen.",
           "Wir entwickeln AI Coordinator als neue Nachbearbeitungsfunktion für die ForgePlay Desktop-Mac-App.",
+          "Um einem Missbrauch im Mehrspielermodus vorzubeugen, soll die Funktion nur ohne Internetverbindung nutzbar sein. Sie ist als eigene Option für storybasierte Einzelspielerspiele vorgesehen.",
           "- Figuren und Gefahren im Spielbild markieren\n  - Markiert mögliche Gegner, Verbündete und Gefahren, damit du die Situation um dich herum besser einschätzen kannst.\n- Kampfsituationen per Sprache und Text melden\n  - Informiert mit kurzen Sprach- und Texthinweisen über neue Gefahren und wichtige Veränderungen.",
           "Du sollst dich auf das Spiel konzentrieren können, während der Koordinator auf leicht übersehene Situationen aufmerksam macht. Weitere Neuigkeiten folgen!",
           "※ Während der Entwicklung können Funktionen hinzukommen oder entfallen."
@@ -53,6 +56,7 @@
         "es": [
           "Un coordinador de IA te acompaña mientras juegas.",
           "Estamos desarrollando AI Coordinator, una nueva función de posprocesamiento para la app de escritorio ForgePlay para Mac.",
+          "Para evitar posibles usos indebidos en partidas multijugador, está previsto que la función solo se pueda usar sin conexión a internet. La estamos preparando como una opción exclusiva para juegos de un solo jugador centrados en la historia.",
           "- Indicadores de personajes y amenazas en pantalla\n  - Señala posibles enemigos, aliados y amenazas para ayudarte a comprender lo que ocurre a tu alrededor.\n- Información del combate mediante voz y texto\n  - Avisa de nuevas amenazas y cambios importantes con notificaciones breves de voz y texto.",
           "El objetivo es que puedas concentrarte en el juego mientras el coordinador señala situaciones que podrían pasarte desapercibidas. ¡Pronto compartiremos más novedades!",
           "※ Durante el desarrollo, se podrán añadir o eliminar funciones."
@@ -60,6 +64,7 @@
         "fr": [
           "Un coordinateur IA dédié vous accompagne pendant vos parties.",
           "Nous développons AI Coordinator, une nouvelle fonction de post-traitement pour l’app de bureau ForgePlay sur Mac.",
+          "Pour limiter les risques d’utilisation abusive en multijoueur, nous prévoyons que cette fonction soit utilisable uniquement lorsque l’ordinateur est déconnecté d’Internet. Elle est conçue comme une option réservée aux jeux solo axés sur l’histoire.",
           "- Repérage des personnages et des menaces à l’écran\n  - Signale les ennemis et alliés présumés ainsi que les menaces pour vous aider à comprendre la situation autour de vous.\n- Informations de combat par la voix et le texte\n  - Signale les nouvelles menaces et les changements importants par de brèves notifications vocales et textuelles.",
           "L’objectif est de vous laisser vous concentrer sur le jeu pendant que le coordinateur attire votre attention sur des situations qui pourraient vous échapper. D’autres nouvelles suivront !",
           "※ Des fonctionnalités pourront être ajoutées ou retirées au cours du développement."
@@ -67,6 +72,7 @@
         "ja": [
           "専用AIコーディネーターが、あなたのプレイをサポートします。",
           "ForgePlayのデスクトップMacアプリ向けに、新しいポストエフェクト機能「AI Coordinator」を開発しています。",
+          "マルチプレイでの悪用を防ぐため、インターネットに接続していない状態でのみ動作する仕様を予定しています。ストーリー重視のシングルプレイゲーム専用オプションとして開発を進めています。",
           "- 画面内のキャラクターや脅威を表示\n  - 敵・味方と推定されるキャラクターや脅威を画面に表示し、周囲の状況把握をサポートします。\n- 戦闘状況を音声とテキストで案内\n  - 新たな脅威や重要な状況の変化を、短い音声とテキストで知らせます。",
           "ゲームに集中している間も、見落としやすい状況にコーディネーターが気づかせてくれる体験を目指しています。続報をお楽しみに！",
           "※ 開発の過程で、機能が追加または削除される場合があります。"
@@ -74,6 +80,7 @@
         "zh-Hans": [
           "专属 AI 协调员，伴你一起游戏。",
           "我们正在为 ForgePlay 桌面 Mac 应用开发新的后处理功能 AI Coordinator。",
+          "考虑到在多人游戏中被滥用的风险，我们计划让该功能仅在未连接互联网时运行，并将其作为注重剧情的单人游戏专用选项进行开发。",
           "- 标记画面中的角色和威胁\n  - 在画面中标记疑似敌人、友军及威胁，帮助你了解周围的情况。\n- 通过语音和文字提示战斗情况\n  - 用简短的语音和文字提示新的威胁及重要的局势变化。",
           "我们希望让你专注于游戏，由协调员提醒那些容易被忽略的情况。敬请期待后续消息！",
           "※ 相关功能可能在开发过程中新增或移除。"
@@ -81,6 +88,7 @@
         "zh-Hant": [
           "專屬 AI 協調員，陪你一起遊戲。",
           "我們正在為 ForgePlay 桌面 Mac App 開發新的後處理功能 AI Coordinator。",
+          "考量到在多人遊戲中被濫用的風險，我們計畫讓此功能僅在未連接網際網路時運作，並將其作為注重劇情的單人遊戲專用選項進行開發。",
           "- 標示畫面中的角色與威脅\n  - 在畫面中標示疑似敵人、友軍及威脅，幫助你掌握周遭情況。\n- 透過語音和文字提示戰鬥情況\n  - 以簡短的語音和文字提示新的威脅及重要的局勢變化。",
           "我們希望讓你專注於遊戲，由協調員提醒那些容易被忽略的情況。敬請期待後續消息！",
           "※ 相關功能可能在開發過程中新增或移除。"
