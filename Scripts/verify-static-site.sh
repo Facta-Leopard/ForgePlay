@@ -12,6 +12,9 @@ PAGES=(
   site-assets/arcade/assets/world.png
   site-assets/arcade/assets/explorer.png
   site-assets/arcade/assets/neural.png
+  site-assets/arcade/hammer/raised.png
+  site-assets/arcade/hammer/down.png
+  site-assets/arcade/hammer/contact.png
   site-assets/forge-motion.css
   site-assets/forge-motion.js
   site-assets/forge-scene/workshop.jpg

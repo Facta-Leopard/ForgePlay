@@ -52,7 +52,7 @@
 .fp-retro .arcade-scene-bay .fp-panorama figcaption { bottom:12px; left:16px; right:16px; }
 .fp-retro .arcade-scene-bay .fp-stage-caption { font-size:15px; max-width:190px; color:#ddc9a8; }
 .fp-retro .arcade-scene-bay .fp-stage-route { display:none; }
-.arcade-scene-controls { display:flex; align-items:center; gap:8px; padding:9px 12px; background:#302519; border-top:1px solid #80603b; }
+.arcade-scene-controls { display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:9px 12px; background:#302519; border-top:1px solid #80603b; }
 .arcade-scene-controls p { margin-right:auto; color:#b9a482; font-size:9px; line-height:1.5; max-width:190px; }
 .fp-retro .arcade-scene-controls button { position:static; display:block; width:auto; height:auto; min-height:32px; min-width:48px; border:1px solid #ad8451; padding:6px 12px; border-radius:1px; background:#4a3520; color:#f8d99f; font-size:10px!important; line-height:1.4; box-shadow:2px 2px #170f07; }
 .arcade-scene-controls button[aria-pressed=false] { color:#8e8b76; background:#171a16; border-color:#555b4a; }

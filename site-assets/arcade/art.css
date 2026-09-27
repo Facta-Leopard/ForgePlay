@@ -31,6 +31,9 @@
 .pixel-strike { position:absolute; right:22px; bottom:55px; z-index:6; width:38px; height:38px; border:1px solid #9d744c; border-radius:3px; color:#ffd097; background:#21170f; font-size:24px!important; line-height:1; }
 .pixel-strike:hover { background:#544027; }.pixel-strike:active { transform:translateY(2px); }
 .pixel-impact .pixel-forge .pixel-character { animation:pixel-hit .24s steps(2,end); }
+/* Pose animation owns the forge sprite; never bob the whole anvil with the rabbit. */
+.fp-site .pixel-forge>.pixel-character { animation:none!important; }
+.pixel-strike:disabled { opacity:.5; cursor:default; }
 .fp-pixel .fp-purpose-art,.fp-pixel .story-art { background:#1e1610; border:1px solid #796149; border-radius:8px; }
 .fp-pixel .fp-purpose-art { height:440px; }.fp-pixel .story-art { height:420px; }
 .pixel-outlook .pixel-background { width:104%; height:104%; inset:-2%; object-fit:cover; transform:translate(calc(var(--pixel-x,0px)*-.45),calc(var(--pixel-y,0px)*-.45)); }
