@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-28",
+  "names": [],
+  "banner": {
+    "imageURL": "https://facta-leopard.github.io/ForgePlay/site-assets/supporters/enterprise-arcade.png",
+    "imageWidth": 2172,
+    "imageHeight": 724,
+    "aspectRatio": 3,
+    "contentMode": "fit",
+    "embedURL": "https://facta-leopard.github.io/ForgePlay/site-assets/enterprise-supporters-banner.html",
+    "linkURL": "https://facta-leopard.github.io/ForgePlay/site-assets/supporters.html#enterprise-supporters",
+    "titles": {
+      "ko": "엔터프라이즈 후원자",
+      "en": "Enterprise supporters",
+      "de": "Unternehmenssponsoren",
+      "es": "Patrocinadores empresariales",
+      "fr": "Mécènes d’entreprise",
+      "ja": "エンタープライズスポンサー",
+      "zh-Hans": "企业赞助者",
+      "zh-Hant": "企業贊助者"
+    },
+    "messages": {
+      "ko": "첫 엔터프라이즈 후원자를 기다립니다.",
+      "en": "Be our first enterprise supporter.",
+      "de": "Werdet unser erster Unternehmenssponsor.",
+      "es": "Sé nuestro primer patrocinador empresarial.",
+      "fr": "Devenez notre premier mécène d’entreprise.",
+      "ja": "最初のご支援をお待ちしています。",
+      "zh-Hans": "期待第一位企业赞助者。",
+      "zh-Hant": "期待第一位企業贊助者。"
+    },
+    "alt": {
+      "ko": "아케이드 게임기를 즐기는 픽셀 토끼",
+      "en": "Pixel-art rabbit playing an arcade machine",
+      "de": "Pixel-Hase an einem Arcade-Automaten",
+      "es": "Conejo de pixel art jugando en una máquina arcade",
+      "fr": "Lapin en pixel art jouant sur une borne d’arcade",
+      "ja": "アーケードゲームを遊ぶドット絵のウサギ",
+      "zh-Hans": "玩街机游戏的像素兔子",
+      "zh-Hant": "玩大型電玩機台的像素兔子"
+    }
+  }
+}

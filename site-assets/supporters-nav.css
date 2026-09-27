@@ -1,0 +1,8 @@
+/* Space for the approved supporter navigation item, including longer locales. */
+.fp-nav:has([data-supporter-nav]) { gap:18px; }
+.fp-site .fp-links:has([data-supporter-nav]) { gap:0; }
+.fp-site .fp-links:has([data-supporter-nav]) a { padding-inline:8px; }
+@media(min-width:961px) and (max-width:1180px) {
+  .fp-site .fp-links:has([data-supporter-nav]) a { font-size:11px; padding-inline:5px; }
+  .fp-nav:has([data-supporter-nav]) { gap:10px; }
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facta-leopard.github.io/ForgePlay/site-data/supporters.schema.json",
+  "title": "Public supporter names",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "names"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "names": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+  }
+}

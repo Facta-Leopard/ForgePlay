@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ForgePlay enterprise supporter banner",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "updatedAt", "names", "banner"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "updatedAt": {"type": "string", "format": "date"},
+    "names": {"type": "array", "maxItems": 200, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 80}},
+    "banner": {
+      "type": "object", "additionalProperties": false,
+      "required": ["imageURL", "imageWidth", "imageHeight", "aspectRatio", "contentMode", "embedURL", "linkURL", "titles", "messages", "alt"],
+      "properties": {
+        "imageURL": {"type": "string", "pattern": "^https://facta-leopard\\.github\\.io/ForgePlay/site-assets/supporters/[a-z0-9-]+\\.png$"},
+        "imageWidth": {"type": "integer", "minimum": 1, "maximum": 8192},
+        "imageHeight": {"type": "integer", "minimum": 1, "maximum": 8192},
+        "aspectRatio": {"type": "number", "minimum": 1, "maximum": 10},
+        "contentMode": {"const": "fit"},
+        "embedURL": {"const": "https://facta-leopard.github.io/ForgePlay/site-assets/enterprise-supporters-banner.html"},
+        "linkURL": {"const": "https://facta-leopard.github.io/ForgePlay/site-assets/supporters.html#enterprise-supporters"},
+        "titles": {"$ref": "#/$defs/localized"},
+        "messages": {"$ref": "#/$defs/localized"},
+        "alt": {"$ref": "#/$defs/localized"}
+      }
+    }
+  },
+  "$defs": {
+    "localized": {
+      "type": "object", "additionalProperties": false,
+      "required": ["ko", "en", "de", "es", "fr", "ja", "zh-Hans", "zh-Hant"],
+      "properties": {
+        "ko": {"type": "string", "minLength": 1, "maxLength": 200},
+        "en": {"type": "string", "minLength": 1, "maxLength": 200},
+        "de": {"type": "string", "minLength": 1, "maxLength": 200},
+        "es": {"type": "string", "minLength": 1, "maxLength": 200},
+        "fr": {"type": "string", "minLength": 1, "maxLength": 200},
+        "ja": {"type": "string", "minLength": 1, "maxLength": 200},
+        "zh-Hans": {"type": "string", "minLength": 1, "maxLength": 200},
+        "zh-Hant": {"type": "string", "minLength": 1, "maxLength": 200}
+      }
+    }
+  }
+}
