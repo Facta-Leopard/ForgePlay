@@ -7,7 +7,6 @@
     blocked: "compat.statusBlocked",
     unknown: "compat.statusUnknown"
   };
-  const statusPriority = ["playable", "testing", "blocked", "unknown"];
   const sourceMessageKeys = {
     "project-test": "compat.verificationProject",
     "github-issue": "compat.verificationGitHubIssue",
@@ -329,10 +328,7 @@
         ));
       })
       .sort((left, right) => {
-        const statusDifference = (
-          statusPriority.indexOf(left.status)
-          - statusPriority.indexOf(right.status)
-        );
+        const statusDifference = catalog().compareGameGroups(left, right);
         return statusDifference || left.gameIndex - right.gameIndex;
       });
 

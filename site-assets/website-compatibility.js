@@ -3,6 +3,11 @@
 
   // Website-only additions never replace the catalog consumed by the app.
   const statusOrder = ["playable", "testing", "blocked", "unknown"];
+  // Both website lists use the assessed game status, not raw report/file order.
+  // Equal-status games retain their existing relative order.
+  const compareGameGroups = (left, right) => (
+    statusOrder.indexOf(left.status) - statusOrder.indexOf(right.status)
+  );
   const versionParts = (value) => {
     if (typeof value !== "string" || !/^\d+(?:\.\d+){1,2}$/.test(value)) return null;
     const parts = value.split(".").map(Number);
@@ -137,5 +142,5 @@
     }
     return pending;
   };
-  window.ForgePlayWebCatalog = {load, merge, summarize, sortReports, describe, compareVersions};
+  window.ForgePlayWebCatalog = {load, merge, summarize, sortReports, describe, compareVersions, compareGameGroups};
 })();

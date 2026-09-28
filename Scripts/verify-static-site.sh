@@ -1758,9 +1758,9 @@ require_snippet "$ROOT_DIR/index.html" 'data-current-release-download'
 require_snippet "$ROOT_DIR/index.html" 'data-current-release-download-label'
 require_snippet "$ROOT_DIR/index.html" 'data-current-release-link'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/current-release.js?v=20260905-7"'
-require_snippet "$ROOT_DIR/index.html" 'src="site-assets/website-compatibility.js?v=20260907-1"'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/website-compatibility.js?v=20260928-order1"'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/home-experience.css?v=20260905-8'
-require_snippet "$ROOT_DIR/index.html" 'src="site-assets/home-experience.js?v=20260927-firsts1"'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/home-experience.js?v=20260928-order1"'
 require_snippet "$ROOT_DIR/index.html" 'data-release-download'
 require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.releaseNotesButton"'
 for html in index.html why.html license.html privacy.html support.html compatibility.html updates.html site-assets/guide.html site-assets/dlss5.html; do
@@ -1785,7 +1785,7 @@ require_snippet "$ROOT_DIR/index.html" 'data-home-search'
 require_snippet "$ROOT_DIR/index.html" 'data-home-games'
 require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
-require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260908-1"'
+require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260928-order1"'
 require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260919-1"'
 require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260913-1"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
@@ -1819,8 +1819,8 @@ require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count
 require_snippet "$ROOT_DIR/compatibility.html" 'href="site.css?v=20260811-22"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260927-license1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/current-release.js?v=20260905-7"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20260907-1"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260908-1"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20260928-order1"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260928-order1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-card'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-tag'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-meta'
@@ -1835,10 +1835,12 @@ require_snippet "$ROOT_DIR/compatibility.js" 'const catalog = () => window.Forge
 require_snippet "$ROOT_DIR/compatibility.js" 'catalog().load()'
 require_snippet "$ROOT_DIR/compatibility.js" 'catalog().summarize('
 require_snippet "$ROOT_DIR/compatibility.js" 'catalog().sortReports('
+require_snippet "$ROOT_DIR/compatibility.js" 'catalog().compareGameGroups(left, right)'
 require_snippet "$ROOT_DIR/compatibility.js" 'catalog().describe('
 require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebCatalog.load()'
 require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebCatalog.summarize('
 require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebCatalog.sortReports('
+require_snippet "$ROOT_DIR/site-assets/home-experience.js" ').sort(window.ForgePlayWebCatalog.compareGameGroups)'
 require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebCatalog.describe('
 require_snippet "$ROOT_DIR/site-assets/website-compatibility.js" 'site-data/compatibility-games.json'
 require_snippet "$ROOT_DIR/site-assets/website-compatibility.js" 'site-data/website-compatibility-reports.json'
@@ -2172,7 +2174,7 @@ vm.runInNewContext(
   {filename: "website-compatibility.js", timeout: 1000}
 );
 const model = context.window.ForgePlayWebCatalog;
-for (const name of ["load", "merge", "summarize", "sortReports", "describe", "compareVersions"]) {
+for (const name of ["load", "merge", "summarize", "sortReports", "describe", "compareVersions", "compareGameGroups"]) {
   assert.equal(typeof model?.[name], "function", `website catalog must expose ${name}`);
 }
 const merged = model.merge(base, additions);
@@ -2205,6 +2207,21 @@ const publicationOrder = [initialReport, followupReport];
 assert.equal(model.sortReports(publicationOrder)[0], followupReport);
 assert.equal(model.summarize(publicationOrder, "1.2").headlineReports[0], followupReport);
 assert.equal(publicationOrder[0], initialReport, "sorting must not reorder the source catalog");
+
+// Sort assessed games before the homepage takes its first six cards. Preserve
+// history-based/current-release judgments and stable ordering within a status.
+const gameGroups = [
+  {id:"legacy-blocked",status:"blocked"},
+  ...Array.from({length:7},(_,i)=>({id:`playable-${i}`,status:"playable"})),
+  {id:"current-blocked",status:model.summarize([report("1.0","playable"),report("2.0.0","blocked")],"2.0.0").status},
+  {id:"testing",status:"testing"}, {id:"unknown",status:"unknown"}
+];
+const sortedGroups = [...gameGroups].sort(model.compareGameGroups);
+assert.ok(sortedGroups.slice(0,6).every(group=>group.status==="playable"));
+assert.deepEqual(sortedGroups.map(group=>group.id),[
+  ...Array.from({length:7},(_,i)=>`playable-${i}`),"testing","legacy-blocked","current-blocked","unknown"
+]);
+assert.equal(gameGroups[0].id,"legacy-blocked","display sorting must not mutate source order");
 
 const referenceBase = {
   schemaVersion: 2,

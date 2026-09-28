@@ -105,7 +105,7 @@
     }).filter(({game, status}) => (
       (selectedStatus === "all" || status === selectedStatus) &&
       (!query || Object.values(game.titles).some((title) => title.normalize("NFKC").toLocaleLowerCase().includes(query)))
-    ));
+    )).sort(window.ForgePlayWebCatalog.compareGameGroups);
     const visible = expanded || query ? games : games.slice(0, 6);
     const fragment = document.createDocumentFragment();
     visible.forEach(({game, records, status, summary:assessment}, index) => {
