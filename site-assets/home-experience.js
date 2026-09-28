@@ -9,30 +9,6 @@
   const format = (key, count) => message(key).replace("{count}", String(count));
 
 
-  const tabs = [...document.querySelectorAll("[data-feature-tab]")];
-  const panels = [...document.querySelectorAll("[data-feature-panel]")];
-  const activate = (index, focus = false) => {
-    tabs.forEach((tab, position) => {
-      const active = position === index;
-      tab.setAttribute("aria-selected", String(active));
-      tab.tabIndex = active ? 0 : -1;
-      panels[position].hidden = !active;
-    });
-    if (focus) tabs[index].focus();
-  };
-  tabs.forEach((tab, index) => {
-    tab.addEventListener("click", () => activate(index));
-    tab.addEventListener("keydown", (event) => {
-      let next;
-      if (event.key === "ArrowRight") next = (index + 1) % tabs.length;
-      if (event.key === "ArrowLeft") next = (index + tabs.length - 1) % tabs.length;
-      if (event.key === "Home") next = 0;
-      if (event.key === "End") next = tabs.length - 1;
-      if (next === undefined) return;
-      event.preventDefault();
-      activate(next, true);
-    });
-  });
 
   const grid = document.querySelector("[data-home-games]");
   const search = document.querySelector("[data-home-search]");

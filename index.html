@@ -29,7 +29,7 @@
   <link rel="stylesheet" href="site-assets/version-posters.css?v=20260920-1">
   <link rel="stylesheet" href="site-assets/guide.css?v=20260927-try1">
   <link rel="stylesheet" href="site-assets/guide-app.css?v=20260913-1">
-  <script src="site.js?v=20260928-copy1" defer></script>
+  <script src="site.js?v=20260928-firsts2" defer></script>
   <script src="site-assets/site-shell.js?v=20260905-2" defer></script>
   <link rel="stylesheet" href="site-assets/supporters-nav.css?v=20260928-1">
   <script src="site-assets/supporters-nav.js?v=20260928-1" defer></script>
@@ -38,17 +38,17 @@
   <script src="compatibility.js?v=20260928-order1" defer></script>
   <script src="announcements.js?v=20260919-1" defer></script>
   <script src="developer-apps.js?v=20260913-1" defer></script>
-  <script src="site-assets/home-experience.js?v=20260928-order1" defer></script>
+  <script src="site-assets/home-experience.js?v=20260928-firsts2" defer></script>
   <script src="site-assets/version-posters.js?v=20260920-1" defer></script>
   <script src="site-assets/guide.js?v=20260928-arcade1" defer></script>
   <script src="site-assets/guide-app.js?v=20260913-2" defer></script>
   <link rel="stylesheet" href="site-assets/forge-motion.css?v=20260927-try1">
-  <link rel="stylesheet" href="site-assets/firsts.css?v=20260927-1">
-  <script src="site-assets/firsts.js?v=20260927-1" defer></script>
+  <link rel="stylesheet" href="site-assets/firsts.css?v=20260928-2">
+  <script src="site-assets/firsts.js?v=20260928-2" defer></script>
   <link rel="stylesheet" href="site-assets/arcade/art.css?v=20260928-2">
-  <link rel="stylesheet" href="site-assets/arcade/arcade.css?v=20260928-copy1">
+  <link rel="stylesheet" href="site-assets/arcade/arcade.css?v=20260928-firsts2">
   <script src="site-assets/arcade/art.js?v=20260928-2" defer></script>
-  <script src="site-assets/arcade/arcade.js?v=20260928-copy1" defer></script>
+  <script src="site-assets/arcade/arcade.js?v=20260928-firsts2" defer></script>
 </head>
 <body class="fp-site fp-home fp-motion fp-pixel fp-retro" data-page="home">
   <a class="skip-link" href="#main" data-i18n="shared.skip">Skip to content</a>
@@ -56,8 +56,7 @@
     <nav class="fp-nav fp-wrap" aria-label="Primary navigation" data-i18n-aria-label="shared.primaryNav">
       <a class="fp-brand" href="index.html" data-locale-link><img src="site-assets/forgeplay-icon.png?v=20260821-dark-1" width="36" height="36" alt=""><span>ForgePlay</span></a>
       <div class="nav-links fp-links" id="fp-navigation">
-        <a href="index.html#game-mode" data-locale-link data-i18n="shared.navGameMode">Game Mode</a>
-        <a href="site-assets/dlss5.html" data-locale-link data-nav-page="dlss5" data-i18n-aria-label="firsts.title">DLSS5</a>
+        <a href="site-assets/dlss5.html" data-locale-link data-nav-page="dlss5" data-i18n="shared.navFirsts">World firsts</a>
         <a href="compatibility.html" data-locale-link data-nav-page="compatibility" data-i18n="shared.navCompatibility">Compatibility</a>
         <a href="updates.html" data-locale-link data-nav-page="updates" data-i18n="shared.navUpdates">Updates</a>
         <a href="why.html" data-locale-link data-nav-page="why" data-i18n="shared.navWhy">Why</a>
@@ -73,6 +72,8 @@
   </header>
 
   <main id="main">
+    <!-- Old shared links remain valid; firsts.js forwards them to the new page. -->
+    <span id="game-mode" hidden></span><span id="difference" hidden></span>
 <aside class="fp-news-preview arcade-newsboard fp-wrap" data-latest-announcement aria-labelledby="fp-news-title">
         <div class="fp-news-meta"><span class="fp-eyebrow" data-i18n="home.latestLabel">LATEST</span><span data-announcement-date></span></div>
         <h2 id="fp-news-title" data-announcement-title data-i18n="shared.navUpdates">Updates</h2>
@@ -109,12 +110,11 @@
         </div>
       </div>
       <div class="fp-first-links arcade-firsts">
-        <a href="#difference" data-open-evidence><span aria-hidden="true">01</span><span><b data-i18n="home.worldFirstRouteGameMode">macOS GAME MODE</b><span data-i18n="firsts.scopeLink">Scope &amp; evidence ↗</span></span></a>
-        <a href="site-assets/dlss5.html" data-locale-link><span aria-hidden="true">02</span><span><b data-i18n="firsts.title">DLSS5 Emulation</b><span data-i18n="dlss5.detailsLink">Features &amp; evidence ↗</span></span></a>
+        <a href="site-assets/dlss5.html" data-locale-link><span aria-hidden="true">✦</span><span><b data-i18n="firsts.homeLink">World-first claims: evidence ↗</b><span><span data-i18n="home.worldFirstRouteGameMode">macOS GAME MODE</span> · <span data-i18n="firsts.title">DLSS5 Emulation</span></span></span></a>
       </div>
     </section>
     <section class="arcade-release-shelf fp-wrap">
-      <div class="arcade-shelf-title"><h2 data-retro-text="shelf">The update collection</h2><p data-retro-text="shelfNote">Select a poster to see it full size.</p></div>
+      <div class="arcade-shelf-title"><h2 data-retro-text="shelf">Release posters</h2><p data-retro-text="shelfNote">Select a poster to see it full size.</p></div>
       <div class="fp-poster-strip" role="group" aria-label="Version posters" data-i18n-aria-label="posters.title">
         <span class="visually-hidden" data-i18n="posters.hint">Select a poster to view it full size.</span>
         <button class="fp-poster-card" type="button" data-poster-version="1.0" aria-label="View ForgePlay 1.0 poster" aria-haspopup="dialog" aria-controls="fp-poster-dialog">
@@ -152,9 +152,9 @@
         </div>
       </div>
     <nav class="arcade-shortcuts fp-wrap" aria-label="Explore sections" data-retro-aria="jump">
-      <a href="#guide"><span class="arcade-shortcut-number">01</span><strong data-retro-text="guide">Try on the web</strong><span class="arcade-shortcut-mark" aria-hidden="true">✚</span></a>
+      <a href="#guide"><span class="arcade-shortcut-number">01</span><strong data-retro-text="guide">User guide</strong><span class="arcade-shortcut-mark" aria-hidden="true">✚</span></a>
       <a href="#library"><span class="arcade-shortcut-number">02</span><strong data-retro-text="games">Compatibility</strong><span class="arcade-shortcut-mark" aria-hidden="true">▦</span></a>
-      <a href="#game-mode"><span class="arcade-shortcut-number">03</span><strong data-retro-text="features">Features</strong><span class="arcade-shortcut-mark" aria-hidden="true">✦</span></a>
+      <a href="site-assets/dlss5.html" data-locale-link><span class="arcade-shortcut-number">03</span><strong data-i18n="shared.navFirsts">World firsts</strong><span class="arcade-shortcut-mark" aria-hidden="true">✦</span></a>
       <a href="#purpose"><span class="arcade-shortcut-number">04</span><strong data-retro-text="why">Why ForgePlay</strong><span class="arcade-shortcut-mark" aria-hidden="true">↗</span></a>
     </nav>
 
@@ -189,32 +189,6 @@
       <div class="fp-library-footer"><span data-home-result-count role="status"></span><button type="button" class="fp-text-button" data-home-more hidden data-i18n="refresh.more">Show more games</button><a class="fp-text-link" href="compatibility.html" data-locale-link><span data-i18n="home.compatibilityButton">Explore compatibility</span> <span aria-hidden="true">↗</span></a></div>
     </section>
 
-    <section class="fp-feature-section" id="game-mode" aria-labelledby="game-mode-title">
-      <div class="fp-wrap fp-section">
-        <header class="fp-section-head"><div><p class="fp-eyebrow" data-i18n="refresh.featuresLabel">FORGEPLAY FEATURES</p><h2 id="game-mode-title" data-i18n="refresh.featuresTitle">Windows games with macOS Game Mode.</h2></div></header>
-        <div class="fp-feature-shell">
-          <div class="fp-feature-tabs" role="tablist" data-i18n-aria-label="home.gameModePathLabel" aria-label="ForgePlay Game Mode path">
-            <button id="feature-tab-0" type="button" role="tab" aria-selected="true" aria-controls="feature-panel-0" data-feature-tab="0"><span>01</span><span data-i18n="refresh.featureTab1">Game Mode</span></button>
-            <button id="feature-tab-1" type="button" role="tab" aria-selected="false" aria-controls="feature-panel-1" data-feature-tab="1" tabindex="-1"><span>02</span><span data-i18n="refresh.featureTab2">Runtime management</span></button>
-            <button id="feature-tab-2" type="button" role="tab" aria-selected="false" aria-controls="feature-panel-2" data-feature-tab="2" tabindex="-1"><span>03</span><span data-i18n="refresh.featureTab3">Open source</span></button>
-          </div>
-          <div class="fp-feature-panel" id="feature-panel-0" role="tabpanel" aria-labelledby="feature-tab-0" data-feature-panel="0" tabindex="0">
-            <div class="fp-feature-copy"><h3 data-i18n="refresh.feature1Title">macOS gives your game priority.</h3><p data-i18n="refresh.feature1Body">ForgePlay enables macOS Game Mode for Windows games, giving them priority access to CPU and GPU resources and reducing interference from background tasks.</p><a class="fp-text-link" href="https://support.apple.com/105118" target="_blank" rel="noopener noreferrer" data-i18n="home.gameModeAppleLink">Apple’s Game Mode guide ↗</a></div>
-            <div class="fp-mode-visual" aria-hidden="true"><div class="fp-orbit"></div><div class="fp-core"><img src="site-assets/forgeplay-icon.png" alt="" width="88" height="88"></div><span class="fp-orbit-chip fp-chip-cpu">CPU</span><span class="fp-orbit-chip fp-chip-gpu">GPU</span><span class="fp-mode-badge"><i></i>macOS <span data-i18n="refresh.featureTab1">Game Mode</span></span></div>
-            <div class="fp-metric-row"><div><strong>CPU + GPU</strong><span data-i18n="home.gameModeMetric1">Highest-priority access</span></div><div><strong>2×</strong><span data-i18n="home.gameModeMetric2">Bluetooth sampling rate</span></div><div><strong>↓</strong><span data-i18n="home.gameModeMetric3">Background activity</span></div></div>
-          </div>
-          <div class="fp-feature-panel" id="feature-panel-1" role="tabpanel" aria-labelledby="feature-tab-1" data-feature-panel="1" tabindex="0" hidden>
-            <div class="fp-feature-copy"><h3 data-i18n="refresh.feature2Title">Configure your game’s runtime.</h3><p data-i18n="refresh.feature2Body">Manage Wine and graphics backends, and save different settings for each game.</p><a class="fp-text-link" href="support.html" data-locale-link data-i18n="shared.navSupport">Support</a></div>
-            <div class="fp-runtime-visual" aria-hidden="true"><span>Wine</span><span>DirectX</span><span>Metal</span><div class="fp-runtime-hub"><img src="site-assets/forgeplay-icon.png" width="48" height="48" alt=""><strong>ForgePlay</strong></div><span>Steam</span><span>macOS</span><span>Game Host</span></div>
-          </div>
-          <div class="fp-feature-panel" id="feature-panel-2" role="tabpanel" aria-labelledby="feature-tab-2" data-feature-panel="2" tabindex="0" hidden>
-            <div class="fp-feature-copy"><h3 data-i18n="refresh.feature3Title">Three core implementations, published under GPLv3.</h3><p data-i18n="refresh.feature3Body">ForgePlay 2.0.0 (Build 6) is a multi-license distribution. Author-owned code in the three implementations below and the identified build materials are published under GPL-3.0-only. This does not make the whole app GPL or transfer rights in Wine, HyPER-GAN, or Apple components to ForgePlay.</p><a class="fp-text-link" href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-OpenSource.tar.gz" target="_blank" rel="noopener noreferrer" data-i18n="home.sourceLink">Download 2.0.0 corresponding source ↗</a></div>
-            <div class="fp-source-visual" aria-hidden="true"><span class="fp-source-address">Facta-Leopard / <strong>ForgePlay</strong></span><span>⌑ &nbsp; Sources/</span><span>⌑ &nbsp; Native/</span><span>⌑ &nbsp; LICENSES/</span><span>⌑ &nbsp; Scripts/</span><div><i class="fp-live-dot"></i> GPLv3 · LGPL · Open source</div></div>
-          </div>
-        </div>
-        <details class="fp-evidence" id="difference"><summary><span>01 / macOS Game Mode — <span data-i18n="home.worldFirstLabel">THE WORLD’S FIRST*</span></span><span aria-hidden="true">+</span></summary><p data-i18n="home.worldFirstScope">*To our knowledge, the first publicly documented open-source Windows gaming platform designed to carry a live Wine game session through a native macOS Game Mode-capable host, as of 28 July 2026.</p><p data-i18n="home.sourceNote">The current reference is the OpenSource archive attached directly to the 2.0.0 (Build 6) release. The default branch and GitHub’s automatic Source code (zip/tar.gz) snapshots are not substitutes for the distribution’s corresponding source.</p><span class="fp-evidence-route">DIRECTX → METAL → <span data-i18n="home.worldFirstRouteGameMode">macOS GAME MODE</span></span><div class="fp-source-links"><a href="https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0" target="_blank" rel="noopener noreferrer" data-i18n="firsts.gameModeRecord">Game Mode: 1.0 release record ↗</a><a href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.0.0/ForgePlay-2.0.0-6-OpenSource.tar.gz" target="_blank" rel="noopener noreferrer" data-i18n="home.sourceLink">Download 2.0.0 corresponding source ↗</a></div><button type="button" class="fp-text-button" data-close-evidence data-i18n="firsts.close">Close evidence</button></details>
-      </div>
-    </section>
 
     <section class="fp-community fp-wrap" id="support-project" aria-labelledby="fp-community-title">
       <div>

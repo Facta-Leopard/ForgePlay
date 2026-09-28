@@ -5,7 +5,7 @@
     "walkthrough":"빠른 시작 · 화면으로 따라가기", "instruction":"화면의 번호를 누르면 해당 기능의 설명을 볼 수 있습니다.", "captureLabel":"선택한 언어의 실제 앱 화면", "captureNote":"ForgePlay 1.3.1의 실제 앱 화면입니다. 준비 상태와 설정값은 사용 환경에 따라 다를 수 있습니다.",
     "zoom":"화면 크게 보기", "close":"닫기", "previous":"이전", "next":"다음 화면", "flow1":"ForgePlay에서 Steam 열기", "flow2":"Steam 라이브러리로 이동", "flow3":"게임 실행",
     "faqEyebrow":"도움말", "faqTitle":"자주 묻는 질문", "support":"지원 안내 보기", "finishTitle":"게임 실행하기", "finishBody":"Steam 게임은 ‘Steam 실행’, 별도의 Windows 프로그램은 ‘EXE 실행’에서 시작하세요. 문제가 생기면 ‘문제 진단’과 게임 호환성 목록을 확인하세요.",
-    "teaserTitle":"ForgePlay 사용 가이드", "teaserBody":"런처에서 Mac 앱을 열고 게임 설정을 조정하는 과정을 웹에서 살펴보세요. 설치하지 않고도 기본 사용법을 익힐 수 있습니다.", "teaserLink":"사용 가이드 보기",
+    "teaserTitle":"ForgePlay 사용 가이드", "teaserBody":"런처와 Mac 앱 사용법을 설치 없이 익힐 수 있습니다. 게임 옵션을 바꾸고 기능 설명을 확인해 보세요.", "teaserLink":"사용 가이드 보기",
     "chapters":[
       {"name":"초기 설정", "title":"Steam 실행 환경을 준비하세요.", "points":[
         ["사이드바 아래에서 설정 열기","처음 준비하거나 필요한 항목을 다시 확인할 때, 사이드바 아래의 상태 버튼으로 설정 화면을 엽니다."],

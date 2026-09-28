@@ -3,14 +3,14 @@
   if (!document.body.classList.contains('fp-pixel')) return;
 
   const copy = {
-    ko: {stage:'대장간',light:'조명',forge:'망치 휘두르기',shelf:'업데이트의 기록',shelfNote:'포스터를 누르면 크게 볼 수 있습니다.',guide:'웹에서 체험',games:'게임 호환성',features:'주요 기능',why:'만든 이유',jump:'구역 바로가기'},
-    en: {stage:'The forge',light:'Lights',forge:'Swing the hammer',shelf:'The update collection',shelfNote:'Select a poster to see it full size.',guide:'Try on the web',games:'Compatibility',features:'Features',why:'Why ForgePlay',jump:'Explore sections'},
-    de: {stage:'Die Schmiede',light:'Licht',forge:'Hammer schwingen',shelf:'Die Updatesammlung',shelfNote:'Poster auswählen und vergrößern.',guide:'Im Web testen',games:'Kompatibilität',features:'Funktionen',why:'Warum ForgePlay',jump:'Bereiche erkunden'},
-    es: {stage:'La forja',light:'Luz',forge:'Golpear con el martillo',shelf:'La colección de actualizaciones',shelfNote:'Selecciona un póster para ampliarlo.',guide:'Probar en la web',games:'Compatibilidad',features:'Funciones',why:'Por qué ForgePlay',jump:'Explorar secciones'},
-    fr: {stage:'La forge',light:'Lumière',forge:'Frapper au marteau',shelf:'La collection des mises à jour',shelfNote:'Sélectionnez une affiche pour l’agrandir.',guide:'Essayer sur le web',games:'Compatibilité',features:'Fonctionnalités',why:'Pourquoi ForgePlay',jump:'Explorer les rubriques'},
-    ja: {stage:'鍛冶場',light:'照明',forge:'ハンマーを振る',shelf:'アップデートの記録',shelfNote:'ポスターを選ぶと拡大できます。',guide:'Webで体験',games:'ゲーム互換性',features:'主な機能',why:'開発の理由',jump:'セクションへ移動'},
-    'zh-Hans': {stage:'锻造工坊',light:'灯光',forge:'挥动锤子',shelf:'更新记录',shelfNote:'点击海报可放大查看。',guide:'网页体验',games:'游戏兼容性',features:'主要功能',why:'开发初衷',jump:'浏览各个区域'},
-    'zh-Hant': {stage:'鍛造工坊',light:'燈光',forge:'揮動鐵鎚',shelf:'更新紀錄',shelfNote:'點選海報可放大檢視。',guide:'網頁體驗',games:'遊戲相容性',features:'主要功能',why:'開發初衷',jump:'瀏覽各個區域'}
+    ko: {stage:'대장간',light:'조명',forge:'망치 휘두르기',shelf:'버전별 포스터',shelfNote:'포스터를 누르면 크게 볼 수 있습니다.',guide:'사용 가이드',games:'게임 호환성',why:'만든 이유',jump:'바로가기'},
+    en: {stage:'The forge',light:'Lights',forge:'Swing the hammer',shelf:'Release posters',shelfNote:'Select a poster to see it full size.',guide:'User guide',games:'Compatibility',why:'Why ForgePlay',jump:'Quick links'},
+    de: {stage:'Die Schmiede',light:'Licht',forge:'Hammer schwingen',shelf:'Versionsposter',shelfNote:'Poster auswählen und vergrößern.',guide:'Anleitung',games:'Kompatibilität',why:'Warum ForgePlay',jump:'Direktlinks'},
+    es: {stage:'La forja',light:'Luz',forge:'Golpear con el martillo',shelf:'Pósteres de versiones',shelfNote:'Selecciona un póster para ampliarlo.',guide:'Guía de uso',games:'Compatibilidad',why:'Por qué ForgePlay',jump:'Accesos directos'},
+    fr: {stage:'La forge',light:'Lumière',forge:'Frapper au marteau',shelf:'Affiches des versions',shelfNote:'Sélectionnez une affiche pour l’agrandir.',guide:'Guide d’utilisation',games:'Compatibilité',why:'Pourquoi ForgePlay',jump:'Accès rapides'},
+    ja: {stage:'鍛冶場',light:'照明',forge:'ハンマーを振る',shelf:'バージョン別ポスター',shelfNote:'ポスターを選ぶと拡大できます。',guide:'使い方',games:'ゲーム互換性',why:'開発の理由',jump:'クイックリンク'},
+    'zh-Hans': {stage:'锻造工坊',light:'灯光',forge:'挥动锤子',shelf:'版本海报',shelfNote:'点击海报可放大查看。',guide:'使用指南',games:'游戏兼容性',why:'开发初衷',jump:'快捷链接'},
+    'zh-Hant': {stage:'鍛造工坊',light:'燈光',forge:'揮動鐵鎚',shelf:'版本海報',shelfNote:'點選海報可放大檢視。',guide:'使用指南',games:'遊戲相容性',why:'開發初衷',jump:'快速連結'}
   };
   const text = key => (copy[document.documentElement.lang] || copy.en)[key];
   function node(tag, className, value) { const el = document.createElement(tag); if(className)el.className=className; if(value)el.textContent=value; return el; }

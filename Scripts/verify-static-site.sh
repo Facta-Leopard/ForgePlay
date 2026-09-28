@@ -1708,7 +1708,7 @@ for html in index.html why.html license.html privacy.html support.html compatibi
   else
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-14"'
   fi
-  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260928-copy1"'
+  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260928-firsts2"'
   require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.css?v=20260905-7'
   require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.js?v=20260905-2'
   if [[ "$html" != "index.html" ]]; then
@@ -1726,28 +1726,35 @@ for html in index.html why.html license.html privacy.html support.html compatibi
   fi
 done
 
-require_snippet "$ROOT_DIR/index.html" 'id="game-mode"'
-require_snippet "$ROOT_DIR/index.html" 'id="difference"'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'id="game-mode"'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'id="difference"'
+require_snippet "$ROOT_DIR/index.html" 'data-i18n="firsts.homeLink"'
+if grep -Eq 'class="fp-feature-section"|data-feature-tab' "$ROOT_DIR/index.html"; then
+  fail "Game Mode explanation must live on the world-firsts page, not the homepage"
+fi
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'data-feature-tab="0"'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'class="fp-firsts-jump"'
+require_snippet "$ROOT_DIR/site-assets/firsts.js" 'redirectLegacySection'
 require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'id="dlss5-evidence"'
 require_snippet "$ROOT_DIR/index.html" 'data-i18n="firsts.badge"'
 require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'data-i18n="firsts.step2Title"'
 require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'datetime="2026-09-19T10:16:04Z"'
 require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'datetime="2026-09-19T14:35:00Z"'
-require_snippet "$ROOT_DIR/index.html" 'data-close-evidence'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'data-close-evidence'
 require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'updates.html#update-next-update-golden-gate-dlss5'
 if grep -Eq 'dlss5-(before|after)\.jpg|fp-neural-compare' "$ROOT_DIR/site-assets/dlss5.html"; then
   fail "DLSS5 detail page must link to the historical comparison instead of duplicating its images"
 fi
 require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'data-page="dlss5"'
-require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'src="site-assets/firsts.js?v=20260927-1"'
-require_snippet "$ROOT_DIR/index.html" 'src="site-assets/firsts.js?v=20260927-1"'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'src="site-assets/firsts.js?v=20260928-2"'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/firsts.js?v=20260928-2"'
 require_snippet "$ROOT_DIR/index.html" 'id="release"'
-require_snippet "$ROOT_DIR/index.html" 'CPU + GPU'
-require_snippet "$ROOT_DIR/index.html" 'Bluetooth sampling rate'
-require_snippet "$ROOT_DIR/index.html" 'href="https://support.apple.com/105118"'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'CPU + GPU'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'Bluetooth sampling rate'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'href="https://support.apple.com/105118"'
 require_snippet "$ROOT_DIR/index.html" 'macOS 27 or later · Rosetta required'
-require_snippet "$ROOT_DIR/index.html" 'The current reference is the OpenSource archive attached directly to the 2.0.0 (Build 6) release.'
-require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.sourceLink">Download 2.0.0 corresponding source ↗'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'The current reference is the OpenSource archive attached directly to the 2.0.0 (Build 6) release.'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'data-i18n="home.sourceLink">Download 2.0.0 corresponding source ↗'
 require_snippet "$ROOT_DIR/index.html" 'href="why.html"'
 require_snippet "$ROOT_DIR/index.html" 'href="license.html"'
 require_snippet "$ROOT_DIR/index.html" 'CURRENT STABLE RELEASE'
@@ -1760,11 +1767,15 @@ require_snippet "$ROOT_DIR/index.html" 'data-current-release-link'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/current-release.js?v=20260905-7"'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/website-compatibility.js?v=20260928-order1"'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/home-experience.css?v=20260905-8'
-require_snippet "$ROOT_DIR/index.html" 'src="site-assets/home-experience.js?v=20260928-order1"'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/home-experience.js?v=20260928-firsts2"'
 require_snippet "$ROOT_DIR/index.html" 'data-release-download'
 require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.releaseNotesButton"'
 for html in index.html why.html license.html privacy.html support.html compatibility.html updates.html site-assets/guide.html site-assets/dlss5.html; do
   require_snippet "$ROOT_DIR/$html" 'data-nav-page="dlss5"'
+  require_snippet "$ROOT_DIR/$html" 'data-i18n="shared.navFirsts"'
+  if grep -Fq 'href="index.html#game-mode"' "$ROOT_DIR/$html"; then
+    fail "$html must use the combined world-firsts navigation"
+  fi
   require_snippet "$ROOT_DIR/$html" 'property="og:image" content="https://facta-leopard.github.io/ForgePlay/site-assets/forgeplay-icon.png?v=20260927-share1"'
   require_snippet "$ROOT_DIR/$html" 'property="og:image:width" content="1254"'
   require_snippet "$ROOT_DIR/$html" 'property="og:image:height" content="1254"'
@@ -1800,7 +1811,7 @@ require_snippet "$ROOT_DIR/index.html" 'METAL'
 require_snippet "$ROOT_DIR/index.html" 'macOS GAME MODE'
 require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.worldFirstRouteGameMode"'
 require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.sponsorMark"'
-require_snippet "$ROOT_DIR/index.html" 'THE WORLD’S FIRST*'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'THE WORLD’S FIRST*'
 require_snippet "$ROOT_DIR/index.html" 'data-poster-version="2.0.0"'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/version-posters/forgeplay-2.0.0.png"'
 if rg -q 'data-poster-version="DLSS5"|data-poster-preview' "$ROOT_DIR/index.html"; then
@@ -1817,7 +1828,7 @@ require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.logLabel"'
 require_snippet "$ROOT_DIR/compatibility.html" 'issues/new?template=compatibility-report.yml'
 require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/compatibility.html" 'href="site.css?v=20260811-22"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260928-copy1"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260928-firsts2"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/current-release.js?v=20260905-7"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20260928-order1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260928-order1"'
