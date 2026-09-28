@@ -229,7 +229,7 @@ timeline focused on releases and substantive project updates.
 ## Developer app catalog
 
 `developer-apps.json` mirrors the catalog shown inside ForgePlay. Schema version
-2 follows the in-app 1.1 preview catalog recorded by `sourceRevision` and keeps
+2 follows the shared CreatorApps catalog recorded by `sourceRevision` and keeps
 both released apps and in-development projects in data so the homepage can
 render the cards without hardcoding them. Released app entries include:
 
@@ -240,7 +240,7 @@ render the cards without hardcoding them. Released app entries include:
 - Apple Silicon Mac compatibility where the App Store listing supports it.
 
 The `inDevelopment` collection mirrors the app's separate development tab. It
-groups MajorDex, ForgeKit, HareWatch, WarrenNet, Leporis Ascendant,
+groups ForgeKit, HareWatch, WarrenNet, Leporis Ascendant,
 Hazel&Peanut, and GrayLine by Mac, iPad, and iPhone and uses the same bundled
 first-party artwork as the app catalog.
 
@@ -251,9 +251,16 @@ GrayLine target iPhone. All three remain in-development games, without release
 or download links. These localized website descriptions do not modify the
 bundled ForgePlay app catalog.
 
-Keep this catalog synchronized with
-`Sources/ForgePlay/Models/DeveloperAppCatalog.swift` and validate structural
-changes against `developer-apps.schema.json`.
+MajorDex moved to the released Mac app catalog on 2026-09-29 with App Store ID
+`6806726163`. Its official Apple artwork is published as
+`site-assets/developer-apps/majordex-appstore-20260929.png`; the dated filename
+avoids reusing the cached development icon.
+
+Keep this catalog synchronized with `Packages/CreatorApps` through
+`Website/Scripts/export-creator-catalog.py`. `sourceRevision` is the Git blob ID
+of the shared `Resources/catalog.json` input, including reviewed uncommitted
+changes; it is not an app release commit. Validate structural changes against
+`developer-apps.schema.json`.
 
 ## Why ForgePlay exists — full text
 

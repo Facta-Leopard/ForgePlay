@@ -130,7 +130,7 @@ PAGES=(
   site-assets/developer-apps/seolapin.jpg
   site-assets/developer-apps/brambletread.jpg
   site-assets/developer-apps/moonwhisk-vale.jpg
-  site-assets/developer-apps/majordex.png
+  site-assets/developer-apps/majordex-appstore-20260929.png
   site-assets/developer-apps/forgekit.png
   site-assets/developer-apps/harewatch.png
   site-assets/developer-apps/warrennet.png
@@ -1528,9 +1528,9 @@ if developer_apps_database.get("schemaVersion") != 2:
 if developer_apps_schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
     raise SystemExit("developer app schema must use JSON Schema draft 2020-12")
 if developer_apps_database.get("sourceRevision") != (
-    "566e4f4530d489175c512e7e431a343192d510b1"
+    "25d55aa4f1b3c2b912934dc86e01498f2b9e1a01"
 ):
-    raise SystemExit("developer app catalog must identify the in-app 1.1 preview source")
+    raise SystemExit("developer app catalog must identify the reviewed shared catalog blob")
 
 developer_apps = developer_apps_database.get("apps")
 if not isinstance(developer_apps, list):
@@ -1538,6 +1538,7 @@ if not isinstance(developer_apps, list):
 
 expected_developer_app_ids = {
     "forgeplay",
+    "majordex",
     "hopdisk",
     "bunmixer",
     "latchcast",
@@ -1588,18 +1589,30 @@ for app in developer_apps:
         raise SystemExit(f"developer app {identifier} artwork escapes the project root")
     if not artwork_path.is_file() or artwork_path.is_symlink():
         raise SystemExit(f"developer app {identifier} artwork is missing or unsafe")
+    if identifier == "majordex":
+        if (app.get("name"), platform, app_store_id, href, artwork) != (
+            "MajorDex", "mac", "6806726163",
+            "https://apps.apple.com/us/app/majordex/id6806726163",
+            "site-assets/developer-apps/majordex-appstore-20260929.png",
+        ):
+            raise SystemExit("MajorDex must use its released Mac App Store identity")
+        if hashlib.sha256(artwork_path.read_bytes()).hexdigest() != (
+            "d154b6e69baa117d5f7862e1d3169a4374981ef2b890ef43b94a661d15c1d49e"
+        ):
+            raise SystemExit("MajorDex artwork differs from the verified official App Store icon")
 
 if developer_app_ids != expected_developer_app_ids:
     raise SystemExit("developer app catalog does not match the in-app catalog")
-if platform_counts != {"mac": 6, "ipad": 3, "iphone": 2}:
+if platform_counts != {"mac": 7, "ipad": 3, "iphone": 2}:
     raise SystemExit(f"developer app platform counts are invalid: {platform_counts}")
+if [app["id"] for app in developer_apps[:2]] != ["forgeplay", "majordex"]:
+    raise SystemExit("MajorDex must be the first App Store app after ForgePlay")
 
 development_projects = developer_apps_database.get("inDevelopment")
 if not isinstance(development_projects, list):
     raise SystemExit("developer app catalog inDevelopment must be an array")
 
 expected_development_projects = {
-    "majordex": ("MajorDex", "mac", "app"),
     "forgekit": ("ForgeKit", "mac", "app"),
     "harewatch": ("HareWatch", "mac", "utility"),
     "warrennet": ("WarrenNet", "mac", "utility"),
@@ -1611,7 +1624,6 @@ expected_project_homepages = {
     "forgekit": "https://facta-leopard.github.io/ForgeKit/",
 }
 expected_development_artwork_hashes = {
-    "majordex": "3455a1b4ff3afe34df01db3aa6ef187bed7edd57fb670a8629be381aad17bd52",
     "forgekit": "03e6dfc77bf72e442ed85e036997ca340ec00d8e22636d7c9f7117e6b35461c9",
     "harewatch": "6f73ec849436bdeb91398ed7b1b76cd67e2cec3d4782fbfc5de475d73afd5cd0",
     "warrennet": "11ee5bf49f59cd1578644432c167b6b693cef90c910677af908dde93bb5a79d8",
@@ -1670,79 +1682,17 @@ for project in development_projects:
         )
 
 if development_ids != set(expected_development_projects):
-    raise SystemExit("developer projects do not match the in-app 1.1 preview catalog")
+    raise SystemExit("developer projects do not match the shared catalog")
 if development_projection != expected_development_projects:
     raise SystemExit("developer project names, platforms, or kinds differ from the app")
-if development_platform_counts != {"mac": 4, "ipad": 1, "iphone": 2}:
+if development_platform_counts != {"mac": 3, "ipad": 1, "iphone": 2}:
     raise SystemExit(
         f"developer project platform counts are invalid: {development_platform_counts}"
     )
 
-developer_app_source_path = (
-    root / "Sources" / "ForgePlay" / "Models" / "DeveloperAppCatalog.swift"
-)
-if developer_app_source_path.is_file() and not developer_app_source_path.is_symlink():
-    source = developer_app_source_path.read_text(encoding="utf-8")
-    source_blocks = [
-        block
-        for block in re.findall(
-            r"DeveloperAppListing\((.*?)\n        \)(?:,|\n    \])",
-            source,
-            flags=re.DOTALL,
-        )
-        if re.search(r'appStoreID: "[0-9]+"', block)
-    ]
-    app_store_apps = [app for app in developer_apps if app.get("appStoreID")]
-    if len(source_blocks) != len(app_store_apps):
-        raise SystemExit(
-            "website developer app catalog count differs from DeveloperAppCatalog.swift"
-        )
-
-    platform_mapping = {"mac": "mac", "iPad": "ipad", "iPhone": "iphone"}
-    source_apps = {}
-    for block in source_blocks:
-        def source_value(pattern):
-            match = re.search(pattern, block)
-            if not match:
-                raise SystemExit(
-                    f"could not parse DeveloperAppCatalog.swift field: {pattern}"
-                )
-            return match.group(1)
-
-        app_store_id = source_value(r'appStoreID: "([0-9]+)"')
-        source_apps[app_store_id] = {
-            "name": source_value(r'name: "([^"]+)"'),
-            "slug": source_value(r'appStoreSlug: "([^"]+)"'),
-            "platform": platform_mapping[
-                source_value(r"platform: \.([A-Za-z]+)")
-            ],
-            "kind": source_value(r"kind: \.([A-Za-z]+)"),
-            "appleSiliconMacCompatible": ".appleSiliconMac" in block,
-        }
-
-    website_apps = {app["appStoreID"]: app for app in app_store_apps}
-    if set(website_apps) != set(source_apps):
-        raise SystemExit(
-            "website developer app IDs differ from DeveloperAppCatalog.swift"
-        )
-    for app_store_id, source_app in source_apps.items():
-        website_app = website_apps[app_store_id]
-        website_slug = urlsplit(website_app["href"]).path.split("/app/", 1)[1]
-        website_slug = website_slug.rsplit("/id", 1)[0]
-        website_projection = {
-            "name": website_app["name"],
-            "slug": website_slug,
-            "platform": website_app["platform"],
-            "kind": website_app["kind"],
-            "appleSiliconMacCompatible": website_app[
-                "appleSiliconMacCompatible"
-            ],
-        }
-        if website_projection != source_app:
-            raise SystemExit(
-                f"website developer app {app_store_id} differs from "
-                "DeveloperAppCatalog.swift"
-            )
+# Published legacy Swift sources describe their historical release, not the current catalog.
+# The canonical pre-publication export check validates the current Packages/CreatorApps
+# source, all translations, website mappings, and sourceRevision together.
 PY
 
 for html in index.html why.html license.html privacy.html support.html compatibility.html updates.html; do
@@ -1997,7 +1947,7 @@ require_snippet "$ROOT_DIR/site-data/README.md" '`forgeplay_version`'
 require_snippet "$ROOT_DIR/site-data/README.md" 'use `development` for an unreleased development build'
 require_snippet "$ROOT_DIR/site-data/README.md" '`game_version`'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Developer app catalog'
-require_snippet "$ROOT_DIR/site-data/README.md" 'DeveloperAppCatalog.swift'
+require_snippet "$ROOT_DIR/site-data/README.md" 'Packages/CreatorApps'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Why ForgePlay exists — full text'
 require_snippet "$ROOT_DIR/site-data/README.md" 'raw Markdown is never inserted into the page'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Routine compatibility database additions and result changes must not create'
