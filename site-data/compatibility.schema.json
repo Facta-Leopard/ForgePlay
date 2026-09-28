@@ -16,7 +16,7 @@
       "type": "string"
     },
     "schemaVersion": {
-      "const": 2
+      "const": 3
     },
     "updatedAt": {
       "type": "string",
@@ -135,6 +135,7 @@
       "required": [
         "id",
         "gameId",
+        "launchPlatform",
         "testProfileId",
         "status",
         "source",
@@ -148,6 +149,10 @@
         },
         "gameId": {
           "$ref": "#/$defs/identifier"
+        },
+        "launchPlatform": {
+          "enum": ["steam", "battlenet", "epic", "stove", "exe", "unknown"],
+          "description": "Reported execution platform, not the renderer, hardware platform or purchase source."
         },
         "testProfileId": {
           "anyOf": [

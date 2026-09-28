@@ -1,0 +1,19 @@
+/* Platform labels are text, independent of the green/yellow/red result colors. */
+.fp-site .fp-platform-badge { display:inline-flex; align-items:center; width:fit-content; max-width:100%; margin:7px 0 2px; padding:4px 8px; border:1px solid #94815a; border-radius:2px; background:#211e16; color:#e6d4af; font-size:11px; font-weight:600; line-height:1.35; overflow-wrap:anywhere; }
+.fp-site .fp-platform-badge[data-launch-platform=unknown] { border-style:dashed; color:#c2bbab; }
+.fp-site .compatibility-record-cell .fp-platform-badge { font-size:11px; }
+.fp-platform-control { display:grid; flex:0 1 190px; min-width:150px; gap:5px; font-size:11px; color:var(--fp-muted); }
+.fp-platform-control select { width:100%; min-height:40px; padding:8px 12px; border:1px solid #706046; border-radius:2px; background:#1e2118; color:#e9dfc5; font:inherit; font-size:12px; }
+.fp-platform-control select:focus-visible { outline:2px solid #e4bd7e; outline-offset:2px; }
+.fp-site .fp-platform-scope { margin:12px 0 18px; color:var(--fp-muted); font-size:12px; line-height:1.6; }
+.fp-site .compatibility-toolbar { grid-template-columns:minmax(0,1fr) minmax(155px,220px) minmax(155px,240px); }
+@media(max-width:850px) {
+  .fp-library-toolbar { flex-wrap:wrap; }
+  .fp-library-toolbar .fp-search { flex-basis:100%; }
+  .fp-platform-control { flex:1 1 175px; }
+  .fp-site .compatibility-toolbar { grid-template-columns:1fr 1fr; }
+  .fp-site .compatibility-toolbar>label:first-child { grid-column:1/-1; }
+}
+@media(max-width:520px) {
+  .fp-site .compatibility-toolbar { grid-template-columns:1fr; }
+}

@@ -155,7 +155,25 @@
   };
   const catalogView = parent => {
     const box=card(U("게임 호환성 DB"),helpText("catalog"));note(box,D("catalog"));const search=node("input");search.type="search";search.placeholder=W("compat.searchPlaceholder");search.setAttribute("aria-label",W("compat.searchPlaceholder"));const list=node("div","sim-catalog");
-    const update=()=>{list.replaceChildren();if(!catalog){note(list,W("compat.dataError"));return;}let count=0;for(const game of catalog.games.filter(g=>Object.values(g.titles).some(t=>t.toLowerCase().includes(search.value.toLowerCase())))){const reports=catalog.reports.filter(r=>r.gameId===game.id);const assessment=window.ForgePlayWebCatalog.summarize(reports,catalog.currentRelease?.marketingVersion);const description=window.ForgePlayWebCatalog.describe(assessment,W);const item=node("details");item.dataset.tone=assessment.tone;const summary=node("summary");summary.append(node("strong","",game.titles[locale()]||game.titles.en),node("span","",description.statusText+" · "+description.versionText));item.append(summary);for(const report of window.ForgePlayWebCatalog.sortReports(reports))note(item,`ForgePlay ${report.forgePlayVersion||"—"} — ${report.notes?.[locale()]||report.notes?.en||""}`);list.append(item);count++;}if(!count)note(list,W("compat.empty"));};search.addEventListener("input",update);box.append(search,list);update();parent.append(box);
+    const model=window.ForgePlayWebCatalog, platformRow=node('label','sim-field'), platform=node('select');
+    platform.setAttribute('aria-label',W('compat.platformLabel'));
+    for(const value of ['all',...model.platforms]){const option=node('option','',value==='all'?W('compat.platformAll'):model.platformLabel(value,W));option.value=value;platform.append(option);}
+    platform.value=state.catalogPlatform||'all';platformRow.append(node('span','',W('compat.platformLabel')),platform);
+    const update=()=>{
+      list.replaceChildren();if(!catalog){note(list,W("compat.dataError"));return;}
+      const groups=model.platformGroups(catalog,platform.value);
+      const matched=groups.filter(group=>Object.values(group.game.titles).some(t=>t.toLowerCase().includes(search.value.toLowerCase())));
+      for(const {game,launchPlatform,reports,summary:assessment} of matched){
+        const description=model.describe(assessment,W),item=node('details');item.dataset.tone=assessment.tone;item.dataset.launchPlatform=launchPlatform;
+        const summary=node('summary'),mark=node('span','fp-platform-badge',model.platformLabel(launchPlatform,W));mark.dataset.launchPlatform=launchPlatform;
+        summary.append(node('strong','',game.titles[locale()]||game.titles.en),mark,node('span','',description.statusText+' · '+description.versionText));item.append(summary);
+        for(const report of model.sortReports(reports))note(item,`ForgePlay ${report.forgePlayVersion||'—'} — ${report.notes?.[locale()]||report.notes?.en||''}`);
+        list.append(item);
+      }
+      if(!matched.length)note(list,W(platform.value!=='all'&&!groups.length?'compat.platformEmpty':'compat.empty'));
+    };
+    search.addEventListener('input',update);platform.addEventListener('change',()=>{state.catalogPlatform=platform.value;update();});
+    box.append(search,platformRow,list);update();parent.append(box);
   };
   const diagnosticReply = question => /FG|DLSS|frame|프레임|フレーム|帧|影格/i.test(question)?"replyGraphics":/library|라이브러리|外|储存|儲存/i.test(question)?"replyStorage":"replyGeneral";
   const diagnosticsView = parent => {

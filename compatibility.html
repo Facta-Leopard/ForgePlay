@@ -26,18 +26,19 @@
   <link rel="stylesheet" href="site.css?v=20260811-22">
   <link rel="stylesheet" href="site-assets/site-shell.css?v=20260905-7">
   <link rel="stylesheet" href="site-assets/page-experience.css?v=20260905-7">
-  <script src="site.js?v=20260928-nav3" defer></script>
+  <script src="site.js?v=20260929-platform1" defer></script>
   <script src="site-assets/site-shell.js?v=20260905-2" defer></script>
   <link rel="stylesheet" href="site-assets/supporters-nav.css?v=20260928-1">
   <script src="site-assets/supporters-nav.js?v=20260928-1" defer></script>
   <script src="site-assets/current-release.js?v=20260905-7" defer></script>
-  <script src="site-assets/website-compatibility.js?v=20260928-order1" defer></script>
-  <script src="compatibility.js?v=20260928-order1" defer></script>
+  <script src="site-assets/website-compatibility.js?v=20260929-platform1" defer></script>
+  <script src="compatibility.js?v=20260929-platform1" defer></script>
   <link rel="stylesheet" href="site-assets/forge-motion.css?v=20260923-copy1">
   <link rel="stylesheet" href="site-assets/arcade/art.css?v=20260928-2">
   <link rel="stylesheet" href="site-assets/arcade/arcade.css?v=20260928-firsts2">
   <script src="site-assets/arcade/art.js?v=20260928-2" defer></script>
   <script src="site-assets/arcade/arcade.js?v=20260928-firsts2" defer></script>
+  <link rel="stylesheet" href="site-assets/compatibility-platforms.css?v=20260929-1">
 </head>
 <body class="fp-site compatibility-page fp-motion fp-pixel fp-retro" data-page="compatibility">
   <a class="skip-link" href="#main" data-i18n="shared.skip">Skip to content</a>
@@ -105,6 +106,17 @@
           <input type="search" autocomplete="off" data-compatibility-search
                  data-i18n-placeholder="compat.searchPlaceholder" placeholder="Game title">
         </label>
+        <label><span data-i18n="compat.platformLabel">Launch platform</span>
+          <select data-compatibility-platform>
+            <option value="all" data-i18n="compat.platformAll">All platforms</option>
+            <option value="steam">Steam</option>
+            <option value="battlenet">Battle.net</option>
+            <option value="epic">Epic Games</option>
+            <option value="stove">STOVE</option>
+            <option value="exe" data-i18n="compat.platformEXE">Direct EXE</option>
+            <option value="unknown" data-i18n="compat.platformUnknown">Unknown platform</option>
+          </select>
+        </label>
         <label>
           <span data-i18n="compat.filterLabel">Game Mode status</span>
           <select data-compatibility-status>
@@ -117,6 +129,7 @@
       </div>
 
       <div class="compatibility-ledger">
+        <p class="fp-platform-scope" data-i18n="compat.platformScope">Compatibility can differ between launch platforms, even for the same game.</p>
         <p class="fp-catalog-scope" data-website-reports-scope data-i18n="compat.webReportsScope">Some reports appear on the website first and are not yet included in the app’s compatibility database.</p>
         <div class="compatibility-ledger-head" aria-hidden="true">
           <span data-i18n="compat.columnGame">Game</span>

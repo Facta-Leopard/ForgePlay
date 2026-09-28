@@ -3,6 +3,12 @@
 
   // Website-only additions never replace the catalog consumed by the app.
   const statusOrder = ["playable", "testing", "blocked", "unknown"];
+  const platforms = Object.freeze(["steam", "battlenet", "epic", "stove", "exe", "unknown"]);
+  const platformOf = report => platforms.includes(report.launchPlatform) ? report.launchPlatform : "unknown";
+  const platformLabel = (platform, message) => ({
+    steam:"Steam", battlenet:"Battle.net", epic:"Epic Games", stove:"STOVE",
+    exe:message("compat.platformEXE"), unknown:message("compat.platformUnknown")
+  }[platform] || message("compat.platformUnknown"));
   // Both website lists use the assessed game status, not raw report/file order.
   // Equal-status games retain their existing relative order.
   const compareGameGroups = (left, right) => (
@@ -78,11 +84,18 @@
   };
 
   const merge = (base, additions) => {
-    if (base?.schemaVersion !== 2 || additions?.schemaVersion !== 1
+    const supportedPair = (base?.schemaVersion === 2 && additions?.schemaVersion === 1)
+      || (base?.schemaVersion === 3 && additions?.schemaVersion === 3);
+    if (!supportedPair
       || !Array.isArray(base.games) || !Array.isArray(base.reports) || !Array.isArray(base.testProfiles)
       || !Array.isArray(additions.reports) || !Array.isArray(additions.testProfiles)
       || !/^\d{4}-\d{2}-\d{2}$/.test(additions.updatedAt || "")) {
       throw new Error("Invalid website compatibility data");
+    }
+    if (base.schemaVersion === 3) {
+      for (const report of [...base.reports, ...additions.reports]) {
+        if (!platforms.includes(report?.launchPlatform)) throw new Error("Invalid schema-3 launch platform");
+      }
     }
     const games = new Set(base.games.map((game) => game.id));
     const profiles = new Set(base.testProfiles.map((profile) => profile.id));
@@ -124,6 +137,27 @@
     };
   };
 
+
+  // Partition first, assess the release/status second. A Steam result must never
+  // override a Battle.net result for the same title (or vice versa).
+  const platformGroups = (database, selectedPlatform = "all") => {
+    if (selectedPlatform !== "all" && !platforms.includes(selectedPlatform)) throw new Error("Invalid platform filter");
+    const grouped = new Map();
+    for (const report of database.reports) {
+      const launchPlatform = platformOf(report);
+      const key = `${report.gameId}:${launchPlatform}`;
+      if (!grouped.has(key)) grouped.set(key, []);
+      grouped.get(key).push(report);
+    }
+    return database.games.flatMap((game, gameIndex) => platforms.flatMap(launchPlatform => {
+      const key = `${game.id}:${launchPlatform}`;
+      const reports = grouped.get(key) || [];
+      if (!reports.length || (selectedPlatform !== "all" && launchPlatform !== selectedPlatform)) return [];
+      const summary = summarize(reports, database.currentRelease?.marketingVersion);
+      return [{key, game, gameIndex, launchPlatform, reports, summary, status:summary.status}];
+    })).sort(compareGameGroups);
+  };
+
   const fetchJSON = async (path) => {
     const url = new URL(path, document.baseURI);
     url.searchParams.set("refresh", Date.now().toString());
@@ -142,5 +176,6 @@
     }
     return pending;
   };
-  window.ForgePlayWebCatalog = {load, merge, summarize, sortReports, describe, compareVersions, compareGameGroups};
+  window.ForgePlayWebCatalog = {load, merge, summarize, sortReports, describe, compareVersions, compareGameGroups,
+    platforms, platformOf, platformLabel, platformGroups};
 })();

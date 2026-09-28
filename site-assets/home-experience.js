@@ -12,6 +12,7 @@
 
   const grid = document.querySelector("[data-home-games]");
   const search = document.querySelector("[data-home-search]");
+  const platformFilter = document.querySelector("[data-compatibility-platform]");
   const filters = [...document.querySelectorAll("[data-home-filter]")];
   const more = document.querySelector("[data-home-more]");
   const resultCount = document.querySelector("[data-home-result-count]");
@@ -37,8 +38,12 @@
     parent.append(element);
     return element;
   };
-  const gameRecords = (game) => catalog.reports.filter((report) => report.gameId === game.id);
-  const gameSummary = (records) => window.ForgePlayWebCatalog.summarize(records, catalog.currentRelease?.marketingVersion);
+  const platformBadge = (parent, platform) => {
+    const label = window.ForgePlayWebCatalog.platformLabel(platform, message);
+    const badge = appendText(parent, "span", "fp-platform-badge", label);
+    badge.dataset.launchPlatform = platform;
+    badge.setAttribute("aria-label", message("compat.platformLabel") + ": " + label);
+  };
 
   const renderRecord = (parent, report) => {
     const record = document.createElement("div");
@@ -53,6 +58,7 @@
     const version = report.forgePlayVersion === "development" ? message("compat.versionDevelopment") : report.forgePlayVersion || message("refresh.unknownVersion");
     appendText(heading, "span", "", "ForgePlay " + version + " · " + message(statusKey[report.status] || statusKey.unknown));
     record.append(heading);
+    platformBadge(record, window.ForgePlayWebCatalog.platformOf(report));
     appendText(record, "p", "", localized(report.notes) || message("refresh.noReportNotes"));
     const attribution = [
       message(report.websiteDeveloperNote || report.reporter === "ForgePlay 개발자"
@@ -74,30 +80,30 @@
       return;
     }
     const query = search.value.trim().normalize("NFKC").toLocaleLowerCase();
-    const games = catalog.games.map((game) => {
-      const records = gameRecords(game);
-      const summary = gameSummary(records);
-      return {game, records, status:summary.status, summary};
-    }).filter(({game, status}) => (
+    const platform = platformFilter?.value || "all";
+    const platformGames = window.ForgePlayWebCatalog.platformGroups(catalog, platform);
+    const games = platformGames.map(group => ({...group, records:group.reports})).filter(({game, status}) => (
       (selectedStatus === "all" || status === selectedStatus) &&
       (!query || Object.values(game.titles).some((title) => title.normalize("NFKC").toLocaleLowerCase().includes(query)))
     )).sort(window.ForgePlayWebCatalog.compareGameGroups);
     const visible = expanded || query ? games : games.slice(0, 6);
     const fragment = document.createDocumentFragment();
-    visible.forEach(({game, records, status, summary:assessment}, index) => {
+    visible.forEach(({key, game, launchPlatform, records, status, summary:assessment}, index) => {
       const description = window.ForgePlayWebCatalog.describe(assessment, message);
       const details = document.createElement("details");
       details.className = "fp-game";
       details.dataset.status = status;
       details.dataset.tone = assessment.tone;
       details.dataset.gameId = game.id;
-      details.open = openGameId === game.id;
+      details.dataset.launchPlatform = launchPlatform;
+      details.open = openGameId === key;
       const summary = document.createElement("summary");
       appendText(summary, "span", "fp-game-number", String(index + 1).padStart(2, "0"));
       const copy = document.createElement("div");
       const title = locale() === "ko" ? game.titles.ko : game.titles.en;
       appendText(copy, "h3", "", title);
       if (locale() === "ko" && title !== game.titles.en) appendText(copy, "span", "fp-game-official", game.titles.en);
+      platformBadge(copy, launchPlatform);
       appendText(copy, "p", "fp-game-tested-version", description.versionText);
       const meta = document.createElement("div");
       meta.className = "fp-game-meta";
@@ -115,24 +121,25 @@
       details.append(reports);
       details.addEventListener("toggle", () => {
         if (details.open) {
-          openGameId = game.id;
+          openGameId = key;
           grid.querySelectorAll("details[open]").forEach((other) => {
             if (other !== details) other.open = false;
           });
-        } else if (openGameId === game.id) openGameId = null;
+        } else if (openGameId === key) openGameId = null;
       });
       fragment.append(details);
     });
-    if (!visible.length) appendText(fragment, "p", "fp-game-empty", message("refresh.noResults"));
+    if (!visible.length) appendText(fragment, "p", "fp-game-empty", message(platform !== "all" && !platformGames.length ? "compat.platformEmpty" : "refresh.noResults"));
     grid.replaceChildren(fragment);
     grid.setAttribute("aria-busy", "false");
-    resultCount.textContent = format("refresh.games", games.length);
+    resultCount.textContent = format("refresh.games", new Set(games.map(group => group.game.id)).size);
     more.hidden = games.length <= 6 || Boolean(query);
     more.textContent = message(expanded ? "refresh.less" : "refresh.more");
     filters.forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.homeFilter === selectedStatus)));
   };
 
   search.addEventListener("input", () => { openGameId = null; renderGames(); });
+  platformFilter?.addEventListener("change", () => { openGameId = null; expanded = false; renderGames(); });
   filters.forEach((button) => button.addEventListener("click", () => {
     selectedStatus = button.dataset.homeFilter;
     expanded = false;

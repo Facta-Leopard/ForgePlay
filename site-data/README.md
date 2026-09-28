@@ -1,5 +1,16 @@
 # ForgePlay compatibility data
 
+## Local management locations
+
+In the maintainer workspace, edit the base catalog and website-only reports in
+`Website/CompatibilityDB/`, notices in `Website/Announcements/`, and public
+supporter names in `Website/Supporters/`. `Website/publication.json` assembles
+them at the unchanged public `site-data/` URLs described below. Other public
+templates and snapshots live in `Website/Public/`. App release snapshots are
+separate; a website-only update does not automatically replace app resources.
+Shared creator metadata is owned by `Packages/CreatorApps`, with website-only
+presentation metadata in `Website/CreatorApps/`.
+
 ## Release license evidence
 
 The current license page follows the 2.0.0 (Build 6) source archive and the
@@ -48,9 +59,14 @@ boundary, and release workflow are documented in
 
 ## Compatibility-only update workflow
 
+Launch-platform classification is stored directly in each schema-3 report's
+`launchPlatform` field. See [the platform contract](compatibility-platforms.md)
+for the six values, unknown fallback, game-platform grouping and launcher handoff.
+Every new report must specify one of the six values, using `unknown` when not reported.
+
 The app-shared compatibility catalog has one source of truth:
-`site-data/compatibility-games.json`. Updates to that catalog affect both the
-app and website and must follow its immutable publication contract below.
+`site-data/compatibility-games.json`. Updates affect the website and schema-3
+launchers and must follow its immutable publication contract below.
 
 For compatibility updates that do not promote website-first reports:
 
@@ -63,8 +79,10 @@ website requests the compatibility database independently of asset versions,
 and both the homepage count and compatibility rows are derived from the JSON.
 New data appears the next time the page is loaded or refreshed.
 
-The ForgePlay app consumes only this base JSON through an explicit refresh.
-Its cache, rollback, same-date conflict, failure-preservation, and coordinated
+Updated launchers consume this schema-3 base JSON through an explicit refresh at
+the existing URL. The user chose a direct schema migration, without a separate
+public legacy feed or platform-association file. All new authoring uses this catalog.
+The original cache, rollback, same-date conflict, failure-preservation, and coordinated
 schema rules are documented in
 [`docs/compatibility-catalog-consumer-contract.md`](https://github.com/Facta-Leopard/ForgePlay/blob/main/docs/compatibility-catalog-consumer-contract.md).
 Under the current contract, a published `updatedAt` identifies one immutable
@@ -143,6 +161,7 @@ One spreadsheet row should represent one test report. The preferred columns are:
 | `title_en` | yes for a new game | `Stellar Blade` |
 | `title_ko` | yes for a new game; include Hangul | `스텔라 블레이드` |
 | `status` | yes | `playable`, `testing`, `blocked`, or `unknown` |
+| `launch_platform` | yes in schema 3 | `steam`, `battlenet`, `epic`, `stove`, `exe`, or `unknown`; do not infer a missing platform |
 | `forgeplay_version` | optional | `1.1`; use `development` for an unreleased development build; leave blank when not reported |
 | `game_version` | optional | Game version, patch, or build; leave blank when not reported |
 | `device_id` | yes; leave blank if not reported | `apple-silicon-m4-pro-24gb` |

@@ -32,13 +32,13 @@
   const list = document.querySelector("[data-compatibility-list]");
   const search = document.querySelector("[data-compatibility-search]");
   const statusFilter = document.querySelector("[data-compatibility-status]");
+  const platformFilter = document.querySelector("[data-compatibility-platform]");
   const emptyState = document.querySelector("[data-compatibility-empty]");
   const errorState = document.querySelector("[data-compatibility-error]");
   let database = null;
 
   const site = () => window.ForgePlaySite;
   const catalog = () => window.ForgePlayWebCatalog;
-  const currentVersion = () => database?.currentRelease?.marketingVersion || null;
   const locale = () => site()?.getLocale() || document.documentElement.lang || "en";
   const message = (key, fallback = "") => site()?.message(key) || fallback;
 
@@ -103,6 +103,13 @@
     cell.className = className;
     cell.dataset.label = label;
     return cell;
+  };
+
+  const appendPlatformBadge = (parent, platform) => {
+    const label = catalog().platformLabel(platform, message);
+    const badge = appendTextElement(parent, "span", "fp-platform-badge", label);
+    badge.dataset.launchPlatform = platform;
+    badge.setAttribute("aria-label", message("compat.platformLabel", "Launch platform") + ": " + label);
   };
 
   const reportNote = (report, selectedLocale) => {
@@ -186,6 +193,7 @@
       message(statusMessageKeys[report.status], report.status)
     );
     status.dataset.status = report.status;
+    appendPlatformBadge(statusCell, catalog().platformOf(report));
 
     const forgePlayVersionCell = makeRecordCell(
       "compatibility-record-version-cell",
@@ -261,14 +269,8 @@
 
   const updateSummary = () => {
     if (!database) return;
-    const reportsByGame = new Map();
-    database.reports.forEach((report) => {
-      if (!reportsByGame.has(report.gameId)) reportsByGame.set(report.gameId, []);
-      reportsByGame.get(report.gameId).push(report);
-    });
-    const playableCount = [...reportsByGame.values()].filter((reports) => (
-      catalog().summarize(reports, currentVersion()).status === "playable"
-    )).length;
+    const playableCount = new Set(catalog().platformGroups(database, platformFilter?.value || "all")
+      .filter(group => group.status === "playable").map(group => group.game.id)).size;
     document.querySelectorAll("[data-compatibility-count]").forEach((element) => {
       element.textContent = String(playableCount);
     });
@@ -293,32 +295,10 @@
     const profiles = new Map(
       database.testProfiles.map((profile) => [profile.id, profile])
     );
-    const recordsByGame = new Map();
-
-    database.reports.forEach((report, databaseIndex) => {
-      if (!recordsByGame.has(report.gameId)) recordsByGame.set(report.gameId, []);
-      recordsByGame.get(report.gameId).push({
-        report,
-        profile: profiles.get(report.testProfileId),
-        databaseIndex
-      });
-    });
-
-    const groups = database.games
-      .map((game, gameIndex) => {
-        const records = recordsByGame.get(game.id) || [];
-        const summary = catalog().summarize(
-          records.map(({ report }) => report),
-          currentVersion()
-        );
-        return {
-          game,
-          gameIndex,
-          records,
-          summary,
-          status: summary.status
-        };
-      })
+    const selectedPlatform = platformFilter?.value || "all";
+    const platformGames = catalog().platformGroups(database, selectedPlatform);
+    const groups = platformGames
+      .map(group => ({...group, records:group.reports.map(report => ({report, profile:profiles.get(report.testProfileId)}))}))
       .filter(({ game, records, status }) => {
         if (!records.length) return false;
         if (selectedStatus !== "all" && status !== selectedStatus) return false;
@@ -333,7 +313,7 @@
       });
 
     const fragment = document.createDocumentFragment();
-    groups.forEach(({ game, records, status, summary }, index) => {
+    groups.forEach(({ game, launchPlatform, records, status, summary }, index) => {
       const sortedRecords = sortRecords(records);
       const blockedRecords = sortedRecords.filter(({ report }) => (
         report.status === "blocked"
@@ -349,6 +329,7 @@
       entry.dataset.status = status;
       entry.dataset.tone = summary.tone;
       entry.dataset.gameId = game.id;
+      entry.dataset.launchPlatform = launchPlatform;
 
       const row = document.createElement("div");
       row.className = "compatibility-row";
@@ -374,6 +355,7 @@
           game.titles.en
         );
       }
+      appendPlatformBadge(titleWrap, launchPlatform);
       appendTextElement(
         titleWrap,
         "span",
@@ -394,7 +376,7 @@
       );
       statusBadge.dataset.status = status;
 
-      const panelId = "compatibility-records-" + game.id;
+      const panelId = "compatibility-records-" + game.id + "-" + launchPlatform;
       let blockedButton = null;
       if (blockedRecords.length) {
         blockedButton = document.createElement("button");
@@ -599,7 +581,10 @@
 
     list.replaceChildren(fragment);
     list.setAttribute("aria-busy", "false");
-    if (emptyState) emptyState.hidden = groups.length !== 0;
+    if (emptyState) {
+      emptyState.hidden = groups.length !== 0;
+      emptyState.textContent = message(selectedPlatform !== "all" && !platformGames.length ? "compat.platformEmpty" : "compat.empty");
+    }
   };
 
   const load = async () => {
@@ -626,6 +611,7 @@
 
   search?.addEventListener("input", render);
   statusFilter?.addEventListener("change", render);
+  platformFilter?.addEventListener("change", render);
   document.addEventListener("forgeplay:localechange", render);
   load();
 })();

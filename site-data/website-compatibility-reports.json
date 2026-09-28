@@ -1,12 +1,13 @@
 {
   "$schema": "./website-compatibility-reports.schema.json",
-  "schemaVersion": 1,
-  "updatedAt": "2026-09-08",
+  "schemaVersion": 3,
+  "updatedAt": "2026-09-29",
   "testProfiles": [],
   "reports": [
     {
       "id": "bodycam-forgeplay-1-2-followup-00-20260907",
       "gameId": "bodycam",
+      "launchPlatform": "steam",
       "testProfileId": "apple-silicon-m5-pro-48gb-tahoe-26-6-2",
       "forgePlayVersion": "1.2",
       "gameVersion": null,

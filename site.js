@@ -15,6 +15,12 @@
 
   const localeData = {
     en: {
+      "compat.platformLabel": "Launch platform",
+      "compat.platformAll": "All platforms",
+      "compat.platformEXE": "Direct EXE",
+      "compat.platformUnknown": "Unknown platform",
+      "compat.platformScope": "Compatibility can differ between launch platforms, even for the same game.",
+      "compat.platformEmpty": "No reports have been submitted for this platform.",
       "shared.navFirsts": "World firsts",
       "shared.navGuide": "User guide",
       "firsts.pageIntro": "Explore macOS Game Mode and DLSS5 Emulation, with public records supporting ForgePlay’s two world-first claims.",
@@ -399,6 +405,12 @@
       "support.updated": "Updated 28 July 2026."
     },
     ko: {
+      "compat.platformLabel": "실행 플랫폼",
+      "compat.platformAll": "전체 플랫폼",
+      "compat.platformEXE": "EXE 직접 실행",
+      "compat.platformUnknown": "플랫폼 미확인",
+      "compat.platformScope": "같은 게임도 실행 플랫폼에 따라 결과가 다를 수 있습니다.",
+      "compat.platformEmpty": "선택한 플랫폼으로 접수된 제보가 없습니다.",
       "shared.navFirsts": "세계 최초",
       "shared.navGuide": "사용 가이드",
       "firsts.pageIntro": "macOS 게임 모드와 DLSS5 에뮬레이팅을 소개하고, 세계 최초 근거와 공개 기록을 함께 안내합니다.",
@@ -783,6 +795,12 @@
       "support.updated": "2026년 7월 28일 기준."
     },
     ja: {
+      "compat.platformLabel": "実行プラットフォーム",
+      "compat.platformAll": "すべて",
+      "compat.platformEXE": "EXEを直接実行",
+      "compat.platformUnknown": "プラットフォーム不明",
+      "compat.platformScope": "同じゲームでも、実行プラットフォームによって動作状況が異なる場合があります。",
+      "compat.platformEmpty": "このプラットフォームでの報告はまだありません。",
       "shared.navFirsts": "世界初",
       "shared.navGuide": "使い方",
       "firsts.pageIntro": "macOSゲームモードとDLSS5エミュレーションの仕組み、世界初とする根拠、公開記録を紹介します。",
@@ -1167,6 +1185,12 @@
       "support.updated": "2026年7月28日更新。"
     },
     "zh-Hans": {
+      "compat.platformLabel": "运行平台",
+      "compat.platformAll": "全部平台",
+      "compat.platformEXE": "直接运行 EXE",
+      "compat.platformUnknown": "平台不明",
+      "compat.platformScope": "同一款游戏在不同运行平台上的兼容性可能不同。",
+      "compat.platformEmpty": "尚无该平台的反馈记录。",
       "shared.navFirsts": "世界首创",
       "shared.navGuide": "使用指南",
       "firsts.pageIntro": "介绍 macOS 游戏模式与 DLSS5 模拟的实现方式，以及两项世界首创主张的公开记录和依据。",
@@ -1551,6 +1575,12 @@
       "support.updated": "更新于 2026 年 7 月 28 日。"
     },
     "zh-Hant": {
+      "compat.platformLabel": "執行平台",
+      "compat.platformAll": "所有平台",
+      "compat.platformEXE": "直接執行 EXE",
+      "compat.platformUnknown": "平台不明",
+      "compat.platformScope": "同一款遊戲在不同執行平台上的相容性可能不同。",
+      "compat.platformEmpty": "尚無此平台的回報紀錄。",
       "shared.navFirsts": "世界首創",
       "shared.navGuide": "使用指南",
       "firsts.pageIntro": "介紹 macOS 遊戲模式與 DLSS5 模擬的實作方式，以及兩項世界首創主張的公開紀錄與依據。",
@@ -1935,6 +1965,12 @@
       "support.updated": "更新於 2026 年 7 月 28 日。"
     },
     de: {
+      "compat.platformLabel": "Startplattform",
+      "compat.platformAll": "Alle Plattformen",
+      "compat.platformEXE": "EXE direkt starten",
+      "compat.platformUnknown": "Plattform unbekannt",
+      "compat.platformScope": "Auch beim selben Spiel kann die Kompatibilität je nach Startplattform unterschiedlich sein.",
+      "compat.platformEmpty": "Für diese Plattform liegen noch keine Berichte vor.",
       "shared.navFirsts": "Weltneuheiten",
       "shared.navGuide": "Anleitung",
       "firsts.pageIntro": "Erfahre, wie der macOS-Spielmodus und die DLSS5-Emulation funktionieren und welche öffentlichen Belege die beiden Weltneuheiten von ForgePlay stützen.",
@@ -2319,6 +2355,12 @@
       "support.updated": "Aktualisiert am 28. Juli 2026."
     },
     es: {
+      "compat.platformLabel": "Plataforma de inicio",
+      "compat.platformAll": "Todas las plataformas",
+      "compat.platformEXE": "Ejecutar EXE directamente",
+      "compat.platformUnknown": "Plataforma desconocida",
+      "compat.platformScope": "La compatibilidad de un mismo juego puede variar según la plataforma desde la que se inicia.",
+      "compat.platformEmpty": "Aún no hay informes para esta plataforma.",
       "shared.navFirsts": "Primicias mundiales",
       "shared.navGuide": "Guía de uso",
       "firsts.pageIntro": "Conoce cómo funcionan el Modo Juego de macOS y la emulación de DLSS5, junto con los registros públicos que respaldan ambas primicias de ForgePlay.",
@@ -2703,6 +2745,12 @@
       "support.updated": "Actualizado el 28 de julio de 2026."
     },
     fr: {
+      "compat.platformLabel": "Plateforme de lancement",
+      "compat.platformAll": "Toutes les plateformes",
+      "compat.platformEXE": "Exécution directe d’EXE",
+      "compat.platformUnknown": "Plateforme inconnue",
+      "compat.platformScope": "La compatibilité d’un même jeu peut varier selon la plateforme de lancement.",
+      "compat.platformEmpty": "Aucun rapport n’a encore été soumis pour cette plateforme.",
       "shared.navFirsts": "Premières mondiales",
       "shared.navGuide": "Guide d’utilisation",
       "firsts.pageIntro": "Découvrez le mode Jeu de macOS et l’émulation DLSS5, ainsi que les documents publics à l’appui des deux premières mondiales revendiquées par ForgePlay.",

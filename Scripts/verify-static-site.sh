@@ -76,6 +76,8 @@ PAGES=(
   site.js
   site-assets/current-release.js
   site-assets/website-compatibility.js
+  site-assets/compatibility-platforms.css
+  site-data/compatibility-platforms.md
   site-assets/why-story.js
   compatibility.js
   announcements.js
@@ -684,13 +686,16 @@ try:
 except (OSError, json.JSONDecodeError) as exc:
     raise SystemExit(f"compatibility JSON is invalid: {exc}")
 
-if database.get("schemaVersion") != 2:
-    raise SystemExit("compatibility database schemaVersion must be 2")
+if database.get("schemaVersion") != 3:
+    raise SystemExit("published compatibility database schemaVersion must be 3")
 if schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
     raise SystemExit("compatibility schema must use JSON Schema draft 2020-12")
-if schema.get("properties", {}).get("schemaVersion", {}).get("const") != 2:
-    raise SystemExit("compatibility schema must require schemaVersion 2")
+if schema.get("properties", {}).get("schemaVersion", {}).get("const") != 3:
+    raise SystemExit("compatibility schema must require schemaVersion 3")
 report_properties = schema.get("$defs", {}).get("report", {}).get("properties", {})
+platform_values = ["steam", "battlenet", "epic", "stove", "exe", "unknown"]
+if report_properties.get("launchPlatform", {}).get("enum") != platform_values or "launchPlatform" not in schema["$defs"]["report"]["required"]:
+    raise SystemExit("schema 3 must require the six launch-platform values")
 for version_field in ("forgePlayVersion", "gameVersion"):
     version_types = report_properties.get(version_field, {}).get("type", [])
     if not (
@@ -792,8 +797,8 @@ def validate_compatibility_database(candidate):
         {"$schema", "schemaVersion", "updatedAt", "testProfiles", "games", "reports"},
         "compatibility database",
     )
-    if candidate.get("schemaVersion") != 2:
-        raise SystemExit("compatibility database schemaVersion must be 2")
+    if type(candidate.get("schemaVersion")) is not int or candidate["schemaVersion"] not in (2, 3):
+        raise SystemExit("unsupported compatibility database schemaVersion")
 
     updated_at = parse_iso_date(
         candidate.get("updatedAt"),
@@ -865,6 +870,7 @@ def validate_compatibility_database(candidate):
             )
 
     reported_game_ids = set()
+    platform_fields = {"launchPlatform"} if candidate["schemaVersion"] == 3 else set()
     for report_id, report in report_by_id.items():
         require_object_shape(
             report,
@@ -877,7 +883,7 @@ def validate_compatibility_database(candidate):
                 "testedAt",
                 "notes",
                 "blocker",
-            },
+            } | platform_fields,
             {
                 "id",
                 "gameId",
@@ -890,9 +896,11 @@ def validate_compatibility_database(candidate):
                 "testedAt",
                 "notes",
                 "blocker",
-            },
+            } | platform_fields,
             f"report {report_id}",
         )
+        if platform_fields and report.get("launchPlatform") not in platform_values:
+            raise SystemExit(f"report {report_id} must identify one supported launch platform")
         game_id = report.get("gameId")
         if game_id not in game_by_id:
             raise SystemExit(f"report {report_id} references an unknown game")
@@ -990,8 +998,8 @@ if set(website_properties) != website_fields:
     raise SystemExit("website compatibility schema fields differ from the website-only contract")
 if website_properties.get("$schema", {}).get("const") != "./website-compatibility-reports.schema.json":
     raise SystemExit("website compatibility schema must bind its own schema reference")
-if website_properties.get("schemaVersion", {}).get("const") != 1:
-    raise SystemExit("website compatibility schema must require schemaVersion 1")
+if website_properties.get("schemaVersion", {}).get("const") != 3:
+    raise SystemExit("website compatibility schema must require schemaVersion 3")
 website_date_schema = website_properties.get("updatedAt", {})
 if website_date_schema.get("type") != "string" or website_date_schema.get("format") != "date":
     raise SystemExit("website compatibility schema must require an ISO date")
@@ -1029,8 +1037,9 @@ def validate_website_compatibility_reports(candidate, base):
     require_object_shape(candidate, website_required_fields, website_fields, "website compatibility reports")
     if candidate.get("$schema") != "./website-compatibility-reports.schema.json":
         raise SystemExit("website compatibility reports reference the wrong schema")
-    if isinstance(candidate.get("schemaVersion"), bool) or candidate.get("schemaVersion") != 1:
-        raise SystemExit("website compatibility reports schemaVersion must be 1")
+    expected_version = 3 if base.get("schemaVersion") == 3 else 1
+    if type(candidate.get("schemaVersion")) is not int or candidate["schemaVersion"] != expected_version:
+        raise SystemExit("website compatibility reports schemaVersion must match the base generation")
     updated_at = parse_iso_date(candidate.get("updatedAt"), "website compatibility reports updatedAt")
     if not all(isinstance(candidate.get(key), list) for key in ("testProfiles", "reports")):
         raise SystemExit("website compatibility report collections must be arrays")
@@ -1101,6 +1110,7 @@ def validate_website_compatibility_reports(candidate, base):
     validate_compatibility_database(merged)
 
 validate_website_compatibility_reports(website_reports, database)
+
 validate_website_compatibility_reports({
     **website_reports,
     "testProfiles": [],
@@ -1747,7 +1757,7 @@ for html in index.html why.html license.html privacy.html support.html compatibi
   else
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-14"'
   fi
-  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260928-nav3"'
+  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260929-platform1"'
   require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.css?v=20260905-7'
   require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.js?v=20260905-2'
   if [[ "$html" != "index.html" ]]; then
@@ -1809,9 +1819,9 @@ require_snippet "$ROOT_DIR/index.html" 'data-current-release-download'
 require_snippet "$ROOT_DIR/index.html" 'data-current-release-download-label'
 require_snippet "$ROOT_DIR/index.html" 'data-current-release-link'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/current-release.js?v=20260905-7"'
-require_snippet "$ROOT_DIR/index.html" 'src="site-assets/website-compatibility.js?v=20260928-order1"'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/website-compatibility.js?v=20260929-platform1"'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/home-experience.css?v=20260905-8'
-require_snippet "$ROOT_DIR/index.html" 'src="site-assets/home-experience.js?v=20260928-firsts2"'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/home-experience.js?v=20260929-platform1"'
 require_snippet "$ROOT_DIR/index.html" 'data-release-download'
 require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.releaseNotesButton"'
 for html in index.html why.html license.html privacy.html support.html compatibility.html updates.html site-assets/guide.html site-assets/dlss5.html; do
@@ -1837,10 +1847,11 @@ require_snippet "$ROOT_DIR/index.html" 'data-compatibility-count'
 require_snippet "$ROOT_DIR/index.html" 'href="compatibility.html"'
 require_snippet "$ROOT_DIR/index.html" 'data-i18n="refresh.playable"'
 require_snippet "$ROOT_DIR/index.html" 'data-home-search'
+require_snippet "$ROOT_DIR/index.html" 'data-compatibility-platform'
 require_snippet "$ROOT_DIR/index.html" 'data-home-games'
 require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
-require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260928-order1"'
+require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260929-platform1"'
 require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260919-1"'
 require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260913-1"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
@@ -1863,6 +1874,13 @@ if rg -q 'data-poster-version="DLSS5"|data-poster-preview' "$ROOT_DIR/index.html
 fi
 
 require_snippet "$ROOT_DIR/compatibility.html" 'data-compatibility-list'
+require_snippet "$ROOT_DIR/compatibility.html" 'data-compatibility-platform'
+for html in index.html compatibility.html; do
+  require_snippet "$ROOT_DIR/$html" 'site-assets/compatibility-platforms.css?v=20260929-1'
+  for platform in steam battlenet epic stove exe unknown; do
+    require_snippet "$ROOT_DIR/$html" "value=\"$platform\""
+  done
+done
 require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n-placeholder="compat.searchPlaceholder"'
 require_snippet "$ROOT_DIR/compatibility.html" 'M4 Pro · 24GB'
 require_snippet "$ROOT_DIR/compatibility.html" 'Report games that work—and games with problems.'
@@ -1872,10 +1890,10 @@ require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.logLabel"'
 require_snippet "$ROOT_DIR/compatibility.html" 'issues/new?template=compatibility-report.yml'
 require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/compatibility.html" 'href="site.css?v=20260811-22"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260928-nav3"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260929-platform1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/current-release.js?v=20260905-7"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20260928-order1"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260928-order1"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20260929-platform1"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260929-platform1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-card'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-tag'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-meta'
@@ -1888,12 +1906,12 @@ require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.columnRecords"
 require_snippet "$ROOT_DIR/compatibility.js" 'forgeplay:localechange'
 require_snippet "$ROOT_DIR/compatibility.js" 'const catalog = () => window.ForgePlayWebCatalog'
 require_snippet "$ROOT_DIR/compatibility.js" 'catalog().load()'
-require_snippet "$ROOT_DIR/compatibility.js" 'catalog().summarize('
+require_snippet "$ROOT_DIR/compatibility.js" 'catalog().platformGroups('
 require_snippet "$ROOT_DIR/compatibility.js" 'catalog().sortReports('
 require_snippet "$ROOT_DIR/compatibility.js" 'catalog().compareGameGroups(left, right)'
 require_snippet "$ROOT_DIR/compatibility.js" 'catalog().describe('
 require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebCatalog.load()'
-require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebCatalog.summarize('
+require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebCatalog.platformGroups('
 require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebCatalog.sortReports('
 require_snippet "$ROOT_DIR/site-assets/home-experience.js" ').sort(window.ForgePlayWebCatalog.compareGameGroups)'
 require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebCatalog.describe('
@@ -2229,7 +2247,7 @@ vm.runInNewContext(
   {filename: "website-compatibility.js", timeout: 1000}
 );
 const model = context.window.ForgePlayWebCatalog;
-for (const name of ["load", "merge", "summarize", "sortReports", "describe", "compareVersions", "compareGameGroups"]) {
+for (const name of ["load", "merge", "summarize", "sortReports", "describe", "compareVersions", "compareGameGroups", "platformGroups", "platformLabel", "platformOf"]) {
   assert.equal(typeof model?.[name], "function", `website catalog must expose ${name}`);
 }
 const merged = model.merge(base, additions);
@@ -2277,6 +2295,36 @@ assert.deepEqual(sortedGroups.map(group=>group.id),[
   ...Array.from({length:7},(_,i)=>`playable-${i}`),"testing","legacy-blocked","current-blocked","unknown"
 ]);
 assert.equal(gameGroups[0].id,"legacy-blocked","display sorting must not mutate source order");
+
+const baseV3 = base;
+const webV3 = additions;
+const beforeV3 = JSON.stringify([baseV3, webV3]);
+const classified = model.merge(baseV3, webV3);
+assert.equal(classified.schemaVersion,3);
+assert.equal(classified.reports.length,baseV3.reports.length+webV3.reports.length);
+assert.equal(JSON.stringify([baseV3,webV3]),beforeV3,"merging must not mutate source catalogs");
+const fixture = {...baseV3, games:[{id:"fixture",titles:{en:"Fixture",ko:"검증용"}}],
+  currentRelease:{marketingVersion:"2.0.0"}, reports:[
+    {...report("1.2","playable"), id:"steam-report", gameId:"fixture", launchPlatform:"steam"},
+    {...report("2.0.0","blocked"), id:"bnet-report", gameId:"fixture", launchPlatform:"battlenet"},
+    {...report("2.0.0","playable"), id:"unknown-report", gameId:"fixture", launchPlatform:"unknown"}
+  ]};
+const emptyV3 = {...webV3,testProfiles:[],reports:[],notePatches:[]};
+const joined = model.merge(fixture,emptyV3);
+const byPlatform = new Map(model.platformGroups(joined).map(group=>[group.launchPlatform,group]));
+assert.equal(byPlatform.get("steam").summary.tone,"green");
+assert.equal(byPlatform.get("battlenet").summary.tone,"red");
+assert.equal(byPlatform.get("steam").reports.length,1);
+assert.equal(new Set([...byPlatform.values()].map(group=>group.key)).size,3);
+assert.deepEqual(Array.from(model.platformGroups(joined,"steam"),group=>group.launchPlatform),["steam"]);
+assert.equal(model.platformGroups(joined,"epic").length,0);
+assert.equal(new Set(model.platformGroups(joined).filter(group=>group.status==="playable").map(group=>group.game.id)).size,1);
+assert.equal(model.platformOf({gameId:"fixture"}),"unknown","legacy missing platform must never inherit Steam");
+for (const launchPlatform of [undefined,null,"Steam","unsupported"]) {
+  assert.throws(()=>model.merge({...fixture,reports:[{...fixture.reports[0],launchPlatform}]},emptyV3));
+}
+assert.throws(()=>model.merge(fixture,{...emptyV3,schemaVersion:1}));
+assert.throws(()=>model.platformGroups(joined,"invalid"));
 
 const referenceBase = {
   schemaVersion: 2,
