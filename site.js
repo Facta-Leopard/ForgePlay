@@ -16,6 +16,7 @@
   const localeData = {
     en: {
       "shared.navFirsts": "World firsts",
+      "shared.navGuide": "User guide",
       "firsts.pageIntro": "Explore macOS Game Mode and DLSS5 Emulation, with public records supporting ForgePlay’s two world-first claims.",
       "firsts.homeLink": "World-first claims: evidence ↗",
       "firsts.gameModeLabel": "01 / macOS GAME MODE",
@@ -399,6 +400,7 @@
     },
     ko: {
       "shared.navFirsts": "세계 최초",
+      "shared.navGuide": "사용 가이드",
       "firsts.pageIntro": "macOS 게임 모드와 DLSS5 에뮬레이팅을 소개하고, 세계 최초 근거와 공개 기록을 함께 안내합니다.",
       "firsts.homeLink": "세계 최초 근거 보기 ↗",
       "firsts.gameModeLabel": "01 / macOS 게임 모드",
@@ -782,6 +784,7 @@
     },
     ja: {
       "shared.navFirsts": "世界初",
+      "shared.navGuide": "使い方",
       "firsts.pageIntro": "macOSゲームモードとDLSS5エミュレーションの仕組み、世界初とする根拠、公開記録を紹介します。",
       "firsts.homeLink": "世界初の根拠を見る ↗",
       "firsts.gameModeLabel": "01 / macOSゲームモード",
@@ -1165,6 +1168,7 @@
     },
     "zh-Hans": {
       "shared.navFirsts": "世界首创",
+      "shared.navGuide": "使用指南",
       "firsts.pageIntro": "介绍 macOS 游戏模式与 DLSS5 模拟的实现方式，以及两项世界首创主张的公开记录和依据。",
       "firsts.homeLink": "查看世界首创依据 ↗",
       "firsts.gameModeLabel": "01 / macOS 游戏模式",
@@ -1548,6 +1552,7 @@
     },
     "zh-Hant": {
       "shared.navFirsts": "世界首創",
+      "shared.navGuide": "使用指南",
       "firsts.pageIntro": "介紹 macOS 遊戲模式與 DLSS5 模擬的實作方式，以及兩項世界首創主張的公開紀錄與依據。",
       "firsts.homeLink": "查看世界首創依據 ↗",
       "firsts.gameModeLabel": "01 / macOS 遊戲模式",
@@ -1931,6 +1936,7 @@
     },
     de: {
       "shared.navFirsts": "Weltneuheiten",
+      "shared.navGuide": "Anleitung",
       "firsts.pageIntro": "Erfahre, wie der macOS-Spielmodus und die DLSS5-Emulation funktionieren und welche öffentlichen Belege die beiden Weltneuheiten von ForgePlay stützen.",
       "firsts.homeLink": "Belege für die Weltneuheiten ↗",
       "firsts.gameModeLabel": "01 / macOS-SPIELMODUS",
@@ -2314,6 +2320,7 @@
     },
     es: {
       "shared.navFirsts": "Primicias mundiales",
+      "shared.navGuide": "Guía de uso",
       "firsts.pageIntro": "Conoce cómo funcionan el Modo Juego de macOS y la emulación de DLSS5, junto con los registros públicos que respaldan ambas primicias de ForgePlay.",
       "firsts.homeLink": "Pruebas de las primicias mundiales ↗",
       "firsts.gameModeLabel": "01 / MODO JUEGO DE macOS",
@@ -2697,6 +2704,7 @@
     },
     fr: {
       "shared.navFirsts": "Premières mondiales",
+      "shared.navGuide": "Guide d’utilisation",
       "firsts.pageIntro": "Découvrez le mode Jeu de macOS et l’émulation DLSS5, ainsi que les documents publics à l’appui des deux premières mondiales revendiquées par ForgePlay.",
       "firsts.homeLink": "Preuves des premières mondiales ↗",
       "firsts.gameModeLabel": "01 / MODE JEU DE macOS",

@@ -6,11 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0e1013">
   <title>ForgePlay — Interactive guide</title>
-  <meta name="description" content="Explore the ForgePlay 2.0.0 launcher and Mac app in an interactive web guide. No installation required.">
+  <meta name="description" content="Try ForgePlay 2.1.0 (build 7), currently in development, in an interactive web guide. Icons and layout may differ from the published release.">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="ForgePlay">
   <meta property="og:title" content="ForgePlay — Interactive guide">
-  <meta property="og:description" content="Explore the ForgePlay 2.0.0 launcher and Mac app in an interactive web guide. No installation required.">
+  <meta property="og:description" content="Try ForgePlay 2.1.0 (build 7), currently in development, in an interactive web guide. Icons and layout may differ from the published release.">
   <meta property="og:url" content="https://facta-leopard.github.io/ForgePlay/site-assets/guide.html">
   <meta property="og:image" content="https://facta-leopard.github.io/ForgePlay/site-assets/forgeplay-icon.png?v=20260927-share1">
   <meta property="og:image:type" content="image/png">
@@ -19,7 +19,7 @@
   <meta property="og:image:alt" content="ForgePlay app icon">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="ForgePlay — Interactive guide">
-  <meta name="twitter:description" content="Explore the ForgePlay 2.0.0 launcher and Mac app in an interactive web guide. No installation required.">
+  <meta name="twitter:description" content="Try ForgePlay 2.1.0 (build 7), currently in development, in an interactive web guide. Icons and layout may differ from the published release.">
   <meta name="twitter:image" content="https://facta-leopard.github.io/ForgePlay/site-assets/forgeplay-icon.png?v=20260927-share1">
   <meta name="twitter:image:alt" content="ForgePlay app icon">
   <link rel="icon" type="image/png" href="site-assets/forgeplay-favicon.png">
@@ -29,7 +29,7 @@
   <link rel="stylesheet" href="site-assets/guide.css?v=20260913-1">
   <link rel="stylesheet" href="site-assets/guide-app.css?v=20260913-1">
   <link rel="stylesheet" href="site-assets/guide-v2.css?v=20260927-2">
-  <script src="site.js?v=20260928-firsts2" defer></script>
+  <script src="site.js?v=20260928-nav3" defer></script>
   <script src="site-assets/site-shell.js?v=20260905-2" defer></script>
   <link rel="stylesheet" href="site-assets/supporters-nav.css?v=20260928-1">
   <script src="site-assets/supporters-nav.js?v=20260928-1" defer></script>
@@ -38,7 +38,7 @@
   <script src="site-assets/guide.js?v=20260928-arcade1" defer></script>
   <script src="site-assets/guide-app.js?v=20260913-2" defer></script>
   <script src="site-assets/guide-v2-icons.js?v=20260927-2" defer></script>
-  <script src="site-assets/guide-v2.js?v=20260928-arcade1" defer></script>
+  <script src="site-assets/guide-v2.js?v=20260928-preview7" defer></script>
   <link rel="stylesheet" href="site-assets/forge-motion.css?v=20260923-copy1">
   <link rel="stylesheet" href="site-assets/arcade/art.css?v=20260928-2">
   <link rel="stylesheet" href="site-assets/arcade/arcade.css?v=20260928-firsts2">
@@ -52,12 +52,13 @@
       <a class="fp-brand" href="index.html" data-locale-link><img src="site-assets/forgeplay-icon.png" width="36" height="36" alt=""><span>ForgePlay</span></a>
       <div class="nav-links fp-links" id="fp-navigation">
         <a href="site-assets/dlss5.html" data-locale-link data-nav-page="dlss5" data-i18n="shared.navFirsts">World firsts</a>
-        <a href="site-assets/guide.html" data-locale-link data-guide-text="nav" data-guide-nav>Guide</a>
-        <a href="compatibility.html" data-locale-link data-i18n="shared.navCompatibility">Compatibility</a>
-        <a href="updates.html" data-locale-link data-i18n="shared.navUpdates">Updates</a>
-        <a href="why.html" data-locale-link data-i18n="shared.navWhy">Why</a>
-        <a href="site-assets/supporters.html" data-locale-link data-supporter-nav>Supporters</a>
-        <a href="support.html" data-locale-link data-i18n="shared.navSupport">Support</a>
+        <a href="site-assets/guide.html" data-locale-link data-nav-page="guide" data-i18n="shared.navGuide" data-guide-nav>User guide</a>
+        <a href="compatibility.html" data-locale-link data-nav-page="compatibility" data-i18n="shared.navCompatibility">Compatibility</a>
+        <a href="updates.html" data-locale-link data-nav-page="updates" data-i18n="shared.navUpdates">Updates</a>
+        <a href="why.html" data-locale-link data-nav-page="why" data-i18n="shared.navWhy">Why</a>
+        <a href="license.html" data-locale-link data-nav-page="license" data-i18n="shared.navLicense">License</a>
+        <a href="site-assets/supporters.html" data-locale-link data-nav-page="supporters" data-supporter-nav>Supporters</a>
+        <a href="support.html" data-locale-link data-nav-page="support" data-i18n="shared.navSupport">Support</a>
       </div>
       <div class="fp-nav-tools">
         <label class="fp-language"><span class="visually-hidden" data-i18n="shared.language">Language</span><select data-language-select aria-label="Language"><option value="ko">한국어</option><option value="en">English</option><option value="de">Deutsch</option><option value="es">Español</option><option value="fr">Français</option><option value="ja">日本語</option><option value="zh-Hans">简体中文</option><option value="zh-Hant">繁體中文</option></select></label>
@@ -68,7 +69,7 @@
   <main id="main" class="fp-wrap guide-main">
     <header class="guide-hero">
       <div>
-        <p class="fp-eyebrow">FORGEPLAY 2.0.0 · INTERACTIVE GUIDE</p>
+        <p class="fp-eyebrow" data-guide2-text="previewVersion">ForgePlay 2.1.0 (build 7) · In development</p>
         <h1><span data-guide2-text="pageTitle">Learn by trying</span><span data-guide2-text="pageTitle2">ForgePlay</span></h1>
       </div>
       <div class="guide-intro">

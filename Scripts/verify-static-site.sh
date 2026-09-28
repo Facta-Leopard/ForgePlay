@@ -328,8 +328,18 @@ class Parser(HTMLParser):
         self.ids = []
         self.i18n_keys = []
         self.base_href = None
+        self.navigation = []
+        self.nav_depth = 0
 
     def handle_starttag(self, tag, attrs):
+        attributes = dict(attrs)
+        if tag == "div":
+            if attributes.get("id") == "fp-navigation":
+                self.nav_depth = 1
+            elif self.nav_depth:
+                self.nav_depth += 1
+        if tag == "a" and self.nav_depth:
+            self.navigation.append(attributes)
         if tag == "base":
             if self.base_href is not None:
                 raise SystemExit("duplicate HTML base element")
@@ -350,6 +360,10 @@ class Parser(HTMLParser):
             } and value:
                 self.i18n_keys.append(value)
 
+    def handle_endtag(self, tag):
+        if tag == "div" and self.nav_depth:
+            self.nav_depth -= 1
+
 def parse_page(path):
     resolved = path.resolve()
     if resolved in parsed_pages:
@@ -359,6 +373,21 @@ def parse_page(path):
         with open(path, "r", encoding="utf-8") as handle:
             parser.feed(handle.read())
         parser.close()
+        if "fp-navigation" in parser.ids:
+            expected_navigation = [
+                ("site-assets/dlss5.html", "dlss5"),
+                ("site-assets/guide.html", "guide"),
+                ("compatibility.html", "compatibility"),
+                ("updates.html", "updates"), ("why.html", "why"),
+                ("license.html", "license"),
+                ("site-assets/supporters.html", "supporters"),
+                ("support.html", "support"),
+            ]
+            actual_navigation = [(a.get("href"), a.get("data-nav-page")) for a in parser.navigation]
+            if actual_navigation != expected_navigation:
+                raise SystemExit(f"{path}: primary navigation differs from the shared eight-item order")
+            if parser.navigation[1].get("data-i18n") != "shared.navGuide":
+                raise SystemExit(f"{path}: guide navigation must use the shared localized label")
         if parser.base_href is not None:
             base = urlsplit(parser.base_href)
             if base.scheme or base.netloc or base.query or base.fragment or base.path.startswith("/"):
@@ -492,6 +521,8 @@ for locale in locale_names:
 guide_v2_ui = json.loads((root / "site-data/guide-v2-ui.json").read_text(encoding="utf-8"))
 guide_v2_copy = json.loads((root / "site-data/guide-v2-copy.json").read_text(encoding="utf-8"))
 guide_v2_map = json.loads((root / "site-data/guide-v2-map.json").read_text(encoding="utf-8"))
+if (guide_v2_map.get("version"), guide_v2_map.get("build")) != ("2.1.0", 7):
+    raise SystemExit("guide-v2: preview must identify development build 2.1.0 (7)")
 for name, data in (("guide-v2-ui", guide_v2_ui), ("guide-v2-copy", guide_v2_copy)):
     if set(data) != set(locale_names):
         raise SystemExit(f"{name}: all eight locales required")
@@ -499,6 +530,12 @@ for name, data in (("guide-v2-ui", guide_v2_ui), ("guide-v2-copy", guide_v2_copy
         if set(values) != set(data["en"]) or any(not isinstance(v, str) or not v.strip() for v in values.values()):
             raise SystemExit(f"{name}: incomplete locale {locale}")
 for locale in locale_names:
+    preview_label = guide_v2_copy[locale].get("previewVersion", "")
+    if "{version}" not in preview_label or "{build}" not in preview_label:
+        raise SystemExit(f"guide-v2: missing localized preview version {locale}")
+    for key in ("lead", "pageIntro", "updateDemo"):
+        if "2.1.0" not in guide_v2_copy[locale][key] or "7" not in guide_v2_copy[locale][key]:
+            raise SystemExit(f"guide-v2: stale development version in {locale}/{key}")
     for view in guide_v2_map["views"].values():
         for key in [view["title"], *view["notes"]]:
             if not guide_v2_ui[locale].get(key):
@@ -508,6 +545,8 @@ for key in re.findall(r'\bC\("([^"]+)"\)', guide_v2_js):
     if key not in guide_v2_copy["en"]:
         raise SystemExit(f"guide-v2: missing explanation {key}")
 guide_html = (root / "site-assets/guide.html").read_text(encoding="utf-8")
+if 'data-guide2-text="previewVersion"' not in guide_html or "2.0.0 (6)" in guide_v2_js:
+    raise SystemExit("guide-v2: visible preview version must use the development metadata")
 if "data-guide-v2" not in guide_html or "data-guide-app " in guide_html or "guide/screens/" in guide_html or "1.3.1" in guide_html:
     raise SystemExit("guide-v2: active page must use the 2.0 web experience, not legacy captures")
 if any(api in guide_v2_js for api in ("innerHTML", "localStorage", "showOpenFilePicker", "getUserMedia", "sendBeacon", "XMLHttpRequest")):
@@ -1708,7 +1747,7 @@ for html in index.html why.html license.html privacy.html support.html compatibi
   else
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-14"'
   fi
-  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260928-firsts2"'
+  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260928-nav3"'
   require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.css?v=20260905-7'
   require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.js?v=20260905-2'
   if [[ "$html" != "index.html" ]]; then
@@ -1749,6 +1788,11 @@ require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'data-page="dlss5"'
 require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'src="site-assets/firsts.js?v=20260928-2"'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/firsts.js?v=20260928-2"'
 require_snippet "$ROOT_DIR/index.html" 'id="release"'
+if grep -Fq 'data-vision-experience' "$ROOT_DIR/index.html"; then
+  fail "Vision Pro experience belongs in the user guide, not the homepage"
+fi
+require_snippet "$ROOT_DIR/site-assets/guide.html" 'data-vision-experience'
+require_snippet "$ROOT_DIR/site-assets/guide.html" 'data-demo-text="visionWarning"'
 require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'CPU + GPU'
 require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'Bluetooth sampling rate'
 require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'href="https://support.apple.com/105118"'
@@ -1828,7 +1872,7 @@ require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.logLabel"'
 require_snippet "$ROOT_DIR/compatibility.html" 'issues/new?template=compatibility-report.yml'
 require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/compatibility.html" 'href="site.css?v=20260811-22"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260928-firsts2"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260928-nav3"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/current-release.js?v=20260905-7"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20260928-order1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260928-order1"'

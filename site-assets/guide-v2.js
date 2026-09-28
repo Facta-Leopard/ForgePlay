@@ -26,7 +26,9 @@
   let state = fresh();
   const config = () => state.configs[view] ||= freshConfig();
   const U = (key, value) => (ui[locale()]?.[key] ?? ui.en?.[key] ?? key).replace("%@", value ?? "%@");
-  const C = key => copy[locale()]?.[key] ?? copy.en[key] ?? key;
+  const C = key => (copy[locale()]?.[key] ?? copy.en[key] ?? key)
+    .replaceAll('{version}',map.version).replaceAll('{build}',String(map.build));
+  const guideVersion = () => `${map.version} (${map.build})`;
   const D = key => demos[locale()]?.[key] ?? demos.en[key] ?? key;
   const W = key => window.ForgePlaySite?.message(key) || key;
   const viewName = id => map.views[id]?.name ? U(map.views[id].title,map.views[id].name) : U(map.views[id]?.title || id);
@@ -176,7 +178,7 @@
       const permissions=node('div','v2-permission-status');for(const name of ['손쉬운 사용 권한','입력 모니터링 권한']){const row=node('div');row.append(symbol('shield'),node('span','',U(name)),badge(U('미확인'),'neutral'));permissions.append(row);}box.append(permissions);parent.append(box);const awdl=card('AWDL',C('awdl'),'wifi');toggle(awdl,'AWDL',state,'awdl');if(!state.awdl)note(awdl,D('visionWarning'),true);awdl.append(btn(U('AWDL 상태 새로고침'),()=>show('AWDL',D('notice'))));parent.append(awdl);return;
     }else if(preference==="environment"){note(box,helpText("environment"));box.append(actions(btn(U("Steam 프리픽스 재생성"),()=>show(U("Steam 프리픽스 재생성"),D("rebuild"))),btn(U("설정"),()=>{dialog.close();go("setup");})));}
     else if(preference==="maintenance"){toggle(box,U('오래된 문제 분석 기록 자동 정리'),state,'autoCleanup');for(const[key,label,max]of [['retained','최근 %d일 보존',365],['logLimit','Steam 실행 로그 세트 최대 %d개 보존',200]]){const row=node('label','sim-field');const input=node('input');input.type='number';input.min=1;input.max=max;input.value=state[key];input.setAttribute('aria-label',U(label).replace('%d',''));input.addEventListener('change',()=>{state[key]=Math.min(max,Math.max(1,Number(input.value)||1));render();});row.append(node('span','',U(label).replace('%d',state[key])),input);box.append(row);}box.append(actions(btn(U('보존 설정 저장'),()=>show(U('보존 설정 저장'),D('saved')),'','check'),btn(U("지금 정리"),()=>show(U("지금 정리"),D("notice")),'','trash'),btn(U("지원 번들 생성"),()=>show(U("지원 번들 생성"),D("bundle")))));}
-    else {note(box,"ForgePlay 2.0.0 (6)");box.append(external(W("shared.navLicense"),"license.html?lang="+locale()),external(W("shared.navPrivacy"),"privacy.html?lang="+locale()));}
+    else {note(box,"ForgePlay "+guideVersion());box.append(external(W("shared.navLicense"),"license.html?lang="+locale()),external(W("shared.navPrivacy"),"privacy.html?lang="+locale()));}
     parent.append(box);
   };
   let preferencesOpen=false;
@@ -190,7 +192,7 @@
     const settings=btn('',()=>openPreferences(),'v2-toolbar-button','gear');settings.setAttribute('aria-label',U('환경 설정'));bar.append(leading,node('strong','',utility?viewName(view):'ForgePlay'),settings);shell.append(bar);
     const layout=node("div","sim-layout"),sidebar=node("aside","sim-sidebar"),brand=node("div","sim-brand"),icon=node("img");icon.src="site-assets/forgeplay-icon.png";icon.alt="";icon.width=40;icon.height=40;const brandText=node('div');brandText.append(node('strong','','ForgePlay'),node('small','',U('Windows 게임을 Mac에서 더 쉽게.')));brand.append(icon,brandText);sidebar.append(brand);const navigation=node("nav");navigation.setAttribute("aria-label",C("macNavigation"));
     for(const id of ["steam","profiles","battlenet","epic","stove","exe","dashboard","why"]){const b=btn(viewName(id),()=>go(id),"sim-nav-item",viewGlyphs[id]);b.dataset.v2Nav=id;b.dataset.nativeSymbol=nativeSymbols[id];b.setAttribute("aria-pressed",String(view===id));navigation.append(b);}
-    const setup=btn(U(state.ready?'시스템 준비 완료':'시스템 확인 필요'),()=>go('setup'),'sim-update',state.ready?'checkCircle':'warning');setup.append(symbol('chevron',12));setup.title=U('설정 열기');setup.dataset.status=state.ready?'ok':'warning';sidebar.append(navigation,setup,node('small','','ForgePlay 2.0.0 (6)'));if(!utility)layout.append(sidebar);
+    const setup=btn(U(state.ready?'시스템 준비 완료':'시스템 확인 필요'),()=>go('setup'),'sim-update',state.ready?'checkCircle':'warning');setup.append(symbol('chevron',12));setup.title=U('설정 열기');setup.dataset.status=state.ready?'ok':'warning';sidebar.append(navigation,setup,node('small','','ForgePlay '+guideVersion()));if(!utility)layout.append(sidebar);
     const body=node("div","sim-body"),heading=node("div","v2-view-heading"),headingCopy=node('div'),headingTitle=node('h2');headingTitle.append(symbol(viewGlyphs[view]||'sliders',25),node('span','',viewName(view)));headingCopy.append(headingTitle);
     const subtitle=view==='steam'?U('Windows용 Steam 실행, 게임 그래픽, 저장공간을 한곳에서 관리합니다.'):view==='exe'?U('Windows 프로그램 실행, 게임 그래픽, 저장공간을 한곳에서 관리합니다.'):['battlenet','epic','stove'].includes(view)?U('Windows 런처 실행, 게임 그래픽, 저장공간을 한곳에서 관리합니다.'):null;if(subtitle)headingCopy.append(node('p','',subtitle));
     heading.append(headingCopy,btn(U("사용법"),()=>show(viewName(view),C("hint"+view[0].toUpperCase()+view.slice(1))+"\n\n"+helpText(view))));body.append(heading);
@@ -213,7 +215,7 @@
     }grid.append(tiles);
     const news=node("aside","v2-launcher-news");renderNews(news);grid.append(news);shell.append(grid);
     const banner=node("div","v2-launcher-banners");for(const[name,label]of [['world-banner','launcherWorld'],['brand',null],['forge-banner','launcherForge']]){const item=node('div','v2-banner');if(name==='brand'){const mark=node('img');mark.src='site-assets/guide/launcher/mark.png';mark.alt='';const title=node('div');title.append(node('strong','','ForgePlay'),node('small','','Play Beyond Boundaries.'));item.append(mark,title);}else{item.style.backgroundImage=`url("site-assets/arcade/launcher/${name}.png")`;item.append(node('p','',C(label)));}banner.append(item);}shell.append(banner);
-    const footer=node("div","v2-launcher-footer");footer.append(node('span','','Apple Silicon | Windows Games on macOS'),node('span','v2-handwriting','Play Beyond Boundaries.'),node('span','','v2.0.0 (6)'),btn('',()=>openPreferences(),'v2-icon-button','gear'));footer.lastChild.setAttribute("aria-label",U("환경 설정"));shell.append(footer);
+    const footer=node("div","v2-launcher-footer");footer.append(node('span','','Apple Silicon | Windows Games on macOS'),node('span','v2-handwriting','Play Beyond Boundaries.'),node('span','','v'+guideVersion()),btn('',()=>openPreferences(),'v2-icon-button','gear'));footer.lastChild.setAttribute("aria-label",U("환경 설정"));shell.append(footer);
   };
   const renderNews = news => {const heading=node('div','v2-news-heading'),refresh=btn('',async()=>{refresh.disabled=true;try{notices=await fetchJSON('site-data/announcements.json');renderNews(news);}catch{refresh.disabled=false;show(C('refreshNews'),W('updates.dataError'));}},'v2-icon-button','refresh');refresh.setAttribute('aria-label',C('refreshNews'));heading.append(node('h3','',C('launcherNews')),refresh);news.replaceChildren(heading);for(const n of notices?.announcements?.slice(0,3)||[]){const a=node("a");a.href="updates.html?lang="+locale()+"#update-"+n.id;a.append(node("small","",n.publishedAt),node("strong","",n.titles[locale()]||n.titles.en));news.append(a);}news.append(node("p","sim-note",C("newsSource")));};
   const render = (resetScroll=false) => {

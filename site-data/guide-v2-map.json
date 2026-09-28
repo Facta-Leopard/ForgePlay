@@ -1,6 +1,6 @@
 {
-  "version": "2.0.0",
-  "build": 6,
+  "version": "2.1.0",
+  "build": 7,
   "aliases": {"AI 로컬 분석 전 미리보기":"AI 로컬 분석(베타) 전 미리보기","다크":"Pumpkin Spice Season 다크","라이트":"Burnt Sienna 라이트"},
   "labels": ["Simple", "Motion Lite", "Motion Quality", "Motion Repair"],
   "views": {
