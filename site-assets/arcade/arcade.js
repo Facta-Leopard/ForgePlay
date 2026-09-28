@@ -3,14 +3,14 @@
   if (!document.body.classList.contains('fp-pixel')) return;
 
   const copy = {
-    ko: {stage:'대장간',light:'조명',forge:'망치 휘두르기',shelf:'업데이트의 기록',shelfNote:'포스터를 누르면 크게 볼 수 있습니다.',guide:'웹에서 체험',games:'게임 호환성',features:'주요 기능',why:'만든 이유',hint:'포인터를 움직이거나 토끼에게 망치를 휘두르게 해보세요.',jump:'구역 바로가기'},
-    en: {stage:'The forge',light:'Lights',forge:'Swing the hammer',shelf:'The update collection',shelfNote:'Select a poster to see it full size.',guide:'Try on the web',games:'Compatibility',features:'Features',why:'Why ForgePlay',hint:'Move the pointer or let the rabbit swing the hammer.',jump:'Explore sections'},
-    de: {stage:'Die Schmiede',light:'Licht',forge:'Hammer schwingen',shelf:'Die Updatesammlung',shelfNote:'Poster auswählen und vergrößern.',guide:'Im Web testen',games:'Kompatibilität',features:'Funktionen',why:'Warum ForgePlay',hint:'Bewege den Zeiger oder lass den Hasen den Hammer schwingen.',jump:'Bereiche erkunden'},
-    es: {stage:'La forja',light:'Luz',forge:'Golpear con el martillo',shelf:'La colección de actualizaciones',shelfNote:'Selecciona un póster para ampliarlo.',guide:'Probar en la web',games:'Compatibilidad',features:'Funciones',why:'Por qué ForgePlay',hint:'Mueve el cursor o haz que el conejo golpee con el martillo.',jump:'Explorar secciones'},
-    fr: {stage:'La forge',light:'Lumière',forge:'Frapper au marteau',shelf:'La collection des mises à jour',shelfNote:'Sélectionnez une affiche pour l’agrandir.',guide:'Essayer sur le web',games:'Compatibilité',features:'Fonctionnalités',why:'Pourquoi ForgePlay',hint:'Déplacez le pointeur ou faites frapper le lapin au marteau.',jump:'Explorer les rubriques'},
-    ja: {stage:'鍛冶場',light:'照明',forge:'ハンマーを振る',shelf:'アップデートの記録',shelfNote:'ポスターを選ぶと拡大できます。',guide:'Webで体験',games:'ゲーム互換性',features:'主な機能',why:'開発の理由',hint:'ポインターを動かしたり、ウサギにハンマーを振らせたりしてみてください。',jump:'セクションへ移動'},
-    'zh-Hans': {stage:'锻造工坊',light:'灯光',forge:'挥动锤子',shelf:'更新记录',shelfNote:'点击海报可放大查看。',guide:'网页体验',games:'游戏兼容性',features:'主要功能',why:'开发初衷',hint:'移动指针，或让兔子挥动锤子。',jump:'浏览各个区域'},
-    'zh-Hant': {stage:'鍛造工坊',light:'燈光',forge:'揮動鐵鎚',shelf:'更新紀錄',shelfNote:'點選海報可放大檢視。',guide:'網頁體驗',games:'遊戲相容性',features:'主要功能',why:'開發初衷',hint:'移動游標，或讓兔子揮動鐵鎚。',jump:'瀏覽各個區域'}
+    ko: {stage:'대장간',light:'조명',forge:'망치 휘두르기',shelf:'업데이트의 기록',shelfNote:'포스터를 누르면 크게 볼 수 있습니다.',guide:'웹에서 체험',games:'게임 호환성',features:'주요 기능',why:'만든 이유',jump:'구역 바로가기'},
+    en: {stage:'The forge',light:'Lights',forge:'Swing the hammer',shelf:'The update collection',shelfNote:'Select a poster to see it full size.',guide:'Try on the web',games:'Compatibility',features:'Features',why:'Why ForgePlay',jump:'Explore sections'},
+    de: {stage:'Die Schmiede',light:'Licht',forge:'Hammer schwingen',shelf:'Die Updatesammlung',shelfNote:'Poster auswählen und vergrößern.',guide:'Im Web testen',games:'Kompatibilität',features:'Funktionen',why:'Warum ForgePlay',jump:'Bereiche erkunden'},
+    es: {stage:'La forja',light:'Luz',forge:'Golpear con el martillo',shelf:'La colección de actualizaciones',shelfNote:'Selecciona un póster para ampliarlo.',guide:'Probar en la web',games:'Compatibilidad',features:'Funciones',why:'Por qué ForgePlay',jump:'Explorar secciones'},
+    fr: {stage:'La forge',light:'Lumière',forge:'Frapper au marteau',shelf:'La collection des mises à jour',shelfNote:'Sélectionnez une affiche pour l’agrandir.',guide:'Essayer sur le web',games:'Compatibilité',features:'Fonctionnalités',why:'Pourquoi ForgePlay',jump:'Explorer les rubriques'},
+    ja: {stage:'鍛冶場',light:'照明',forge:'ハンマーを振る',shelf:'アップデートの記録',shelfNote:'ポスターを選ぶと拡大できます。',guide:'Webで体験',games:'ゲーム互換性',features:'主な機能',why:'開発の理由',jump:'セクションへ移動'},
+    'zh-Hans': {stage:'锻造工坊',light:'灯光',forge:'挥动锤子',shelf:'更新记录',shelfNote:'点击海报可放大查看。',guide:'网页体验',games:'游戏兼容性',features:'主要功能',why:'开发初衷',jump:'浏览各个区域'},
+    'zh-Hant': {stage:'鍛造工坊',light:'燈光',forge:'揮動鐵鎚',shelf:'更新紀錄',shelfNote:'點選海報可放大檢視。',guide:'網頁體驗',games:'遊戲相容性',features:'主要功能',why:'開發初衷',jump:'瀏覽各個區域'}
   };
   const text = key => (copy[document.documentElement.lang] || copy.en)[key];
   function node(tag, className, value) { const el = document.createElement(tag); if(className)el.className=className; if(value)el.textContent=value; return el; }

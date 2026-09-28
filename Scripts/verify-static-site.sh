@@ -1708,7 +1708,7 @@ for html in index.html why.html license.html privacy.html support.html compatibi
   else
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-14"'
   fi
-  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260927-license1"'
+  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260928-copy1"'
   require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.css?v=20260905-7'
   require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.js?v=20260905-2'
   if [[ "$html" != "index.html" ]]; then
@@ -1817,7 +1817,7 @@ require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.logLabel"'
 require_snippet "$ROOT_DIR/compatibility.html" 'issues/new?template=compatibility-report.yml'
 require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/compatibility.html" 'href="site.css?v=20260811-22"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260927-license1"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260928-copy1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/current-release.js?v=20260905-7"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20260928-order1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260928-order1"'

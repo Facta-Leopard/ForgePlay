@@ -52,8 +52,7 @@
 .fp-retro .arcade-scene-bay .fp-panorama figcaption { bottom:12px; left:16px; right:16px; }
 .fp-retro .arcade-scene-bay .fp-stage-caption { font-size:15px; max-width:190px; color:#ddc9a8; }
 .fp-retro .arcade-scene-bay .fp-stage-route { display:none; }
-.arcade-scene-controls { display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:9px 12px; background:#302519; border-top:1px solid #80603b; }
-.arcade-scene-controls p { margin-right:auto; color:#b9a482; font-size:9px; line-height:1.5; max-width:190px; }
+.arcade-scene-controls { display:flex; justify-content:flex-end; align-items:center; flex-wrap:wrap; gap:8px; padding:9px 12px; background:#302519; border-top:1px solid #80603b; }
 .fp-retro .arcade-scene-controls button { position:static; display:block; width:auto; height:auto; min-height:32px; min-width:48px; border:1px solid #ad8451; padding:6px 12px; border-radius:1px; background:#4a3520; color:#f8d99f; font-size:10px!important; line-height:1.4; box-shadow:2px 2px #170f07; }
 .arcade-scene-controls button[aria-pressed=false] { color:#8e8b76; background:#171a16; border-color:#555b4a; }
 .fp-retro .arcade-lights-dim .pixel-background { filter:brightness(.45) saturate(.7); }.fp-retro .arcade-lights-dim .pixel-character { filter:brightness(.7); }
@@ -133,7 +132,7 @@
   .fp-retro .fp-wrap { width:calc(100% - 30px); }.arcade-cabinet { margin-top:22px; padding:5px; }.arcade-cabinet-body { grid-template-columns:1fr; }.arcade-intro { padding:25px 22px; }.fp-retro .arcade-intro h1 { font-size:clamp(35px,8vw,49px); }.fp-retro .arcade-intro .fp-actions { max-width:none; }
   .arcade-marquee { padding:9px 11px; }.arcade-marquee-spec { font-size:7px; letter-spacing:.02em; }.arcade-marquee-brand { font-size:9px; }
   .arcade-scene-bay { border-left:0; border-top:1px solid #73583a; grid-template-rows:auto 290px auto; }.fp-retro .arcade-scene-bay .fp-panorama { min-height:290px; }.fp-retro .arcade-scene-bay .pixel-character { height:85%; left:25%; bottom:10%; }
-  .fp-retro .arcade-scene-bay .pixel-background { object-position:66% center; }.fp-retro .arcade-scene-bay .fp-stage-caption { font-size:13px; max-width:160px; }.arcade-scene-controls p { font-size:8px; }
+  .fp-retro .arcade-scene-bay .pixel-background { object-position:66% center; }.fp-retro .arcade-scene-bay .fp-stage-caption { font-size:13px; max-width:160px; }
   .fp-retro .arcade-firsts { gap:5px; }.fp-retro .arcade-firsts>a { padding:9px; gap:7px; }.fp-retro .arcade-firsts>a b { font-size:8px; }.fp-retro .arcade-firsts>a span span { font-size:8px; }
   .fp-retro .arcade-newsboard { padding:15px; grid-template-columns:1fr; gap:8px; }.fp-retro .arcade-newsboard .fp-news-meta { grid-column:1; grid-row:1; display:flex; gap:12px; }.fp-retro .arcade-newsboard h2 { grid-column:1; grid-row:2; font-size:16px; }.fp-retro .arcade-newsboard .fp-news-summary { grid-column:1; grid-row:3; }.fp-retro .arcade-newsboard .fp-news-links { grid-column:1; grid-row:4; }
   .arcade-release-shelf { flex-wrap:wrap; }.arcade-shelf-title { width:100%; flex:auto; }.fp-retro .arcade-release-shelf .fp-poster-strip { width:100%; justify-content:space-between; gap:15px; }.fp-retro .arcade-release-shelf .fp-poster-card { width:42px; }.fp-retro .arcade-release-shelf .fp-poster-frame { height:63px; }
