@@ -1,7 +1,7 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-09-22",
+  "updatedAt": "2026-09-28",
   "testProfiles": [
     {
       "id": "apple-silicon-m5-pro-24gb-macos-27-0",
@@ -156,6 +156,13 @@
       "chip": "M4 Pro",
       "unifiedMemoryGB": 24,
       "macOSVersion": "26.6.2 (25G83)"
+    },
+    {
+      "id": "apple-silicon-m4-24gb-tahoe-26-5",
+      "platform": "Apple Silicon Mac",
+      "chip": "M4",
+      "unifiedMemoryGB": 24,
+      "macOSVersion": "Tahoe 26.5"
     }
   ],
   "games": [
@@ -451,6 +458,20 @@
       "titles": {
         "en": "The Forest",
         "ko": "더 포레스트"
+      }
+    },
+    {
+      "id": "team-fortress-2",
+      "titles": {
+        "en": "Team Fortress 2",
+        "ko": "팀 포트리스 2"
+      }
+    },
+    {
+      "id": "lethal-company",
+      "titles": {
+        "en": "Lethal Company",
+        "ko": "리썰 컴퍼니"
       }
     }
   ],
@@ -1368,6 +1389,50 @@
         "zh-Hant": "GitHub 使用者 @sleeeppy 回報：透過 HoYoPlay 啟動的官方 Windows Steam 版《絕區零》（Steam App ID 4162040）可由 ForgePlay 內的 Windows Steam 啟動，但工作階段始終無法到達可遊玩的畫面。測試環境為 Mac17,9、Apple M5 Pro、24GB 統一記憶體、macOS 26.6.2（25G83）。"
       },
       "blocker": "launcher"
+    },
+    {
+      "id": "team-fortress-2-forgeplay-2-0-0-community-oo-20260928",
+      "gameId": "team-fortress-2",
+      "testProfileId": null,
+      "forgePlayVersion": "2.0.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "ㅇㅇ",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.0.0에서 WineD3D로 정상 실행된다는 커뮤니티 제보입니다. 다만 시점을 돌릴 때 마우스 입력이 간헐적으로 끊기는 듯한 증상이 있다고 합니다. Mac 사양·macOS 버전·게임 버전은 확인되지 않았습니다.",
+        "en": "A community report says Team Fortress 2 runs successfully with WineD3D in ForgePlay 2.0.0. However, mouse input reportedly seems to stutter intermittently when turning the camera. Mac specifications, macOS version and game version are unconfirmed.",
+        "ja": "ForgePlay 2.0.0でWineD3Dを使用すると正常に動作するとのコミュニティ報告です。ただし、視点を動かす際にマウス入力が断続的に途切れるように感じるとのことです。Macの仕様、macOSのバージョン、ゲームのバージョンは未確認です。",
+        "zh-Hans": "社区反馈称，Team Fortress 2 在 ForgePlay 2.0.0 中使用 WineD3D 可以正常运行。不过，转动视角时似乎存在鼠标输入间歇性卡顿的现象。Mac 配置、macOS 版本和游戏版本尚未确认。",
+        "zh-Hant": "社群回報指出，Team Fortress 2 在 ForgePlay 2.0.0 中使用 WineD3D 可正常執行。不過，轉動視角時似乎有滑鼠輸入間歇性卡頓的情況。Mac 規格、macOS 版本與遊戲版本尚未確認。",
+        "de": "Laut einem Community-Bericht läuft Team Fortress 2 mit WineD3D in ForgePlay 2.0.0 erfolgreich. Beim Drehen der Kamera scheint die Mauseingabe jedoch zeitweise zu stocken. Mac-Spezifikationen, macOS-Version und Spielversion sind nicht bestätigt.",
+        "es": "Según un informe de la comunidad, Team Fortress 2 funciona con WineD3D en ForgePlay 2.0.0. Sin embargo, al girar la cámara parece que la entrada del ratón se entrecorta de forma intermitente. No se han confirmado las especificaciones del Mac, la versión de macOS ni la del juego.",
+        "fr": "Selon un signalement de la communauté, Team Fortress 2 fonctionne avec WineD3D dans ForgePlay 2.0.0. Toutefois, la réponse à la souris semble parfois saccadée lors des changements de direction de la caméra. La configuration du Mac, la version de macOS et celle du jeu ne sont pas confirmées."
+      },
+      "blocker": null
+    },
+    {
+      "id": "lethal-company-github-24-dms-199999-20260928",
+      "gameId": "lethal-company",
+      "testProfileId": "apple-silicon-m4-24gb-tahoe-26-5",
+      "forgePlayVersion": null,
+      "gameVersion": null,
+      "status": "playable",
+      "source": "github-issue",
+      "reporter": "dms-199999",
+      "testedAt": null,
+      "notes": {
+        "ko": "GitHub 이슈 #24: M4·메모리 24GB·macOS Tahoe 26.5 환경에서 플레이 가능하다고 제보했습니다. ForgePlay 버전은 원문의 오기재 가능성이 있어 확인 중입니다. 그래픽 백엔드와 게임 버전은 확인되지 않았습니다. 원문: https://github.com/Facta-Leopard/ForgePlay/issues/24",
+        "en": "GitHub issue #24 reports Lethal Company as playable on an M4 Mac with 24GB memory and macOS Tahoe 26.5. The ForgePlay version is awaiting confirmation because the original entry may be incorrect. The graphics backend and game version are unconfirmed. Source: https://github.com/Facta-Leopard/ForgePlay/issues/24",
+        "ja": "GitHubイシュー#24：M4、メモリ24GB、macOS Tahoe 26.5の環境でプレイ可能との報告です。ForgePlayのバージョンは原文の記載に誤りの可能性があるため確認中です。グラフィックバックエンドとゲームのバージョンは未確認です。原文：https://github.com/Facta-Leopard/ForgePlay/issues/24",
+        "zh-Hans": "GitHub 问题 #24：反馈者报告在 M4、24GB 内存、macOS Tahoe 26.5 环境下可以游玩。由于原文的 ForgePlay 版本可能填写有误，目前正在确认。图形后端和游戏版本尚未确认。原文：https://github.com/Facta-Leopard/ForgePlay/issues/24",
+        "zh-Hant": "GitHub 問題 #24：回報者表示在 M4、24GB 記憶體、macOS Tahoe 26.5 環境下可以遊玩。由於原文的 ForgePlay 版本可能填寫有誤，目前正在確認。圖形後端與遊戲版本尚未確認。原文：https://github.com/Facta-Leopard/ForgePlay/issues/24",
+        "de": "GitHub-Issue #24 meldet Lethal Company auf einem M4-Mac mit 24 GB Arbeitsspeicher und macOS Tahoe 26.5 als spielbar. Die ForgePlay-Version wird noch geklärt, da die ursprüngliche Angabe möglicherweise falsch ist. Grafik-Backend und Spielversion sind nicht bestätigt. Quelle: https://github.com/Facta-Leopard/ForgePlay/issues/24",
+        "es": "La incidencia #24 de GitHub indica que Lethal Company es jugable en un Mac M4 con 24GB de memoria y macOS Tahoe 26.5. La versión de ForgePlay está pendiente de confirmación, ya que el dato original podría ser incorrecto. No se han confirmado el backend gráfico ni la versión del juego. Fuente: https://github.com/Facta-Leopard/ForgePlay/issues/24",
+        "fr": "Le ticket GitHub nº24 indique que Lethal Company est jouable sur un Mac M4 avec 24Go de mémoire et macOS Tahoe 26.5. La version de ForgePlay reste à confirmer, car celle indiquée dans le signalement pourrait être erronée. Le backend graphique et la version du jeu ne sont pas confirmés. Source : https://github.com/Facta-Leopard/ForgePlay/issues/24"
+      },
+      "blocker": null
     }
   ]
 }
