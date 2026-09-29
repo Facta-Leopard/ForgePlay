@@ -95,6 +95,7 @@ PAGES=(
   site-assets/version-posters/forgeplay-1.3.jpg
   site-assets/version-posters/forgeplay-2.0.0.png
   site-assets/version-posters/forgeplay-vr-preview.jpg
+  site-assets/version-posters/forgeplay-ai-coordinator-preview.jpg
   site-assets/site-shell.js
   site-data/compatibility-games.json
   site-data/compatibility.schema.json
@@ -1895,10 +1896,11 @@ root = Path(sys.argv[1])
 page = (root / 'index.html').read_text()
 cards = re.findall(r'<button\b[^>]*data-poster-version="([^"]+)"[^>]*>', page)
 previews = re.findall(r'<button\b[^>]*data-poster-preview[^>]*>', page)
-if cards != ['1.0','1.1','1.2','1.3','2.0.0','VR'] or len(previews) != 1 or 'data-poster-version="VR"' not in previews[0]:
-    raise SystemExit('Release posters must remain versioned; only the new VR poster is a preview')
-if not (root / 'site-assets/version-posters/forgeplay-vr-preview.jpg').read_bytes().startswith(b'\xff\xd8\xff'):
-    raise SystemExit('VR preview poster must be a valid JPEG asset')
+if cards != ['1.0','1.1','1.2','1.3','2.0.0','VR','AI Coordinator'] or len(previews) != 2 or not all(f'data-poster-version="{label}"' in tag for label,tag in zip(['VR','AI Coordinator'],previews)):
+    raise SystemExit('Release posters must remain versioned; VR and AI Coordinator are previews')
+for name in ['forgeplay-vr-preview.jpg','forgeplay-ai-coordinator-preview.jpg']:
+    if not (root / 'site-assets/version-posters' / name).read_bytes().startswith(b'\xff\xd8\xff'):
+        raise SystemExit('Preview poster must be a valid JPEG asset: '+name)
 POSTERS
 
 require_snippet "$ROOT_DIR/compatibility.html" 'data-compatibility-list'
