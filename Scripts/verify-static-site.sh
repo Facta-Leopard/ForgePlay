@@ -94,6 +94,7 @@ PAGES=(
   site-assets/version-posters/forgeplay-1.2.png
   site-assets/version-posters/forgeplay-1.3.jpg
   site-assets/version-posters/forgeplay-2.0.0.png
+  site-assets/version-posters/forgeplay-vr-preview.jpg
   site-assets/site-shell.js
   site-data/compatibility-games.json
   site-data/compatibility.schema.json
@@ -1853,9 +1854,24 @@ require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.sponsorMark"'
 require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'THE WORLD’S FIRST*'
 require_snippet "$ROOT_DIR/index.html" 'data-poster-version="2.0.0"'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/version-posters/forgeplay-2.0.0.png"'
-if rg -q 'data-poster-version="DLSS5"|data-poster-preview' "$ROOT_DIR/index.html"; then
+if rg -q 'data-poster-version="DLSS5"' "$ROOT_DIR/index.html"; then
   fail "versioned posters must not retain the old DLSS5 preview label"
 fi
+require_snippet "$ROOT_DIR/index.html" 'data-poster-version="VR" data-poster-preview'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/version-posters/forgeplay-vr-preview.jpg"'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/version-posters.js?v=20260929-vr1"'
+python3 - "$ROOT_DIR" <<'POSTERS'
+from pathlib import Path
+import re, sys
+root = Path(sys.argv[1])
+page = (root / 'index.html').read_text()
+cards = re.findall(r'<button\b[^>]*data-poster-version="([^"]+)"[^>]*>', page)
+previews = re.findall(r'<button\b[^>]*data-poster-preview[^>]*>', page)
+if cards != ['1.0','1.1','1.2','1.3','2.0.0','VR'] or len(previews) != 1 or 'data-poster-version="VR"' not in previews[0]:
+    raise SystemExit('Release posters must remain versioned; only the new VR poster is a preview')
+if not (root / 'site-assets/version-posters/forgeplay-vr-preview.jpg').read_bytes().startswith(b'\xff\xd8\xff'):
+    raise SystemExit('VR preview poster must be a valid JPEG asset')
+POSTERS
 
 require_snippet "$ROOT_DIR/compatibility.html" 'data-compatibility-list'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-compatibility-platform'

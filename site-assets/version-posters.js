@@ -13,6 +13,7 @@
   });
   const message = (key, version) => (window.ForgePlaySite?.message(key) || key)
     .replace("{version}", version);
+  const posterLabel = poster => poster.version + (poster.preview ? " · " + message("posters.preview", "") : "");
   let currentIndex = 0;
   let opener = null;
 
@@ -22,7 +23,7 @@
     image.src = poster.src;
     image.width = poster.width;
     image.height = poster.height;
-    image.alt = message("posters.imageAlt", poster.version);
+    image.alt = message("posters.imageAlt", posterLabel(poster));
     title.textContent = "ForgePlay " + poster.version;
     position.textContent = (currentIndex + 1) + " / " + posters.length;
     development.hidden = !poster.preview;
@@ -58,7 +59,7 @@
   });
   const localize = () => {
     buttons.forEach((button, index) => {
-      const label = posters[index].version + (posters[index].preview ? " · " + message("posters.preview", "") : "");
+      const label = posterLabel(posters[index]);
       button.setAttribute("aria-label", message("posters.open", label));
       button.querySelector("img").alt = message("posters.imageAlt", label);
     });
