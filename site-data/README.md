@@ -61,8 +61,8 @@ boundary, and release workflow are documented in
 
 Launch-platform classification is stored directly in each schema-3 report's
 `launchPlatform` field. See [the platform contract](compatibility-platforms.md)
-for the six values, unknown fallback, game-platform grouping and launcher handoff.
-Every new report must specify one of the six values, using `unknown` when not reported.
+for the seven values, unknown fallback, game-platform grouping and launcher handoff.
+Every new report must specify one of the seven values, using `unknown` when not reported.
 
 The app-shared compatibility catalog has one source of truth:
 `site-data/compatibility-games.json`. Updates affect the website and schema-3
@@ -161,7 +161,7 @@ One spreadsheet row should represent one test report. The preferred columns are:
 | `title_en` | yes for a new game | `Stellar Blade` |
 | `title_ko` | yes for a new game; include Hangul | `스텔라 블레이드` |
 | `status` | yes | `playable`, `testing`, `blocked`, or `unknown` |
-| `launch_platform` | yes in schema 3 | `steam`, `battlenet`, `epic`, `stove`, `exe`, or `unknown`; do not infer a missing platform |
+| `launch_platform` | yes in schema 3 | `steam`, `battlenet`, `epic`, `stove`, `exe`, `vr`, or `unknown`; do not infer a missing platform |
 | `forgeplay_version` | optional | `1.1`; use `development` for an unreleased development build; leave blank when not reported |
 | `game_version` | optional | Game version, patch, or build; leave blank when not reported |
 | `device_id` | yes; leave blank if not reported | `apple-silicon-m4-pro-24gb` |

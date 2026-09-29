@@ -151,7 +151,7 @@
           "$ref": "#/$defs/identifier"
         },
         "launchPlatform": {
-          "enum": ["steam", "battlenet", "epic", "stove", "exe", "unknown"],
+          "enum": ["steam", "battlenet", "epic", "stove", "exe", "vr", "unknown"],
           "description": "Reported execution platform, not the renderer, hardware platform or purchase source."
         },
         "testProfileId": {

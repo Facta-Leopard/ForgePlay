@@ -39,11 +39,18 @@ by their schema. Record IDs, game IDs and hardware IDs keep their meaning.
 | `epic` | Epic Games |
 | `stove` | STOVE |
 | `exe` | Direct EXE / EXE 직접 실행 |
+| `vr` | VR |
 | `unknown` | Unknown platform / 플랫폼 미확인 |
 
 The field identifies the reported execution path, not the purchase source,
 graphics backend or hardware `testProfile.platform`. A Steam-installed game
 launched directly as an EXE is an `exe` report when that is the reported path.
+
+`vr` identifies a reported ForgePlay VR execution path. It is separate from a
+desktop Steam result even when the game is installed through Steam. A game's
+name or VR support alone does not make its existing reports `vr`; record the
+actual tested path. VR is displayed with the same abbreviation in all eight
+website languages.
 
 Schema 3 rejects missing, null and unsupported values; unknown information is
 explicitly `unknown`. When an updated reader opens older schema-1/2 bundles or
@@ -70,7 +77,7 @@ for the same game must remain separate cards, not one combined verdict.
 
 ## Refresh and launcher integration
 
-Keep strict validation: schema 3 permits the new key and requires one of the six
+Keep strict validation: schema 3 permits the new key and requires one of the seven
 values, rather than accepting arbitrary unknown keys. Keep legacy 1/2 decoding
 for existing bundles/caches, mapping only their missing platform to unknown.
 
@@ -94,3 +101,8 @@ follow-up) as Steam. Removing only `launchPlatform` from the migrated reports
 reproduces their previous records exactly. No result, ForgePlay version, hardware,
 reporter, note or tested date was changed. In particular, no new Battle.net /
 Overwatch anti-cheat report is published; the user will provide that separately.
+
+The subsequent VR category addition keeps schema 3 and the existing URLs. It
+extends the allowed values only: no report payload, update date, status or
+Steam classification changes, and no VR results are invented. The launcher
+reader and filters accept `vr` through the coordinated source update.

@@ -3,11 +3,11 @@
 
   // Website-only additions never replace the catalog consumed by the app.
   const statusOrder = ["playable", "testing", "blocked", "unknown"];
-  const platforms = Object.freeze(["steam", "battlenet", "epic", "stove", "exe", "unknown"]);
+  const platforms = Object.freeze(["steam", "battlenet", "epic", "stove", "exe", "vr", "unknown"]);
   const platformOf = report => platforms.includes(report.launchPlatform) ? report.launchPlatform : "unknown";
   const platformLabel = (platform, message) => ({
     steam:"Steam", battlenet:"Battle.net", epic:"Epic Games", stove:"STOVE",
-    exe:message("compat.platformEXE"), unknown:message("compat.platformUnknown")
+    exe:message("compat.platformEXE"), vr:"VR", unknown:message("compat.platformUnknown")
   }[platform] || message("compat.platformUnknown"));
   // Both website lists use the assessed game status, not raw report/file order.
   // Equal-status games retain their existing relative order.

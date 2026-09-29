@@ -693,9 +693,9 @@ if schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
 if schema.get("properties", {}).get("schemaVersion", {}).get("const") != 3:
     raise SystemExit("compatibility schema must require schemaVersion 3")
 report_properties = schema.get("$defs", {}).get("report", {}).get("properties", {})
-platform_values = ["steam", "battlenet", "epic", "stove", "exe", "unknown"]
+platform_values = ["steam", "battlenet", "epic", "stove", "exe", "vr", "unknown"]
 if report_properties.get("launchPlatform", {}).get("enum") != platform_values or "launchPlatform" not in schema["$defs"]["report"]["required"]:
-    raise SystemExit("schema 3 must require the six launch-platform values")
+    raise SystemExit("schema 3 must require the seven launch-platform values")
 for version_field in ("forgePlayVersion", "gameVersion"):
     version_types = report_properties.get(version_field, {}).get("type", [])
     if not (
@@ -1769,7 +1769,7 @@ require_snippet "$ROOT_DIR/index.html" 'data-current-release-download'
 require_snippet "$ROOT_DIR/index.html" 'data-current-release-download-label'
 require_snippet "$ROOT_DIR/index.html" 'data-current-release-link'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/current-release.js?v=20260905-7"'
-require_snippet "$ROOT_DIR/index.html" 'src="site-assets/website-compatibility.js?v=20260929-platform1"'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/website-compatibility.js?v=20260929-platform-vr1"'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/home-experience.css?v=20260905-8'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/home-experience.js?v=20260929-platform1"'
 require_snippet "$ROOT_DIR/index.html" 'data-release-download'
@@ -1827,7 +1827,7 @@ require_snippet "$ROOT_DIR/compatibility.html" 'data-compatibility-list'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-compatibility-platform'
 for html in index.html compatibility.html; do
   require_snippet "$ROOT_DIR/$html" 'site-assets/compatibility-platforms.css?v=20260929-1'
-  for platform in steam battlenet epic stove exe unknown; do
+  for platform in steam battlenet epic stove exe vr unknown; do
     require_snippet "$ROOT_DIR/$html" "value=\"$platform\""
   done
 done
@@ -1842,7 +1842,8 @@ require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count
 require_snippet "$ROOT_DIR/compatibility.html" 'href="site.css?v=20260811-22"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260929-platform1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/current-release.js?v=20260905-7"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20260929-platform1"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20260929-platform-vr1"'
+require_snippet "$ROOT_DIR/site-assets/guide.html" 'src="site-assets/website-compatibility.js?v=20260929-platform-vr1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260929-platform1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-card'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-tag'
@@ -2257,6 +2258,7 @@ const fixture = {...baseV3, games:[{id:"fixture",titles:{en:"Fixture",ko:"검증
   currentRelease:{marketingVersion:"2.0.0"}, reports:[
     {...report("1.2","playable"), id:"steam-report", gameId:"fixture", launchPlatform:"steam"},
     {...report("2.0.0","blocked"), id:"bnet-report", gameId:"fixture", launchPlatform:"battlenet"},
+    {...report("2.0.0","testing"), id:"vr-report", gameId:"fixture", testProfileId:null, launchPlatform:"vr"},
     {...report("2.0.0","playable"), id:"unknown-report", gameId:"fixture", launchPlatform:"unknown"}
   ]};
 const emptyV3 = {...webV3,testProfiles:[],reports:[],notePatches:[]};
@@ -2264,13 +2266,21 @@ const joined = model.merge(fixture,emptyV3);
 const byPlatform = new Map(model.platformGroups(joined).map(group=>[group.launchPlatform,group]));
 assert.equal(byPlatform.get("steam").summary.tone,"green");
 assert.equal(byPlatform.get("battlenet").summary.tone,"red");
+assert.equal(byPlatform.get("vr").summary.tone,"yellow");
+assert.equal(byPlatform.get("vr").reports[0].id,"vr-report");
+assert.equal(model.platformOf({launchPlatform:"vr"}),"vr");
+assert.equal(model.platformLabel("vr",key=>key),"VR");
 assert.equal(byPlatform.get("steam").reports.length,1);
-assert.equal(new Set([...byPlatform.values()].map(group=>group.key)).size,3);
+assert.equal(new Set([...byPlatform.values()].map(group=>group.key)).size,4);
 assert.deepEqual(Array.from(model.platformGroups(joined,"steam"),group=>group.launchPlatform),["steam"]);
+assert.deepEqual(Array.from(model.platformGroups(joined,"vr"),group=>group.key),["fixture:vr"]);
+assert.deepEqual(Array.from(model.platforms),["steam","battlenet","epic","stove","exe","vr","unknown"]);
+const vrSupplement = model.merge({...fixture,reports:[]},{...emptyV3,reports:[fixture.reports[2]]});
+assert.equal(model.platformGroups(vrSupplement,"vr").length,1,"website-only VR reports use the same grouping");
 assert.equal(model.platformGroups(joined,"epic").length,0);
 assert.equal(new Set(model.platformGroups(joined).filter(group=>group.status==="playable").map(group=>group.game.id)).size,1);
 assert.equal(model.platformOf({gameId:"fixture"}),"unknown","legacy missing platform must never inherit Steam");
-for (const launchPlatform of [undefined,null,"Steam","unsupported"]) {
+for (const launchPlatform of [undefined,null,"Steam","VR","unsupported"]) {
   assert.throws(()=>model.merge({...fixture,reports:[{...fixture.reports[0],launchPlatform}]},emptyV3));
 }
 assert.throws(()=>model.merge(fixture,{...emptyV3,schemaVersion:1}));
