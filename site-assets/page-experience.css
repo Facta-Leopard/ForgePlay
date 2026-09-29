@@ -165,6 +165,15 @@
 .fp-site .update-card-list { color: var(--page-copy); font-size: .95rem; line-height: 1.8; }
 .fp-site .update-card-body p,
 .fp-site .update-card-list li { overflow-wrap: anywhere; }
+.fp-site .update-card-body strong { color:var(--page-ink); font-weight:650; }
+.fp-site .update-inline-image { min-width:0; margin:6px 0 12px; }
+.fp-site .update-inline-image a { display:block; overflow:hidden; border:1px solid var(--page-line); border-radius:8px; cursor:zoom-in; }
+.fp-site .update-inline-image img { display:block; width:100%; height:auto; }
+.fp-site .update-inline-image figcaption { padding-top:10px; color:var(--page-muted); font-size:.8rem; line-height:1.7; word-break:keep-all; }
+.fp-site .update-feedback-button { display:inline-flex; align-items:center; justify-content:center; justify-self:start; max-width:100%; min-height:48px; padding:12px 20px; border:1px solid var(--page-accent); border-radius:8px; background:var(--page-accent); color:#101111; font-size:.93rem; font-weight:700; line-height:1.5; text-align:center; text-decoration:none; }
+.fp-site .update-feedback-button:hover { filter:brightness(1.12); color:#101111; }
+.fp-site .update-feedback-button:focus-visible,.fp-site .update-inline-image a:focus-visible { outline:2px solid var(--page-ink); outline-offset:5px; }
+@media(max-width:600px) { .fp-site .update-feedback-button { width:100%; } }
 .fp-site .update-card-section-title { color: var(--page-ink); font-size: 1.15rem; font-weight: 600; line-height: 1.5; }
 .fp-site .update-card-note { background: #1d2025; border-color: var(--page-accent); }
 .fp-site .update-card-divider { background: var(--page-line); }

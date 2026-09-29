@@ -131,14 +131,29 @@
             "additionalProperties": false,
             "required": ["src", "caption"],
             "properties": {
-              "src": {"type": "string", "pattern": "^site-assets/announcements/[a-z0-9-]+\\.jpg$"},
-              "caption": {"$ref": "#/$defs/localizedText"}
+              "src": {"type": "string", "pattern": "^site-assets/announcements/[a-z0-9-]+\\.(jpg|png)$"},
+              "caption": {"$ref": "#/$defs/localizedText"},
+              "alt": {"$ref": "#/$defs/localizedText"},
+              "width": {"type": "integer", "minimum": 1},
+              "height": {"type": "integer", "minimum": 1},
+              "afterParagraph": {"type": "integer", "minimum": 0}
             }
           }
         },
         "href": {
           "type": "string",
           "minLength": 1
+        },
+        "action": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["href", "label", "accessibilityLabel", "afterParagraph"],
+          "properties": {
+            "href": {"const": "https://github.com/Facta-Leopard/ForgePlay/issues"},
+            "label": {"$ref": "#/$defs/localizedText"},
+            "accessibilityLabel": {"$ref": "#/$defs/localizedText"},
+            "afterParagraph": {"type": "integer", "minimum": 0}
+          }
         }
       }
     }

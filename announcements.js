@@ -120,6 +120,45 @@
 
   const bulletLinePattern = /^(\s*)-\s+(.+)$/;
 
+  const appendEmphasizedText = (parent, text) => {
+    // A small text-only format: emphasis never permits HTML or executable markup.
+    let offset = 0;
+    for (const match of text.matchAll(/\*\*([^*]+)\*\*/g)) {
+      parent.append(document.createTextNode(text.slice(offset, match.index)));
+      appendTextElement(parent, "strong", "", match[1]);
+      offset = match.index + match[0].length;
+    }
+    parent.append(document.createTextNode(text.slice(offset)));
+  };
+
+  const appendImage = (parent, asset, selectedLocale, className = "") => {
+    if (!/^site-assets\/announcements\/[a-z0-9-]+\.(?:jpg|png)$/.test(asset.src)) return;
+    const figure = document.createElement("figure");
+    figure.className = className;
+    const caption = localizedText(asset.caption, selectedLocale);
+    const link = document.createElement("a");
+    link.href = asset.src;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    const image = document.createElement("img");
+    image.src = asset.src;
+    image.alt = localizedText(asset.alt, selectedLocale) || caption;
+    image.loading = "lazy";
+    image.width = asset.width || 1280;
+    image.height = asset.height || 831;
+    link.append(image);
+    figure.append(link);
+    appendTextElement(figure, "figcaption", "", caption);
+    parent.append(figure);
+  };
+
+  const appendAction = (parent, action, selectedLocale) => {
+    if (action.href !== "https://github.com/Facta-Leopard/ForgePlay/issues") return;
+    const link = appendTextElement(parent, "a", "update-feedback-button", localizedText(action.label, selectedLocale));
+    applyLinkDestination(link, action.href, selectedLocale);
+    link.setAttribute("aria-label", localizedText(action.accessibilityLabel, selectedLocale));
+  };
+
   const appendBulletList = (parent, lines) => {
     const rootList = document.createElement("ul");
     rootList.className = "update-card-list";
@@ -168,12 +207,13 @@
       return;
     }
 
-    appendTextElement(
+    const element = appendTextElement(
       parent,
       "p",
       trimmed.startsWith("※") ? "update-card-note" : "",
-      trimmed
+      ""
     );
+    appendEmphasizedText(element, trimmed);
   };
 
   const renderList = (announcements, selectedLocale) => {
@@ -234,31 +274,20 @@
       if (paragraphs.length) {
         const body = document.createElement("div");
         body.className = "update-card-body";
-        paragraphs.forEach((paragraph) => appendStructuredParagraph(body, paragraph));
+        paragraphs.forEach((paragraph, index) => {
+          appendStructuredParagraph(body, paragraph);
+          (announcement.images || []).filter(asset => asset.afterParagraph === index)
+            .forEach(asset => appendImage(body, asset, selectedLocale, "update-inline-image"));
+          if (announcement.action?.afterParagraph === index) appendAction(body, announcement.action, selectedLocale);
+        });
         content.append(body);
       }
 
-      if (announcement.images?.length) {
+      const galleryImages = (announcement.images || []).filter(asset => asset.afterParagraph === undefined);
+      if (galleryImages.length) {
         const gallery = document.createElement("div");
         gallery.className = "update-images";
-        announcement.images.forEach((asset) => {
-          const figure = document.createElement("figure");
-          const caption = localizedText(asset.caption, selectedLocale);
-          const link = document.createElement("a");
-          link.href = asset.src;
-          link.target = "_blank";
-          link.rel = "noopener noreferrer";
-          const image = document.createElement("img");
-          image.src = asset.src;
-          image.alt = caption;
-          image.loading = "lazy";
-          image.width = 1280;
-          image.height = 831;
-          link.append(image);
-          figure.append(link);
-          appendTextElement(figure, "figcaption", "", caption);
-          gallery.append(figure);
-        });
+        galleryImages.forEach(asset => appendImage(gallery, asset, selectedLocale));
         content.append(gallery);
       }
 

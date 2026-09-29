@@ -1424,7 +1424,7 @@ for announcement in announcements:
     require_object_shape(
         announcement,
         {"id", "type", "publishedAt", "featured", "titles", "summaries", "href"},
-        {"id", "type", "publishedAt", "featured", "titles", "summaries", "paragraphs", "images", "href"},
+        {"id", "type", "publishedAt", "featured", "titles", "summaries", "paragraphs", "images", "action", "href"},
         f"announcement {identifier}",
     )
     if announcement.get("type") not in {"project", "release"}:
@@ -1501,17 +1501,30 @@ for announcement in announcements:
         if not isinstance(images, list) or not images:
             raise SystemExit(f"announcement {identifier}: images must be a non-empty list")
         for asset in images:
-            if not isinstance(asset, dict) or set(asset) != {"src", "caption"}:
-                raise SystemExit(f"announcement {identifier}: invalid image fields")
+            require_object_shape(asset, {"src", "caption"}, {"src", "caption", "alt", "width", "height", "afterParagraph"}, f"announcement {identifier} image")
             src = asset["src"]
-            if not isinstance(src, str) or not re.fullmatch(r"site-assets/announcements/[a-z0-9-]+\.jpg", src):
+            if not isinstance(src, str) or not re.fullmatch(r"site-assets/announcements/[a-z0-9-]+\.(jpg|png)", src):
                 raise SystemExit(f"announcement {identifier}: invalid image path")
             image = root / src
-            if image.is_symlink() or not image.is_file() or not image.read_bytes().startswith(b"\xff\xd8\xff"):
+            signature = b"\x89PNG\r\n\x1a\n" if src.endswith(".png") else b"\xff\xd8\xff"
+            if image.is_symlink() or not image.is_file() or not image.read_bytes().startswith(signature):
                 raise SystemExit(f"announcement {identifier}: missing or invalid image")
             captions = asset["caption"]
             if not isinstance(captions, dict) or set(captions) != set(locale_names) or not all(isinstance(v, str) and v.strip() for v in captions.values()):
                 raise SystemExit(f"announcement {identifier}: image captions must cover eight locales")
+            if "alt" in asset and (set(asset["alt"]) != set(locale_names) or not all(isinstance(v,str) and v.strip() for v in asset["alt"].values())):
+                raise SystemExit(f"announcement {identifier}: image alternatives must cover eight locales")
+            if "afterParagraph" in asset:
+                after = asset["afterParagraph"]
+                count = len(announcement.get("paragraphs", {}).get("en", []))
+                if type(after) is not int or not 0 <= after < count:
+                    raise SystemExit(f"announcement {identifier}: invalid inline image position")
+                if any(type(asset.get(key)) is not int or asset[key] < 1 for key in ("width", "height")):
+                    raise SystemExit(f"announcement {identifier}: inline images need dimensions")
+                if src.endswith(".png"):
+                    import struct
+                    if struct.unpack('>II', image.read_bytes()[16:24]) != (asset["width"],asset["height"]):
+                        raise SystemExit(f"announcement {identifier}: incorrect PNG dimensions")
     paragraphs = announcement.get("paragraphs")
     if paragraphs is not None:
         expected_detail_href = f"updates.html#update-{identifier}"
@@ -1542,6 +1555,21 @@ for announcement in announcements:
             raise SystemExit(
                 f"announcement {identifier} paragraph structure differs by locale"
             )
+    if "action" in announcement:
+        action = announcement["action"]
+        fields = {"href", "label", "accessibilityLabel", "afterParagraph"}
+        require_object_shape(action, fields, fields, f"announcement {identifier} action")
+        if action["href"] != "https://github.com/Facta-Leopard/ForgePlay/issues":
+            raise SystemExit("announcement feedback action must target the ForgePlay issue list")
+        for key in ("label", "accessibilityLabel"):
+            if not isinstance(action[key],dict) or set(action[key]) != set(locale_names) or not all(isinstance(v,str) and v.strip() for v in action[key].values()):
+                raise SystemExit(f"announcement {identifier}: action labels require eight locales")
+        after = action["afterParagraph"]
+        if type(after) is not int or not 0 <= after < len((paragraphs or {}).get("en", [])):
+            raise SystemExit(f"announcement {identifier}: invalid action position")
+
+if announcements_path.stat().st_size > 512_000:
+    raise SystemExit("announcement feed exceeds the launcher's existing download size limit")
 
 featured_announcements = [
     announcement for announcement in announcements
@@ -1837,7 +1865,7 @@ require_snippet "$ROOT_DIR/index.html" 'data-home-games'
 require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
 require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260929-platform1"'
-require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260919-1"'
+require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260929-news1"'
 require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260913-1"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
 require_snippet "$ROOT_DIR/index.html" 'data-announcement-summary'
@@ -2005,7 +2033,7 @@ require_snippet "$ROOT_DIR/site-data/README.md" 'Routine compatibility database 
 require_snippet "$ROOT_DIR/site-data/README.md" 'No raw HTML or Markdown is rendered.'
 require_snippet "$ROOT_DIR/updates.html" 'data-announcement-list'
 require_snippet "$ROOT_DIR/updates.html" 'data-nav-page="updates"'
-require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260919-1"'
+require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260929-news1"'
 require_snippet "$ROOT_DIR/updates.html" 'Release notes, important notices, and development news.'
 require_snippet "$ROOT_DIR/announcements.js" 'site-data/announcements.json'
 require_snippet "$ROOT_DIR/announcements.js" 'forgeplay:localechange'
