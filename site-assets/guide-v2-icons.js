@@ -9,6 +9,11 @@
   const line=d=>path(d);
   const solid={fill:'currentColor',stroke:'none'};
   const drawings={
+    vision:()=>[path('M4 7c3-3 13-3 16 0 3 3 2 10-1 10-2 0-4-3-7-3s-5 3-7 3C2 17 1 10 4 7Z')],
+    visionFill:()=>[path('M4 7c3-3 13-3 16 0 3 3 2 10-1 10-2 0-4-3-7-3s-5 3-7 3C2 17 1 10 4 7Z',solid)],
+    layers:()=>[path('m3 7 9-5 9 5-9 5Z'),line('m3 12 9 5 9-5M3 17l9 5 9-5')],
+    hand:()=>[path('M8 12V5a1.5 1.5 0 0 1 3 0v6-8a1.5 1.5 0 0 1 3 0v8-6a1.5 1.5 0 0 1 3 0v7-4a1.5 1.5 0 0 1 3 0v7c0 5-3 7-6 7h-2c-3 0-4-2-6-5l-3-4c-1-2 1-3 2-2l3 3')],
+    power:()=>[line('M12 2v10'),path('M7 5a9 9 0 1 0 10 0')],
     play:()=>[path('M8 5.5 19 12 8 18.5Z',solid)],
     playCircle:()=>[circle(12,12,9,solid),path('M10 7.5 16.5 12 10 16.5Z',{fill:'var(--sim-bg, #211710)',stroke:'none'})],
     controller:()=>[path('M7 6.5h10c3 0 4.2 3 4.5 7.5.3 4.3-1.1 5-3.2 3l-2-2H7.7l-2 2c-2.1 2-3.5 1.3-3.2-3C2.8 9.5 4 6.5 7 6.5Z'),line('M6 9v5m-2.5-2.5h5'),circle(16,10.3,.85,solid),circle(19,12.9,.85,solid)],

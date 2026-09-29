@@ -93,9 +93,14 @@
       throw new Error("Invalid website compatibility data");
     }
     if (base.schemaVersion === 3) {
+      if (Object.hasOwn(base, "revision") && (!Number.isSafeInteger(base.revision) || base.revision < 0)) {
+        throw new Error("Invalid schema-3 publication revision");
+      }
       for (const report of [...base.reports, ...additions.reports]) {
         if (!platforms.includes(report?.launchPlatform)) throw new Error("Invalid schema-3 launch platform");
       }
+    } else if (Object.hasOwn(base, "revision")) {
+      throw new Error("Publication revision requires schema 3");
     }
     const games = new Set(base.games.map((game) => game.id));
     const profiles = new Set(base.testProfiles.map((profile) => profile.id));

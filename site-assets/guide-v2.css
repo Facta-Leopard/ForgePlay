@@ -1,4 +1,4 @@
-/* Web-only 2.0.0 UI: native orange controls inside the existing site shell. */
+/* Web UI preview. Mac colors follow Mac/UI/Theme.swift (2026-09-29), not the release palette. */
 [data-guide-v2] { --v2-copper:#e89642; }
 [data-guide-v2] .sim-intro { border-top:1px solid var(--fp-line); padding-top:24px; }
 [data-guide-v2] .sim-intro h2 { font-size:22px; }
@@ -73,12 +73,13 @@ body:has(.v2-immersive) { overflow:hidden; }
 .v2-banner strong { display:block; font-size:25px; color:#ffc477; }.v2-banner small { display:block; font-size:10px; margin-top:7px; color:#ffc477; letter-spacing:.7px; }
 .v2-launcher-footer { display:flex; align-items:center; justify-content:space-between; color:#bbaa93; font-size:11px; padding-top:15px; }
 .v2-launcher-footer button,.v2-toolbar-button { background:#2e2924; color:#edd9bc; border:1px solid #62503d; border-radius:6px; min-width:34px; min-height:32px; }
-.v2-mac,.v2-dialog { --sim-bg:#141618; --sim-sidebar:#1a1c1f; --sim-panel:#212326; --sim-control:#2f3236; --sim-line:#44484f; --sim-ink:#f2f5fa; --sim-muted:#a8b0bd; --sim-primary:#ff5c3d; --sim-success:#40c285; --sim-warning:#f5ab3d; color-scheme:dark; }
-.v2-mac.sim-light,.v2-dialog.sim-light { --sim-bg:#f4f5f7; --sim-sidebar:#ecEFF2; --sim-panel:#fefeff; --sim-control:#eff1f3; --sim-line:#c9cfd6; --sim-ink:#1b1e23; --sim-muted:#59616e; --sim-primary:#d63821; --sim-success:#0a784f; --sim-warning:#854502; color-scheme:light; }
-.v2-mac .sim-titlebar { position:relative; background:linear-gradient(#2b2d30,#232528); padding:8px 14px; min-height:46px; }
+.v2-mac,.v2-dialog { --sim-bg:#12100e; --sim-sidebar:#1d1915; --sim-panel:#1d1915; --sim-control:#29221c; --sim-line:#3c3229; --sim-ink:#f4ebdd; --sim-muted:#bbae9e; --sim-primary:#e6a264; --sim-on-primary:#24160b; --sim-success:#a0c5ab; --sim-warning:#e6be79; --sim-danger:#eaa09a; color-scheme:dark; }
+.v2-mac.sim-light,.v2-dialog.sim-light { --sim-bg:#f2ede5; --sim-sidebar:#fcf8f2; --sim-panel:#fcf8f2; --sim-control:#e9e0d5; --sim-line:#d9cdbe; --sim-ink:#30261e; --sim-muted:#716252; --sim-primary:#a9501b; --sim-on-primary:#ffffff; --sim-success:#356b54; --sim-warning:#7f520f; --sim-danger:#a8403a; color-scheme:light; }
+.v2-mac .sim-titlebar { position:relative; background:var(--sim-panel); padding:8px 14px; min-height:46px; }
 .v2-mac .sim-titlebar strong { text-align:center; }
 .v2-toolbar-leading { display:flex; align-items:center; gap:28px; min-width:180px; }
-.v2-mac .v2-toolbar-button { border:0; background:transparent; color:#c2c5cb; }
+.v2-mac .v2-toolbar-button { border:0; background:transparent; color:var(--sim-muted); }
+[data-guide-v2] .v2-mac :is(h2,h3,h4),[data-guide-v2] .v2-dialog :is(h2,h3,h4) { color:var(--sim-ink); }
 .v2-mac .sim-sidebar { background:var(--sim-sidebar); padding:18px 10px 14px; }
 .v2-mac .sim-layout { grid-template-columns:242px minmax(0,1fr); min-height:725px; }
 .v2-mac .sim-brand { padding:0 12px 20px; align-items:start; gap:12px; }
@@ -96,17 +97,17 @@ body:has(.v2-immersive) { overflow:hidden; }
 .v2-view-heading p { margin-top:6px; color:var(--sim-muted); font-size:12px; line-height:1.5; }
 .v2-view-heading>button { background:none; border:1px solid var(--sim-line); border-radius:6px; padding:7px 12px; color:var(--sim-muted); font-size:12px; }
 .v2-mac .sim-content { height:620px; padding:16px 28px 30px; scroll-behavior:auto; }
-.v2-mac.sim-light .sim-titlebar { background:linear-gradient(#f1f2f4,#e9ebef); color:var(--sim-ink); }
+.v2-mac.sim-light .sim-titlebar { background:var(--sim-panel); color:var(--sim-ink); }
 .v2-mac.sim-light .sim-sidebar { color:var(--sim-ink); }
 .v2-mac.sim-light .sim-primary,.v2-dialog.sim-light .sim-primary { color:white; }
 .v2-mac .sim-subnav { padding:3px; margin:10px 28px 0; width:fit-content; max-width:calc(100% - 56px); border:1px solid var(--sim-line); background:var(--sim-control); border-radius:8px; gap:0; }
 .v2-mac .sim-subnav button,.v2-dialog .sim-subnav button { font-size:12px; }
 .v2-mac .sim-subnav button,.v2-dialog .sim-subnav button { background:transparent; min-height:28px; border-radius:5px; padding:5px 14px; color:var(--sim-muted); }
 .v2-mac .sim-subnav button[aria-pressed=true],.v2-dialog .sim-subnav button[aria-pressed=true] { background:color-mix(in srgb,var(--sim-ink) 16%,var(--sim-control)); color:var(--sim-ink); border-color:#ffffff16; box-shadow:0 1px 3px #0003; }
-.v2-mac .sim-card { box-shadow:0 1px 0 #0003; border-radius:18px; padding:18px; }
+.v2-mac .sim-card { box-shadow:none; border-radius:16px; padding:20px; border-color:color-mix(in srgb,var(--sim-line) 65%,transparent); }
 .v2-card-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:15px; }
 .v2-card-heading h3 { font-size:16px; line-height:1.5; font-weight:650; color:var(--sim-ink); margin:0; flex:1; }
-.v2-card-heading>.v2-symbol { color:var(--sim-primary); width:21px; }
+.v2-card-heading>.v2-symbol { color:var(--sim-muted); width:28px; height:28px; padding:5px; border-radius:10px; background:var(--sim-control); }
 .v2-control-label { display:flex; align-items:center; gap:8px; }
 .v2-mac .v2-info,.v2-dialog .v2-info { display:inline-flex; min-height:24px; min-width:24px; width:24px; height:24px; padding:3px; background:transparent; border:0; color:var(--sim-muted); flex-shrink:0; }
 .v2-mac .v2-info:hover,.v2-dialog .v2-info:hover { color:var(--sim-ink); background:var(--sim-control); }
@@ -122,14 +123,17 @@ body:has(.v2-immersive) { overflow:hidden; }
 .v2-mac .sim-toggle-row,.v2-mac .sim-field,.v2-dialog .sim-toggle-row,.v2-dialog .sim-field { font-size:13px; padding:10px 12px; margin:8px 0; border:1px solid var(--sim-line); border-radius:10px; background:var(--sim-control); }
 .v2-processing .sim-toggle-row,.v2-processing .sim-field { border:0; border-radius:0; padding:6px 0; margin:0; background:none; min-height:37px; }
 .v2-processing .sim-toggle-row:not(:first-child) { border-top:1px solid var(--sim-line); padding-top:12px; margin-top:10px; }
-.v2-mac .sim-switch,.v2-dialog .sim-switch { width:32px; height:20px; min-height:20px; border:0; background:#63666c; }
+.v2-mac .sim-switch,.v2-dialog .sim-switch { width:32px; height:20px; min-height:20px; border:0; background:var(--sim-muted); }
 .v2-mac .sim-switch>span,.v2-dialog .sim-switch>span { height:16px; width:16px; top:2px; left:2px; box-shadow:0 1px 3px #0004; background:#fff; }
 .v2-mac .sim-switch[aria-checked=true]>span,.v2-dialog .sim-switch[aria-checked=true]>span { transform:translateX(12px); }
 .v2-mac .sim-switch[aria-checked=true],.v2-dialog .sim-switch[aria-checked=true] { background:var(--sim-primary); }
 .v2-mac .sim-card button,.v2-dialog .sim-card button { min-height:31px; padding:7px 11px; font-size:12px; border-color:var(--sim-line); border-radius:10px; }
 .v2-mac .sim-card .v2-info,.v2-dialog .sim-card .v2-info { padding:3px; min-height:24px; border:0; border-radius:5px; }
 .v2-mac .sim-toggle-row .sim-switch,.v2-dialog .sim-toggle-row .sim-switch { min-height:20px; padding:0; border-radius:12px; }
-.v2-mac .sim-primary,.v2-dialog .sim-primary { background:var(--sim-primary); color:#130d0a; border-color:var(--sim-primary); }
+.v2-mac .sim-primary,.v2-dialog .sim-primary { background:var(--sim-primary); color:var(--sim-on-primary); border-color:var(--sim-primary); }
+.v2-mac .sim-important,.v2-dialog .sim-important { color:var(--sim-warning)!important; border-color:var(--sim-warning); }
+.v2-mac .sim-content { scrollbar-color:var(--sim-line) transparent; }
+.v2-mac button:focus-visible,.v2-dialog button:focus-visible { outline-color:var(--sim-primary); }
 .v2-mac .sim-selected { background:color-mix(in srgb,var(--sim-primary) 10%,var(--sim-panel)); border-color:var(--sim-primary)!important; color:var(--sim-ink); }
 .v2-mac .sim-renderers { margin-top:8px; gap:8px; }
 .v2-mac .sim-renderers button { min-height:59px; justify-content:start; align-items:center; padding:8px; gap:8px; }
@@ -155,7 +159,7 @@ body:has(.v2-immersive) { overflow:hidden; }
 .v2-mac .sim-status-grid>div>.v2-symbol { color:var(--sim-primary); margin-bottom:12px; }
 .v2-mac .sim-status-grid small { font-size:12px; color:var(--sim-muted); margin-bottom:8px; }
 .v2-section-heading { display:flex; align-items:center; gap:8px; margin:24px 0 14px; }.v2-section-heading h3 { font-size:15px; }.v2-section-heading>.v2-symbol { color:var(--sim-primary); }
-.v2-workflow { border-color:color-mix(in srgb,var(--sim-primary) 50%,var(--sim-line))!important; background:linear-gradient(120deg,color-mix(in srgb,var(--sim-primary) 5%,var(--sim-panel)),var(--sim-panel))!important; }
+.v2-workflow { border-color:color-mix(in srgb,var(--sim-primary) 24%,transparent)!important; border-left:3px solid var(--sim-primary)!important; background:var(--sim-panel)!important; }
 .v2-workflow .v2-card-heading h3 { font-size:22px; }
 .v2-empty-state { text-align:center; padding:35px 18px; color:var(--sim-muted); }
 .v2-empty-state>.v2-symbol { display:block; margin:0 auto 12px; }.v2-empty-state>strong { display:block; font-size:15px; font-weight:600; }
@@ -177,7 +181,7 @@ body:has(.v2-immersive) { overflow:hidden; }
 .v2-chat { display:flex; flex-direction:column; gap:10px; font-size:13px; line-height:1.8; white-space:pre-line; overflow-wrap:anywhere; }
 .v2-chat p { padding:13px 16px; border-radius:9px; max-width:92%; }
 .v2-chat-user { align-self:end; background:var(--sim-control); border:1px solid var(--sim-line); }
-.v2-chat-reply { align-self:start; border-left:2px solid #c58b57; background:#30261c; color:#ead8c2; }
+.v2-chat-reply { align-self:start; border-left:2px solid var(--sim-primary); background:var(--sim-control); color:var(--sim-ink); }
 .v2-chat-form { display:flex; gap:9px; align-items:end; margin-top:15px; }
 .v2-chat-form textarea { flex:1; width:0; resize:vertical; min-height:65px; max-height:180px; padding:12px; border-radius:7px; border:1px solid var(--sim-line); background:var(--sim-bg); color:var(--sim-ink); font:inherit; font-size:12px; }
 .v2-snapshot { display:flex; flex-wrap:wrap; align-items:center; gap:12px; border-top:1px solid var(--sim-line); margin-top:16px; padding-top:16px; font-size:11px; }
@@ -196,10 +200,10 @@ body:has(.v2-immersive) { overflow:hidden; }
 .v2-preferences .sim-card>.sim-subnav { background:var(--sim-control); border:1px solid var(--sim-line); border-radius:8px; padding:3px; }
 .v2-preferences .sim-field input[type=number] { width:75px; max-width:75px; }
 .v2-preferences .sim-card { margin-bottom:16px; border-radius:18px; }
-.v2-info-popover { position:fixed; margin:0; border:1px solid #696c73; border-radius:12px; padding:16px; background:#292c30f8; color:#eff1f4; box-shadow:0 15px 45px #0007; max-height:calc(100dvh - 40px); overflow:auto; font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif; }
-.v2-info-popover::backdrop { background:transparent; }.v2-popover-head { display:flex; gap:10px; align-items:start; justify-content:space-between; }.v2-popover-head h3 { font-size:14px; font-weight:650; padding-top:4px; }.v2-info-popover>p { white-space:pre-line; line-height:1.7; font-size:12px; margin-top:10px; color:#ced2d9; }
+.v2-info-popover { position:fixed; margin:0; border:1px solid #3c3229; border-radius:12px; padding:20px; background:#1d1915; color:#f4ebdd; box-shadow:0 15px 45px #0007; max-height:calc(100dvh - 40px); overflow:auto; font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif; }
+.v2-info-popover::backdrop { background:transparent; }.v2-popover-head { display:flex; gap:10px; align-items:start; justify-content:space-between; }.v2-popover-head h3 { font-size:14px; font-weight:650; padding-top:4px; }.v2-info-popover>p { white-space:pre-line; line-height:1.7; font-size:12px; margin-top:10px; color:#bbae9e; }
 .v2-popover-head button { flex:0 0 auto; }
-.v2-light-popover { background:#f3f5f8fa; border-color:#c3c8cf; color:#20252c; }.v2-light-popover>p { color:#485361; }
+.v2-light-popover { background:#fcf8f2; border-color:#d9cdbe; color:#30261e; }.v2-light-popover>p { color:#716252; }
 .v2-preferences .sim-subnav button { color:var(--sim-ink); }
 .guide-teaser [data-guide-teaser-image] { height:100%; object-fit:cover; }
 @media(max-width:1050px) {

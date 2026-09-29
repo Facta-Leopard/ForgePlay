@@ -70,7 +70,7 @@ launchers and must follow its immutable publication contract below.
 
 For compatibility updates that do not promote website-first reports:
 
-1. Edit only `compatibility-games.json`, including its `updatedAt` value.
+1. Edit `compatibility-games.json`; use the publication date in `updatedAt` and increment `revision` for an additional publication on the same date.
 2. Commit and push that file to `main`.
 3. The GitHub Pages workflow validates and deploys the data automatically.
 
@@ -85,9 +85,15 @@ public legacy feed or platform-association file. All new authoring uses this cat
 The original cache, rollback, same-date conflict, failure-preservation, and coordinated
 schema rules are documented in
 [`docs/compatibility-catalog-consumer-contract.md`](https://github.com/Facta-Leopard/ForgePlay/blob/main/docs/compatibility-catalog-consumer-contract.md).
-Under the current contract, a published `updatedAt` identifies one immutable
-payload; batch reports into a single publication when they arrive on the same
-date.
+For schema 3, the pair (`updatedAt`, `revision`) identifies an immutable payload.
+The optional integer `revision` defaults to 0 and is limited to 0...9007199254740991.
+Same-day additions increment it; a later date may restart at 0. Readers supporting
+this extension order by (schema generation, date, revision), keep rejecting
+same-pair content conflicts and rollbacks, and normalize explicit revision 0 as
+omission for hashes. Positive revisions use `website-v3-YYYY-MM-DD-rN`; zero keeps
+the existing revision string. This does not rebuild or update an installed app.
+Routine report changes update the public catalog only. Do not delegate launcher
+work or synchronize app bundles unless the user explicitly requests it.
 
 ## Website-only community reports
 
@@ -261,6 +267,35 @@ Keep this catalog synchronized with `Packages/CreatorApps` through
 of the shared `Resources/catalog.json` input, including reviewed uncommitted
 changes; it is not an app release commit. Validate structural changes against
 `developer-apps.schema.json`.
+
+## Interactive VR Mac guide
+
+The guide launcher opens `guide-vr.js` instead of a development-only alert for
+the VR tile. `guide-vr-copy.json` stores eight translations per key in its
+explicit `locales` order. The VR preview is labelled **PREVIEW / 0.1** independently
+from the desktop guide's development version.
+
+The 2026-09-29 UI reference is the current first-party `VR/Sources/ForgePlayVR/`
+views (`VRDashboard`, `VRDevicesView`, `VRSteamEnvironmentSheet`,
+`VRBindingEditorView`, `VRGuideView`) plus `VRInterface/VRPalette`, `VRVisuals`
+and `VRGuideContent`. This is a web reimplementation, not a shipped Swift app.
+The visor/portal and interface icons are code-native drawings; no Apple symbol
+assets or fonts are redistributed.
+
+The demonstration covers shared or separate Steam setup, pairing and remembered
+connections, tracking readiness, input/quality locking, diagnostics, session
+ending and Wine-only stop. Headset actions are explicitly separated into a
+web-demo progression bar. The input editor uses three fictional actions and
+representative controls; it is not a complete game-specific bindings editor.
+Sample paths/codes are not usable credentials. No native APIs, device discovery,
+audio, file selection, clipboard, runtime, persistence or real Steam launch is used.
+The standalone validator checks localization, assets and pure state transitions.
+
+The desktop demo's dark/light palette also follows the current
+`Mac/Sources/ForgePlay/UI/Theme.swift`: charcoal/copper in dark mode and warm
+ivory/burnt copper in light mode. Cards, title bar, controls, warnings and help
+popovers use the matching roles. Native theme identifiers and the desktop
+preview version 2.1.0 (7) are unchanged.
 
 ## Why ForgePlay exists — full text
 

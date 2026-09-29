@@ -34,6 +34,9 @@ PAGES=(
   site-assets/guide-v2.js
   site-assets/guide-v2-icons.js
   site-assets/guide-v2.css
+  site-assets/guide-vr.js
+  site-assets/guide-vr.css
+  site-data/guide-vr-copy.json
   site-data/guide-v2-map.json
   site-data/guide-v2-ui.json
   site-data/guide-v2-copy.json
@@ -547,6 +550,31 @@ for key in re.findall(r'\bC\("([^"]+)"\)', guide_v2_js):
     if key not in guide_v2_copy["en"]:
         raise SystemExit(f"guide-v2: missing explanation {key}")
 guide_html = (root / "site-assets/guide.html").read_text(encoding="utf-8")
+vr_copy = json.loads((root / "site-data/guide-vr-copy.json").read_text(encoding="utf-8"))
+if set(vr_copy["locales"]) != set(locale_names) or len(vr_copy["locales"]) != 8:
+    raise SystemExit("VR guide must support all eight website languages")
+for key, values in vr_copy["strings"].items():
+    if len(values) != 8 or any(not isinstance(v, str) or not v.strip() for v in values):
+        raise SystemExit(f"VR guide: missing translation for {key}")
+    if any(set(re.findall(r'\{[a-z]+\}', v)) != set(re.findall(r'\{[a-z]+\}', values[0])) for v in values):
+        raise SystemExit(f"VR guide: inconsistent placeholders for {key}")
+    if re.search(r'[\u3040-\u30ff]', values[0]):
+        raise SystemExit(f"VR guide: unexpected Japanese text in Korean {key}")
+for name in ["guide-vr.css?v=20260929-1", "guide-vr.js?v=20260929-1", "guide-v2.js?v=20260929-vr1", "guide-v2-icons.js?v=20260929-vr1"]:
+    if name not in guide_html:
+        raise SystemExit(f"VR guide: missing current asset {name}")
+if 'guide-v2.css?v=20260929-palette1' not in guide_html:
+    raise SystemExit("Mac guide must use the updated native palette stylesheet")
+mac_guide_css = (root / "site-assets/guide-v2.css").read_text().lower()
+for color in ['#12100e','#1d1915','#29221c','#e6a264','#24160b','#f4ebdd','#bbae9e','#3c3229',
+              '#f2ede5','#fcf8f2','#e9e0d5','#a9501b','#30261e','#716252','#d9cdbe']:
+    if color not in mac_guide_css:
+        raise SystemExit(f"Mac guide missing current native palette color {color}")
+vr_js = (root / "site-assets/guide-vr.js").read_text(encoding="utf-8")
+if any(api in vr_js for api in ("innerHTML", "fetch(", "localStorage", "sessionStorage", "showOpenFilePicker", "getUserMedia", "navigator.", "WebSocket", "setInterval", "setTimeout", "sendBeacon")):
+    raise SystemExit("VR guide must remain local UI simulation with no device, storage or networking APIs")
+if "if(id==='vr'){surface='vr';render(true);return;}" not in guide_v2_js:
+    raise SystemExit("VR launcher tile must open the interactive VR guide")
 if 'data-guide2-text="previewVersion"' not in guide_html or "2.0.0 (6)" in guide_v2_js:
     raise SystemExit("guide-v2: visible preview version must use the development metadata")
 if "data-guide-v2" not in guide_html or "data-guide-app " in guide_html or "guide/screens/" in guide_html or "1.3.1" in guide_html:
@@ -692,6 +720,9 @@ if schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
     raise SystemExit("compatibility schema must use JSON Schema draft 2020-12")
 if schema.get("properties", {}).get("schemaVersion", {}).get("const") != 3:
     raise SystemExit("compatibility schema must require schemaVersion 3")
+revision_schema = schema.get("properties", {}).get("revision", {})
+if revision_schema.get("type") != "integer" or revision_schema.get("minimum") != 0 or revision_schema.get("maximum") != 9007199254740991:
+    raise SystemExit("compatibility revision schema must use the safe integer range")
 report_properties = schema.get("$defs", {}).get("report", {}).get("properties", {})
 platform_values = ["steam", "battlenet", "epic", "stove", "exe", "vr", "unknown"]
 if report_properties.get("launchPlatform", {}).get("enum") != platform_values or "launchPlatform" not in schema["$defs"]["report"]["required"]:
@@ -794,11 +825,14 @@ def validate_compatibility_database(candidate):
     require_object_shape(
         candidate,
         {"schemaVersion", "updatedAt", "testProfiles", "games", "reports"},
-        {"$schema", "schemaVersion", "updatedAt", "testProfiles", "games", "reports"},
+        {"$schema", "schemaVersion", "updatedAt", "revision", "testProfiles", "games", "reports"},
         "compatibility database",
     )
     if type(candidate.get("schemaVersion")) is not int or candidate["schemaVersion"] not in (2, 3):
         raise SystemExit("unsupported compatibility database schemaVersion")
+    if "revision" in candidate and (candidate["schemaVersion"] != 3
+            or type(candidate["revision"]) is not int or not 0 <= candidate["revision"] <= 9007199254740991):
+        raise SystemExit("schema-3 revision must be an integer in 0...9007199254740991")
 
     updated_at = parse_iso_date(
         candidate.get("updatedAt"),
@@ -1769,7 +1803,7 @@ require_snippet "$ROOT_DIR/index.html" 'data-current-release-download'
 require_snippet "$ROOT_DIR/index.html" 'data-current-release-download-label'
 require_snippet "$ROOT_DIR/index.html" 'data-current-release-link'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/current-release.js?v=20260905-7"'
-require_snippet "$ROOT_DIR/index.html" 'src="site-assets/website-compatibility.js?v=20260929-platform-vr1"'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/website-compatibility.js?v=20260929-reports1"'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/home-experience.css?v=20260905-8'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/home-experience.js?v=20260929-platform1"'
 require_snippet "$ROOT_DIR/index.html" 'data-release-download'
@@ -1842,8 +1876,8 @@ require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count
 require_snippet "$ROOT_DIR/compatibility.html" 'href="site.css?v=20260811-22"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260929-platform1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/current-release.js?v=20260905-7"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20260929-platform-vr1"'
-require_snippet "$ROOT_DIR/site-assets/guide.html" 'src="site-assets/website-compatibility.js?v=20260929-platform-vr1"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20260929-reports1"'
+require_snippet "$ROOT_DIR/site-assets/guide.html" 'src="site-assets/website-compatibility.js?v=20260929-reports1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20260929-platform1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-card'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-tag'
@@ -1936,7 +1970,7 @@ require_snippet "$ROOT_DIR/site-data/README.md" 'monotonically increasing intege
 require_snippet "$ROOT_DIR/site-data/README.md" '`docs/update-check-contract.md`'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Excel / spreadsheet import contract'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Compatibility-only update workflow'
-require_snippet "$ROOT_DIR/site-data/README.md" 'Edit only `compatibility-games.json`'
+require_snippet "$ROOT_DIR/site-data/README.md" 'Edit `compatibility-games.json`'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Website-only community reports'
 require_snippet "$ROOT_DIR/site-data/README.md" '`website-compatibility-reports.json`, not `compatibility-games.json`'
 require_snippet "$ROOT_DIR/site-data/README.md" 'Same-day website-only updates are allowed.'
@@ -2169,6 +2203,7 @@ for script in \
   site-assets/guide-app.js \
   site-assets/guide-v2.js \
   site-assets/guide-v2-icons.js \
+  site-assets/guide-vr.js \
   site-assets/forge-motion.js \
   site-assets/website-compatibility.js \
   compatibility.js \
@@ -2285,6 +2320,12 @@ for (const launchPlatform of [undefined,null,"Steam","VR","unsupported"]) {
 }
 assert.throws(()=>model.merge(fixture,{...emptyV3,schemaVersion:1}));
 assert.throws(()=>model.platformGroups(joined,"invalid"));
+for (const revision of [0,1,9007199254740991]) {
+  assert.equal(model.merge({...fixture,revision},emptyV3).revision,revision);
+}
+for (const revision of [null,true,"1",-1,0.5,9007199254740992]) {
+  assert.throws(()=>model.merge({...fixture,revision},emptyV3));
+}
 
 const referenceBase = {
   schemaVersion: 2,
@@ -2378,5 +2419,29 @@ for retired_license_phrase in \
     fail "public site contains retired license wording: $retired_license_phrase"
   fi
 done
+
+node - "$ROOT_DIR" <<'VRJS'
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
+const root=process.argv[2],context={window:{}};
+vm.runInNewContext(fs.readFileSync(path.join(root,'site-assets/guide-vr.js'),'utf8'),context);
+const {initial,transition:T,locked,bitrate}=context.window.ForgePlayVRDemo;
+let s=initial();assert.equal(s.mode,'combined');assert.equal(s.controller,'mac');assert.equal(s.quality,1600);
+assert.equal(T(s,'steam').steam,false);assert.equal(T(s,'track').tracking,false);assert.equal(T(s,'connect').connected,false);
+s=T(s,'environment','shared');s=T(s,'mode','hands');s=T(s,'controller','vision');s=T(s,'quality',1280);
+assert.equal(bitrate(1280),40);assert.equal(bitrate(1600),60);assert.equal(bitrate(1920),85);
+s=T(s,'prepare');assert.equal(locked(s),false);s=T(s,'connect');assert.equal(s.tracking,false);assert.equal(s.steam,false);assert.ok(locked(s));
+assert.equal(T(s,'mode','gamepad').mode,'hands');assert.equal(T(s,'quality',1920).quality,1280);
+s=T(s,'track');assert.ok(s.tracking&&s.steam);s=T(s,'game');assert.ok(s.game);
+assert.equal(T(s,'environment',null).environment,'shared');
+const stopped=T(s,'forceStop');assert.ok(stopped.connected&&stopped.tracking);assert.equal(stopped.steam,false);assert.equal(stopped.game,false);
+const ended=T(s,'stop');assert.ok(!ended.connected&&!ended.listening&&!ended.tracking&&!ended.steam);assert.ok(ended.remembered);assert.equal(ended.environment,'shared');assert.equal(ended.mode,'hands');
+const paired=T(T(ended,'prepare'),'connect');assert.equal(paired.tracking,false);const forgotten=T(paired,'resetPairing');assert.ok(!forgotten.connected&&!forgotten.remembered);assert.equal(forgotten.environment,'shared');
+assert.equal(T(initial(),'environment','own').environment,'own');assert.equal(T(initial(),'quality',9999).quality,1600);
+assert.equal(s.steam,true,'state transitions must not mutate their input');
+const strings=JSON.parse(fs.readFileSync(path.join(root,'site-data/guide-vr-copy.json'),'utf8'));
+for(const key of ['heroSteam','heroConnect','heroPair','heroRemembered','heroTracking','heroReady','heroPlay'])assert.ok(strings.strings[key]&&strings.strings[key+'Body']);
+for(const key of ['start','prefix','installation','input','display','audio','connection','finish'])assert.ok(strings.strings['topic'+key]&&strings.strings['guide'+key]);
+console.log('VR guide state/lifecycle checks passed.');
+VRJS
 
 printf 'Static site verification passed.\n'

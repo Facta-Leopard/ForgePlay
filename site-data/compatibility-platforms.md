@@ -81,9 +81,14 @@ Keep strict validation: schema 3 permits the new key and requires one of the sev
 values, rather than accepting arbitrary unknown keys. Keep legacy 1/2 decoding
 for existing bundles/caches, mapping only their missing platform to unknown.
 
-The v3 snapshot has its own `website-v3-<updatedAt>` revision. Retain the existing
-date/hash integrity, same-date conflict, failure preservation, size limits and
-cache safety rules for the current catalog. The initial schema-3 date is 2026-09-29. Do not silently fall back to a Steam assumption
+The v3 snapshot has its own `website-v3-<updatedAt>` revision. An optional integer
+`revision` (0...9007199254740991, omitted=0) distinguishes same-day publications;
+positive values append `-rN`. Ordering is (schema generation, date, revision).
+Explicit zero and omitted revision are equivalent, including canonical hashing.
+Reject null, booleans, fractions, strings and values outside the safe-integer range.
+Legacy schema 1/2 does not permit this field. Keep rejecting content conflicts
+for the same date/revision pair and preserve rollback, failure, size and cache
+safety rules. The initial schema-3 date is 2026-09-29. Do not silently fall back to a Steam assumption
 when fetch/validation fails; retain an already validated snapshot or report the
 failure according to the existing client policy.
 
@@ -99,8 +104,10 @@ with the “런처 관련” task; this website task does not edit native code o
 The user explicitly classified all 56 existing reports (55 base + 1 website
 follow-up) as Steam. Removing only `launchPlatform` from the migrated reports
 reproduces their previous records exactly. No result, ForgePlay version, hardware,
-reporter, note or tested date was changed. In particular, no new Battle.net /
-Overwatch anti-cheat report is published; the user will provide that separately.
+reporter, note or tested date was changed. No Battle.net / Overwatch anti-cheat
+report was included in that migration. The later 2026-09-29 revision 1 adds the
+separately supplied Battle.net report and labels its anti-cheat explanation as
+a developer note, without changing the existing Steam evidence.
 
 The subsequent VR category addition keeps schema 3 and the existing URLs. It
 extends the allowed values only: no report payload, update date, status or
