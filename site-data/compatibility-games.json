@@ -1,8 +1,8 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
-  "updatedAt": "2026-09-29",
-  "revision": 1,
+  "updatedAt": "2026-10-01",
+  "revision": 0,
   "testProfiles": [
     {
       "id": "apple-silicon-m5-pro-24gb-macos-27-0",
@@ -171,6 +171,13 @@
       "chip": "M6",
       "unifiedMemoryGB": 16,
       "macOSVersion": "Golden Gate 27.0"
+    },
+    {
+      "id": "apple-silicon-m5-max-32gb-golden-gate-27-0-1",
+      "platform": "Apple Silicon Mac",
+      "chip": "M5 Max",
+      "unifiedMemoryGB": 32,
+      "macOSVersion": "Golden Gate 27.0.1"
     }
   ],
   "games": [
@@ -489,6 +496,22 @@
     {
       "id": "persona-4-golden",
       "titles": {"en": "Persona 4 Golden", "ko": "페르소나 4 골든"}
+    },
+    {
+      "id": "romance-of-the-three-kingdoms-13",
+      "titles": {"en": "Romance of the Three Kingdoms XIII", "ko": "삼국지 13"}
+    },
+    {
+      "id": "romance-of-the-three-kingdoms-14",
+      "titles": {"en": "Romance of the Three Kingdoms XIV", "ko": "삼국지 14"}
+    },
+    {
+      "id": "romance-of-the-three-kingdoms-8-remake",
+      "titles": {"en": "Romance of the Three Kingdoms 8 Remake", "ko": "삼국지 8 리메이크"}
+    },
+    {
+      "id": "the-witcher-3",
+      "titles": {"en": "The Witcher 3", "ko": "더 위쳐 3"}
     }
   ],
   "reports": [
@@ -1596,6 +1619,144 @@
         "fr": "Le ticket GitHub nº25 signale un plantage au lancement de Persona 4 Golden dans ForgePlay 2.0.0, empêchant de jouer. Il indique M6, 16 Go et macOS Golden Gate 27.0 ; la désignation matérielle n’est pas confirmée séparément. Plateforme, backend graphique, version du jeu et cause inconnus. Le développeur a demandé les résultats avec d’autres backends. Source : https://github.com/Facta-Leopard/ForgePlay/issues/25"
       },
       "blocker": "unknown"
+    },
+    {
+      "id": "romance-of-the-three-kingdoms-13-github-26-20260930",
+      "gameId": "romance-of-the-three-kingdoms-13",
+      "launchPlatform": "unknown",
+      "testProfileId": "apple-silicon-m5-pro-24gb-macos-27-0",
+      "forgePlayVersion": "2.0.0",
+      "gameVersion": null,
+      "status": "blocked",
+      "source": "github-issue",
+      "reporter": "KFCBucketCat",
+      "testedAt": null,
+      "notes": {
+        "ko": "GitHub 이슈 #26: ForgePlay 2.0.0(6)에서 실행 시 Wine 디버그 창과 SAN13Launcher.exe의 심각한 오류 안내가 나타나며 게임이 시작되지 않는다고 합니다. 실행 플랫폼·그래픽 백엔드·오류 원인은 미확인입니다. 원문: https://github.com/Facta-Leopard/ForgePlay/issues/26",
+        "en": "GitHub issue #26: In ForgePlay 2.0.0 (6), a Wine debug window and a serious-error message for SAN13Launcher.exe appear, and the game does not start. Launch platform, graphics backend and cause are unconfirmed. Source: https://github.com/Facta-Leopard/ForgePlay/issues/26",
+        "de": "GitHub-Issue #26: In ForgePlay 2.0.0 (6) erscheinen ein Wine-Debugfenster und eine Meldung über einen schwerwiegenden Fehler in SAN13Launcher.exe; das Spiel startet nicht. Startplattform, Grafik-Backend und Ursache sind unbestätigt. Quelle: https://github.com/Facta-Leopard/ForgePlay/issues/26",
+        "es": "Incidencia #26 de GitHub: en ForgePlay 2.0.0 (6) aparecen una ventana de depuración de Wine y un error grave de SAN13Launcher.exe; el juego no se inicia. Plataforma de lanzamiento, backend gráfico y causa sin confirmar. Fuente: https://github.com/Facta-Leopard/ForgePlay/issues/26",
+        "fr": "Ticket GitHub nº26 : dans ForgePlay 2.0.0 (6), une fenêtre de débogage Wine et une erreur grave de SAN13Launcher.exe apparaissent ; le jeu ne démarre pas. Plateforme de lancement, backend graphique et cause non confirmés. Source : https://github.com/Facta-Leopard/ForgePlay/issues/26",
+        "ja": "GitHubイシュー#26：ForgePlay 2.0.0（6）で起動するとWineのデバッグ画面とSAN13Launcher.exeの重大なエラーが表示され、ゲームが開始しないとの報告です。起動プラットフォーム、グラフィックバックエンド、原因は未確認です。原文：https://github.com/Facta-Leopard/ForgePlay/issues/26",
+        "zh-Hans": "GitHub 问题 #26：反馈称在 ForgePlay 2.0.0（6）中启动时出现 Wine 调试窗口和 SAN13Launcher.exe 严重错误提示，游戏无法启动。启动平台、图形后端及原因尚未确认。原文：https://github.com/Facta-Leopard/ForgePlay/issues/26",
+        "zh-Hant": "GitHub 問題 #26：回報稱在 ForgePlay 2.0.0（6）中啟動時出現 Wine 偵錯視窗和 SAN13Launcher.exe 嚴重錯誤提示，遊戲無法啟動。啟動平台、圖形後端及原因尚未確認。原文：https://github.com/Facta-Leopard/ForgePlay/issues/26"
+      },
+      "blocker": "launcher"
+    },
+    {
+      "id": "romance-of-the-three-kingdoms-14-github-27-20260930",
+      "gameId": "romance-of-the-three-kingdoms-14",
+      "launchPlatform": "unknown",
+      "testProfileId": "apple-silicon-m5-pro-24gb-macos-27-0",
+      "forgePlayVersion": "2.0.0",
+      "gameVersion": null,
+      "status": "blocked",
+      "source": "github-issue",
+      "reporter": "KFCBucketCat",
+      "testedAt": null,
+      "notes": {
+        "ko": "GitHub 이슈 #27: ForgePlay 2.0.0(6)에서 실행 시 Wine 디버그 창과 SAN14Launcher.exe의 심각한 오류 안내가 나타나며 게임이 시작되지 않는다고 합니다. 실행 플랫폼·그래픽 백엔드·오류 원인은 미확인입니다. 원문: https://github.com/Facta-Leopard/ForgePlay/issues/27",
+        "en": "GitHub issue #27: In ForgePlay 2.0.0 (6), a Wine debug window and a serious-error message for SAN14Launcher.exe appear, and the game does not start. Launch platform, graphics backend and cause are unconfirmed. Source: https://github.com/Facta-Leopard/ForgePlay/issues/27",
+        "de": "GitHub-Issue #27: In ForgePlay 2.0.0 (6) erscheinen ein Wine-Debugfenster und eine Meldung über einen schwerwiegenden Fehler in SAN14Launcher.exe; das Spiel startet nicht. Startplattform, Grafik-Backend und Ursache sind unbestätigt. Quelle: https://github.com/Facta-Leopard/ForgePlay/issues/27",
+        "es": "Incidencia #27 de GitHub: en ForgePlay 2.0.0 (6) aparecen una ventana de depuración de Wine y un error grave de SAN14Launcher.exe; el juego no se inicia. Plataforma de lanzamiento, backend gráfico y causa sin confirmar. Fuente: https://github.com/Facta-Leopard/ForgePlay/issues/27",
+        "fr": "Ticket GitHub nº27 : dans ForgePlay 2.0.0 (6), une fenêtre de débogage Wine et une erreur grave de SAN14Launcher.exe apparaissent ; le jeu ne démarre pas. Plateforme de lancement, backend graphique et cause non confirmés. Source : https://github.com/Facta-Leopard/ForgePlay/issues/27",
+        "ja": "GitHubイシュー#27：ForgePlay 2.0.0（6）で起動するとWineのデバッグ画面とSAN14Launcher.exeの重大なエラーが表示され、ゲームが開始しないとの報告です。起動プラットフォーム、グラフィックバックエンド、原因は未確認です。原文：https://github.com/Facta-Leopard/ForgePlay/issues/27",
+        "zh-Hans": "GitHub 问题 #27：反馈称在 ForgePlay 2.0.0（6）中启动时出现 Wine 调试窗口和 SAN14Launcher.exe 严重错误提示，游戏无法启动。启动平台、图形后端及原因尚未确认。原文：https://github.com/Facta-Leopard/ForgePlay/issues/27",
+        "zh-Hant": "GitHub 問題 #27：回報稱在 ForgePlay 2.0.0（6）中啟動時出現 Wine 偵錯視窗和 SAN14Launcher.exe 嚴重錯誤提示，遊戲無法啟動。啟動平台、圖形後端及原因尚未確認。原文：https://github.com/Facta-Leopard/ForgePlay/issues/27"
+      },
+      "blocker": "launcher"
+    },
+    {
+      "id": "romance-of-the-three-kingdoms-8-remake-github-28-20260930",
+      "gameId": "romance-of-the-three-kingdoms-8-remake",
+      "launchPlatform": "unknown",
+      "testProfileId": "apple-silicon-m5-pro-24gb-macos-27-0",
+      "forgePlayVersion": "2.0.0",
+      "gameVersion": null,
+      "status": "blocked",
+      "source": "github-issue",
+      "reporter": "KFCBucketCat",
+      "testedAt": null,
+      "notes": {
+        "ko": "GitHub 이슈 #28: ForgePlay 2.0.0(6)에서 코에이·시부사와 코우 로고까지 표시되지만, 이후 오프닝 구간에서 검은 화면이 나타나고 잠시 뒤 게임이 강제 종료된다고 합니다. 본문의 증상을 기준으로 실행 불가로 분류했습니다. 실행 플랫폼·그래픽 백엔드·오류 원인은 미확인입니다. 원문: https://github.com/Facta-Leopard/ForgePlay/issues/28",
+        "en": "GitHub issue #28: In ForgePlay 2.0.0 (6), the Koei and Kou Shibusawa logos appear, but the opening then goes black and the game crashes shortly afterward. Classified as blocked based on the described symptoms. Launch platform, graphics backend and cause are unconfirmed. Source: https://github.com/Facta-Leopard/ForgePlay/issues/28",
+        "de": "GitHub-Issue #28: In ForgePlay 2.0.0 (6) erscheinen die Logos von Koei und Kou Shibusawa, danach wird das Intro schwarz und das Spiel stürzt kurz darauf ab. Aufgrund der beschriebenen Symptome als nicht spielbar eingestuft. Startplattform, Grafik-Backend und Ursache sind unbestätigt. Quelle: https://github.com/Facta-Leopard/ForgePlay/issues/28",
+        "es": "Incidencia #28 de GitHub: en ForgePlay 2.0.0 (6) aparecen los logotipos de Koei y Kou Shibusawa, pero la introducción queda en negro y el juego se cierra poco después. Se clasifica como no jugable por los síntomas descritos. Plataforma, backend y causa sin confirmar. Fuente: https://github.com/Facta-Leopard/ForgePlay/issues/28",
+        "fr": "Ticket GitHub nº28 : dans ForgePlay 2.0.0 (6), les logos Koei et Kou Shibusawa apparaissent, puis l’introduction reste noire et le jeu plante peu après. Classé comme non jouable d’après les symptômes décrits. Plateforme, backend et cause non confirmés. Source : https://github.com/Facta-Leopard/ForgePlay/issues/28",
+        "ja": "GitHubイシュー#28：ForgePlay 2.0.0（6）でコーエーとシブサワ・コウのロゴは表示されますが、その後のオープニングで画面が黒くなり、しばらくするとゲームが強制終了するとの報告です。本文の症状に基づきプレイ不可に分類しました。起動プラットフォーム、バックエンド、原因は未確認です。原文：https://github.com/Facta-Leopard/ForgePlay/issues/28",
+        "zh-Hans": "GitHub 问题 #28：反馈称在 ForgePlay 2.0.0（6）中能显示光荣和涩泽光标志，但随后的开场画面变黑，游戏稍后崩溃。根据正文描述的症状归为无法游玩。启动平台、图形后端及原因尚未确认。原文：https://github.com/Facta-Leopard/ForgePlay/issues/28",
+        "zh-Hant": "GitHub 問題 #28：回報稱在 ForgePlay 2.0.0（6）中能顯示光榮和澀澤光標誌，但隨後的開場畫面變黑，遊戲稍後當機。依正文描述的症狀歸為無法遊玩。啟動平台、圖形後端及原因尚未確認。原文：https://github.com/Facta-Leopard/ForgePlay/issues/28"
+      },
+      "blocker": "unknown"
+    },
+    {
+      "id": "idolmaster-starlit-season-github-29-20260930",
+      "gameId": "idolmaster-starlit-season",
+      "launchPlatform": "unknown",
+      "testProfileId": "apple-silicon-m5-pro-24gb-macos-27-0",
+      "forgePlayVersion": "2.0.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "github-issue",
+      "reporter": "KFCBucketCat",
+      "testedAt": null,
+      "notes": {
+        "ko": "GitHub 이슈 #29: ForgePlay 2.0.0(6)에서 실행은 되지만 오프닝·이벤트·챕터 전환 영상이 표시되지 않거나 검은 화면이 나타나며, 간헐적으로 진행이 막힌다고 합니다. 마우스를 클릭해야 대사창이 표시되는 문제도 있습니다. 실행 플랫폼·그래픽 백엔드·오류 원인은 미확인입니다. 원문: https://github.com/Facta-Leopard/ForgePlay/issues/29",
+        "en": "GitHub issue #29: The game runs in ForgePlay 2.0.0 (6), but opening, event and chapter-transition videos may be missing or black, sometimes preventing progress. Dialogue boxes may appear only after a mouse click. Launch platform, graphics backend and cause are unconfirmed. Source: https://github.com/Facta-Leopard/ForgePlay/issues/29",
+        "de": "GitHub-Issue #29: Das Spiel läuft in ForgePlay 2.0.0 (6), doch Intro-, Ereignis- und Kapitelwechselvideos fehlen oder bleiben schwarz; gelegentlich lässt sich nicht weiterspielen. Dialogfenster erscheinen teils erst nach einem Mausklick. Startplattform, Grafik-Backend und Ursache sind unbestätigt. Quelle: https://github.com/Facta-Leopard/ForgePlay/issues/29",
+        "es": "Incidencia #29 de GitHub: el juego funciona en ForgePlay 2.0.0 (6), pero los vídeos de introducción, eventos y cambios de capítulo pueden faltar o verse en negro, impidiendo avanzar en ocasiones. Los cuadros de diálogo pueden requerir un clic para aparecer. Plataforma, backend y causa sin confirmar. Fuente: https://github.com/Facta-Leopard/ForgePlay/issues/29",
+        "fr": "Ticket GitHub nº29 : le jeu fonctionne dans ForgePlay 2.0.0 (6), mais les vidéos d’introduction, d’événements et de transition entre chapitres peuvent manquer ou rester noires, bloquant parfois la progression. Les dialogues peuvent nécessiter un clic pour apparaître. Plateforme, backend et cause non confirmés. Source : https://github.com/Facta-Leopard/ForgePlay/issues/29",
+        "ja": "GitHubイシュー#29：ForgePlay 2.0.0（6）で起動しますが、オープニング・イベント・章切り替えの動画が表示されない、または黒い画面になり、時々進行できなくなるとの報告です。マウスをクリックしないと会話ウィンドウが表示されない問題もあります。起動プラットフォーム、バックエンド、原因は未確認です。原文：https://github.com/Facta-Leopard/ForgePlay/issues/29",
+        "zh-Hans": "GitHub 问题 #29：反馈称游戏能在 ForgePlay 2.0.0（6）中运行，但开场、事件和章节切换视频可能不显示或黑屏，偶尔导致无法继续。还存在需要点击鼠标才显示对话框的问题。启动平台、图形后端及原因尚未确认。原文：https://github.com/Facta-Leopard/ForgePlay/issues/29",
+        "zh-Hant": "GitHub 問題 #29：回報稱遊戲能在 ForgePlay 2.0.0（6）中執行，但開場、事件和章節切換影片可能不顯示或黑畫面，偶爾導致無法繼續。另有必須點擊滑鼠才顯示對話框的問題。啟動平台、圖形後端及原因尚未確認。原文：https://github.com/Facta-Leopard/ForgePlay/issues/29"
+      },
+      "blocker": null
+    },
+    {
+      "id": "djmax-respect-v-github-30-20260930",
+      "gameId": "djmax-respect-v",
+      "launchPlatform": "unknown",
+      "testProfileId": "apple-silicon-m5-pro-24gb-macos-27-0",
+      "forgePlayVersion": "2.0.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "github-issue",
+      "reporter": "KFCBucketCat",
+      "testedAt": null,
+      "notes": {
+        "ko": "GitHub 이슈 #30: ForgePlay 2.0.0(6)에서 게임 플레이 자체에는 문제가 없으나, 설정창에서 옵션을 변경하면 화면이 확대·축소를 반복하다 전체 화면으로 돌아온다고 합니다. 실행 플랫폼·그래픽 백엔드·오류 원인은 미확인입니다. 원문: https://github.com/Facta-Leopard/ForgePlay/issues/30",
+        "en": "GitHub issue #30: Gameplay itself is reported to work well in ForgePlay 2.0.0 (6), but changing options in the settings window makes the image repeatedly enlarge and shrink before returning to full screen. Launch platform, graphics backend and cause are unconfirmed. Source: https://github.com/Facta-Leopard/ForgePlay/issues/30",
+        "de": "GitHub-Issue #30: Das Spielen selbst funktioniert laut Bericht in ForgePlay 2.0.0 (6) problemlos. Beim Ändern von Optionen wird das Bild jedoch wiederholt größer und kleiner, bevor es zum Vollbild zurückkehrt. Startplattform, Grafik-Backend und Ursache sind unbestätigt. Quelle: https://github.com/Facta-Leopard/ForgePlay/issues/30",
+        "es": "Incidencia #30 de GitHub: el juego funciona bien en ForgePlay 2.0.0 (6), pero al cambiar opciones en los ajustes la imagen se amplía y reduce repetidamente antes de volver a pantalla completa. Plataforma de lanzamiento, backend gráfico y causa sin confirmar. Fuente: https://github.com/Facta-Leopard/ForgePlay/issues/30",
+        "fr": "Ticket GitHub nº30 : le jeu lui-même fonctionne bien dans ForgePlay 2.0.0 (6), mais modifier les options agrandit et réduit plusieurs fois l’image avant le retour au plein écran. Plateforme de lancement, backend graphique et cause non confirmés. Source : https://github.com/Facta-Leopard/ForgePlay/issues/30",
+        "ja": "GitHubイシュー#30：ForgePlay 2.0.0（6）でゲームプレイ自体に問題はありませんが、設定画面でオプションを変更すると画面が拡大・縮小を繰り返した後、全画面に戻るとの報告です。起動プラットフォーム、グラフィックバックエンド、原因は未確認です。原文：https://github.com/Facta-Leopard/ForgePlay/issues/30",
+        "zh-Hans": "GitHub 问题 #30：反馈称在 ForgePlay 2.0.0（6）中游玩本身没有问题，但在设置中更改选项后，画面会反复放大、缩小，再恢复全屏。启动平台、图形后端及原因尚未确认。原文：https://github.com/Facta-Leopard/ForgePlay/issues/30",
+        "zh-Hant": "GitHub 問題 #30：回報稱在 ForgePlay 2.0.0（6）中遊玩本身沒有問題，但在設定中變更選項後，畫面會反覆放大、縮小，再恢復全螢幕。啟動平台、圖形後端及原因尚未確認。原文：https://github.com/Facta-Leopard/ForgePlay/issues/30"
+      },
+      "blocker": null
+    },
+    {
+      "id": "the-witcher-3-github-31-20260930",
+      "gameId": "the-witcher-3",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m5-max-32gb-golden-gate-27-0-1",
+      "forgePlayVersion": "2.0",
+      "gameVersion": null,
+      "status": "blocked",
+      "source": "github-issue",
+      "reporter": "freakinmatcha",
+      "testedAt": null,
+      "notes": {
+        "ko": "GitHub 이슈 #31: 제보자가 'The Witcher 3 : Remastered'로 기재한 게임의 런처가 ForgePlay v2.0에서 실행되지 않는다고 합니다. 첨부 자료에서 Steam 실행 환경은 확인되지만 게임 실패 시점의 로그가 부족해 원인은 미확인입니다. 그래픽 백엔드와 정확한 게임 빌드도 확인되지 않았습니다. 원문: https://github.com/Facta-Leopard/ForgePlay/issues/31",
+        "en": "GitHub issue #31: The launcher for the game reported as 'The Witcher 3 : Remastered' does not start in ForgePlay v2.0. Attachments establish a Steam session but lack logs from the game's failure, so the cause is unconfirmed. The graphics backend and exact game build are also unknown. Source: https://github.com/Facta-Leopard/ForgePlay/issues/31",
+        "de": "GitHub-Issue #31: Der Launcher des als 'The Witcher 3 : Remastered' gemeldeten Spiels startet in ForgePlay v2.0 nicht. Die Anhänge belegen eine Steam-Sitzung, enthalten aber keine ausreichenden Logs zum Spielfehler; die Ursache ist unbestätigt. Grafik-Backend und genauer Spiel-Build sind ebenfalls unbekannt. Quelle: https://github.com/Facta-Leopard/ForgePlay/issues/31",
+        "es": "Incidencia #31 de GitHub: el lanzador del juego indicado como 'The Witcher 3 : Remastered' no se inicia en ForgePlay v2.0. Los adjuntos confirman una sesión de Steam, pero faltan registros del fallo del juego; la causa no está confirmada. Backend gráfico y compilación exacta del juego desconocidos. Fuente: https://github.com/Facta-Leopard/ForgePlay/issues/31",
+        "fr": "Ticket GitHub nº31 : le lanceur du jeu indiqué comme 'The Witcher 3 : Remastered' ne démarre pas dans ForgePlay v2.0. Les pièces jointes attestent une session Steam, mais les journaux du plantage du jeu manquent ; la cause reste inconnue. Backend graphique et version exacte du jeu non confirmés. Source : https://github.com/Facta-Leopard/ForgePlay/issues/31",
+        "ja": "GitHubイシュー#31：報告者が'The Witcher 3 : Remastered'と記載したゲームのランチャーがForgePlay v2.0で起動しないとのことです。添付資料からSteamの起動環境は確認できますが、ゲームの失敗時点のログが不足しており、原因は未確認です。グラフィックバックエンドと正確なゲームビルドも不明です。原文：https://github.com/Facta-Leopard/ForgePlay/issues/31",
+        "zh-Hans": "GitHub 问题 #31：反馈者称其填写为 'The Witcher 3 : Remastered' 的游戏启动器无法在 ForgePlay v2.0 中启动。附件可确认 Steam 会话，但缺少游戏失败时的日志，原因尚未确认。图形后端和准确的游戏版本也未知。原文：https://github.com/Facta-Leopard/ForgePlay/issues/31",
+        "zh-Hant": "GitHub 問題 #31：回報者稱其填寫為 'The Witcher 3 : Remastered' 的遊戲啟動器無法在 ForgePlay v2.0 中啟動。附件可確認 Steam 工作階段，但缺少遊戲失敗時的紀錄，原因尚未確認。圖形後端和確切遊戲版本也未知。原文：https://github.com/Facta-Leopard/ForgePlay/issues/31"
+      },
+      "blocker": "launcher"
     }
   ]
 }
