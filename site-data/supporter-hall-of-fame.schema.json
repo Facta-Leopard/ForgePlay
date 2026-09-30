@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://facta-leopard.github.io/ForgePlay/site-data/supporter-hall-of-fame.schema.json",
+  "title": "Supporter Hall of Fame — public display names",
+  "description": "Separate launcher-only list in source order. Empty names is a valid replacement. Publication also rejects leading/trailing whitespace, Unicode Cc/Cf/Cs characters, canonically equivalent duplicate names, and files over 128000 UTF-8 bytes. No account, payment, tier or amount fields.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "names"],
+  "properties": {
+    "schemaVersion": {"type": "integer", "const": 1},
+    "names": {
+      "type": "array",
+      "maxItems": 200,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 80,
+        "description": "Public display name. Publication uses an 80 Unicode code-point limit, conservatively within the launcher's 80 Swift Character limit."
+      }
+    }
+  }
+}

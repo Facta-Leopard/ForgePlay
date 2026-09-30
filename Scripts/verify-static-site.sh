@@ -107,6 +107,8 @@ PAGES=(
   site-assets/announcements/dlss5-before.jpg
   site-assets/announcements/dlss5-after.jpg
   site-data/announcements.schema.json
+  site-data/supporter-hall-of-fame.json
+  site-data/supporter-hall-of-fame.schema.json
   site-data/developer-apps.json
   site-data/developer-apps.schema.json
   site-data/README.md
@@ -317,9 +319,23 @@ from datetime import date, datetime
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urlsplit
+import unicodedata
 
 root = Path(sys.argv[1])
 root_resolved = root.resolve()
+hall_raw = (root / "site-data/supporter-hall-of-fame.json").read_bytes()
+hall = json.loads(hall_raw.decode("utf-8"))
+assert len(hall_raw) <= 128_000, "Hall of Fame exceeds the launcher byte limit"
+assert isinstance(hall, dict) and set(hall) == {"schemaVersion", "names"}, "Invalid Hall of Fame fields"
+assert type(hall["schemaVersion"]) is int and hall["schemaVersion"] == 1, "Invalid Hall of Fame schema"
+assert isinstance(hall["names"], list) and len(hall["names"]) <= 200, "Too many Hall of Fame names"
+assert all(isinstance(name, str) and 1 <= len(name) <= 80 and name == name.strip()
+           and all(unicodedata.category(c) not in {"Cc", "Cf", "Cs"} for c in name)
+           for name in hall["names"]), "Invalid Hall of Fame display name"
+assert len({unicodedata.normalize("NFC", name) for name in hall["names"]}) == len(hall["names"]), "Duplicate Hall of Fame name"
+hall_schema = json.loads((root / "site-data/supporter-hall-of-fame.schema.json").read_text())
+assert hall_schema["properties"]["names"]["maxItems"] == 200
+assert hall_schema["properties"]["names"]["items"]["maxLength"] == 80
 forgeplay_icon_path = root / "site-assets" / "forgeplay-icon.png"
 forgeplay_icon_hash = hashlib.sha256(forgeplay_icon_path.read_bytes()).hexdigest()
 if forgeplay_icon_hash != "65a8602880ce0d14f623f81ce9aa8a1dc6c87da2ea617654e54bdbd0740511b3":
