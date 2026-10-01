@@ -1,0 +1,10 @@
+.fopl-keyring {position:fixed;top:0;left:0;width:72px;height:81px;z-index:2200;pointer-events:none!important;user-select:none;contain:layout style;will-change:transform;}
+.fopl-keyring[hidden] {display:none;}
+.fopl-keyring::before {content:'';position:absolute;left:35.5px;top:-50px;width:1px;height:57px;background:linear-gradient(#c9b89899,#be9a63);pointer-events:none;}
+.fopl-keyring img {display:block;width:72px;height:81px;transform-origin:50% 8%;will-change:transform;pointer-events:none;}
+.fopl-keyring-toggle {display:inline-flex;align-items:center;gap:7px;border:1px solid #76604466;border-radius:6px;background:transparent;color:inherit;font:inherit;font-size:12px;padding:7px 10px;margin:12px 0;cursor:pointer;}
+.fopl-keyring-toggle[aria-pressed=false] {opacity:.65;}
+.fopl-keyring-toggle[hidden] {display:none;}
+.fopl-keyring-toggle:focus-visible {outline:2px solid #e6a264;outline-offset:3px;}
+.fopl-keyring-toggle svg {width:15px;height:19px;stroke:currentColor;fill:none;stroke-width:1.5;}
+@media(prefers-reduced-motion:reduce),(hover:none),(pointer:coarse){.fopl-keyring,.fopl-keyring-toggle{display:none!important;}}

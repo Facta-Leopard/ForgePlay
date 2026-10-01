@@ -9,6 +9,9 @@
   const line=d=>path(d);
   const solid={fill:'currentColor',stroke:'none'};
   const drawings={
+    bulb:()=>[path('M8 16c0-3-3-3-3-7a7 7 0 0 1 14 0c0 4-3 4-3 7Z',solid),line('M8 19h8m-6 3h4')],
+    thumb:()=>[path('M3 11h4v10H3Zm6 10V10l3-7h3v7h5c2 0 1 4 0 7l-1 4Z',solid)],
+    pulse:()=>[line('M2 12h5l3-9 4 18 3-9h5')],
     vision:()=>[path('M4 7c3-3 13-3 16 0 3 3 2 10-1 10-2 0-4-3-7-3s-5 3-7 3C2 17 1 10 4 7Z')],
     visionFill:()=>[path('M4 7c3-3 13-3 16 0 3 3 2 10-1 10-2 0-4-3-7-3s-5 3-7 3C2 17 1 10 4 7Z',solid)],
     layers:()=>[path('m3 7 9-5 9 5-9 5Z'),line('m3 12 9 5 9-5M3 17l9 5 9-5')],
@@ -102,5 +105,26 @@
     if(tile==='apps')for(const[x,y]of [[13,14],[54,14],[13,55],[54,55]])svg.append(panel(x,y,31,31,7),l(`M${x+6} ${y+7}H${x+23}`,'#ffffffcc',2));
     svg.style.setProperty('--tile-ink',ink);return svg;
   };
-  window.ForgePlayGuideIcons=Object.freeze({icon,launcher});
+  // Normalized, static counterpart of the first-party LauncherFoplBackdrop Canvas.
+  const backdrop=scene=>{
+    const svg=s('svg',{viewBox:'0 0 100 100',preserveAspectRatio:'none','aria-hidden':'true',class:'v2-launcher-scene'});
+    const floor=scene==='portal'?73:['journey','arcade'].includes(scene)?77:56;
+    const panel=(x,y,w,h,kind='wall')=>svg.append(rect(x,y,w,h,2,{class:'v2-scene-'+kind}));
+    const stroke=(d,kind='edge')=>svg.append(path(d,{class:'v2-scene-'+kind,fill:'none','stroke-width':.6}));
+    const poly=(d,kind='wall')=>svg.append(path(d,{class:'v2-scene-'+kind}));
+    panel(28,7,68,floor-7,'wash');panel(0,floor,100,100-floor,'wash');
+    for(const x of [0,25,50,75,100])stroke('M'+(58+(x-50)*.28)+' '+floor+'L'+x+' 100');
+    for(const t of [.12,.36,.72])stroke('M0 '+(floor+(100-floor)*t)+'H100');
+    const cabinets=(start,count,step,height)=>{for(let i=0;i<count;i++){const x=start+i*step,top=floor-height-(i%2?0:3);panel(x,top,step*.8,floor-top);panel(x+step*.09,top+3.5,step*.62,height*.43,'lit');stroke('M'+x+' '+(top+height*.62)+'h'+step*.8);}};
+    if(['mac','diagnostics','updates'].includes(scene)){panel(36,15,24,23);panel(39,18,18,13,'lit');panel(78,12,18,25);panel(32,46,64,3.5,'lit');stroke('M42 39h6v7M86 40v6M37 50v6');}
+    else if(['retro','console','arcade'].includes(scene))cabinets(scene==='arcade'?42:34,scene==='arcade'?4:3,scene==='arcade'?16:22,scene==='arcade'?50:32);
+    else if(['catalog','license'].includes(scene)){for(let r=0;r<2;r++){const y=13+r*20;for(let b=0;b<7;b++){const h=b%3?14:10;panel(36+b*7.8,y+15-h,4.5,h,b%2?'lit':'wall');}panel(33,y+15,62,1.8,'edge-fill');}}
+    else if(['like','sponsor'].includes(scene)){stroke('M30 15 49 22 73 18 98 10');for(const[x,y]of [[39,18],[57,20.5],[83,14.5]])poly('M'+x+' '+y+'l7 -1.4 -2.5 8.9Z','lit');panel(38,43,52,10);panel(45,40,40,4,'lit');}
+    else if(scene==='vr'){svg.append(s('ellipse',{cx:66,cy:29,rx:28,ry:20,class:'v2-scene-lit-stroke',fill:'none'}));stroke('M32 42 50 35 70 39 95 26M34 48 58 41 95 47');}
+    else if(scene==='portal'){for(const n of [6,16,26])stroke('M'+n+' 73V'+(9+n*.22+18)+'Q'+n+' '+(9+n*.22)+' 50 '+(9+n*.22)+'Q'+(100-n)+' '+(9+n*.22)+' '+(100-n)+' '+(27+n*.22)+'V73');stroke('M10 73V18h7M90 73V18h-7','lit-stroke');}
+    else if(scene==='journey'){poly('M25 77 42 32 56 58 74 18 100 52V77Z');poly('M35 77 60 47 70 64 88 40 100 65V77Z','lit');stroke('M35 87 57 71 52 65 66 54');}
+    svg.append(s('ellipse',{cx:scene==='portal'?50:70,cy:scene==='portal'?73:['arcade','journey'].includes(scene)?90:59,rx:scene==='portal'?44:28,ry:2.8,class:'v2-scene-lit'}));
+    return svg;
+  };
+  window.ForgePlayGuideIcons=Object.freeze({icon,launcher,backdrop});
 })();

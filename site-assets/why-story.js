@@ -4,7 +4,6 @@
   const note = document.querySelector("[data-why-story]");
   const content = document.querySelector("[data-why-story-content]");
   const tableOfContents = document.querySelector("[data-why-story-toc]");
-  if (!note || !content || !tableOfContents) return;
 
   const supportedLocales = new Set([
     "ko",
@@ -411,6 +410,9 @@
     }
   };
 
+  // Share the same safe full-text renderer with the launcher web demonstration.
+  window.ForgePlayFounderNote = Object.freeze({fetchMarkdown, renderMarkdown});
+  if (!note || !content || !tableOfContents) return;
   note.addEventListener("toggle", synchronize);
   document.addEventListener("forgeplay:localechange", synchronize);
   synchronize();

@@ -1,0 +1,10 @@
+Fopl (포플) is ForgePlay's original mascot.
+Copyright (C) 2026 Facta-Leopard.
+
+The website uses approved ForgePlay artwork. The small keyring and idle strip
+are display-sized exports from the approved first-party atlas. Native originals
+are unchanged. No third-party character, font or animation library is included.
+
+Public display on ForgePlay's website does not grant a separate reuse license
+for the mascot artwork, name or branding. The project's code-license scopes
+and third-party component terms remain separate.

@@ -270,8 +270,10 @@ changes; it is not an app release commit. Validate structural changes against
 
 ## Interactive VR Mac guide
 
-The guide launcher opens `guide-vr.js` instead of a development-only alert for
-the VR tile. `guide-vr-copy.json` stores eight translations per key in its
+As of October 1, the current launcher’s VR tile shows its development notice;
+VR app handoff is on hold. The earlier `guide-vr.js` simulation is retained as
+historical guide code, but the launcher and `#app-vr` no longer open it.
+`guide-vr-copy.json` stores eight translations per key in its
 explicit `locales` order. The VR preview is labelled **PREVIEW / 0.1** independently
 from the desktop guide's development version.
 
@@ -291,11 +293,24 @@ Sample paths/codes are not usable credentials. No native APIs, device discovery,
 audio, file selection, clipboard, runtime, persistence or real Steam launch is used.
 The standalone validator checks localization, assets and pure state transitions.
 
-The desktop demo's dark/light palette also follows the current
-`Mac/Sources/ForgePlay/UI/Theme.swift`: charcoal/copper in dark mode and warm
-ivory/burnt copper in light mode. Cards, title bar, controls, warnings and help
-popovers use the matching roles. Native theme identifiers and the desktop
-preview version 2.1.0 (7) are unchanged.
+The desktop demo now follows the October 1 native UI: stronger beige/light
+icons, charcoal dark mode, setup as a separate first sidebar entry, no Why
+sidebar entry, shared Retina default off and explicit save. The3840×2160
+source limit is explained without treating720p processing as an exemption.
+Preparation does not imply Steam login success. Native theme identifiers and
+the desktop preview version2.1.0 (7) are unchanged.
+
+The launcher uses the current4×3 layout, Fopl art and creator-rabbit exceptions.
+It opens the full founder’s note, refreshes the public compatibility list and
+offers clearly marked update-state examples. It never installs or updates an app.
+
+`guide-desktop-copy.json` is manually maintained public copy, not a bulk export
+of private Coordinator strings. `guide-coordinator-notice.json` contains only
+public restricted-game names and notice metadata. It is not an app policy feed.
+The web demo has no Coordinator detailed settings or private model configuration;
+legal notices and applicable license text are in `guide-notices/`.
+The website cursor keyring and desktop sidebar mascot reuse the approved Fopl
+atlas, with reduced-motion support and no input collection or persistence.
 
 ## Why ForgePlay exists — full text
 

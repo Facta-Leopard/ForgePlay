@@ -34,6 +34,19 @@ PAGES=(
   site-assets/guide-v2.js
   site-assets/guide-v2-icons.js
   site-assets/guide-v2.css
+  site-assets/guide-launcher.css
+  site-data/guide-launcher-copy.json
+  site-assets/guide-desktop.css
+  site-data/guide-desktop-copy.json
+  site-data/guide-coordinator-notice.json
+  site-data/guide-notices/coordinator.ko.txt
+  site-data/guide-notices/coordinator.en.txt
+  site-data/guide-notices/owlv2-license.txt
+  site-data/guide-notices/supertonic2-license.txt
+  site-assets/fopl/idle-strip.webp
+  site-assets/fopl-keyring.js
+  site-assets/fopl-keyring.css
+  site-assets/fopl/keyring.webp
   site-assets/guide-vr.js
   site-assets/guide-vr.css
   site-data/guide-vr-copy.json
@@ -562,7 +575,7 @@ for key, values in vr_copy["strings"].items():
         raise SystemExit(f"VR guide: inconsistent placeholders for {key}")
     if re.search(r'[\u3040-\u30ff]', values[0]):
         raise SystemExit(f"VR guide: unexpected Japanese text in Korean {key}")
-for name in ["guide-vr.css?v=20260929-1", "guide-vr.js?v=20260929-1", "guide-v2.js?v=20260929-vr1", "guide-v2-icons.js?v=20260929-vr1"]:
+for name in ["guide-vr.css?v=20260929-1", "guide-vr.js?v=20260929-1", "guide-v2.js?v=20261001-desktop1", "guide-v2-icons.js?v=20261001-launcher1", "guide-launcher.css?v=20261001-1", "guide-desktop.css?v=20261001-1", "why-story.js?v=20261001-reader1"]:
     if name not in guide_html:
         raise SystemExit(f"VR guide: missing current asset {name}")
 if 'guide-v2.css?v=20260929-palette1' not in guide_html:
@@ -575,8 +588,36 @@ for color in ['#12100e','#1d1915','#29221c','#e6a264','#24160b','#f4ebdd','#bbae
 vr_js = (root / "site-assets/guide-vr.js").read_text(encoding="utf-8")
 if any(api in vr_js for api in ("innerHTML", "fetch(", "localStorage", "sessionStorage", "showOpenFilePicker", "getUserMedia", "navigator.", "WebSocket", "setInterval", "setTimeout", "sendBeacon")):
     raise SystemExit("VR guide must remain local UI simulation with no device, storage or networking APIs")
-if "if(id==='vr'){surface='vr';render(true);return;}" not in guide_v2_js:
-    raise SystemExit("VR launcher tile must open the interactive VR guide")
+if "if(['vr','retro','console'].includes(id)){show(tileLabel(id),L('development'));return;}" not in guide_v2_js:
+    raise SystemExit("Current launcher must show development status for VR, Old Game and ConSole Game")
+launcher_copy = json.loads((root / "site-data/guide-launcher-copy.json").read_text())
+desktop_copy = json.loads((root / "site-data/guide-desktop-copy.json").read_text())
+if desktop_copy["locales"] != launcher_copy["locales"]:
+    raise SystemExit("Desktop guide requires the same eight locales")
+for key, values in desktop_copy["strings"].items():
+    if len(values) != 8 or any(not isinstance(v, str) or not v.strip() for v in values):
+        raise SystemExit(f"Missing desktop translation: {key}")
+    if re.search(r'[\u3040-\u30ff]', values[0]):
+        raise SystemExit(f"Unexpected Japanese in Korean desktop text: {key}")
+public_notice = json.loads((root / "site-data/guide-coordinator-notice.json").read_text())
+if set(public_notice) != {"schemaVersion", "asOf", "restrictedGames"} or not all(isinstance(n, str) and n.strip() for n in public_notice["restrictedGames"]):
+    raise SystemExit("Coordinator web notice must contain only public game names and notice metadata")
+desktop_css = (root / "site-assets/guide-desktop.css").read_text().lower()
+for color in ['#e7d5ba','#dfc7a6','#efe0c9','#e3cbaa','#883a15','#604d3a','#c5ac8a']:
+    if color not in desktop_css:
+        raise SystemExit(f"Desktop guide missing current native color {color}")
+if set(launcher_copy["locales"]) != set(locale_names) or len(launcher_copy["locales"]) != 8:
+    raise SystemExit("Launcher guide requires eight locales")
+for key, values in launcher_copy["strings"].items():
+    if len(values) != 8 or any(not isinstance(v, str) or not v.strip() for v in values):
+        raise SystemExit(f"Missing launcher translation: {key}")
+for name in ["mac", "vr", "old-game", "console-game", "compatibility", "like", "sponsor", "diagnostics", "license", "updates", "left-portrait", "bottom-left", "bottom-right"]:
+    if not (root / f"site-assets/guide/launcher-current/fopl-{name}.webp").is_file():
+        raise SystemExit(f"Missing approved Fopl launcher art: {name}")
+for name in ["creator-apps-tile", "why-forgeplay-tile", "brand"]:
+    for theme in ["light", "dark"]:
+        if not (root / f"site-assets/guide/launcher-current/{name}-{theme}.webp").is_file():
+            raise SystemExit(f"Missing launcher theme artwork: {name}/{theme}")
 if 'data-guide2-text="previewVersion"' not in guide_html or "2.0.0 (6)" in guide_v2_js:
     raise SystemExit("guide-v2: visible preview version must use the development metadata")
 if "data-guide-v2" not in guide_html or "data-guide-app " in guide_html or "guide/screens/" in guide_html or "1.3.1" in guide_html:
@@ -1773,7 +1814,7 @@ for html in index.html why.html license.html privacy.html support.html compatibi
   fi
   require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260929-platform1"'
   require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.css?v=20260905-7'
-  require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.js?v=20260905-2'
+  require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.js?v=20261001-fopl1'
   if [[ "$html" != "index.html" ]]; then
     require_snippet "$ROOT_DIR/$html" 'site-assets/page-experience.css?v=20260905-7'
   fi

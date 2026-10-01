@@ -1,0 +1,66 @@
+AI Coordinator usage notice · Korea / United States / international
+Notice revision: 2026-10-01.1-popple
+
+Important: no cheating, unlawful use or impersonation of official releases
+Follow applicable law and the rules of your game and platform. Violations may lead
+to platform enforcement, contractual responsibility or remedies under applicable law.
+Users are responsible for their own conduct, rule violations and resulting harm.
+
+1. Official app acknowledgement and restricted-game list
+Official ForgePlay asks you to review this notice and the game list before first
+enabling Coordinator. Saving options after confirmation remembers the same notice
+and policy on this Mac. Changed notices or policies require a new review.
+Only the last confirmation's version, digest, policy version and time are kept locally;
+account information and game images are not transmitted by this confirmation.
+The official app restricts Coordinator in listed games; other app features remain
+available. The list may change and does not certify game compatibility with ForgePlay.
+
+2. Software license
+The original Coordinator implementation is GPL-3.0-only. Copying, modification and
+redistribution are allowed under GPLv3. No ND or blanket ban on modified distributions
+applies. Comply with applicable copyright/change notices, same-license and
+Corresponding Source obligations.
+This usage notice is not a software license adding restrictions to GPL rights.
+Distinguish the official app's game restrictions and safety guidance from liabilities
+under applicable law or game/platform rules. GPL does not grant permission to cheat,
+infringe others' rights or violate game/platform rules.
+
+3. Korea
+Korean copyright law and applicable program-use exceptions govern the relevant rights
+and distribution. Electronic notices, acknowledgements and consumer protection follow
+the laws applicable to the transaction and circumstances. Game/platform rule breaches
+and GPL distribution violations are separate questions.
+https://www.law.go.kr/법령/저작권법
+https://www.law.go.kr/법령/전자문서및전자거래기본법
+https://www.law.go.kr/법령/약관의규제에관한법률
+
+4. United States
+Copyright, distribution and applicable exceptions are assessed under applicable U.S.
+copyright law and GPL terms. Relevant federal/state law and transaction terms govern
+electronic notices and acknowledgements. Modified distributions are not categorically
+prohibited; distinguish GPL compliance, impersonation and game-rule violations.
+https://www.law.cornell.edu/uscode/text/17
+https://www.law.cornell.edu/uscode/text/15/7001
+
+5. International use and attribution
+Applicable national copyright law, game rules, choice-of-law and jurisdiction rules
+remain relevant. Do not present an unofficial modified build as an official ForgePlay
+release. Retain authorship, source and applicable licenses, and identify changes as
+required by GPL.
+https://www.wipo.int/en/web/treaties/ip/berne/summary_berne
+
+6. Separate components
+OWLv2 weights and conversions retain their Apache-2.0 notices. Apple system components,
+existing GPL/LGPL adapters, Wine and other third-party materials retain their own terms.
+SCOPE.json identifies the Coordinator source classifications.
+
+Popple speech is AI-generated on the device CPU using the Supertonic2 model.
+Use of this voice model requires agreement to its separate OpenRAIL-M license,
+including paragraph5 and AttachmentA. Redistribution or provision of the model
+must preserve the paragraph4 obligations, full license, rights notices, applicable
+use restrictions and modification notices. Read the full text in Voice model terms.
+ONNX Runtime retains MIT and its bundled third-party notices. These model/runtime
+terms do not apply wholesale to ForgePlay's independently authored GPL source.
+
+Official project: https://github.com/Facta-Leopard/ForgePlay
+Copyright (C) 2026 Facta-Leopard
