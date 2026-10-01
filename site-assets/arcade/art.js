@@ -2,6 +2,7 @@
   'use strict';
   if(!document.body.classList.contains('fp-site'))return;
   const root='site-assets/arcade/';
+  const asset=path=>window.ForgePlaySiteTheme?.asset(path)||path;
   const reduce=matchMedia('(prefers-reduced-motion: reduce)'),fine=matchMedia('(hover:hover) and (pointer:fine)');
   let paused=false;
   const copy={
@@ -46,19 +47,23 @@
     if(hammer.elapsed>=.43&&!hammer.impacted){hammer.impacted=true;field.burst=1;}
   }
   async function loadHammer(field) {
+    const revision=field.hammerRevision=(field.hammerRevision||0)+1;
     try {
       const frames=Object.fromEntries(await Promise.all(['raised','down','contact'].map(async name=>{
-        const frame=new Image();frame.src=root+'hammer/'+name+'.png';await frame.decode();return [name,frame];
+        const frame=new Image();frame.src=asset(root+'hammer/'+name+'.png');await frame.decode();return [name,frame];
       })));
-      field.hammer={frames,elapsed:null,wait:1.6,impacted:false};
-      field.scene.classList.add('pixel-hammer-ready');showPose(field,'contact');syncStrikeButton(field);resume();
+      if(revision!==field.hammerRevision)return;
+      field.hammer={frames,elapsed:field.hammer?.elapsed??null,wait:field.hammer?.wait??1.6,impacted:field.hammer?.impacted??false};
+      const pose=field.scene.dataset.hammerPose||'contact';delete field.scene.dataset.hammerPose;
+      field.scene.classList.add('pixel-hammer-ready');showPose(field,pose);syncStrikeButton(field);resume();
     } catch {
       // Decorative artwork is optional. Keep the original still if a pose cannot load.
-      field.character.src=root+'assets/smith.png';syncStrikeButton(field);
+      if(revision!==field.hammerRevision)return;
+      if(!field.hammer)field.character.src=asset(root+'assets/smith.png');syncStrikeButton(field);
     }
   }
   function image(file,klass,kind) {
-    const img=document.createElement('img');img.src=root+'assets/'+file;img.alt='';img.className='pixel-layer '+klass;img.dataset.pixelLayer=kind;img.decoding='async'; return img;
+    const img=document.createElement('img');img.dataset.pixelAsset=root+'assets/'+file;img.src=asset(img.dataset.pixelAsset);img.alt='';img.className='pixel-layer '+klass;img.dataset.pixelLayer=kind;img.decoding='async'; return img;
   }
   function makeScene(host,kind) {
     if(kind==='forge'&&!host.id)host.id='pixel-forge';
@@ -124,5 +129,14 @@
   pause.addEventListener('click',()=>{paused=!paused;pause.setAttribute('aria-pressed',String(paused));updateLabels();resume();});
   document.addEventListener('forgeplay:localechange',updateLabels);updateLabels();
   document.addEventListener('visibilitychange',resume);reduce.addEventListener('change',resume);
+  document.addEventListener('forgeplay:themechange',()=>{
+    for(const field of scenes){
+      for(const layer of field.scene.querySelectorAll('[data-pixel-asset]')){
+        if(field.kind==='forge'&&layer===field.character)continue;
+        layer.src=asset(layer.dataset.pixelAsset);
+      }
+      if(field.kind==='forge')void loadHammer(field);
+    }
+  });
   document.body.classList.add('arcade-art-ready');
 })();

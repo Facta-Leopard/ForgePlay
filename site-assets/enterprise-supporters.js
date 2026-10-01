@@ -5,6 +5,7 @@
   const languages = ['ko','en','de','es','fr','ja','zh-Hans','zh-Hant'];
   const requested = new URL(location.href).searchParams.get('lang');
   let payload = null;
+  let placeholderProbe=null,artRevision=0;
   const locale = () => window.ForgePlaySite?.getLocale() || (languages.includes(requested) ? requested : 'en');
   const localized = values => values[locale()] || values.en;
   function render() {
@@ -13,7 +14,14 @@
     element.style.aspectRatio = String(banner.aspectRatio);
     const image = element.querySelector('img');
     // The versioned URL is absolute for native consumers. Resolve the same asset locally for previews.
-    image.src = new URL('site-assets/supporters/' + banner.imageURL.split('/').pop(), document.baseURI).href;
+    const originalURL=new URL('site-assets/supporters/' + banner.imageURL.split('/').pop(), document.baseURI).href;
+    image.src = originalURL;
+    const revision=++artRevision;
+    if(document.documentElement.dataset.siteTheme==='light'&&banner.imageURL.endsWith('/enterprise-arcade.png')){
+      placeholderProbe ||= fetch(originalURL,{cache:'force-cache',credentials:'omit',signal:AbortSignal.timeout(10000)})
+        .then(async response=>{if(!response.ok||Number(response.headers.get('Content-Length'))>8_000_000)return false;const data=await response.arrayBuffer();if(data.byteLength>8_000_000)return false;const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',data))].map(v=>v.toString(16).padStart(2,'0')).join('');return hash==='0cb07af680b74377938ead746f245a89cdadab93956734ae53c8b968b32f0424';}).catch(()=>false);
+      placeholderProbe.then(isDefault=>{if(isDefault&&revision===artRevision&&document.documentElement.dataset.siteTheme==='light')image.src=window.ForgePlaySiteTheme.asset('site-assets/arcade/launcher/forge-banner.png');});
+    }
     image.width = banner.imageWidth; image.height = banner.imageHeight;
     image.alt = localized(banner.alt);
     element.querySelector('strong').textContent = localized(banner.titles);
@@ -25,6 +33,7 @@
     if (document.body.classList.contains('enterprise-embed')) { document.documentElement.lang = locale(); document.title = `ForgePlay — ${localized(banner.titles)}`; }
   }
   document.addEventListener('forgeplay:localechange', render);
+  document.addEventListener('forgeplay:themechange', render);
   const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(),10000);
   const url = new URL('site-data/enterprise-supporters.json', document.baseURI); url.searchParams.set('refresh',String(Date.now()));
   fetch(url,{cache:'no-store',credentials:'omit',redirect:'error',signal:controller.signal})

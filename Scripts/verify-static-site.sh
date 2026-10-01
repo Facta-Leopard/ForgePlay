@@ -2,6 +2,18 @@
 set -euo pipefail
 ROOT_DIR="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 PAGES=(
+  site-assets/site-theme.js
+  site-assets/site-theme.css
+  site-assets/forgeplay-icon-light.webp
+  site-assets/arcade/light/workshop.webp
+  site-assets/arcade/light/world.webp
+  site-assets/arcade/light/tools.webp
+  site-assets/arcade/light/explorer.webp
+  site-assets/arcade/light/neural.webp
+  site-assets/arcade/light/forge-banner.webp
+  site-assets/arcade/light/hammer-raised.webp
+  site-assets/arcade/light/hammer-down.webp
+  site-assets/arcade/light/hammer-contact.webp
   site-assets/arcade/art.js
   site-assets/arcade/arcade.js
   site-assets/arcade/art.css
@@ -575,7 +587,7 @@ for key, values in vr_copy["strings"].items():
         raise SystemExit(f"VR guide: inconsistent placeholders for {key}")
     if re.search(r'[\u3040-\u30ff]', values[0]):
         raise SystemExit(f"VR guide: unexpected Japanese text in Korean {key}")
-for name in ["guide-vr.css?v=20260929-1", "guide-vr.js?v=20260929-1", "guide-v2.js?v=20261001-desktop1", "guide-v2-icons.js?v=20261001-launcher1", "guide-launcher.css?v=20261001-1", "guide-desktop.css?v=20261001-1", "why-story.js?v=20261001-reader1"]:
+for name in ["guide-vr.css?v=20260929-1", "guide-vr.js?v=20260929-1", "guide-v2.js?v=20261002-theme1", "guide-v2-icons.js?v=20261001-launcher1", "guide-launcher.css?v=20261001-1", "guide-desktop.css?v=20261001-1", "why-story.js?v=20261001-reader1"]:
     if name not in guide_html:
         raise SystemExit(f"VR guide: missing current asset {name}")
 if 'guide-v2.css?v=20260929-palette1' not in guide_html:
