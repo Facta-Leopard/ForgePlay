@@ -1557,11 +1557,11 @@ for announcement in announcements:
         for asset in images:
             require_object_shape(asset, {"src", "caption"}, {"src", "caption", "alt", "width", "height", "afterParagraph"}, f"announcement {identifier} image")
             src = asset["src"]
-            if not isinstance(src, str) or not re.fullmatch(r"site-assets/announcements/[a-z0-9-]+\.(jpg|png)", src):
+            if not isinstance(src, str) or not re.fullmatch(r"site-assets/announcements/[a-z0-9-]+\.(jpg|png|gif)", src):
                 raise SystemExit(f"announcement {identifier}: invalid image path")
             image = root / src
-            signature = b"\x89PNG\r\n\x1a\n" if src.endswith(".png") else b"\xff\xd8\xff"
-            if image.is_symlink() or not image.is_file() or not image.read_bytes().startswith(signature):
+            signatures = {".png": (b"\x89PNG\r\n\x1a\n",), ".jpg": (b"\xff\xd8\xff",), ".gif": (b"GIF87a", b"GIF89a")}
+            if image.is_symlink() or not image.is_file() or not image.read_bytes().startswith(signatures[image.suffix]):
                 raise SystemExit(f"announcement {identifier}: missing or invalid image")
             captions = asset["caption"]
             if not isinstance(captions, dict) or set(captions) != set(locale_names) or not all(isinstance(v, str) and v.strip() for v in captions.values()):
@@ -1579,6 +1579,10 @@ for announcement in announcements:
                     import struct
                     if struct.unpack('>II', image.read_bytes()[16:24]) != (asset["width"],asset["height"]):
                         raise SystemExit(f"announcement {identifier}: incorrect PNG dimensions")
+                elif src.endswith(".gif"):
+                    import struct
+                    if struct.unpack('<HH', image.read_bytes()[6:10]) != (asset["width"],asset["height"]):
+                        raise SystemExit(f"announcement {identifier}: incorrect GIF dimensions")
     paragraphs = announcement.get("paragraphs")
     if paragraphs is not None:
         expected_detail_href = f"updates.html#update-{identifier}"
@@ -1613,8 +1617,8 @@ for announcement in announcements:
         action = announcement["action"]
         fields = {"href", "label", "accessibilityLabel", "afterParagraph"}
         require_object_shape(action, fields, fields, f"announcement {identifier} action")
-        if action["href"] != "https://github.com/Facta-Leopard/ForgePlay/issues":
-            raise SystemExit("announcement feedback action must target the ForgePlay issue list")
+        if action["href"] not in {"https://github.com/Facta-Leopard/ForgePlay/issues", "site-assets/guide.html"}:
+            raise SystemExit("announcement action must target the ForgePlay issue list or interactive guide")
         for key in ("label", "accessibilityLabel"):
             if not isinstance(action[key],dict) or set(action[key]) != set(locale_names) or not all(isinstance(v,str) and v.strip() for v in action[key].values()):
                 raise SystemExit(f"announcement {identifier}: action labels require eight locales")
@@ -1919,7 +1923,7 @@ require_snippet "$ROOT_DIR/index.html" 'data-home-games'
 require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
 require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260929-platform1"'
-require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20260929-news1"'
+require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20261002-preview1"'
 require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260913-1"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
 require_snippet "$ROOT_DIR/index.html" 'data-announcement-summary'
@@ -2088,7 +2092,7 @@ require_snippet "$ROOT_DIR/site-data/README.md" 'Routine compatibility database 
 require_snippet "$ROOT_DIR/site-data/README.md" 'No raw HTML or Markdown is rendered.'
 require_snippet "$ROOT_DIR/updates.html" 'data-announcement-list'
 require_snippet "$ROOT_DIR/updates.html" 'data-nav-page="updates"'
-require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20260929-news1"'
+require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20261002-preview1"'
 require_snippet "$ROOT_DIR/updates.html" 'Release notes, important notices, and development news.'
 require_snippet "$ROOT_DIR/announcements.js" 'site-data/announcements.json'
 require_snippet "$ROOT_DIR/announcements.js" 'forgeplay:localechange'

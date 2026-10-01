@@ -132,7 +132,7 @@
   };
 
   const appendImage = (parent, asset, selectedLocale, className = "") => {
-    if (!/^site-assets\/announcements\/[a-z0-9-]+\.(?:jpg|png)$/.test(asset.src)) return;
+    if (!/^site-assets\/announcements\/[a-z0-9-]+\.(?:jpg|png|gif)$/.test(asset.src)) return;
     const figure = document.createElement("figure");
     figure.className = className;
     const caption = localizedText(asset.caption, selectedLocale);
@@ -153,7 +153,7 @@
   };
 
   const appendAction = (parent, action, selectedLocale) => {
-    if (action.href !== "https://github.com/Facta-Leopard/ForgePlay/issues") return;
+    if (!["https://github.com/Facta-Leopard/ForgePlay/issues", "site-assets/guide.html"].includes(action.href)) return;
     const link = appendTextElement(parent, "a", "update-feedback-button", localizedText(action.label, selectedLocale));
     applyLinkDestination(link, action.href, selectedLocale);
     link.setAttribute("aria-label", localizedText(action.accessibilityLabel, selectedLocale));
