@@ -2,8 +2,22 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-02",
-  "revision": 1,
+  "revision": 2,
   "testProfiles": [
+    {
+      "id": "macbook-air-13-m5-macos-27",
+      "platform": "MacBook Air (13-inch)",
+      "chip": "M5",
+      "unifiedMemoryGB": null,
+      "macOSVersion": "27"
+    },
+    {
+      "id": "apple-silicon-m5-max-128gb-macos-27-0-1",
+      "platform": "Apple Silicon Mac",
+      "chip": "M5 Max",
+      "unifiedMemoryGB": 128,
+      "macOSVersion": "27.0.1"
+    },
     {
       "id": "apple-silicon-m5-pro-24gb-macos-27-0",
       "platform": "Apple Silicon Mac",
@@ -181,6 +195,27 @@
     }
   ],
   "games": [
+    {
+      "id": "the-binding-of-isaac",
+      "titles": {
+        "en": "The Binding of Isaac",
+        "ko": "아이작"
+      }
+    },
+    {
+      "id": "path-of-exile",
+      "titles": {
+        "en": "Path of Exile",
+        "ko": "패스 오브 엑자일 1"
+      }
+    },
+    {
+      "id": "path-of-exile-2",
+      "titles": {
+        "en": "Path of Exile 2",
+        "ko": "패스 오브 엑자일 2"
+      }
+    },
     {
       "id": "delta-force",
       "titles": {
@@ -522,6 +557,75 @@
     }
   ],
   "reports": [
+    {
+      "id": "isaac-2-0-0-community-20261002",
+      "gameId": "the-binding-of-isaac",
+      "launchPlatform": "steam",
+      "testProfileId": "macbook-air-13-m5-macos-27",
+      "forgePlayVersion": "2.0.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "ㅇㅇ",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.0.0에서 Steam판 아이작이 원활하게 실행되며 한글 패치도 정상 작동한다는 커뮤니티 제보입니다. 다만 일부 모드는 작동하지 않는다고 합니다. 제보 기기는 13인치 M5 MacBook Air, macOS 27입니다. 메모리 용량과 게임의 세부 에디션·버전, 작동하지 않는 모드 이름은 확인되지 않았습니다.",
+        "en": "Community report: the Steam version of The Binding of Isaac runs smoothly in ForgePlay 2.0.0, and the Korean-language patch works. Some mods do not work. Reported setup: 13-inch M5 MacBook Air, macOS 27. Memory capacity, exact game edition and version, and the names of the affected mods are unconfirmed.",
+        "de": "Community-Bericht: Die Steam-Version von The Binding of Isaac läuft in ForgePlay 2.0.0 flüssig; auch der koreanische Sprachpatch funktioniert. Einige Mods funktionieren jedoch nicht. Gemeldetes Gerät: 13-Zoll-MacBook Air mit M5 und macOS 27. Speicherausstattung, genaue Spieledition und -version sowie die betroffenen Mods sind nicht bestätigt.",
+        "es": "Informe de la comunidad: la versión de Steam de The Binding of Isaac funciona con fluidez en ForgePlay 2.0.0 y el parche de idioma coreano también funciona. Algunos mods no funcionan. Equipo indicado: MacBook Air M5 de 13 pulgadas con macOS 27. No se han confirmado la memoria, la edición y versión exactas del juego ni los nombres de los mods afectados.",
+        "fr": "Signalement communautaire : la version Steam de The Binding of Isaac fonctionne avec fluidité dans ForgePlay 2.0.0, ainsi que le patch de traduction coréenne. Certains mods ne fonctionnent toutefois pas. Machine indiquée : MacBook Air M5 de 13 pouces, macOS 27. La mémoire, l’édition et la version exactes du jeu ainsi que les mods concernés ne sont pas précisés.",
+        "ja": "ForgePlay 2.0.0でSteam版のアイザックがスムーズに動作し、韓国語パッチも正常に使えるとのコミュニティ報告です。ただし一部のMODは動作しないとのことです。報告環境は13インチM5 MacBook Air、macOS 27です。メモリ容量、ゲームの具体的なエディション・バージョン、動作しないMODの名称は未確認です。",
+        "zh-Hans": "社区反馈：Steam 版 The Binding of Isaac 在 ForgePlay 2.0.0 中运行流畅，韩语补丁也正常工作，但部分模组无法使用。报告设备为 13 英寸 M5 MacBook Air、macOS 27。内存容量、游戏的具体发行版与版本，以及无法使用的模组名称尚未确认。",
+        "zh-Hant": "社群回報：Steam 版 The Binding of Isaac 在 ForgePlay 2.0.0 中執行流暢，韓語修補檔也正常運作，但部分模組無法使用。回報裝置為 13 吋 M5 MacBook Air、macOS 27。記憶體容量、遊戲的具體發行版與版本，以及無法使用的模組名稱尚未確認。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "path-of-exile-2-0-0-community-jjeoni-20261002",
+      "gameId": "path-of-exile",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m5-max-128gb-macos-27-0-1",
+      "forgePlayVersion": "2.0.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "쩌니",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.0.0에서 Steam판 Path of Exile 1을 실행한 커뮤니티 제보입니다. FPS가 60을 거의 넘지 못하며, 캐릭터를 움직이기 시작할 때 잠깐 끊김이 있다고 합니다. 제보자는 최적화 문제로 추정했으나 정확한 원인은 확인되지 않았습니다. 그래픽 백엔드·해상도·그래픽 설정·프레임 생성 사용 여부는 미확인입니다.",
+        "en": "Community report for the Steam version of Path of Exile 1 in ForgePlay 2.0.0: FPS rarely exceeds 60, with a brief stutter when the character starts moving. The reporter suspects an optimization issue, but the cause is unconfirmed. Graphics backend, resolution, graphics settings, and whether frame generation was enabled were not specified.",
+        "de": "Community-Bericht zur Steam-Version von Path of Exile 1 in ForgePlay 2.0.0: Die Bildrate liegt kaum über 60 FPS; zu Beginn einer Charakterbewegung tritt ein kurzes Ruckeln auf. Der Melder vermutet ein Optimierungsproblem, die Ursache ist jedoch unbestätigt. Grafik-Backend, Auflösung, Grafikeinstellungen und Nutzung der Frame-Generierung wurden nicht angegeben.",
+        "es": "Informe de la comunidad sobre Path of Exile 1 de Steam en ForgePlay 2.0.0: los FPS rara vez superan 60 y hay un tirón breve al empezar a mover al personaje. El informante sospecha un problema de optimización, pero la causa no está confirmada. No se indicaron el backend gráfico, la resolución, los ajustes gráficos ni el uso de generación de fotogramas.",
+        "fr": "Signalement communautaire pour Path of Exile 1 sur Steam avec ForgePlay 2.0.0 : la fréquence dépasse rarement 60 FPS et une brève saccade apparaît au début du déplacement du personnage. La personne évoque un problème d’optimisation, sans cause confirmée. Backend graphique, résolution, réglages graphiques et utilisation de la génération d’images non précisés.",
+        "ja": "ForgePlay 2.0.0でSteam版Path of Exile 1を実行したコミュニティ報告です。FPSはほとんど60を超えず、キャラクターを動かし始めたときに短いカクつきがあるとのことです。報告者は最適化の問題と推測していますが、正確な原因は未確認です。グラフィックバックエンド、解像度、画質設定、フレーム生成の使用有無は不明です。",
+        "zh-Hans": "社区反馈：在 ForgePlay 2.0.0 中运行 Steam 版 Path of Exile 1 时，FPS 很少超过 60，角色刚开始移动时会短暂卡顿。反馈者怀疑是优化问题，但具体原因尚未确认。图形后端、分辨率、画质设置和是否启用帧生成功能均未说明。",
+        "zh-Hant": "社群回報：在 ForgePlay 2.0.0 中執行 Steam 版 Path of Exile 1 時，FPS 很少超過 60，角色剛開始移動時會短暫卡頓。回報者懷疑是最佳化問題，但具體原因尚未確認。圖形後端、解析度、畫質設定和是否啟用影格生成功能均未說明。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "path-of-exile-2-2-0-0-community-jjeoni-20261002",
+      "gameId": "path-of-exile-2",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m5-max-128gb-macos-27-0-1",
+      "forgePlayVersion": "2.0.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "쩌니",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.0.0에서 Steam판 Path of Exile 2를 실행한 커뮤니티 제보입니다. FPS가 60을 거의 넘지 못하며, 캐릭터를 움직이기 시작할 때 잠깐 끊김이 있다고 합니다. 제보자는 최적화 문제로 추정했으나 정확한 원인은 확인되지 않았습니다. 그래픽 백엔드·해상도·그래픽 설정·프레임 생성 사용 여부는 미확인입니다.",
+        "en": "Community report for the Steam version of Path of Exile 2 in ForgePlay 2.0.0: FPS rarely exceeds 60, with a brief stutter when the character starts moving. The reporter suspects an optimization issue, but the cause is unconfirmed. Graphics backend, resolution, graphics settings, and whether frame generation was enabled were not specified.",
+        "de": "Community-Bericht zur Steam-Version von Path of Exile 2 in ForgePlay 2.0.0: Die Bildrate liegt kaum über 60 FPS; zu Beginn einer Charakterbewegung tritt ein kurzes Ruckeln auf. Der Melder vermutet ein Optimierungsproblem, die Ursache ist jedoch unbestätigt. Grafik-Backend, Auflösung, Grafikeinstellungen und Nutzung der Frame-Generierung wurden nicht angegeben.",
+        "es": "Informe de la comunidad sobre Path of Exile 2 de Steam en ForgePlay 2.0.0: los FPS rara vez superan 60 y hay un tirón breve al empezar a mover al personaje. El informante sospecha un problema de optimización, pero la causa no está confirmada. No se indicaron el backend gráfico, la resolución, los ajustes gráficos ni el uso de generación de fotogramas.",
+        "fr": "Signalement communautaire pour Path of Exile 2 sur Steam avec ForgePlay 2.0.0 : la fréquence dépasse rarement 60 FPS et une brève saccade apparaît au début du déplacement du personnage. La personne évoque un problème d’optimisation, sans cause confirmée. Backend graphique, résolution, réglages graphiques et utilisation de la génération d’images non précisés.",
+        "ja": "ForgePlay 2.0.0でSteam版Path of Exile 2を実行したコミュニティ報告です。FPSはほとんど60を超えず、キャラクターを動かし始めたときに短いカクつきがあるとのことです。報告者は最適化の問題と推測していますが、正確な原因は未確認です。グラフィックバックエンド、解像度、画質設定、フレーム生成の使用有無は不明です。",
+        "zh-Hans": "社区反馈：在 ForgePlay 2.0.0 中运行 Steam 版 Path of Exile 2 时，FPS 很少超过 60，角色刚开始移动时会短暂卡顿。反馈者怀疑是优化问题，但具体原因尚未确认。图形后端、分辨率、画质设置和是否启用帧生成功能均未说明。",
+        "zh-Hant": "社群回報：在 ForgePlay 2.0.0 中執行 Steam 版 Path of Exile 2 時，FPS 很少超過 60，角色剛開始移動時會短暫卡頓。回報者懷疑是最佳化問題，但具體原因尚未確認。圖形後端、解析度、畫質設定和是否啟用影格生成功能均未說明。"
+      },
+      "blocker": null
+    },
     {
       "id": "delta-force-2-0-0-community-00-20261002",
       "gameId": "delta-force",
