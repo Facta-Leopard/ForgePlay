@@ -1,6 +1,7 @@
 {
   "locales": ["ko", "en", "de", "es", "fr", "ja", "zh-Hans", "zh-Hant"],
   "strings": {
+    "oneClickUpdate": ["원버튼 업데이트", "One-click update", "Ein-Klick-Update", "Actualización con un clic", "Mise à jour en un clic", "ワンクリック更新", "一键更新", "一鍵更新"],
     "diagnostics": ["문제진단(AI)", "Diagnostics (AI)", "Diagnose (KI)", "Diagnóstico (IA)", "Diagnostic (IA)", "問題診断（AI）", "问题诊断（AI）", "問題診斷（AI）"],
     "license": ["라이센스", "Licenses", "Lizenzen", "Licencias", "Licences", "ライセンス", "许可证", "授權條款"],
     "why": ["만든 이유", "Why I Made It", "Warum ich ForgePlay entwickelt habe", "Por qué lo creé", "Pourquoi je l’ai créé", "つくった理由", "创作缘由", "創作緣由"],
@@ -12,7 +13,6 @@
     "captionLicense": ["이용 조건 · 고지", "Terms · notices", "Bedingungen · Hinweise", "Condiciones · Avisos", "Conditions · Notices", "利用条件・告知", "条款 · 声明", "條款 · 聲明"],
     "captionApps": ["앱 목록 · App Store", "Apps · App Store", "Apps · App Store", "Apps · App Store", "Apps · App Store", "アプリ一覧・App Store", "App 列表 · App Store", "App 清單 · App Store"],
     "captionWhy": ["제작자 이야기", "The creator’s story", "Die Geschichte dahinter", "La historia del creador", "L’histoire du créateur", "制作者の物語", "创作者的故事", "創作者的故事"],
-    "captionUpdates": ["최신 버전 확인", "Check latest version", "Neueste Version prüfen", "Consultar última versión", "Vérifier la dernière version", "最新バージョンを確認", "检查最新版本", "檢查最新版本"],
     "appearance": ["체험 화면 색상", "Demo appearance", "Demo-Darstellung", "Apariencia de la demo", "Apparence de la démo", "体験画面の配色", "体验界面外观", "體驗畫面外觀"],
     "light": ["라이트", "Light", "Hell", "Claro", "Clair", "ライト", "浅色", "淺色"],
     "dark": ["다크", "Dark", "Dunkel", "Oscuro", "Sombre", "ダーク", "深色", "深色"],
@@ -26,14 +26,6 @@
     "contents": ["목차", "Contents", "Inhalt", "Contenido", "Sommaire", "目次", "目录", "目錄"],
     "whyHelp": ["제작자 노트 전문입니다. 실제 런처는 한국어·영어 원문을 앱에 담아 오프라인으로 표시합니다. 웹 체험에서는 홈페이지에서 선택한 언어의 원문을 불러옵니다.", "The complete founder’s note. The real launcher bundles the Korean and English text for offline reading. This web demo loads the full text in the website’s selected language.", "Die vollständige Notiz des Entwicklers. Der echte Launcher enthält Koreanisch und Englisch zum Offline-Lesen. Die Webdemo lädt den Volltext in der gewählten Website-Sprache.", "La nota completa del creador. El lanzador incluye los textos coreano e inglés para leerlos sin conexión. La demo carga el texto en el idioma elegido en la web.", "La note intégrale du créateur. Le lanceur inclut les textes coréen et anglais pour une lecture hors ligne. La démo charge le texte dans la langue choisie sur le site.", "制作者ノートの全文です。実際のランチャーは韓国語・英語の原文を同梱し、オフラインで表示します。Web体験では選択したサイト言語の全文を読み込みます。", "创作者手记全文。实际启动器内置韩语和英语原文，可离线阅读。网页体验会加载所选网站语言的全文。", "創作者手記全文。實際啟動器內建韓語及英語原文，可離線閱讀。網頁體驗會載入所選網站語言的全文。"],
     "loading": ["불러오는 중…", "Loading…", "Wird geladen…", "Cargando…", "Chargement…", "読み込み中…", "加载中…", "載入中…"],
-    "updateExample": ["업데이트 결과 체험 · 실제 설치 버전을 검사하거나 앱을 설치하지 않습니다.", "Update-result demo · Does not inspect your installed version or install an app.", "Demo der Update-Ergebnisse · Keine Prüfung deiner installierten Version oder Installation.", "Demo del resultado · No comprueba tu versión instalada ni instala apps.", "Démo des résultats · Ne vérifie pas votre version installée et n’installe aucune app.", "更新結果の体験・インストール済みバージョンの確認やアプリのインストールは行いません。", "更新结果体验 · 不检查已安装版本，也不安装 App。", "更新結果體驗 · 不檢查已安裝版本，也不安裝 App。"],
-    "updateAvailable": ["업데이트가 있습니다. 자동 업데이트 기능 개발중입니다.", "An update is available. Automatic updating is in development.", "Ein Update ist verfügbar. Automatische Updates sind in Entwicklung.", "Hay una actualización. La actualización automática está en desarrollo.", "Une mise à jour est disponible. La mise à jour automatique est en développement.", "アップデートがあります。自動更新機能は開発中です。", "有可用更新，自动更新功能正在开发中。", "有可用更新，自動更新功能開發中。"],
-    "updateNone": ["아직 업데이트가 없습니다. 향후 자동 업데이트 기능을 개발할 예정입니다.", "No update is available yet. Automatic updating is planned for the future.", "Es ist noch kein Update verfügbar. Automatische Updates sind für später geplant.", "Todavía no hay actualizaciones. Se prevé añadir actualización automática en el futuro.", "Aucune mise à jour pour le moment. La mise à jour automatique est prévue ultérieurement.", "まだアップデートはありません。今後、自動更新機能を開発する予定です。", "目前没有更新，计划今后开发自动更新功能。", "目前沒有更新，預計未來開發自動更新功能。"],
-    "updateError": ["업데이트를 확인하지 못했습니다. 연결 상태를 확인하고 다시 시도해 주세요.", "Could not check for updates. Check your connection and try again.", "Updates konnten nicht geprüft werden. Prüfe die Verbindung und versuche es erneut.", "No se pudieron buscar actualizaciones. Comprueba la conexión e inténtalo de nuevo.", "Impossible de vérifier les mises à jour. Vérifiez la connexion et réessayez.", "更新を確認できませんでした。接続を確認して再試行してください。", "无法检查更新，请检查连接后重试。", "無法檢查更新，請檢查連線後重試。"],
-    "checking": ["업데이트 확인 중…", "Checking for updates…", "Updates werden geprüft…", "Buscando actualizaciones…", "Recherche de mises à jour…", "更新を確認中…", "正在检查更新…", "正在檢查更新…"],
-    "available": ["업데이트 있음", "Update available", "Update verfügbar", "Actualización disponible", "Mise à jour disponible", "更新あり", "有更新", "有更新"],
-    "none": ["업데이트 없음", "No update", "Kein Update", "Sin actualizaciones", "Aucune mise à jour", "更新なし", "无更新", "無更新"],
-    "error": ["확인 실패", "Check failed", "Prüfung fehlgeschlagen", "Error de comprobación", "Échec de la vérification", "確認失敗", "检查失败", "檢查失敗"],
     "retry": ["다시 확인", "Check again", "Erneut prüfen", "Comprobar de nuevo", "Vérifier à nouveau", "再確認", "再次检查", "再次檢查"],
     "released": ["출시된 앱", "Released apps", "Veröffentlichte Apps", "Apps publicadas", "Apps disponibles", "公開済みアプリ", "已发布 App", "已發布 App"],
     "developing": ["개발 중", "In development", "In Entwicklung", "En desarrollo", "En développement", "開発中", "开发中", "開發中"]

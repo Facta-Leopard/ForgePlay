@@ -296,9 +296,9 @@
     ['catalog','checklist','compatibility','captionCatalog'],['like','thumb','like',null],
     ['sponsor','heart','sponsor',null],['diagnostics','pulse','diagnostics','captionDiagnostics'],
     ['license','logs','license','captionLicense'],['apps','grid',null,'captionApps'],
-    ['founder','bulb',null,'captionWhy'],['updates','refresh','updates','captionUpdates']
+    ['founder','bulb',null,'captionWhy'],['updates','refresh','updates','coming']
   ];
-  const tileLabel = id => ({mac:'Mac',vr:'VR',retro:'Old Game',console:'ConSole Game',catalog:C('launcherCompatibility'),like:C('like'),sponsor:C('sponsor'),diagnostics:L('diagnostics'),license:L('license'),apps:U('제작자의 다른 앱'),founder:L('why'),updates:U('업데이트 확인')})[id];
+  const tileLabel = id => ({mac:'Mac',vr:'VR',retro:'Old Game',console:'ConSole Game',catalog:C('launcherCompatibility'),like:C('like'),sponsor:C('sponsor'),diagnostics:L('diagnostics'),license:L('license'),apps:U('제작자의 다른 앱'),founder:L('why'),updates:L('oneClickUpdate')})[id];
   const openFounder = async () => {
     show(L('why'),L('whyHelp'));dialog.dataset.kind='founder';dialog.classList.add('v2-founder-dialog');
     const selected=locale(),navigation=node('details','v2-founder-toc'),body=node('div','v2-founder-body',L('loading'));
@@ -315,19 +315,7 @@
     }catch{if(body.isConnected){body.replaceChildren(node('p','',L('refreshFailed')),btn(L('retry'),()=>void openFounder()));}}
     finally{body.setAttribute('aria-busy','false');}
   };
-  const openUpdates = () => {
-    show(U('업데이트 확인'),L('updateExample'));dialog.dataset.kind='updates';
-    const options=node('div','v2-update-examples'),status=node('p','v2-update-status'),recheck=btn(L('retry'),()=>check(),'sim-primary','refresh');
-    status.setAttribute('role','status');let active=true, timer;
-    const check=()=>{clearTimeout(timer);status.textContent=L('checking');status.dataset.result='checking';recheck.disabled=true;
-      timer=setTimeout(()=>{if(!active||!status.isConnected)return;status.dataset.result=state.updateScenario||'none';status.textContent=L(({available:'updateAvailable',none:'updateNone',error:'updateError'})[state.updateScenario||'none']);recheck.disabled=false;},450);};
-    for(const choice of ['available','none','error']){
-      const b=btn(L(choice),()=>{state.updateScenario=choice;for(const sibling of options.children)sibling.setAttribute('aria-pressed',String(sibling===b));check();});
-      b.dataset.updateExample=choice;b.setAttribute('aria-pressed',String(choice===(state.updateScenario||'none')));options.append(b);
-    }
-    dialog.append(options,status,recheck,external(W('shared.navReleases')==='shared.navReleases'?C('official'):W('shared.navReleases'),'https://github.com/Facta-Leopard/ForgePlay/releases/latest'));
-    dialog.addEventListener('close',()=>{active=false;clearTimeout(timer);},{once:true});check();
-  };
+  const openUpdates = () => show(L('oneClickUpdate'),L('development'));
   const activateLauncherTile = id => {
     if(id==='vr'){surface='vr';render(true);return;}
     if(['retro','console'].includes(id)){show(tileLabel(id),L('development'));return;}

@@ -587,7 +587,7 @@ for key, values in vr_copy["strings"].items():
         raise SystemExit(f"VR guide: inconsistent placeholders for {key}")
     if re.search(r'[\u3040-\u30ff]', values[0]):
         raise SystemExit(f"VR guide: unexpected Japanese text in Korean {key}")
-for name in ["guide-vr.css?v=20261002-1", "guide-vr.js?v=20261002-1", "guide-v2.js?v=20261002-vr1", "guide-v2-icons.js?v=20261001-launcher1", "guide-launcher.css?v=20261001-1", "guide-desktop.css?v=20261001-1", "why-story.js?v=20261001-reader1"]:
+for name in ["guide-vr.css?v=20261002-1", "guide-vr.js?v=20261002-1", "guide-v2.js?v=20261003-update1", "guide-v2-icons.js?v=20261001-launcher1", "guide-launcher.css?v=20261001-1", "guide-desktop.css?v=20261001-1", "why-story.js?v=20261001-reader1"]:
     if name not in guide_html:
         raise SystemExit(f"VR guide: missing current asset {name}")
 if 'guide-v2.css?v=20260929-palette1' not in guide_html:
@@ -605,6 +605,12 @@ if "if(['retro','console'].includes(id)){show(tileLabel(id),L('development'));re
 if "if(id==='vr'){surface='vr';render(true);return;}" not in guide_v2_js:
     raise SystemExit("VR entry must open the clearly labelled web simulation")
 launcher_copy = json.loads((root / "site-data/guide-launcher-copy.json").read_text())
+if launcher_copy["strings"]["oneClickUpdate"][:2] != ["원버튼 업데이트", "One-click update"]:
+    raise SystemExit("Launcher guide must label the one-click update placeholder")
+if "const openUpdates = () => show(L('oneClickUpdate'),L('development'));" not in guide_v2_js:
+    raise SystemExit("Launcher update placeholder must display only the development message")
+if "['updates','refresh','updates','coming']" not in guide_v2_js or "updateScenario" in guide_v2_js:
+    raise SystemExit("Launcher update tile must retain its art and remove the old checking scenario")
 desktop_copy = json.loads((root / "site-data/guide-desktop-copy.json").read_text())
 if desktop_copy["locales"] != launcher_copy["locales"]:
     raise SystemExit("Desktop guide requires the same eight locales")
