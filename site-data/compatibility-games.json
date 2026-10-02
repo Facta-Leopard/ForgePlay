@@ -2,7 +2,7 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-02",
-  "revision": 2,
+  "revision": 3,
   "testProfiles": [
     {
       "id": "macbook-air-13-m5-macos-27",
@@ -195,6 +195,13 @@
     }
   ],
   "games": [
+    {
+      "id": "52-hertz",
+      "titles": {
+        "en": "52 Hertz",
+        "ko": "52헤르츠"
+      }
+    },
     {
       "id": "the-binding-of-isaac",
       "titles": {
@@ -557,6 +564,29 @@
     }
   ],
   "reports": [
+    {
+      "id": "52-hertz-2-0-0-community-20261002",
+      "gameId": "52-hertz",
+      "launchPlatform": "stove",
+      "testProfileId": null,
+      "forgePlayVersion": "2.0.0",
+      "gameVersion": null,
+      "status": "unknown",
+      "source": "community-report",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.0.0의 STOVE판 52헤르츠 관련 커뮤니티 제보입니다. 필수 구성요소 설치 도구에서 DirectX 게임 구성요소 설치 파일을 선택해 실행하면 설치 도중 오류가 발생하며, Microsoft .NET 4.8.1(ndp4.8.1) 설치 파일은 실행 단계부터 진행되지 않는다고 합니다. 게임 자체의 실행 여부와 Mac 사양·macOS 버전은 미확인입니다. 개발자 추가 안내: Ren’Py 게임 엔진의 작동 방식을 확인했으며, 다음 버전에 관련 개선을 적용할 예정입니다.",
+        "en": "Community report concerning the STOVE version of 52 Hertz in ForgePlay 2.0.0: the DirectX game-components installer fails during installation when selected and run through the prerequisite installer tool. The Microsoft .NET 4.8.1 (ndp4.8.1) installer cannot proceed from launch. Whether the game itself runs is unconfirmed; Mac specifications and macOS version were not provided. Developer note: Ren’Py’s behavior has been investigated, and related improvements are planned for the next version.",
+        "de": "Community-Bericht zur STOVE-Version von 52 Hertz in ForgePlay 2.0.0: Wird das DirectX-Installationsprogramm für Spielkomponenten im Werkzeug für erforderliche Komponenten ausgewählt und gestartet, tritt während der Installation ein Fehler auf. Das Installationsprogramm für Microsoft .NET 4.8.1 (ndp4.8.1) kommt bereits beim Start nicht weiter. Ob das Spiel selbst läuft, ist unbestätigt; Mac-Konfiguration und macOS-Version fehlen. Entwicklerhinweis: Die Funktionsweise von Ren’Py wurde untersucht; entsprechende Verbesserungen sind für die nächste Version geplant.",
+        "es": "Informe de la comunidad sobre 52 Hertz de STOVE en ForgePlay 2.0.0: al seleccionar y ejecutar el instalador de componentes de juego DirectX desde la herramienta de requisitos, se produce un error durante la instalación. El instalador de Microsoft .NET 4.8.1 (ndp4.8.1) no pasa de la fase de inicio. No se ha confirmado si el juego funciona; tampoco se proporcionaron las especificaciones del Mac ni la versión de macOS. Nota del desarrollador: se ha investigado el funcionamiento de Ren’Py y se prevén mejoras relacionadas para la próxima versión.",
+        "fr": "Signalement communautaire concernant 52 Hertz sur STOVE avec ForgePlay 2.0.0 : l’installation des composants de jeu DirectX échoue après sélection et lancement du fichier dans l’outil d’installation des prérequis. L’installateur Microsoft .NET 4.8.1 (ndp4.8.1) est bloqué dès son lancement. Le fonctionnement du jeu lui-même reste inconnu ; la configuration du Mac et la version de macOS ne sont pas précisées. Note du développeur : le fonctionnement de Ren’Py a été étudié et des améliorations sont prévues pour la prochaine version.",
+        "ja": "ForgePlay 2.0.0でのSTOVE版52 Hertzに関するコミュニティ報告です。必須コンポーネントのインストールツールでDirectXゲームコンポーネントのインストーラーを選択して実行すると、途中でエラーになります。Microsoft .NET 4.8.1（ndp4.8.1）のインストーラーは起動段階から進まないとのことです。ゲーム自体の動作、Macの仕様、macOSのバージョンは未確認です。開発者追記：Ren’Pyの動作を調査しており、次のバージョンで関連する改善を適用する予定です。",
+        "zh-Hans": "关于 ForgePlay 2.0.0 中 STOVE 版 52 Hertz 的社区反馈：在必需组件安装工具中选择并运行 DirectX 游戏组件安装程序后，安装途中出现错误；Microsoft .NET 4.8.1（ndp4.8.1）安装程序则从启动阶段就无法继续。游戏本身是否可运行、Mac 配置和 macOS 版本均未确认。开发者补充：已研究 Ren’Py 游戏引擎的工作方式，计划在下一版本中加入相关改进。",
+        "zh-Hant": "關於 ForgePlay 2.0.0 中 STOVE 版 52 Hertz 的社群回報：在必要元件安裝工具中選擇並執行 DirectX 遊戲元件安裝程式後，安裝途中出現錯誤；Microsoft .NET 4.8.1（ndp4.8.1）安裝程式則從啟動階段就無法繼續。遊戲本身是否可執行、Mac 規格和 macOS 版本均未確認。開發者補充：已研究 Ren’Py 遊戲引擎的運作方式，計畫在下一版本中加入相關改善。"
+      },
+      "blocker": "runtime",
+      "reporter": "ㅇㅇ"
+    },
     {
       "id": "isaac-2-0-0-community-20261002",
       "gameId": "the-binding-of-isaac",
