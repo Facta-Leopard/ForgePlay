@@ -329,7 +329,8 @@
     dialog.addEventListener('close',()=>{active=false;clearTimeout(timer);},{once:true});check();
   };
   const activateLauncherTile = id => {
-    if(['vr','retro','console'].includes(id)){show(tileLabel(id),L('development'));return;}
+    if(id==='vr'){surface='vr';render(true);return;}
+    if(['retro','console'].includes(id)){show(tileLabel(id),L('development'));return;}
     if(['mac','catalog','diagnostics','apps'].includes(id)){go(id==='mac'?(state.ready?'steam':'setup'):id);return;}
     if(id==='founder'){void openFounder();return;}
     if(id==='updates'){openUpdates();return;}
@@ -434,7 +435,7 @@
     matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change',event=>{if(event.matches)mascotAnimation?.cancel();});
     const notice=node('p','v2-safety');notice.dataset.v2Notice='';coach=node('p','v2-coach');coach.setAttribute('role','status');root.append(notice,coach);shell=node('div');root.append(shell);
     dialog=node('dialog','sim-dialog v2-dialog');dialog.setAttribute('aria-labelledby','v2-dialog-title');dialog.addEventListener('close',()=>{preferencesOpen=false;dialog.classList.remove('v2-preferences');if(focusBeforeDialog?.isConnected)focusBeforeDialog.focus();else (root.querySelector('[data-v2-reset]'))?.focus({preventScroll:true});});root.append(dialog);
-    vrDemo=window.ForgePlayVRDemo.create({copy:vrCopy,locale,exit:()=>{surface='launcher';render(true);root.querySelector('[data-v2-tile="vr"]')?.focus({preventScroll:true});}});
+    vrDemo=window.ForgePlayVRDemo.create({copy:vrCopy,locale,apps:()=>appCatalog?.apps||[],exit:target=>{surface=target==='desktop'?'mac':'launcher';if(target==='desktop'){view='steam';workspace='launch';}render(true);if(surface==='launcher')root.querySelector('[data-v2-tile="vr"]')?.focus({preventScroll:true});}});
     const hash=()=>{if(location.hash==='#app-vr'){surface='launcher';render(true);activateLauncherTile('vr');}else if(location.hash==='#app-awdl'){surface='mac';view='steam';render();openPreferences('input');}else render();};window.addEventListener('hashchange',hash);document.addEventListener('forgeplay:localechange',()=>{if(dialog.open&&!preferencesOpen)dialog.close();render();});hash();
     // Each optional public feed settles independently. Never delay the usable UI for it.
     void refreshCatalog();

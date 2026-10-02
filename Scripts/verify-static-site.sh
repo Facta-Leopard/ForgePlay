@@ -587,7 +587,7 @@ for key, values in vr_copy["strings"].items():
         raise SystemExit(f"VR guide: inconsistent placeholders for {key}")
     if re.search(r'[\u3040-\u30ff]', values[0]):
         raise SystemExit(f"VR guide: unexpected Japanese text in Korean {key}")
-for name in ["guide-vr.css?v=20260929-1", "guide-vr.js?v=20260929-1", "guide-v2.js?v=20261002-theme1", "guide-v2-icons.js?v=20261001-launcher1", "guide-launcher.css?v=20261001-1", "guide-desktop.css?v=20261001-1", "why-story.js?v=20261001-reader1"]:
+for name in ["guide-vr.css?v=20261002-1", "guide-vr.js?v=20261002-1", "guide-v2.js?v=20261002-vr1", "guide-v2-icons.js?v=20261001-launcher1", "guide-launcher.css?v=20261001-1", "guide-desktop.css?v=20261001-1", "why-story.js?v=20261001-reader1"]:
     if name not in guide_html:
         raise SystemExit(f"VR guide: missing current asset {name}")
 if 'guide-v2.css?v=20260929-palette1' not in guide_html:
@@ -600,8 +600,10 @@ for color in ['#12100e','#1d1915','#29221c','#e6a264','#24160b','#f4ebdd','#bbae
 vr_js = (root / "site-assets/guide-vr.js").read_text(encoding="utf-8")
 if any(api in vr_js for api in ("innerHTML", "fetch(", "localStorage", "sessionStorage", "showOpenFilePicker", "getUserMedia", "navigator.", "WebSocket", "setInterval", "setTimeout", "sendBeacon")):
     raise SystemExit("VR guide must remain local UI simulation with no device, storage or networking APIs")
-if "if(['vr','retro','console'].includes(id)){show(tileLabel(id),L('development'));return;}" not in guide_v2_js:
-    raise SystemExit("Current launcher must show development status for VR, Old Game and ConSole Game")
+if "if(['retro','console'].includes(id)){show(tileLabel(id),L('development'));return;}" not in guide_v2_js:
+    raise SystemExit("Current launcher must retain development status for Old Game and ConSole Game")
+if "if(id==='vr'){surface='vr';render(true);return;}" not in guide_v2_js:
+    raise SystemExit("VR entry must open the clearly labelled web simulation")
 launcher_copy = json.loads((root / "site-data/guide-launcher-copy.json").read_text())
 desktop_copy = json.loads((root / "site-data/guide-desktop-copy.json").read_text())
 if desktop_copy["locales"] != launcher_copy["locales"]:
@@ -2527,19 +2529,30 @@ node - "$ROOT_DIR" <<'VRJS'
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
 const root=process.argv[2],context={window:{}};
 vm.runInNewContext(fs.readFileSync(path.join(root,'site-assets/guide-vr.js'),'utf8'),context);
-const {initial,transition:T,locked,bitrate}=context.window.ForgePlayVRDemo;
+const {initial,transition:T,locked,bitrate,validCode,demoCode}=context.window.ForgePlayVRDemo;
 let s=initial();assert.equal(s.mode,'combined');assert.equal(s.controller,'mac');assert.equal(s.quality,1600);
-assert.equal(T(s,'steam').steam,false);assert.equal(T(s,'track').tracking,false);assert.equal(T(s,'connect').connected,false);
+assert.equal(s.foveation,false);assert.equal(s.autoPlay,false);assert.equal(s.macPrepared,false);assert.equal(s.visionPrepared,false);
+assert.equal(T(s,'steam').steam,false);assert.equal(T(s,'play').tracking,false);assert.equal(T(s,'connect').connected,false);
+assert.equal(T(s,'environment','shared').environment,null);assert.equal(T(s,'prepare').listening,false);
+s=T(s,'acknowledge');assert.equal(s.macPrepared,true);
 s=T(s,'environment','shared');s=T(s,'mode','hands');s=T(s,'controller','vision');s=T(s,'quality',1280);
 assert.equal(bitrate(1280),40);assert.equal(bitrate(1600),60);assert.equal(bitrate(1920),85);
-s=T(s,'prepare');assert.equal(locked(s),false);s=T(s,'connect');assert.equal(s.tracking,false);assert.equal(s.steam,false);assert.ok(locked(s));
+s=T(s,'rate',30);assert.equal(s.rate,30);assert.equal(T(s,'rate',999).rate,30);
+s=T(s,'prepare');assert.equal(locked(s),false);assert.equal(T(s,'connect').connected,false);
+s=T(s,'device','vision');s=T(s,'acknowledge');s=T(s,'selectMac');assert.equal(T(s,'connect').connected,false);
+assert.equal(validCode('wrong'),false);assert.equal(validCode('DEMO-1234 DEMO-5678 DEMO-9012 DEMO-3456'),true);
+s={...s,pairCode:demoCode};s=T(s,'connect');assert.equal(s.tracking,false);assert.equal(s.immersive,false);assert.equal(s.steam,false);assert.ok(locked(s));
 assert.equal(T(s,'mode','gamepad').mode,'hands');assert.equal(T(s,'quality',1920).quality,1280);
-s=T(s,'track');assert.ok(s.tracking&&s.steam);s=T(s,'game');assert.ok(s.game);
+s=T(s,'play');assert.ok(s.tracking&&s.steam&&s.immersive&&s.hasPlayed);s=T(s,'game');assert.ok(s.game);
 assert.equal(T(s,'environment',null).environment,'shared');
 const stopped=T(s,'forceStop');assert.ok(stopped.connected&&stopped.tracking);assert.equal(stopped.steam,false);assert.equal(stopped.game,false);
+let home=T(s,'home');assert.ok(home.home&&!home.immersive&&!home.tracking&&home.connected&&home.steam&&home.game);
+home=T(home,'reopenVision');assert.equal(home.home,false);assert.equal(home.immersive,false);home=T(home,'play');assert.ok(home.immersive);
+assert.equal(T(home,'foveation').foveation,false);assert.equal(T(T(home,'home'),'foveation').foveation,true);
 const ended=T(s,'stop');assert.ok(!ended.connected&&!ended.listening&&!ended.tracking&&!ended.steam);assert.ok(ended.remembered);assert.equal(ended.environment,'shared');assert.equal(ended.mode,'hands');
-const paired=T(T(ended,'prepare'),'connect');assert.equal(paired.tracking,false);const forgotten=T(paired,'resetPairing');assert.ok(!forgotten.connected&&!forgotten.remembered);assert.equal(forgotten.environment,'shared');
-assert.equal(T(initial(),'environment','own').environment,'own');assert.equal(T(initial(),'quality',9999).quality,1600);
+const paired=T(T(T(ended,'device','mac'),'prepare'),'device','vision');assert.ok(paired.connected);assert.equal(paired.tracking,false);const forgotten=T(paired,'resetPairing');assert.ok(!forgotten.connected&&!forgotten.remembered&&!forgotten.immersive);assert.equal(forgotten.environment,'shared');
+const automatic=T(T(T(T(ended,'autoPlay'),'device','mac'),'prepare'),'device','vision');assert.ok(automatic.connected&&automatic.immersive);
+assert.equal(T(T(initial(),'acknowledge'),'environment','own').environment,'own');assert.equal(T(initial(),'quality',9999).quality,1600);
 assert.equal(s.steam,true,'state transitions must not mutate their input');
 const strings=JSON.parse(fs.readFileSync(path.join(root,'site-data/guide-vr-copy.json'),'utf8'));
 for(const key of ['heroSteam','heroConnect','heroPair','heroRemembered','heroTracking','heroReady','heroPlay'])assert.ok(strings.strings[key]&&strings.strings[key+'Body']);
