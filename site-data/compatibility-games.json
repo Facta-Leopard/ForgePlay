@@ -2,7 +2,7 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-02",
-  "revision": 0,
+  "revision": 1,
   "testProfiles": [
     {
       "id": "apple-silicon-m5-pro-24gb-macos-27-0",
@@ -525,7 +525,7 @@
     {
       "id": "delta-force-2-0-0-community-00-20261002",
       "gameId": "delta-force",
-      "launchPlatform": "unknown",
+      "launchPlatform": "steam",
       "testProfileId": null,
       "forgePlayVersion": "2.0.0",
       "gameVersion": null,
@@ -534,14 +534,14 @@
       "reporter": "00",
       "testedAt": null,
       "notes": {
-        "ko": "ForgePlay 2.0.0에서 델타포스를 실행할 수 없다는 커뮤니티 제보입니다. 실행 플랫폼·Mac 사양·macOS 버전은 확인되지 않았습니다. 개발자 확인: 커널 수준의 안티치트로 인해 실행할 수 없습니다.",
-        "en": "Community report: Delta Force does not launch in ForgePlay 2.0.0. The launch platform, Mac specifications, and macOS version are unconfirmed. Developer confirmation: the game cannot run because of its kernel-level anti-cheat.",
-        "de": "Community-Bericht: Delta Force startet in ForgePlay 2.0.0 nicht. Startplattform, Mac-Konfiguration und macOS-Version sind nicht bestätigt. Vom Entwickler bestätigt: Das Spiel kann wegen seines Anti-Cheat-Systems auf Kernel-Ebene nicht ausgeführt werden.",
-        "es": "Informe de la comunidad: Delta Force no se inicia en ForgePlay 2.0.0. La plataforma de lanzamiento, las especificaciones del Mac y la versión de macOS no están confirmadas. Confirmación del desarrollador: el juego no puede ejecutarse debido a su sistema antitrampas a nivel de kernel.",
-        "fr": "Signalement communautaire : Delta Force ne démarre pas dans ForgePlay 2.0.0. La plateforme de lancement, la configuration du Mac et la version de macOS ne sont pas confirmées. Confirmation du développeur : le jeu ne peut pas fonctionner à cause de son système anti-triche au niveau du noyau.",
-        "ja": "ForgePlay 2.0.0でDelta Forceを起動できないとのコミュニティ報告です。起動プラットフォーム、Macの仕様、macOSのバージョンは未確認です。開発者による確認：カーネルレベルのアンチチートにより実行できません。",
-        "zh-Hans": "社区反馈：Delta Force 在 ForgePlay 2.0.0 中无法启动。启动平台、Mac 配置和 macOS 版本尚未确认。开发者确认：由于内核级反作弊机制，游戏无法运行。",
-        "zh-Hant": "社群回報：Delta Force 在 ForgePlay 2.0.0 中無法啟動。啟動平台、Mac 規格與 macOS 版本尚未確認。開發者確認：由於核心層級的反作弊機制，遊戲無法執行。"
+        "ko": "ForgePlay 2.0.0에서 Steam판 델타포스를 실행할 수 없다는 커뮤니티 제보입니다. Mac 사양과 macOS 버전은 확인되지 않았습니다. 개발자 확인: 커널 수준의 안티치트로 인해 실행할 수 없습니다.",
+        "en": "Community report: the Steam version of Delta Force does not launch in ForgePlay 2.0.0. Mac specifications and macOS version are unconfirmed. Developer confirmation: the game cannot run because of its kernel-level anti-cheat.",
+        "de": "Community-Bericht: Die Steam-Version von Delta Force startet in ForgePlay 2.0.0 nicht. Mac-Konfiguration und macOS-Version sind nicht bestätigt. Vom Entwickler bestätigt: Das Spiel kann wegen seines Anti-Cheat-Systems auf Kernel-Ebene nicht ausgeführt werden.",
+        "es": "Informe de la comunidad: la versión de Steam de Delta Force no se inicia en ForgePlay 2.0.0. Las especificaciones del Mac y la versión de macOS no están confirmadas. Confirmación del desarrollador: el juego no puede ejecutarse debido a su sistema antitrampas a nivel de kernel.",
+        "fr": "Signalement communautaire : la version Steam de Delta Force ne démarre pas dans ForgePlay 2.0.0. La configuration du Mac et la version de macOS ne sont pas confirmées. Confirmation du développeur : le jeu ne peut pas fonctionner à cause de son système anti-triche au niveau du noyau.",
+        "ja": "ForgePlay 2.0.0でSteam版Delta Forceを起動できないとのコミュニティ報告です。Macの仕様とmacOSのバージョンは未確認です。開発者による確認：カーネルレベルのアンチチートにより実行できません。",
+        "zh-Hans": "社区反馈：Steam 版 Delta Force 在 ForgePlay 2.0.0 中无法启动。Mac 配置和 macOS 版本尚未确认。开发者确认：由于内核级反作弊机制，游戏无法运行。",
+        "zh-Hant": "社群回報：Steam 版 Delta Force 在 ForgePlay 2.0.0 中無法啟動。Mac 規格與 macOS 版本尚未確認。開發者確認：由於核心層級的反作弊機制，遊戲無法執行。"
       },
       "blocker": "anti-cheat"
     },
