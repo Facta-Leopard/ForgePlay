@@ -1,9 +1,16 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
-  "updatedAt": "2026-10-02",
-  "revision": 3,
+  "updatedAt": "2026-10-03",
+  "revision": 0,
   "testProfiles": [
+    {
+      "id": "macbook-pro-16-m5-pro-48gb-macos-27-0-1",
+      "platform": "MacBook Pro (16-inch)",
+      "chip": "M5 Pro",
+      "unifiedMemoryGB": 48,
+      "macOSVersion": "27.0.1"
+    },
     {
       "id": "macbook-air-13-m5-macos-27",
       "platform": "MacBook Air (13-inch)",
@@ -195,6 +202,13 @@
     }
   ],
   "games": [
+    {
+      "id": "marvels-spider-man-remastered",
+      "titles": {
+        "en": "Marvel's Spider-Man Remastered",
+        "ko": "마블 스파이더맨 리마스터"
+      }
+    },
     {
       "id": "52-hertz",
       "titles": {
@@ -564,6 +578,29 @@
     }
   ],
   "reports": [
+    {
+      "id": "marvels-spider-man-remastered-github-34-20261003",
+      "gameId": "marvels-spider-man-remastered",
+      "launchPlatform": "steam",
+      "testProfileId": "macbook-pro-16-m5-pro-48gb-macos-27-0-1",
+      "forgePlayVersion": "2.0.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "github-issue",
+      "reporter": "G9aia",
+      "testedAt": null,
+      "notes": {
+        "ko": "GitHub 이슈 #34: Steam판 마블 스파이더맨 리마스터(App ID 1817070)를 ForgePlay 2.0.0에서 D3DMetal로 정상 플레이했다는 제보입니다. 기기는 16인치 MacBook Pro·M5 Pro·통합 메모리 48GB·저장 공간 1TB, macOS 27.0.1입니다. 게임은 테스트 당시 최신 버전으로 기재됐으나 정확한 빌드 번호는 미확인입니다. FPS·플레이 시간·그래픽 설정과 오디오·입력 장치별 세부 결과는 제공되지 않았습니다. 원문: https://github.com/Facta-Leopard/ForgePlay/issues/34",
+        "en": "GitHub issue #34 reports normal gameplay in the Steam version of Marvel's Spider-Man Remastered (App ID 1817070) using D3DMetal in ForgePlay 2.0.0. Setup: 16-inch MacBook Pro, M5 Pro, 48GB unified memory, 1TB storage, macOS 27.0.1. The reporter described the game as current at testing, but the exact build is unconfirmed. FPS, play duration, graphics settings, and device-specific audio/input results were not provided. Source: https://github.com/Facta-Leopard/ForgePlay/issues/34",
+        "de": "GitHub-Issue #34 meldet normales Spielen mit der Steam-Version von Marvel's Spider-Man Remastered (App-ID 1817070), D3DMetal und ForgePlay 2.0.0. Gerät: 16-Zoll-MacBook Pro, M5 Pro, 48 GB gemeinsamer Arbeitsspeicher, 1 TB Speicher, macOS 27.0.1. Laut Melder war das Spiel beim Test aktuell; der genaue Build ist unbestätigt. FPS, Spieldauer, Grafikeinstellungen und gerätespezifische Audio-/Eingabeergebnisse fehlen. Quelle: https://github.com/Facta-Leopard/ForgePlay/issues/34",
+        "es": "La incidencia #34 de GitHub informa de juego normal en Marvel's Spider-Man Remastered de Steam (App ID 1817070), con D3DMetal y ForgePlay 2.0.0. Equipo: MacBook Pro de 16 pulgadas, M5 Pro, 48GB de memoria unificada, 1TB de almacenamiento y macOS 27.0.1. El juego se indicó como actualizado al probarlo, pero no se confirmó la compilación exacta. No se aportaron FPS, duración, ajustes gráficos ni resultados de audio o entrada por dispositivo. Fuente: https://github.com/Facta-Leopard/ForgePlay/issues/34",
+        "fr": "Le ticket GitHub nº34 signale un jeu normal avec Marvel's Spider-Man Remastered sur Steam (App ID 1817070), D3DMetal et ForgePlay 2.0.0. Configuration : MacBook Pro 16 pouces, M5 Pro, 48 Go de mémoire unifiée, 1 To de stockage et macOS 27.0.1. Le jeu était indiqué à jour lors du test, sans numéro de build confirmé. FPS, durée, réglages graphiques et résultats audio/entrée par périphérique non précisés. Source : https://github.com/Facta-Leopard/ForgePlay/issues/34",
+        "ja": "GitHubイシュー#34：Steam版Marvel's Spider-Man Remastered（App ID 1817070）をForgePlay 2.0.0のD3DMetalで正常にプレイできたとの報告です。環境は16インチMacBook Pro、M5 Pro、ユニファイドメモリ48GB、ストレージ1TB、macOS 27.0.1です。ゲームはテスト時点の最新版と記載されていますが、正確なビルド番号は未確認です。FPS、プレイ時間、画質設定、音声・入力機器ごとの詳細は未提供です。原文：https://github.com/Facta-Leopard/ForgePlay/issues/34",
+        "zh-Hans": "GitHub 问题 #34：反馈者报告 Steam 版 Marvel's Spider-Man Remastered（App ID 1817070）在 ForgePlay 2.0.0 中使用 D3DMetal 可以正常游玩。设备为 16 英寸 MacBook Pro、M5 Pro、48GB 统一内存、1TB 存储空间，系统为 macOS 27.0.1。游戏被注明为测试时的最新版，但准确构建编号未确认。未提供 FPS、游玩时长、画质设置及各音频或输入设备的具体结果。原文：https://github.com/Facta-Leopard/ForgePlay/issues/34",
+        "zh-Hant": "GitHub 問題 #34：回報者表示 Steam 版 Marvel's Spider-Man Remastered（App ID 1817070）在 ForgePlay 2.0.0 中使用 D3DMetal 可以正常遊玩。裝置為 16 吋 MacBook Pro、M5 Pro、48GB 統一記憶體、1TB 儲存空間，系統為 macOS 27.0.1。遊戲被註明為測試時的最新版，但確切組建編號未確認。未提供 FPS、遊玩時長、畫質設定及各音訊或輸入裝置的具體結果。原文：https://github.com/Facta-Leopard/ForgePlay/issues/34"
+      },
+      "blocker": null
+    },
     {
       "id": "52-hertz-2-0-0-community-20261002",
       "gameId": "52-hertz",
