@@ -1063,6 +1063,8 @@ def validate_compatibility_database(candidate):
             raise SystemExit(
                 f"report {report_id} notes must cover all eight site locales"
             )
+        if notes and any(re.search(r"https?://(?:www\.)?github\.com(?:/|$)", note, re.I) for note in notes.values()):
+            raise SystemExit(f"report {report_id}: keep GitHub source URLs out of public compatibility notes")
 
     unreported_games = game_by_id.keys() - reported_game_ids
     if unreported_games:
