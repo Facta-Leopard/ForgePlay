@@ -2,7 +2,7 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-03",
-  "revision": 0,
+  "revision": 1,
   "testProfiles": [
     {
       "id": "macbook-pro-16-m5-pro-48gb-macos-27-0-1",
@@ -202,6 +202,13 @@
     }
   ],
   "games": [
+    {
+      "id": "marvels-spider-man-miles-morales",
+      "titles": {
+        "en": "Marvel's Spider-Man: Miles Morales",
+        "ko": "마블 스파이더맨: 마일즈 모랄레스"
+      }
+    },
     {
       "id": "marvels-spider-man-remastered",
       "titles": {
@@ -578,6 +585,52 @@
     }
   ],
   "reports": [
+    {
+      "id": "marvels-spider-man-miles-morales-github-35-20261003",
+      "gameId": "marvels-spider-man-miles-morales",
+      "launchPlatform": "steam",
+      "testProfileId": "macbook-pro-16-m5-pro-48gb-macos-27-0-1",
+      "forgePlayVersion": "2.0.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "github-issue",
+      "reporter": "G9aia",
+      "testedAt": null,
+      "notes": {
+        "ko": "GitHub 이슈 #35 — 플레이 가능(문제 있음): Steam판 마일즈 모랄레스(App ID 1817190)를 ForgePlay 2.0.0의 D3DMetal로 실행하면 그래픽카드 미감지 및 GPU·드라이버 호환성 경고창 2개가 나타나지만, 각각 확인을 누른 뒤 정상 플레이된다고 합니다. 경고의 'AMD Compatibility Mode' 표시는 게임이 출력한 문구이며 실제 Mac 사양을 뜻하지 않습니다. 기기는 16인치 M5 Pro MacBook Pro·48GB·1TB·macOS 27.0.1입니다. 개발자 추가 안내: 그래픽카드 인식 폴백 경로 수정을 차기 버전용으로 적용했습니다. 배포 후 제보자의 재확인을 기다리고 있으며, 경고 해소가 확인된 상태는 아닙니다. 원문: https://github.com/Facta-Leopard/ForgePlay/issues/35",
+        "en": "GitHub issue #35 — playable with issues: the Steam version of Miles Morales (App ID 1817190) shows two graphics-card detection and GPU/driver compatibility warnings with D3DMetal in ForgePlay 2.0.0, but reportedly plays normally after both are dismissed. 'AMD Compatibility Mode' is wording shown by the game, not the Mac's hardware. Setup: 16-inch M5 Pro MacBook Pro, 48GB, 1TB, macOS 27.0.1. Developer note: a graphics-detection fallback fix has been applied for the next release. Reporter retesting after release is pending; removal of the warnings is not yet user-confirmed. Source: https://github.com/Facta-Leopard/ForgePlay/issues/35",
+        "de": "GitHub-Issue #35 — mit Einschränkungen spielbar: Die Steam-Version von Miles Morales (App-ID 1817190) zeigt mit D3DMetal in ForgePlay 2.0.0 zwei Warnungen zur Grafikkartenerkennung und GPU-/Treiberkompatibilität. Nach Bestätigung beider Meldungen läuft das Spiel laut Bericht normal. 'AMD Compatibility Mode' ist eine Spielmeldung, keine Mac-Hardwareangabe. Gerät: 16-Zoll-MacBook Pro, M5 Pro, 48 GB, 1 TB, macOS 27.0.1. Entwicklerhinweis: Der Fallback-Pfad der Grafikerkennung wurde für die nächste Version korrigiert. Ein erneuter Test durch den Melder nach Veröffentlichung steht aus; das Verschwinden der Warnungen ist noch nicht bestätigt. Quelle: https://github.com/Facta-Leopard/ForgePlay/issues/35",
+        "es": "Incidencia #35 de GitHub — jugable con problemas: Miles Morales de Steam (App ID 1817190) muestra dos advertencias de detección de tarjeta gráfica y compatibilidad de GPU/controlador con D3DMetal en ForgePlay 2.0.0. Según el informe, se juega con normalidad al aceptar ambas. 'AMD Compatibility Mode' es un mensaje del juego, no el hardware real del Mac. Equipo: MacBook Pro de 16 pulgadas, M5 Pro, 48GB, 1TB, macOS 27.0.1. Nota del desarrollador: se aplicó una corrección de la ruta alternativa de detección gráfica para la próxima versión. Queda pendiente que el informante la pruebe tras publicarse; aún no se ha confirmado que desaparezcan las advertencias. Fuente: https://github.com/Facta-Leopard/ForgePlay/issues/35",
+        "fr": "Ticket GitHub nº35 — jouable avec des problèmes : Miles Morales sur Steam (App ID 1817190) affiche deux avertissements de détection de carte graphique et de compatibilité GPU/pilote avec D3DMetal dans ForgePlay 2.0.0. La personne indique pouvoir jouer normalement après les avoir validés. 'AMD Compatibility Mode' est un message du jeu, pas le matériel réel du Mac. Configuration : MacBook Pro 16 pouces, M5 Pro, 48 Go, 1 To, macOS 27.0.1. Note du développeur : le chemin de repli de la détection graphique a été corrigé pour la prochaine version. Un nouvel essai après publication est attendu ; la disparition des avertissements n’est pas encore confirmée par l’utilisateur. Source : https://github.com/Facta-Leopard/ForgePlay/issues/35",
+        "ja": "GitHubイシュー#35 — 問題はあるもののプレイ可能：Steam版Miles Morales（App ID 1817190）をForgePlay 2.0.0のD3DMetalで実行すると、GPUの未検出とGPU・ドライバー互換性に関する警告が2つ表示されますが、両方を確認して閉じると正常にプレイできるとのことです。'AMD Compatibility Mode'はゲーム側の表示で、実際のMacの仕様ではありません。環境は16インチM5 Pro MacBook Pro、48GB、1TB、macOS 27.0.1です。開発者追記：グラフィック認識のフォールバック経路を次のバージョン向けに修正済みです。公開後の報告者による再確認待ちで、警告の解消はまだユーザー確認されていません。原文：https://github.com/Facta-Leopard/ForgePlay/issues/35",
+        "zh-Hans": "GitHub 问题 #35——可以游玩，但存在问题：Steam 版 Miles Morales（App ID 1817190）在 ForgePlay 2.0.0 中使用 D3DMetal 时，会显示显卡未检测到及 GPU/驱动兼容性警告各一条；反馈者称逐一确认后可以正常游玩。'AMD Compatibility Mode' 是游戏显示的文字，并非 Mac 的实际硬件。设备为 16 英寸 M5 Pro MacBook Pro、48GB、1TB、macOS 27.0.1。开发者补充：已为下一版本应用显卡识别回退路径修复，待发布后由反馈者再次测试，尚未获得警告已消失的用户确认。原文：https://github.com/Facta-Leopard/ForgePlay/issues/35",
+        "zh-Hant": "GitHub 問題 #35——可以遊玩，但存在問題：Steam 版 Miles Morales（App ID 1817190）在 ForgePlay 2.0.0 中使用 D3DMetal 時，會顯示未偵測到顯示卡及 GPU/驅動程式相容性警告各一則；回報者表示逐一確認後可以正常遊玩。'AMD Compatibility Mode' 是遊戲顯示的文字，並非 Mac 的實際硬體。裝置為 16 吋 M5 Pro MacBook Pro、48GB、1TB、macOS 27.0.1。開發者補充：已為下一版本套用顯示卡辨識備援路徑修正，待發布後由回報者再次測試，尚未取得警告已消失的使用者確認。原文：https://github.com/Facta-Leopard/ForgePlay/issues/35"
+      },
+      "blocker": null
+    },
+    {
+      "id": "marvels-spider-man-2-github-36-20261003",
+      "gameId": "marvels-spider-man-2",
+      "launchPlatform": "steam",
+      "testProfileId": "macbook-pro-16-m5-pro-48gb-macos-27-0-1",
+      "forgePlayVersion": "2.0.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "github-issue",
+      "reporter": "G9aia",
+      "testedAt": null,
+      "notes": {
+        "ko": "GitHub 이슈 #36 — 플레이 가능(문제 있음): Steam판 스파이더맨 2(App ID 2651280)는 ForgePlay 2.0.0에서 플레이되지만 그래픽카드 미감지 및 GPU·드라이버 호환성 경고창 2개가 나타나며, 게임 중 마우스 포인터가 계속 보인다고 합니다. 선택한 렌더러와 포인터 증상의 정확한 재현 조건은 미확인입니다. 기기는 16인치 M5 Pro MacBook Pro·48GB·1TB·macOS 27.0.1입니다. 개발자 추가 안내: 그래픽카드 인식 폴백과 환경설정의 단축키 옵션 충돌 관련 수정사항을 차기 버전용으로 적용했습니다. 배포 후 제보자의 재확인 대기 중이며, 경고·포인터 문제의 해소를 확정한 기록은 아닙니다. 원문: https://github.com/Facta-Leopard/ForgePlay/issues/36",
+        "en": "GitHub issue #36 — playable with issues: the Steam version of Spider-Man 2 (App ID 2651280) runs in ForgePlay 2.0.0, but shows two graphics-card detection and GPU/driver compatibility warnings, and the mouse pointer remains visible during play. The selected renderer and exact conditions for the pointer issue are unconfirmed. Setup: 16-inch M5 Pro MacBook Pro, 48GB, 1TB, macOS 27.0.1. Developer note: graphics-detection fallback and shortcut-option conflict fixes have been applied for the next release. Reporter retesting after release is pending; resolution of the warnings and pointer issue is not yet confirmed. Source: https://github.com/Facta-Leopard/ForgePlay/issues/36",
+        "de": "GitHub-Issue #36 — mit Einschränkungen spielbar: Die Steam-Version von Spider-Man 2 (App-ID 2651280) läuft in ForgePlay 2.0.0, zeigt aber zwei Warnungen zur Grafikkartenerkennung und GPU-/Treiberkompatibilität; zudem bleibt der Mauszeiger im Spiel sichtbar. Renderer und genaue Auslöser des Zeigerproblems sind unbestätigt. Gerät: 16-Zoll-MacBook Pro, M5 Pro, 48 GB, 1 TB, macOS 27.0.1. Entwicklerhinweis: Korrekturen am Grafik-Fallback und an einem Konflikt mit Tastenkürzeloptionen wurden für die nächste Version angewendet. Ein erneuter Test durch den Melder steht nach Veröffentlichung aus; die Behebung der Warnungen und des Zeigerproblems ist noch nicht bestätigt. Quelle: https://github.com/Facta-Leopard/ForgePlay/issues/36",
+        "es": "Incidencia #36 de GitHub — jugable con problemas: Spider-Man 2 de Steam (App ID 2651280) funciona en ForgePlay 2.0.0, pero muestra dos advertencias de detección gráfica y compatibilidad de GPU/controlador; además, el puntero sigue visible durante la partida. No se confirmaron el renderizador ni las condiciones exactas del problema del puntero. Equipo: MacBook Pro de 16 pulgadas, M5 Pro, 48GB, 1TB, macOS 27.0.1. Nota del desarrollador: se aplicaron correcciones a la detección gráfica alternativa y a un conflicto con las opciones de atajos para la próxima versión. Queda pendiente la nueva prueba del informante tras publicarse; aún no se ha confirmado que desaparezcan las advertencias y el problema del puntero. Fuente: https://github.com/Facta-Leopard/ForgePlay/issues/36",
+        "fr": "Ticket GitHub nº36 — jouable avec des problèmes : Spider-Man 2 sur Steam (App ID 2651280) fonctionne dans ForgePlay 2.0.0, mais affiche deux avertissements de détection graphique et de compatibilité GPU/pilote ; le pointeur reste aussi visible pendant le jeu. Le moteur de rendu choisi et les conditions précises du problème de pointeur ne sont pas confirmés. Configuration : MacBook Pro 16 pouces, M5 Pro, 48 Go, 1 To, macOS 27.0.1. Note du développeur : des corrections du repli de détection graphique et d’un conflit avec les options de raccourcis ont été appliquées pour la prochaine version. Un nouvel essai après publication est attendu ; la résolution des avertissements et du problème de pointeur n’est pas encore confirmée. Source : https://github.com/Facta-Leopard/ForgePlay/issues/36",
+        "ja": "GitHubイシュー#36 — 問題はあるもののプレイ可能：Steam版Spider-Man 2（App ID 2651280）はForgePlay 2.0.0でプレイできますが、GPUの未検出とGPU・ドライバー互換性の警告が2つ表示され、プレイ中もマウスポインターが消えないとのことです。選択したレンダラーとポインター症状の正確な再現条件は未確認です。環境は16インチM5 Pro MacBook Pro、48GB、1TB、macOS 27.0.1です。開発者追記：グラフィック認識のフォールバックとショートカット設定の競合を次のバージョン向けに修正済みです。公開後の報告者による再確認待ちで、警告やポインター問題の解消を確定した記録ではありません。原文：https://github.com/Facta-Leopard/ForgePlay/issues/36",
+        "zh-Hans": "GitHub 问题 #36——可以游玩，但存在问题：Steam 版 Spider-Man 2（App ID 2651280）在 ForgePlay 2.0.0 中可以游玩，但会显示两条显卡检测及 GPU/驱动兼容性警告，游戏中的鼠标指针也持续可见。所选渲染器和指针问题的具体复现条件尚未确认。设备为 16 英寸 M5 Pro MacBook Pro、48GB、1TB、macOS 27.0.1。开发者补充：已为下一版本应用显卡识别回退及快捷键选项冲突的修复。等待发布后由反馈者再次测试，尚不能确认警告和指针问题已经消除。原文：https://github.com/Facta-Leopard/ForgePlay/issues/36",
+        "zh-Hant": "GitHub 問題 #36——可以遊玩，但存在問題：Steam 版 Spider-Man 2（App ID 2651280）在 ForgePlay 2.0.0 中可以遊玩，但會顯示兩則顯示卡偵測及 GPU/驅動程式相容性警告，遊戲中的滑鼠指標也持續可見。所選算繪器與指標問題的具體重現條件尚未確認。裝置為 16 吋 M5 Pro MacBook Pro、48GB、1TB、macOS 27.0.1。開發者補充：已為下一版本套用顯示卡辨識備援及快捷鍵選項衝突的修正。等待發布後由回報者再次測試，尚不能確認警告和指標問題已經消除。原文：https://github.com/Facta-Leopard/ForgePlay/issues/36"
+      },
+      "blocker": null
+    },
     {
       "id": "marvels-spider-man-remastered-github-34-20261003",
       "gameId": "marvels-spider-man-remastered",
