@@ -7,7 +7,6 @@
     return url.href;
   };
 
-  const databaseURL = cacheBustedDataURL("site-data/announcements.json");
   const typeMessageKeys = {
     project: "updates.typeProject",
     release: "updates.typeRelease"
@@ -15,6 +14,9 @@
 
   const latestCards = document.querySelectorAll("[data-latest-announcement]");
   const list = document.querySelector("[data-announcement-list]");
+  const databaseURL = cacheBustedDataURL(
+    list ? "site-data/announcements-full.json" : "site-data/announcements.json"
+  );
   const emptyState = document.querySelector("[data-announcement-empty]");
   const errorState = document.querySelector("[data-announcement-error]");
   let database = null;
@@ -153,7 +155,9 @@
   };
 
   const appendAction = (parent, action, selectedLocale) => {
-    if (!["https://github.com/Facta-Leopard/ForgePlay/issues", "site-assets/guide.html"].includes(action.href)) return;
+    const releaseDownload = /^https:\/\/github\.com\/Facta-Leopard\/ForgePlay\/releases\/download\/v([0-9]+\.[0-9]+\.[0-9]+)\/ForgePlay-\1-[0-9]+\.dmg$/;
+    if (!["https://github.com/Facta-Leopard/ForgePlay/issues", "site-assets/guide.html"].includes(action.href)
+      && !releaseDownload.test(action.href)) return;
     const link = appendTextElement(parent, "a", "update-feedback-button", localizedText(action.label, selectedLocale));
     applyLinkDestination(link, action.href, selectedLocale);
     link.setAttribute("aria-label", localizedText(action.accessibilityLabel, selectedLocale));
@@ -181,7 +185,8 @@
         stack.push(context);
       }
 
-      const item = appendTextElement(context.list, "li", "", match[2]);
+      const item = appendTextElement(context.list, "li", "", "");
+      appendEmphasizedText(item, match[2]);
       context.lastItem = item;
     });
 

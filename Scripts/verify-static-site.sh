@@ -129,6 +129,7 @@ PAGES=(
   site-data/current-release.json
   site-data/current-release.schema.json
   site-data/announcements.json
+  site-data/announcements-full.json
   site-assets/announcements/dlss5-before.jpg
   site-assets/announcements/dlss5-after.jpg
   site-data/announcements.schema.json
@@ -1435,7 +1436,8 @@ validate_current_release({
     },
 })
 
-announcements_path = root / "site-data" / "announcements.json"
+announcements_index_path = root / "site-data" / "announcements.json"
+announcements_path = root / "site-data" / "announcements-full.json"
 announcements_schema_path = root / "site-data" / "announcements.schema.json"
 try:
     announcement_database = json.loads(announcements_path.read_text(encoding="utf-8"))
@@ -1627,8 +1629,9 @@ for announcement in announcements:
         action = announcement["action"]
         fields = {"href", "label", "accessibilityLabel", "afterParagraph"}
         require_object_shape(action, fields, fields, f"announcement {identifier} action")
-        if action["href"] not in {"https://github.com/Facta-Leopard/ForgePlay/issues", "site-assets/guide.html"}:
-            raise SystemExit("announcement action must target the ForgePlay issue list or interactive guide")
+        download_action = re.fullmatch(r"https://github\.com/Facta-Leopard/ForgePlay/releases/download/v([0-9]+\.[0-9]+\.[0-9]+)/ForgePlay-\1-[0-9]+\.dmg", action["href"])
+        if action["href"] not in {"https://github.com/Facta-Leopard/ForgePlay/issues", "site-assets/guide.html"} and not download_action:
+            raise SystemExit("announcement action must target the project issue list, guide or a version-matched release DMG")
         for key in ("label", "accessibilityLabel"):
             if not isinstance(action[key],dict) or set(action[key]) != set(locale_names) or not all(isinstance(v,str) and v.strip() for v in action[key].values()):
                 raise SystemExit(f"announcement {identifier}: action labels require eight locales")
@@ -1636,8 +1639,14 @@ for announcement in announcements:
         if type(after) is not int or not 0 <= after < len((paragraphs or {}).get("en", [])):
             raise SystemExit(f"announcement {identifier}: invalid action position")
 
-if announcements_path.stat().st_size > 512_000:
+if announcements_index_path.stat().st_size > 512_000:
     raise SystemExit("announcement feed exceeds the launcher's existing download size limit")
+index_database = json.loads(announcements_index_path.read_text(encoding="utf-8"))
+index_fields = ("id", "type", "publishedAt", "featured", "titles", "summaries", "href")
+expected_index = {key: value for key, value in announcement_database.items() if key != "announcements"}
+expected_index["announcements"] = [{key: item[key] for key in index_fields} for item in announcements]
+if index_database != expected_index or len(announcements) > 200:
+    raise SystemExit("launcher announcement index differs from full website content")
 
 featured_announcements = [
     announcement for announcement in announcements
@@ -1933,7 +1942,7 @@ require_snippet "$ROOT_DIR/index.html" 'data-home-games'
 require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
 require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260929-platform1"'
-require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20261002-preview1"'
+require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20261004-release210"'
 require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20260913-1"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
 require_snippet "$ROOT_DIR/index.html" 'data-announcement-summary'
@@ -1963,8 +1972,10 @@ root = Path(sys.argv[1])
 page = (root / 'index.html').read_text()
 cards = re.findall(r'<button\b[^>]*data-poster-version="([^"]+)"[^>]*>', page)
 previews = re.findall(r'<button\b[^>]*data-poster-preview[^>]*>', page)
-if cards != ['1.0','1.1','1.2','1.3','2.0.0','VR','AI Coordinator'] or len(previews) != 2 or not all(f'data-poster-version="{label}"' in tag for label,tag in zip(['VR','AI Coordinator'],previews)):
-    raise SystemExit('Release posters must remain versioned; VR and AI Coordinator are previews')
+if cards != ['1.0','1.1','1.2','1.3','2.0.0','2.1.0','VR'] or len(previews) != 1 or 'data-poster-version="VR"' not in previews[0]:
+    raise SystemExit('Release posters must remain versioned; only VR remains a preview at the right')
+if 'src="site-assets/announcements/forgeplay-2-1-0-poster.png"' not in page:
+    raise SystemExit('2.1.0 must use the approved release poster')
 for name in ['forgeplay-vr-preview.jpg','forgeplay-ai-coordinator-preview.jpg']:
     if not (root / 'site-assets/version-posters' / name).read_bytes().startswith(b'\xff\xd8\xff'):
         raise SystemExit('Preview poster must be a valid JPEG asset: '+name)
@@ -2102,7 +2113,7 @@ require_snippet "$ROOT_DIR/site-data/README.md" 'Routine compatibility database 
 require_snippet "$ROOT_DIR/site-data/README.md" 'No raw HTML or Markdown is rendered.'
 require_snippet "$ROOT_DIR/updates.html" 'data-announcement-list'
 require_snippet "$ROOT_DIR/updates.html" 'data-nav-page="updates"'
-require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20261002-preview1"'
+require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20261004-release210"'
 require_snippet "$ROOT_DIR/updates.html" 'Release notes, important notices, and development news.'
 require_snippet "$ROOT_DIR/announcements.js" 'site-data/announcements.json'
 require_snippet "$ROOT_DIR/announcements.js" 'forgeplay:localechange'
@@ -2191,32 +2202,32 @@ require_snippet "$ROOT_DIR/license.html" '遊戲模式、影格生成與 DLSS5 �
 require_snippet "$ROOT_DIR/license.html" 'href="LICENSE.md" download'
 require_snippet "$ROOT_DIR/license.html" 'href="LICENSES/GPL-3.0-only.txt" download'
 
-require_snippet "$ROOT_DIR/site-data/announcements.json" '"de": "ForgePlay stellt den macOS-Spielmodus in den Mittelpunkt."'
-require_snippet "$ROOT_DIR/site-data/announcements.json" '"es": "ForgePlay sitúa el modo Juego de macOS en el centro."'
-require_snippet "$ROOT_DIR/site-data/announcements.json" '"fr": "ForgePlay place le mode Jeu de macOS au centre."'
-require_snippet "$ROOT_DIR/site-data/announcements.json" '"ja": "ForgePlayはmacOSのゲームモードを中核に据えました。"'
-require_snippet "$ROOT_DIR/site-data/announcements.json" '"id": "next-forgeplay-update-underway"'
-require_snippet "$ROOT_DIR/site-data/announcements.json" '"id": "macos-27-rosetta-reinstall"'
-require_snippet "$ROOT_DIR/site-data/announcements.json" '"ko": "[공지] macOS 27 Golden Gate 업데이트 후 Rosetta 재설치 안내"'
-require_snippet "$ROOT_DIR/site-data/announcements.json" 'softwareupdate --install-rosetta'
-require_snippet "$ROOT_DIR/site-data/announcements.json" 'https://developer.apple.com/tutorials/data/documentation/macos-release-notes/macos-27-release-notes.json'
-require_snippet "$ROOT_DIR/site-data/announcements.json" '"ko": "다음 ForgePlay 업데이트를 준비하고 있습니다."'
-require_snippet "$ROOT_DIR/site-data/announcements.json" '"id": "forgeplay-1-1-released"'
-require_snippet "$ROOT_DIR/site-data/announcements.json" '"ko": "ForgePlay 1.1 업데이트 출시!"'
-require_snippet "$ROOT_DIR/site-data/announcements.json" 'DirectX 12가 적용되지 않던 문제 수정'
-require_snippet "$ROOT_DIR/site-data/announcements.json" 'Wine 11.12'
-require_snippet "$ROOT_DIR/site-data/announcements.json" 'Game Porting Toolkit(GPTK) 4.0 beta'
-require_snippet "$ROOT_DIR/site-data/announcements.json" 'GitHub Sponsors'
-require_snippet "$ROOT_DIR/site-data/announcements.json" '"id": "forgeplay-1-0-released"'
-require_snippet "$ROOT_DIR/site-data/announcements.json" '"ko": "ForgePlay 1.0을 공개했습니다."'
-require_snippet "$ROOT_DIR/site-data/announcements.json" '"href": "https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0"'
+require_snippet "$ROOT_DIR/site-data/announcements-full.json" '"de": "ForgePlay stellt den macOS-Spielmodus in den Mittelpunkt."'
+require_snippet "$ROOT_DIR/site-data/announcements-full.json" '"es": "ForgePlay sitúa el modo Juego de macOS en el centro."'
+require_snippet "$ROOT_DIR/site-data/announcements-full.json" '"fr": "ForgePlay place le mode Jeu de macOS au centre."'
+require_snippet "$ROOT_DIR/site-data/announcements-full.json" '"ja": "ForgePlayはmacOSのゲームモードを中核に据えました。"'
+require_snippet "$ROOT_DIR/site-data/announcements-full.json" '"id": "next-forgeplay-update-underway"'
+require_snippet "$ROOT_DIR/site-data/announcements-full.json" '"id": "macos-27-rosetta-reinstall"'
+require_snippet "$ROOT_DIR/site-data/announcements-full.json" '"ko": "[공지] macOS 27 Golden Gate 업데이트 후 Rosetta 재설치 안내"'
+require_snippet "$ROOT_DIR/site-data/announcements-full.json" 'softwareupdate --install-rosetta'
+require_snippet "$ROOT_DIR/site-data/announcements-full.json" 'https://developer.apple.com/tutorials/data/documentation/macos-release-notes/macos-27-release-notes.json'
+require_snippet "$ROOT_DIR/site-data/announcements-full.json" '"ko": "다음 ForgePlay 업데이트를 준비하고 있습니다."'
+require_snippet "$ROOT_DIR/site-data/announcements-full.json" '"id": "forgeplay-1-1-released"'
+require_snippet "$ROOT_DIR/site-data/announcements-full.json" '"ko": "ForgePlay 1.1 업데이트 출시!"'
+require_snippet "$ROOT_DIR/site-data/announcements-full.json" 'DirectX 12가 적용되지 않던 문제 수정'
+require_snippet "$ROOT_DIR/site-data/announcements-full.json" 'Wine 11.12'
+require_snippet "$ROOT_DIR/site-data/announcements-full.json" 'Game Porting Toolkit(GPTK) 4.0 beta'
+require_snippet "$ROOT_DIR/site-data/announcements-full.json" 'GitHub Sponsors'
+require_snippet "$ROOT_DIR/site-data/announcements-full.json" '"id": "forgeplay-1-0-released"'
+require_snippet "$ROOT_DIR/site-data/announcements-full.json" '"ko": "ForgePlay 1.0을 공개했습니다."'
+require_snippet "$ROOT_DIR/site-data/announcements-full.json" '"href": "https://github.com/Facta-Leopard/ForgePlay/releases/tag/v1.0.0"'
 
 if grep -Fq 'home.releaseTitle' "$ROOT_DIR/index.html" "$ROOT_DIR/site.js"; then
   fail "the removed homepage release title must not remain"
 fi
 
 if grep -Fq '"id": "compatibility-database-opens"' \
-  "$ROOT_DIR/site-data/announcements.json"; then
+  "$ROOT_DIR/site-data/announcements-full.json"; then
   fail "routine compatibility database updates must not appear in project notices"
 fi
 
@@ -2513,7 +2524,7 @@ for retired_release_phrase in \
   "quelques jours"; do
   if grep -Fiq "$retired_release_phrase" \
     "$ROOT_DIR/index.html" "$ROOT_DIR/site.js" \
-    "$ROOT_DIR/site-data/announcements.json"; then
+    "$ROOT_DIR/site-data/announcements-full.json"; then
     fail "public site contains retired pre-release wording: $retired_release_phrase"
   fi
 done

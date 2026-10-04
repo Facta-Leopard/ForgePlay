@@ -1,9 +1,16 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
-  "updatedAt": "2026-10-03",
-  "revision": 2,
+  "updatedAt": "2026-10-04",
+  "revision": 0,
   "testProfiles": [
+    {
+      "id": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
+      "platform": "Apple Silicon Mac",
+      "chip": "M4 Pro (binned)",
+      "unifiedMemoryGB": 24,
+      "macOSVersion": "27.0.1"
+    },
     {
       "id": "macbook-pro-16-m5-pro-48gb-macos-27-0-1",
       "platform": "MacBook Pro (16-inch)",
@@ -202,6 +209,48 @@
     }
   ],
   "games": [
+    {
+      "id": "romance-of-the-three-kingdoms-6",
+      "titles": {
+        "en": "Romance of the Three Kingdoms VI",
+        "ko": "삼국지 6"
+      }
+    },
+    {
+      "id": "romance-of-the-three-kingdoms-9-pk",
+      "titles": {
+        "en": "Romance of the Three Kingdoms IX with Power Up Kit",
+        "ko": "삼국지 9PK"
+      }
+    },
+    {
+      "id": "romance-of-the-three-kingdoms-12",
+      "titles": {
+        "en": "Romance of the Three Kingdoms XII",
+        "ko": "삼국지 12"
+      }
+    },
+    {
+      "id": "the-evil-within",
+      "titles": {
+        "en": "The Evil Within",
+        "ko": "이블 위딘 1"
+      }
+    },
+    {
+      "id": "dagon",
+      "titles": {
+        "en": "Dagon",
+        "ko": "다곤(Dagon)"
+      }
+    },
+    {
+      "id": "the-lab",
+      "titles": {
+        "en": "The Lab",
+        "ko": "더 랩(The Lab)"
+      }
+    },
     {
       "id": "marvels-spider-man-miles-morales",
       "titles": {
@@ -585,6 +634,138 @@
     }
   ],
   "reports": [
+    {
+      "id": "romance-of-the-three-kingdoms-6-forgeplay-2-1-0-project-test-20261004",
+      "gameId": "romance-of-the-three-kingdoms-6",
+      "launchPlatform": "exe",
+      "testProfileId": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
+      "forgePlayVersion": "2.1.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": {
+        "ko": "개발자 테스트: ForgePlay 2.1.0의 .EXE 환경에서 원활한 정상 실행을 확인했습니다. 테스트 Mac: M4 Pro 컷칩, 통합 메모리 24GB, macOS 27.0.1.",
+        "en": "Developer test: confirmed smooth, normal operation through .EXE in ForgePlay 2.1.0. Mac: binned M4 Pro, 24GB unified memory, macOS 27.0.1.",
+        "de": "Entwicklertest: reibungsloser, normaler Betrieb über .EXE mit ForgePlay 2.1.0 bestätigt. Mac: M4 Pro mit reduzierter Kernzahl, 24 GB gemeinsamer Speicher, macOS 27.0.1.",
+        "es": "Prueba del desarrollador: funcionamiento normal y fluido mediante .EXE en ForgePlay 2.1.0. Mac: M4 Pro con menos núcleos, 24GB de memoria unificada, macOS 27.0.1.",
+        "fr": "Test du développeur : fonctionnement normal et fluide via .EXE avec ForgePlay 2.1.0. Mac : M4 Pro à nombre de cœurs réduit, 24 Go de mémoire unifiée, macOS 27.0.1.",
+        "ja": "開発者テスト：ForgePlay 2.1.0の.EXE環境で快適な正常動作を確認。Mac：コア数の少ない構成のM4 Pro、ユニファイドメモリ24GB、macOS 27.0.1。",
+        "zh-Hans": "开发者测试：确认在 ForgePlay 2.1.0 的 .EXE 环境下流畅、正常运行。Mac：减少核心数版本的 M4 Pro，24GB 统一内存，macOS 27.0.1。",
+        "zh-Hant": "開發者測試：確認在 ForgePlay 2.1.0 的 .EXE 環境下順暢、正常運作。Mac：核心數較少版本的 M4 Pro，24GB 統一記憶體，macOS 27.0.1。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "romance-of-the-three-kingdoms-9-pk-forgeplay-2-1-0-project-test-20261004",
+      "gameId": "romance-of-the-three-kingdoms-9-pk",
+      "launchPlatform": "exe",
+      "testProfileId": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
+      "forgePlayVersion": "2.1.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": {
+        "ko": "개발자 테스트: ForgePlay 2.1.0의 .EXE 환경에서 원활한 정상 실행을 확인했습니다. 테스트 Mac: M4 Pro 컷칩, 통합 메모리 24GB, macOS 27.0.1.",
+        "en": "Developer test: confirmed smooth, normal operation through .EXE in ForgePlay 2.1.0. Mac: binned M4 Pro, 24GB unified memory, macOS 27.0.1.",
+        "de": "Entwicklertest: reibungsloser, normaler Betrieb über .EXE mit ForgePlay 2.1.0 bestätigt. Mac: M4 Pro mit reduzierter Kernzahl, 24 GB gemeinsamer Speicher, macOS 27.0.1.",
+        "es": "Prueba del desarrollador: funcionamiento normal y fluido mediante .EXE en ForgePlay 2.1.0. Mac: M4 Pro con menos núcleos, 24GB de memoria unificada, macOS 27.0.1.",
+        "fr": "Test du développeur : fonctionnement normal et fluide via .EXE avec ForgePlay 2.1.0. Mac : M4 Pro à nombre de cœurs réduit, 24 Go de mémoire unifiée, macOS 27.0.1.",
+        "ja": "開発者テスト：ForgePlay 2.1.0の.EXE環境で快適な正常動作を確認。Mac：コア数の少ない構成のM4 Pro、ユニファイドメモリ24GB、macOS 27.0.1。",
+        "zh-Hans": "开发者测试：确认在 ForgePlay 2.1.0 的 .EXE 环境下流畅、正常运行。Mac：减少核心数版本的 M4 Pro，24GB 统一内存，macOS 27.0.1。",
+        "zh-Hant": "開發者測試：確認在 ForgePlay 2.1.0 的 .EXE 環境下順暢、正常運作。Mac：核心數較少版本的 M4 Pro，24GB 統一記憶體，macOS 27.0.1。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "romance-of-the-three-kingdoms-12-forgeplay-2-1-0-project-test-20261004",
+      "gameId": "romance-of-the-three-kingdoms-12",
+      "launchPlatform": "exe",
+      "testProfileId": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
+      "forgePlayVersion": "2.1.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": {
+        "ko": "개발자 테스트: ForgePlay 2.1.0의 .EXE 환경에서 원활한 정상 실행을 확인했습니다. 테스트 Mac: M4 Pro 컷칩, 통합 메모리 24GB, macOS 27.0.1.",
+        "en": "Developer test: confirmed smooth, normal operation through .EXE in ForgePlay 2.1.0. Mac: binned M4 Pro, 24GB unified memory, macOS 27.0.1.",
+        "de": "Entwicklertest: reibungsloser, normaler Betrieb über .EXE mit ForgePlay 2.1.0 bestätigt. Mac: M4 Pro mit reduzierter Kernzahl, 24 GB gemeinsamer Speicher, macOS 27.0.1.",
+        "es": "Prueba del desarrollador: funcionamiento normal y fluido mediante .EXE en ForgePlay 2.1.0. Mac: M4 Pro con menos núcleos, 24GB de memoria unificada, macOS 27.0.1.",
+        "fr": "Test du développeur : fonctionnement normal et fluide via .EXE avec ForgePlay 2.1.0. Mac : M4 Pro à nombre de cœurs réduit, 24 Go de mémoire unifiée, macOS 27.0.1.",
+        "ja": "開発者テスト：ForgePlay 2.1.0の.EXE環境で快適な正常動作を確認。Mac：コア数の少ない構成のM4 Pro、ユニファイドメモリ24GB、macOS 27.0.1。",
+        "zh-Hans": "开发者测试：确认在 ForgePlay 2.1.0 的 .EXE 环境下流畅、正常运行。Mac：减少核心数版本的 M4 Pro，24GB 统一内存，macOS 27.0.1。",
+        "zh-Hant": "開發者測試：確認在 ForgePlay 2.1.0 的 .EXE 環境下順暢、正常運作。Mac：核心數較少版本的 M4 Pro，24GB 統一記憶體，macOS 27.0.1。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "the-evil-within-forgeplay-2-1-0-project-test-20261004",
+      "gameId": "the-evil-within",
+      "launchPlatform": "exe",
+      "testProfileId": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
+      "forgePlayVersion": "2.1.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": {
+        "ko": "개발자 테스트: ForgePlay 2.1.0의 .EXE 환경에서 원활한 정상 실행을 확인했습니다. 테스트 Mac: M4 Pro 컷칩, 통합 메모리 24GB, macOS 27.0.1.",
+        "en": "Developer test: confirmed smooth, normal operation through .EXE in ForgePlay 2.1.0. Mac: binned M4 Pro, 24GB unified memory, macOS 27.0.1.",
+        "de": "Entwicklertest: reibungsloser, normaler Betrieb über .EXE mit ForgePlay 2.1.0 bestätigt. Mac: M4 Pro mit reduzierter Kernzahl, 24 GB gemeinsamer Speicher, macOS 27.0.1.",
+        "es": "Prueba del desarrollador: funcionamiento normal y fluido mediante .EXE en ForgePlay 2.1.0. Mac: M4 Pro con menos núcleos, 24GB de memoria unificada, macOS 27.0.1.",
+        "fr": "Test du développeur : fonctionnement normal et fluide via .EXE avec ForgePlay 2.1.0. Mac : M4 Pro à nombre de cœurs réduit, 24 Go de mémoire unifiée, macOS 27.0.1.",
+        "ja": "開発者テスト：ForgePlay 2.1.0の.EXE環境で快適な正常動作を確認。Mac：コア数の少ない構成のM4 Pro、ユニファイドメモリ24GB、macOS 27.0.1。",
+        "zh-Hans": "开发者测试：确认在 ForgePlay 2.1.0 的 .EXE 环境下流畅、正常运行。Mac：减少核心数版本的 M4 Pro，24GB 统一内存，macOS 27.0.1。",
+        "zh-Hant": "開發者測試：確認在 ForgePlay 2.1.0 的 .EXE 環境下順暢、正常運作。Mac：核心數較少版本的 M4 Pro，24GB 統一記憶體，macOS 27.0.1。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "dagon-forgeplay-2-1-0-project-test-20261004",
+      "gameId": "dagon",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
+      "forgePlayVersion": "2.1.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": {
+        "ko": "개발자 테스트: ForgePlay 2.1.0의 Steam 환경에서 원활한 정상 실행을 확인했습니다. 테스트 Mac: M4 Pro 컷칩, 통합 메모리 24GB, macOS 27.0.1.",
+        "en": "Developer test: confirmed smooth, normal operation through Steam in ForgePlay 2.1.0. Mac: binned M4 Pro, 24GB unified memory, macOS 27.0.1.",
+        "de": "Entwicklertest: reibungsloser, normaler Betrieb über Steam mit ForgePlay 2.1.0 bestätigt. Mac: M4 Pro mit reduzierter Kernzahl, 24 GB gemeinsamer Speicher, macOS 27.0.1.",
+        "es": "Prueba del desarrollador: funcionamiento normal y fluido mediante Steam en ForgePlay 2.1.0. Mac: M4 Pro con menos núcleos, 24GB de memoria unificada, macOS 27.0.1.",
+        "fr": "Test du développeur : fonctionnement normal et fluide via Steam avec ForgePlay 2.1.0. Mac : M4 Pro à nombre de cœurs réduit, 24 Go de mémoire unifiée, macOS 27.0.1.",
+        "ja": "開発者テスト：ForgePlay 2.1.0のSteam環境で快適な正常動作を確認。Mac：コア数の少ない構成のM4 Pro、ユニファイドメモリ24GB、macOS 27.0.1。",
+        "zh-Hans": "开发者测试：确认在 ForgePlay 2.1.0 的 Steam 环境下流畅、正常运行。Mac：减少核心数版本的 M4 Pro，24GB 统一内存，macOS 27.0.1。",
+        "zh-Hant": "開發者測試：確認在 ForgePlay 2.1.0 的 Steam 環境下順暢、正常運作。Mac：核心數較少版本的 M4 Pro，24GB 統一記憶體，macOS 27.0.1。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "the-lab-forgeplay-2-1-0-project-test-20261004",
+      "gameId": "the-lab",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
+      "forgePlayVersion": "2.1.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": {
+        "ko": "개발자 테스트: ForgePlay 2.1.0의 Steam 환경에서 원활한 정상 실행을 확인했습니다. 테스트 Mac: M4 Pro 컷칩, 통합 메모리 24GB, macOS 27.0.1.",
+        "en": "Developer test: confirmed smooth, normal operation through Steam in ForgePlay 2.1.0. Mac: binned M4 Pro, 24GB unified memory, macOS 27.0.1.",
+        "de": "Entwicklertest: reibungsloser, normaler Betrieb über Steam mit ForgePlay 2.1.0 bestätigt. Mac: M4 Pro mit reduzierter Kernzahl, 24 GB gemeinsamer Speicher, macOS 27.0.1.",
+        "es": "Prueba del desarrollador: funcionamiento normal y fluido mediante Steam en ForgePlay 2.1.0. Mac: M4 Pro con menos núcleos, 24GB de memoria unificada, macOS 27.0.1.",
+        "fr": "Test du développeur : fonctionnement normal et fluide via Steam avec ForgePlay 2.1.0. Mac : M4 Pro à nombre de cœurs réduit, 24 Go de mémoire unifiée, macOS 27.0.1.",
+        "ja": "開発者テスト：ForgePlay 2.1.0のSteam環境で快適な正常動作を確認。Mac：コア数の少ない構成のM4 Pro、ユニファイドメモリ24GB、macOS 27.0.1。",
+        "zh-Hans": "开发者测试：确认在 ForgePlay 2.1.0 的 Steam 环境下流畅、正常运行。Mac：减少核心数版本的 M4 Pro，24GB 统一内存，macOS 27.0.1。",
+        "zh-Hant": "開發者測試：確認在 ForgePlay 2.1.0 的 Steam 環境下順暢、正常運作。Mac：核心數較少版本的 M4 Pro，24GB 統一記憶體，macOS 27.0.1。"
+      },
+      "blocker": null
+    },
     {
       "id": "marvels-spider-man-miles-morales-github-35-20261003",
       "gameId": "marvels-spider-man-miles-morales",

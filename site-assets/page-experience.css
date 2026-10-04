@@ -169,6 +169,8 @@
 .fp-site .update-inline-image { min-width:0; margin:6px 0 12px; }
 .fp-site .update-inline-image a { display:block; overflow:hidden; border:1px solid var(--page-line); border-radius:8px; cursor:zoom-in; }
 .fp-site .update-inline-image img { display:block; width:100%; height:auto; }
+.fp-site #update-forgeplay-2-1-0-released .update-inline-image:has(img[src$=".gif"]) { width:min(260px,100%); margin-inline:auto; }
+.fp-site #update-forgeplay-2-1-0-released .update-inline-image:has(img[src$="-poster.png"]) { width:min(420px,100%); margin-inline:auto; }
 .fp-site .update-inline-image figcaption { padding-top:10px; color:var(--page-muted); font-size:.8rem; line-height:1.7; word-break:keep-all; }
 .fp-site .update-feedback-button { display:inline-flex; align-items:center; justify-content:center; justify-self:start; max-width:100%; min-height:48px; padding:12px 20px; border:1px solid var(--page-accent); border-radius:8px; background:var(--page-accent); color:#101111; font-size:.93rem; font-weight:700; line-height:1.5; text-align:center; text-decoration:none; }
 .fp-site .update-feedback-button:hover { filter:brightness(1.12); color:#101111; }

@@ -208,8 +208,11 @@ explanatory prose may be edited for the website. The localization exporter is
 a source of app strings; review and merge future exports so they do not
 overwrite website editorial improvements.
 
-`announcements.json` is the single source for the latest notice shown on the
-homepage and the full project timeline on `updates.html`. Each notice carries a
+`announcements.json` is the compact launcher/homepage index (schema 2; at most
+512,000 bytes and 200 notices). `announcements-full.json` contains the complete
+website timeline, including all historical bodies and media. Both are generated
+from the single authored source in `Website/Announcements/announcements.json`.
+The index preserves the native consumer's existing URL and fields. Each notice carries a
 stable ID, publication date, category, destination, and title/summary text for
 all eight supported locales. An optional localized `paragraphs` collection
 provides the full notice on the updates page while the homepage keeps the short
@@ -221,10 +224,14 @@ Localized paragraph items remain plain text and are always inserted with
 line-oriented markers for structured notices: `## ` for a section heading,
 `- ` for a list item, two leading spaces before `- ` for a nested list item,
 and an exact `---` item for a divider. No raw HTML or Markdown is rendered.
+Paired `**` markers create text-only emphasis in paragraphs and list items.
 
 Notices may also include an optional `images` array. Each item has a local
-`site-assets/announcements/*.jpg` source and a `caption` in all eight locales.
-Images appear below the body; selecting an image opens the original in a new tab.
+`site-assets/announcements/` JPG, PNG or GIF source and a `caption` in all
+eight locales. An optional `afterParagraph` places media within the body.
+Selecting an image opens the original in a new tab. A notice's optional action
+may link to the guide, project issue list or a version-matched ForgePlay release
+DMG on GitHub; arbitrary external action targets are rejected.
 
 Routine compatibility database additions and result changes must not create
 project notices. They belong in the app-shared `compatibility-games.json` or,

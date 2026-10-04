@@ -149,7 +149,10 @@
           "additionalProperties": false,
           "required": ["href", "label", "accessibilityLabel", "afterParagraph"],
           "properties": {
-            "href": {"enum": ["https://github.com/Facta-Leopard/ForgePlay/issues", "site-assets/guide.html"]},
+            "href": {"anyOf": [
+              {"enum": ["https://github.com/Facta-Leopard/ForgePlay/issues", "site-assets/guide.html"]},
+              {"type": "string", "pattern": "^https://github\\.com/Facta-Leopard/ForgePlay/releases/download/v([0-9]+\\.[0-9]+\\.[0-9]+)/ForgePlay-\\1-[0-9]+\\.dmg$"}
+            ]},
             "label": {"$ref": "#/$defs/localizedText"},
             "accessibilityLabel": {"$ref": "#/$defs/localizedText"},
             "afterParagraph": {"type": "integer", "minimum": 0}
