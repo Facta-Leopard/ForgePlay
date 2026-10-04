@@ -2,7 +2,7 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-05",
-  "revision": 0,
+  "revision": 1,
   "testProfiles": [
     {
       "id": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
@@ -2236,6 +2236,29 @@
         "ja": "続報：2.0.0で報告された、FPSがほとんど60を超えない問題と移動開始時の短いカクつきは、ForgePlay 2.1.0ではどちらも解消したとのことです。4KモニターでRetinaモードを使った際の鮮明さにも非常に満足しているそうです。更新後の具体的なFPS測定値は示されていません。",
         "zh-Hans": "后续反馈：2.0.0 中此前反馈的 FPS 很少超过 60，以及角色开始移动时短暂卡顿的问题，在 ForgePlay 2.1.0 中均已消失。反馈者也对在 4K 显示器上使用 Retina 模式时的画面清晰度非常满意。未提供更新后的具体 FPS 测量值。",
         "zh-Hant": "後續回報：2.0.0 中先前回報的 FPS 很少超過 60，以及角色開始移動時短暫卡頓的問題，在 ForgePlay 2.1.0 中均已消失。回報者也對在 4K 顯示器上使用 Retina 模式時的畫面清晰度非常滿意。未提供更新後的具體 FPS 測量值。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "marvels-spider-man-remastered-github-37-20261005",
+      "gameId": "marvels-spider-man-remastered",
+      "launchPlatform": "steam",
+      "testProfileId": "macbook-pro-16-m5-pro-48gb-macos-27-0-1",
+      "forgePlayVersion": "2.1.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "github-issue",
+      "reporter": "G9aia",
+      "testedAt": null,
+      "notes": {
+        "ko": "GitHub 이슈 #37 후속 제보 — ForgePlay 2.1.0에서 Steam판 스파이더맨 리마스터를 D3DMetal로 실행하면 그래픽카드 미감지 및 GPU 드라이버 호환성 경고창 2개가 다시 나타납니다. 두 경고를 닫으면 정상적으로 플레이된다고 합니다. 'AMD Compatibility Mode'는 게임의 경고 문구이며 실제 Mac GPU 정보를 뜻하지 않습니다. 개발자 추가 안내: 그래픽카드 인식 경로를 다시 수정했으며 다음 버전에 반영할 예정입니다. 현재 2.1.0에서 경고가 해소됐다는 뜻은 아닙니다.",
+        "en": "GitHub issue #37 follow-up: launching the Steam version of Spider-Man Remastered with D3DMetal in ForgePlay 2.1.0 again shows two warnings about an undetected graphics card and GPU driver compatibility. The game reportedly plays normally after both are dismissed. 'AMD Compatibility Mode' is wording from the game, not the actual Mac GPU. Developer note: the graphics-detection path has been revised again for a future release; this does not mean the warnings are resolved in 2.1.0.",
+        "de": "Folgebericht aus GitHub-Issue #37: Spider-Man Remastered auf Steam zeigt beim Start mit D3DMetal in ForgePlay 2.1.0 erneut zwei Warnungen zur nicht erkannten Grafikkarte und GPU-Treiberkompatibilität. Nach Bestätigung beider Warnungen ist normales Spielen möglich. 'AMD Compatibility Mode' ist eine Spielmeldung, keine Angabe zur tatsächlichen Mac-GPU. Entwicklerhinweis: Der Erkennungspfad wurde erneut für eine kommende Version überarbeitet; die Warnungen gelten in 2.1.0 nicht als behoben.",
+        "es": "Seguimiento de la incidencia #37 de GitHub: Spider-Man Remastered de Steam vuelve a mostrar dos advertencias sobre tarjeta gráfica no detectada y compatibilidad del controlador al iniciarse con D3DMetal en ForgePlay 2.1.0. Se juega con normalidad tras cerrar ambas. 'AMD Compatibility Mode' es un mensaje del juego, no la GPU real del Mac. Nota del desarrollador: se ha revisado de nuevo la detección gráfica para una próxima versión; las advertencias no están resueltas en 2.1.0.",
+        "fr": "Suivi du ticket GitHub nº37 : Spider-Man Remastered sur Steam affiche de nouveau deux avertissements de carte graphique non détectée et de compatibilité du pilote avec D3DMetal dans ForgePlay 2.1.0. Le jeu fonctionne normalement une fois les deux messages fermés. 'AMD Compatibility Mode' est un message du jeu, pas le GPU réel du Mac. Note du développeur : la détection graphique a été revue pour une prochaine version ; les avertissements ne sont pas considérés comme corrigés dans 2.1.0.",
+        "ja": "GitHubイシュー#37の続報：ForgePlay 2.1.0でSteam版スパイダーマン リマスターをD3DMetalで起動すると、グラフィックカード未検出とGPUドライバー互換性の警告が2つ再表示されます。両方を閉じると正常にプレイできるとのことです。'AMD Compatibility Mode'はゲームの警告文であり、実際のMacのGPU情報ではありません。開発者追記：グラフィック認識経路を再修正し、次のバージョンに反映する予定です。2.1.0で警告が解消したことを意味しません。",
+        "zh-Hans": "GitHub 问题 #37 后续反馈：在 ForgePlay 2.1.0 中以 D3DMetal 启动 Steam 版蜘蛛侠重制版时，再次出现显卡未检测到及 GPU 驱动兼容性两条警告。关闭两条警告后可正常游玩。'AMD Compatibility Mode' 是游戏警告文字，并非 Mac 的实际 GPU 信息。开发者补充：已再次修改显卡识别路径，计划在下一版本中发布；这不表示 2.1.0 的警告已经解决。",
+        "zh-Hant": "GitHub 問題 #37 後續回報：在 ForgePlay 2.1.0 中以 D3DMetal 啟動 Steam 版蜘蛛人重製版時，再次出現顯示卡未偵測到及 GPU 驅動程式相容性兩項警告。關閉兩項警告後可正常遊玩。'AMD Compatibility Mode' 是遊戲警告文字，並非 Mac 的實際 GPU 資訊。開發者補充：已再次修改顯示卡辨識路徑，計畫在下一版本中發布；這不表示 2.1.0 的警告已經解決。"
       },
       "blocker": null
     }
