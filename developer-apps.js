@@ -149,9 +149,6 @@
     const identity = document.createElement("div");
     identity.className = "developer-app-identity";
     appendTextElement(identity, "h3", "", project.name);
-    heading.append(renderArtwork(project), identity);
-    article.append(heading);
-    if (project.presentation === "identity") return article;
 
     const badges = document.createElement("div");
     badges.className = "developer-app-badges";
@@ -172,6 +169,8 @@
           : message("developerApps.kindApp", "App")
     );
     identity.append(badges);
+    heading.append(renderArtwork(project), identity);
+    article.append(heading);
 
     const summary = localizedText(project.summaries, selectedLocale);
     if (summary) {

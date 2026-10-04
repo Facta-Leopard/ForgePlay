@@ -141,10 +141,6 @@
         "kind": {
           "enum": ["app", "utility", "game"]
         },
-        "presentation": {
-          "const": "identity",
-          "description": "Display only the project icon and name."
-        },
         "summaries": {
           "$ref": "#/$defs/localizedText"
         },

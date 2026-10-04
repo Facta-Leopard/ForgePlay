@@ -1796,8 +1796,8 @@ for project in development_projects:
     if project.get("href") != expected_project_homepages.get(identifier):
         raise SystemExit(f"developer project {identifier} has an unexpected homepage URL")
     summaries = project.get("summaries")
-    if identifier in {"lapivelle", "hasenbau"} and ("summaries" in project or project.get("presentation") != "identity"):
-        raise SystemExit(f"developer project {identifier} must show only its icon and name")
+    if identifier in {"lapivelle", "hasenbau"} and "summaries" in project:
+        raise SystemExit(f"developer project {identifier} must not include a description")
     if identifier in {"leporis-ascendant", "hazel-and-peanut", "grayline"} and summaries is None:
         raise SystemExit(f"developer game {identifier} requires a localized introduction")
     if summaries is not None:
@@ -1960,7 +1960,7 @@ require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-li
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
 require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20260929-platform1"'
 require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20261004-release210"'
-require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20261004-identity"'
+require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20261004-badges"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
 require_snippet "$ROOT_DIR/index.html" 'data-announcement-summary'
 require_snippet "$ROOT_DIR/index.html" 'data-announcement-date'

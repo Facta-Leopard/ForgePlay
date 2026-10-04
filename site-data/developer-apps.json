@@ -272,7 +272,6 @@
       "name": "Lapivelle",
       "platform": "ipad",
       "kind": "app",
-      "presentation": "identity",
       "artwork": "site-assets/developer-apps/lapivelle.png"
     },
     {
@@ -280,7 +279,6 @@
       "name": "HasenBau",
       "platform": "ipad",
       "kind": "app",
-      "presentation": "identity",
       "artwork": "site-assets/developer-apps/hasenbau.png"
     },
     {
