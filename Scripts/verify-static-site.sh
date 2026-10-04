@@ -483,6 +483,11 @@ for path in paths:
                         "/facta-leopard/forgeplay/issues/new",
                         "template=compatibility-report.yml",
                     ),
+                    (
+                        "index.html",
+                        "/facta-leopard/forgeplay/issues/new",
+                        "template=compatibility-report.yml",
+                    ),
                 }
                 issue_destination = (
                     path.name,
@@ -1927,7 +1932,30 @@ require_snippet "$ROOT_DIR/index.html" 'data-current-release-download-label'
 require_snippet "$ROOT_DIR/index.html" 'data-current-release-link'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/current-release.js?v=20260905-7"'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/website-compatibility.js?v=20260929-reports1"'
-require_snippet "$ROOT_DIR/index.html" 'site-assets/home-experience.css?v=20260905-8'
+require_snippet "$ROOT_DIR/index.html" 'site-assets/home-experience.css?v=20261005-report'
+python3 - "$ROOT_DIR/index.html" <<'HOME_REPORT'
+from html.parser import HTMLParser
+from pathlib import Path
+import sys
+class ReportLink(HTMLParser):
+    in_library = False
+    found = 0
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        if tag == "section":
+            self.in_library = attrs.get("id") == "library"
+        if self.in_library and tag == "a" and attrs.get("data-i18n") == "compat.reportButton":
+            assert attrs.get("href") == "https://github.com/facta-leopard/ForgePlay/issues/new?template=compatibility-report.yml"
+            assert attrs.get("target") == "_blank"
+            assert {"noopener", "noreferrer"}.issubset(attrs.get("rel", "").split())
+            self.found += 1
+    def handle_endtag(self, tag):
+        if tag == "section":
+            self.in_library = False
+parser = ReportLink()
+parser.feed(Path(sys.argv[1]).read_text())
+assert parser.found == 1, "Homepage compatibility section must have one localized report-form link"
+HOME_REPORT
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/home-experience.js?v=20260929-platform1"'
 require_snippet "$ROOT_DIR/index.html" 'data-release-download'
 require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.releaseNotesButton"'
