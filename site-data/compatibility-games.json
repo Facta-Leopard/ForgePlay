@@ -2,7 +2,7 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-05",
-  "revision": 4,
+  "revision": 5,
   "testProfiles": [
     {
       "id": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
@@ -2017,7 +2017,7 @@
     {
       "id": "djmax-respect-v-2-0-0-macgallery7-20260929",
       "gameId": "djmax-respect-v",
-      "launchPlatform": "unknown",
+      "launchPlatform": "steam",
       "testProfileId": null,
       "forgePlayVersion": "2.0.0",
       "gameVersion": null,
@@ -2026,14 +2026,14 @@
       "reporter": "맥갤러7",
       "testedAt": null,
       "notes": {
-        "ko": "ForgePlay 2.0.0에서 실행 가능하다는 커뮤니티 제보입니다. 첫 실행에서는 해상도가 최저로 설정되고 설정 메뉴에서 해상도를 바꿀 수 없었지만, 두 번째 실행에서는 이 문제가 재발하지 않았습니다. 다만 설정 메뉴에 들어가면 화면이 점점 커졌다가 창 모드처럼 줄어든 뒤 돌아오는 현상이 있으며, 제보자는 시각적으로 불편하다고 했습니다. 실행 플랫폼·Mac 사양·macOS 버전은 확인되지 않았습니다.",
-        "en": "Community report: playable in ForgePlay 2.0.0. On the first launch, resolution was set to the lowest option and could not be changed in settings; this did not recur on the second launch. However, opening settings makes the image grow, shrink as if entering windowed mode, then return; the reporter found this visually uncomfortable. Launch platform, Mac specifications and macOS version are unconfirmed.",
-        "ja": "ForgePlay 2.0.0で実行可能とのコミュニティ報告です。初回は最低解像度となり設定から変更できませんでしたが、2回目の起動では再発しませんでした。ただし設定画面を開くと画面が徐々に拡大し、ウインドウモードのように縮小してから戻る現象があり、報告者は視覚的に不快だとしています。起動プラットフォーム、Macの仕様、macOSのバージョンは未確認です。",
-        "zh-Hans": "社区反馈：ForgePlay 2.0.0 中可以运行。首次启动时分辨率为最低选项，且无法在设置中更改；第二次启动未再次出现此问题。但进入设置菜单时，画面会逐渐放大，再像窗口模式一样缩小后恢复，反馈者表示视觉上不适。启动平台、Mac 配置和 macOS 版本尚未确认。",
-        "zh-Hant": "社群回報：ForgePlay 2.0.0 中可以執行。首次啟動時解析度為最低選項，且無法在設定中更改；第二次啟動未再次出現此問題。但進入設定選單時，畫面會逐漸放大，再像視窗模式一樣縮小後恢復，回報者表示視覺上不適。啟動平台、Mac 規格與 macOS 版本尚未確認。",
-        "de": "Community-Bericht: in ForgePlay 2.0.0 spielbar. Beim ersten Start war die niedrigste Auflösung eingestellt und ließ sich nicht ändern; beim zweiten Start trat das Problem nicht erneut auf. Beim Öffnen der Einstellungen vergrößert sich das Bild jedoch, schrumpft wie beim Wechsel in den Fenstermodus und kehrt zurück. Der Melder empfand dies als visuell unangenehm. Startplattform, Mac-Spezifikationen und macOS-Version sind unbestätigt.",
-        "es": "Informe de la comunidad: jugable en ForgePlay 2.0.0. En el primer inicio, la resolución era la mínima y no se podía cambiar en ajustes; no se repitió en el segundo inicio. Sin embargo, al abrir ajustes, la imagen crece, se reduce como al pasar a modo ventana y vuelve a su tamaño, lo que resultó visualmente incómodo al informante. Plataforma, especificaciones del Mac y versión de macOS sin confirmar.",
-        "fr": "Signalement communautaire : jouable dans ForgePlay 2.0.0. Au premier lancement, la résolution était au minimum et impossible à modifier ; ce problème ne s’est pas reproduit au deuxième lancement. Toutefois, l’ouverture des réglages agrandit progressivement l’image, la réduit comme en mode fenêtré, puis la rétablit, ce que la personne juge visuellement inconfortable. Plateforme de lancement, configuration du Mac et version de macOS non confirmées."
+        "ko": "ForgePlay 2.0.0에서 실행 가능하다는 커뮤니티 제보입니다. 첫 실행에서는 해상도가 최저로 설정되고 설정 메뉴에서 해상도를 바꿀 수 없었지만, 두 번째 실행에서는 이 문제가 재발하지 않았습니다. 다만 설정 메뉴에 들어가면 화면이 점점 커졌다가 창 모드처럼 줄어든 뒤 돌아오는 현상이 있으며, 제보자는 시각적으로 불편하다고 했습니다. Mac 사양·macOS 버전은 확인되지 않았습니다.",
+        "en": "Community report: playable in ForgePlay 2.0.0. On the first launch, resolution was set to the lowest option and could not be changed in settings; this did not recur on the second launch. However, opening settings makes the image grow, shrink as if entering windowed mode, then return; the reporter found this visually uncomfortable. Mac specifications and macOS version are unconfirmed.",
+        "ja": "ForgePlay 2.0.0で実行可能とのコミュニティ報告です。初回は最低解像度となり設定から変更できませんでしたが、2回目の起動では再発しませんでした。ただし設定画面を開くと画面が徐々に拡大し、ウインドウモードのように縮小してから戻る現象があり、報告者は視覚的に不快だとしています。Macの仕様、macOSのバージョンは未確認です。",
+        "zh-Hans": "社区反馈：ForgePlay 2.0.0 中可以运行。首次启动时分辨率为最低选项，且无法在设置中更改；第二次启动未再次出现此问题。但进入设置菜单时，画面会逐渐放大，再像窗口模式一样缩小后恢复，反馈者表示视觉上不适。Mac 配置和 macOS 版本尚未确认。",
+        "zh-Hant": "社群回報：ForgePlay 2.0.0 中可以執行。首次啟動時解析度為最低選項，且無法在設定中更改；第二次啟動未再次出現此問題。但進入設定選單時，畫面會逐漸放大，再像視窗模式一樣縮小後恢復，回報者表示視覺上不適。Mac 規格與 macOS 版本尚未確認。",
+        "de": "Community-Bericht: in ForgePlay 2.0.0 spielbar. Beim ersten Start war die niedrigste Auflösung eingestellt und ließ sich nicht ändern; beim zweiten Start trat das Problem nicht erneut auf. Beim Öffnen der Einstellungen vergrößert sich das Bild jedoch, schrumpft wie beim Wechsel in den Fenstermodus und kehrt zurück. Der Melder empfand dies als visuell unangenehm. Mac-Spezifikationen und macOS-Version sind unbestätigt.",
+        "es": "Informe de la comunidad: jugable en ForgePlay 2.0.0. En el primer inicio, la resolución era la mínima y no se podía cambiar en ajustes; no se repitió en el segundo inicio. Sin embargo, al abrir ajustes, la imagen crece, se reduce como al pasar a modo ventana y vuelve a su tamaño, lo que resultó visualmente incómodo al informante. Especificaciones del Mac y versión de macOS sin confirmar.",
+        "fr": "Signalement communautaire : jouable dans ForgePlay 2.0.0. Au premier lancement, la résolution était au minimum et impossible à modifier ; ce problème ne s’est pas reproduit au deuxième lancement. Toutefois, l’ouverture des réglages agrandit progressivement l’image, la réduit comme en mode fenêtré, puis la rétablit, ce que la personne juge visuellement inconfortable. Configuration du Mac et version de macOS non confirmées."
       },
       "blocker": null
     },
@@ -2178,7 +2178,7 @@
     {
       "id": "djmax-respect-v-github-30-20260930",
       "gameId": "djmax-respect-v",
-      "launchPlatform": "unknown",
+      "launchPlatform": "steam",
       "testProfileId": "apple-silicon-m5-pro-24gb-macos-27-0",
       "forgePlayVersion": "2.0.0",
       "gameVersion": null,
@@ -2187,14 +2187,14 @@
       "reporter": "KFCBucketCat",
       "testedAt": null,
       "notes": {
-        "ko": "GitHub 이슈 #30: ForgePlay 2.0.0(6)에서 게임 플레이 자체에는 문제가 없으나, 설정창에서 옵션을 변경하면 화면이 확대·축소를 반복하다 전체 화면으로 돌아온다고 합니다. 실행 플랫폼·그래픽 백엔드·오류 원인은 미확인입니다.",
-        "en": "GitHub issue #30: Gameplay itself is reported to work well in ForgePlay 2.0.0 (6), but changing options in the settings window makes the image repeatedly enlarge and shrink before returning to full screen. Launch platform, graphics backend and cause are unconfirmed.",
-        "de": "GitHub-Issue #30: Das Spielen selbst funktioniert laut Bericht in ForgePlay 2.0.0 (6) problemlos. Beim Ändern von Optionen wird das Bild jedoch wiederholt größer und kleiner, bevor es zum Vollbild zurückkehrt. Startplattform, Grafik-Backend und Ursache sind unbestätigt.",
-        "es": "Incidencia #30 de GitHub: el juego funciona bien en ForgePlay 2.0.0 (6), pero al cambiar opciones en los ajustes la imagen se amplía y reduce repetidamente antes de volver a pantalla completa. Plataforma de lanzamiento, backend gráfico y causa sin confirmar.",
-        "fr": "Ticket GitHub nº30 : le jeu lui-même fonctionne bien dans ForgePlay 2.0.0 (6), mais modifier les options agrandit et réduit plusieurs fois l’image avant le retour au plein écran. Plateforme de lancement, backend graphique et cause non confirmés.",
-        "ja": "GitHubイシュー#30：ForgePlay 2.0.0（6）でゲームプレイ自体に問題はありませんが、設定画面でオプションを変更すると画面が拡大・縮小を繰り返した後、全画面に戻るとの報告です。起動プラットフォーム、グラフィックバックエンド、原因は未確認です。",
-        "zh-Hans": "GitHub 问题 #30：反馈称在 ForgePlay 2.0.0（6）中游玩本身没有问题，但在设置中更改选项后，画面会反复放大、缩小，再恢复全屏。启动平台、图形后端及原因尚未确认。",
-        "zh-Hant": "GitHub 問題 #30：回報稱在 ForgePlay 2.0.0（6）中遊玩本身沒有問題，但在設定中變更選項後，畫面會反覆放大、縮小，再恢復全螢幕。啟動平台、圖形後端及原因尚未確認。"
+        "ko": "GitHub 이슈 #30: ForgePlay 2.0.0(6)에서 게임 플레이 자체에는 문제가 없으나, 설정창에서 옵션을 변경하면 화면이 확대·축소를 반복하다 전체 화면으로 돌아온다고 합니다. 그래픽 백엔드·오류 원인은 미확인입니다.",
+        "en": "GitHub issue #30: Gameplay itself is reported to work well in ForgePlay 2.0.0 (6), but changing options in the settings window makes the image repeatedly enlarge and shrink before returning to full screen. Graphics backend and cause are unconfirmed.",
+        "de": "GitHub-Issue #30: Das Spielen selbst funktioniert laut Bericht in ForgePlay 2.0.0 (6) problemlos. Beim Ändern von Optionen wird das Bild jedoch wiederholt größer und kleiner, bevor es zum Vollbild zurückkehrt. Grafik-Backend und Ursache sind unbestätigt.",
+        "es": "Incidencia #30 de GitHub: el juego funciona bien en ForgePlay 2.0.0 (6), pero al cambiar opciones en los ajustes la imagen se amplía y reduce repetidamente antes de volver a pantalla completa. Backend gráfico y causa sin confirmar.",
+        "fr": "Ticket GitHub nº30 : le jeu lui-même fonctionne bien dans ForgePlay 2.0.0 (6), mais modifier les options agrandit et réduit plusieurs fois l’image avant le retour au plein écran. Backend graphique et cause non confirmés.",
+        "ja": "GitHubイシュー#30：ForgePlay 2.0.0（6）でゲームプレイ自体に問題はありませんが、設定画面でオプションを変更すると画面が拡大・縮小を繰り返した後、全画面に戻るとの報告です。グラフィックバックエンド、原因は未確認です。",
+        "zh-Hans": "GitHub 问题 #30：反馈称在 ForgePlay 2.0.0（6）中游玩本身没有问题，但在设置中更改选项后，画面会反复放大、缩小，再恢复全屏。图形后端及原因尚未确认。",
+        "zh-Hant": "GitHub 問題 #30：回報稱在 ForgePlay 2.0.0（6）中遊玩本身沒有問題，但在設定中變更選項後，畫面會反覆放大、縮小，再恢復全螢幕。圖形後端及原因尚未確認。"
       },
       "blocker": null
     },
