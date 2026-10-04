@@ -2,7 +2,7 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-05",
-  "revision": 1,
+  "revision": 2,
   "testProfiles": [
     {
       "id": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
@@ -2259,6 +2259,29 @@
         "ja": "GitHubイシュー#37の続報：ForgePlay 2.1.0でSteam版スパイダーマン リマスターをD3DMetalで起動すると、グラフィックカード未検出とGPUドライバー互換性の警告が2つ再表示されます。両方を閉じると正常にプレイできるとのことです。'AMD Compatibility Mode'はゲームの警告文であり、実際のMacのGPU情報ではありません。開発者追記：グラフィック認識経路を再修正し、次のバージョンに反映する予定です。2.1.0で警告が解消したことを意味しません。",
         "zh-Hans": "GitHub 问题 #37 后续反馈：在 ForgePlay 2.1.0 中以 D3DMetal 启动 Steam 版蜘蛛侠重制版时，再次出现显卡未检测到及 GPU 驱动兼容性两条警告。关闭两条警告后可正常游玩。'AMD Compatibility Mode' 是游戏警告文字，并非 Mac 的实际 GPU 信息。开发者补充：已再次修改显卡识别路径，计划在下一版本中发布；这不表示 2.1.0 的警告已经解决。",
         "zh-Hant": "GitHub 問題 #37 後續回報：在 ForgePlay 2.1.0 中以 D3DMetal 啟動 Steam 版蜘蛛人重製版時，再次出現顯示卡未偵測到及 GPU 驅動程式相容性兩項警告。關閉兩項警告後可正常遊玩。'AMD Compatibility Mode' 是遊戲警告文字，並非 Mac 的實際 GPU 資訊。開發者補充：已再次修改顯示卡辨識路徑，計畫在下一版本中發布；這不表示 2.1.0 的警告已經解決。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "overwatch-2-1-0-m3-max-community-macgallery-20261005",
+      "gameId": "overwatch",
+      "launchPlatform": "unknown",
+      "testProfileId": "apple-silicon-m3-max",
+      "forgePlayVersion": "2.1.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "맥갤러",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.1.0 커뮤니티 제보: M3 Max 풀칩에서 고해상도 Retina 모드를 켜면 화면이 선명하고 전반적으로 원활하게 플레이된다고 합니다. 마우스 감도를 높여 시점을 빠르게 돌릴 때는 약간의 끊김이 남아 있다고 합니다.",
+        "en": "Community report for ForgePlay 2.1.0: with high-resolution Retina mode enabled on a full-chip M3 Max, Overwatch 2 reportedly looks crisp and runs smoothly overall. Slight stutter remains during rapid camera turns with high mouse sensitivity.",
+        "de": "Community-Bericht zu ForgePlay 2.1.0: Auf einem M3 Max in Vollausstattung wirkt Overwatch 2 mit aktiviertem hochauflösendem Retina-Modus scharf und läuft insgesamt flüssig. Bei schnellen Kameraschwenks mit hoher Mausempfindlichkeit bleibt leichtes Ruckeln.",
+        "es": "Informe de la comunidad para ForgePlay 2.1.0: con el modo Retina de alta resolución activado en un M3 Max con todos los núcleos, Overwatch 2 se ve nítido y funciona con fluidez en general. Persisten pequeños tirones al girar rápidamente la cámara con sensibilidad alta del ratón.",
+        "fr": "Signalement communautaire pour ForgePlay 2.1.0 : sur un M3 Max avec tous ses cœurs, Overwatch 2 offre une image nette et fonctionne globalement de manière fluide avec le mode Retina haute résolution. De légères saccades subsistent lors des rotations rapides de la caméra avec une sensibilité élevée de la souris.",
+        "ja": "ForgePlay 2.1.0のコミュニティ報告：フル構成のM3 Maxで高解像度Retinaモードを有効にすると、オーバーウォッチ2は鮮明に表示され、全体的に快適にプレイできるとのことです。マウス感度を高くして視点を素早く回すと、わずかなカクつきが残るそうです。",
+        "zh-Hans": "ForgePlay 2.1.0 社区反馈：在满核心版 M3 Max 上开启高分辨率 Retina 模式后，守望先锋 2 画面清晰，整体运行流畅。在较高鼠标灵敏度下快速转动视角时，仍有轻微卡顿。",
+        "zh-Hant": "ForgePlay 2.1.0 社群回報：在全核心版 M3 Max 上開啟高解析度 Retina 模式後，鬥陣特攻 2 畫面清晰，整體運作流暢。在較高滑鼠靈敏度下快速轉動視角時，仍有輕微卡頓。"
       },
       "blocker": null
     }
