@@ -1753,6 +1753,7 @@ if not isinstance(development_projects, list):
     raise SystemExit("developer app catalog inDevelopment must be an array")
 
 expected_development_projects = {
+    "hasenbau": ("HasenBau", "ipad", "app"),
     "forgekit": ("ForgeKit", "mac", "app"),
     "harewatch": ("HareWatch", "mac", "utility"),
     "warrennet": ("WarrenNet", "mac", "utility"),
@@ -1764,6 +1765,7 @@ expected_project_homepages = {
     "forgekit": "https://facta-leopard.github.io/ForgeKit/",
 }
 expected_development_artwork_hashes = {
+    "hasenbau": "f9ce4d8c87802e89df8d0e727b9ac87ff0bc3c7f8884bd110bb86c436809bede",
     "forgekit": "03e6dfc77bf72e442ed85e036997ca340ec00d8e22636d7c9f7117e6b35461c9",
     "harewatch": "6f73ec849436bdeb91398ed7b1b76cd67e2cec3d4782fbfc5de475d73afd5cd0",
     "warrennet": "11ee5bf49f59cd1578644432c167b6b693cef90c910677af908dde93bb5a79d8",
@@ -1792,7 +1794,7 @@ for project in development_projects:
     if project.get("href") != expected_project_homepages.get(identifier):
         raise SystemExit(f"developer project {identifier} has an unexpected homepage URL")
     summaries = project.get("summaries")
-    if identifier in {"leporis-ascendant", "hazel-and-peanut", "grayline"} and summaries is None:
+    if identifier in {"hasenbau", "leporis-ascendant", "hazel-and-peanut", "grayline"} and summaries is None:
         raise SystemExit(f"developer game {identifier} requires a localized introduction")
     if summaries is not None:
         if not isinstance(summaries, dict) or set(summaries) != set(locale_names):
@@ -1818,14 +1820,14 @@ for project in development_projects:
     artwork_hash = hashlib.sha256(artwork_path.read_bytes()).hexdigest()
     if artwork_hash != expected_development_artwork_hashes.get(identifier):
         raise SystemExit(
-            f"developer project {identifier} artwork differs from the in-app asset"
+            f"developer project {identifier} artwork differs from its approved asset"
         )
 
 if development_ids != set(expected_development_projects):
-    raise SystemExit("developer projects do not match the shared catalog")
+    raise SystemExit("developer projects do not match the approved website catalog")
 if development_projection != expected_development_projects:
-    raise SystemExit("developer project names, platforms, or kinds differ from the app")
-if development_platform_counts != {"mac": 3, "ipad": 1, "iphone": 2}:
+    raise SystemExit("developer project names, platforms, or kinds differ from approved metadata")
+if development_platform_counts != {"mac": 3, "ipad": 2, "iphone": 2}:
     raise SystemExit(
         f"developer project platform counts are invalid: {development_platform_counts}"
     )

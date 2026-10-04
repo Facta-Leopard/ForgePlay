@@ -1,7 +1,7 @@
 {
   "$schema": "./developer-apps.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-09-29",
+  "updatedAt": "2026-10-04",
   "sourceRevision": "25d55aa4f1b3c2b912934dc86e01498f2b9e1a01",
   "apps": [
     {
@@ -267,6 +267,23 @@
     }
   ],
   "inDevelopment": [
+    {
+      "id": "hasenbau",
+      "name": "HasenBau",
+      "platform": "ipad",
+      "kind": "app",
+      "artwork": "site-assets/developer-apps/hasenbau.png",
+      "summaries": {
+        "ko": "건축구조기술사 시험의 수학·역학 원리를 익히고, 필기·그림·말하기로 설명을 연습하는 iPad 학습 앱입니다.",
+        "en": "An iPad learning app for the mathematics and mechanics behind Korea’s Professional Engineer Architectural Structures exam, with written, drawn and spoken explanation practice.",
+        "de": "Eine iPad-Lernapp für Mathematik und Mechanik hinter der koreanischen Fachingenieurprüfung für Tragwerksplanung, mit schriftlichen, gezeichneten und mündlichen Erklärungsübungen.",
+        "es": "Una app de aprendizaje para iPad sobre las matemáticas y la mecánica del examen profesional coreano de estructuras arquitectónicas, con práctica de explicaciones escritas, dibujadas y orales.",
+        "fr": "Une app d’apprentissage sur iPad pour les mathématiques et la mécanique de l’examen coréen d’ingénieur professionnel en structures, avec des exercices d’explication écrite, dessinée et orale.",
+        "ja": "韓国の建築構造技術士試験に必要な数学・力学の原理を学び、筆記・図・発話で説明を練習するiPad学習アプリです。",
+        "zh-Hans": "面向韩国建筑结构技术士考试的 iPad 学习应用，学习数学与力学原理，并通过书写、绘图和口述练习讲解。",
+        "zh-Hant": "針對韓國建築結構技術士考試的 iPad 學習 App，學習數學與力學原理，並透過書寫、繪圖和口述練習講解。"
+      }
+    },
     {
       "id": "forgekit",
       "name": "ForgeKit",
