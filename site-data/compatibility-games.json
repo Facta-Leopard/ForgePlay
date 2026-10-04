@@ -1,7 +1,7 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
-  "updatedAt": "2026-10-04",
+  "updatedAt": "2026-10-05",
   "revision": 0,
   "testProfiles": [
     {
@@ -2192,6 +2192,52 @@
         "zh-Hant": "GitHub 問題 #31：回報者稱其填寫為 'The Witcher 3 : Remastered' 的遊戲啟動器無法在 ForgePlay v2.0 中啟動。附件可確認 Steam 工作階段，但缺少遊戲失敗時的紀錄，原因尚未確認。圖形後端和確切遊戲版本也未知。"
       },
       "blocker": "launcher"
+    },
+    {
+      "id": "path-of-exile-2-1-0-community-macgaller1-20261005",
+      "gameId": "path-of-exile",
+      "launchPlatform": "steam",
+      "testProfileId": null,
+      "forgePlayVersion": "2.1.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "맥갤러1",
+      "testedAt": null,
+      "notes": {
+        "ko": "2.0.0에서 제보했던 FPS가 60을 거의 넘지 못하는 문제와 캐릭터 이동 시작 시 끊김이 ForgePlay 2.1.0에서는 모두 사라졌다는 후속 제보입니다. Retina 모드로 4K 모니터를 사용할 때 화면 선명도에도 매우 만족한다고 합니다. 개선 후 FPS 수치는 별도로 제시되지 않았습니다.",
+        "en": "Follow-up report: the previously reported FPS rarely exceeding 60 and brief stutter when starting to move in 2.0.0 are both gone in ForgePlay 2.1.0. The reporter is also very satisfied with image clarity when using Retina mode on a 4K monitor. No post-update FPS measurements were provided.",
+        "de": "Folgebericht: Die in 2.0.0 gemeldete Bildrate von kaum über 60 FPS und das kurze Ruckeln beim Beginn einer Bewegung sind in ForgePlay 2.1.0 verschwunden. Der Melder ist außerdem mit der Bildschärfe im Retina-Modus auf einem 4K-Monitor sehr zufrieden. FPS-Messwerte nach dem Update wurden nicht angegeben.",
+        "es": "Informe de seguimiento: en ForgePlay 2.1.0 han desaparecido tanto los FPS que rara vez superaban 60 como el tirón al comenzar a moverse, reportados en 2.0.0. El informante también está muy satisfecho con la nitidez del modo Retina en un monitor 4K. No se aportaron mediciones de FPS tras la actualización.",
+        "fr": "Retour de suivi : les deux problèmes signalés en 2.0.0 — une fréquence dépassant rarement 60 FPS et une brève saccade au début du déplacement — ont disparu avec ForgePlay 2.1.0. La personne se dit également très satisfaite de la netteté du mode Retina sur un écran 4K. Aucun relevé de FPS après mise à jour n’a été fourni.",
+        "ja": "続報：2.0.0で報告された、FPSがほとんど60を超えない問題と移動開始時の短いカクつきは、ForgePlay 2.1.0ではどちらも解消したとのことです。4KモニターでRetinaモードを使った際の鮮明さにも非常に満足しているそうです。更新後の具体的なFPS測定値は示されていません。",
+        "zh-Hans": "后续反馈：2.0.0 中此前反馈的 FPS 很少超过 60，以及角色开始移动时短暂卡顿的问题，在 ForgePlay 2.1.0 中均已消失。反馈者也对在 4K 显示器上使用 Retina 模式时的画面清晰度非常满意。未提供更新后的具体 FPS 测量值。",
+        "zh-Hant": "後續回報：2.0.0 中先前回報的 FPS 很少超過 60，以及角色開始移動時短暫卡頓的問題，在 ForgePlay 2.1.0 中均已消失。回報者也對在 4K 顯示器上使用 Retina 模式時的畫面清晰度非常滿意。未提供更新後的具體 FPS 測量值。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "path-of-exile-2-2-1-0-community-macgaller1-20261005",
+      "gameId": "path-of-exile-2",
+      "launchPlatform": "steam",
+      "testProfileId": null,
+      "forgePlayVersion": "2.1.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "맥갤러1",
+      "testedAt": null,
+      "notes": {
+        "ko": "2.0.0에서 제보했던 FPS가 60을 거의 넘지 못하는 문제와 캐릭터 이동 시작 시 끊김이 ForgePlay 2.1.0에서는 모두 사라졌다는 후속 제보입니다. Retina 모드로 4K 모니터를 사용할 때 화면 선명도에도 매우 만족한다고 합니다. 개선 후 FPS 수치는 별도로 제시되지 않았습니다.",
+        "en": "Follow-up report: the previously reported FPS rarely exceeding 60 and brief stutter when starting to move in 2.0.0 are both gone in ForgePlay 2.1.0. The reporter is also very satisfied with image clarity when using Retina mode on a 4K monitor. No post-update FPS measurements were provided.",
+        "de": "Folgebericht: Die in 2.0.0 gemeldete Bildrate von kaum über 60 FPS und das kurze Ruckeln beim Beginn einer Bewegung sind in ForgePlay 2.1.0 verschwunden. Der Melder ist außerdem mit der Bildschärfe im Retina-Modus auf einem 4K-Monitor sehr zufrieden. FPS-Messwerte nach dem Update wurden nicht angegeben.",
+        "es": "Informe de seguimiento: en ForgePlay 2.1.0 han desaparecido tanto los FPS que rara vez superaban 60 como el tirón al comenzar a moverse, reportados en 2.0.0. El informante también está muy satisfecho con la nitidez del modo Retina en un monitor 4K. No se aportaron mediciones de FPS tras la actualización.",
+        "fr": "Retour de suivi : les deux problèmes signalés en 2.0.0 — une fréquence dépassant rarement 60 FPS et une brève saccade au début du déplacement — ont disparu avec ForgePlay 2.1.0. La personne se dit également très satisfaite de la netteté du mode Retina sur un écran 4K. Aucun relevé de FPS après mise à jour n’a été fourni.",
+        "ja": "続報：2.0.0で報告された、FPSがほとんど60を超えない問題と移動開始時の短いカクつきは、ForgePlay 2.1.0ではどちらも解消したとのことです。4KモニターでRetinaモードを使った際の鮮明さにも非常に満足しているそうです。更新後の具体的なFPS測定値は示されていません。",
+        "zh-Hans": "后续反馈：2.0.0 中此前反馈的 FPS 很少超过 60，以及角色开始移动时短暂卡顿的问题，在 ForgePlay 2.1.0 中均已消失。反馈者也对在 4K 显示器上使用 Retina 模式时的画面清晰度非常满意。未提供更新后的具体 FPS 测量值。",
+        "zh-Hant": "後續回報：2.0.0 中先前回報的 FPS 很少超過 60，以及角色開始移動時短暫卡頓的問題，在 ForgePlay 2.1.0 中均已消失。回報者也對在 4K 顯示器上使用 Retina 模式時的畫面清晰度非常滿意。未提供更新後的具體 FPS 測量值。"
+      },
+      "blocker": null
     }
   ]
 }
