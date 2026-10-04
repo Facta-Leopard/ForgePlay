@@ -2,7 +2,7 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-05",
-  "revision": 2,
+  "revision": 3,
   "testProfiles": [
     {
       "id": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
@@ -2265,7 +2265,7 @@
     {
       "id": "overwatch-2-1-0-m3-max-community-macgallery-20261005",
       "gameId": "overwatch",
-      "launchPlatform": "unknown",
+      "launchPlatform": "steam",
       "testProfileId": "apple-silicon-m3-max",
       "forgePlayVersion": "2.1.0",
       "gameVersion": null,
