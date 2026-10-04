@@ -1753,6 +1753,7 @@ if not isinstance(development_projects, list):
     raise SystemExit("developer app catalog inDevelopment must be an array")
 
 expected_development_projects = {
+    "lapivelle": ("Lapivelle", "ipad", "app"),
     "hasenbau": ("HasenBau", "ipad", "app"),
     "forgekit": ("ForgeKit", "mac", "app"),
     "harewatch": ("HareWatch", "mac", "utility"),
@@ -1765,6 +1766,7 @@ expected_project_homepages = {
     "forgekit": "https://facta-leopard.github.io/ForgeKit/",
 }
 expected_development_artwork_hashes = {
+    "lapivelle": "5baabc51653932f12f513c53e54180335ae8d1f505af9d0799579193be497757",
     "hasenbau": "f9ce4d8c87802e89df8d0e727b9ac87ff0bc3c7f8884bd110bb86c436809bede",
     "forgekit": "03e6dfc77bf72e442ed85e036997ca340ec00d8e22636d7c9f7117e6b35461c9",
     "harewatch": "6f73ec849436bdeb91398ed7b1b76cd67e2cec3d4782fbfc5de475d73afd5cd0",
@@ -1794,7 +1796,7 @@ for project in development_projects:
     if project.get("href") != expected_project_homepages.get(identifier):
         raise SystemExit(f"developer project {identifier} has an unexpected homepage URL")
     summaries = project.get("summaries")
-    if identifier in {"hasenbau", "leporis-ascendant", "hazel-and-peanut", "grayline"} and summaries is None:
+    if identifier in {"lapivelle", "hasenbau", "leporis-ascendant", "hazel-and-peanut", "grayline"} and summaries is None:
         raise SystemExit(f"developer game {identifier} requires a localized introduction")
     if summaries is not None:
         if not isinstance(summaries, dict) or set(summaries) != set(locale_names):
@@ -1827,7 +1829,7 @@ if development_ids != set(expected_development_projects):
     raise SystemExit("developer projects do not match the approved website catalog")
 if development_projection != expected_development_projects:
     raise SystemExit("developer project names, platforms, or kinds differ from approved metadata")
-if development_platform_counts != {"mac": 3, "ipad": 2, "iphone": 2}:
+if development_platform_counts != {"mac": 3, "ipad": 3, "iphone": 2}:
     raise SystemExit(
         f"developer project platform counts are invalid: {development_platform_counts}"
     )
