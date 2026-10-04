@@ -2,7 +2,7 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-05",
-  "revision": 3,
+  "revision": 4,
   "testProfiles": [
     {
       "id": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
@@ -209,6 +209,34 @@
     }
   ],
   "games": [
+    {
+      "id": "assassins-creed-brotherhood",
+      "titles": {
+        "en": "Assassin's Creed: Brotherhood",
+        "ko": "어쌔신 크리드: 브라더후드"
+      }
+    },
+    {
+      "id": "warcraft-3",
+      "titles": {
+        "en": "Warcraft III",
+        "ko": "워크래프트 3"
+      }
+    },
+    {
+      "id": "witch-trainer",
+      "titles": {
+        "en": "Witch Trainer",
+        "ko": "위치 트레이너"
+      }
+    },
+    {
+      "id": "jazz-jackrabbit-2",
+      "titles": {
+        "en": "Jazz Jackrabbit 2",
+        "ko": "재즈 잭래빗 2"
+      }
+    },
     {
       "id": "romance-of-the-three-kingdoms-6",
       "titles": {
@@ -2282,6 +2310,94 @@
         "ja": "ForgePlay 2.1.0のコミュニティ報告：フル構成のM3 Maxで高解像度Retinaモードを有効にすると、オーバーウォッチ2は鮮明に表示され、全体的に快適にプレイできるとのことです。マウス感度を高くして視点を素早く回すと、わずかなカクつきが残るそうです。",
         "zh-Hans": "ForgePlay 2.1.0 社区反馈：在满核心版 M3 Max 上开启高分辨率 Retina 模式后，守望先锋 2 画面清晰，整体运行流畅。在较高鼠标灵敏度下快速转动视角时，仍有轻微卡顿。",
         "zh-Hant": "ForgePlay 2.1.0 社群回報：在全核心版 M3 Max 上開啟高解析度 Retina 模式後，鬥陣特攻 2 畫面清晰，整體運作流暢。在較高滑鼠靈敏度下快速轉動視角時，仍有輕微卡頓。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "assassins-creed-brotherhood-forgeplay-2-1-0-project-test-20261005",
+      "gameId": "assassins-creed-brotherhood",
+      "launchPlatform": "exe",
+      "testProfileId": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
+      "forgePlayVersion": "2.1.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": {
+        "ko": "개발자 테스트: ForgePlay 2.1.0의 EXE 직접 실행으로 실행을 확인했습니다. 테스트 환경은 M4 Pro·통합 메모리 24GB·macOS 27.0.1입니다.",
+        "en": "Developer test: confirmed running via direct EXE launch in ForgePlay 2.1.0 on an M4 Pro with 24GB unified memory and macOS 27.0.1.",
+        "de": "Entwicklertest: Ausführung über den direkten EXE-Start in ForgePlay 2.1.0 bestätigt. Testumgebung: M4 Pro, 24 GB gemeinsamer Speicher, macOS 27.0.1.",
+        "es": "Prueba del desarrollador: ejecución confirmada mediante inicio directo de EXE en ForgePlay 2.1.0. Equipo: M4 Pro, 24GB de memoria unificada y macOS 27.0.1.",
+        "fr": "Test du développeur : exécution confirmée par lancement direct d’EXE dans ForgePlay 2.1.0. Configuration : M4 Pro, 24 Go de mémoire unifiée et macOS 27.0.1.",
+        "ja": "開発者テスト：ForgePlay 2.1.0のEXE直接実行で動作を確認しました。環境はM4 Pro、ユニファイドメモリ24GB、macOS 27.0.1です。",
+        "zh-Hans": "开发者测试：确认可通过 ForgePlay 2.1.0 的 EXE 直接运行功能启动运行。测试环境为 M4 Pro、24GB 统一内存、macOS 27.0.1。",
+        "zh-Hant": "開發者測試：確認可透過 ForgePlay 2.1.0 的 EXE 直接執行功能啟動運作。測試環境為 M4 Pro、24GB 統一記憶體、macOS 27.0.1。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "warcraft-3-forgeplay-2-1-0-project-test-20261005",
+      "gameId": "warcraft-3",
+      "launchPlatform": "exe",
+      "testProfileId": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
+      "forgePlayVersion": "2.1.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": {
+        "ko": "개발자 테스트: ForgePlay 2.1.0의 EXE 직접 실행으로 실행을 확인했습니다. 테스트 환경은 M4 Pro·통합 메모리 24GB·macOS 27.0.1입니다.",
+        "en": "Developer test: confirmed running via direct EXE launch in ForgePlay 2.1.0 on an M4 Pro with 24GB unified memory and macOS 27.0.1.",
+        "de": "Entwicklertest: Ausführung über den direkten EXE-Start in ForgePlay 2.1.0 bestätigt. Testumgebung: M4 Pro, 24 GB gemeinsamer Speicher, macOS 27.0.1.",
+        "es": "Prueba del desarrollador: ejecución confirmada mediante inicio directo de EXE en ForgePlay 2.1.0. Equipo: M4 Pro, 24GB de memoria unificada y macOS 27.0.1.",
+        "fr": "Test du développeur : exécution confirmée par lancement direct d’EXE dans ForgePlay 2.1.0. Configuration : M4 Pro, 24 Go de mémoire unifiée et macOS 27.0.1.",
+        "ja": "開発者テスト：ForgePlay 2.1.0のEXE直接実行で動作を確認しました。環境はM4 Pro、ユニファイドメモリ24GB、macOS 27.0.1です。",
+        "zh-Hans": "开发者测试：确认可通过 ForgePlay 2.1.0 的 EXE 直接运行功能启动运行。测试环境为 M4 Pro、24GB 统一内存、macOS 27.0.1。",
+        "zh-Hant": "開發者測試：確認可透過 ForgePlay 2.1.0 的 EXE 直接執行功能啟動運作。測試環境為 M4 Pro、24GB 統一記憶體、macOS 27.0.1。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "witch-trainer-forgeplay-2-1-0-project-test-20261005",
+      "gameId": "witch-trainer",
+      "launchPlatform": "exe",
+      "testProfileId": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
+      "forgePlayVersion": "2.1.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": {
+        "ko": "개발자 테스트: ForgePlay 2.1.0의 EXE 직접 실행으로 실행을 확인했습니다. 테스트 환경은 M4 Pro·통합 메모리 24GB·macOS 27.0.1입니다.",
+        "en": "Developer test: confirmed running via direct EXE launch in ForgePlay 2.1.0 on an M4 Pro with 24GB unified memory and macOS 27.0.1.",
+        "de": "Entwicklertest: Ausführung über den direkten EXE-Start in ForgePlay 2.1.0 bestätigt. Testumgebung: M4 Pro, 24 GB gemeinsamer Speicher, macOS 27.0.1.",
+        "es": "Prueba del desarrollador: ejecución confirmada mediante inicio directo de EXE en ForgePlay 2.1.0. Equipo: M4 Pro, 24GB de memoria unificada y macOS 27.0.1.",
+        "fr": "Test du développeur : exécution confirmée par lancement direct d’EXE dans ForgePlay 2.1.0. Configuration : M4 Pro, 24 Go de mémoire unifiée et macOS 27.0.1.",
+        "ja": "開発者テスト：ForgePlay 2.1.0のEXE直接実行で動作を確認しました。環境はM4 Pro、ユニファイドメモリ24GB、macOS 27.0.1です。",
+        "zh-Hans": "开发者测试：确认可通过 ForgePlay 2.1.0 的 EXE 直接运行功能启动运行。测试环境为 M4 Pro、24GB 统一内存、macOS 27.0.1。",
+        "zh-Hant": "開發者測試：確認可透過 ForgePlay 2.1.0 的 EXE 直接執行功能啟動運作。測試環境為 M4 Pro、24GB 統一記憶體、macOS 27.0.1。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "jazz-jackrabbit-2-forgeplay-2-1-0-project-test-20261005",
+      "gameId": "jazz-jackrabbit-2",
+      "launchPlatform": "exe",
+      "testProfileId": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
+      "forgePlayVersion": "2.1.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": {
+        "ko": "개발자 테스트: ForgePlay 2.1.0의 EXE 직접 실행으로 실행을 확인했습니다. 테스트 환경은 M4 Pro·통합 메모리 24GB·macOS 27.0.1입니다.",
+        "en": "Developer test: confirmed running via direct EXE launch in ForgePlay 2.1.0 on an M4 Pro with 24GB unified memory and macOS 27.0.1.",
+        "de": "Entwicklertest: Ausführung über den direkten EXE-Start in ForgePlay 2.1.0 bestätigt. Testumgebung: M4 Pro, 24 GB gemeinsamer Speicher, macOS 27.0.1.",
+        "es": "Prueba del desarrollador: ejecución confirmada mediante inicio directo de EXE en ForgePlay 2.1.0. Equipo: M4 Pro, 24GB de memoria unificada y macOS 27.0.1.",
+        "fr": "Test du développeur : exécution confirmée par lancement direct d’EXE dans ForgePlay 2.1.0. Configuration : M4 Pro, 24 Go de mémoire unifiée et macOS 27.0.1.",
+        "ja": "開発者テスト：ForgePlay 2.1.0のEXE直接実行で動作を確認しました。環境はM4 Pro、ユニファイドメモリ24GB、macOS 27.0.1です。",
+        "zh-Hans": "开发者测试：确认可通过 ForgePlay 2.1.0 的 EXE 直接运行功能启动运行。测试环境为 M4 Pro、24GB 统一内存、macOS 27.0.1。",
+        "zh-Hant": "開發者測試：確認可透過 ForgePlay 2.1.0 的 EXE 直接執行功能啟動運作。測試環境為 M4 Pro、24GB 統一記憶體、macOS 27.0.1。"
       },
       "blocker": null
     }
