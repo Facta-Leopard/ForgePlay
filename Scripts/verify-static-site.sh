@@ -1847,7 +1847,11 @@ for html in index.html why.html license.html privacy.html support.html compatibi
   else
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-14"'
   fi
-  require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260929-platform1"'
+  if [[ "$html" == "index.html" || "$html" == "site-assets/dlss5.html" ]]; then
+    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20261004-firsts3"'
+  else
+    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260929-platform1"'
+  fi
   require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.css?v=20260905-7'
   require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.js?v=20261001-fopl1'
   if [[ "$html" != "index.html" ]]; then
@@ -1876,6 +1880,13 @@ require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'class="fp-firsts-jump"'
 require_snippet "$ROOT_DIR/site-assets/firsts.js" 'redirectLegacySection'
 require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'id="dlss5-evidence"'
 require_snippet "$ROOT_DIR/index.html" 'data-i18n="firsts.badge"'
+require_snippet "$ROOT_DIR/index.html" 'THREE WORLD FIRSTS*'
+require_snippet "$ROOT_DIR/index.html" 'data-i18n="coordinatorFirst.homeClaim"'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'id="ai-coordinator"'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'id="coordinator-evidence"'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'data-i18n="coordinatorFirst.scope"'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'data-i18n="coordinatorFirst.frameInput"'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'ForgePlay-Mac-2.1.0-7-OpenSource.tar.gz'
 require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'data-i18n="firsts.step2Title"'
 require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'datetime="2026-09-19T10:16:04Z"'
 require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'datetime="2026-09-19T14:35:00Z"'

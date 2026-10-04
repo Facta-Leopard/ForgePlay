@@ -7,11 +7,11 @@
   <script src="site-assets/site-theme.js?v=20261002-1"></script>
   <meta name="theme-color" content="#0e1013">
   <title>ForgePlay — World firsts</title>
-  <meta name="description" content="macOS Game Mode and DLSS5 Emulation: features, public records, and evidence for both world-first claims.">
+  <meta name="description" content="macOS Game Mode, DLSS5 Emulation and AI Coordinator: the implementation, public record and scope of three world-first claims.">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="ForgePlay">
   <meta property="og:title" content="ForgePlay — World firsts">
-  <meta property="og:description" content="macOS Game Mode and DLSS5 Emulation: features, public records, and evidence for both world-first claims.">
+  <meta property="og:description" content="macOS Game Mode, DLSS5 Emulation and AI Coordinator: the implementation, public record and scope of three world-first claims.">
   <meta property="og:url" content="https://facta-leopard.github.io/ForgePlay/site-assets/dlss5.html">
   <meta property="og:image" content="https://facta-leopard.github.io/ForgePlay/site-assets/forgeplay-icon.png?v=20260927-share1">
   <meta property="og:image:type" content="image/png">
@@ -20,7 +20,7 @@
   <meta property="og:image:alt" content="ForgePlay app icon">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="ForgePlay — World firsts">
-  <meta name="twitter:description" content="macOS Game Mode and DLSS5 Emulation: features, public records, and evidence for both world-first claims.">
+  <meta name="twitter:description" content="macOS Game Mode, DLSS5 Emulation and AI Coordinator: the implementation, public record and scope of three world-first claims.">
   <meta name="twitter:image" content="https://facta-leopard.github.io/ForgePlay/site-assets/forgeplay-icon.png?v=20260927-share1">
   <meta name="twitter:image:alt" content="ForgePlay app icon">
   <link rel="icon" type="image/png" href="site-assets/forgeplay-favicon.png">
@@ -29,8 +29,8 @@
   <link rel="stylesheet" href="site-assets/site-shell.css?v=20260905-7">
   <link rel="stylesheet" href="site-assets/home-experience.css?v=20260905-8">
   <link rel="stylesheet" href="site-assets/forge-motion.css?v=20260923-copy1">
-  <link rel="stylesheet" href="site-assets/firsts.css?v=20260928-2">
-  <script src="site.js?v=20260929-platform1" defer></script>
+  <link rel="stylesheet" href="site-assets/firsts.css?v=20261004-firsts3">
+  <script src="site.js?v=20261004-firsts3" defer></script>
   <script src="site-assets/site-shell.js?v=20261001-fopl1" defer></script>
   <link rel="stylesheet" href="site-assets/supporters-nav.css?v=20260928-1">
   <script src="site-assets/supporters-nav.js?v=20260928-1" defer></script>
@@ -67,10 +67,11 @@
     <header class="fp-firsts-intro fp-wrap">
       <p class="fp-eyebrow">FORGEPLAY</p>
       <h1 data-i18n="shared.navFirsts">World firsts</h1>
-      <p class="fp-section-lead" data-i18n="firsts.pageIntro">How ForgePlay implements macOS Game Mode and DLSS5 Emulation, with public records and evidence for both world-first claims.</p>
+      <p class="fp-section-lead" data-i18n="firsts.pageIntro">macOS Game Mode, DLSS5 Emulation and AI Coordinator: the implementation, public record and scope of three world-first claims.</p>
       <nav class="fp-firsts-jump" data-i18n-aria-label="shared.navFirsts" aria-label="World firsts">
         <a href="site-assets/dlss5.html#game-mode" data-locale-link><span>01</span><strong data-i18n="home.worldFirstRouteGameMode">macOS GAME MODE</strong><span aria-hidden="true">↓</span></a>
         <a href="site-assets/dlss5.html#dlss5" data-locale-link><span>02</span><strong data-i18n="firsts.title">DLSS5 Emulation</strong><span aria-hidden="true">↓</span></a>
+        <a href="site-assets/dlss5.html#ai-coordinator" data-locale-link><span>03</span><strong>AI Coordinator</strong><span aria-hidden="true">↓</span></a>
       </nav>
     </header>
     <section class="fp-feature-section" id="game-mode" aria-labelledby="game-mode-title">
@@ -142,6 +143,51 @@
           <p data-i18n="firsts.forkNote">The supplied fork comparisons were also checked. On 27 September 2026, lastquest/main was identical to upstream/main; porom004/main was five commits behind with no ahead commits. These comparisons alone neither prove nor disprove worldwide priority.</p>
           <div class="fp-source-links"><a href="https://github.com/stefanos50/HyPER-GAN/compare/main...lastquest:main" target="_blank" rel="noopener noreferrer">lastquest/main ↗</a><a href="https://github.com/stefanos50/HyPER-GAN/compare/main...porom004:main" target="_blank" rel="noopener noreferrer">porom004/main ↗</a></div>
           <p class="fp-neural-note" data-i18n="firsts.historyNote">The 19 September notice, captions, and images remain unchanged historical records. They do not independently establish FPS, latency, NPU placement, or a model checkpoint. Current specifications belong to the 2.0.0 release notes.</p>
+          <button type="button" class="fp-text-button" data-close-evidence data-i18n="firsts.close">Close evidence</button>
+        </div>
+      </details>
+    </section>
+    <section class="fp-neural fp-wrap fp-section" id="ai-coordinator" aria-labelledby="coordinator-first-title">
+      <header class="fp-neural-heading">
+        <div><p class="fp-eyebrow" data-i18n="coordinatorFirst.label">03 / A THIRD WORLD FIRST*</p><h2 id="coordinator-first-title" data-i18n="coordinatorFirst.title">AI Coordinator · Fopl</h2></div>
+        <span class="fp-neural-version">ForgePlay 2.1.0<span>OWLv2 · Apple Foundation Models</span></span>
+      </header>
+      <div class="fp-coordinator-intro">
+        <figure class="fp-neural-art"><img src="site-assets/announcements/forgeplay-2-1-0-gameplay.png" width="850" height="364" loading="lazy" alt="AI Coordinator in ForgePlay 2.1.0 — target highlights and Fopl guidance in an actual game capture." data-i18n-alt="coordinatorFirst.caption"><figcaption data-i18n="coordinatorFirst.caption">AI Coordinator in ForgePlay 2.1.0 — target highlights and Fopl guidance in an actual game capture.</figcaption></figure>
+        <div><p data-i18n="coordinatorFirst.body">The game keeps rendering on the GPU while the coordinator observes through a separate asynchronous path. OWLv2 perception, configured for CPU and Apple Neural Engine, connects screen-region highlights with Apple’s on-device explanations and conversation.</p><p data-i18n="coordinatorFirst.experience">Fopl marks candidate objects and uses an image with detections tied to that same frame to provide guidance. Ask questions or use conversation to direct the assistance.</p></div>
+      </div>
+      <p class="fp-neural-note" data-i18n="coordinatorFirst.shortScope">*A limited developer claim: the 2 October 2026 public-source review and key-source recheck on 4 October identified no earlier example of the complete combination below.</p>
+      <p class="fp-neural-lead" data-i18n="coordinatorFirst.scope">The claim concerns a product implementation for Windows games running on Mac that continues game rendering while asynchronously performing OWLv2 perception configured for CPU and Apple Neural Engine, without external AI inference APIs, and uses frame-linked detections for both screen-region overlays and image-based explanations/conversation through Apple’s own on-device model. It does not claim the first Mac AI, invention of parallel processing or the first worldwide public release.</p>
+      <div class="fp-source-links">
+        <a href="updates.html#update-forgeplay-2-1-0-released" data-locale-link data-i18n="firsts.releaseGuide">Current features, recommended hardware, and setup ↗</a>
+        <a href="site-assets/dlss5.html#coordinator-evidence" data-locale-link data-open-evidence data-i18n="firsts.scopeLink">Scope &amp; evidence ↗</a>
+      </div>
+      <details class="fp-evidence fp-neural-evidence" id="coordinator-evidence">
+        <summary><span data-i18n="coordinatorFirst.evidence">03 / AI Coordinator — claim scope and evidence</span><span aria-hidden="true">+</span></summary>
+        <div class="fp-neural-evidence-body">
+          <h3 data-i18n="firsts.scopeTitle">What “world first” means here</h3>
+          <p data-i18n="coordinatorFirst.frameInput">Apple’s model receives an analysis image without composited overlays and candidate regions from that same frame as reference information—not detection names, scores or a box-painted image as ground truth.</p>
+          <p data-i18n="coordinatorFirst.limits">Detections are candidates, not confirmed enemies or allies; highlights use 2D screen regions. Not every operation runs exclusively on ANE, and performance impact is not zero. Boxes, text and speech can update at different times. Local AI inference does not rule out network use for app or policy updates.</p>
+          <h3 data-i18n="firsts.timelineTitle">From development to public release</h3>
+          <p data-i18n="coordinatorFirst.record">2 October 2026 is the prior-work review cutoff. ForgePlay 2.1.0 (Build 7) was publicly released on 4 October 2026 in Korea. The release documents availability, not independently certified worldwide priority.</p>
+          <p data-i18n="coordinatorFirst.sourceNote">The separately attached OpenSource archive documents asynchronous rendering separation, CPU/Neural Engine configuration, frame association and Apple on-device model use. GitHub’s automatic source snapshots are not the corresponding-source reference.</p>
+          <div class="fp-source-links">
+            <a href="https://github.com/Facta-Leopard/ForgePlay/releases/tag/v2.1.0" target="_blank" rel="noopener noreferrer" data-i18n="firsts.releaseRecord">Release record and downloads ↗</a>
+            <a href="https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.1.0/ForgePlay-Mac-2.1.0-7-OpenSource.tar.gz" target="_blank" rel="noopener noreferrer" data-i18n="coordinatorFirst.source">View 2.1.0 corresponding source ↗</a>
+          </div>
+          <h3 data-i18n="firsts.priorTitle">Related work and the scope of comparison</h3>
+          <dl class="fp-prior-work">
+            <div><dt><a href="https://github.com/ValentineReese/navi-vision" target="_blank" rel="noopener noreferrer">NaviVision ↗</a></dt><dd data-i18n="coordinatorFirst.navi">An earlier Mac game-screen assistant using local Qwen and llama.cpp. ForgePlay does not claim to be the first local game AI on Mac.</dd></div>
+            <div><dt><a href="https://inference-models.roboflow.com/models/owlv2/" target="_blank" rel="noopener noreferrer">Roboflow OWLv2 ↗</a><br><a href="https://github.com/SohamSPB/MemoGraph" target="_blank" rel="noopener noreferrer">MemoGraph ↗</a></dt><dd data-i18n="coordinatorFirst.owl">Earlier practical uses of local OWLv2 in services and photo analysis. ForgePlay does not claim to have invented OWLv2 or first put it to practical use.</dd></div>
+            <div><dt><a href="https://github.com/mizorewww/laya-coreml" target="_blank" rel="noopener noreferrer">Laya-CoreML ↗</a></dt><dd data-i18n="coordinatorFirst.laya">Local Core ML/Neural Engine decisions and a Snake example. ForgePlay does not claim the first use of an NPU for any game-related function.</dd></div>
+          </dl>
+          <p data-i18n="coordinatorFirst.apple">Apple has already described concurrent CPU/GPU work with ANE inference and asynchronous Core ML prediction. The claim is about the stated product combination, not invention of those principles.</p>
+          <div class="fp-source-links">
+            <a href="https://developer.apple.com/videos/play/wwdc2022/10027/" target="_blank" rel="noopener noreferrer">Core ML · WWDC22 ↗</a>
+            <a href="https://developer.apple.com/videos/play/wwdc2023/10049/" target="_blank" rel="noopener noreferrer">Async prediction · WWDC23 ↗</a>
+            <a href="https://developer.apple.com/videos/play/wwdc2026/241/" target="_blank" rel="noopener noreferrer">Foundation Models · WWDC26 ↗</a>
+            <a href="https://machinelearning.apple.com/research/neural-engine-transformers" target="_blank" rel="noopener noreferrer">Apple Neural Engine ↗</a>
+          </div>
           <button type="button" class="fp-text-button" data-close-evidence data-i18n="firsts.close">Close evidence</button>
         </div>
       </details>
