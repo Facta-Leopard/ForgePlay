@@ -1,13 +1,40 @@
 {
   "$schema": "./announcements.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-10-04",
+  "updatedAt": "2026-10-06",
   "announcements": [
+    {
+      "id": "forgeplay-modular-installation-development",
+      "type": "project",
+      "publishedAt": "2026-10-06",
+      "featured": true,
+      "titles": {
+        "ko": "ForgePlay Mac 경량화와 런처 업데이트 기능을 개발하고 있습니다.",
+        "en": "A lighter ForgePlay Mac and launcher-based updates are in development.",
+        "de": "Ein schlankeres ForgePlay Mac und Updates über den Launcher sind in Entwicklung.",
+        "es": "Estamos desarrollando un ForgePlay Mac más ligero y actualizaciones desde el lanzador.",
+        "fr": "Nous développons un ForgePlay Mac plus léger et les mises à jour depuis le lanceur.",
+        "ja": "ForgePlay Macの軽量化とランチャーの更新機能を開発しています。",
+        "zh-Hans": "正在开发 ForgePlay Mac 轻量化与启动器更新功能。",
+        "zh-Hant": "正在開發 ForgePlay Mac 輕量化與啟動器更新功能。"
+      },
+      "summaries": {
+        "ko": "필요한 기능만 선택해 설치·사용·업데이트하는 구조를 장기적으로 개발하고 있습니다. FEX 도입 가능성과 기술 부채도 검토하며, 당분간은 버그 수정과 안정화 중심의 소규모 업데이트를 이어갈 예정입니다.",
+        "en": "We are working on a long-term redesign so you can choose which features to install, use and update. We are also reviewing possible FEX adoption and related technical debt, while focusing near-term updates on bug fixes and stability.",
+        "de": "Eine langfristige Neugestaltung soll dich wählen lassen, welche Funktionen du installierst, nutzt und aktualisierst. Auch ein möglicher FEX-Einsatz und technische Altlasten werden geprüft. Vorerst stehen kleinere Fehlerbehebungen und Stabilitätsupdates im Mittelpunkt.",
+        "es": "Preparamos un rediseño a largo plazo para elegir qué funciones instalar, usar y actualizar. También estudiamos una posible incorporación de FEX y la deuda técnica relacionada. Por ahora, nos centraremos en pequeñas actualizaciones de corrección y estabilidad.",
+        "fr": "Nous préparons une refonte à long terme pour choisir les fonctions à installer, utiliser et mettre à jour. Nous étudions aussi FEX et la dette technique associée. À court terme, les mises à jour seront centrées sur les correctifs et la stabilité.",
+        "ja": "必要な機能だけを選んでインストール・使用・更新できる構成を長期的に開発しています。FEX導入の可能性と技術的負債も検討し、当面は不具合修正と安定性向上を中心とする小規模な更新を予定しています。",
+        "zh-Hans": "正在长期推进结构重设计，让用户选择需要安装、使用和更新的功能，同时评估 FEX 的引入可能性及相关技术债务。近期将以修复问题和提升稳定性的小型更新为主。",
+        "zh-Hant": "正在長期推進結構重新設計，讓使用者選擇需要安裝、使用和更新的功能，同時評估 FEX 的導入可能性及相關技術債務。近期將以修正問題和提升穩定性的小型更新為主。"
+      },
+      "href": "updates.html#update-forgeplay-modular-installation-development"
+    },
     {
       "id": "forgeplay-2-1-0-released",
       "type": "release",
       "publishedAt": "2026-10-04",
-      "featured": true,
+      "featured": false,
       "titles": {
         "ko": "ForgePlay 2.1.0 업데이트",
         "en": "ForgePlay 2.1.0 Update",

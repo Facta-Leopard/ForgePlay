@@ -1,13 +1,98 @@
 {
   "$schema": "./announcements.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-10-04",
+  "updatedAt": "2026-10-06",
   "announcements": [
+    {
+      "id": "forgeplay-modular-installation-development",
+      "type": "project",
+      "publishedAt": "2026-10-06",
+      "featured": true,
+      "titles": {
+        "ko": "ForgePlay Mac 경량화와 런처 업데이트 기능을 개발하고 있습니다.",
+        "en": "A lighter ForgePlay Mac and launcher-based updates are in development.",
+        "de": "Ein schlankeres ForgePlay Mac und Updates über den Launcher sind in Entwicklung.",
+        "es": "Estamos desarrollando un ForgePlay Mac más ligero y actualizaciones desde el lanzador.",
+        "fr": "Nous développons un ForgePlay Mac plus léger et les mises à jour depuis le lanceur.",
+        "ja": "ForgePlay Macの軽量化とランチャーの更新機能を開発しています。",
+        "zh-Hans": "正在开发 ForgePlay Mac 轻量化与启动器更新功能。",
+        "zh-Hant": "正在開發 ForgePlay Mac 輕量化與啟動器更新功能。"
+      },
+      "summaries": {
+        "ko": "필요한 기능만 선택해 설치·사용·업데이트하는 구조를 장기적으로 개발하고 있습니다. FEX 도입 가능성과 기술 부채도 검토하며, 당분간은 버그 수정과 안정화 중심의 소규모 업데이트를 이어갈 예정입니다.",
+        "en": "We are working on a long-term redesign so you can choose which features to install, use and update. We are also reviewing possible FEX adoption and related technical debt, while focusing near-term updates on bug fixes and stability.",
+        "de": "Eine langfristige Neugestaltung soll dich wählen lassen, welche Funktionen du installierst, nutzt und aktualisierst. Auch ein möglicher FEX-Einsatz und technische Altlasten werden geprüft. Vorerst stehen kleinere Fehlerbehebungen und Stabilitätsupdates im Mittelpunkt.",
+        "es": "Preparamos un rediseño a largo plazo para elegir qué funciones instalar, usar y actualizar. También estudiamos una posible incorporación de FEX y la deuda técnica relacionada. Por ahora, nos centraremos en pequeñas actualizaciones de corrección y estabilidad.",
+        "fr": "Nous préparons une refonte à long terme pour choisir les fonctions à installer, utiliser et mettre à jour. Nous étudions aussi FEX et la dette technique associée. À court terme, les mises à jour seront centrées sur les correctifs et la stabilité.",
+        "ja": "必要な機能だけを選んでインストール・使用・更新できる構成を長期的に開発しています。FEX導入の可能性と技術的負債も検討し、当面は不具合修正と安定性向上を中心とする小規模な更新を予定しています。",
+        "zh-Hans": "正在长期推进结构重设计，让用户选择需要安装、使用和更新的功能，同时评估 FEX 的引入可能性及相关技术债务。近期将以修复问题和提升稳定性的小型更新为主。",
+        "zh-Hant": "正在長期推進結構重新設計，讓使用者選擇需要安裝、使用和更新的功能，同時評估 FEX 的導入可能性及相關技術債務。近期將以修正問題和提升穩定性的小型更新為主。"
+      },
+      "paragraphs": {
+        "ko": [
+          "사용자가 **필요한 기능만 골라 설치하고 사용할 수 있도록** ForgePlay Mac의 구조를 개선할 계획입니다. 원하지 않는 기능은 사용하지 않는 데 그치지 않고, **처음부터 설치하지 않을 수 있게** 해 불필요한 저장공간 사용을 줄이려 합니다. 런처에서도 필요한 항목을 선택해 설치·업데이트할 수 있도록 준비하고 있습니다.",
+          "이를 위해서는 앱의 전체 설계와 구성요소 관리·배포 방식을 바꿔야 하므로, **장기적인 프로젝트로 설계와 개발을 진행하고 있습니다.**",
+          "향후 **FEX 오픈소스의 도입 가능성**도 열어 두고, 이를 위한 구조 정비와 관련 기술 부채를 함께 검토하고 있습니다. 아직 도입 여부나 적용 시점이 확정된 것은 아닙니다.",
+          "현재 ForgePlay Mac·VR·VM의 개발과 개선·최적화도 병행하고 있어, 대규모 기능 업데이트까지는 시간이 필요합니다. **당분간은 버그 수정과 안정화를 중심으로 소규모 업데이트를 이어갈 예정입니다.**",
+          "보내주시는 제보를 바탕으로 기존 기능부터 차근차근 다듬겠습니다. 늘 관심과 응원을 보내주셔서 감사합니다."
+        ],
+        "en": [
+          "We plan to redesign ForgePlay Mac so you can **choose only the features you need to install and use**. Instead of merely leaving unwanted features switched off, you will be able to **leave them out of the installation entirely**, reducing unnecessary storage use. We are also preparing a way to select which components to install and update through the launcher.",
+          "This requires changes to the app’s overall architecture and the way components are managed and distributed, so **we are approaching the design and development as a long-term project.**",
+          "We are also considering the **possible adoption of the open-source FEX project**, alongside the structural work and related technical debt this would involve. Neither adoption nor its timing has been decided.",
+          "Development, improvements and optimization across ForgePlay Mac, VR and VM are continuing in parallel, so a major feature update will take time. **For the time being, we plan to continue with smaller updates focused on bug fixes and stability.**",
+          "We will keep refining existing features based on your reports. Thank you for your continued interest and support."
+        ],
+        "de": [
+          "Wir wollen ForgePlay Mac so umgestalten, dass du **nur die Funktionen installierst und nutzt, die du brauchst**. Unerwünschte Funktionen sollen nicht bloß ausgeschaltet bleiben, sondern **von Anfang an gar nicht installiert werden müssen**, um unnötigen Speicherbedarf zu vermeiden. Auch im Launcher sollst du auswählen können, welche Komponenten du installierst und aktualisierst.",
+          "Dafür müssen die Gesamtarchitektur der App sowie die Verwaltung und Bereitstellung ihrer Komponenten überarbeitet werden. **Wir gehen diese Gestaltung und Entwicklung deshalb als langfristiges Projekt an.**",
+          "Wir prüfen außerdem den **möglichen Einsatz des Open-Source-Projekts FEX** sowie die dafür nötigen strukturellen Anpassungen und die damit verbundenen technischen Altlasten. Ob und wann FEX eingesetzt wird, steht noch nicht fest.",
+          "Parallel arbeiten wir an ForgePlay Mac, VR und VM sowie an Verbesserungen und Optimierungen. Ein großes Funktionsupdate wird daher Zeit brauchen. **Vorerst planen wir kleinere Updates mit Schwerpunkt auf Fehlerbehebungen und Stabilität.**",
+          "Auf Grundlage eurer Rückmeldungen werden wir die vorhandenen Funktionen Schritt für Schritt verbessern. Vielen Dank für euer anhaltendes Interesse und eure Unterstützung."
+        ],
+        "es": [
+          "Tenemos previsto rediseñar ForgePlay Mac para que puedas **elegir únicamente las funciones que quieras instalar y utilizar**. No se trata solo de mantener desactivadas las funciones que no necesitas: podrás **excluirlas por completo de la instalación** para reducir el uso innecesario de almacenamiento. También preparamos la selección de componentes para instalarlos y actualizarlos desde el lanzador.",
+          "Esto requiere cambiar la arquitectura general de la app y la gestión y distribución de sus componentes, por lo que **abordamos el diseño y el desarrollo como un proyecto a largo plazo.**",
+          "También estudiamos la **posible incorporación del proyecto de código abierto FEX**, junto con los cambios estructurales y la deuda técnica que ello implica. Aún no se ha decidido si se incorporará ni cuándo.",
+          "Seguimos desarrollando, mejorando y optimizando ForgePlay Mac, VR y VM en paralelo, por lo que una gran actualización de funciones llevará tiempo. **Por ahora, prevemos continuar con actualizaciones más pequeñas centradas en corregir errores y mejorar la estabilidad.**",
+          "Seguiremos afinando las funciones existentes a partir de vuestros reportes. Gracias por vuestro interés y apoyo constantes."
+        ],
+        "fr": [
+          "Nous prévoyons de revoir la structure de ForgePlay Mac pour vous permettre de **choisir uniquement les fonctions à installer et à utiliser**. Les fonctions dont vous ne voulez pas ne seront pas simplement désactivées : vous pourrez **ne pas les installer du tout**, afin de limiter l’espace de stockage inutilement occupé. Nous préparons également la sélection des composants à installer et à mettre à jour depuis le lanceur.",
+          "Cela nécessite de modifier l’architecture globale de l’app ainsi que la gestion et la distribution de ses composants. **Nous abordons donc cette conception et ce développement comme un projet à long terme.**",
+          "Nous étudions aussi **l’adoption éventuelle du projet open source FEX**, avec les adaptations structurelles nécessaires et la dette technique associée. Ni son adoption ni son calendrier ne sont encore décidés.",
+          "Le développement, les améliorations et les optimisations de ForgePlay Mac, VR et VM se poursuivent en parallèle. Une mise à jour majeure demandera donc du temps. **Dans l’immédiat, nous prévoyons de poursuivre les petites mises à jour consacrées aux correctifs et à la stabilité.**",
+          "Nous continuerons à affiner les fonctions existantes à partir de vos signalements. Merci pour votre intérêt et votre soutien."
+        ],
+        "ja": [
+          "ユーザーが**必要な機能だけを選んでインストールし、使用できるように**、ForgePlay Macの構成を見直す計画です。不要な機能をオフにするだけでなく、**最初からインストールしないことも選べるように**して、無駄なストレージ使用を減らしたいと考えています。ランチャーからも、必要な項目を選んでインストール・更新できる仕組みを準備しています。",
+          "これにはアプリ全体の設計と、構成要素の管理・配布方法を変更する必要があるため、**長期的なプロジェクトとして設計と開発を進めています。**",
+          "今後の**オープンソースFEXの導入可能性**も視野に入れ、必要な構造の整理と関連する技術的負債を併せて検討しています。導入の可否や時期は、まだ決まっていません。",
+          "現在、ForgePlay Mac・VR・VMの開発、改善、最適化も並行して進めているため、大規模な機能更新には時間が必要です。**当面は、不具合修正と安定性の向上を中心とした小規模な更新を続ける予定です。**",
+          "皆さんからの報告をもとに、既存の機能を着実に磨いていきます。いつも関心と応援を寄せていただき、ありがとうございます。"
+        ],
+        "zh-Hans": [
+          "我们计划调整 ForgePlay Mac 的结构，让用户**只选择自己需要的功能来安装和使用**。对于不需要的功能，不仅可以停用，还能**从一开始就选择不安装**，减少不必要的存储占用。我们也正在准备通过启动器选择所需组件进行安装和更新的方式。",
+          "这需要改变应用的整体设计以及组件的管理和分发方式，因此**我们正将其作为一个长期项目推进设计与开发。**",
+          "我们也在评估未来**引入开源项目 FEX 的可能性**，并一并审视所需的结构调整及相关技术债务。目前尚未决定是否引入，也没有确定应用时间。",
+          "目前 ForgePlay Mac、VR、VM 的开发、改进和优化也在同步进行，因此大型功能更新仍需要时间。**近期计划继续推出以问题修复和稳定性改进为主的小型更新。**",
+          "我们会根据大家的反馈，逐步完善现有功能。感谢大家一直以来的关注与支持。"
+        ],
+        "zh-Hant": [
+          "我們計畫調整 ForgePlay Mac 的結構，讓使用者**只選擇自己需要的功能來安裝和使用**。對於不需要的功能，不僅可以停用，還能**從一開始就選擇不安裝**，減少不必要的儲存空間占用。我們也正在準備透過啟動器選擇所需元件進行安裝和更新的方式。",
+          "這需要改變應用程式的整體設計，以及元件的管理和散布方式，因此**我們正將其作為一個長期專案推進設計與開發。**",
+          "我們也在評估未來**導入開源專案 FEX 的可能性**，並一併檢視所需的結構調整及相關技術債務。目前尚未決定是否導入，也沒有確定套用時間。",
+          "目前 ForgePlay Mac、VR、VM 的開發、改善和最佳化也在同步進行，因此大型功能更新仍需要時間。**近期計畫繼續推出以問題修正和穩定性改善為主的小型更新。**",
+          "我們會根據大家的回報，逐步完善現有功能。感謝大家一直以來的關注與支持。"
+        ]
+      },
+      "href": "updates.html#update-forgeplay-modular-installation-development"
+    },
     {
       "id": "forgeplay-2-1-0-released",
       "type": "release",
       "publishedAt": "2026-10-04",
-      "featured": true,
+      "featured": false,
       "titles": {
         "ko": "ForgePlay 2.1.0 업데이트",
         "en": "ForgePlay 2.1.0 Update",
