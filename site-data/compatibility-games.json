@@ -2,7 +2,7 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-05",
-  "revision": 6,
+  "revision": 7,
   "testProfiles": [
     {
       "id": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
@@ -209,6 +209,13 @@
     }
   ],
   "games": [
+    {
+      "id": "stardew-valley",
+      "titles": {
+        "en": "Stardew Valley",
+        "ko": "스타듀밸리"
+      }
+    },
     {
       "id": "the-callisto-protocol",
       "titles": {
@@ -2427,6 +2434,29 @@
         "ja": "開発者テスト：ForgePlay 2.1.0でEpic Games版The Callisto Protocolが快適にプレイできることを確認しました。環境はM4 Pro、ユニファイドメモリ24GB、macOS 27.0.1です。",
         "zh-Hans": "开发者测试：确认在 ForgePlay 2.1.0 中可流畅游玩 Epic Games 版 The Callisto Protocol。测试环境为 M4 Pro、24GB 统一内存、macOS 27.0.1。",
         "zh-Hant": "開發者測試：確認在 ForgePlay 2.1.0 中可順暢遊玩 Epic Games 版 The Callisto Protocol。測試環境為 M4 Pro、24GB 統一記憶體、macOS 27.0.1。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "stardew-valley-2-1-0-community-geul-naeryeojuseyo-20261005",
+      "gameId": "stardew-valley",
+      "launchPlatform": "steam",
+      "testProfileId": null,
+      "forgePlayVersion": "2.1.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "글 내려주세요",
+      "testedAt": null,
+      "notes": {
+        "ko": "커뮤니티 제보: ForgePlay 2.1.0에서 Steam판 스타듀밸리가 잘 실행된다고 합니다.",
+        "en": "Community report: the Steam version of Stardew Valley runs well in ForgePlay 2.1.0.",
+        "de": "Community-Bericht: Die Steam-Version von Stardew Valley läuft mit ForgePlay 2.1.0 gut.",
+        "es": "Informe de la comunidad: la versión de Steam de Stardew Valley funciona bien con ForgePlay 2.1.0.",
+        "fr": "Signalement communautaire : la version Steam de Stardew Valley fonctionne bien avec ForgePlay 2.1.0.",
+        "ja": "コミュニティ報告：ForgePlay 2.1.0でSteam版Stardew Valleyが問題なく動作するとのことです。",
+        "zh-Hans": "社区反馈：Steam 版 Stardew Valley 在 ForgePlay 2.1.0 中运行良好。",
+        "zh-Hant": "社群回報：Steam 版 Stardew Valley 在 ForgePlay 2.1.0 中運作良好。"
       },
       "blocker": null
     }
