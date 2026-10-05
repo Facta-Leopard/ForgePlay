@@ -1,8 +1,8 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
-  "updatedAt": "2026-10-05",
-  "revision": 7,
+  "updatedAt": "2026-10-06",
+  "revision": 0,
   "testProfiles": [
     {
       "id": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
@@ -209,6 +209,13 @@
     }
   ],
   "games": [
+    {
+      "id": "dave-the-diver",
+      "titles": {
+        "en": "DAVE THE DIVER",
+        "ko": "데이브 더 다이버"
+      }
+    },
     {
       "id": "stardew-valley",
       "titles": {
@@ -2457,6 +2464,29 @@
         "ja": "コミュニティ報告：ForgePlay 2.1.0でSteam版Stardew Valleyが問題なく動作するとのことです。",
         "zh-Hans": "社区反馈：Steam 版 Stardew Valley 在 ForgePlay 2.1.0 中运行良好。",
         "zh-Hant": "社群回報：Steam 版 Stardew Valley 在 ForgePlay 2.1.0 中運作良好。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "dave-the-diver-2-1-0-community-geul-naeryeojuseyo-20261006",
+      "gameId": "dave-the-diver",
+      "launchPlatform": "steam",
+      "testProfileId": null,
+      "forgePlayVersion": "2.1.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "글 내려주세요",
+      "testedAt": null,
+      "notes": {
+        "ko": "커뮤니티 제보 — 플레이 가능(소리 없음): ForgePlay 2.1.0에서 Steam판 데이브 더 다이버는 정상적으로 실행되고 플레이되지만 소리가 나오지 않는다고 합니다.",
+        "en": "Community report — playable, but no sound: the Steam version of DAVE THE DIVER launches and plays normally in ForgePlay 2.1.0, but no audio is heard.",
+        "de": "Community-Bericht — spielbar, aber ohne Ton: Die Steam-Version von DAVE THE DIVER startet und läuft mit ForgePlay 2.1.0 normal, es ist jedoch kein Ton zu hören.",
+        "es": "Informe de la comunidad — jugable, pero sin sonido: la versión de Steam de DAVE THE DIVER se inicia y se juega con normalidad en ForgePlay 2.1.0, pero no se oye audio.",
+        "fr": "Signalement communautaire — jouable, mais sans son : la version Steam de DAVE THE DIVER se lance et fonctionne normalement avec ForgePlay 2.1.0, mais aucun son n’est audible.",
+        "ja": "コミュニティ報告 — プレイ可能（音が出ない）：ForgePlay 2.1.0でSteam版DAVE THE DIVERは正常に起動してプレイできますが、音が出ないとのことです。",
+        "zh-Hans": "社区反馈 — 可以游玩，但无声音：Steam 版 DAVE THE DIVER 在 ForgePlay 2.1.0 中可正常启动和游玩，但没有声音。",
+        "zh-Hant": "社群回報 — 可以遊玩，但無聲音：Steam 版 DAVE THE DIVER 在 ForgePlay 2.1.0 中可正常啟動和遊玩，但沒有聲音。"
       },
       "blocker": null
     }
