@@ -2,7 +2,7 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-05",
-  "revision": 5,
+  "revision": 6,
   "testProfiles": [
     {
       "id": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
@@ -209,6 +209,13 @@
     }
   ],
   "games": [
+    {
+      "id": "the-callisto-protocol",
+      "titles": {
+        "en": "The Callisto Protocol",
+        "ko": "칼리스토 프로토콜"
+      }
+    },
     {
       "id": "assassins-creed-brotherhood",
       "titles": {
@@ -2398,6 +2405,28 @@
         "ja": "開発者テスト：ForgePlay 2.1.0のEXE直接実行で動作を確認しました。環境はM4 Pro、ユニファイドメモリ24GB、macOS 27.0.1です。",
         "zh-Hans": "开发者测试：确认可通过 ForgePlay 2.1.0 的 EXE 直接运行功能启动运行。测试环境为 M4 Pro、24GB 统一内存、macOS 27.0.1。",
         "zh-Hant": "開發者測試：確認可透過 ForgePlay 2.1.0 的 EXE 直接執行功能啟動運作。測試環境為 M4 Pro、24GB 統一記憶體、macOS 27.0.1。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "the-callisto-protocol-2-1-0-epic-project-test-20261005",
+      "gameId": "the-callisto-protocol",
+      "launchPlatform": "epic",
+      "testProfileId": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
+      "forgePlayVersion": "2.1.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": "2026-10-05",
+      "notes": {
+        "ko": "개발자 테스트: ForgePlay 2.1.0에서 Epic Games판 칼리스토 프로토콜의 원활한 플레이를 확인했습니다. 테스트 환경은 M4 Pro·통합 메모리 24GB·macOS 27.0.1입니다.",
+        "en": "Developer test: confirmed smooth gameplay in the Epic Games version of The Callisto Protocol with ForgePlay 2.1.0. Test setup: M4 Pro, 24GB unified memory, macOS 27.0.1.",
+        "de": "Entwicklertest: flüssiges Spielen der Epic-Games-Version von The Callisto Protocol mit ForgePlay 2.1.0 bestätigt. Testumgebung: M4 Pro, 24 GB gemeinsamer Speicher, macOS 27.0.1.",
+        "es": "Prueba del desarrollador: juego fluido confirmado en la versión de Epic Games de The Callisto Protocol con ForgePlay 2.1.0. Equipo: M4 Pro, 24GB de memoria unificada y macOS 27.0.1.",
+        "fr": "Test du développeur : jeu fluide confirmé pour la version Epic Games de The Callisto Protocol avec ForgePlay 2.1.0. Configuration : M4 Pro, 24 Go de mémoire unifiée, macOS 27.0.1.",
+        "ja": "開発者テスト：ForgePlay 2.1.0でEpic Games版The Callisto Protocolが快適にプレイできることを確認しました。環境はM4 Pro、ユニファイドメモリ24GB、macOS 27.0.1です。",
+        "zh-Hans": "开发者测试：确认在 ForgePlay 2.1.0 中可流畅游玩 Epic Games 版 The Callisto Protocol。测试环境为 M4 Pro、24GB 统一内存、macOS 27.0.1。",
+        "zh-Hant": "開發者測試：確認在 ForgePlay 2.1.0 中可順暢遊玩 Epic Games 版 The Callisto Protocol。測試環境為 M4 Pro、24GB 統一記憶體、macOS 27.0.1。"
       },
       "blocker": null
     }
