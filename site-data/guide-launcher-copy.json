@@ -1,6 +1,7 @@
 {
   "locales": ["ko", "en", "de", "es", "fr", "ja", "zh-Hans", "zh-Hant"],
   "strings": {
+    "diagnosticsTile": ["포플과 대화(문제진단)", "Talk to Fopl (Diagnostics)", "Mit Fopl sprechen (Diagnose)", "Hablar con Fopl (Diagnóstico)", "Parler à Fopl (Diagnostic)", "ポプルと話す（問題診断）", "与 Fopl 聊天（问题诊断）", "與 Fopl 對話（問題診斷）"],
     "oneClickUpdate": ["원버튼 업데이트", "One-click update", "Ein-Klick-Update", "Actualización con un clic", "Mise à jour en un clic", "ワンクリック更新", "一键更新", "一鍵更新"],
     "diagnostics": ["문제진단(AI)", "Diagnostics (AI)", "Diagnose (KI)", "Diagnóstico (IA)", "Diagnostic (IA)", "問題診断（AI）", "问题诊断（AI）", "問題診斷（AI）"],
     "license": ["라이센스", "Licenses", "Lizenzen", "Licencias", "Licences", "ライセンス", "许可证", "授權條款"],
@@ -9,7 +10,7 @@
     "development": ["개발중입니다.", "In development.", "In Entwicklung.", "En desarrollo.", "En cours de développement.", "開発中です。", "正在开发中。", "開發中。"],
     "captionMac": ["데스크탑 앱 실행", "Open desktop app", "Desktop-App öffnen", "Abrir app de escritorio", "Ouvrir l’app de bureau", "デスクトップアプリを開く", "打开桌面 App", "開啟桌面 App"],
     "captionCatalog": ["지원 게임 찾아보기", "Find supported games", "Unterstützte Spiele", "Buscar juegos compatibles", "Jeux compatibles", "対応ゲームを探す", "查找兼容游戏", "尋找相容遊戲"],
-    "captionDiagnostics": ["실행 로그 · AI 도움", "Run logs · AI help", "Protokolle · KI-Hilfe", "Registros · Ayuda de IA", "Journaux · Aide IA", "実行ログ・AIの支援", "运行日志 · AI 帮助", "執行紀錄 · AI 協助"],
+    "captionDiagnostics": ["사용법 · 로그 분석", "Help · log analysis", "Hilfe · Loganalyse", "Uso · Análisis de logs", "Aide · Analyse des journaux", "使い方・ログ解析", "使用说明 · 日志分析", "使用說明 · 記錄分析"],
     "captionLicense": ["이용 조건 · 고지", "Terms · notices", "Bedingungen · Hinweise", "Condiciones · Avisos", "Conditions · Notices", "利用条件・告知", "条款 · 声明", "條款 · 聲明"],
     "captionApps": ["앱 목록 · App Store", "Apps · App Store", "Apps · App Store", "Apps · App Store", "Apps · App Store", "アプリ一覧・App Store", "App 列表 · App Store", "App 清單 · App Store"],
     "captionWhy": ["제작자 이야기", "The creator’s story", "Die Geschichte dahinter", "La historia del creador", "L’histoire du créateur", "制作者の物語", "创作者的故事", "創作者的故事"],

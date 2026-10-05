@@ -12,7 +12,7 @@
   const actionGlyph=text=>{if(!ui)return null;const pairs=[["Steam 실행","play"],["프로그램 실행","play"],["설정 저장","download"],["저장공간 관리","drive"],["Wine 강제 종료","stop"],["EXE 파일 선택","folder"],["사용법","help"],["루트 선택","folder"],["프로필 권장값 복원","refresh"],["키보드 설정하기","keyboard"],["컨트롤러 확인","controller"],["외장 드라이브/폴더 연결","folderPlus"],["Steam 참고 목록 새로고침","refresh"],["스냅샷 목록 확인","refresh"],["선택한 백업 삭제","trash"],["지원 번들 생성","download"],["최근 로그 다시 분석","refresh"],["AI 로컬 분석 전 미리보기","eye"],["연결 해제","close"],["Rosetta 설치","download"],["Steam 프리픽스 재생성","refresh"],["AWDL 상태 새로고침","refresh"]];return pairs.find(([label])=>U(label)===text)?.[1]||null;};
   const btn = (text, action, cls = "", glyph) => {const b=node("button",cls);b.type="button";const name=glyph===false?null:glyph||actionGlyph(text);if(name)b.append(symbol(name));if(text)b.append(node('span','v2-button-label',text));b.addEventListener("click",action);return b;};
   const external = (text, href) => { const a = node("a", "sim-link", text); a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer"; return a; };
-  let map, ui, copy, demos, launcherCopy, desktopCopy, coordinatorNotice, catalog, appCatalog, notices, shell, dialog, coach, focusBeforeDialog, vrDemo;
+  let map, ui, copy, demos, launcherCopy, desktopCopy, coordinatorNotice, coordinatorDefaults, catalog, appCatalog, notices, shell, dialog, coach, focusBeforeDialog, vrDemo;
   let supporters=[], remoteBanners=new Map(), catalogLoading=false, catalogFailed=false;
   const artworkRoot='site-assets/guide/launcher-current/';
   let surface = "launcher", view = "steam", workspace = "launch", preference = "general", lesson = "free";
@@ -23,11 +23,15 @@
     if(expandedWindow){root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');let branch=root;while(branch.parentElement){for(const sibling of branch.parentElement.children){if(sibling===branch||inertBackground.has(sibling))continue;inertBackground.set(sibling,sibling.inert);sibling.inert=true;}branch=branch.parentElement;if(branch===document.body)break;}}
     else{root.setAttribute('role','region');root.removeAttribute('aria-modal');for(const[element,previous]of inertBackground)element.inert=previous;inertBackground.clear();}
   };
-  const freshConfig = () => ({renderer:"D3DMetal - NVIDIA", neural:false, coordinator:false, method:"HyPER-GAN", resolution:"720p", style:"Cityscapes", passes:1, strength:100, fg:false, interpolation:"Simple", frameCheck:true, gameMode:true, network:"standard", microphone:false, vram:"auto", heap:true});
+  const freshConfig = () => ({renderer:"D3DMetal - NVIDIA", neural:false, coordinator:false, highlights:true, assistantText:true, assistantVoice:true, voiceStyle:"F1", pitch:3.5, rate:1, method:"HyPER-GAN", resolution:"native", style:"Cityscapes", passes:1, strength:100, fg:false, interpolation:"Simple", frameCheck:true, gameMode:true, network:"standard", microphone:false, vram:"auto", heap:true, retina:false});
   const fresh = () => ({configs:{}, saved:{}, ready:true, setup:9, launched:{}, installed:{steam:true}, file:null, installer:false, library:null, profileRoot:false, profileSaved:false, theme:"system", pointer:false, mapping:false, command:"Ctrl", option:"Alt", control:"Ctrl", quitKeys:false, switchKeys:false, spaces:false, screenshots:false, awdl:true, retained:30, logLimit:30, autoCleanup:true, aiEnabled:false, appPlatform:'mac', chat:[], snapshots:[{id:"Recovery-example",protected:false},{id:"Manual-backup-example",protected:true}], snapshotLoaded:false, checkedController:false, expanded:{}, tickerPaused:false});
-  const newState = () => Object.assign(fresh(),{retina:false,savedRetina:false});
+  const newState = () => Object.assign(fresh(),{retina:false,savedRetina:false,profile:"helldivers2",poppleTips:true,advanced:false,coordinatorPrefs:{accepted:false,details:false,mode:"pushToTalk",shortcut:"Fn",position:"frame-check",bubbleColor:"navy",boxColor:"cyan",bubbleWidth:300,bubbleFont:13,maxBox:10,targets:"",instructions:""}});
   let state = newState();
-  const config = () => state.configs[view] ||= freshConfig();
+  const configKey = () => view==='profiles' ? 'profiles-'+state.profile : view;
+  const config = () => state.configs[configKey()] ||= freshConfig();
+  const retinaEnabled = () => view==='profiles' ? config().retina : state.retina;
+  const saveConfig = () => {state.saved[configKey()]=JSON.stringify(config());if(view!=='profiles')state.savedRetina=state.retina;render();};
+  const configSaved = () => state.saved[configKey()]===JSON.stringify(config())&&(view==='profiles'||state.savedRetina===state.retina);
   const U = (key, value) => (ui[locale()]?.[key] ?? ui.en?.[key] ?? key).replace("%@", value ?? "%@");
   const C = key => (copy[locale()]?.[key] ?? copy.en[key] ?? key)
     .replaceAll('{version}',map.version).replaceAll('{build}',String(map.build));
@@ -37,7 +41,7 @@
   const D = key => demos[locale()]?.[key] ?? demos.en[key] ?? key;
   const W = key => window.ForgePlaySite?.message(key) || key;
   const viewName = id => id==='setup'?M('setup'):map.views[id]?.name ? U(map.views[id].title,map.views[id].name) : U(map.views[id]?.title || id);
-  const platform = () => map.views[view]?.name || (view === "steam" ? "Steam" : C("program"));
+  const platform = () => map.views[view]?.name || (["steam","profiles"].includes(view) ? "Steam" : C("program"));
   const note = (parent,text,important=false) => parent.append(node("p",important?"sim-note sim-important":"sim-note",String(text).replaceAll('\\n','\n')));
   const actions = (...buttons) => { const row=node("div","sim-actions"); row.append(...buttons); return row; };
   const card = (title,help,glyph) => {const c=node("section","sim-card");const h=node("div","v2-card-heading");h.append(symbol(glyph||viewGlyphs[view]||'sliders'),node("h3","",title));if(help)h.append(info(title,help));c.append(h);return c;};
@@ -79,26 +83,86 @@
   const renderers = parent => {
     const c=config(), group=node("div","sim-renderers");
     for(const [name,api] of [["D3DMetal - NVIDIA","DirectX 11/12 · 64-bit"],["DXMT","DirectX 10/11"],["DXVK","DirectX 10/11"],["WineD3D","Direct3D 9 · 32-bit · OpenGL"]]){
-      const b=btn("",()=>{c.renderer=name;render();},c.renderer===name?"sim-selected":"");b.id="v2-renderer-"+name.replaceAll(" ","");b.setAttribute("aria-pressed",String(c.renderer===name));const caption=node('span');caption.append(node("strong","",name),node("small","",api));b.append(symbol(c.renderer===name?'checkCircleFill':'circle',18),caption);
+      const b=btn("",()=>{c.renderer=name;if(name==='WineD3D')c.coordinator=false;render();},c.renderer===name?"sim-selected":"");b.id="v2-renderer-"+name.replaceAll(" ","");b.setAttribute("aria-pressed",String(c.renderer===name));const caption=node('span');caption.append(node("strong","",name),node("small","",api));b.append(symbol(c.renderer===name?'checkCircleFill':'circle',18),caption);
       if(name==="DXVK")b.title=M('dxvk');group.append(b);
     }
     const heading=node('div','v2-form-heading');heading.append(node('strong','',U(view==='steam'?"다음 Steam 실행 설정":"렌더러")),info(U("렌더러"),C('backendIntro')+'\n\n'+M('dxvk')));parent.append(heading,group);
+  };
+  const coordinatorSlider = (parent,label,obj,key,min,max,step,suffix='') => {
+    const row=node('label','sim-field v2-coordinator-slider'),input=node('input'),value=node('output');input.type='range';input.id='v2-coordinator-'+key;input.min=min;input.max=max;input.step=step;input.value=obj[key];input.setAttribute('aria-label',label);value.htmlFor=input.id;
+    const display=()=>{value.textContent=String(Math.round(Number(input.value)*100)/100)+suffix;};display();
+    input.addEventListener('input',()=>{obj[key]=Number(input.value);display();});input.addEventListener('change',render);row.append(node('span','',label),input,value);parent.append(row);
+  };
+  const coordinatorColors = (parent,label,prefs,key,colors) => {
+    const group=node('div','v2-coordinator-colors');group.setAttribute('role','group');group.setAttribute('aria-label',label);
+    for(const[value,title,color]of colors){const b=btn(U(title),()=>{prefs[key]=value;render();},'v2-color-choice',false);b.style.setProperty('--swatch',color);b.setAttribute('aria-pressed',String(prefs[key]===value));group.append(b);}parent.append(node('strong','',label),group);
+  };
+  const coordinatorEditor = targets => {
+    const p=state.coordinatorPrefs,key=targets?'targets':'instructions',title=U(targets?'검출 대상 설정':'게임 안내 지시문');
+    const defaultValue=()=>targets?coordinatorDefaults.targets.join(', '):coordinatorDefaults.instructions[locale()==='ko'?'ko':'en'];
+    show(title,M(targets?'targetHelp':'instructionHelp'));
+    const input=node('textarea','v2-coordinator-editor'),status=node('p','sim-note');input.rows=targets?3:10;input.maxLength=targets?2048:1500;input.value=p[key]||defaultValue();input.setAttribute('aria-label',title);
+    const apply=btn(U('적용'),()=>{p[key]=input.value.trim()===defaultValue()?'':input.value.trim();dialog.close();render();},'sim-primary','check');
+    const check=()=>{const values=input.value.split(',').map(v=>v.trim()).filter(Boolean);apply.disabled=targets&&(values.length<1||values.length>5);status.textContent=targets?M('targetCount').replace('{count}',String(values.length)):`${[...input.value].length} / 1500`;};input.addEventListener('input',check);check();
+    dialog.append(input,status,actions(btn(U(targets?'기본 검출 대상 복원':'기본 지시문 복원'),()=>{input.value=defaultValue();check();},'','refresh'),btn(U('취소'),()=>dialog.close()),apply));
+  };
+  const coordinatorNoticeView = (c,enablePending=false) => {
+    show(U('AI Coordinator 사용 고지'),M('legalHelp')+'\n\n'+M('restrictionHelp'));
+    const legal=node('section','v2-coordinator-notice');
+    for(const[title,href]of [[M('noticeKorean'),'site-data/guide-notices/coordinator.ko.txt'],[M('noticeEnglish'),'site-data/guide-notices/coordinator.en.txt'],['GPL-3.0-only','LICENSES/GPL-3.0-only.txt'],['OWLv2 · Apache-2.0','site-data/guide-notices/owlv2-license.txt'],['Supertonic2 · OpenRAIL-M','site-data/guide-notices/supertonic2-license.txt']])legal.append(external(title,href));
+    const list=node('details'),items=node('ul');list.append(node('summary','',M('restrictions')));for(const name of coordinatorNotice.restrictedGames)items.append(node('li','',name));list.append(items);legal.append(list);dialog.append(legal);
+    if(enablePending){const label=node('label','v2-demo-consent'),check=node('input');check.type='checkbox';label.append(check,node('span','',M('demoConsent')));const enable=btn(M('demoEnable'),()=>{state.coordinatorPrefs.accepted=true;state.coordinatorPrefs.details=true;c.coordinator=true;dialog.close();render();},'sim-primary');enable.disabled=true;check.addEventListener('change',()=>{enable.disabled=!check.checked;});dialog.append(label,actions(btn(U('취소'),()=>dialog.close()),enable));}
+  };
+  const coordinatorDetails = (parent,c) => {
+    const p=state.coordinatorPrefs;
+    select(parent,U('안내 방식'),p,'mode',[['automatic',U('필요할 때 자동 안내')],['pushToTalk',U('자동 안내 + 단축키 질문')],['continuous',U('연속 대화')]],null,M('conversationHelp'));
+    parent.append(btn(U('음성 질문 사용법'),()=>show(U('음성 질문 사용법'),M('conversationHelp')+'\n\n'+M('temporaryHelp')),'','help'));
+    if(p.mode!=='automatic'){
+      if(p.mode==='pushToTalk')select(parent,U('질문 단축키'),p,'shortcut',['Fn','F16','F17','F18'].map(n=>[n,n]),null,M('shortcutHelp'));
+      note(parent,M('temporaryHelp'));parent.append(actions(...['마이크 권한 확인',...(p.mode==='pushToTalk'?['단축키 권한 확인']:[]),'준비 상태 새로고침','macOS 음성 인식 데이터 설치'].map(key=>btn(U(key),()=>show(U(key),M('permissionDemo'))))));
+    }
+    parent.append(btn(U('게임 안내 지시문'),()=>coordinatorEditor(false),'','chat'));note(parent,U(p.instructions?'사용자 게임 안내 지시문 사용 중':'기본 게임 안내 지시문 사용 중'));
+    if(c.coordinator&&c.assistantVoice){
+      select(parent,U('안내 목소리'),{voice:'popple'},'voice',[['popple',U('포플 목소리')],['future',U('다른 목소리 · 추가 예정'),true]],null,M('voiceHelp'));
+      select(parent,U('음색'),c,'voiceStyle',['F1','F2','F3','F4','F5'].map(n=>[n,n+(n==='F1'?' · '+U('기본값'):'')]));
+      coordinatorSlider(parent,U('피치'),c,'pitch',0,6,.5,' '+U('반음'));coordinatorSlider(parent,U('말 빠르기'),c,'rate',.75,1.35,.05,'×');
+      parent.append(actions(btn(U('미리듣기'),()=>show(U('미리듣기'),M('voiceDemo')),'','volume'),btn(M('resetDefaults'),()=>{Object.assign(c,{voiceStyle:'F1',pitch:3.5,rate:1});render();},'','refresh')));note(parent,M('voiceHelp'));
+    }
+    const positions=[['top-left','왼쪽 위'],['top','위 가운데'],['top-right','오른쪽 위'],['left','왼쪽 가운데'],['right','오른쪽 가운데'],['bottom-left','왼쪽 아래'],['bottom','아래 가운데'],['bottom-right','오른쪽 아래']];
+    parent.append(node('strong','',U('말풍선 위치')));const map=node('div','v2-bubble-position-map');map.append(node('span','',U('게임 화면')));
+    for(const[value,title]of positions){const b=btn('',()=>{p.position=value;render();},'v2-position-choice','chat');b.dataset.position=value;b.setAttribute('aria-label',U(title));b.setAttribute('aria-pressed',String(p.position===value));b.title=U(title);map.append(b);}parent.append(map);
+    const restorePosition=btn(U('Frame Check 아래 (기본)'),()=>{p.position='frame-check';render();},'',p.position==='frame-check'?'checkCircleFill':'circle');restorePosition.setAttribute('aria-pressed',String(p.position==='frame-check'));parent.append(restorePosition);
+    note(parent,U(p.position==='frame-check'?'Frame Check 아래 (기본)':positions.find(v=>v[0]===p.position)[1]));
+    coordinatorColors(parent,U('말풍선 색상'),p,'bubbleColor',[['navy','짙은 파랑','#06131c'],['charcoal','차콜','#141414'],['copper','구리색','#3b1f14'],['teal','청록색','#082b21'],['plum','자주색','#301c47']]);
+    coordinatorSlider(parent,U('말풍선 폭'),p,'bubbleWidth',240,560,20,' pt');coordinatorSlider(parent,U('말풍선 글자 크기'),p,'bubbleFont',11,22,1,' pt');
+    const preview=node('div','v2-bubble-sample',ui[locale()==='ko'?'ko':'en']['준비됐어. 같이 가보자!']);preview.dataset.color=p.bubbleColor;preview.style.width=p.bubbleWidth+'px';preview.style.fontSize=p.bubbleFont+'px';parent.append(preview);
+    parent.append(btn(U('말풍선 크기 기본값'),()=>{p.bubbleWidth=300;p.bubbleFont=13;render();},'','refresh'));note(parent,M('appearanceHelp'));
+    select(parent,U('인식 모델'),{model:'OWLv2'},'model',[['OWLv2','OWLv2'],...['Grounding DINO Tiny','SigLIP 2','TinyCLIP'].map(n=>[n,n+' · '+U('추가될 수 있음'),true])],null,M('modelHelp'));
+    parent.append(btn(U('검출 대상 설정'),()=>coordinatorEditor(true),'','search'));note(parent,U(p.targets?'사용자 지정 검출 대상 사용 중':'기본 검출 대상 사용 중'));
+    coordinatorColors(parent,U('캐릭터 박스 색상'),p,'boxColor',[['cyan','하늘색','#33ccff'],['green','초록색','#4dff80'],['orange','주황색','#ffa633'],['pink','분홍색','#ff66bf'],['white','흰색','#ffffff']]);
+    coordinatorSlider(parent,U('최대 박스 크기'),p,'maxBox',5,100,1,'%');note(parent,M('boxHelp'));
+    parent.append(actions(btn(U('크기 비교 보기'),()=>{show(U('박스 크기 비교'),M('boxHelp'));const grid=node('div','v2-box-area-grid');for(const value of [5,10,15,25,35,50]){const figure=node('figure'),screen=node('div'),area=node('i');area.style.width=Math.sqrt(value/100)*100+'%';area.style.height=Math.sqrt(value/100)*100+'%';screen.append(area);figure.append(screen,node('figcaption','',value+'%'));grid.append(figure);}dialog.append(grid);} ,'','grid'),btn(U('기본값 10%'),()=>{p.maxBox=10;render();},'','refresh')));
+    note(parent,M('coordinatorLanguage'));note(parent,M('liveSettings'));
   };
   const coordinatorControl = (parent,c) => {
     const row=node('div','sim-toggle-row'),label=node('div','v2-control-label');
     label.append(node('span','',M('coordinator')),info(M('coordinator'),M('coordinatorHelp')));
     const control=btn('',()=>{
       if(c.coordinator){c.coordinator=false;render();return;}
-      show(M('coordinator'),M('coordinatorHelp')+'\n\n'+M('restrictionHelp'),[[M('demoEnable'),()=>{c.coordinator=true;c.neural=false;c.frameCheck=true;render();}]]);
-      const legal=node('section','v2-coordinator-notice');legal.append(node('h3','',M('legal')),node('p','',M('legalHelp')));
-      for(const[title,href]of [['한국어 · 이용 고지','site-data/guide-notices/coordinator.ko.txt'],['English · Use notice','site-data/guide-notices/coordinator.en.txt'],['GPL-3.0-only','LICENSES/GPL-3.0-only.txt'],['OWLv2 · Apache-2.0','site-data/guide-notices/owlv2-license.txt'],['Supertonic2 · OpenRAIL-M','site-data/guide-notices/supertonic2-license.txt']])legal.append(external(title,href));
-      const list=node('details'),items=node('ul');list.append(node('summary','',M('restrictions')));for(const name of coordinatorNotice.restrictedGames)items.append(node('li','',name));list.append(items);legal.append(list);dialog.append(legal);
+      if(state.coordinatorPrefs.accepted){c.coordinator=true;state.coordinatorPrefs.details=true;render();}else coordinatorNoticeView(c,true);
     },'sim-switch');control.id='v2-coordinator-toggle';control.setAttribute('role','switch');control.setAttribute('aria-label',M('coordinator'));control.setAttribute('aria-checked',String(c.coordinator));control.append(node('span'));
-    row.append(label,control);parent.append(row);if(c.coordinator)note(parent,M('detailsUnavailable'));
+    control.disabled=!c.coordinator&&(c.neural||c.renderer==='WineD3D');row.append(label,control);parent.append(row);
+    if(c.neural)note(parent,U('DLSS5를 먼저 끄면 AI Coordinator를 켤 수 있습니다.'),true);
+    if(c.renderer==='WineD3D')note(parent,U('AI Coordinator는 D3DMetal, DXMT, DXVK에서 사용할 수 있습니다.'),true);
+    if(c.coordinator){toggle(parent,U('영역 박스와 은은한 강조'),c,'highlights',M('boxHelp'));toggle(parent,U('말풍선 안내'),c,'assistantText',M('appearanceHelp'));toggle(parent,U('음성 안내'),c,'assistantVoice',M('voiceHelp'));}
+    parent.append(btn(U('AI Coordinator 사용 금지 목록'),()=>coordinatorNoticeView(c),'','list'));
+    const details=node('details','v2-disclosure v2-coordinator-details');details.open=state.coordinatorPrefs.details;details.append(node('summary','',U('Coordinator 세부 설정')));details.addEventListener('toggle',()=>{state.coordinatorPrefs.details=details.open;});const body=node('div','v2-coordinator-settings');coordinatorDetails(body,c);details.append(body);parent.append(details);
   };
   const processing = parent => {
     const c=config(), block=node("div","v2-processing");
-    toggle(block,U("DLSS5 Emulation (베타)"),c,"neural",helpText("dlss5")+'\n\n'+M('resolutionHelp'),on=>{if(on){c.frameCheck=true;c.coordinator=false;}});
+    toggle(block,U("DLSS5 Emulation (베타)"),c,"neural",helpText("dlss5")+'\n\n'+M('resolutionHelp'),on=>{if(on)c.frameCheck=true;});
+    block.querySelector('[data-option="neural"] button[role="switch"]').disabled=c.coordinator;
+    if(c.coordinator)note(block,U('AI Coordinator를 먼저 끄면 DLSS5를 켤 수 있습니다.'),true);
     if(c.neural){
       select(block,U("보정 방식"),c,"method",[["HyPER-GAN","HyPER-GAN"],["MLX-DLSS","MLX-DLSS Neural Rendering"]]);
       if(c.method==="MLX-DLSS")note(block,C("mlx"),true);
@@ -114,15 +178,15 @@
     if(c.fg){select(block,U("프레임 생성 방식"),c,"interpolation",["Simple","Motion Lite","Motion Quality","Motion Repair"].map(n=>[n,U(n)]),null,U({"Simple":"같은 위치의 두 화면을 섞습니다. 부담이 가장 적지만 움직이는 물체가 겹쳐 보일 수 있습니다.","Motion Lite":"작은 영역의 움직임을 찾아 중간 위치에 표시합니다. 복잡한 경계에서는 오차가 생길 수 있습니다.","Motion Quality":"더 촘촘하게 움직임을 추정합니다. 세밀한 움직임에 유리하지만 GPU 부담이 늘어납니다.","Motion Repair":"정밀 추정 후 작은 빈틈과 어긋난 경계를 원본 화면에서 다시 찾아 복원합니다. 두 원본에 없는 내용은 복원할 수 없습니다."}[c.interpolation]));
       const fps=actions(btn("120 FPS",()=>show("120 FPS",C("target")),"sim-selected"));for(const n of [144,240]){const b=btn(`${n} FPS · ${U("준비 중")}`,()=>{});b.disabled=true;fps.append(b);}block.append(node("p","sim-note",U("목표 표시 FPS")),fps);
     }
-    coordinatorControl(block,c);
     toggle(block,"Frame Check",c,"frameCheck",helpText("framecheck"));
+    coordinatorControl(block,c);
     parent.append(block);
   };
   const launchView = parent => {
     const c=config(), name=platform(), title=view==="steam"?U("Steam 실행"):view==="exe"?U("프로그램 실행"):U("%@ 실행",name);
     const box=card(U("백엔드 선택 후 실행"),helpText(view));
-    const launch=btn(title,()=>{if(view!=="steam"&&view!=="exe"&&!state.installed[view]){show(C("installTitle"),C("installNotice"),[[C("exampleInstaller"),()=>{state.installed[view]=true;render();}]]);return;}state.launched[view]=true;render();show(title,view==="steam"?D("launch"):view==="exe"?D("exeLaunch"):C("platformLaunch"));},"sim-primary",'play');launch.dataset.launch='';launch.disabled=!state.ready||(view==="exe"&&!state.file);
-    box.append(actions(launch,btn(U("설정 저장"),()=>{state.saved[view]=JSON.stringify(c);state.savedRetina=state.retina;render();}),btn(view==="exe"?U("EXE 파일 선택"):U("저장공간 관리"),()=>view==="exe"?chooseFile():setWorkspace("storage")),btn(U("Wine 강제 종료"),()=>show(U("Wine 강제 종료"),C("stopNotice"),[[C("confirmExample"),()=>{state.launched={};render();}]]))));
+    const launch=btn(title,()=>{if(!['steam','profiles','exe'].includes(view)&&!state.installed[view]){show(C("installTitle"),C("installNotice"),[[C("exampleInstaller"),()=>{state.installed[view]=true;render();}]]);return;}state.launched[configKey()]=true;render();show(title,['steam','profiles'].includes(view)?D("launch"):view==="exe"?D("exeLaunch"):C("platformLaunch"));},"sim-primary",'play');launch.dataset.launch='';launch.disabled=!state.ready||(view==="exe"&&!state.file);
+    box.append(actions(launch,btn(U("설정 저장"),saveConfig),btn(view==="exe"?U("EXE 파일 선택"):U("저장공간 관리"),()=>view==="exe"?chooseFile():view==='profiles'?show(U('저장공간 관리'),helpText('storage')):setWorkspace("storage")),btn(U("Wine 강제 종료"),()=>show(U("Wine 강제 종료"),C("stopNotice"),[[C("confirmExample"),()=>{state.launched={};render();}]]))));
     if(!state.ready)box.append(btn(C("setupNeeded"),()=>go("setup")));
     if(view==="exe"&&state.file){box.append(node("p","sim-file",state.file));if(state.installer)note(box,C("installerMode"),true);}
     const status=node('div','v2-launch-status');status.append(badge(D(state.ready?'ready':'waiting'),state.ready?'ok':'warning'),info(U("최근 Steam 실행 상태"),state.launched[view]?C('launchResult'):C('readyExample')));box.append(status);
@@ -133,9 +197,9 @@
     select(box,U("게임 비디오 메모리 (베타)"),c,"vram",[["auto",U("자동")],...[2,4,8,12,16].map(n=>[String(n),n+" GB"])],null,U("게임에 알려줄 비디오 메모리 용량입니다. 실제 메모리를 미리 차지하지 않습니다. 자동은 Mac 통합 메모리의 절반을 기준으로 2~16 GB 안에서 정하며, 변경한 값은 다음 실행부터 적용됩니다."));
     const keyboard=node('div','v2-native-action-row');keyboard.append(symbol('keyboard'),node('span','',U("키보드 입력")),node('small','',U("시스템 기본값")),btn(U("설정하기"),()=>openPreferences('input')));keyboard.lastChild.setAttribute('aria-label',U('키보드 설정하기'));box.append(keyboard);
     const controller=node('div','v2-native-action-row');controller.append(symbol('controller'),node('span','',U('컨트롤러')),badge(U('미확인'),'neutral'),btn(U("컨트롤러 확인"),()=>{state.checkedController=true;render();show(U("컨트롤러 확인"),C("controller"));}));box.append(controller);
-    const saved=state.saved[view]===JSON.stringify(c)&&state.savedRetina===state.retina,summary=node('div','v2-configuration-summary');summary.append(symbol(saved?'download':'sliders'),node('strong','',U(saved?"다음 실행 초안 · 저장됨":"다음 실행 초안 · 저장되지 않은 변경")),info(U('설정 저장'),C(saved?'saved':'unsaved')));summary.append(node('small','',`${c.renderer} · ${c.fg?'FG':'FG OFF'} · ${c.frameCheck?'Frame Check':'Frame Check OFF'} · ${c.network==='standard'?U('표준 네트워크'):c.network}`));box.append(summary);
+    const saved=configSaved(),summary=node('div','v2-configuration-summary');summary.append(symbol(saved?'download':'sliders'),node('strong','',U(saved?"다음 실행 초안 · 저장됨":"다음 실행 초안 · 저장되지 않은 변경")),info(U('설정 저장'),C(saved?'saved':'unsaved')));summary.append(node('small','',`${c.renderer} · ${c.fg?'FG':'FG OFF'} · ${c.frameCheck?'Frame Check':'Frame Check OFF'} · ${c.network==='standard'?U('표준 네트워크'):c.network}`));box.append(summary);
     const recent=node('div');note(recent,state.launched[view]?C('launchResult'):U('미확인'));recent.append(btn(U('문제 진단 (베타)'),()=>show(L('diagnostics'),M('diagnosticsGuide')),'','diagnostics'));box.append(disclosure(U('최근 Steam 실행 상태'),view+'-recent',recent));
-    const advanced=node('div');advanced.append(btn(U('Steam 프리픽스 재생성'),()=>show(U('Steam 프리픽스 재생성'),D('rebuild'))));box.append(disclosure(U('고급 정보'),view+'-advanced',advanced));
+    if(state.advanced){const advanced=node('div');advanced.append(btn(U('Steam 프리픽스 재생성'),()=>show(U('Steam 프리픽스 재생성'),D('rebuild'))));box.append(disclosure(U('고급 정보'),view+'-advanced',advanced));}
     if(state.launched[view])box.append(btn(U("문제 진단 (베타)"),()=>show(L("diagnostics"),M("diagnosticsGuide"))));
     parent.append(box);
   };
@@ -164,15 +228,28 @@
     if(state.ready)box.append(btn(U("Steam 실행 화면 열기"),()=>go("steam"),"sim-primary"));parent.append(box);
   };
   const profilesView = parent => {
-    const c=config(),box=card(U("게임 프로필"),helpText("profiles"));box.append(node("strong","","HELLDIVERS 2 · App ID 553850"));note(box,C("profile"));
-    box.append(actions(btn(U("루트 선택"),()=>show(U("루트 선택"),D("fileHint"),[[C("confirmExample"),()=>{state.profileRoot=true;render();}]])),btn(U("프로필 권장값 복원"),()=>{state.configs.profiles=freshConfig();render();}),btn(U("설정 저장"),()=>{state.saved.profiles=JSON.stringify(c);state.savedRetina=state.retina;render();})));
+    const picker=card(U('게임 프로필'),helpText('profiles'));select(picker,U('게임 프로필'),state,'profile',[['helldivers2','HELLDIVERS 2 · App ID 553850'],['witcher3','The Witcher 3 Remastered · DX12']]);parent.append(picker);
+    if(state.profile==='witcher3'){
+      const box=card('The Witcher 3 Remastered · DX12');
+      note(box,U('먼저 일반 Steam 실행을 사용하세요. D3DMetal에서 게임 창이 검게 멈출 때만 이 시험 보완을 고려하세요. Steam 자체 실행 실패나 로그인 문제를 해결하는 기능은 아닙니다.'));
+      note(box,U('보완을 적용하거나 복구하기 전에 위처 3 게임을 정상 종료하세요. Steam 클라이언트는 켜 두어도 됩니다.'));
+      box.append(btn(U('게임 폴더 선택'),()=>show(U('게임 폴더 선택'),D('fileHint'),[[C('confirmExample'),()=>{state.witcherFolder=true;render();}]]),'','folder'));
+      note(box,state.witcherFolder?'The Witcher 3 · '+D('example'):U('게임 폴더를 선택하세요.'));
+      const apply=btn(U('위처 3 보완 적용'),()=>show(U('위처 3 호환성 보완을 적용할까요?'),U('선택한 게임 폴더의 FidelityFX 로더를 보존한 뒤 교체합니다. 일부 그래픽 효과가 생략될 수 있으며, 보완 해제로 원본을 복구할 수 있습니다. 게임 파일이 업데이트되었으면 자동으로 덮어쓰지 않습니다.')+'\n\n'+D('notice'),[[C('confirmExample'),()=>{state.witcherPatched=true;render();}]]));apply.disabled=!state.witcherFolder;
+      const restore=btn(U('보완 해제·원본 복구'),()=>show(U('보완 해제·원본 복구'),D('notice'),[[C('confirmExample'),()=>{state.witcherPatched=false;render();}]]));restore.disabled=!state.witcherPatched;
+      box.append(actions(apply,restore,btn(U('상태 확인'),()=>show(U('상태 확인'),state.witcherPatched?U('위처 3 보완이 적용되어 있고 원본이 보존되어 있습니다.'):D('notice'))),btn(U('이전 보완 기록 정리'),()=>show(U('이전 보완 기록 정리'),U('현재 게임 파일은 그대로 두고 ForgePlay가 보존했던 이전 로더와 보완 기록만 제거합니다.')+'\n\n'+D('notice')))));
+      if(state.witcherPatched)note(box,U('위처 3 보완이 적용되어 있고 원본이 보존되어 있습니다.')+' · '+D('example'));
+      note(box,U('보완은 원본 복구 전까지 유지됩니다. 아래에서 D3DMetal을 선택한 뒤 Steam을 실행하세요. 실행 옵션과 Retina 선택은 이 게임의 호환성 설정에 별도로 저장됩니다.'));parent.append(box);launchView(parent);return;
+    }
+    const c=config(),box=card('HELLDIVERS 2',helpText('profiles'));note(box,C("profile"));
+    box.append(actions(btn(U("루트 선택"),()=>show(U("루트 선택"),D("fileHint"),[[C("confirmExample"),()=>{state.profileRoot=true;render();}]])),btn(U("프로필 권장값 복원"),()=>{state.configs[configKey()]=freshConfig();render();}),btn(U("설정 저장"),saveConfig)));
     note(box,state.profileRoot?C("rootConnected"):C("rootNeeded"));renderers(box);toggle(box,'Game Mode',c,'gameMode',C('gameMode'));
     toggle(box,'Heap zero memory',c,'heap',U("이 게임 프로필의 메모리 호환성 선택이며 다른 Steam 실행 구성과 독립적으로 저장됩니다."));
     note(box,U("선택한 매니페스트 루트 안에서 정확히 일치하는 GameGuard 구성요소 또는 파일 이름만 게임 렌더러 환경과 렌더러 DLL 재정의에서 제외됩니다."));
     select(box,U("네트워크 (베타)"),c,'network',[["standard",U("표준 네트워크")],["Ethernet",U("Ethernet 호환성")],["Wi-Fi",U("Wi-Fi 호환성")]]);
     toggle(box,U("오디오 입력 (베타)"),c,'microphone',C('microphone'));
     select(box,U("게임 비디오 메모리 (베타)"),c,'vram',[["auto",U("자동")],...[2,4,8,12,16].map(n=>[String(n),n+' GB'])]);
-    const launch=btn(U("Steam 실행"),()=>show(U("Steam 실행"),D("launch")),"sim-primary",'play');launch.disabled=!state.profileRoot||!state.ready;box.append(launch);note(box,state.saved.profiles===JSON.stringify(c)?C('saved'):C('unsaved'));parent.append(box);
+    const launch=btn(U("Steam 실행"),()=>show(U("Steam 실행"),D("launch")),"sim-primary",'play');launch.disabled=!state.profileRoot||!state.ready;box.append(launch);note(box,configSaved()?C('saved'):C('unsaved'));parent.append(box);
   };
   const dashboardView = parent => {
     const workflow=card(U(state.ready?'Windows용 Steam 실행':'다음 작업'),C('dashboard'),'playCircle');workflow.classList.add('v2-workflow');workflow.append(badge(U(state.ready?'실행 준비 완료':'준비 필요'),state.ready?'ok':'warning'));note(workflow,U('Windows용 Steam을 열고 Steam 라이브러리에서 게임을 실행합니다.'));workflow.append(actions(btn(U(state.ready?'백엔드 선택 후 실행':'설정 계속'),()=>go(state.ready?'steam':'setup'),'','sliders'),btn(U('문제 진단 (베타)'),()=>show(L('diagnostics'),M('diagnosticsGuide')),'','diagnostics')));parent.append(workflow);
@@ -224,8 +301,11 @@
     if(preference==="general"){
       const general=node('div','v2-general-grid'),right=node('div'),language=card(U('앱 언어'),C('preferences'),'globe'),grid=node('div','v2-language-grid');for(const l of locales){const title=({ko:'한국어',en:'English',de:'Deutsch',es:'Español',fr:'Français',ja:'日本語','zh-Hans':'简体中文','zh-Hant':'繁體中文'})[l];const b=btn(title,()=>{const master=document.querySelector('[data-language-select]');master.value=l;master.dispatchEvent(new Event('change',{bubbles:true}));},l===locale()?'sim-selected':'',l===locale()?'checkCircle':'circle');b.setAttribute('aria-pressed',String(l===locale()));grid.append(b);}language.append(grid);general.append(language,right);parent.append(general);
       const appearance=card(U('화면 스타일'),null,'palette'),themes=node('div','sim-subnav');for(const[key,label]of [['system','시스템 설정 따르기'],['light','라이트'],['dark','다크']]){const b=btn(U(label),()=>{state.theme=key;render();});b.setAttribute('aria-pressed',String(state.theme===key));themes.append(b);}appearance.append(themes);right.append(appearance);
+      toggle(appearance,U('포플 자동 말풍선'),state,'poppleTips',U('앱이 앞에 있을 때 가끔 인사와 현재 화면의 사용 팁을 보여줍니다. 소리는 나지 않습니다.'));
+      toggle(appearance,U('고급 정보 표시'),state,'advanced');
       const ai=card(U('문제 진단 (베타)'),C('chatNotice'),'diagnostics');toggle(ai,U('AI 문제 진단(베타) 사용'),state,'aiEnabled',C('chatNotice'));ai.append(badge(U('미확인'),'neutral'),node('p','sim-note','Apple Foundation Models'));right.append(ai);return;
     }else if(preference==="input"){
+      note(box,U('입력 보호는 일반 Steam과 Steam 호환성 실행에 적용됩니다. 설정을 바꾼 뒤 Steam을 완전히 종료하고 다시 실행하세요. 이미 실행 중인 Steam과 다른 플랫폼·EXE에는 새 설정이 적용되지 않습니다.'));
       toggle(box,U("게임이 전면일 때 macOS 포인터 숨기기 (베타)"),state,"pointer");toggle(box,U("게임용 보조키 매핑 사용"),state,"mapping");
       if(state.mapping)for(const key of ["command","option","control"])select(box,key[0].toUpperCase()+key.slice(1),state,key,[["Ctrl","Ctrl"],["Alt","Alt"],["none",U("전달 안 함")]]);
       for(const[key,label]of [["quitKeys","게임 중 앱 종료·창 관리 단축키 차단"],["switchKeys","게임 중 앱 전환·검색 단축키 차단"],["spaces","게임 중 Mission Control·Spaces 키보드 단축키 차단"],["screenshots","게임 중 macOS 기본 스크린샷 단축키 차단"]])toggle(box,U(label),state,key);
@@ -258,11 +338,12 @@
     group.append(button,node('strong','',M('fopl')),node('small','','ForgePlay Mascot'));return group;
   };
   const retinaControl = () => {
-    const row=node('div','v2-retina-control'),control=btn('',()=>{state.retina=!state.retina;render();},'sim-switch',false);
-    control.id='v2-retina-toggle';control.setAttribute('role','switch');control.setAttribute('aria-label',M('retina'));control.setAttribute('aria-checked',String(state.retina));control.append(node('span'));
-    row.append(node('span','v2-retina-label',M('retina')),control,node('small','',M(state.retina?'on':'off')));
-    if(state.retina!==state.savedRetina)row.append(node('small','v2-retina-unsaved',M('unsaved')));
-    row.append(info(M('retina'),M('retinaHelp')+'\n\n'+M('resolutionHelp')));return row;
+    const enabled=retinaEnabled(),row=node('div','v2-retina-control'),control=btn('',()=>{if(view==='profiles')config().retina=!enabled;else state.retina=!enabled;render();},'sim-switch',false);
+    control.id='v2-retina-toggle';control.setAttribute('role','switch');control.setAttribute('aria-label',M('retina'));control.setAttribute('aria-checked',String(enabled));control.append(node('span'));
+    row.append(node('span','v2-retina-label',M('retina')),control,node('small','',M(enabled?'on':'off')));
+    const saved=view==='profiles'?JSON.parse(state.saved[configKey()]||'{}').retina===enabled:state.retina===state.savedRetina;
+    if(!saved)row.append(node('small','v2-retina-unsaved',M('unsaved')));
+    row.append(info(M('retina'),U('Retina는 기본 꺼짐입니다. 켜면 Windows 게임에 더 높은 실제 픽셀 해상도가 제공될 수 있으며, 4K 지원은 게임과 디스플레이에 따라 다릅니다. 일반 실행 화면은 설정을 공유하고 Steam 호환성 실행은 게임별로 따로 저장합니다. 설정 저장 후 Windows 런처와 게임을 종료하고 다시 실행하세요.')+'\n\n'+M('resolutionHelp')));return row;
   };
   const renderMac = () => {
     const utility=surface==='utility',bar=node("div","sim-titlebar"),leading=node('div','v2-toolbar-leading');leading.append(windowLights(utility?closeUtility:null));
@@ -281,7 +362,7 @@
     const headerActions=node('div','v2-view-actions');if(hasRetina)headerActions.append(retinaControl());
     const usage=()=>show(viewName(view),(view==='setup'?M('readiness'):C(['battlenet','epic','stove'].includes(view)?'hintPlatform':"hint"+view[0].toUpperCase()+view.slice(1)))+"\n\n"+helpText(view)+(hasRetina?'\n\n'+M('retinaHelp')+'\n\n'+M('resolutionHelp'):'')+'\n\n'+M('diagnosticsGuide'));
     headerActions.append(btn(U("사용법"),usage));heading.append(headingCopy,headerActions);body.append(heading);
-    if(hasRetina&&state.retina)body.append(node('p','v2-retina-warning',M('resolutionHelp')));
+    if(hasRetina&&retinaEnabled())body.append(node('p','v2-retina-warning',M('resolutionHelp')));
     if(launchPages.includes(view)){const tabs=node("div","sim-subnav");for(const[id,key,glyph]of [["launch","실행 및 그래픽",'playCircle'],["storage","저장공간",'drive'],["components","구성요소",'puzzle']]){const b=btn(U(key),()=>setWorkspace(id),'',glyph);b.setAttribute("aria-pressed",String(workspace===id));tabs.append(b);}body.append(tabs);}
     const content=node("div","sim-content");content.tabIndex=-1;content.dataset.v2Content=view;
     if(launchPages.includes(view)){({launch:launchView,storage:storageView,components:componentsView})[workspace](content);}
@@ -298,7 +379,7 @@
     ['license','logs','license','captionLicense'],['apps','grid',null,'captionApps'],
     ['founder','bulb',null,'captionWhy'],['updates','refresh','updates','coming']
   ];
-  const tileLabel = id => ({mac:'Mac',vr:'VR',retro:'Old Game',console:'ConSole Game',catalog:C('launcherCompatibility'),like:C('like'),sponsor:C('sponsor'),diagnostics:L('diagnostics'),license:L('license'),apps:U('제작자의 다른 앱'),founder:L('why'),updates:L('oneClickUpdate')})[id];
+  const tileLabel = id => ({mac:'Mac',vr:'VR',retro:'Old Game',console:'ConSole Game',catalog:C('launcherCompatibility'),like:C('like'),sponsor:C('sponsor'),diagnostics:L('diagnosticsTile'),license:L('license'),apps:U('제작자의 다른 앱'),founder:L('why'),updates:L('oneClickUpdate')})[id];
   const openFounder = async () => {
     show(L('why'),L('whyHelp'));dialog.dataset.kind='founder';dialog.classList.add('v2-founder-dialog');
     const selected=locale(),navigation=node('details','v2-founder-toc'),body=node('div','v2-founder-body',L('loading'));
@@ -354,7 +435,8 @@
       const title=tileLabel(id),action=caption?L(caption):id==='like'?'GitHub Star':'GitHub Sponsors';
       b.setAttribute('aria-label',title);b.title=title+' · '+action;
       if(art)b.append(window.ForgePlayGuideIcons.backdrop(id));
-      b.append(image,symbol(glyph,30),node('strong','',title),node('small','',action));tiles.append(b);
+      const visibleTitle=id==='diagnostics'?title.replace(/\s*([（(])/u,'\n$1'):title;
+      b.append(image,symbol(glyph,30),node('strong','',visibleTitle),node('small','',action));tiles.append(b);
     }grid.append(tiles);
     const news=node('aside','v2-launcher-news');renderNews(news);grid.append(news);shell.append(grid);
     const banners=node('div','v2-launcher-banners'),brandPanel=node('div','v2-banner v2-banner-brand'),brandText=node('div');
@@ -406,15 +488,15 @@
     for(const e of document.querySelectorAll('[data-guide2-text]'))e.textContent=C(e.dataset.guide2Text);
     document.title='ForgePlay — '+C('title');document.querySelector('[data-guide-nav]')?.setAttribute('aria-current','page');
     for(const selector of ['meta[name="description"]','meta[property="og:description"]','meta[name="twitter:description"]'])document.querySelector(selector)?.setAttribute('content',C('pageIntro'));
-    for(const b of root.querySelectorAll('[data-v2-lesson]')){b.textContent=C(b.dataset.v2Lesson);b.setAttribute('aria-pressed',String(lesson===b.dataset.v2Lesson));}
+    for(const b of root.querySelectorAll('[data-v2-lesson]')){b.textContent=b.dataset.v2Lesson==='lessonCoordinator'?M('coordinatorLesson'):C(b.dataset.v2Lesson);b.setAttribute('aria-pressed',String(lesson===b.dataset.v2Lesson));}
     if(preferencesOpen&&dialog.open)renderPreferences();
     if(focusId)document.getElementById(focusId)?.focus({preventScroll:true});else if(nav)root.querySelector(`[data-v2-nav="${nav}"]`)?.focus({preventScroll:true});
     else if(focusText)[...(dialog.open?dialog:root).querySelectorAll('button')].find(b=>b.textContent===focusText)?.focus({preventScroll:true});
     if(shell.querySelector('.sim-content'))shell.querySelector('.sim-content').scrollTop=resetScroll===true?0:scroll;
   };
-  Promise.all([fetchJSON('site-data/guide-v2-map.json'),fetchJSON('site-data/guide-v2-ui.json'),fetchJSON('site-data/guide-v2-copy.json'),fetchJSON('site-data/guide-demo.json'),fetchJSON('site-data/guide-vr-copy.json'),fetchJSON('site-data/guide-launcher-copy.json'),fetchJSON('site-data/guide-desktop-copy.json'),fetchJSON('site-data/guide-coordinator-notice.json')]).then(async([m,u,c,d,vrCopy,lc,dc,cn])=>{
-    map=m;ui=u;copy=c;demos=d;launcherCopy=lc;desktopCopy=dc;coordinatorNotice=cn;root.replaceChildren();const intro=node('header','sim-intro');const title=node('h2');title.dataset.v2Title='';const lead=node('p');lead.dataset.v2Lead='';intro.append(title,lead);root.append(intro);
-    const lessons=node('div','v2-lessons');for(const id of ['lessonFirst','lessonGraphics','lessonStorage','lessonDiagnosis']){const b=btn('',()=>{lesson=id;if(id==='lessonFirst'){state=newState();state.ready=false;state.setup=0;surface='launcher';}else if(id==='lessonDiagnosis'){go('diagnostics');return;}else{surface='mac';view='steam';workspace=id==='lessonStorage'?'storage':'launch';}render();});b.dataset.v2Lesson=id;lessons.append(b);}const reset=btn('',()=>{if(dialog.open)dialog.close();state=newState();vrDemo.reset();surface='launcher';workspace='launch';view='steam';lesson='free';render();});reset.dataset.v2Reset='';lessons.append(reset);root.append(lessons);
+  Promise.all([fetchJSON('site-data/guide-v2-map.json'),fetchJSON('site-data/guide-v2-ui.json'),fetchJSON('site-data/guide-v2-copy.json'),fetchJSON('site-data/guide-demo.json'),fetchJSON('site-data/guide-vr-copy.json'),fetchJSON('site-data/guide-launcher-copy.json'),fetchJSON('site-data/guide-desktop-copy.json'),fetchJSON('site-data/guide-coordinator-notice.json'),fetchJSON('site-data/guide-coordinator-defaults.json')]).then(async([m,u,c,d,vrCopy,lc,dc,cn,cd])=>{
+    map=m;ui=u;copy=c;demos=d;launcherCopy=lc;desktopCopy=dc;coordinatorNotice=cn;coordinatorDefaults=cd;root.replaceChildren();const intro=node('header','sim-intro');const title=node('h2');title.dataset.v2Title='';const lead=node('p');lead.dataset.v2Lead='';intro.append(title,lead);root.append(intro);
+    const lessons=node('div','v2-lessons');for(const id of ['lessonFirst','lessonGraphics','lessonCoordinator','lessonStorage','lessonDiagnosis']){const b=btn('',()=>{lesson=id;if(id==='lessonFirst'){state=newState();state.ready=false;state.setup=0;surface='launcher';}else if(id==='lessonDiagnosis'){go('diagnostics');return;}else{surface='mac';view='steam';workspace=id==='lessonStorage'?'storage':'launch';if(id==='lessonCoordinator')state.coordinatorPrefs.details=true;}render();if(id==='lessonCoordinator')root.querySelector('#v2-coordinator-toggle')?.scrollIntoView({block:'center'});});b.dataset.v2Lesson=id;lessons.append(b);}const reset=btn('',()=>{if(dialog.open)dialog.close();state=newState();vrDemo.reset();surface='launcher';workspace='launch';view='steam';lesson='free';render();});reset.dataset.v2Reset='';lessons.append(reset);root.append(lessons);
     const expand=btn('',()=>{expandedWindow=!expandedWindow;applyWindowSize();if(expandedWindow)root.scrollTop=0;},'','window');expand.dataset.v2Expand='';lessons.append(expand);document.addEventListener('keydown',event=>{if(!expandedWindow||root.querySelector('dialog[open],:popover-open'))return;if(event.key==='Escape'){expandedWindow=false;applyWindowSize();expand.focus({preventScroll:true});}if(event.key==='Tab'){const focusable=[...root.querySelectorAll('button,a[href],input,select,textarea,[tabindex]')].filter(n=>!n.disabled&&n.tabIndex>=0&&n.getClientRects().length);const first=focusable[0],last=focusable.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}}});
     document.addEventListener('visibilitychange',()=>{root.classList.toggle('v2-document-hidden',document.hidden);if(document.hidden)mascotAnimation?.cancel();});
     document.addEventListener('forgeplay:themechange',()=>{if(state.theme==='system')render();});

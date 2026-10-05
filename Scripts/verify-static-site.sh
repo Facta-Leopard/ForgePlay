@@ -51,6 +51,7 @@ PAGES=(
   site-assets/guide-desktop.css
   site-data/guide-desktop-copy.json
   site-data/guide-coordinator-notice.json
+  site-data/guide-coordinator-defaults.json
   site-data/guide-notices/coordinator.ko.txt
   site-data/guide-notices/coordinator.en.txt
   site-data/guide-notices/owlv2-license.txt
@@ -560,7 +561,7 @@ guide_v2_ui = json.loads((root / "site-data/guide-v2-ui.json").read_text(encodin
 guide_v2_copy = json.loads((root / "site-data/guide-v2-copy.json").read_text(encoding="utf-8"))
 guide_v2_map = json.loads((root / "site-data/guide-v2-map.json").read_text(encoding="utf-8"))
 if (guide_v2_map.get("version"), guide_v2_map.get("build")) != ("2.1.0", 7):
-    raise SystemExit("guide-v2: preview must identify development build 2.1.0 (7)")
+    raise SystemExit("guide-v2: demo must identify release 2.1.0 (7)")
 for name, data in (("guide-v2-ui", guide_v2_ui), ("guide-v2-copy", guide_v2_copy)):
     if set(data) != set(locale_names):
         raise SystemExit(f"{name}: all eight locales required")
@@ -573,7 +574,7 @@ for locale in locale_names:
         raise SystemExit(f"guide-v2: missing localized preview version {locale}")
     for key in ("lead", "pageIntro", "updateDemo"):
         if "2.1.0" not in guide_v2_copy[locale][key] or "7" not in guide_v2_copy[locale][key]:
-            raise SystemExit(f"guide-v2: stale development version in {locale}/{key}")
+            raise SystemExit(f"guide-v2: stale release version in {locale}/{key}")
     for view in guide_v2_map["views"].values():
         for key in [view["title"], *view["notes"]]:
             if not guide_v2_ui[locale].get(key):
@@ -593,7 +594,7 @@ for key, values in vr_copy["strings"].items():
         raise SystemExit(f"VR guide: inconsistent placeholders for {key}")
     if re.search(r'[\u3040-\u30ff]', values[0]):
         raise SystemExit(f"VR guide: unexpected Japanese text in Korean {key}")
-for name in ["guide-vr.css?v=20261002-1", "guide-vr.js?v=20261002-1", "guide-v2.js?v=20261003-update1", "guide-v2-icons.js?v=20261001-launcher1", "guide-launcher.css?v=20261001-1", "guide-desktop.css?v=20261001-1", "why-story.js?v=20261001-reader1"]:
+for name in ["guide-vr.css?v=20261002-1", "guide-vr.js?v=20261002-1", "guide-v2.js?v=20261006-1", "guide-v2-icons.js?v=20261006-1", "guide-launcher.css?v=20261003-fopl1", "guide-desktop.css?v=20261006-1", "why-story.js?v=20261001-reader1"]:
     if name not in guide_html:
         raise SystemExit(f"VR guide: missing current asset {name}")
 if 'guide-v2.css?v=20260929-palette1' not in guide_html:
@@ -611,6 +612,10 @@ if "if(['retro','console'].includes(id)){show(tileLabel(id),L('development'));re
 if "if(id==='vr'){surface='vr';render(true);return;}" not in guide_v2_js:
     raise SystemExit("VR entry must open the clearly labelled web simulation")
 launcher_copy = json.loads((root / "site-data/guide-launcher-copy.json").read_text())
+if launcher_copy["strings"]["diagnosticsTile"][:2] != ["포플과 대화(문제진단)", "Talk to Fopl (Diagnostics)"]:
+    raise SystemExit("Launcher diagnostics tile must use the final Fopl conversation label")
+if launcher_copy["strings"]["captionDiagnostics"][:2] != ["사용법 · 로그 분석", "Help · log analysis"]:
+    raise SystemExit("Launcher diagnostics caption must describe help and log analysis")
 if launcher_copy["strings"]["oneClickUpdate"][:2] != ["원버튼 업데이트", "One-click update"]:
     raise SystemExit("Launcher guide must label the one-click update placeholder")
 if "const openUpdates = () => show(L('oneClickUpdate'),L('development'));" not in guide_v2_js:
@@ -628,6 +633,13 @@ for key, values in desktop_copy["strings"].items():
 public_notice = json.loads((root / "site-data/guide-coordinator-notice.json").read_text())
 if set(public_notice) != {"schemaVersion", "asOf", "restrictedGames"} or not all(isinstance(n, str) and n.strip() for n in public_notice["restrictedGames"]):
     raise SystemExit("Coordinator web notice must contain only public game names and notice metadata")
+coordinator_defaults = json.loads((root / "site-data/guide-coordinator-defaults.json").read_text())
+if set(coordinator_defaults) != {"schemaVersion", "instructions", "targets"} or coordinator_defaults["schemaVersion"] != 1:
+    raise SystemExit("Coordinator demo defaults must expose only public editor text and targets")
+if set(coordinator_defaults["instructions"]) != {"ko", "en"} or any(not isinstance(v, str) or not 0 < len(v) <= 1500 for v in coordinator_defaults["instructions"].values()):
+    raise SystemExit("Coordinator demo instructions require Korean/English and the app's character limit")
+if len(coordinator_defaults["targets"]) != 5 or any(not isinstance(v, str) or not v.strip() for v in coordinator_defaults["targets"]):
+    raise SystemExit("Coordinator demo requires the five public default targets")
 desktop_css = (root / "site-assets/guide-desktop.css").read_text().lower()
 for color in ['#e7d5ba','#dfc7a6','#efe0c9','#e3cbaa','#883a15','#604d3a','#c5ac8a']:
     if color not in desktop_css:
@@ -645,7 +657,7 @@ for name in ["creator-apps-tile", "why-forgeplay-tile", "brand"]:
         if not (root / f"site-assets/guide/launcher-current/{name}-{theme}.webp").is_file():
             raise SystemExit(f"Missing launcher theme artwork: {name}/{theme}")
 if 'data-guide2-text="previewVersion"' not in guide_html or "2.0.0 (6)" in guide_v2_js:
-    raise SystemExit("guide-v2: visible preview version must use the development metadata")
+    raise SystemExit("guide-v2: visible demo version must use the release metadata")
 if "data-guide-v2" not in guide_html or "data-guide-app " in guide_html or "guide/screens/" in guide_html or "1.3.1" in guide_html:
     raise SystemExit("guide-v2: active page must use the 2.0 web experience, not legacy captures")
 if any(api in guide_v2_js for api in ("innerHTML", "localStorage", "showOpenFilePicker", "getUserMedia", "sendBeacon", "XMLHttpRequest")):

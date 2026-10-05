@@ -38,6 +38,8 @@
 .v2-launcher-tile[data-creator=true] .v2-tile-art {inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated;}
 .v2-launcher .v2-launcher-tile>.v2-symbol {position:absolute;top:12px;left:12px;width:30px;height:30px;}
 .v2-launcher .v2-launcher-tile strong {color:inherit;font-size:14px;line-height:1.3;min-height:36px;display:grid;place-items:center;text-shadow:none;margin-top:58px;}
+.v2-launcher .v2-launcher-tile[data-v2-tile=diagnostics] strong {white-space:pre-line;}
+.v2-launcher-tile[data-v2-tile=diagnostics] .v2-tile-art {top:4px;height:44%;}
 .v2-launcher-tile small {display:block;font-size:10px;text-align:center;color:var(--launch-muted);white-space:nowrap;text-overflow:ellipsis;overflow:hidden;}
 .v2-launcher .v2-launcher-tile:hover {border-color:var(--launch-accent);background:var(--launch-hover);transform:none;}
 .v2-launcher .v2-launcher-tile:active {background:var(--launch-hover);transform:none;}

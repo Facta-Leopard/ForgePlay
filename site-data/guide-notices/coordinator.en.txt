@@ -1,5 +1,5 @@
 AI Coordinator usage notice · Korea / United States / international
-Notice revision: 2026-10-01.1-popple
+Notice revision: 2026-10-04.1-runtime-boundary
 
 Important: no cheating, unlawful use or impersonation of official releases
 Follow applicable law and the rules of your game and platform. Violations may lead
@@ -16,10 +16,14 @@ The official app restricts Coordinator in listed games; other app features remai
 available. The list may change and does not certify game compatibility with ForgePlay.
 
 2. Software license
-The original Coordinator implementation is GPL-3.0-only. Copying, modification and
+The original Coordinator inference/control runtime is GPL-3.0-only. Copying, modification and
 redistribution are allowed under GPLv3. No ND or blanket ban on modified distributions
 applies. Comply with applicable copyright/change notices, same-license and
 Corresponding Source obligations.
+The exact host UI/connection wrappers additionally have the author-owned binary
+permission in ../ForgePlayWrapper/PERMISSION.txt and SCOPE.json. It does not
+exclude the actual runtime source, revoke prior GPL grants or waive third-party
+obligations. A Swift filename alone does not make a runtime file an excluded wrapper.
 This usage notice is not a software license adding restrictions to GPL rights.
 Distinguish the official app's game restrictions and safety guidance from liabilities
 under applicable law or game/platform rules. GPL does not grant permission to cheat,
