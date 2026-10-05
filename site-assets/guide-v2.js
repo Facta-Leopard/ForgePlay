@@ -189,7 +189,7 @@
     box.append(actions(launch,btn(U("설정 저장"),saveConfig),btn(view==="exe"?U("EXE 파일 선택"):U("저장공간 관리"),()=>view==="exe"?chooseFile():view==='profiles'?show(U('저장공간 관리'),helpText('storage')):setWorkspace("storage")),btn(U("Wine 강제 종료"),()=>show(U("Wine 강제 종료"),C("stopNotice"),[[C("confirmExample"),()=>{state.launched={};render();}]]))));
     if(!state.ready)box.append(btn(C("setupNeeded"),()=>go("setup")));
     if(view==="exe"&&state.file){box.append(node("p","sim-file",state.file));if(state.installer)note(box,C("installerMode"),true);}
-    const status=node('div','v2-launch-status');status.append(badge(D(state.ready?'ready':'waiting'),state.ready?'ok':'warning'),info(U("최근 Steam 실행 상태"),state.launched[view]?C('launchResult'):C('readyExample')));box.append(status);
+    const status=node('div','v2-launch-status');status.append(badge(D(state.ready?'ready':'waiting'),state.ready?'ok':'warning'),info(U("최근 Steam 실행 상태"),state.launched[configKey()]?C('launchResult'):C('readyExample')));box.append(status);
     if(view==="battlenet")box.append(btn(C("safariTitle"),()=>show(C("safariTitle"),C("safariBody"))));
     renderers(box);processing(box);toggle(box,"Game Mode",c,"gameMode",C("gameMode"));
     select(box,U("네트워크 (베타)"),c,"network",[["standard",U("표준 네트워크")],["Ethernet",U("Ethernet 호환성")],["Wi-Fi",U("Wi-Fi 호환성")]],null,U(c.network==="standard"?"게임에 네트워크 종류를 원래대로 표시합니다. 연결 형식 인식에 문제가 없다면 이 설정을 사용하세요.":c.network==="Wi-Fi"?"게임이 연결을 Wi-Fi로 인식하도록 표시합니다. 게임의 네트워크 종류 인식 문제를 비교할 때 사용하며, 실제 연결 방식이나 속도는 바뀌지 않습니다.":"게임이 연결을 유선 Ethernet으로 인식하도록 표시합니다. 게임의 네트워크 종류 인식 문제를 비교할 때 사용하며, 실제 연결 방식이나 속도는 바뀌지 않습니다."));
@@ -198,9 +198,9 @@
     const keyboard=node('div','v2-native-action-row');keyboard.append(symbol('keyboard'),node('span','',U("키보드 입력")),node('small','',U("시스템 기본값")),btn(U("설정하기"),()=>openPreferences('input')));keyboard.lastChild.setAttribute('aria-label',U('키보드 설정하기'));box.append(keyboard);
     const controller=node('div','v2-native-action-row');controller.append(symbol('controller'),node('span','',U('컨트롤러')),badge(U('미확인'),'neutral'),btn(U("컨트롤러 확인"),()=>{state.checkedController=true;render();show(U("컨트롤러 확인"),C("controller"));}));box.append(controller);
     const saved=configSaved(),summary=node('div','v2-configuration-summary');summary.append(symbol(saved?'download':'sliders'),node('strong','',U(saved?"다음 실행 초안 · 저장됨":"다음 실행 초안 · 저장되지 않은 변경")),info(U('설정 저장'),C(saved?'saved':'unsaved')));summary.append(node('small','',`${c.renderer} · ${c.fg?'FG':'FG OFF'} · ${c.frameCheck?'Frame Check':'Frame Check OFF'} · ${c.network==='standard'?U('표준 네트워크'):c.network}`));box.append(summary);
-    const recent=node('div');note(recent,state.launched[view]?C('launchResult'):U('미확인'));recent.append(btn(U('문제 진단 (베타)'),()=>show(L('diagnostics'),M('diagnosticsGuide')),'','diagnostics'));box.append(disclosure(U('최근 Steam 실행 상태'),view+'-recent',recent));
+    const recent=node('div');note(recent,state.launched[configKey()]?C('launchResult'):U('미확인'));recent.append(btn(U('문제 진단 (베타)'),()=>show(L('diagnostics'),M('diagnosticsGuide')),'','diagnostics'));box.append(disclosure(U('최근 Steam 실행 상태'),view+'-recent',recent));
     if(state.advanced){const advanced=node('div');advanced.append(btn(U('Steam 프리픽스 재생성'),()=>show(U('Steam 프리픽스 재생성'),D('rebuild'))));box.append(disclosure(U('고급 정보'),view+'-advanced',advanced));}
-    if(state.launched[view])box.append(btn(U("문제 진단 (베타)"),()=>show(L("diagnostics"),M("diagnosticsGuide"))));
+    if(state.launched[configKey()])box.append(btn(U("문제 진단 (베타)"),()=>show(L("diagnostics"),M("diagnosticsGuide"))));
     parent.append(box);
   };
   const chooseFile = () => show(U("EXE 파일 선택"),D("fileHint"),["ClassicGame.exe","Setup.exe","WindowsUtility.exe"].map(file=>[file,()=>{state.file=file;state.installer=file==="Setup.exe";render();}]));

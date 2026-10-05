@@ -594,7 +594,7 @@ for key, values in vr_copy["strings"].items():
         raise SystemExit(f"VR guide: inconsistent placeholders for {key}")
     if re.search(r'[\u3040-\u30ff]', values[0]):
         raise SystemExit(f"VR guide: unexpected Japanese text in Korean {key}")
-for name in ["guide-vr.css?v=20261002-1", "guide-vr.js?v=20261002-1", "guide-v2.js?v=20261006-1", "guide-v2-icons.js?v=20261006-1", "guide-launcher.css?v=20261003-fopl1", "guide-desktop.css?v=20261006-1", "why-story.js?v=20261001-reader1"]:
+for name in ["guide-vr.css?v=20261002-1", "guide-vr.js?v=20261002-1", "guide-v2.js?v=20261006-2", "guide-v2-icons.js?v=20261006-1", "guide-launcher.css?v=20261003-fopl1", "guide-desktop.css?v=20261006-1", "why-story.js?v=20261001-reader1"]:
     if name not in guide_html:
         raise SystemExit(f"VR guide: missing current asset {name}")
 if 'guide-v2.css?v=20260929-palette1' not in guide_html:
