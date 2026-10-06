@@ -2,8 +2,15 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-06",
-  "revision": 0,
+  "revision": 1,
   "testProfiles": [
+    {
+      "id": "apple-silicon-m5-max-full-128gb",
+      "platform": "Apple Silicon Mac",
+      "chip": "M5 Max (full)",
+      "unifiedMemoryGB": 128,
+      "macOSVersion": null
+    },
     {
       "id": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
       "platform": "Apple Silicon Mac",
@@ -209,6 +216,13 @@
     }
   ],
   "games": [
+    {
+      "id": "last-epoch",
+      "titles": {
+        "en": "Last Epoch",
+        "ko": "라스트 에폭"
+      }
+    },
     {
       "id": "dave-the-diver",
       "titles": {
@@ -2487,6 +2501,75 @@
         "ja": "コミュニティ報告 — プレイ可能（音が出ない）：ForgePlay 2.1.0でSteam版DAVE THE DIVERは正常に起動してプレイできますが、音が出ないとのことです。",
         "zh-Hans": "社区反馈 — 可以游玩，但无声音：Steam 版 DAVE THE DIVER 在 ForgePlay 2.1.0 中可正常启动和游玩，但没有声音。",
         "zh-Hant": "社群回報 — 可以遊玩，但無聲音：Steam 版 DAVE THE DIVER 在 ForgePlay 2.1.0 中可正常啟動和遊玩，但沒有聲音。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "path-of-exile-2-1-0-community-jjeoni-20261006",
+      "gameId": "path-of-exile",
+      "launchPlatform": "unknown",
+      "testProfileId": "apple-silicon-m5-max-full-128gb",
+      "forgePlayVersion": "2.1.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "쩌니",
+      "testedAt": null,
+      "notes": {
+        "ko": "커뮤니티 추가 제보: ForgePlay 2.1.0에서 정상 플레이 가능하며 약 120 FPS가 나온다고 합니다. 채팅창을 열 때 영문 입력 상태에서는 Enter가 정상 작동하지만, 한글 입력 상태에서는 두 번 작동하는 문제가 있습니다. POE 1의 프레임 생성 사용 여부는 확인되지 않았습니다. 테스트 기기는 M5 Max 풀칩·통합 메모리 128GB이며, 실행 플랫폼과 macOS 버전은 미확인입니다.",
+        "en": "Additional community report: playable in ForgePlay 2.1.0 at about 120 FPS. Enter opens chat normally with English input selected, but triggers twice with Korean input selected. Whether frame generation was enabled in POE 1 was not specified. Test hardware: full-configuration M5 Max with 128GB unified memory. Launch platform and macOS version are unconfirmed.",
+        "de": "Weiterer Community-Bericht: Mit ForgePlay 2.1.0 bei etwa 120 FPS spielbar. Bei englischer Eingabe öffnet Enter den Chat normal; bei koreanischer Eingabe wird Enter zweimal ausgelöst. Ob Frame-Generierung in POE 1 aktiviert war, wurde nicht angegeben. Testgerät: M5 Max in Vollausstattung mit 128 GB gemeinsamem Speicher. Startplattform und macOS-Version sind unbekannt.",
+        "es": "Nuevo informe de la comunidad: se puede jugar con ForgePlay 2.1.0 a unos 120 FPS. Enter abre el chat normalmente con la entrada en inglés, pero se activa dos veces con la entrada en coreano. No se indicó si POE 1 usaba generación de fotogramas. Equipo: M5 Max en configuración completa con 128GB de memoria unificada. Plataforma de ejecución y versión de macOS sin confirmar.",
+        "fr": "Nouveau signalement communautaire : jouable avec ForgePlay 2.1.0 à environ 120 FPS. Entrée ouvre normalement le chat avec la saisie anglaise, mais se déclenche deux fois avec la saisie coréenne. L’utilisation de la génération d’images dans POE 1 n’a pas été précisée. Machine : M5 Max en configuration complète, 128 Go de mémoire unifiée. Plateforme de lancement et version de macOS non confirmées.",
+        "ja": "コミュニティからの追加報告：ForgePlay 2.1.0でプレイ可能で、約120 FPSとのことです。チャットを開く際、英語入力ではEnterが正常に動作しますが、韓国語入力では2回反応する問題があります。POE 1でのフレーム生成の使用有無は未確認です。環境はフル構成のM5 Max・ユニファイドメモリ128GBで、起動プラットフォームとmacOSバージョンは不明です。",
+        "zh-Hans": "社区追加反馈：在 ForgePlay 2.1.0 中可以正常游玩，约为 120 FPS。打开聊天窗口时，英文输入状态下 Enter 正常，但韩文输入状态下会触发两次。未说明 POE 1 是否开启帧生成。测试设备为满配 M5 Max、128GB 统一内存；运行平台及 macOS 版本未确认。",
+        "zh-Hant": "社群追加回報：在 ForgePlay 2.1.0 中可以正常遊玩，約為 120 FPS。開啟聊天視窗時，英文輸入狀態下 Enter 正常，但韓文輸入狀態下會觸發兩次。未說明 POE 1 是否開啟影格生成。測試裝置為滿配 M5 Max、128GB 統一記憶體；執行平台及 macOS 版本未確認。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "path-of-exile-2-2-1-0-community-jjeoni-20261006",
+      "gameId": "path-of-exile-2",
+      "launchPlatform": "unknown",
+      "testProfileId": "apple-silicon-m5-max-full-128gb",
+      "forgePlayVersion": "2.1.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "쩌니",
+      "testedAt": null,
+      "notes": {
+        "ko": "커뮤니티 추가 제보: ForgePlay 2.1.0에서 정상 플레이 가능하며 약 65 FPS, 프레임 생성(FG)을 켜면 약 92 FPS가 나온다고 합니다. 채팅창을 열 때 영문 입력 상태에서는 Enter가 정상 작동하지만, 한글 입력 상태에서는 두 번 작동하는 문제가 있습니다. 테스트 기기는 M5 Max 풀칩·통합 메모리 128GB이며, 실행 플랫폼과 macOS 버전은 미확인입니다.",
+        "en": "Additional community report: playable in ForgePlay 2.1.0 at about 65 FPS, or about 92 FPS with frame generation (FG) enabled. Enter opens chat normally with English input selected, but triggers twice with Korean input selected. Test hardware: full-configuration M5 Max with 128GB unified memory. Launch platform and macOS version are unconfirmed.",
+        "de": "Weiterer Community-Bericht: Mit ForgePlay 2.1.0 bei etwa 65 FPS spielbar, mit aktivierter Frame-Generierung (FG) bei etwa 92 FPS. Bei englischer Eingabe öffnet Enter den Chat normal; bei koreanischer Eingabe wird Enter zweimal ausgelöst. Testgerät: M5 Max in Vollausstattung mit 128 GB gemeinsamem Speicher. Startplattform und macOS-Version sind unbekannt.",
+        "es": "Nuevo informe de la comunidad: se puede jugar con ForgePlay 2.1.0 a unos 65 FPS, o unos 92 FPS con la generación de fotogramas (FG) activada. Enter abre el chat normalmente con la entrada en inglés, pero se activa dos veces con la entrada en coreano. Equipo: M5 Max en configuración completa con 128GB de memoria unificada. Plataforma de ejecución y versión de macOS sin confirmar.",
+        "fr": "Nouveau signalement communautaire : jouable avec ForgePlay 2.1.0 à environ 65 FPS, ou 92 FPS avec la génération d’images (FG) activée. Entrée ouvre normalement le chat avec la saisie anglaise, mais se déclenche deux fois avec la saisie coréenne. Machine : M5 Max en configuration complète, 128 Go de mémoire unifiée. Plateforme de lancement et version de macOS non confirmées.",
+        "ja": "コミュニティからの追加報告：ForgePlay 2.1.0でプレイ可能で、約65 FPS、フレーム生成（FG）を有効にすると約92 FPSとのことです。チャットを開く際、英語入力ではEnterが正常に動作しますが、韓国語入力では2回反応する問題があります。環境はフル構成のM5 Max・ユニファイドメモリ128GBで、起動プラットフォームとmacOSバージョンは不明です。",
+        "zh-Hans": "社区追加反馈：在 ForgePlay 2.1.0 中可以正常游玩，约为 65 FPS，开启帧生成（FG）后约为 92 FPS。打开聊天窗口时，英文输入状态下 Enter 正常，但韩文输入状态下会触发两次。测试设备为满配 M5 Max、128GB 统一内存；运行平台及 macOS 版本未确认。",
+        "zh-Hant": "社群追加回報：在 ForgePlay 2.1.0 中可以正常遊玩，約為 65 FPS，開啟影格生成（FG）後約為 92 FPS。開啟聊天視窗時，英文輸入狀態下 Enter 正常，但韓文輸入狀態下會觸發兩次。測試裝置為滿配 M5 Max、128GB 統一記憶體；執行平台及 macOS 版本未確認。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "last-epoch-2-1-0-community-jjeoni-20261006",
+      "gameId": "last-epoch",
+      "launchPlatform": "unknown",
+      "testProfileId": "apple-silicon-m5-max-full-128gb",
+      "forgePlayVersion": "2.1.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "쩌니",
+      "testedAt": null,
+      "notes": {
+        "ko": "커뮤니티 제보 — 플레이 가능하나 키보드 입력 문제 있음: ForgePlay 2.1.0에서 라스트 에폭을 정상적으로 플레이할 수 있다고 제보했지만, 키보드 입력은 전혀 인식되지 않는 것 같다고 합니다. 테스트 기기는 M5 Max 풀칩·통합 메모리 128GB이며, 실행 플랫폼과 macOS 버전은 미확인입니다.",
+        "en": "Community report — playable, with a keyboard-input issue: the reporter says Last Epoch is playable in ForgePlay 2.1.0, but keyboard input appears not to be recognized at all. Test hardware: full-configuration M5 Max with 128GB unified memory. Launch platform and macOS version are unconfirmed.",
+        "de": "Community-Bericht — spielbar, aber mit Tastatureingabeproblem: Laut Melder lässt sich Last Epoch mit ForgePlay 2.1.0 spielen, Tastatureingaben werden jedoch offenbar überhaupt nicht erkannt. Testgerät: M5 Max in Vollausstattung mit 128 GB gemeinsamem Speicher. Startplattform und macOS-Version sind unbekannt.",
+        "es": "Informe de la comunidad — jugable, con un problema de teclado: el informante indica que Last Epoch se puede jugar con ForgePlay 2.1.0, pero parece que no reconoce ninguna entrada del teclado. Equipo: M5 Max en configuración completa con 128GB de memoria unificada. Plataforma de ejecución y versión de macOS sin confirmar.",
+        "fr": "Signalement communautaire — jouable, avec un problème de clavier : la personne indique que Last Epoch est jouable avec ForgePlay 2.1.0, mais semble ne reconnaître aucune saisie au clavier. Machine : M5 Max en configuration complète, 128 Go de mémoire unifiée. Plateforme de lancement et version de macOS non confirmées.",
+        "ja": "コミュニティ報告 — プレイ可能ですがキーボード入力に問題あり：ForgePlay 2.1.0でLast Epochをプレイできる一方、キーボード入力がまったく認識されないようだとのことです。環境はフル構成のM5 Max・ユニファイドメモリ128GBで、起動プラットフォームとmacOSバージョンは不明です。",
+        "zh-Hans": "社区反馈 — 可以游玩，但存在键盘输入问题：反馈者表示 Last Epoch 可在 ForgePlay 2.1.0 中正常游玩，但似乎完全无法识别键盘输入。测试设备为满配 M5 Max、128GB 统一内存；运行平台及 macOS 版本未确认。",
+        "zh-Hant": "社群回報 — 可以遊玩，但存在鍵盤輸入問題：回報者表示 Last Epoch 可在 ForgePlay 2.1.0 中正常遊玩，但似乎完全無法辨識鍵盤輸入。測試裝置為滿配 M5 Max、128GB 統一記憶體；執行平台及 macOS 版本未確認。"
       },
       "blocker": null
     }
