@@ -121,6 +121,7 @@ PAGES=(
   site-assets/version-posters/forgeplay-1.3.jpg
   site-assets/version-posters/forgeplay-2.0.0.png
   site-assets/version-posters/forgeplay-vr-preview.jpg
+  site-assets/version-posters/forgeplay-vm-preview.jpg
   site-assets/version-posters/forgeplay-ai-coordinator-preview.jpg
   site-assets/site-shell.js
   site-data/compatibility-games.json
@@ -2021,6 +2022,8 @@ if rg -q 'data-poster-version="DLSS5"' "$ROOT_DIR/index.html"; then
 fi
 require_snippet "$ROOT_DIR/index.html" 'data-poster-version="VR" data-poster-preview'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/version-posters/forgeplay-vr-preview.jpg"'
+require_snippet "$ROOT_DIR/index.html" 'data-poster-version="VM" data-poster-preview'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/version-posters/forgeplay-vm-preview.jpg"'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/version-posters.js?v=20260929-vr1"'
 python3 - "$ROOT_DIR" <<'POSTERS'
 from pathlib import Path
@@ -2029,11 +2032,11 @@ root = Path(sys.argv[1])
 page = (root / 'index.html').read_text()
 cards = re.findall(r'<button\b[^>]*data-poster-version="([^"]+)"[^>]*>', page)
 previews = re.findall(r'<button\b[^>]*data-poster-preview[^>]*>', page)
-if cards != ['1.0','1.1','1.2','1.3','2.0.0','2.1.0','VR'] or len(previews) != 1 or 'data-poster-version="VR"' not in previews[0]:
-    raise SystemExit('Release posters must remain versioned; only VR remains a preview at the right')
+if cards != ['1.0','1.1','1.2','1.3','2.0.0','2.1.0','VR','VM'] or len(previews) != 2 or any(f'data-poster-version="{name}"' not in previews[i] for i, name in enumerate(['VR','VM'])):
+    raise SystemExit('Release posters must remain versioned; VR and VM previews follow at the right')
 if 'src="site-assets/announcements/forgeplay-2-1-0-poster.png"' not in page:
     raise SystemExit('2.1.0 must use the approved release poster')
-for name in ['forgeplay-vr-preview.jpg','forgeplay-ai-coordinator-preview.jpg']:
+for name in ['forgeplay-vr-preview.jpg','forgeplay-vm-preview.jpg','forgeplay-ai-coordinator-preview.jpg']:
     if not (root / 'site-assets/version-posters' / name).read_bytes().startswith(b'\xff\xd8\xff'):
         raise SystemExit('Preview poster must be a valid JPEG asset: '+name)
 POSTERS
