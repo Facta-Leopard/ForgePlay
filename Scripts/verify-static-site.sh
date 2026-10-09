@@ -1686,7 +1686,7 @@ if developer_apps_database.get("schemaVersion") != 2:
 if developer_apps_schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
     raise SystemExit("developer app schema must use JSON Schema draft 2020-12")
 if developer_apps_database.get("sourceRevision") != (
-    "25d55aa4f1b3c2b912934dc86e01498f2b9e1a01"
+    "7b2734bbae93717d48aaaf509e234dc5d6a27131"
 ):
     raise SystemExit("developer app catalog must identify the reviewed shared catalog blob")
 
@@ -1696,6 +1696,7 @@ if not isinstance(developer_apps, list):
 
 expected_developer_app_ids = {
     "forgeplay",
+    "hasenbau",
     "majordex",
     "hopdisk",
     "bunmixer",
@@ -1747,6 +1748,19 @@ for app in developer_apps:
         raise SystemExit(f"developer app {identifier} artwork escapes the project root")
     if not artwork_path.is_file() or artwork_path.is_symlink():
         raise SystemExit(f"developer app {identifier} artwork is missing or unsafe")
+    if identifier == "hasenbau":
+        if summaries["ko"] != "건축학도를 위한 건축구조 원리학습" or summaries["en"] != "Understand Building Structures":
+            raise SystemExit("HasenBau must display its verified App Store subtitle")
+        if (app.get("name"), platform, app.get("kind"), app_store_id, href, artwork) != (
+            "HasenBau", "ipad", "app", "6818912190",
+            "https://apps.apple.com/us/app/hasenbau/id6818912190",
+            "site-assets/developer-apps/hasenbau.png",
+        ):
+            raise SystemExit("HasenBau must use its released iPad App Store identity")
+        if app.get("supportedLanguages") != ["en", "ko"] or app.get("appleSiliconMacCompatible") is not True:
+            raise SystemExit("HasenBau must use the App Store language and Apple Silicon Mac availability metadata")
+        if hashlib.sha256(artwork_path.read_bytes()).hexdigest() != "f9ce4d8c87802e89df8d0e727b9ac87ff0bc3c7f8884bd110bb86c436809bede":
+            raise SystemExit("HasenBau must retain the approved user-provided icon")
     if identifier == "majordex":
         if (app.get("name"), platform, app_store_id, href, artwork) != (
             "MajorDex", "mac", "6806726163",
@@ -1761,7 +1775,7 @@ for app in developer_apps:
 
 if developer_app_ids != expected_developer_app_ids:
     raise SystemExit("developer app catalog does not match the in-app catalog")
-if platform_counts != {"mac": 7, "ipad": 3, "iphone": 2}:
+if platform_counts != {"mac": 7, "ipad": 4, "iphone": 2}:
     raise SystemExit(f"developer app platform counts are invalid: {platform_counts}")
 if [app["id"] for app in developer_apps[:2]] != ["forgeplay", "majordex"]:
     raise SystemExit("MajorDex must be the first App Store app after ForgePlay")
@@ -1772,7 +1786,6 @@ if not isinstance(development_projects, list):
 
 expected_development_projects = {
     "lapivelle": ("Lapivelle", "ipad", "app"),
-    "hasenbau": ("HasenBau", "ipad", "app"),
     "forgekit": ("ForgeKit", "mac", "app"),
     "harewatch": ("HareWatch", "mac", "utility"),
     "warrennet": ("WarrenNet", "mac", "utility"),
@@ -1785,7 +1798,6 @@ expected_project_homepages = {
 }
 expected_development_artwork_hashes = {
     "lapivelle": "5baabc51653932f12f513c53e54180335ae8d1f505af9d0799579193be497757",
-    "hasenbau": "f9ce4d8c87802e89df8d0e727b9ac87ff0bc3c7f8884bd110bb86c436809bede",
     "forgekit": "03e6dfc77bf72e442ed85e036997ca340ec00d8e22636d7c9f7117e6b35461c9",
     "harewatch": "6f73ec849436bdeb91398ed7b1b76cd67e2cec3d4782fbfc5de475d73afd5cd0",
     "warrennet": "11ee5bf49f59cd1578644432c167b6b693cef90c910677af908dde93bb5a79d8",
@@ -1849,7 +1861,7 @@ if development_ids != set(expected_development_projects):
     raise SystemExit("developer projects do not match the approved website catalog")
 if development_projection != expected_development_projects:
     raise SystemExit("developer project names, platforms, or kinds differ from approved metadata")
-if development_platform_counts != {"mac": 3, "ipad": 3, "iphone": 2}:
+if development_platform_counts != {"mac": 3, "ipad": 2, "iphone": 2}:
     raise SystemExit(
         f"developer project platform counts are invalid: {development_platform_counts}"
     )

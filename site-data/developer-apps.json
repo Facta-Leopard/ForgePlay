@@ -1,8 +1,8 @@
 {
   "$schema": "./developer-apps.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-10-04",
-  "sourceRevision": "25d55aa4f1b3c2b912934dc86e01498f2b9e1a01",
+  "updatedAt": "2026-10-09",
+  "sourceRevision": "7b2734bbae93717d48aaaf509e234dc5d6a27131",
   "apps": [
     {
       "id": "forgeplay",
@@ -161,6 +161,27 @@
       "href": "https://apps.apple.com/us/app/kanindex/id6765845295"
     },
     {
+      "id": "hasenbau",
+      "appStoreID": "6818912190",
+      "name": "HasenBau",
+      "platform": "ipad",
+      "kind": "app",
+      "summaries": {
+        "ko": "건축학도를 위한 건축구조 원리학습",
+        "en": "Understand Building Structures",
+        "de": "Tragwerke verstehen",
+        "es": "Comprende las estructuras de los edificios",
+        "fr": "Comprendre les structures du bâtiment",
+        "ja": "建築構造の原理を学ぶ",
+        "zh-Hans": "理解建筑结构原理",
+        "zh-Hant": "理解建築結構原理"
+      },
+      "supportedLanguages": ["en", "ko"],
+      "appleSiliconMacCompatible": true,
+      "artwork": "site-assets/developer-apps/hasenbau.png",
+      "href": "https://apps.apple.com/us/app/hasenbau/id6818912190"
+    },
+    {
       "id": "bunniki",
       "appStoreID": "6763970447",
       "name": "Bunniki",
@@ -273,13 +294,6 @@
       "platform": "ipad",
       "kind": "app",
       "artwork": "site-assets/developer-apps/lapivelle.png"
-    },
-    {
-      "id": "hasenbau",
-      "name": "HasenBau",
-      "platform": "ipad",
-      "kind": "app",
-      "artwork": "site-assets/developer-apps/hasenbau.png"
     },
     {
       "id": "forgekit",
