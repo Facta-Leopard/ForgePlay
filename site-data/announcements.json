@@ -1,13 +1,40 @@
 {
   "$schema": "./announcements.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-10-06",
+  "updatedAt": "2026-10-10",
   "announcements": [
+    {
+      "id": "forgeplay-vr-update-preparation",
+      "type": "project",
+      "publishedAt": "2026-10-10",
+      "featured": true,
+      "titles": {
+        "ko": "ForgePlay VR 업데이트를 준비하고 있습니다.",
+        "en": "We’re preparing the ForgePlay VR update.",
+        "de": "Wir bereiten das ForgePlay-VR-Update vor.",
+        "es": "Estamos preparando la actualización de ForgePlay VR.",
+        "fr": "Nous préparons la mise à jour de ForgePlay VR.",
+        "ja": "ForgePlay VRのアップデートを準備しています。",
+        "zh-Hans": "正在准备 ForgePlay VR 更新。",
+        "zh-Hant": "正在準備 ForgePlay VR 更新。"
+      },
+      "summaries": {
+        "ko": "ForgePlay VR의 Mac·Vision Pro 앱 개발을 마치고 배포를 준비하고 있습니다. 맨손 포인팅·클릭 지원과 함께 VC++ 설치, 글꼴 처리, IME 입력 관련 문제 등의 개선도 반영할 예정입니다.",
+        "en": "Development of the ForgePlay VR apps for Mac and Vision Pro is complete, and we’re preparing their release. The update will bring bare-hand pointing and clicking, alongside improvements to VC++ installation, font handling, IME input and more.",
+        "de": "Die Entwicklung der ForgePlay-VR-Apps für Mac und Vision Pro ist abgeschlossen; die Veröffentlichung wird vorbereitet. Das Update bietet Zeigen und Klicken mit bloßen Händen sowie Verbesserungen bei VC++-Installation, Schriftverarbeitung, IME-Eingabe und weiteren Bereichen.",
+        "es": "Hemos terminado el desarrollo de las apps de ForgePlay VR para Mac y Vision Pro y preparamos su distribución. La actualización permitirá apuntar y hacer clic con las manos, junto con mejoras en la instalación de VC++, las fuentes, la entrada mediante IME y otros aspectos.",
+        "fr": "Le développement des apps ForgePlay VR pour Mac et Vision Pro est terminé et nous préparons leur distribution. La mise à jour permettra de pointer et cliquer à mains nues, avec des améliorations de l’installation de VC++, des polices, de la saisie IME et d’autres points.",
+        "ja": "ForgePlay VRのMac・Vision Proアプリの開発を終え、配布を準備しています。素手でのポインティング・クリックに加え、VC++のインストール、フォント処理、IME入力などの問題も改善する予定です。",
+        "zh-Hans": "ForgePlay VR 的 Mac 与 Vision Pro App 已完成开发，正在准备发布。更新将支持徒手指向和点击，并包含 VC++ 安装、字体处理、IME 输入等方面的改进。",
+        "zh-Hant": "ForgePlay VR 的 Mac 與 Vision Pro App 已完成開發，正在準備發布。更新將支援徒手指向和點擊，並包含 VC++ 安裝、字型處理、IME 輸入等方面的改善。"
+      },
+      "href": "updates.html#update-forgeplay-vr-update-preparation"
+    },
     {
       "id": "forgeplay-modular-installation-development",
       "type": "project",
       "publishedAt": "2026-10-06",
-      "featured": true,
+      "featured": false,
       "titles": {
         "ko": "ForgePlay Mac 경량화와 런처 업데이트 기능을 개발하고 있습니다.",
         "en": "A lighter ForgePlay Mac and launcher-based updates are in development.",

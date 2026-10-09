@@ -1,13 +1,168 @@
 {
   "$schema": "./announcements.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-10-06",
+  "updatedAt": "2026-10-10",
   "announcements": [
+    {
+      "id": "forgeplay-vr-update-preparation",
+      "type": "project",
+      "publishedAt": "2026-10-10",
+      "featured": true,
+      "titles": {
+        "ko": "ForgePlay VR 업데이트를 준비하고 있습니다.",
+        "en": "We’re preparing the ForgePlay VR update.",
+        "de": "Wir bereiten das ForgePlay-VR-Update vor.",
+        "es": "Estamos preparando la actualización de ForgePlay VR.",
+        "fr": "Nous préparons la mise à jour de ForgePlay VR.",
+        "ja": "ForgePlay VRのアップデートを準備しています。",
+        "zh-Hans": "正在准备 ForgePlay VR 更新。",
+        "zh-Hant": "正在準備 ForgePlay VR 更新。"
+      },
+      "summaries": {
+        "ko": "ForgePlay VR의 Mac·Vision Pro 앱 개발을 마치고 배포를 준비하고 있습니다. 맨손 포인팅·클릭 지원과 함께 VC++ 설치, 글꼴 처리, IME 입력 관련 문제 등의 개선도 반영할 예정입니다.",
+        "en": "Development of the ForgePlay VR apps for Mac and Vision Pro is complete, and we’re preparing their release. The update will bring bare-hand pointing and clicking, alongside improvements to VC++ installation, font handling, IME input and more.",
+        "de": "Die Entwicklung der ForgePlay-VR-Apps für Mac und Vision Pro ist abgeschlossen; die Veröffentlichung wird vorbereitet. Das Update bietet Zeigen und Klicken mit bloßen Händen sowie Verbesserungen bei VC++-Installation, Schriftverarbeitung, IME-Eingabe und weiteren Bereichen.",
+        "es": "Hemos terminado el desarrollo de las apps de ForgePlay VR para Mac y Vision Pro y preparamos su distribución. La actualización permitirá apuntar y hacer clic con las manos, junto con mejoras en la instalación de VC++, las fuentes, la entrada mediante IME y otros aspectos.",
+        "fr": "Le développement des apps ForgePlay VR pour Mac et Vision Pro est terminé et nous préparons leur distribution. La mise à jour permettra de pointer et cliquer à mains nues, avec des améliorations de l’installation de VC++, des polices, de la saisie IME et d’autres points.",
+        "ja": "ForgePlay VRのMac・Vision Proアプリの開発を終え、配布を準備しています。素手でのポインティング・クリックに加え、VC++のインストール、フォント処理、IME入力などの問題も改善する予定です。",
+        "zh-Hans": "ForgePlay VR 的 Mac 与 Vision Pro App 已完成开发，正在准备发布。更新将支持徒手指向和点击，并包含 VC++ 安装、字体处理、IME 输入等方面的改进。",
+        "zh-Hant": "ForgePlay VR 的 Mac 與 Vision Pro App 已完成開發，正在準備發布。更新將支援徒手指向和點擊，並包含 VC++ 安裝、字型處理、IME 輸入等方面的改善。"
+      },
+      "paragraphs": {
+        "ko": [
+          "ForgePlay VR의 **Mac 앱과 Apple Vision Pro 앱 개발을 마치고, 배포를 준비하고 있습니다.** Mac에서 실행한 SteamVR 게임을 Vision Pro에서 즐길 수 있습니다.",
+          "## 컨트롤러 없이, 맨손으로",
+          "**핸드 트래킹을 통해 별도의 VR 컨트롤러 없이도 맨손으로 포인팅하고 클릭할 수 있습니다.** 게임 화면의 메뉴나 대상을 손으로 가리키고 선택하며 상호작용할 수 있습니다.",
+          "## ForgePlay Mac도 함께 개선했습니다",
+          "보내주신 이슈와 커뮤니티 제보를 바탕으로 **VC++ 구성요소 설치 과정의 권한 오류, 설치 화면의 글꼴 처리, 한글 입력기(IME) 관련 키 매핑과 키보드 배열 인식 문제 등**을 수정·개선했습니다.",
+          "이번 업데이트에는 ForgePlay VR뿐 아니라, 기존 Mac 앱의 호환성과 안정성을 높이기 위한 개선 사항도 함께 반영됩니다.",
+          "기다려 주셔서 감사합니다. 자세한 업데이트 내용과 사용 방법은 배포 시 함께 안내하겠습니다."
+        ],
+        "en": [
+          "Development of the ForgePlay VR **Mac app and Apple Vision Pro app is complete, and we’re preparing their release.** You can enjoy SteamVR games running on your Mac through Vision Pro.",
+          "## With your hands, without a controller",
+          "**Hand tracking lets you point and click with your bare hands, without a separate VR controller.** Point at and select menus or objects in the game to interact with them.",
+          "## ForgePlay Mac improvements are included too",
+          "Based on your issues and community reports, we have addressed **permission errors during VC++ component installation, font handling in installer screens, Korean IME-related key mapping and keyboard layout detection issues, among others.**",
+          "Alongside ForgePlay VR, this update will include improvements to compatibility and stability in the existing Mac app.",
+          "Thank you for your patience. We’ll share the full update details and usage instructions when the update is released."
+        ],
+        "de": [
+          "Die Entwicklung der **Mac-App und der Apple-Vision-Pro-App von ForgePlay VR ist abgeschlossen, und wir bereiten die Veröffentlichung vor.** SteamVR-Spiele, die auf deinem Mac laufen, kannst du auf Vision Pro erleben.",
+          "## Mit bloßen Händen, ohne Controller",
+          "**Dank Handtracking kannst du ohne separaten VR-Controller mit bloßen Händen zeigen und klicken.** Zeige auf Menüs oder Objekte im Spiel und wähle sie aus, um mit ihnen zu interagieren.",
+          "## Auch ForgePlay Mac wurde verbessert",
+          "Auf Grundlage eurer Issues und Community-Berichte haben wir unter anderem **Berechtigungsfehler bei der Installation von VC++-Komponenten, die Schriftverarbeitung in Installationsfenstern sowie Probleme mit der Tastenzuordnung bei koreanischer IME-Eingabe und der Erkennung von Tastaturlayouts** behoben beziehungsweise verbessert.",
+          "Neben ForgePlay VR enthält dieses Update auch Verbesserungen für die Kompatibilität und Stabilität der bestehenden Mac-App.",
+          "Vielen Dank für eure Geduld. Die vollständigen Update-Details und Nutzungshinweise geben wir zur Veröffentlichung bekannt."
+        ],
+        "es": [
+          "**Hemos terminado el desarrollo de las apps de ForgePlay VR para Mac y Apple Vision Pro y estamos preparando su distribución.** Podrás disfrutar en Vision Pro de los juegos de SteamVR que se ejecuten en tu Mac.",
+          "## Con las manos, sin mando",
+          "**El seguimiento de manos permite apuntar y hacer clic con las manos, sin un mando VR adicional.** Puedes señalar y seleccionar menús u objetos dentro del juego para interactuar con ellos.",
+          "## También hemos mejorado ForgePlay Mac",
+          "A partir de las incidencias y los reportes de la comunidad, hemos corregido y mejorado **errores de permisos al instalar componentes de VC++, el tratamiento de fuentes en las pantallas de instalación, la asignación de teclas con el IME coreano y la detección de distribuciones de teclado, entre otros aspectos.**",
+          "Además de ForgePlay VR, esta actualización incluirá mejoras de compatibilidad y estabilidad para la app de Mac existente.",
+          "Gracias por vuestra paciencia. Compartiremos los detalles completos y las instrucciones de uso cuando publiquemos la actualización."
+        ],
+        "fr": [
+          "**Le développement des apps ForgePlay VR pour Mac et Apple Vision Pro est terminé, et nous préparons leur distribution.** Vous pourrez profiter sur Vision Pro des jeux SteamVR exécutés sur votre Mac.",
+          "## À mains nues, sans manette",
+          "**Le suivi des mains permet de pointer et de cliquer à mains nues, sans manette VR supplémentaire.** Vous pouvez désigner et sélectionner des menus ou des objets dans le jeu pour interagir avec eux.",
+          "## ForgePlay Mac a également été amélioré",
+          "À partir de vos signalements et des retours de la communauté, nous avons corrigé et amélioré notamment **les erreurs d’autorisation lors de l’installation des composants VC++, la gestion des polices dans les écrans d’installation, l’affectation des touches avec l’IME coréen et la reconnaissance des dispositions de clavier.**",
+          "En plus de ForgePlay VR, cette mise à jour intégrera des améliorations de compatibilité et de stabilité pour l’app Mac existante.",
+          "Merci pour votre patience. Nous communiquerons les détails complets de la mise à jour et les instructions d’utilisation lors de sa publication."
+        ],
+        "ja": [
+          "ForgePlay VRの**MacアプリとApple Vision Proアプリの開発を終え、配布を準備しています。** Macで動作するSteamVRゲームをVision Proで楽しめます。",
+          "## コントローラーなしで、素手で操作",
+          "**ハンドトラッキングにより、別途VRコントローラーを用意せずに、素手でポインティングやクリックができます。** ゲーム内のメニューや対象を手で指し示して選択し、操作できます。",
+          "## ForgePlay Macも改善しました",
+          "皆さんからのIssueやコミュニティ報告をもとに、**VC++コンポーネントのインストール時の権限エラー、インストール画面のフォント処理、韓国語IMEに関するキーマッピングやキーボード配列の認識問題など**を修正・改善しました。",
+          "今回のアップデートにはForgePlay VRに加え、既存のMacアプリの互換性と安定性を高める改善も含まれます。",
+          "お待ちいただきありがとうございます。詳しい更新内容と使い方は、配布時にあわせてご案内します。"
+        ],
+        "zh-Hans": [
+          "ForgePlay VR 的 **Mac App 和 Apple Vision Pro App 已完成开发，正在准备发布。** 你可以在 Vision Pro 上体验由 Mac 运行的 SteamVR 游戏。",
+          "## 无需控制器，徒手操作",
+          "**通过手部追踪，无需额外的 VR 控制器，即可徒手指向和点击。** 你可以用手指向并选择游戏画面中的菜单或对象，与其进行交互。",
+          "## ForgePlay Mac 也一并改进",
+          "根据大家提交的 Issue 和社区反馈，我们修复和改进了 **VC++ 组件安装过程中的权限错误、安装界面的字体处理、韩文输入法（IME）相关的按键映射及键盘布局识别问题等。**",
+          "本次更新不仅包含 ForgePlay VR，还将一并带来现有 Mac App 的兼容性与稳定性改进。",
+          "感谢大家的耐心等待。我们将在发布时一并介绍详细更新内容与使用方法。"
+        ],
+        "zh-Hant": [
+          "ForgePlay VR 的 **Mac App 與 Apple Vision Pro App 已完成開發，正在準備發布。** 你可以在 Vision Pro 上體驗由 Mac 執行的 SteamVR 遊戲。",
+          "## 無需控制器，徒手操作",
+          "**透過手部追蹤，無需額外的 VR 控制器，即可徒手指向和點擊。** 你可以用手指向並選取遊戲畫面中的選單或對象，與其互動。",
+          "## ForgePlay Mac 也一併改善",
+          "根據大家提交的 Issue 與社群回報，我們修正並改善了 **VC++ 元件安裝過程中的權限錯誤、安裝畫面的字型處理、韓文輸入法（IME）相關的按鍵對應及鍵盤配置辨識問題等。**",
+          "本次更新不僅包含 ForgePlay VR，還將一併帶來現有 Mac App 的相容性與穩定性改善。",
+          "感謝大家耐心等候。我們將於發布時一併介紹詳細更新內容與使用方式。"
+        ]
+      },
+      "images": [
+        {
+          "src": "site-assets/announcements/forgeplay-vr-update-hands.jpg",
+          "width": 1280,
+          "height": 720,
+          "afterParagraph": 2,
+          "caption": {
+            "ko": "ForgePlay VR의 손 추적 화면",
+            "en": "Hand tracking in ForgePlay VR",
+            "de": "Handtracking in ForgePlay VR",
+            "es": "Seguimiento de manos en ForgePlay VR",
+            "fr": "Suivi des mains dans ForgePlay VR",
+            "ja": "ForgePlay VRのハンドトラッキング画面",
+            "zh-Hans": "ForgePlay VR 手部追踪画面",
+            "zh-Hant": "ForgePlay VR 手部追蹤畫面"
+          },
+          "alt": {
+            "ko": "ForgePlay VR 게임 화면 앞에 손이 표시되는 모습",
+            "en": "A hand visible in front of the game scene in ForgePlay VR",
+            "de": "Eine Hand vor der Spielszene in ForgePlay VR",
+            "es": "Una mano visible delante de la escena del juego en ForgePlay VR",
+            "fr": "Une main visible devant la scène de jeu dans ForgePlay VR",
+            "ja": "ForgePlay VRのゲーム画面の手前に表示された手",
+            "zh-Hans": "ForgePlay VR 游戏画面前显示的手部",
+            "zh-Hant": "ForgePlay VR 遊戲畫面前顯示的手部"
+          }
+        },
+        {
+          "src": "site-assets/announcements/forgeplay-vr-update-pointing.jpg",
+          "width": 1280,
+          "height": 720,
+          "afterParagraph": 2,
+          "caption": {
+            "ko": "ForgePlay VR의 포인팅 화면",
+            "en": "Pointing in ForgePlay VR",
+            "de": "Zeigen in ForgePlay VR",
+            "es": "Apuntado en ForgePlay VR",
+            "fr": "Pointage dans ForgePlay VR",
+            "ja": "ForgePlay VRのポインティング画面",
+            "zh-Hans": "ForgePlay VR 指向操作画面",
+            "zh-Hant": "ForgePlay VR 指向操作畫面"
+          },
+          "alt": {
+            "ko": "ForgePlay VR 게임 화면의 대상을 향하는 포인터",
+            "en": "A pointer aimed at an object in the ForgePlay VR game scene",
+            "de": "Ein auf ein Objekt in der ForgePlay-VR-Spielszene gerichteter Zeiger",
+            "es": "Un puntero dirigido a un objeto en la escena del juego de ForgePlay VR",
+            "fr": "Un pointeur dirigé vers un objet dans la scène de jeu de ForgePlay VR",
+            "ja": "ForgePlay VRのゲーム画面内の対象を指すポインター",
+            "zh-Hans": "指向 ForgePlay VR 游戏场景中对象的指针",
+            "zh-Hant": "指向 ForgePlay VR 遊戲場景中對象的指標"
+          }
+        }
+      ],
+      "href": "updates.html#update-forgeplay-vr-update-preparation"
+    },
     {
       "id": "forgeplay-modular-installation-development",
       "type": "project",
       "publishedAt": "2026-10-06",
-      "featured": true,
+      "featured": false,
       "titles": {
         "ko": "ForgePlay Mac 경량화와 런처 업데이트 기능을 개발하고 있습니다.",
         "en": "A lighter ForgePlay Mac and launcher-based updates are in development.",
