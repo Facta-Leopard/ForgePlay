@@ -20,6 +20,25 @@ body:
       required: true
 
   - type: dropdown
+    id: launch_platform
+    attributes:
+      label: Launch platform / 실행 플랫폼
+      description: |
+        Select how you launched the game in ForgePlay, not where you bought it or which graphics backend you used. Choose Unknown / Not sure if you cannot identify the launch method.
+        ForgePlay에서 실제로 게임을 실행한 경로를 선택해 주세요. 구입한 스토어나 그래픽 백엔드와는 별개입니다. 모르면 알 수 없음을 선택해 주세요.
+      multiple: false
+      options:
+        - Steam
+        - Battle.net
+        - Epic Games
+        - STOVE
+        - .EXE (Direct EXE launch / EXE 직접 실행)
+        - VR (ForgePlay VR)
+        - Unknown / Not sure (알 수 없음)
+    validations:
+      required: true
+
+  - type: dropdown
     id: result
     attributes:
       label: Result

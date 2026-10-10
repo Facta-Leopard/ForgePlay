@@ -1,9 +1,16 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
-  "updatedAt": "2026-10-06",
-  "revision": 2,
+  "updatedAt": "2026-10-11",
+  "revision": 0,
   "testProfiles": [
+    {
+      "id": "apple-silicon-m2-max-32gb-golden-gate-27-2",
+      "platform": "Apple Silicon Mac",
+      "chip": "M2 Max",
+      "unifiedMemoryGB": 32,
+      "macOSVersion": "Golden Gate 27.2"
+    },
     {
       "id": "apple-silicon-m5-max-full-128gb",
       "platform": "Apple Silicon Mac",
@@ -216,6 +223,13 @@
     }
   ],
   "games": [
+    {
+      "id": "phoenix-wright-ace-attorney-trilogy",
+      "titles": {
+        "en": "Phoenix Wright: Ace Attorney Trilogy",
+        "ko": "역전재판 123 나루호도 셀렉션"
+      }
+    },
     {
       "id": "last-epoch",
       "titles": {
@@ -2572,6 +2586,29 @@
         "zh-Hant": "社群回報 — 可以遊玩，但存在鍵盤輸入問題：回報者表示 Last Epoch 可在 ForgePlay 2.1.0 中正常遊玩，但似乎完全無法辨識鍵盤輸入。測試裝置為滿配 M5 Max、128GB 統一記憶體；執行平台及 macOS 版本未確認。\n\n開發者補充說明：已確認所回報的輸入問題，計畫在下一版本中處理。"
       },
       "blocker": null
+    },
+    {
+      "id": "phoenix-wright-ace-attorney-trilogy-github-40-20261011",
+      "gameId": "phoenix-wright-ace-attorney-trilogy",
+      "launchPlatform": "unknown",
+      "testProfileId": "apple-silicon-m2-max-32gb-golden-gate-27-2",
+      "forgePlayVersion": "2.1.0",
+      "gameVersion": null,
+      "status": "blocked",
+      "source": "github-issue",
+      "reporter": "Moneyya",
+      "testedAt": null,
+      "notes": {
+        "ko": "GitHub 이슈 제보: ForgePlay 2.1.0(빌드 7)에서 역전재판 123 나루호도 셀렉션이 실행되지 않는다고 합니다. 실행 플랫폼, 그래픽 백엔드와 게임 버전은 기재되지 않았으며 정확한 원인은 미확인입니다.\n\n개발자 추가 안내: 현재 이 게임을 위한 별도의 호환성 조치는 계획하고 있지 않습니다. 개발 중인 가상 머신(VM) 기능이 완성되면 이를 통한 실행이 가능할 것으로 예상하지만, 실제 VM 실행 여부는 아직 확인되지 않았습니다.",
+        "en": "GitHub issue report: Phoenix Wright: Ace Attorney Trilogy does not launch in ForgePlay 2.1.0 (build 7). The launch platform, graphics backend and game version were not specified, and the cause is unconfirmed.\n\nDeveloper note: No game-specific compatibility workaround is currently planned. The developer expects the game may run through the virtual machine (VM) feature once development is complete, but actual VM compatibility has not yet been verified.",
+        "de": "GitHub-Issue-Bericht: Phoenix Wright: Ace Attorney Trilogy startet mit ForgePlay 2.1.0 (Build 7) nicht. Startplattform, Grafik-Backend und Spielversion wurden nicht angegeben; die Ursache ist ungeklärt.\n\nErgänzung des Entwicklers: Derzeit ist keine gesonderte Kompatibilitätsanpassung für dieses Spiel geplant. Es wird erwartet, dass das Spiel nach Abschluss der Entwicklung über die Funktion für virtuelle Maschinen (VM) laufen könnte. Die tatsächliche VM-Kompatibilität wurde noch nicht bestätigt.",
+        "es": "Reporte de GitHub: Phoenix Wright: Ace Attorney Trilogy no se inicia en ForgePlay 2.1.0 (compilación 7). No se indicaron la plataforma de ejecución, el backend gráfico ni la versión del juego; la causa no está confirmada.\n\nNota del desarrollador: Por ahora no se prevé una solución de compatibilidad específica para este juego. Se espera que pueda ejecutarse mediante la función de máquina virtual (VM) cuando termine su desarrollo, pero su compatibilidad real con VM aún no se ha verificado.",
+        "fr": "Signalement GitHub : Phoenix Wright: Ace Attorney Trilogy ne se lance pas avec ForgePlay 2.1.0 (build 7). La plateforme de lancement, le backend graphique et la version du jeu ne sont pas précisés ; la cause reste indéterminée.\n\nNote du développeur : aucune adaptation de compatibilité propre à ce jeu n’est prévue actuellement. Le développeur s’attend à ce qu’il puisse fonctionner avec la fonction de machine virtuelle (VM) une fois son développement terminé, mais cette compatibilité n’a pas encore été vérifiée.",
+        "ja": "GitHub Issueでの報告：ForgePlay 2.1.0（ビルド7）で『逆転裁判123 成歩堂セレクション』が起動しないとのことです。起動プラットフォーム、グラフィックバックエンド、ゲームのバージョンは記載されておらず、原因は未確認です。\n\n開発者からの追記：現在、このゲーム専用の互換性対応は予定していません。開発中の仮想マシン（VM）機能が完成すれば実行できる可能性があると見込んでいますが、VMでの実際の動作はまだ確認されていません。",
+        "zh-Hans": "GitHub Issue 反馈：逆转裁判123 成步堂精选集在 ForgePlay 2.1.0（构建 7）中无法启动。未注明运行平台、图形后端及游戏版本，具体原因尚未确认。\n\n开发者补充说明：目前不计划为本游戏提供专门的兼容性修复。开发者预计，正在开发的虚拟机（VM）功能完成后可能能够运行本游戏，但实际的 VM 兼容性尚未验证。",
+        "zh-Hant": "GitHub Issue 回報：逆轉裁判123 成步堂精選集在 ForgePlay 2.1.0（組建 7）中無法啟動。未註明執行平台、圖形後端及遊戲版本，具體原因尚未確認。\n\n開發者補充說明：目前不計畫為本遊戲提供專門的相容性修正。開發者預計，開發中的虛擬機器（VM）功能完成後可能能夠執行本遊戲，但實際的 VM 相容性尚未驗證。"
+      },
+      "blocker": "unknown"
     }
   ]
 }
