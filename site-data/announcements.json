@@ -1,13 +1,40 @@
 {
   "$schema": "./announcements.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-10-10",
+  "updatedAt": "2026-10-12",
   "announcements": [
+    {
+      "id": "forgeplay-2-2-0-preview",
+      "type": "project",
+      "publishedAt": "2026-10-12",
+      "featured": true,
+      "titles": {
+        "ko": "ForgePlay 2.2.0 업데이트를 준비하고 있습니다.",
+        "en": "We’re preparing the ForgePlay 2.2.0 update.",
+        "de": "Wir bereiten das Update auf ForgePlay 2.2.0 vor.",
+        "es": "Estamos preparando la actualización de ForgePlay 2.2.0.",
+        "fr": "Nous préparons la mise à jour ForgePlay 2.2.0.",
+        "ja": "ForgePlay 2.2.0のアップデートを準備しています。",
+        "zh-Hans": "正在准备 ForgePlay 2.2.0 更新。",
+        "zh-Hant": "正在準備 ForgePlay 2.2.0 更新。"
+      },
+      "summaries": {
+        "ko": "새로운 아일랜드형 런처와 포플 키링, 경량화·런타임 모듈화, 플랫폼별 호환성 실행, Vision Pro용 SteamVR과 VC++·IME 문제 개선을 준비하고 있습니다. ForgePlayVP는 App Store 심사 제출 준비 중입니다.",
+        "en": "A new island-style launcher and Fopl keyring, reduced storage use, modular runtimes, per-platform compatibility launch, SteamVR for Vision Pro, and VC++ and IME fixes are coming. ForgePlayVP is being prepared for App Store review submission.",
+        "de": "Ein neuer Launcher im Inselstil mit Fopl-Schlüsselanhänger, weniger Speicherbedarf, modulare Laufzeitumgebungen, plattformspezifische Kompatibilitätsstarts, SteamVR für Vision Pro sowie VC++- und IME-Korrekturen sind in Vorbereitung. ForgePlayVP wird für die Einreichung zur App-Store-Prüfung vorbereitet.",
+        "es": "Preparamos un lanzador de tipo isla con el llavero Fopl, menor uso de almacenamiento, runtimes modulares, ejecución compatible por plataforma, SteamVR para Vision Pro y mejoras de VC++ e IME. ForgePlayVP se está preparando para enviarse a revisión del App Store.",
+        "fr": "Un lanceur en îlot avec le porte-clés Fopl, un stockage réduit, des environnements modulaires, un lancement compatible par plateforme, SteamVR sur Vision Pro et des correctifs VC++ et IME sont en préparation. ForgePlayVP se prépare à être soumis à l’examen de l’App Store.",
+        "ja": "新しいアイランド型ランチャーとポプルのキーホルダー、容量削減・ランタイムのモジュール化、プラットフォーム別の互換起動、Vision Pro向けSteamVR、VC++・IMEの改善を準備しています。ForgePlayVPはApp Store審査への提出準備中です。",
+        "zh-Hans": "正在准备全新的岛式启动器与 Fopl 钥匙挂件、存储优化和运行时模块化、各平台兼容启动、Vision Pro 上的 SteamVR，以及 VC++ 和 IME 问题修复。ForgePlayVP 正在准备提交 App Store 审核。",
+        "zh-Hant": "正在準備全新的島式啟動器與 Fopl 鑰匙吊飾、儲存最佳化和執行階段模組化、各平台相容啟動、Vision Pro 上的 SteamVR，以及 VC++ 和 IME 問題修正。ForgePlayVP 正在準備提交 App Store 審查。"
+      },
+      "href": "updates.html#update-forgeplay-2-2-0-preview"
+    },
     {
       "id": "forgeplay-vr-update-preparation",
       "type": "project",
       "publishedAt": "2026-10-10",
-      "featured": true,
+      "featured": false,
       "titles": {
         "ko": "ForgePlay VR 업데이트를 준비하고 있습니다.",
         "en": "We’re preparing the ForgePlay VR update.",
