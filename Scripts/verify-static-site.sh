@@ -1904,7 +1904,9 @@ for html in index.html why.html license.html privacy.html support.html compatibi
   else
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-14"'
   fi
-  if [[ "$html" == "index.html" || "$html" == "site-assets/dlss5.html" ]]; then
+  if [[ "$html" == "license.html" || "$html" == "site-assets/dlss5.html" ]]; then
+    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20261012-license220"'
+  elif [[ "$html" == "index.html" ]]; then
     require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20261004-firsts3"'
   else
     require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20260929-platform1"'
@@ -1965,8 +1967,8 @@ require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'CPU + GPU'
 require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'Bluetooth sampling rate'
 require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'href="https://support.apple.com/105118"'
 require_snippet "$ROOT_DIR/index.html" 'macOS 27 or later · Rosetta required'
-require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'The current reference is the OpenSource archive attached directly to the 2.0.0 (Build 6) release.'
-require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'data-i18n="home.sourceLink">Download 2.0.0 corresponding source ↗'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'Use ForgePlay-2.2.0-8-OpenSource.tar.gz attached to the 2.2.0 (Build 8) release.'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'data-i18n="home.sourceLink">Download 2.2.0 corresponding source ↗'
 require_snippet "$ROOT_DIR/index.html" 'href="why.html"'
 require_snippet "$ROOT_DIR/index.html" 'href="license.html"'
 require_snippet "$ROOT_DIR/index.html" 'CURRENT STABLE RELEASE'
@@ -2274,7 +2276,7 @@ if grep -Eq 'innerHTML|outerHTML|insertAdjacentHTML|document\\.write' "$ROOT_DIR
   fail "why-story.js must render the statement without unsafe HTML insertion"
 fi
 
-require_snippet "$ROOT_DIR/license.html" 'ForgePlay 2.0.0 (Build 6) is a multi-license distribution.'
+require_snippet "$ROOT_DIR/license.html" 'ForgePlay 2.2.0 (Build 8) is a multi-license distribution.'
 require_snippet "$ROOT_DIR/license.html" 'GPL-3.0-only'
 require_snippet "$ROOT_DIR/license.html" 'Corresponding Source'
 require_snippet "$ROOT_DIR/license.html" 'Native/NeuralRendering/'
@@ -2288,16 +2290,45 @@ require_snippet "$ROOT_DIR/license.html" 'data-i18n="license.mastheadLabel"'
 require_snippet "$ROOT_DIR/license.html" 'data-i18n-aria-label="license.mastheadAria"'
 require_snippet "$ROOT_DIR/license.html" 'data-i18n="license.mastheadScope"'
 require_snippet "$ROOT_DIR/license.html" 'data-i18n="license.filesLabel"'
-require_snippet "$ROOT_DIR/license.html" '게임 모드·프레임 생성·DLSS5 에뮬레이팅은 GPLv3로 공개합니다.'
-require_snippet "$ROOT_DIR/license.html" 'Game Mode, Frame Generation, and DLSS5 Emulation are published under GPLv3.'
-require_snippet "$ROOT_DIR/license.html" 'Spielmodus, Frame-Generierung und DLSS5-Emulation stehen unter GPLv3.'
-require_snippet "$ROOT_DIR/license.html" 'El modo Juego, la generación de fotogramas y la emulación de DLSS5 se publican bajo GPLv3.'
-require_snippet "$ROOT_DIR/license.html" 'Le mode Jeu, la génération d’images et l’émulation DLSS5 sont publiés sous GPLv3.'
-require_snippet "$ROOT_DIR/license.html" 'ゲームモード・フレーム生成・DLSS5エミュレーションをGPLv3で公開しています。'
-require_snippet "$ROOT_DIR/license.html" '游戏模式、帧生成与 DLSS5 模拟以 GPLv3 公开。'
-require_snippet "$ROOT_DIR/license.html" '遊戲模式、影格生成與 DLSS5 模擬以 GPLv3 公開。'
+require_snippet "$ROOT_DIR/license.html" 'ForgePlay 2.2.0의 라이선스와 공개 소스'
+require_snippet "$ROOT_DIR/license.html" 'Licenses and public source for ForgePlay 2.2.0'
+require_snippet "$ROOT_DIR/license.html" 'Lizenzen und öffentliche Quellen für ForgePlay 2.2.0'
+require_snippet "$ROOT_DIR/license.html" 'Licencias y código público de ForgePlay 2.2.0'
+require_snippet "$ROOT_DIR/license.html" 'Licences et sources publiques de ForgePlay 2.2.0'
+require_snippet "$ROOT_DIR/license.html" 'ForgePlay 2.2.0のライセンスと公開ソース'
+require_snippet "$ROOT_DIR/license.html" 'ForgePlay 2.2.0 的许可证与公开源码'
+require_snippet "$ROOT_DIR/license.html" 'ForgePlay 2.2.0 的授權與公開原始碼'
 require_snippet "$ROOT_DIR/license.html" 'href="LICENSE.md" download'
 require_snippet "$ROOT_DIR/license.html" 'href="LICENSES/GPL-3.0-only.txt" download'
+python3 - "$ROOT_DIR" <<'LICENSE220'
+from pathlib import Path
+import hashlib, json, re, sys
+root = Path(sys.argv[1])
+notices = root / 'site-data/licenses/2.2.0'
+snapshot = json.loads((notices / 'NOTICE-SNAPSHOT.json').read_text())
+assert (snapshot['version'], snapshot['build']) == ('2.2.0', 8)
+assert snapshot['archiveSHA256'] == '45a004f09e7de2c97dcdf620a1778b8b3f155fa3909c193fa6eaa52cabba2019'
+assert snapshot['sourceURL'].endswith('/v2.2.0/ForgePlay-2.2.0-8-OpenSource.tar.gz')
+assert len(snapshot['files']) == 18
+for item in snapshot['files']:
+    assert Path(item['path']).name == item['path']
+    path = notices / item['path']
+    assert path.is_file() and not path.is_symlink()
+    assert path.stat().st_size == item['byteSize']
+    assert hashlib.sha256(path.read_bytes()).hexdigest() == item['sha256']
+scope = json.loads((notices / 'SOURCE-BOUNDARIES.json').read_text())
+assert (scope['version'], str(scope['build'])) == ('2.2.0', '8')
+assert scope['completeMacApplicationSource'] is False
+page = (root / 'license.html').read_text()
+for lang in ('ko','en','de','es','fr','ja','zh-Hans','zh-Hant'):
+    article = re.search(r'<article id="license-' + lang + r'".*?</article>', page, re.S).group()
+    assert len(re.findall('class="license-scope-number"', article)) == 6
+    for term in ('2.2.0', 'BUILD 8', 'ForgePlay AI Coordinator', 'ForgePlayVP', 'Open RAIL-M', 'Apache-2.0', 'BSD-3-Clause', 'WRAPPER-PERMISSION.txt', 'SOURCE-BOUNDARIES.json'):
+        assert term in article, (lang, term)
+    assert '/v2.0.0/' not in article
+assert 'THREE NATIVE IMPLEMENTATIONS' not in page
+print('Release 2.2.0 licensing scope, 8 locales and immutable notice hashes passed.')
+LICENSE220
 
 require_snippet "$ROOT_DIR/site-data/announcements-full.json" '"de": "ForgePlay stellt den macOS-Spielmodus in den Mittelpunkt."'
 require_snippet "$ROOT_DIR/site-data/announcements-full.json" '"es": "ForgePlay sitúa el modo Juego de macOS en el centro."'

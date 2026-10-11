@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "version": "2.2.0",
+  "build": 8,
+  "sourceURL": "https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.2.0/ForgePlay-2.2.0-8-OpenSource.tar.gz",
+  "archiveSHA256": "45a004f09e7de2c97dcdf620a1778b8b3f155fa3909c193fa6eaa52cabba2019",
+  "archiveByteSize": 161020184,
+  "files": [
+    {
+      "path": "LICENSE.md",
+      "archivePath": "Notices/LICENSE.md",
+      "byteSize": 9154,
+      "sha256": "62ee7c91ff9252f79c49aed6c51abac019d34c5cd25ffa23a628e9dd44260eb3"
+    },
+    {
+      "path": "VR-NOTICE.txt",
+      "archivePath": "Notices/LICENSES/ForgePlayVR/NOTICE.txt",
+      "byteSize": 3383,
+      "sha256": "4e9b7af7f5a5fb01822212112c03b1efe066c42f29f94807f6dfba2160268a45"
+    },
+    {
+      "path": "VR-SCOPE.json",
+      "archivePath": "Notices/LICENSES/ForgePlayVR/SCOPE.json",
+      "byteSize": 1674,
+      "sha256": "46b9960042df318194573af23b7a2805137289de0676611966f4ecc2cb61ec11"
+    },
+    {
+      "path": "COORDINATOR-SCOPE.json",
+      "archivePath": "Notices/LICENSES/ForgePlayCoordinator/SCOPE.json",
+      "byteSize": 4860,
+      "sha256": "618dd63472c57c3ac4deeae06bf830f198c7267a551c45591b2ba7059f5f1bf8"
+    },
+    {
+      "path": "COORDINATOR-CONTRACTS-LICENSE.txt",
+      "archivePath": "Notices/LICENSES/ForgePlayCoordinator/CONTRACTS-LICENSE.txt",
+      "byteSize": 1217,
+      "sha256": "c1687ea273cab0e4cdda45202fefded49f94d343337a837b0c35da2bd4e07b6e"
+    },
+    {
+      "path": "WRAPPER-PERMISSION.txt",
+      "archivePath": "Notices/LICENSES/ForgePlayWrapper/PERMISSION.txt",
+      "byteSize": 3682,
+      "sha256": "54881f7336819548324873e175a26b9fa2018d7c940ff565db8f23ca6b6d0cbd"
+    },
+    {
+      "path": "WRAPPER-SCOPE.json",
+      "archivePath": "Notices/LICENSES/ForgePlayWrapper/SCOPE.json",
+      "byteSize": 1585,
+      "sha256": "18c1d8a3d2e91de9f6810243f70ccd5078f4da677d678c8bea191778eeffba9a"
+    },
+    {
+      "path": "Supertonic2-MODEL-LICENSE.txt",
+      "archivePath": "Notices/LICENSES/Supertonic2/LICENSE",
+      "byteSize": 15007,
+      "sha256": "0d944a9110fed9a9602d60e0423a272903e7bd21ab060490774efc77c2275e9f"
+    },
+    {
+      "path": "Supertonic2-CODE-LICENSE.txt",
+      "archivePath": "Notices/LICENSES/Supertonic2/CODE-LICENSE",
+      "byteSize": 1070,
+      "sha256": "0dfe0d0ba84416fe3879d9a34f4909d8d0137c78d1e95834177b0414ac096fa2"
+    },
+    {
+      "path": "OWLv2-LICENSE.txt",
+      "archivePath": "Notices/LICENSES/OWLv2/LICENSE",
+      "byteSize": 11357,
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "path": "HyPER-GAN-LICENSE.txt",
+      "archivePath": "Notices/LICENSES/HyPERGAN/LICENSE",
+      "byteSize": 1072,
+      "sha256": "a568d11a92af5cb9c0611a154e27fed30cec8feb3e6a8fcf2e28ba5b962db508"
+    },
+    {
+      "path": "ONNXRuntime-LICENSE.txt",
+      "archivePath": "Notices/LICENSES/ONNXRuntime/LICENSE",
+      "byteSize": 1073,
+      "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c"
+    },
+    {
+      "path": "ONNXRuntime-ThirdPartyNotices.txt",
+      "archivePath": "Notices/LICENSES/ONNXRuntime/ThirdPartyNotices.txt",
+      "byteSize": 338088,
+      "sha256": "143764b952fdb1a7c69ce653bfba74a7744d6a8a573bfb73e235fba356c83de3"
+    },
+    {
+      "path": "OpenVR-LICENSE.txt",
+      "archivePath": "ThirdParty/VR/ThirdParty/OpenVR/LICENSE",
+      "byteSize": 1488,
+      "sha256": "f56ff606104d4ef18e617921a75c73ad73b5a1a1d70c69590c29de16919e04ad"
+    },
+    {
+      "path": "SOURCE-BOUNDARIES.json",
+      "archivePath": "SOURCE-BOUNDARIES.json",
+      "byteSize": 430669,
+      "sha256": "4b28beb63c5b918b5848f4517d8073e2f0fd19ccab7fe13be7e58d054bc8b2f4"
+    },
+    {
+      "path": "RuntimeSBOM.json",
+      "archivePath": "ForgePlay/Mac/Resources/Runners/ForgePlayRuntime/RuntimeSBOM.json",
+      "byteSize": 155253,
+      "sha256": "16e113dc1413efb4fcf1603546a3edfdf34589a712e657c444c8c3a3f71aaf0f"
+    },
+    {
+      "path": "SOURCE-README.ko.md",
+      "archivePath": "README.ko.md",
+      "byteSize": 2927,
+      "sha256": "cc366cc30198037c082f41396a111a8da8dfd195cc8aa6e75fd12d0be9d5abbc"
+    },
+    {
+      "path": "SOURCE-README.md",
+      "archivePath": "README.md",
+      "byteSize": 1909,
+      "sha256": "fd2eea16806877f85cf2c32e80131368cedad5d49eb980920f679de14449936f"
+    }
+  ]
+}
