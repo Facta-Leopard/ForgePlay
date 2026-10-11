@@ -1,8 +1,8 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
-  "updatedAt": "2026-10-11",
-  "revision": 2,
+  "updatedAt": "2026-10-12",
+  "revision": 0,
   "testProfiles": [
     {
       "id": "apple-silicon-m2-max-32gb-golden-gate-27-2",
@@ -223,6 +223,13 @@
     }
   ],
   "games": [
+    {
+      "id": "dasi-gireul-geotda",
+      "titles": {
+        "en": "다시, 길을 걷다",
+        "ko": "다시, 길을 걷다"
+      }
+    },
     {
       "id": "phoenix-wright-ace-attorney-trilogy",
       "titles": {
@@ -711,6 +718,28 @@
     }
   ],
   "reports": [
+    {
+      "id": "dasi-gireul-geotda-forgeplay-2-2-0-project-test-20261012",
+      "gameId": "dasi-gireul-geotda",
+      "launchPlatform": "stove",
+      "testProfileId": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
+      "forgePlayVersion": "2.2.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": {
+        "ko": "개발자 테스트: ForgePlay 2.2.0의 STOVE 환경에서 원활한 정상 실행을 확인했습니다. 특이사항: Ren’Py(렌파이) 게임 엔진 기반인 이 게임이 원활히 실행되는 것을 확인한 테스트 결과입니다. 테스트 Mac: M4 Pro 컷칩, 통합 메모리 24GB, macOS 27.0.1.",
+        "en": "Developer test: confirmed smooth, normal operation through STOVE in ForgePlay 2.2.0. Note: this test confirmed that this Ren’Py-based game runs smoothly. Mac: binned M4 Pro, 24GB unified memory, macOS 27.0.1.",
+        "de": "Entwicklertest: reibungsloser, normaler Betrieb über STOVE mit ForgePlay 2.2.0 bestätigt. Hinweis: Dieser Test bestätigt die flüssige Ausführung dieses auf Ren’Py basierenden Spiels. Mac: M4 Pro mit reduzierter Kernzahl, 24GB gemeinsamer Speicher, macOS 27.0.1.",
+        "es": "Prueba del desarrollador: funcionamiento normal y fluido mediante STOVE en ForgePlay 2.2.0. Nota: esta prueba confirmó el funcionamiento fluido de este juego basado en Ren’Py. Mac: M4 Pro con menos núcleos, 24GB de memoria unificada, macOS 27.0.1.",
+        "fr": "Test du développeur : fonctionnement normal et fluide via STOVE avec ForgePlay 2.2.0 confirmé. Remarque : ce test a confirmé le bon fonctionnement de ce jeu basé sur Ren’Py. Mac : M4 Pro à nombre de cœurs réduit, 24Go de mémoire unifiée, macOS 27.0.1.",
+        "ja": "開発者テスト：ForgePlay 2.2.0のSTOVE環境で快適な正常動作を確認しました。補足：Ren’Pyエンジンを使用した本作がスムーズに動作することを確認したテスト結果です。Mac：コア数の少ない構成のM4 Pro、ユニファイドメモリ24GB、macOS 27.0.1。",
+        "zh-Hans": "开发者测试：确认在 ForgePlay 2.2.0 的 STOVE 环境中正常、流畅运行。备注：本次测试确认这款基于 Ren’Py 引擎的游戏可以流畅运行。Mac：减少核心数版本的 M4 Pro，24GB 统一内存，macOS 27.0.1。",
+        "zh-Hant": "開發者測試：確認在 ForgePlay 2.2.0 的 STOVE 環境中正常、流暢執行。備註：本次測試確認這款基於 Ren’Py 引擎的遊戲可以流暢執行。Mac：核心數較少版本的 M4 Pro，24GB 統一記憶體，macOS 27.0.1。"
+      },
+      "blocker": null
+    },
     {
       "id": "romance-of-the-three-kingdoms-6-forgeplay-2-1-0-project-test-20261004",
       "gameId": "romance-of-the-three-kingdoms-6",

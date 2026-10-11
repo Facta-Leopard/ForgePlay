@@ -5,28 +5,28 @@
   "announcements": [
     {
       "id": "forgeplay-2-2-0-preview",
-      "type": "project",
+      "type": "release",
       "publishedAt": "2026-10-12",
       "featured": true,
       "titles": {
-        "ko": "ForgePlay 2.2.0 업데이트를 준비하고 있습니다.",
-        "en": "We’re preparing the ForgePlay 2.2.0 update.",
-        "de": "Wir bereiten das Update auf ForgePlay 2.2.0 vor.",
-        "es": "Estamos preparando la actualización de ForgePlay 2.2.0.",
-        "fr": "Nous préparons la mise à jour ForgePlay 2.2.0.",
-        "ja": "ForgePlay 2.2.0のアップデートを準備しています。",
-        "zh-Hans": "正在准备 ForgePlay 2.2.0 更新。",
-        "zh-Hant": "正在準備 ForgePlay 2.2.0 更新。"
+        "ko": "ForgePlay 2.2.0 업데이트",
+        "en": "ForgePlay 2.2.0 Update",
+        "de": "ForgePlay 2.2.0 – Update",
+        "es": "Actualización de ForgePlay 2.2.0",
+        "fr": "Mise à jour ForgePlay 2.2.0",
+        "ja": "ForgePlay 2.2.0アップデート",
+        "zh-Hans": "ForgePlay 2.2.0 更新",
+        "zh-Hant": "ForgePlay 2.2.0 更新"
       },
       "summaries": {
-        "ko": "새로운 아일랜드형 런처와 포플 키링, 경량화·런타임 모듈화, 플랫폼별 호환성 실행, Vision Pro용 SteamVR과 VC++·IME 문제 개선을 준비하고 있습니다. ForgePlayVP는 App Store 심사 제출 준비 중입니다.",
-        "en": "A new island-style launcher and Fopl keyring, reduced storage use, modular runtimes, per-platform compatibility launch, SteamVR for Vision Pro, and VC++ and IME fixes are coming. ForgePlayVP is being prepared for App Store review submission.",
-        "de": "Ein neuer Launcher im Inselstil mit Fopl-Schlüsselanhänger, weniger Speicherbedarf, modulare Laufzeitumgebungen, plattformspezifische Kompatibilitätsstarts, SteamVR für Vision Pro sowie VC++- und IME-Korrekturen sind in Vorbereitung. ForgePlayVP wird für die Einreichung zur App-Store-Prüfung vorbereitet.",
-        "es": "Preparamos un lanzador de tipo isla con el llavero Fopl, menor uso de almacenamiento, runtimes modulares, ejecución compatible por plataforma, SteamVR para Vision Pro y mejoras de VC++ e IME. ForgePlayVP se está preparando para enviarse a revisión del App Store.",
-        "fr": "Un lanceur en îlot avec le porte-clés Fopl, un stockage réduit, des environnements modulaires, un lancement compatible par plateforme, SteamVR sur Vision Pro et des correctifs VC++ et IME sont en préparation. ForgePlayVP se prépare à être soumis à l’examen de l’App Store.",
-        "ja": "新しいアイランド型ランチャーとポプルのキーホルダー、容量削減・ランタイムのモジュール化、プラットフォーム別の互換起動、Vision Pro向けSteamVR、VC++・IMEの改善を準備しています。ForgePlayVPはApp Store審査への提出準備中です。",
-        "zh-Hans": "正在准备全新的岛式启动器与 Fopl 钥匙挂件、存储优化和运行时模块化、各平台兼容启动、Vision Pro 上的 SteamVR，以及 VC++ 和 IME 问题修复。ForgePlayVP 正在准备提交 App Store 审核。",
-        "zh-Hant": "正在準備全新的島式啟動器與 Fopl 鑰匙吊飾、儲存最佳化和執行階段模組化、各平台相容啟動、Vision Pro 上的 SteamVR，以及 VC++ 和 IME 問題修正。ForgePlayVP 正在準備提交 App Store 審查。"
+        "ko": "ForgePlay 2.2.0(빌드 8)을 공개했습니다. 아일랜드형 런처와 포플 키링, 경량화·런타임 모듈화, 플랫폼별 호환성 실행과 VC++·IME 문제 개선을 적용했습니다. Mac의 VR 기능도 포함했으며, 별도로 필요한 ForgePlayVP는 App Store 심사 제출 준비 중입니다.",
+        "en": "ForgePlay 2.2.0 (build 8) is available. This update brings an island-style launcher and Fopl keyring, reduced storage use, modular runtimes, per-platform compatibility launch, and VC++ and IME fixes. Mac-side VR is included; the separately required ForgePlayVP is being prepared for App Store review submission.",
+        "de": "ForgePlay 2.2.0 (Build 8) ist verfügbar: Launcher im Inselstil mit Fopl-Schlüsselanhänger, weniger Speicherbedarf, modulare Laufzeitumgebungen, plattformspezifischer Kompatibilitätsstart sowie VC++- und IME-Korrekturen. Die Mac-seitige VR-Funktion ist enthalten; das zusätzlich benötigte ForgePlayVP wird für die App-Store-Prüfung vorbereitet.",
+        "es": "ForgePlay 2.2.0 (compilación 8) ya está disponible: lanzador de tipo isla con Fopl, menor uso de almacenamiento, runtimes modulares, ejecución compatible por plataforma y correcciones de VC++ e IME. Incluye VR en el Mac; ForgePlayVP, necesario por separado, se prepara para enviarse a revisión del App Store.",
+        "fr": "ForgePlay 2.2.0 (build 8) est disponible : lanceur en îlot avec Fopl, stockage réduit, environnements modulaires, lancement compatible par plateforme et correctifs VC++ et IME. La VR côté Mac est incluse ; ForgePlayVP, requis séparément, se prépare à être soumis à l’examen de l’App Store.",
+        "ja": "ForgePlay 2.2.0（ビルド8）を公開しました。アイランド型ランチャーとポプル、容量削減・ランタイムのモジュール化、プラットフォーム別の互換起動、VC++・IMEの改善を適用しました。Mac側のVR機能も含まれます。別途必要なForgePlayVPはApp Store審査への提出準備中です。",
+        "zh-Hans": "ForgePlay 2.2.0（构建 8）现已发布。新增岛式启动器和 Fopl 挂件，减少存储占用、实现运行时模块化，并改善各平台兼容启动及 VC++、IME 问题。包含 Mac 端 VR 功能；另行必需的 ForgePlayVP 正在准备提交 App Store 审核。",
+        "zh-Hant": "ForgePlay 2.2.0（組建 8）現已發布。新增島式啟動器和 Fopl 吊飾，減少儲存占用、實現執行階段模組化，並改善各平台相容啟動及 VC++、IME 問題。包含 Mac 端 VR 功能；另行必需的 ForgePlayVP 正在準備提交 App Store 審查。"
       },
       "href": "updates.html#update-forgeplay-2-2-0-preview"
     },
