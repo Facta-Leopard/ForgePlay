@@ -1,0 +1,526 @@
+{
+  "version": "2.2.0",
+  "build": 8,
+  "locales": [
+    "ko",
+    "en",
+    "de",
+    "es",
+    "fr",
+    "ja",
+    "zh-Hans",
+    "zh-Hant"
+  ],
+  "strings": {
+      "storageLead": [
+        "빈 폴더는 Windows 드라이브로 연결하고, 기존 SteamLibrary는 Steam에 등록합니다. 게임 파일을 복사하거나 옮기지 않습니다. 게임·설치 작업을 종료한 뒤 연결을 변경하세요.",
+        "Connect an empty folder as a Windows drive, or register an existing SteamLibrary. Game files are not copied or moved. End games and installation tasks before changing connections.",
+        "Leere Ordner als Windows-Laufwerk verbinden oder bestehende SteamLibrary registrieren. Keine Spieldateien werden kopiert oder verschoben. Spiele/Installationen vorher beenden.",
+        "Conecta una carpeta vacía como unidad Windows o registra SteamLibrary. No se copian ni mueven juegos. Cierra juegos e instalaciones antes de cambiar conexiones.",
+        "Connectez un dossier vide comme lecteur Windows ou enregistrez SteamLibrary. Aucun jeu copié ou déplacé. Fermez jeux et installations avant de modifier les connexions.",
+        "空のフォルダーをWindowsドライブとして接続するか、既存のSteamLibraryを登録します。ゲームファイルは移動・コピーしません。変更前にゲームやインストールを終了してください。",
+        "将空文件夹连接为 Windows 驱动器，或注册现有 SteamLibrary。不会复制或移动游戏文件。更改连接前请退出游戏和安装任务。",
+        "將空資料夾連接為 Windows 磁碟機，或註冊既有 SteamLibrary。不會複製或移動遊戲檔案。更改連線前請結束遊戲和安裝作業。"
+      ],
+      "storageEmpty": [
+        "연결한 외장 저장공간이 없습니다. 내부 Steam 라이브러리는 그대로 사용할 수 있습니다.",
+        "No external storage connected. The internal Steam library remains available.",
+        "Kein externer Speicher verbunden. Die interne Steam-Bibliothek bleibt verfügbar.",
+        "No hay almacenamiento externo conectado. La biblioteca interna sigue disponible.",
+        "Aucun stockage externe connecté. La bibliothèque interne reste disponible.",
+        "外付けストレージは未接続です。内部Steamライブラリは利用できます。",
+        "未连接外部存储，内部 Steam 库仍可使用。",
+        "未連接外部儲存空間，內部 Steam 收藏庫仍可使用。"
+      ],
+      "storageLocked": [
+        "연결을 변경하려면 Steam·게임을 먼저 종료하세요.",
+        "Close Steam and games before changing connections.",
+        "Steam und Spiele vor Änderungen beenden.",
+        "Cierra Steam y los juegos antes de cambiar conexiones.",
+        "Fermez Steam et les jeux avant de modifier les connexions.",
+        "接続変更前にSteamとゲームを終了してください。",
+        "更改连接前请退出 Steam 和游戏。",
+        "更改連線前請結束 Steam 和遊戲。"
+      ],
+      "storageExisting": [
+        "기존 SteamLibrary 연결 예시",
+        "Connect existing SteamLibrary example",
+        "Beispiel: bestehende SteamLibrary",
+        "Ejemplo: SteamLibrary existente",
+        "Exemple : SteamLibrary existante",
+        "既存SteamLibraryの接続例",
+        "连接现有 SteamLibrary 示例",
+        "連接既有 SteamLibrary 範例"
+      ],
+      "storageEmptyChoice": [
+        "빈 외장 폴더 연결 예시",
+        "Connect empty external folder example",
+        "Beispiel: leerer externer Ordner",
+        "Ejemplo: carpeta externa vacía",
+        "Exemple : dossier externe vide",
+        "空の外付けフォルダーの接続例",
+        "连接空外部文件夹示例",
+        "連接空外部資料夾範例"
+      ],
+      "refresh": [
+        "새로고침",
+        "Refresh",
+        "Aktualisieren",
+        "Actualizar",
+        "Actualiser",
+        "更新",
+        "刷新",
+        "重新整理"
+      ],
+      "retinaHelp": [
+        "기본은 꺼짐입니다. Mac의 Steam·게임 창을 더 선명하게 그리지만 GPU 부담이 커질 수 있습니다. VR 전송 해상도는 바뀌지 않으며 ‘기기와 입력’에서 별도로 조절합니다. Steam을 종료한 뒤 변경하세요.",
+        "Off by default. Renders Mac Steam/game windows more sharply, with possible extra GPU load. VR stream resolution is unchanged; set it separately in Devices & Input. Close Steam before changing.",
+        "Standardmäßig aus. Schärfere Mac-Fenster, möglicherweise mehr GPU-Last. Die VR-Stream-Auflösung wird separat unter Geräte/Eingabe eingestellt. Steam vorher beenden.",
+        "Desactivado por defecto. Más nitidez en las ventanas Mac, con posible carga GPU adicional. La resolución VR se ajusta por separado en dispositivos. Cierra Steam antes.",
+        "Désactivé par défaut. Fenêtres Mac plus nettes, avec une charge GPU possible. La résolution VR se règle séparément dans Appareils. Fermez Steam avant.",
+        "標準はオフです。MacのSteam・ゲーム画面を高精細にしますがGPU負荷が増える場合があります。VR配信解像度は変わらず「機器と入力」で別に設定します。変更前にSteamを終了してください。",
+        "默认关闭。让 Mac 上的 Steam 和游戏窗口更清晰，但可能增加 GPU 负载。不会改变 VR 传输分辨率，需在设备与输入中单独调整。更改前请退出 Steam。",
+        "預設關閉。讓 Mac 上的 Steam 和遊戲視窗更清晰，但可能增加 GPU 負載。不會改變 VR 傳輸解析度，需在裝置與輸入中單獨調整。變更前請結束 Steam。"
+      ],
+    "compact": [
+      "작은 버튼 보기",
+      "Show small buttons",
+      "Kleine Schaltflächen",
+      "Botones pequeños",
+      "Petits boutons",
+      "小さいボタンで表示",
+      "显示小按钮",
+      "顯示小按鈕"
+    ],
+    "expanded": [
+      "전체 화면 펼치기",
+      "Expand full view",
+      "Vollständig aufklappen",
+      "Desplegar vista completa",
+      "Déployer la vue",
+      "全体を展開",
+      "展开完整界面",
+      "展開完整介面"
+    ],
+    "keyring": [
+      "완전 접기 · 포플만 보기",
+      "Fully fold · Fopl only",
+      "Ganz einklappen · nur Fopl",
+      "Plegar · solo Fopl",
+      "Replier · Fopl seul",
+      "完全に折りたたむ・ポプルのみ",
+      "完全收起 · 只显示 Fopl",
+      "完全收起 · 只顯示 Fopl"
+    ],
+    "hide": [
+      "잠깐 숨기기",
+      "Hide for now",
+      "Vorübergehend ausblenden",
+      "Ocultar un momento",
+      "Masquer temporairement",
+      "一時的に隠す",
+      "暂时隐藏",
+      "暫時隱藏"
+    ],
+    "restore": [
+      "ForgePlay 다시 보기",
+      "Show ForgePlay again",
+      "ForgePlay wieder anzeigen",
+      "Mostrar ForgePlay",
+      "Réafficher ForgePlay",
+      "ForgePlayを再表示",
+      "重新显示 ForgePlay",
+      "重新顯示 ForgePlay"
+    ],
+    "chatter": [
+      "혼잣말",
+      "Chatter",
+      "Plaudern",
+      "Comentarios",
+      "Bavardages",
+      "独り言",
+      "自言自语",
+      "自言自語"
+    ],
+    "reactions": [
+      "클릭에 반응",
+      "React to clicks",
+      "Auf Klicks reagieren",
+      "Reaccionar a clics",
+      "Réagir aux clics",
+      "クリックに反応",
+      "点击反应",
+      "點擊反應"
+    ],
+    "position": [
+      "키링 위치",
+      "Keyring position",
+      "Position des Anhängers",
+      "Posición del llavero",
+      "Position du porte-clés",
+      "キーホルダーの位置",
+      "挂件位置",
+      "吊飾位置"
+    ],
+    "left": [
+      "왼쪽",
+      "Left",
+      "Links",
+      "Izquierda",
+      "Gauche",
+      "左",
+      "左侧",
+      "左側"
+    ],
+    "center": [
+      "가운데",
+      "Center",
+      "Mitte",
+      "Centro",
+      "Centre",
+      "中央",
+      "中央",
+      "中央"
+    ],
+    "right": [
+      "오른쪽",
+      "Right",
+      "Rechts",
+      "Derecha",
+      "Droite",
+      "右",
+      "右侧",
+      "右側"
+    ],
+    "advanced": [
+      "고급 정보 표시",
+      "Show advanced information",
+      "Erweiterte Informationen",
+      "Información avanzada",
+      "Informations avancées",
+      "詳細情報を表示",
+      "显示高级信息",
+      "顯示進階資訊"
+    ],
+    "settings": [
+      "환경 설정…",
+      "Settings…",
+      "Einstellungen…",
+      "Ajustes…",
+      "Réglages…",
+      "環境設定…",
+      "设置…",
+      "設定…"
+    ],
+    "close": [
+      "닫기",
+      "Close",
+      "Schließen",
+      "Cerrar",
+      "Fermer",
+      "閉じる",
+      "关闭",
+      "關閉"
+    ],
+    "menu": [
+      "포플 키링 옵션",
+      "Fopl keyring options",
+      "Fopl-Anhängeroptionen",
+      "Opciones del llavero Fopl",
+      "Options du porte-clés Fopl",
+      "ポプルのキーホルダー設定",
+      "Fopl 挂件选项",
+      "Fopl 吊飾選項"
+    ],
+    "fopl": [
+      "포플 키링 · 클릭하면 반응, 우클릭하면 옵션",
+      "Fopl keyring · click to react, right-click for options",
+      "Fopl-Anhänger · klicken zum Reagieren, Rechtsklick für Optionen",
+      "Llavero Fopl · clic para interactuar, clic derecho para opciones",
+      "Porte-clés Fopl · clic pour réagir, clic droit pour les options",
+      "ポプル・クリックで反応、右クリックで設定",
+      "Fopl 挂件 · 点击互动，右键打开选项",
+      "Fopl 吊飾 · 點擊互動，右鍵開啟選項"
+    ],
+    "handle": [
+      "아래로 끌어 펼치기 · 위로 밀어 접기",
+      "Drag down to expand · up to collapse",
+      "Nach unten aufziehen · nach oben einklappen",
+      "Arrastra abajo para desplegar y arriba para plegar",
+      "Tirer vers le bas pour déployer, vers le haut pour replier",
+      "下へドラッグで展開・上へドラッグで折りたたむ",
+      "向下拖动展开，向上拖动收起",
+      "向下拖曳展開，向上拖曳收起"
+    ],
+    "home": [
+      "런처로 돌아가기",
+      "Return to launcher",
+      "Zurück zum Launcher",
+      "Volver al lanzador",
+      "Retour au lanceur",
+      "ランチャーに戻る",
+      "返回启动器",
+      "返回啟動器"
+    ],
+    "hello": [
+      "앗, 불렀어? 나 여기 있어~",
+      "Oh, did you call me? I’m right here!",
+      "Hast du mich gerufen? Ich bin hier!",
+      "¿Me llamabas? ¡Aquí estoy!",
+      "Tu m’as appelé ? Je suis là !",
+      "呼んだ？ここにいるよ～",
+      "叫我了吗？我在这里～",
+      "叫我了嗎？我在這裡～"
+    ],
+    "tickle": [
+      "으앗, 잠깐~ 간지러워!",
+      "Ahaha, wait! That tickles!",
+      "Hihi, warte! Das kitzelt!",
+      "¡Espera, me haces cosquillas!",
+      "Attends, ça chatouille !",
+      "ちょっと待って、くすぐったいよ～",
+      "等一下，好痒呀～",
+      "等一下，好癢呀～"
+    ],
+    "tipFold": [
+      "위의 손잡이를 아래로 끌면 펼칠 수 있어!",
+      "Drag the handle down to expand the app!",
+      "Zieh den Griff nach unten zum Aufklappen!",
+      "¡Arrastra el tirador hacia abajo para desplegar!",
+      "Tire la poignée vers le bas pour déployer !",
+      "上の取っ手を下へ引くと開けるよ！",
+      "向下拖动上方把手就能展开！",
+      "向下拖曳上方把手就能展開！"
+    ],
+    "tipMenu": [
+      "나만 남았을 땐 우클릭해서 작은 버튼이나 전체 화면으로 돌아가면 돼!",
+      "When only I’m here, right-click to restore the buttons or full view!",
+      "Rechtsklick auf mich bringt die Schaltflächen oder volle Ansicht zurück!",
+      "¡Haz clic derecho para volver a los botones o la vista completa!",
+      "Un clic droit sur moi ramène les boutons ou la vue complète !",
+      "僕だけの時は右クリックでボタンや全体表示に戻れるよ！",
+      "只剩我时，右键就能恢复按钮或完整界面！",
+      "只剩我時，右鍵就能恢復按鈕或完整介面！"
+    ],
+    "tipHome": [
+      "오른쪽 앱 아이콘을 누르면 런처로 돌아갈 수 있어!",
+      "Tap the app icon on the right to return to the launcher!",
+      "Das App-Symbol rechts führt zurück zum Launcher!",
+      "¡El icono de la derecha vuelve al lanzador!",
+      "L’icône à droite te ramène au lanceur !",
+      "右のアプリアイコンでランチャーに戻れるよ！",
+      "点击右侧应用图标即可返回启动器！",
+      "點擊右側應用程式圖示即可返回啟動器！"
+    ],
+    "lessonIsland": [
+      "아일랜드 · 포플 키링",
+      "Island · Fopl keyring",
+      "Insel · Fopl-Anhänger",
+      "Isla · llavero Fopl",
+      "Îlot · porte-clés Fopl",
+      "アイランド・ポプル",
+      "岛式界面 · Fopl 挂件",
+      "島式介面 · Fopl 吊飾"
+    ],
+    "lessonCompatibility": [
+      "게임별 호환성 실행",
+      "Game compatibility profiles",
+      "Spielprofile",
+      "Perfiles de compatibilidad",
+      "Profils de compatibilité",
+      "ゲーム別互換起動",
+      "游戏兼容配置",
+      "遊戲相容設定"
+    ],
+    "compatibility": [
+      "호환성 실행",
+      "Compatibility launch",
+      "Kompatibilitätsstart",
+      "Ejecución compatible",
+      "Lancement compatible",
+      "互換起動",
+      "兼容启动",
+      "相容啟動"
+    ],
+    "profile": [
+      "게임 프로필",
+      "Game profile",
+      "Spielprofil",
+      "Perfil del juego",
+      "Profil de jeu",
+      "ゲームプロファイル",
+      "游戏配置",
+      "遊戲設定"
+    ],
+    "renpy": [
+      "Ren’Py 엔진 친화",
+      "Ren’Py-friendly",
+      "Ren’Py-freundlich",
+      "Compatible con Ren’Py",
+      "Adapté à Ren’Py",
+      "Ren’Py向け",
+      "Ren’Py 引擎优化",
+      "Ren’Py 引擎相容"
+    ],
+    "renpyHelp": [
+      "Ren’Py 게임의 OpenGL 초기화 문제를 피하기 위한 프로필입니다. Steam·STOVE·Epic Games·.EXE를 선택하고 백엔드와 옵션을 확인하세요. 일반 실행과 별도로 저장되며, 기존 클라이언트를 종료한 뒤 실행해야 적용됩니다. 모든 Ren’Py 게임의 실행을 보장하지는 않습니다.",
+      "A profile for Ren’Py OpenGL startup issues. Choose Steam, STOVE, Epic Games or .EXE, then review the backend and options. Settings are separate from normal launch; close the existing client before using them. Not every Ren’Py game is guaranteed to work.",
+      "Profil für OpenGL-Startprobleme bei Ren’Py. Steam, STOVE, Epic Games oder .EXE wählen und Optionen prüfen. Einstellungen sind vom normalen Start getrennt. Vorher den laufenden Client beenden; keine Garantie für alle Ren’Py-Spiele.",
+      "Perfil para problemas de inicio OpenGL de Ren’Py. Elige Steam, STOVE, Epic Games o .EXE y revisa las opciones. Se guarda aparte del inicio normal; cierra el cliente antes. No garantiza todos los juegos Ren’Py.",
+      "Profil pour les problèmes de démarrage OpenGL de Ren’Py. Choisissez Steam, STOVE, Epic Games ou .EXE et vérifiez les options. Réglages distincts du lancement normal ; fermez le client avant. Tous les jeux Ren’Py ne sont pas garantis.",
+      "Ren’PyのOpenGL起動問題向けプロファイルです。Steam・STOVE・Epic Games・.EXEを選び、設定を確認します。通常起動とは別に保存され、既存クライアント終了後に適用されます。すべてのRen’Pyゲームを保証しません。",
+      "用于 Ren’Py 游戏 OpenGL 启动问题的配置。选择 Steam、STOVE、Epic Games 或 .EXE 后检查后端和选项。与普通启动设置分开保存；请先退出原有客户端。不保证所有 Ren’Py 游戏都能运行。",
+      "用於 Ren’Py 遊戲 OpenGL 啟動問題的設定。選擇 Steam、STOVE、Epic Games 或 .EXE 後檢查後端和選項。與一般啟動設定分開儲存；請先結束原有用戶端。不保證所有 Ren’Py 遊戲都能執行。"
+    ],
+    "reviewProfile": [
+      "프로필과 대상을 전체 화면에서 확인하세요.",
+      "Review the profile and target in the expanded view.",
+      "Profil und Ziel in der Vollansicht prüfen.",
+      "Revisa perfil y destino en la vista completa.",
+      "Vérifiez profil et cible dans la vue déployée.",
+      "展開画面でプロファイルと対象を確認してください。",
+      "请在展开界面检查配置和目标。",
+      "請在展開介面檢查設定和目標。"
+    ],
+    "showSettings": [
+      "설정 보기",
+      "Show settings",
+      "Einstellungen anzeigen",
+      "Ver ajustes",
+      "Voir les réglages",
+      "設定を表示",
+      "查看设置",
+      "查看設定"
+    ],
+    "repair": [
+      "브라우저 로그인 연결 정비",
+      "Repair browser sign-in links",
+      "Browser-Anmeldung reparieren",
+      "Reparar inicio de sesión web",
+      "Réparer la connexion navigateur",
+      "ブラウザログイン接続の修復",
+      "修复浏览器登录关联",
+      "修復瀏覽器登入連結"
+    ],
+    "repairHelp": [
+      "Epic Games·Battle.net·STOVE의 브라우저 로그인이 앱으로 돌아오지 않을 때 연결 상태를 점검하고 다시 등록하는 기능입니다. 웹 체험에서는 예시 결과만 표시하며 실제 브라우저 설정이나 앱 연결을 바꾸지 않습니다.",
+      "Checks and re-registers links when Epic Games, Battle.net or STOVE browser sign-in does not return to the app. This web demo shows sample results only; no browser settings or app associations change.",
+      "Prüft und registriert Links erneut, wenn Epic Games, Battle.net oder STOVE nicht aus dem Browser zurückkehren. Nur Beispielergebnisse; keine Änderung von Browser- oder App-Zuordnungen.",
+      "Revisa y vuelve a registrar enlaces cuando Epic Games, Battle.net o STOVE no vuelven desde el navegador. Solo muestra ejemplos; no cambia ajustes ni asociaciones.",
+      "Vérifie et réenregistre les liens si Epic Games, Battle.net ou STOVE ne reviennent pas du navigateur. Résultats simulés uniquement ; aucune association modifiée.",
+      "Epic Games・Battle.net・STOVEのブラウザログインが戻らない場合に接続を確認・再登録します。Webでは例のみで、設定やアプリの関連付けは変更しません。",
+      "当 Epic Games、Battle.net 或 STOVE 的浏览器登录未返回应用时，检查并重新注册关联。网页仅显示示例，不修改浏览器设置或应用关联。",
+      "當 Epic Games、Battle.net 或 STOVE 的瀏覽器登入未返回應用程式時，檢查並重新註冊連結。網頁僅顯示範例，不修改瀏覽器設定或應用程式關聯。"
+    ],
+    "vrCaption": [
+      "VR 연결 · DXMT",
+      "VR connection · DXMT",
+      "VR-Verbindung · DXMT",
+      "Conexión VR · DXMT",
+      "Connexion VR · DXMT",
+      "VR接続・DXMT",
+      "VR 连接 · DXMT",
+      "VR 連線 · DXMT"
+    ],
+    "vrAvailability": [
+      "Mac의 VR 기능은 2.2.0에 포함되어 있습니다. 실제 연결에는 별도 Vision Pro 앱 ForgePlayVP가 필요하며, 현재 App Store 심사 제출 준비 중입니다. 아래에서는 연결 과정을 미리 체험할 수 있습니다.",
+      "Mac VR is included in 2.2.0. Real connections require the separate ForgePlayVP app for Vision Pro, currently being prepared for App Store review. Try the connection flow below.",
+      "Mac-VR ist in 2.2.0 enthalten. Echte Verbindungen benötigen ForgePlayVP für Vision Pro, das für die App-Store-Prüfung vorbereitet wird. Der Ablauf lässt sich hier ausprobieren.",
+      "VR para Mac se incluye en 2.2.0. La conexión real requiere ForgePlayVP para Vision Pro, en preparación para revisión del App Store. Prueba el proceso aquí.",
+      "La VR Mac est incluse en 2.2.0. La connexion réelle nécessite ForgePlayVP pour Vision Pro, en préparation pour l’examen de l’App Store. Essayez le parcours ici.",
+      "Mac側VR機能は2.2.0に含まれます。実際の接続にはApp Store審査への提出準備中のForgePlayVPが別途必要です。ここでは接続の流れを体験できます。",
+      "Mac VR 功能已包含在 2.2.0 中。实际连接需要独立的 ForgePlayVP，现正准备提交 App Store 审核。可在下方体验连接流程。",
+      "Mac VR 功能已包含在 2.2.0 中。實際連線需要獨立的 ForgePlayVP，現正準備提交 App Store 審查。可在下方體驗連線流程。"
+    ],
+    "virtualDisplay": [
+      "Mac 가상 디스플레이를 연결하고 플레이하세요. AWDL과 가상 디스플레이 연결을 유지해야 합니다. 개발자용 Allow Mac Virtual Display를 켠 상태에서 몰입 화면에 Mac 화면이 겹칠 때만 해당 옵션을 끄세요. 실제 연결을 끄는 것과 다릅니다.",
+      "Connect Mac Virtual Display and keep it and AWDL enabled while playing. Only turn off the developer option Allow Mac Virtual Display if it is enabled and the Mac screen overlaps immersion. Do not disconnect the actual display.",
+      "Mac Virtual Display verbinden und zusammen mit AWDL während des Spielens aktiv lassen. Die Entwickleroption Allow Mac Virtual Display nur bei aktivierter Überlagerung ausschalten – nicht die tatsächliche Verbindung.",
+      "Conecta y mantén la pantalla virtual del Mac y AWDL durante el juego. Desactiva Allow Mac Virtual Display solo si esa opción de desarrollador provoca una superposición. No desconectes la pantalla real.",
+      "Gardez l’écran virtuel Mac et AWDL connectés pendant le jeu. Désactivez l’option développeur Allow Mac Virtual Display uniquement si elle provoque une superposition, pas la connexion réelle.",
+      "Mac仮想ディスプレイとAWDLの接続を維持してください。開発者用Allow Mac Virtual Displayがオンで没入画面にMac画面が重なる場合のみ、その設定をオフにします。実際の接続は切らないでください。",
+      "游玩时请维持 Mac 虚拟显示器连接和 AWDL。仅当开发者选项 Allow Mac Virtual Display 已开启且造成画面重叠时关闭该选项，不要断开实际连接。",
+      "遊玩時請維持 Mac 虛擬顯示器連線和 AWDL。僅當開發者選項 Allow Mac Virtual Display 已開啟且造成畫面重疊時關閉該選項，不要中斷實際連線。"
+    ],
+    "storage": [
+      "저장공간",
+      "Storage",
+      "Speicher",
+      "Almacenamiento",
+      "Stockage",
+      "ストレージ",
+      "存储空间",
+      "儲存空間"
+    ],
+    "storageHelp": [
+      "빈 폴더는 Windows 드라이브로 연결하고, 기존 SteamLibrary는 Steam에 등록합니다. 게임 파일을 복사하거나 옮기지 않습니다. 게임·설치 작업을 종료한 뒤 연결을 변경하세요.",
+      "Connect an empty folder as a Windows drive, or register an existing SteamLibrary. Game files are not copied or moved. End games and installation tasks before changing connections.",
+      "Leere Ordner als Windows-Laufwerk verbinden oder bestehende SteamLibrary registrieren. Keine Spieldateien werden kopiert oder verschoben. Spiele/Installationen vorher beenden.",
+      "Conecta una carpeta vacía como unidad Windows o registra SteamLibrary. No se copian ni mueven juegos. Cierra juegos e instalaciones antes de cambiar conexiones.",
+      "Connectez un dossier vide comme lecteur Windows ou enregistrez SteamLibrary. Aucun jeu copié ou déplacé. Fermez jeux et installations avant de modifier les connexions.",
+      "空のフォルダーをWindowsドライブとして接続するか、既存のSteamLibraryを登録します。ゲームファイルは移動・コピーしません。変更前にゲームやインストールを終了してください。",
+      "将空文件夹连接为 Windows 驱动器，或注册现有 SteamLibrary。不会复制或移动游戏文件。更改连接前请退出游戏和安装任务。",
+      "將空資料夾連接為 Windows 磁碟機，或註冊既有 SteamLibrary。不會複製或移動遊戲檔案。更改連線前請結束遊戲和安裝作業。"
+    ],
+    "gameModePending": [
+      "게임 모드 · VR 호환성 개선 중",
+      "Game Mode · VR compatibility in development",
+      "Game Mode · VR-Kompatibilität in Arbeit",
+      "Game Mode · compatibilidad VR en desarrollo",
+      "Game Mode · compatibilité VR en développement",
+      "ゲームモード・VR互換性改善中",
+      "游戏模式 · VR 兼容性改进中",
+      "遊戲模式 · VR 相容性改善中"
+    ],
+    "retina": [
+      "고해상도 Retina 모드",
+      "High-resolution Retina mode",
+      "Hochauflösender Retina-Modus",
+      "Modo Retina de alta resolución",
+      "Mode Retina haute résolution",
+      "高解像度Retinaモード",
+      "高分辨率 Retina 模式",
+      "高解析度 Retina 模式"
+    ],
+    "quickVR": [
+      "Steam 실행",
+      "Launch Steam",
+      "Steam starten",
+      "Iniciar Steam",
+      "Lancer Steam",
+      "Steamを起動",
+      "启动 Steam",
+      "啟動 Steam"
+    ],
+    "macTab": [
+      "Mac 실행 화면",
+      "Mac launch screen",
+      "Mac-Startansicht",
+      "Pantalla de inicio Mac",
+      "Écran de lancement Mac",
+      "Mac起動画面",
+      "Mac 启动界面",
+      "Mac 啟動畫面"
+    ],
+    "learnMore": [
+      "설명 보기",
+      "Learn more",
+      "Mehr erfahren",
+      "Ver explicación",
+      "Voir l’explication",
+      "説明を見る",
+      "查看说明",
+      "查看說明"
+    ],
+    "profileOnlySteam": [
+      "이 게임별 프로필은 Steam 실행에 적용됩니다.",
+      "This game profile applies to Steam launch.",
+      "Dieses Spielprofil gilt für Steam.",
+      "Este perfil se aplica a Steam.",
+      "Ce profil s’applique au lancement Steam.",
+      "このゲーム別プロファイルはSteam起動に適用されます。",
+      "此游戏配置适用于 Steam 启动。",
+      "此遊戲設定適用於 Steam 啟動。"
+    ]
+  }
+}

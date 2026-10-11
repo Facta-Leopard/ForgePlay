@@ -8,7 +8,7 @@
     theme:'dark',visionTheme:'dark',device:'mac',macPrepared:false,visionPrepared:false,
     selectedMac:false,pairCode:'',immersive:false,home:false,hasPlayed:false,
     pinch:true,showHands:true,microphone:false,foveation:false,autoPlay:false,rate:0,
-    topic:'start',error:false,game:false,bindings:{}});
+    topic:'start',error:false,game:false,bindings:{},retina:false,storage:null});
   const locked = state => state.connected || state.steam;
   const transition = (state, action, value) => {
     const next = {...state};
@@ -19,12 +19,14 @@
     if(action==='controller' && !locked(state) && ['mac','vision'].includes(value)) next.controller=value;
     if(action==='quality' && !locked(state) && [1280,1600,1920].includes(value)) next.quality=value;
     if(action==='rate' && !locked(state) && [0,30,45,60].includes(value)) next.rate=value;
+    if(action==='retina'&&!state.steam)next.retina=!state.retina;
+    if(action==='storage'&&!state.steam&&['empty','existing',null].includes(value))next.storage=value;
     if(action==='prepare' && state.macPrepared && state.environment && !state.listening) next.listening=true;
     if(action==='selectMac' && state.visionPrepared && state.listening) next.selectedMac=true;
     if(action==='connect' && state.visionPrepared && state.listening && state.selectedMac && validCode(state.pairCode)) {next.connected=true;next.remembered=true;}
     if(['device','acknowledge','reopenVision','prepare'].includes(action) && next.device==='vision' && next.visionPrepared && next.listening && next.remembered) next.connected=true;
     if(action==='reopenVision') next.home=false;
-    if((action==='play' || (!state.connected && next.connected && next.autoPlay)) && next.connected && next.visionPrepared) {next.tracking=true;next.immersive=true;next.home=false;next.hasPlayed=true;if(next.environment) next.steam=true;}
+    if((action==='play' || (!state.connected && next.connected && next.autoPlay)) && next.connected && next.visionPrepared) {next.tracking=true;next.immersive=true;next.home=false;next.hasPlayed=true;}
     if(action==='home') {next.immersive=false;next.tracking=false;next.home=true;}
     if(action==='disconnectVision') {next.connected=false;next.immersive=false;next.tracking=false;next.home=false;}
     if(action==='pinch' && state.mode!=='gamepad') next.pinch=!state.pinch;
@@ -38,10 +40,10 @@
     return next;
   };
   const bitrate = quality => Math.min(100,Math.max(25,Math.round(60*(quality/1600)**2/5)*5));
-  const create = ({copy,locale,exit,apps=()=>[]}) => {
+  const create = ({copy,locale,exit,apps=()=>[],releaseText=key=>key,appearance=()=>false,changeAppearance=()=>{}}) => {
     let state=initial(),host,modal=null,modalReturn=null,scroll=0,fieldFocus=null;
     let expanded={mac:new Set(),vision:new Set()};
-    const t=(key,values={})=>Object.entries(values).reduce((text,[key,value])=>text.replaceAll('{'+key+'}',String(value)),copy.strings[key][Math.max(0,copy.locales.indexOf(locale()))]);
+    const t=(key,values={})=>Object.entries(values).reduce((text,[key,value])=>text.replaceAll('{'+key+'}',String(value)),copy.strings[key]?.[Math.max(0,copy.locales.indexOf(locale()))]||releaseText(key));
     const n=(tag,cls='',text)=>{const e=document.createElement(tag);e.className=cls;if(text!==undefined)e.textContent=text;return e;};
     const icon=(name,size=18)=>window.ForgePlayGuideIcons.icon(name,size);
     const button=(key,action,style='',glyph)=>{const b=n('button','vr-button '+style);b.type='button';b.dataset.vrAction=key;if(glyph)b.append(icon(glyph));b.append(n('span','',t(key)));b.addEventListener('click',action);return b;};
@@ -58,7 +60,7 @@
     const choice=(key,action,selected,disabled=false,glyph,detail)=>{const b=button(key,action,'vr-choice',glyph);b.setAttribute('aria-pressed',String(selected));b.disabled=disabled;if(detail)b.append(n('small','',t(detail)));b.append(icon(selected?'checkCircleFill':'circle',17));return b;};
     const toggle=(key,value,action,detail,disabled=false)=>{const wrap=n('div','vr-toggle-row'),b=button(key,action,'vr-toggle');b.setAttribute('role','switch');b.setAttribute('aria-checked',String(value));b.disabled=disabled;wrap.append(b);if(detail)wrap.append(p(detail));return wrap;};
     const disclosure=(key,child)=>{const d=n('details','vr-disclosure');d.dataset.vrDisclosure=key;d.open=expanded[state.device].has(key);d.append(n('summary','',t(key)),child);return d;};
-    const isLight=()=> (state.device==='vision'?state.visionTheme:state.theme)==='light';
+    const isLight=()=> state.device==='vision'?state.visionTheme==='light':appearance();
     const status=()=>t(state.tracking?'trackingReady':state.listening?'waitingConnection':state.steam?'steamRunning':'beforeSession');
     let visorSequence=0;
     const visor=()=>{
@@ -108,6 +110,8 @@
       const main=button(nextKey(),next,'primary','play'),buttons=row(main);
       if(state.environment)buttons.append(button(state.listening?'inputSettings':'prepareVision',()=>state.listening?go('devices'):set('prepare')));copy.append(buttons);
       if(state.steam)copy.append(pill(t('steamRunning'),true));hero.append(copy,portal());body.append(hero);
+      const notice=n('aside','vr-panel');notice.append(icon('display'),p('virtualDisplay'));body.append(notice);
+      const options=panel('quality',null,'display');options.append(toggle('gameModePending',false,()=>{},null,true),toggle('retina',state.retina,()=>set('retina'),'retinaHelp',state.steam));body.append(options);
       if(state.environment&&state.listening&&!state.connected)body.append(connection());
       const steps=n('div','vr-readiness');for(const [i,key,ready,action] of [[1,'existingSteam',!!state.environment,()=>state.environment?go('devices'):open('environment')],[2,'vision',state.connected,()=>go('devices')],[3,'playReady',state.tracking,()=>go('guide','display')]]){const b=button(key,action,'vr-step');b.prepend(n('span','vr-step-number',ready?'✓':String(i).padStart(2,'0')));b.append(n('small','',t(ready?'ready':'notReady')));steps.append(b);}body.append(steps);
       const lower=n('div','vr-two'),summary=panel('myEnvironment',null,'sliders');
@@ -127,6 +131,12 @@
       const rate=select(quality,'rate',[[0,t('rateAutomatic')],[30,'30 Mbps'],[45,'45 Mbps'],[60,'60 Mbps']],String(state.rate),v=>set('rate',Number(v)));rate.disabled=locked(state);quality.append(p('rateHelp'));body.append(quality);
       const controls=panel('gameControls','bindingHelp','sliders'),keyboard=button('keyboard',()=>open('help','keyboardHelp'),'','keyboard');keyboard.disabled=true;
       controls.append(row(button('editBindings',()=>open('bindings'),'','sliders'),keyboard),p(state.game?'sampleGameLoaded':'noGameActions'),p('keyboardHelp'));body.append(controls,environment());
+    };
+    const storage=body=>{
+      const box=panel('storage',null,'drive');box.append(p('storageHelp'));
+      const add=button('folder',()=>open('storage'),'primary','folder');add.disabled=state.steam;box.append(row(add,button('refresh',()=>open('help','simulatedStatus'),'','refresh')));
+      if(state.storage){box.append(pill('D:\\ · '+(state.storage==='existing'?'SteamLibrary':'ExternalDrive'),true),p('examplePaths'));const remove=button('disconnect',()=>set('storage',null));remove.disabled=state.steam;box.append(remove);}else box.append(p('storageEmpty'));
+      if(state.steam)box.append(p('storageLocked'));body.append(box);
     };
     const topics=['start','prefix','installation','input','display','audio','connection','finish'];
     const guide=body=>{
@@ -187,13 +197,14 @@
     const renderModal=()=>{
       if(!modal)return;
       const dialog=n('dialog','vr-dialog'+(isLight()?' vr-light':''));dialog.setAttribute('aria-labelledby','vr-dialog-title');const header=n('div','vr-modal-head');
-      const titles={environment:'connectSteam',folder:'folder',install:'installOwn',bindings:'editBindings',diagnostics:'diagnostics',appearance:'macSettings',help:'help',preparation:'prepTitle',apps:'otherApps',visionGuide:'guide',confirm:modal.value};
+      const titles={environment:'connectSteam',folder:'folder',storage:'storage',install:'installOwn',bindings:'editBindings',diagnostics:'diagnostics',appearance:'macSettings',help:'help',preparation:'prepTitle',apps:'otherApps',visionGuide:'guide',confirm:modal.value};
       const title=n('h2','',t(titles[modal.type]));title.id='vr-dialog-title';header.append(title,button('close',close,'vr-icon','close'));dialog.append(header);const body=n('div','vr-modal-body');dialog.append(body);
       if(modal.type==='environment')environmentSheet(body);
+      else if(modal.type==='storage'){body.append(p('storageHelp'),p('noInstallation'),row(button('storageExisting',()=>{modal=null;set('storage','existing');}),button('storageEmptyChoice',()=>{modal=null;set('storage','empty');})));}
       else if(modal.type==='folder'){body.append(p('folderHelp'),p('examplePaths'),button('useExample',()=>{modal=null;set('environment','shared');},'primary'));}
       else if(modal.type==='install'){body.append(p('installHelp'),p('noInstallation'),button('useExample',()=>{modal=null;set('environment','own');},'primary'));}
       else if(modal.type==='help')body.append(p(modal.value));
-      else if(modal.type==='appearance'){body.append(p('macSettingsHelp'));for(const key of ['dark','light'])body.append(choice(key,()=>{state.theme=key;render();},state.theme===key));}
+      else if(modal.type==='appearance'){body.append(p('macSettingsHelp'));for(const key of ['dark','light'])body.append(choice(key,()=>{changeAppearance(key);render();},isLight()===(key==='light')));}
       else if(modal.type==='preparation')preparation(body);
       else if(modal.type==='apps')appsDialog(body);
       else if(modal.type==='visionGuide')for(const topic of topics)body.append(disclosure('topic'+topic,p('guide'+topic)));
@@ -214,7 +225,7 @@
       const oldFocus=document.activeElement?.dataset?.vrAction;fieldFocus=document.activeElement?.dataset?.vrField;scroll=resetScroll?0:host.querySelector('.vr-scroll')?.scrollTop||scroll;
       if(host.dataset.vrDevice)expanded[host.dataset.vrDevice]=new Set([...host.querySelectorAll('details[data-vr-disclosure][open]')].map(e=>e.dataset.vrDisclosure));
       host.replaceChildren();host.className='sim-window v2-shell v2-vr'+(isLight()?' vr-light':'');host.dataset.vrDevice=state.device;
-      const tour=n('div','vr-tour'),tourCopy=n('div');tourCopy.append(n('strong','',t('webDemo')),n('p','',t('demoNotice')));tour.append(tourCopy);
+      const tour=n('div','vr-tour'),tourCopy=n('div');tourCopy.append(n('strong','',t('webDemo')),n('p','',t('demoNotice')),n('p','',t('vrAvailability')));tour.append(tourCopy);
       tour.append(linkText('restart',()=>{state=initial();modal=null;expanded={mac:new Set(),vision:new Set()};delete host.dataset.vrDevice;render(true);}));host.append(tour);
       const switcher=row();switcher.classList.add('vr-device-switch');switcher.setAttribute('aria-label',t('deviceSwitch'));for(const [id,key,glyph] of [['mac','macApp','display'],['vision','visionApp','vision']]){const b=button(key,()=>set('device',id),'',glyph);b.setAttribute('aria-pressed',String(state.device===id));switcher.append(b);}host.append(switcher);
       const prepared=state.device==='mac'?state.macPrepared:state.visionPrepared;
@@ -229,17 +240,17 @@
       if(!prepared){const body=n('div','vr-scroll vr-preparation');preparation(body,true);host.append(body);complete(body,oldFocus);return;}
       const layout=n('div','vr-layout'),sidebar=n('aside','vr-sidebar'),brand=n('div','vr-brand');brand.append(visor(),n('strong','','FORGEPLAY\nVR'));sidebar.append(brand);
       const nav=n('nav');nav.setAttribute('aria-label',t('navigation'));
-      for(const [id,key,glyph,native]of [['play','play','layers','square.stack.3d.up'],['devices','devices','vision','vision.pro'],['guide','guide','book','book.closed']]){const b=button(key,()=>go(id),'vr-nav',glyph);b.dataset.vrNav=id;b.dataset.nativeSymbol=native;b.setAttribute('aria-current',String(state.page===id));nav.append(b);}sidebar.append(nav,linkText('prepTitle',()=>open('preparation')));
-      const identity=n('div','vr-sidebar-card');identity.append(icon('vision',30),n('strong','','Designed for\nApple Vision Pro'),p('sidebar'));sidebar.append(identity,n('small','vr-preview','PREVIEW / 0.1'),p('development'));layout.append(sidebar);
+      for(const [id,key,glyph,native]of [['play','play','layers','square.stack.3d.up'],['storage','storage','drive','externaldrive'],['devices','devices','vision','vision.pro'],['guide','guide','book','book.closed']]){const b=button(key,()=>go(id),'vr-nav',glyph);b.dataset.vrNav=id;b.dataset.nativeSymbol=native;b.setAttribute('aria-current',String(state.page===id));nav.append(b);}sidebar.append(nav,linkText('prepTitle',()=>open('preparation')));
+      const identity=n('div','vr-sidebar-card');identity.append(icon('vision',30),n('strong','','Designed for\nApple Vision Pro'),p('sidebar'));sidebar.append(identity,n('small','vr-preview','ForgePlay 2.2.0 (8)'));layout.append(sidebar);
       const main=n('div','vr-main'),body=n('div','vr-scroll');body.tabIndex=-1;body.dataset.vrPage=state.page;const head=n('header','vr-page-head'),title=n('div');title.append(n('h2','',t(state.page)),p(state.page+'Lead'));head.append(title,pill(t(state.connected?'connected':'beforeConnection'),state.connected));body.append(head);
       if(state.error){const error=n('aside','vr-error');error.append(icon('warning'),p('busyError'),button('troubleshoot',()=>go('guide','connection')));body.append(error);}
       if(state.steam)body.append(pill(t('steamRunning'),true));
-      ({play,devices,guide})[state.page](body);if(state.tracking&&state.steam&&!state.game)body.append(button('sampleGame',()=>set('game')));main.append(body);
+      ({play,storage,devices,guide})[state.page](body);if(state.tracking&&state.steam&&!state.game)body.append(button('sampleGame',()=>set('game')));main.append(body);
       const footer=n('footer','vr-session'),statusCopy=n('div');statusCopy.setAttribute('role','status');statusCopy.append(n('strong','',status()),n('small','',t('simulatedStatus')));footer.append(n('span','vr-dot'+(state.tracking?' is-ready':'')),statusCopy,button('diagnostics',()=>open('diagnostics'),'vr-icon','diagnostics'));
       if(state.environment){const stop=button('forceStop',()=>open('confirm','forceStop'),'vr-text');footer.append(stop);}
       const end=button('endSession',()=>state.steam?open('confirm','endSession'):set('stop'),'','power');end.disabled=!state.listening&&!state.steam;footer.append(end);main.append(footer);layout.append(main);host.append(layout);complete(body,oldFocus);
     };
-    return {render:element=>{host=element;render();},reset:()=>{state=initial();modal=null;scroll=0;expanded={mac:new Set(),vision:new Set()};if(host)delete host.dataset.vrDevice;},hint:()=>t('coach')};
+    return {render:element=>{host=element;render();},launch:()=>{if(state.macPrepared)next();else render(true);},reset:()=>{state=initial();modal=null;scroll=0;expanded={mac:new Set(),vision:new Set()};if(host)delete host.dataset.vrDevice;},hint:()=>t('coach')};
   };
   window.ForgePlayVRDemo=Object.freeze({create,initial,transition,locked,bitrate,validCode,demoCode});
 })();

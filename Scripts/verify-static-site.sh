@@ -64,6 +64,12 @@ PAGES=(
   site-assets/guide-vr.css
   site-data/guide-vr-copy.json
   site-data/guide-v2-map.json
+  site-data/guide-island-copy.json
+  site-assets/guide-island.js
+  site-assets/guide-island.css
+  site-assets/fopl/atlas-220.webp
+  site-assets/fopl/reactions-220.webp
+  site-assets/guide/launcher-220/fopl-vr.webp
   site-data/guide-v2-ui.json
   site-data/guide-v2-copy.json
   site-assets/guide/launcher/gate-portrait.jpg
@@ -562,8 +568,8 @@ for locale in locale_names:
 guide_v2_ui = json.loads((root / "site-data/guide-v2-ui.json").read_text(encoding="utf-8"))
 guide_v2_copy = json.loads((root / "site-data/guide-v2-copy.json").read_text(encoding="utf-8"))
 guide_v2_map = json.loads((root / "site-data/guide-v2-map.json").read_text(encoding="utf-8"))
-if (guide_v2_map.get("version"), guide_v2_map.get("build")) != ("2.1.0", 7):
-    raise SystemExit("guide-v2: demo must identify release 2.1.0 (7)")
+if (guide_v2_map.get("version"), guide_v2_map.get("build")) != ("2.2.0", 8):
+    raise SystemExit("guide-v2: demo must identify release 2.2.0 (8)")
 for name, data in (("guide-v2-ui", guide_v2_ui), ("guide-v2-copy", guide_v2_copy)):
     if set(data) != set(locale_names):
         raise SystemExit(f"{name}: all eight locales required")
@@ -575,7 +581,7 @@ for locale in locale_names:
     if "{version}" not in preview_label or "{build}" not in preview_label:
         raise SystemExit(f"guide-v2: missing localized preview version {locale}")
     for key in ("lead", "pageIntro", "updateDemo"):
-        if "2.1.0" not in guide_v2_copy[locale][key] or "7" not in guide_v2_copy[locale][key]:
+        if "2.2.0" not in guide_v2_copy[locale][key] or "8" not in guide_v2_copy[locale][key]:
             raise SystemExit(f"guide-v2: stale release version in {locale}/{key}")
     for view in guide_v2_map["views"].values():
         for key in [view["title"], *view["notes"]]:
@@ -586,6 +592,19 @@ for key in re.findall(r'\bC\("([^"]+)"\)', guide_v2_js):
     if key not in guide_v2_copy["en"]:
         raise SystemExit(f"guide-v2: missing explanation {key}")
 guide_html = (root / "site-assets/guide.html").read_text(encoding="utf-8")
+island_copy = json.loads((root / "site-data/guide-island-copy.json").read_text())
+if (island_copy.get("version"), island_copy.get("build")) != ("2.2.0", 8) or set(island_copy.get("locales", [])) != set(locale_names):
+    raise SystemExit("Island guide must match release 2.2.0 (8) and all eight locales")
+for key, values in island_copy["strings"].items():
+    if len(values) != 8 or any(not isinstance(v, str) or not v.strip() for v in values):
+        raise SystemExit(f"Island guide: incomplete translation {key}")
+island_js = (root / "site-assets/guide-island.js").read_text()
+for api in ("innerHTML", "localStorage", "sessionStorage", "sendBeacon", "WebSocket", "getUserMedia", "setInterval"):
+    if api in island_js:
+        raise SystemExit(f"Island guide must remain a scoped, ephemeral simulation: {api}")
+for hook in ("contextmenu", "pointercancel", "visibilitychange", "IntersectionObserver", "prefers-reduced-motion", "pagehide"):
+    if hook not in island_js:
+        raise SystemExit(f"Island guide must retain interaction/lifecycle support: {hook}")
 vr_copy = json.loads((root / "site-data/guide-vr-copy.json").read_text(encoding="utf-8"))
 if set(vr_copy["locales"]) != set(locale_names) or len(vr_copy["locales"]) != 8:
     raise SystemExit("VR guide must support all eight website languages")
@@ -596,7 +615,7 @@ for key, values in vr_copy["strings"].items():
         raise SystemExit(f"VR guide: inconsistent placeholders for {key}")
     if re.search(r'[\u3040-\u30ff]', values[0]):
         raise SystemExit(f"VR guide: unexpected Japanese text in Korean {key}")
-for name in ["guide-vr.css?v=20261002-1", "guide-vr.js?v=20261002-1", "guide-v2.js?v=20261006-2", "guide-v2-icons.js?v=20261006-1", "guide-launcher.css?v=20261003-fopl1", "guide-desktop.css?v=20261006-1", "why-story.js?v=20261001-reader1"]:
+for name in ["guide-vr.css?v=20261002-1", "guide-vr.js?v=20261012-1", "guide-v2.js?v=20261012-1", "guide-island.js?v=20261012-1", "guide-island.css?v=20261012-1", "guide-v2-icons.js?v=20261006-1", "guide-launcher.css?v=20261003-fopl1", "guide-desktop.css?v=20261006-1", "why-story.js?v=20261001-reader1"]:
     if name not in guide_html:
         raise SystemExit(f"VR guide: missing current asset {name}")
 if 'guide-v2.css?v=20260929-palette1' not in guide_html:
@@ -2648,7 +2667,8 @@ s=T(s,'device','vision');s=T(s,'acknowledge');s=T(s,'selectMac');assert.equal(T(
 assert.equal(validCode('wrong'),false);assert.equal(validCode('DEMO-1234 DEMO-5678 DEMO-9012 DEMO-3456'),true);
 s={...s,pairCode:demoCode};s=T(s,'connect');assert.equal(s.tracking,false);assert.equal(s.immersive,false);assert.equal(s.steam,false);assert.ok(locked(s));
 assert.equal(T(s,'mode','gamepad').mode,'hands');assert.equal(T(s,'quality',1920).quality,1280);
-s=T(s,'play');assert.ok(s.tracking&&s.steam&&s.immersive&&s.hasPlayed);s=T(s,'game');assert.ok(s.game);
+const viewOnly=T(s,'play');assert.ok(viewOnly.tracking&&viewOnly.immersive&&!viewOnly.steam,'Opening the VR view must not launch Steam');
+s=T(s,'steam');s=T(s,'play');assert.ok(s.tracking&&s.steam&&s.immersive&&s.hasPlayed);s=T(s,'game');assert.ok(s.game);
 assert.equal(T(s,'environment',null).environment,'shared');
 const stopped=T(s,'forceStop');assert.ok(stopped.connected&&stopped.tracking);assert.equal(stopped.steam,false);assert.equal(stopped.game,false);
 let home=T(s,'home');assert.ok(home.home&&!home.immersive&&!home.tracking&&home.connected&&home.steam&&home.game);
