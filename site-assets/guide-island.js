@@ -22,6 +22,7 @@
     fopl.setAttribute('aria-haspopup','dialog');sprite.setAttribute('aria-hidden','true');pivot.append(sprite);fopl.append(pivot);companion.append(fopl,bubble);
     shell.before(stage);stage.append(panel,companion,recovery);panel.append(chrome,compact,shell);
     const button=(key,action,text)=>{const b=n('button','',text===undefined?t(key):text);b.type='button';b.setAttribute('aria-label',t(key));b.title=t(key);b.addEventListener('click',action);return b;};
+    const symbolButton=(key,action,symbol)=>{const b=button(key,action,'');b.append(window.ForgePlayGuideIcons.icon(symbol,22));return b;};
     const active=()=>!document.hidden&&inView&&!state.hidden&&!root.querySelector('dialog[open]');
     const quiet=()=>{animation?.cancel();animation=null;clearTimeout(bubbleTimer);clearTimeout(chatterTimer);bubble.hidden=true;sprite.dataset.pose='idle';};
     const speak=(key='hello')=>{
@@ -94,7 +95,7 @@
       handle.addEventListener('pointercancel',()=>{drag=null;});
       const row=n('div','island-chrome-row'),lights=n('span','island-lights');lights.append(button('hide',()=>change('hide'),'●'),button('compact',()=>change('mode','compact'),'●'));
       const titleNode=n('strong','island-title',title());row.append(lights,titleNode);
-      const controls=n('div','island-controls');controls.append(button('keyring',()=>change('mode','keyring'),'⌃⌃'),button(state.mode==='expanded'?'compact':'expanded',()=>change('mode',state.mode==='expanded'?'compact':'expanded'),state.mode==='expanded'?'⌃':'⌄'));
+      const controls=n('div','island-controls');controls.append(symbolButton('keyring',()=>change('mode','keyring'),'collapseAll'),symbolButton(state.mode==='expanded'?'compact':'expanded',()=>change('mode',state.mode==='expanded'?'compact':'expanded'),state.mode==='expanded'?'collapse':'expand'));
       const brand=button('home',home,''),image=n('img');image.src='site-assets/forgeplay-icon.png';image.alt='';image.width=image.height=28;brand.append(image);controls.append(brand);row.append(controls);chrome.append(handle,row,ticker());
       compact.replaceChildren();if(state.mode==='compact')renderCompact(compact);
       syncActivity();if(restoreMenu)openMenu();

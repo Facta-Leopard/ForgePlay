@@ -616,7 +616,7 @@ for key, values in vr_copy["strings"].items():
         raise SystemExit(f"VR guide: inconsistent placeholders for {key}")
     if re.search(r'[\u3040-\u30ff]', values[0]):
         raise SystemExit(f"VR guide: unexpected Japanese text in Korean {key}")
-for name in ["guide-vr.css?v=20261002-1", "guide-vr.js?v=20261012-2", "guide-v2.js?v=20261012-2", "guide-vr-showcase.css?v=20261012-1", "guide-island.js?v=20261012-1", "guide-island.css?v=20261012-1", "guide-v2-icons.js?v=20261006-1", "guide-launcher.css?v=20261003-fopl1", "guide-desktop.css?v=20261006-1", "why-story.js?v=20261001-reader1"]:
+for name in ["guide-vr.css?v=20261002-1", "guide-vr.js?v=20261012-2", "guide-v2.js?v=20261012-3", "guide-vr-showcase.css?v=20261012-1", "guide-island.js?v=20261012-3", "guide-island.css?v=20261012-3", "guide-v2-icons.js?v=20261012-3", "guide-launcher.css?v=20261003-fopl1", "guide-desktop.css?v=20261006-1", "why-story.js?v=20261001-reader1"]:
     if name not in guide_html:
         raise SystemExit(f"VR guide: missing current asset {name}")
 if 'guide-v2.css?v=20260929-palette1' not in guide_html:
@@ -631,8 +631,13 @@ if any(api in vr_js for api in ("innerHTML", "fetch(", "localStorage", "sessionS
     raise SystemExit("VR guide must remain local UI simulation with no device, storage or networking APIs")
 if "if(['retro','console'].includes(id)){show(tileLabel(id),L('development'));return;}" not in guide_v2_js:
     raise SystemExit("Current launcher must retain development status for Old Game and ConSole Game")
-if "if(id==='vr'){surface='vr';render(true);return;}" not in guide_v2_js:
-    raise SystemExit("VR entry must open the clearly labelled web simulation")
+if "if(id==='vr'){enterSurface('vr');render(true);return;}" not in guide_v2_js:
+    raise SystemExit("VR entry must open the compact web simulation")
+for contract in ("island.setMode(expanded?'expanded':'compact',false)", "else if(surface!=='mac')enterSurface('mac')", "const showVR=()=>{enterSurface('vr');", "home:goHome"):
+    if contract not in guide_v2_js:
+        raise SystemExit(f"Feature entry must start compact while internal tabs retain their size: {contract}")
+if "'collapseAll'" not in island_js or "⌃⌃" in island_js:
+    raise SystemExit("Fully fold control must use the code-native double-chevron symbol")
 launcher_copy = json.loads((root / "site-data/guide-launcher-copy.json").read_text())
 if launcher_copy["strings"]["diagnosticsTile"][:2] != ["포플과 대화(문제진단)", "Talk to Fopl (Diagnostics)"]:
     raise SystemExit("Launcher diagnostics tile must use the final Fopl conversation label")

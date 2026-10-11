@@ -15,6 +15,7 @@
 .island-chrome button:hover{background:var(--island-panel);}
 .island-title{font-size:18px;font-weight:650;flex:1;}
 .island-controls{display:flex;align-items:center;gap:6px;}.island-controls button{font-size:23px;line-height:1;}.island-controls img{display:block;border-radius:8px;}
+.island-controls .v2-symbol{display:block;margin:auto;flex-shrink:0;}
 .island-lights{display:flex;gap:1px;}.island-lights button{min-width:20px;font-size:20px;color:#ff6059;padding:0;}.island-lights button+button{color:#ffbd2e;}
 .island-chrome .island-handle{position:absolute;top:0;left:calc(50% - 64px);width:128px;min-height:18px;height:18px;border:0;border-radius:0;touch-action:none;cursor:ns-resize;}
 .island-handle::after{content:'';display:block;width:38px;height:3px;margin:auto;background:var(--island-muted);opacity:.5;border-radius:5px;}

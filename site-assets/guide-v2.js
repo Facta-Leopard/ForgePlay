@@ -16,7 +16,7 @@
   let supporters=[], remoteBanners=new Map(), catalogLoading=false, catalogFailed=false;
   const artworkRoot='site-assets/guide/launcher-current/';
   let surface = "launcher", view = "steam", workspace = "launch", preference = "general", lesson = "free";
-  let utilityReturn={surface:'launcher',view:'steam',workspace:'launch'};
+  let utilityReturn={surface:'launcher',view:'steam',workspace:'launch',mode:'compact'};
   let expandedWindow=false;
   const inertBackground=new Map();
   const applyWindowSize=()=>{root.classList.toggle('v2-immersive',expandedWindow);const control=root.querySelector('[data-v2-expand]');if(control){control.replaceChildren(symbol('window'),node('span','',C(expandedWindow?'windowRestore':'windowExpand')));control.setAttribute('aria-pressed',String(expandedWindow));}
@@ -67,8 +67,20 @@
       popup.addEventListener('toggle',event=>{if(event.newState==='closed'){popup.remove();if(b.isConnected)b.focus({preventScroll:true});}});popup.showPopover();const height=popup.getBoundingClientRect().height;const preferred=rect.bottom+height+10<innerHeight-16?rect.bottom+10:rect.top-height-10;popup.style.top=Math.max(16,Math.min(preferred,innerHeight-height-16))+'px';
     },"v2-info",'info');b.setAttribute("aria-label",`${title} · ${C("help")}`);return b;
   };
-  const go = id => {if(['catalog','diagnostics','apps'].includes(id)){if(surface!=='utility')utilityReturn={surface,view,workspace};surface='utility';}else surface='mac';view=id;workspace='launch';render(true);if(id==='catalog')void refreshCatalog();if(expandedWindow)root.scrollTop=0;shell.querySelector('.sim-content')?.focus({preventScroll:true});};
-  const closeUtility=()=>{({surface,view,workspace}=utilityReturn);render(true);};
+  // Native feature entry starts compact; navigating tabs within a feature keeps its size.
+  const enterSurface = (destination, expanded=false) => {surface=destination;island.setMode(expanded?'expanded':'compact',false);};
+  const goHome = () => {enterSurface('launcher');render(true);};
+  const go = id => {
+    if(['catalog','diagnostics','apps'].includes(id)){
+      if(surface!=='utility')utilityReturn={surface,view,workspace,mode:island.mode};
+      enterSurface('utility',true);
+    }else if(surface!=='mac')enterSurface('mac');
+    view=id;workspace='launch';render(true);
+    if(id==='catalog')void refreshCatalog();
+    if(expandedWindow)root.scrollTop=0;
+    shell.querySelector('.sim-content')?.focus({preventScroll:true});
+  };
+  const closeUtility=()=>{({surface,view,workspace}=utilityReturn);island.setMode(utilityReturn.mode,false);render(true);};
   const windowLights=(close)=>{const lights=node('div','v2-window-lights');for(const[k,color]of ['red','yellow','green'].entries()){if(k===0&&close){const b=btn('',close,'v2-window-light '+color,'close');b.setAttribute('aria-label',D('close'));lights.append(b);}else{const dot=node('span','v2-window-light '+color);dot.setAttribute('aria-hidden','true');lights.append(dot);}}return lights;};
   const toggle = (parent,label,obj,key,help,changed) => {
     const row=node("div","sim-toggle-row"), id=`v2-${surface}-${view}-${key}`; const text=node("span","",label); text.id=id+"-label";
@@ -352,7 +364,7 @@
   };
   const renderMac = () => {
     const utility=surface==='utility',bar=node("div","sim-titlebar"),leading=node('div','v2-toolbar-leading');leading.append(windowLights(utility?closeUtility:null));
-    if(!utility){const back=btn('',()=>{surface='launcher';render();},'v2-toolbar-button','launcher');back.setAttribute('aria-label',U('런처로 돌아가기'));leading.append(back);}
+    if(!utility){const back=btn('',goHome,'v2-toolbar-button','launcher');back.setAttribute('aria-label',U('런처로 돌아가기'));leading.append(back);}
     const settings=btn('',()=>openPreferences(),'v2-toolbar-button','gear');settings.setAttribute('aria-label',U('환경 설정'));bar.append(leading,node('strong','',utility?viewName(view):'ForgePlay'),settings);shell.append(bar);
     const layout=node("div","sim-layout"),sidebar=node("aside","sim-sidebar"),brand=node("div","sim-brand"),icon=node("img");
     icon.src=artworkRoot+'brand-'+(isLight()?'light':'dark')+'.webp';icon.className='v2-mac-brand';icon.alt="";icon.width=40;icon.height=40;
@@ -403,7 +415,7 @@
   };
   const openUpdates = () => show(L('oneClickUpdate'),L('development'));
   const activateLauncherTile = id => {
-    if(id==='vr'){surface='vr';render(true);return;}
+    if(id==='vr'){enterSurface('vr');render(true);return;}
     if(['retro','console'].includes(id)){show(tileLabel(id),L('development'));return;}
     if(['mac','catalog','diagnostics','apps'].includes(id)){go(id==='mac'?(state.ready?'steam':'setup'):id);return;}
     if(id==='founder'){void openFounder();return;}
@@ -521,7 +533,7 @@
   };
   Promise.all([fetchJSON('site-data/guide-v2-map.json'),fetchJSON('site-data/guide-v2-ui.json'),fetchJSON('site-data/guide-v2-copy.json'),fetchJSON('site-data/guide-demo.json'),fetchJSON('site-data/guide-vr-copy.json'),fetchJSON('site-data/guide-launcher-copy.json'),fetchJSON('site-data/guide-desktop-copy.json'),fetchJSON('site-data/guide-coordinator-notice.json'),fetchJSON('site-data/guide-coordinator-defaults.json'),fetchJSON('site-data/guide-island-copy.json')]).then(async([m,u,c,d,vrCopy,lc,dc,cn,cd,ic])=>{
     map=m;ui=u;copy=c;demos=d;launcherCopy=lc;desktopCopy=dc;coordinatorNotice=cn;coordinatorDefaults=cd;islandCopy=ic;root.replaceChildren();const intro=node('header','sim-intro');const title=node('h2');title.dataset.v2Title='';const lead=node('p');lead.dataset.v2Lead='';intro.append(title,lead);root.append(intro);
-    const lessons=node('div','v2-lessons');for(const id of ['lessonIsland','lessonFirst','lessonCompatibility','lessonGraphics','lessonCoordinator','lessonStorage','lessonDiagnosis']){const b=btn('',()=>{lesson=id;island.setMode(id==='lessonIsland'?'compact':'expanded',false);if(id==='lessonIsland'){surface='launcher';}else if(id==='lessonFirst'){state=newState();state.ready=false;state.setup=0;surface='launcher';}else if(id==='lessonDiagnosis'){go('diagnostics');return;}else{surface='mac';view=id==='lessonCompatibility'?'profiles':'steam';workspace=id==='lessonStorage'?'storage':'launch';if(id==='lessonCompatibility')state.profile='renpy';if(id==='lessonCoordinator')state.coordinatorPrefs.details=true;}render();if(id==='lessonIsland')island.speak('tipMenu');if(id==='lessonCoordinator')root.querySelector('#v2-coordinator-toggle')?.scrollIntoView({block:'center'});});b.dataset.v2Lesson=id;lessons.append(b);}const reset=btn('',()=>{if(dialog.open)dialog.close();state=newState();vrDemo.reset();island.reset();surface='launcher';workspace='launch';view='steam';lesson='free';render();});reset.dataset.v2Reset='';lessons.append(reset);root.append(lessons);
+    const lessons=node('div','v2-lessons');for(const id of ['lessonIsland','lessonFirst','lessonCompatibility','lessonGraphics','lessonCoordinator','lessonStorage','lessonDiagnosis']){const b=btn('',()=>{lesson=id;if(id==='lessonIsland'){enterSurface('launcher');}else if(id==='lessonFirst'){state=newState();state.ready=false;state.setup=0;enterSurface('launcher');}else if(id==='lessonDiagnosis'){go('diagnostics');return;}else{enterSurface('mac',true);view=id==='lessonCompatibility'?'profiles':'steam';workspace=id==='lessonStorage'?'storage':'launch';if(id==='lessonCompatibility')state.profile='renpy';if(id==='lessonCoordinator')state.coordinatorPrefs.details=true;}render();if(id==='lessonIsland')island.speak('tipMenu');if(id==='lessonCoordinator')root.querySelector('#v2-coordinator-toggle')?.scrollIntoView({block:'center'});});b.dataset.v2Lesson=id;lessons.append(b);}const reset=btn('',()=>{if(dialog.open)dialog.close();state=newState();vrDemo.reset();island.reset();surface='launcher';workspace='launch';view='steam';lesson='free';render();});reset.dataset.v2Reset='';lessons.append(reset);root.append(lessons);
     const expand=btn('',()=>{expandedWindow=!expandedWindow;applyWindowSize();if(expandedWindow)root.scrollTop=0;},'','window');expand.dataset.v2Expand='';lessons.append(expand);document.addEventListener('keydown',event=>{if(!expandedWindow||root.querySelector('dialog[open],:popover-open'))return;if(event.key==='Escape'){expandedWindow=false;applyWindowSize();expand.focus({preventScroll:true});}if(event.key==='Tab'){const focusable=[...root.querySelectorAll('button,a[href],input,select,textarea,[tabindex]')].filter(n=>!n.disabled&&n.tabIndex>=0&&n.getClientRects().length);const first=focusable[0],last=focusable.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}}});
     document.addEventListener('visibilitychange',()=>{root.classList.toggle('v2-document-hidden',document.hidden);if(document.hidden)mascotAnimation?.cancel();});
     document.addEventListener('forgeplay:themechange',()=>{if(state.theme==='system')render();});
@@ -530,11 +542,11 @@
     matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change',event=>{if(event.matches)mascotAnimation?.cancel();});
     const notice=node('p','v2-safety');notice.dataset.v2Notice='';coach=node('p','v2-coach');coach.setAttribute('role','status');root.append(notice,coach);shell=node('div');root.append(shell);
     dialog=node('dialog','sim-dialog v2-dialog');dialog.setAttribute('aria-labelledby','v2-dialog-title');dialog.addEventListener('close',()=>{preferencesOpen=false;dialog.classList.remove('v2-preferences');if(focusBeforeDialog?.isConnected)focusBeforeDialog.focus();else (root.querySelector('[data-v2-reset]'))?.focus({preventScroll:true});});root.append(dialog);
-    vrDemo=window.ForgePlayVRDemo.create({copy:vrCopy,locale,releaseText:I,appearance:isLight,changeAppearance:value=>{state.theme=value;island.render();},apps:()=>appCatalog?.apps||[],exit:target=>{surface=target==='desktop'?'mac':'launcher';if(target==='desktop'){view='steam';workspace='launch';}render(true);if(surface==='launcher')root.querySelector('[data-v2-tile="vr"]')?.focus({preventScroll:true});}});
-    island=window.ForgePlayIslandDemo.create({root,shell,copy:islandCopy,locale,light:isLight,title:()=>surface==='launcher'?'ForgePlay':surface==='vr'?'ForgePlay VR':surface==='utility'?viewName(view):'ForgePlay Mac',renderCompact,home:()=>{surface='launcher';render(true);},settings:()=>openPreferences(),advanced:()=>state.advanced,setAdvanced:value=>{state.advanced=value;},onChatter:value=>{state.poppleTips=value;},refresh:()=>render(),ticker:renderTicker});
-    const showVR=()=>{island.setMode('expanded',false);surface='vr';render(true);root.scrollIntoView({block:'start'});};
+    vrDemo=window.ForgePlayVRDemo.create({copy:vrCopy,locale,releaseText:I,appearance:isLight,changeAppearance:value=>{state.theme=value;island.render();},apps:()=>appCatalog?.apps||[],exit:target=>{enterSurface(target==='desktop'?'mac':'launcher');if(target==='desktop'){view='steam';workspace='launch';}render(true);if(surface==='launcher')root.querySelector('[data-v2-tile="vr"]')?.focus({preventScroll:true});}});
+    island=window.ForgePlayIslandDemo.create({root,shell,copy:islandCopy,locale,light:isLight,title:()=>surface==='launcher'?'ForgePlay':surface==='vr'?'ForgePlay VR':surface==='utility'?viewName(view):'ForgePlay Mac',renderCompact,home:goHome,settings:()=>openPreferences(),advanced:()=>state.advanced,setAdvanced:value=>{state.advanced=value;},onChatter:value=>{state.poppleTips=value;},refresh:()=>render(),ticker:renderTicker});
+    const showVR=()=>{enterSurface('vr');render(true);root.scrollIntoView({block:'start'});};
     for(const link of document.querySelectorAll('[data-guide-vr-demo]'))link.addEventListener('click',event=>{if(event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;event.preventDefault();showVR();});
-    const hash=()=>{if(location.hash==='#app-vr'){showVR();}else if(location.hash==='#app-awdl'){surface='mac';view='steam';render();openPreferences('input');}else{render();if(location.hash==='#steamvr')requestAnimationFrame(()=>document.getElementById('steamvr')?.scrollIntoView({block:'start',behavior:'instant'}));}};window.addEventListener('hashchange',hash);document.addEventListener('forgeplay:localechange',()=>{if(dialog.open&&!preferencesOpen)dialog.close();render();});hash();
+    const hash=()=>{if(location.hash==='#app-vr'){showVR();}else if(location.hash==='#app-awdl'){enterSurface('mac');view='steam';render();openPreferences('input');}else{render();if(location.hash==='#steamvr')requestAnimationFrame(()=>document.getElementById('steamvr')?.scrollIntoView({block:'start',behavior:'instant'}));}};window.addEventListener('hashchange',hash);document.addEventListener('forgeplay:localechange',()=>{if(dialog.open&&!preferencesOpen)dialog.close();render();});hash();
     // Each optional public feed settles independently. Never delay the usable UI for it.
     void refreshCatalog();
     fetchJSON('site-data/developer-apps.json').then(data=>{appCatalog=data;if(surface==='utility'&&view==='apps')render();}).catch(()=>{});
