@@ -508,6 +508,9 @@
     island?.render();if(view==='profiles'&&surface==='mac')coach.textContent=I('renpyHelp');
     applyWindowSize();
     for(const e of document.querySelectorAll('[data-guide2-text]'))e.textContent=C(e.dataset.guide2Text);
+    for(const e of document.querySelectorAll('[data-vr-showcase-text]'))e.textContent=I(e.dataset.vrShowcaseText);
+    for(const e of document.querySelectorAll('[data-vr-photo-alt]'))e.alt=I(e.dataset.vrPhotoAlt);
+    for(const e of document.querySelectorAll('[data-vp-home]'))e.href='https://facta-leopard.github.io/ForgePlayVP/'+locale()+'/';
     document.title='ForgePlay — '+C('title');document.querySelector('[data-guide-nav]')?.setAttribute('aria-current','page');
     for(const selector of ['meta[name="description"]','meta[property="og:description"]','meta[name="twitter:description"]'])document.querySelector(selector)?.setAttribute('content',C('pageIntro'));
     for(const b of root.querySelectorAll('[data-v2-lesson]')){b.textContent=['lessonIsland','lessonCompatibility'].includes(b.dataset.v2Lesson)?I(b.dataset.v2Lesson):b.dataset.v2Lesson==='lessonCoordinator'?M('coordinatorLesson'):C(b.dataset.v2Lesson);b.setAttribute('aria-pressed',String(lesson===b.dataset.v2Lesson));}
@@ -529,7 +532,9 @@
     dialog=node('dialog','sim-dialog v2-dialog');dialog.setAttribute('aria-labelledby','v2-dialog-title');dialog.addEventListener('close',()=>{preferencesOpen=false;dialog.classList.remove('v2-preferences');if(focusBeforeDialog?.isConnected)focusBeforeDialog.focus();else (root.querySelector('[data-v2-reset]'))?.focus({preventScroll:true});});root.append(dialog);
     vrDemo=window.ForgePlayVRDemo.create({copy:vrCopy,locale,releaseText:I,appearance:isLight,changeAppearance:value=>{state.theme=value;island.render();},apps:()=>appCatalog?.apps||[],exit:target=>{surface=target==='desktop'?'mac':'launcher';if(target==='desktop'){view='steam';workspace='launch';}render(true);if(surface==='launcher')root.querySelector('[data-v2-tile="vr"]')?.focus({preventScroll:true});}});
     island=window.ForgePlayIslandDemo.create({root,shell,copy:islandCopy,locale,light:isLight,title:()=>surface==='launcher'?'ForgePlay':surface==='vr'?'ForgePlay VR':surface==='utility'?viewName(view):'ForgePlay Mac',renderCompact,home:()=>{surface='launcher';render(true);},settings:()=>openPreferences(),advanced:()=>state.advanced,setAdvanced:value=>{state.advanced=value;},onChatter:value=>{state.poppleTips=value;},refresh:()=>render(),ticker:renderTicker});
-    const hash=()=>{if(location.hash==='#app-vr'){surface='launcher';render(true);activateLauncherTile('vr');}else if(location.hash==='#app-awdl'){surface='mac';view='steam';render();openPreferences('input');}else render();};window.addEventListener('hashchange',hash);document.addEventListener('forgeplay:localechange',()=>{if(dialog.open&&!preferencesOpen)dialog.close();render();});hash();
+    const showVR=()=>{island.setMode('expanded',false);surface='vr';render(true);root.scrollIntoView({block:'start'});};
+    for(const link of document.querySelectorAll('[data-guide-vr-demo]'))link.addEventListener('click',event=>{if(event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;event.preventDefault();showVR();});
+    const hash=()=>{if(location.hash==='#app-vr'){showVR();}else if(location.hash==='#app-awdl'){surface='mac';view='steam';render();openPreferences('input');}else{render();if(location.hash==='#steamvr')requestAnimationFrame(()=>document.getElementById('steamvr')?.scrollIntoView({block:'start',behavior:'instant'}));}};window.addEventListener('hashchange',hash);document.addEventListener('forgeplay:localechange',()=>{if(dialog.open&&!preferencesOpen)dialog.close();render();});hash();
     // Each optional public feed settles independently. Never delay the usable UI for it.
     void refreshCatalog();
     fetchJSON('site-data/developer-apps.json').then(data=>{appCatalog=data;if(surface==='utility'&&view==='apps')render();}).catch(()=>{});

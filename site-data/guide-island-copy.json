@@ -12,6 +12,146 @@
     "zh-Hant"
   ],
   "strings": {
+    "vrShowcaseTitle": [
+      "Mac의 VR 게임을, Vision Pro에서.",
+      "Your Mac’s VR games, on Vision Pro.",
+      "VR-Spiele vom Mac auf Vision Pro.",
+      "Tus juegos VR del Mac, en Vision Pro.",
+      "Les jeux VR du Mac, sur Vision Pro.",
+      "MacのVRゲームを、Vision Proで。",
+      "在 Vision Pro 体验 Mac 上的 VR 游戏。",
+      "在 Vision Pro 體驗 Mac 上的 VR 遊戲。"
+    ],
+    "vrShowcaseLead": [
+      "Mac의 ForgePlay가 호환되는 Windows VR 게임을 실행하고, Vision Pro의 ForgePlayVP가 게임 화면과 머리·손 입력을 연결합니다. Mac과 Vision Pro, 두 기기가 함께 만드는 경험입니다.",
+      "ForgePlay on Mac runs compatible Windows VR games. ForgePlayVP on Vision Pro connects the game view with head and hand input. The experience uses both devices.",
+      "ForgePlay auf dem Mac führt kompatible Windows-VR-Spiele aus. ForgePlayVP auf Vision Pro verbindet das Spielbild mit Kopf- und Handeingaben. Beide Geräte werden benötigt.",
+      "ForgePlay en el Mac ejecuta juegos Windows VR compatibles. ForgePlayVP conecta la imagen con los movimientos de cabeza y manos en Vision Pro. Se utilizan ambos dispositivos.",
+      "ForgePlay sur Mac exécute les jeux Windows VR compatibles. ForgePlayVP relie l’image et les mouvements de tête et de mains sur Vision Pro. Les deux appareils sont nécessaires.",
+      "MacのForgePlayが対応Windows VRゲームを実行し、Vision ProのForgePlayVPがゲーム映像と頭・手の入力をつなぎます。両方の機器を使用する体験です。",
+      "Mac 上的 ForgePlay 运行兼容的 Windows VR 游戏，Vision Pro 上的 ForgePlayVP 连接游戏画面与头部、手部输入。体验需要两台设备共同工作。",
+      "Mac 上的 ForgePlay 執行相容的 Windows VR 遊戲，Vision Pro 上的 ForgePlayVP 連接遊戲畫面與頭部、手部輸入。體驗需要兩台裝置共同運作。"
+    ],
+    "vrHandsTitle": [
+      "컨트롤러 없이, 손으로 가리키고 클릭하세요.",
+      "Point and click with your hands.",
+      "Mit den Händen zeigen und klicken.",
+      "Apunta y haz clic con las manos.",
+      "Pointez et cliquez avec vos mains.",
+      "手で指し示し、クリック。",
+      "用手指向和点击。",
+      "用手指向和點擊。"
+    ],
+    "vrHandsBody": [
+      "별도의 VR 컨트롤러 없이 손으로 대상을 가리키고, 엄지와 검지를 맞대어 선택할 수 있습니다. 지원되는 게임에서는 게임패드 입력도 함께 사용할 수 있습니다. 조작 범위는 게임의 입력 지원과 바인딩에 따라 달라집니다.",
+      "Point at a target and pinch your thumb and index finger to select it, without a separate VR controller. Compatible games can also combine this with gamepad input. Available controls depend on the game’s input support and bindings.",
+      "Ohne separaten VR-Controller auf ein Ziel zeigen und Daumen und Zeigefinger zum Auswählen zusammenführen. Bei unterstützten Spielen lässt sich dies mit Gamepad-Eingaben kombinieren. Steuerung und Belegung hängen vom Spiel ab.",
+      "Apunta a un objetivo y junta pulgar e índice para seleccionarlo, sin un controlador VR adicional. Los juegos compatibles pueden combinarlo con un mando. Los controles dependen del soporte y las asignaciones del juego.",
+      "Pointez une cible et pincez pouce et index pour la sélectionner, sans contrôleur VR supplémentaire. Les jeux compatibles peuvent aussi utiliser une manette. Les commandes dépendent du jeu et de ses affectations.",
+      "別途VRコントローラーを用意せず、手で対象を指し、親指と人差し指をつまんで選択できます。対応ゲームではゲームパッド入力も併用できます。操作できる範囲はゲームの入力対応と割り当てによって異なります。",
+      "无需额外的 VR 控制器，用手指向目标并捏合拇指和食指即可选择。兼容游戏也可搭配手柄输入。可用操作取决于游戏的输入支持和按键绑定。",
+      "無需額外的 VR 控制器，用手指向目標並捏合拇指和食指即可選取。相容遊戲也可搭配遊戲控制器輸入。可用操作取決於遊戲的輸入支援和按鍵綁定。"
+    ],
+    "vrHandsPhoto": [
+      "Vision Pro 실사용 화면 · 손 추적",
+      "Real Vision Pro gameplay · hand tracking",
+      "Echte Vision-Pro-Aufnahme · Handtracking",
+      "Captura real en Vision Pro · seguimiento de manos",
+      "Capture réelle sur Vision Pro · suivi des mains",
+      "Vision Proの実際の画面・ハンドトラッキング",
+      "Vision Pro 实际画面 · 手部追踪",
+      "Vision Pro 實際畫面 · 手部追蹤"
+    ],
+    "vrPointPhoto": [
+      "Vision Pro 실사용 화면 · 손으로 가리키는 포인터",
+      "Real Vision Pro gameplay · hand-directed pointer",
+      "Echte Vision-Pro-Aufnahme · handgesteuerter Zeiger",
+      "Captura real en Vision Pro · puntero dirigido con la mano",
+      "Capture réelle sur Vision Pro · pointeur dirigé par la main",
+      "Vision Proの実際の画面・手の向きによるポインター",
+      "Vision Pro 实际画面 · 手部指向的指针",
+      "Vision Pro 實際畫面 · 手部指向的指標"
+    ],
+    "vrPhotoCredit": [
+      "사용자가 제공한 Dagon 실사용 사진입니다. 일반 게임을 VR 게임으로 변환하는 기능은 아닙니다.",
+      "User-provided Dagon gameplay screenshots. This does not turn ordinary games into VR games.",
+      "Vom Nutzer bereitgestellte Dagon-Aufnahmen. Normale Spiele werden damit nicht in VR-Spiele umgewandelt.",
+      "Capturas reales de Dagon aportadas por el usuario. No convierte juegos normales en juegos VR.",
+      "Captures de Dagon fournies par l’utilisateur. Cette fonction ne transforme pas les jeux ordinaires en jeux VR.",
+      "ユーザー提供のDagon実プレイ画像です。通常のゲームをVRゲームへ変換する機能ではありません。",
+      "用户提供的 Dagon 实际游玩截图。此功能不会将普通游戏转换为 VR 游戏。",
+      "使用者提供的 Dagon 實際遊玩截圖。此功能不會將一般遊戲轉換為 VR 遊戲。"
+    ],
+    "vrStep1": [
+      "Mac 가상 디스플레이와 ForgePlayVP를 연결합니다.",
+      "Connect Mac Virtual Display and ForgePlayVP.",
+      "Mac Virtual Display und ForgePlayVP verbinden.",
+      "Conecta la pantalla virtual del Mac y ForgePlayVP.",
+      "Connectez l’écran virtuel Mac et ForgePlayVP.",
+      "Mac仮想ディスプレイとForgePlayVPを接続します。",
+      "连接 Mac 虚拟显示器和 ForgePlayVP。",
+      "連接 Mac 虛擬顯示器和 ForgePlayVP。"
+    ],
+    "vrStep2": [
+      "Mac의 Steam에서 게임을 VR 모드로 실행합니다.",
+      "Start the game in VR mode through Steam on Mac.",
+      "Das Spiel auf dem Mac in Steam im VR-Modus starten.",
+      "Inicia el juego en modo VR desde Steam en el Mac.",
+      "Lancez le jeu en mode VR dans Steam sur Mac.",
+      "MacのSteamでゲームをVRモードで起動します。",
+      "在 Mac 的 Steam 中以 VR 模式启动游戏。",
+      "在 Mac 的 Steam 中以 VR 模式啟動遊戲。"
+    ],
+    "vrStep3": [
+      "Vision Pro에서 ‘VR 게임 화면 열기’를 누릅니다.",
+      "Select Open VR Game View on Vision Pro.",
+      "Auf Vision Pro die VR-Spielansicht öffnen.",
+      "Pulsa Abrir vista del juego VR en Vision Pro.",
+      "Ouvrez la vue du jeu VR sur Vision Pro.",
+      "Vision Proで「VRゲーム画面を開く」を押します。",
+      "在 Vision Pro 选择“打开 VR 游戏画面”。",
+      "在 Vision Pro 選擇「開啟 VR 遊戲畫面」。"
+    ],
+    "vrShowcaseNote": [
+      "Mac의 VR 기능은 ForgePlay 2.2.0에 포함되어 있습니다. Vision Pro용 ForgePlayVP는 별도로 App Store 심사 제출을 준비하고 있습니다. 플레이 중에는 Mac 가상 디스플레이 연결과 AWDL을 유지해 주세요.",
+      "Mac-side VR is included in ForgePlay 2.2.0. ForgePlayVP for Vision Pro is being prepared separately for App Store review submission. Keep Mac Virtual Display connected and AWDL enabled while playing.",
+      "Mac-VR ist in ForgePlay 2.2.0 enthalten. ForgePlayVP für Vision Pro wird separat für die App-Store-Prüfung vorbereitet. Beim Spielen Mac Virtual Display verbunden und AWDL aktiviert lassen.",
+      "La función VR del Mac se incluye en ForgePlay 2.2.0. ForgePlayVP para Vision Pro se prepara por separado para revisión del App Store. Mantén la pantalla virtual del Mac conectada y AWDL activado durante el juego.",
+      "La VR côté Mac est incluse dans ForgePlay 2.2.0. ForgePlayVP pour Vision Pro se prépare séparément à l’examen de l’App Store. Gardez l’écran virtuel Mac connecté et AWDL activé pendant le jeu.",
+      "Mac側VR機能はForgePlay 2.2.0に含まれます。Vision Pro用ForgePlayVPは別途App Store審査への提出準備中です。プレイ中はMac仮想ディスプレイとAWDLの接続を維持してください。",
+      "Mac 端 VR 功能已包含在 ForgePlay 2.2.0 中。Vision Pro 的 ForgePlayVP 正在单独准备提交 App Store 审核。游玩时请保持 Mac 虚拟显示器连接和 AWDL 开启。",
+      "Mac 端 VR 功能已包含在 ForgePlay 2.2.0 中。Vision Pro 的 ForgePlayVP 正在單獨準備提交 App Store 審查。遊玩時請保持 Mac 虛擬顯示器連線和 AWDL 開啟。"
+    ],
+    "vpHome": [
+      "ForgePlayVP 홈페이지 보기",
+      "Visit the ForgePlayVP homepage",
+      "Zur ForgePlayVP-Homepage",
+      "Ver la web de ForgePlayVP",
+      "Voir le site ForgePlayVP",
+      "ForgePlayVPのホームページへ",
+      "访问 ForgePlayVP 主页",
+      "前往 ForgePlayVP 首頁"
+    ],
+    "vrTry": [
+      "VR 연결 과정 체험하기",
+      "Try the VR connection flow",
+      "VR-Verbindung ausprobieren",
+      "Probar la conexión VR",
+      "Essayer la connexion VR",
+      "VR接続の流れを体験",
+      "体验 VR 连接流程",
+      "體驗 VR 連線流程"
+    ],
+    "vrPhotos": [
+      "Vision Pro 실사용 사진 보기",
+      "View Vision Pro gameplay photos",
+      "Vision-Pro-Aufnahmen ansehen",
+      "Ver capturas de Vision Pro",
+      "Voir les captures Vision Pro",
+      "Vision Proの実プレイ画像を見る",
+      "查看 Vision Pro 实际画面",
+      "查看 Vision Pro 實際畫面"
+    ],
       "storageLead": [
         "빈 폴더는 Windows 드라이브로 연결하고, 기존 SteamLibrary는 Steam에 등록합니다. 게임 파일을 복사하거나 옮기지 않습니다. 게임·설치 작업을 종료한 뒤 연결을 변경하세요.",
         "Connect an empty folder as a Windows drive, or register an existing SteamLibrary. Game files are not copied or moved. End games and installation tasks before changing connections.",

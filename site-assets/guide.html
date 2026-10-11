@@ -34,6 +34,7 @@
   <link rel="stylesheet" href="site-assets/guide-desktop.css?v=20261006-1">
   <link rel="stylesheet" href="site-assets/guide-vr.css?v=20261002-1">
   <link rel="stylesheet" href="site-assets/guide-island.css?v=20261012-1">
+  <link rel="stylesheet" href="site-assets/guide-vr-showcase.css?v=20261012-1">
   <script src="site.js?v=20260929-platform1" defer></script>
   <script src="site-assets/site-shell.js?v=20261001-fopl1" defer></script>
   <link rel="stylesheet" href="site-assets/supporters-nav.css?v=20260928-1">
@@ -44,9 +45,9 @@
   <script src="site-assets/guide-app.js?v=20260913-2" defer></script>
   <script src="site-assets/guide-v2-icons.js?v=20261006-1" defer></script>
   <script src="site-assets/why-story.js?v=20261001-reader1" defer></script>
-  <script src="site-assets/guide-vr.js?v=20261012-1" defer></script>
+  <script src="site-assets/guide-vr.js?v=20261012-2" defer></script>
   <script src="site-assets/guide-island.js?v=20261012-1" defer></script>
-  <script src="site-assets/guide-v2.js?v=20261012-1" defer></script>
+  <script src="site-assets/guide-v2.js?v=20261012-2" defer></script>
   <link rel="stylesheet" href="site-assets/forge-motion.css?v=20260923-copy1">
   <link rel="stylesheet" href="site-assets/arcade/art.css?v=20260928-2">
   <link rel="stylesheet" href="site-assets/arcade/arcade.css?v=20260928-firsts2">
@@ -88,7 +89,27 @@
       </div>
     </header>
     <span id="app-awdl" aria-hidden="true"></span>
+    <span id="app-vr" aria-hidden="true"></span>
     <section class="guide-app-experience" id="app" data-guide-v2 aria-label="ForgePlay interactive guide"><p role="status">Loading ForgePlay guide…</p></section>
+    <section class="guide-vr-showcase" id="steamvr" aria-labelledby="guide-vr-showcase-title">
+      <div class="guide-vr-showcase-heading">
+        <div><p class="fp-eyebrow">FORGEPLAY VR × FORGEPLAYVP</p><h2 id="guide-vr-showcase-title" data-vr-showcase-text="vrShowcaseTitle">Your Mac’s VR games, on Vision Pro.</h2></div>
+        <p data-vr-showcase-text="vrShowcaseLead">ForgePlay on Mac runs compatible Windows VR games. ForgePlayVP on Vision Pro connects the game view with head and hand input. The experience uses both devices.</p>
+      </div>
+      <div class="guide-vr-hands-copy"><h3 data-vr-showcase-text="vrHandsTitle">Point and click with your hands.</h3><p data-vr-showcase-text="vrHandsBody">Point at a target and pinch your thumb and index finger to select it, without a separate VR controller. Compatible games can also combine this with gamepad input. Available controls depend on the game’s input support and bindings.</p></div>
+      <div class="guide-vr-photos">
+        <figure><a href="site-assets/announcements/forgeplay-vr-update-hands.jpg" target="_blank" rel="noopener noreferrer"><img src="site-assets/announcements/forgeplay-vr-update-hands.jpg" width="1280" height="720" loading="lazy" decoding="async" alt="Real Vision Pro gameplay · hand tracking" data-vr-photo-alt="vrHandsPhoto"></a><figcaption data-vr-showcase-text="vrHandsPhoto">Real Vision Pro gameplay · hand tracking</figcaption></figure>
+        <figure><a href="site-assets/announcements/forgeplay-vr-update-pointing.jpg" target="_blank" rel="noopener noreferrer"><img src="site-assets/announcements/forgeplay-vr-update-pointing.jpg" width="1280" height="720" loading="lazy" decoding="async" alt="Real Vision Pro gameplay · hand-directed pointer" data-vr-photo-alt="vrPointPhoto"></a><figcaption data-vr-showcase-text="vrPointPhoto">Real Vision Pro gameplay · hand-directed pointer</figcaption></figure>
+      </div>
+      <p class="guide-vr-photo-credit" data-vr-showcase-text="vrPhotoCredit">User-provided Dagon gameplay screenshots. This does not turn ordinary games into VR games.</p>
+      <ol class="guide-vr-steps">
+        <li><span aria-hidden="true">01</span><p data-vr-showcase-text="vrStep1">Connect Mac Virtual Display and ForgePlayVP.</p></li>
+        <li><span aria-hidden="true">02</span><p data-vr-showcase-text="vrStep2">Start the game in VR mode through Steam on Mac.</p></li>
+        <li><span aria-hidden="true">03</span><p data-vr-showcase-text="vrStep3">Select Open VR Game View on Vision Pro.</p></li>
+      </ol>
+      <p class="guide-vr-release-note" data-vr-showcase-text="vrShowcaseNote">Mac-side VR is included in ForgePlay 2.2.0. ForgePlayVP for Vision Pro is being prepared separately for App Store review submission. Keep Mac Virtual Display connected and AWDL enabled while playing.</p>
+      <div class="guide-vr-showcase-actions"><a class="guide-vr-primary" href="https://facta-leopard.github.io/ForgePlayVP/" target="_blank" rel="noopener noreferrer" data-vp-home><span data-vr-showcase-text="vpHome">Visit the ForgePlayVP homepage</span><span aria-hidden="true">↗</span></a><a href="site-assets/guide.html#app-vr" data-locale-link data-guide-vr-demo><span data-vr-showcase-text="vrTry">Try the VR connection flow</span><span aria-hidden="true">↑</span></a></div>
+    </section>
     <section class="guide-vision" id="vision" data-vision-experience>
       <div class="guide-vision-heading"><div><p class="fp-eyebrow">VISION PRO · MAC VIRTUAL DISPLAY</p><h2 data-demo-text="visionTitle">Ultrawide play that fills your view.</h2></div><div><p data-demo-text="visionBody">Real gameplay through Mac Virtual Display on Vision Pro.</p><p class="guide-vision-warning" data-demo-text="visionWarning">Keep AWDL on while using Mac Virtual Display.</p></div></div>
       <div class="guide-vision-media"><img src="site-assets/guide/vision/ultrawide-1.jpg" width="1280" height="720" loading="lazy" alt="Vision Pro ultrawide gameplay" data-vision-photo><img src="site-assets/guide/vision/ultrawide-2.jpg" width="1280" height="720" loading="lazy" alt="Vision Pro ultrawide gameplay" data-vision-photo></div>
