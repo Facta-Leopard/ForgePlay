@@ -4,6 +4,7 @@
 ![Frame Generation — GPL-3.0-only](https://img.shields.io/badge/Frame_Generation-GPL--3.0--only-blue)
 ![DLSS5 Emulation — GPL-3.0-only](https://img.shields.io/badge/DLSS5_Emulation-GPL--3.0--only-blue)
 ![AI Coordinator — GPL-3.0-only](https://img.shields.io/badge/AI_Coordinator-GPL--3.0--only-blue)
+![ForgePlay VR & ForgePlayVP — GPL-3.0-only](https://img.shields.io/badge/ForgePlay_VR_%26_ForgePlayVP-GPL--3.0--only-blue)
 
 [한국어](#한국어) · [English](#english)
 
@@ -13,9 +14,11 @@
 
 ForgePlay는 Wine 기반의 Windows 게임 실행 환경을 관리하는 macOS 앱입니다. 통합 런처 **ForgePlay**와 게임 실행 환경 **ForgePlay Mac**을 통해 Game Mode 연동, 프레임 생성, HyPER-GAN 기반 DLSS5 Emulation, AI Coordinator, AWDL 제어와 게임용 단축키 설정을 제공합니다.
 
-**Game Mode·Frame Generation·DLSS5 Emulation·AI Coordinator의 지정된 자체 구현을 각각 GPL-3.0-only로 공개합니다.** 위 배지는 해당 구현의 라이선스를 뜻합니다. 앱 전체, UI·연결 래퍼, 모델 가중치나 제3자 구성요소에 하나의 GPL 라이선스를 일괄 적용한다는 뜻은 아닙니다. 별도 허락과 구성요소별 조건은 아래에서 구분합니다.
+**Game Mode·Frame Generation·DLSS5 Emulation·AI Coordinator와 ForgePlay VR·ForgePlayVP의 지정된 자체 구현에는 각각 GPL-3.0-only를 적용합니다.**
 
-[최신 버전 다운로드](https://github.com/Facta-Leopard/ForgePlay/releases/latest) · [2.1.0 공개 소스](https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.1.0/ForgePlay-Mac-2.1.0-7-OpenSource.tar.gz) · [홈페이지](https://facta-leopard.github.io/ForgePlay/) · [문제 제보](https://github.com/Facta-Leopard/ForgePlay/issues)
+배지는 해당 구현의 라이선스를 나타냅니다. 앱 전체, 별도 허가된 호스트 래퍼, 모델 가중치, 아트워크와 제3자 구성요소에 하나의 GPL 라이선스를 일괄 적용한다는 뜻은 아닙니다. 정확한 공개 범위와 추가 허가는 구성요소별 고지를 따릅니다.
+
+[최신 버전 다운로드](https://github.com/Facta-Leopard/ForgePlay/releases/latest) · [2.2.0 공개 소스](https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.2.0/ForgePlay-2.2.0-8-OpenSource.tar.gz) · [홈페이지](https://facta-leopard.github.io/ForgePlay/) · [문제 제보](https://github.com/Facta-Leopard/ForgePlay/issues)
 
 ### ForgePlay를 만든 이유
 
@@ -31,9 +34,9 @@ ForgePlay가 지향하는 차이는 게임을 실행시키는 데서 끝나지 �
 
 ForgePlay는 설치된 CrossOver를 실행하거나 감싸는 프런트엔드가 아니며, CrossOver의 제품 번들·실행 파일·비공개 패치에 의존하지 않습니다. 공개 라이선스에 따라 배포된 Wine·제3자 수정분을 사용하는 것과 비공개 구현을 복제하는 것은 구분합니다. 사용한 공개 코드의 출처와 저작권은 보존하며, 그 부분까지 ForgePlay가 새로 작성했다고 주장하지 않습니다.
 
-### 네 가지 GPL 공개 구현
+### GPL로 공개하는 자체 구현
 
-아래 경로는 **2.1.0 릴리스에 별도로 첨부한 소스 압축본 내부 경로**입니다. GitHub 기본 브랜치의 파일 위치와 다를 수 있습니다.
+아래 구현 경로는 **2.2.0 공개 소스의 원래 소스 구조를 기준**으로 합니다. 압축본은 자체 구현·Wine·제3자·빌드·고지를 구분해 보관하므로, 실제 보관 위치와 원래 경로의 대응은 `SOURCE-BOUNDARIES.json`에서 확인해 주세요. GitHub 기본 브랜치의 파일 위치와 다를 수 있습니다.
 
 각 구현에는 같은 GPL v3 원문을 적용하되, 작성자 소유 기여분·Wine 유래 코드·제3자 자료·별도 허락의 범위를 구분합니다.
 
@@ -105,72 +108,101 @@ Apple의 온디바이스 Foundation Models에는 장면 이미지와 같은 프�
 
 **실제 worker와 공유 런타임에 필요한 Swift 8개 파일도 공개 대상입니다.** 일반 UI·연결 래퍼와 구현 역할이 다르므로, Swift라는 확장자만으로 일괄 제외하지 않습니다.
 
-### 공개 런타임과 비공개 래퍼의 경계
+#### 5. ForgePlay VR 및 ForgePlayVP — GPL-3.0-only
 
-ForgePlay의 공개 범위는 **언어가 아니라 구현 역할과 명시된 이용허락**을 기준으로 정합니다.
+**공개 범위:** Mac VR 런타임, Vision Pro용 ForgePlayVP, 공통 전송·영상·입력 구현과 이를 빌드하는 데 필요한 자체 지원 코드·빌드 자료입니다. 정확한 범위는 소스 아카이브의 `Notices/LICENSES/ForgePlayVR/SCOPE.json`, 적용 조건은 같은 폴더의 `NOTICE.txt`에 명시합니다.
 
-- 실제 추론·제어·그래픽 처리 런타임은 해당 GPL 공개 범위에 유지합니다.
-- 일반 앱·런처 UI와 지정된 입력·연결 래퍼에는 작성자 소유 기여분의 별도 바이너리 배포 허락이 적용됩니다.
-- 현재 추가 허락의 정확한 목록은 `LICENSES/ForgePlayWrapper/SCOPE.json`, 조건은 `PERMISSION.txt`에 있습니다.
-- 이 목록은 Coordinator 호스트 파일 11개와 포플 표시 래퍼 2개를 지정합니다. 관련 소스는 이번 공개 패키지에서 제외됩니다.
-- 기존에 부여된 GPL 권리는 철회하지 않습니다. 실제 런타임의 대응 소스 의무나 Wine·다른 저작권자의 조건도 면제하지 않습니다.
-- 포플 아트워크·이름·브랜딩은 코드와 별개이며, 코드의 GPL 고지가 공개 재사용 허락을 새로 부여하지 않습니다.
+**구현 방식:** Wine에서 실행하는 Windows VR 게임과 Mac·Vision Pro 사이의 영상 및 입력 전달을 연결합니다. Mac/Wine 사이의 공유 메모리 전달과 Mac/Vision Pro 사이의 네트워크 전송을 구분하고, 화면 전달·헤드 트래킹·핸드 트래킹·게임패드 입력을 처리합니다. 현재 연결 구성에는 AWDL 실시간 연결 모드를 활용합니다.
 
-프로세스나 IPC를 분리했다는 이유만으로 라이선스 의무가 사라진다고 설명하지 않습니다. 적용 가능한 별도 허락은 그 원문에 지정된 작성자 소유 범위에 한합니다.
+이 자체 구현에는 실제 동작을 담당하는 Swift 코드도 포함됩니다. **ForgePlayVP와 공통 VR 런타임을 단순 UI 래퍼로 분류해 공개 대상에서 제외하지 않습니다.**
+
+Wine에서 유래한 `VRUnixBootstrap.cpp`는 원저작권과 **LGPL-2.1-or-later 및 추가 링크 허가**를 유지합니다. Valve의 OpenVR 공개 헤더와 생성된 선언은 **BSD-3-Clause**를 따릅니다. 이 부분을 ForgePlay의 독자 작성 코드로 표시하거나 자체 GPL 고지로 재라이선스하지 않습니다.
+
+여기서 ‘자체 구현’은 공개 인터페이스를 이용해 작성한 ForgePlay의 구현을 뜻합니다. Wine·SteamVR·OpenVR·Apple 프레임워크·게임 또는 관련 표준 자체의 소유권을 주장하는 표현이 아닙니다.
+
+> **Vision Pro 앱 출시 안내:** ForgePlayVP는 별도로 Vision Pro App Store 심사 제출을 준비하고 있습니다. 향후 앱 출시 소식은 [ForgePlay 홈페이지](https://facta-leopard.github.io/ForgePlay/)에서 확인해 주세요. 소스 공개와 App Store 앱 출시는 별도의 절차입니다.
+
+### 공개 런타임과 별도 허가된 호스트 래퍼
+
+ForgePlay의 공개 범위는 **프로그래밍 언어가 아니라 실제 구현 역할과 명시된 이용허락**을 기준으로 정합니다.
+
+- 게임 실행·그래픽 처리·추론·제어·VR 전송 및 입력을 담당하는 공개 대상 런타임은 해당 GPL 범위에 포함합니다.
+- 고지에 정확히 지정된 저작자 소유 Mac 런처·데스크탑 UI와 입력·연결 래퍼에는 별도의 바이너리 배포 허가가 적용됩니다.
+- 자체 GPL 기여분과 해당 래퍼를 결합하는 데 필요한 추가 허가는 각 고지에 명시된 범위에 한합니다.
+- 이 허가는 실제 런타임, Wine 유래 코드 또는 다른 저작권자의 자료에 대한 공개·배포 의무를 면제하지 않습니다.
+- 기존에 부여된 GPL 권리는 철회하지 않습니다.
+
+구체적인 조건은 `Notices/LICENSES/ForgePlayWrapper/PERMISSION.txt`와 `SCOPE.json`, 기존 Game Mode·Frame Generation 고지, VR의 `NOTICE.txt`를 함께 확인해 주세요.
+
+**Swift 파일이라는 이유만으로 모두 비공개가 되는 것은 아닙니다.** 실제 추론을 수행하는 `NeuralWorker.swift`, AI Coordinator의 공개 대상 worker·공유 런타임, ForgePlayVP와 공통 VR 구현은 공개 범위에 포함됩니다.
+
+프로세스·IPC·폴더를 분리했다는 사실만으로 라이선스 의무가 없어지는 것도 아닙니다. 별도 허가는 그 원문에서 지정한 저작자 소유 기여분에만 적용됩니다.
 
 ### Wine과 제3자 라이선스
 
-| 구성요소 | 적용 경계 |
+ForgePlay는 여러 라이선스가 함께 적용되는 배포물입니다. 자체 작성 코드와 기존 공개 코드를 구분하며, 재사용한 자료의 원저작권·출처·라이선스 고지를 유지합니다.
+
+| 구성요소 | 적용 라이선스와 경계 |
 | --- | --- |
-| Wine 및 Wine 유래 코드 | 원본 LGPL-2.1-or-later와 지정된 Game Mode 사본의 GPL 전환·원저작권 고지 |
-| HyPER-GAN | MIT. 원본·가중치·파생 모델 자료의 고지 보존 |
-| OWLv2 | Apache-2.0. 모델·토크나이저·변환에 관한 원저작 고지 보존 |
-| Supertonic2 가중치·음색 자료 | OpenRAIL-M. 자체 GPL 코드나 참고 코드의 MIT 조건과 구분 |
-| Supertonic 참고 코드·ONNX Runtime | MIT 및 해당 의존성 고지 |
-| MoltenVK와 지정 수정분 | Apache-2.0 및 구성요소별 고지 |
-| DXMT·DXVK·GStreamer·글꼴·기타 의존성 | 각 구성요소의 MIT, zlib/libpng, LGPL, OFL 등 원래 조건 |
-| 위쳐 3 호환성 어댑터 | 원본·수정 고지를 보존한 MIT. 게임 원본 DLL은 포함하지 않음 |
+| ForgePlay의 지정된 자체 런타임 | GPL-3.0-only 및 구성요소별로 명시된 추가 허가 |
+| Wine과 Wine 유래 코드 | LGPL-2.1-or-later 및 개별 고지. 지정된 Game Mode 호스트·패치 사본은 기존 GPL-3.0-only 전환 고지 유지 |
+| VR의 Wine 파생 Unix 로더 | LGPL-2.1-or-later 및 원문의 추가 링크 허가 |
+| Valve OpenVR 공개 헤더·생성 선언 | BSD-3-Clause |
+| HyPER-GAN | MIT. 원본·가중치·파생 모델 자료의 고지 유지 |
+| OWLv2 | Apache-2.0 |
+| Supertonic 2 모델·음성 스타일 가중치 | BigScience Open RAIL-M. 자체 GPL 코드와 구분 |
+| Supertonic 참조 코드·ONNX Runtime | MIT 및 해당 의존성 고지 |
+| MoltenVK·DXMT·DXVK·GStreamer·폰트·기타 의존성 | 각 구성요소의 개별 라이선스와 고지 |
+| 위쳐 3 호환성 어댑터 | 원저작권과 수정 고지를 보존한 MIT. 게임 원본 DLL은 포함하지 않음 |
 | Apple D3DMetal·시스템 프레임워크·모델 | Apple의 별도 조건. ForgePlay의 GPL 선언으로 재라이선스하지 않음 |
 
-Wine의 지정 Game Mode 사본은 [LGPL 2.1 제3항](https://github.com/wine-mirror/wine/blob/master/COPYING.LIB)에 따른 GPL 전환 고지를 유지합니다. **해당 변경을 포함한 Wine 파생 배포본의 의무를 패치 파일 두 개에만 한정하지 않습니다.** 원본 Wine과 별도 사본의 LGPL 권리 및 제3자 저작권도 보존합니다.
+지정된 Game Mode 사본에는 [LGPL 2.1 제3항](https://github.com/wine-mirror/wine/blob/master/COPYING.LIB)에 따른 기존 GPL 전환 고지를 유지합니다. **관련 Wine 파생 배포본의 의무를 패치 파일만 공개하는 것으로 한정하지 않습니다.** 원본 Wine과 별도 사본의 LGPL 권리, 제3자 저작권과 적용 가능한 대응 소스·빌드 자료 제공 의무도 유지합니다.
 
 ### 공개 소스는 릴리스 첨부파일로 제공합니다
 
-**Wine과 각 구성요소의 라이선스에 따른 배포 의무를 이행하기 위해, 실제 배포물에 대응하는 소스·수정 패치·필수 빌드 자료·고지를 릴리스에 함께 제공합니다.**
+**Wine과 각 구성요소의 라이선스에 따른 배포 의무를 이행하기 위해, 실제 배포물에 대응하는 공개 소스·수정 패치·필수 빌드 자료·저작권 및 라이선스 고지를 GitHub 릴리스에 별도 압축파일로 제공합니다.**
 
-현재 공개본은 [ForgePlay 2.1.0 (Build 7)](https://github.com/Facta-Leopard/ForgePlay/releases/tag/v2.1.0)에 첨부되어 있습니다.
+현재 공개본은 [ForgePlay 2.2.0 (Build 8)](https://github.com/Facta-Leopard/ForgePlay/releases/tag/v2.2.0)에 첨부한 [ForgePlay-2.2.0-8-OpenSource.tar.gz](https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.2.0/ForgePlay-2.2.0-8-OpenSource.tar.gz)입니다.
 
-- [공개 소스 압축파일](https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.1.0/ForgePlay-Mac-2.1.0-7-OpenSource.tar.gz)
-- [공개 소스 SHA-256](https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.1.0/ForgePlay-Mac-2.1.0-7-OpenSource.tar.gz.sha256)
-
-압축본에서 다음 자료를 확인할 수 있습니다.
+2.2.0 소스 패키지는 다음과 같이 구분합니다.
 
 | 파일·폴더 | 내용 |
 | --- | --- |
-| `LICENSE.md`, `SOURCE-SCOPE.md` | 전체 구성과 공개 경계 안내 |
-| `LICENSES/ForgePlayCoordinator/` | Coordinator 런타임의 GPL·MIT 범위와 원문 |
-| `LICENSES/ForgePlayWrapper/` | 지정 UI·연결 래퍼의 별도 바이너리 허락 |
-| `LICENSES/ForgePlayRelease13/`, `Scripts/Templates/ReleaseSource20/NOTICE.txt` | 기존 네이티브 구현의 적용 고지와 허락 |
-| `SOURCE-FILES.json` | 공개 파일 해시와 대응 Mac 바이너리 식별 정보 |
-| `BUILDING.md` | 네이티브 런타임·Wine·모델 준비 및 재구축 안내 |
-| `ThirdPartyCorrespondingSource/` | 제3자 대응 소스·빌드 레시피·재링크 자료 |
+| `ForgePlay/` | 공개 대상 자체 구현, VR·ForgePlayVP와 공용 지원 코드 |
+| `Wine/` | Wine 원본 소스, 해당 버전의 패치와 Wine 유래 코드 |
+| `ThirdParty/` | 제3자 원본·명시된 수정본 및 대응 소스 |
+| `Build/` | 필요한 빌드·패키징 도구와 설정 |
+| `Notices/` | 라이선스 전문, 원저작권, 출처와 정확한 적용 범위 |
+| `SOURCE-BOUNDARIES.json` | 원래 소스 경로와 공개 사본·빌드 입력의 대응 해시 |
+| `restore-layout.py` | 공개 파일을 빌드에 필요한 원래 상대경로로 복원하는 도구 |
 
-과거 버전이 적힌 법적 고지는 해당 허락의 기준 시점을 나타냅니다. 현재 배포물과의 대응은 해당 릴리스와 `SOURCE-FILES.json`을 확인해 주세요.
+**폴더 이름이 해당 폴더 전체에 하나의 라이선스를 부여하지는 않습니다.** `Notices/LICENSE.md`, 구성요소별 고지·범위 파일과 개별 파일의 고지가 기준입니다.
 
-GitHub가 자동 생성하는 **`Source code (zip/tar.gz)`는 저장소 태그의 스냅샷**입니다. 별도로 첨부한 대응 소스 압축본을 대신하지 않습니다. 공개 패키지는 비공개 앱 전체 저장소의 사본도 아닙니다.
+README의 구현 설명에서 사용하는 경로는 원래 소스 구조를 기준으로 합니다. 압축본의 실제 보관 위치와 원래 경로의 대응은 `SOURCE-BOUNDARIES.json`에서 확인할 수 있습니다.
+
+과거 버전이 적힌 법적 고지는 해당 허락의 기준 시점을 나타냅니다. 현재 배포물과의 대응은 해당 릴리스와 `SOURCE-BOUNDARIES.json`을 확인해 주세요.
+
+GitHub가 자동 생성하는 **`Source code (zip/tar.gz)`는 저장소 태그의 스냅샷**이며, 별도로 첨부한 대응 소스 압축본을 대신하지 않습니다. 공개 패키지는 비공개 앱 전체 저장소의 사본도 아닙니다.
 
 압축파일로 제공한다는 이유로 해당 라이선스가 허용하는 복사·수정·재배포 권리가 제한되지는 않습니다.
 
-### 저작권과 재배포
+### 저작권·출처와 재배포
 
 ForgePlay 자체 작성 부분의 저작자: **[Facta-Leopard](https://github.com/Facta-Leopard)**  
 **Copyright © 2026 Facta-Leopard**
 
-재사용·재배포 시 해당 구성요소의 저작권·출처·라이선스와 적용되는 고지를 보존하고, 필요한 변경 표시와 대응 소스 제공 의무를 준수해 주세요. 수정본을 공식 ForgePlay 배포물이나 작성자가 보증하는 배포물처럼 표시해서는 안 됩니다.
+Wine과 제3자 자료의 저작권은 각각의 원저작자에게 있습니다. ForgePlay가 작성하거나 수정한 부분의 고지가 원저작자의 권리를 대체하지 않습니다.
 
-GPL이 허용하는 이용에는 조건을 준수하는 상업적 이용도 포함됩니다. 다만 이것이 Apple 구성요소, 모델 가중치, 아트워크·상표 등 별도 자료의 조건을 없애는 것은 아닙니다.
+재사용·수정·재배포 시에는 다음 사항을 지켜 주세요.
 
-이 README는 범위와 구현을 설명하는 안내이며, 라이선스 원문을 대체하거나 제3자의 권리를 새로 부여하지 않습니다.
+- 해당 구성요소가 요구하는 저작권·출처·라이선스 고지를 보존합니다.
+- 필요한 변경 표시와 대응 소스·빌드 자료 제공 의무를 준수합니다.
+- 원저작자의 기여를 자신의 독자 작성물로 오인시키거나, 수정본을 공식 ForgePlay 배포물 또는 작성자가 보증하는 배포물처럼 표시하지 않습니다.
+- GPL에 따른 권리와 별개로 적용되는 모델·Apple 구성요소·아트워크·상표의 조건을 확인합니다.
+
+GPL이 허용하는 이용에는 조건을 준수하는 상업적 이용도 포함됩니다. **소스 공개는 포플 이미지, 로고, 이름과 브랜드에 대한 새로운 재사용 허가나 상표 사용권을 부여하는 것이 아닙니다.**
+
+이 README는 공개 범위와 구현을 설명하는 안내입니다. 라이선스 전문을 대체하거나 제3자의 권리를 새로 부여하지 않습니다.
 
 ### 실행 결과를 알려주세요
 
@@ -186,9 +218,11 @@ GPL이 허용하는 이용에는 조건을 준수하는 상업적 이용도 포�
 
 ForgePlay manages Wine-based Windows gaming environments on macOS. The unified **ForgePlay** launcher and **ForgePlay Mac** execution environment provide Game Mode integration, frame generation, HyPER-GAN-based DLSS5 Emulation, AI Coordinator, AWDL controls, and game-oriented shortcut settings.
 
-**The identified author-owned implementations of Game Mode, Frame Generation, DLSS5 Emulation, and AI Coordinator are each published under GPL-3.0-only.** The badges identify those implementations. They do not apply one blanket GPL license to the entire app, UI wrappers, model weights, or third-party components. Separate permissions and component-specific terms are explained below.
+**The identified author-owned implementations of Game Mode, Frame Generation, DLSS5 Emulation, AI Coordinator, and ForgePlay VR / ForgePlayVP use GPL-3.0-only.**
 
-[Download the latest version](https://github.com/Facta-Leopard/ForgePlay/releases/latest) · [2.1.0 source archive](https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.1.0/ForgePlay-Mac-2.1.0-7-OpenSource.tar.gz) · [Website](https://facta-leopard.github.io/ForgePlay/) · [Report an issue](https://github.com/Facta-Leopard/ForgePlay/issues)
+The badges identify those implementations. They do not apply a blanket GPL license to the entire app, separately permitted host wrappers, model weights, artwork, or third-party components. Exact scopes and additional permissions are defined by the component notices.
+
+[Download the latest version](https://github.com/Facta-Leopard/ForgePlay/releases/latest) · [2.2.0 source archive](https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.2.0/ForgePlay-2.2.0-8-OpenSource.tar.gz) · [Website](https://facta-leopard.github.io/ForgePlay/) · [Report an issue](https://github.com/Facta-Leopard/ForgePlay/issues)
 
 ### Why ForgePlay was created
 
@@ -204,9 +238,9 @@ ForgePlay’s goals extend beyond getting a game to launch. It aims to address p
 
 ForgePlay is not a front end that launches or wraps an installed copy of CrossOver, and it does not depend on CrossOver product bundles, executables, or private patches. Using Wine and third-party modifications distributed under public licenses is distinct from copying a private implementation. The provenance and copyrights of reused public code are preserved; we do not claim to have newly authored those parts.
 
-### Four separately identified GPL implementations
+### Separately Identified GPL Implementations
 
-The paths below refer to **the source archive attached separately to the 2.1.0 release**, not necessarily this repository’s default branch.
+The implementation paths below refer to **the original source layout of the 2.2.0 public source**. The archive separates project-authored code, Wine, third-party material, build tools, and notices. Consult `SOURCE-BOUNDARIES.json` for the mapping between archive locations and original paths; these may differ from this repository’s default branch.
 
 The same GPL v3 text applies to the identified implementations, while author-owned contributions, Wine-derived code, third-party material, and additional permissions remain separately identified.
 
@@ -278,70 +312,101 @@ Principal published implementation:
 
 **The eight Swift files required by the inference worker and its shared runtime are included.** They perform a different role from ordinary UI and connection wrappers; a Swift filename alone does not exclude a file from publication.
 
-### Published runtime and private wrapper boundaries
+#### 5. ForgePlay VR and ForgePlayVP — GPL-3.0-only
+
+**Published scope:** The Mac VR runtime, the ForgePlayVP application for Vision Pro, shared transport/media/input implementations, and the project-authored support code and build materials required to build them. The exact scope is recorded in `Notices/LICENSES/ForgePlayVR/SCOPE.json`, with applicable terms in `NOTICE.txt`.
+
+**Implementation:** The runtime connects video and input between Windows VR games running through Wine, the Mac, and Vision Pro. It separates Mac/Wine shared-memory transport from Mac/Vision Pro networking and handles video delivery, head tracking, hand tracking, and gamepad input. The current connection setup uses an AWDL real-time connection mode.
+
+The scope includes Swift code that performs the actual runtime work. **ForgePlayVP and the shared VR implementation are not excluded as ordinary UI wrappers.**
+
+The Wine-derived `VRUnixBootstrap.cpp` retains its original copyrights, **LGPL-2.1-or-later**, and its additional linking permission. Valve’s public OpenVR headers and generated declarations retain **BSD-3-Clause**. These materials are not presented as wholly original ForgePlay code or relicensed by ForgePlay’s GPL notice.
+
+“Original implementation” describes ForgePlay-authored behavior using public interfaces. It does not claim ownership of Wine, SteamVR, OpenVR, Apple frameworks, games, or the underlying standards.
+
+> **Vision Pro app availability:** ForgePlayVP is being prepared separately for review submission to the Vision Pro App Store. Check the [ForgePlay website](https://facta-leopard.github.io/ForgePlay/) for release announcements. Source publication and App Store availability are separate processes.
+
+### Published Runtime and Separately Permitted Host Wrappers
 
 Source scope follows **implementation roles and explicit permissions**, not programming language.
 
-- Actual inference, control, and graphics-processing runtimes remain within their applicable GPL source scope.
-- Identified author-owned application UI, launcher UI, input, and connection wrappers have separate binary-distribution permissions.
-- The current additional permission is recorded in `LICENSES/ForgePlayWrapper/PERMISSION.txt`, with its exact file list in `SCOPE.json`.
-- That list identifies 11 Coordinator host files and two Fopl presentation wrappers. Their source is excluded from this publication.
-- Previously granted GPL rights are not revoked. Runtime source obligations and the independent terms of Wine and other rights holders remain intact.
-- Fopl artwork, names, and branding are separate from code. A GPL code notice does not grant new public reuse rights in those assets.
+- Covered execution, graphics, inference, control, VR transport, and input runtimes remain within their applicable GPL scope.
+- Precisely identified author-owned Mac launcher/Desktop UI, input, and connection wrappers have separate binary-distribution permissions.
+- Additional permissions to combine author-owned GPL contributions with those wrappers apply only within their stated scope.
+- Those permissions do not exempt the actual runtime, Wine-derived code, or another rights holder’s material from applicable obligations.
+- Previously granted GPL rights remain intact.
 
-Neither IPC nor a separate process automatically removes license obligations. An additional permission applies only to the author-owned material identified by its terms.
+Consult `Notices/LICENSES/ForgePlayWrapper/PERMISSION.txt` and `SCOPE.json`, the existing Game Mode and Frame Generation notices, and the VR `NOTICE.txt`.
 
-### Wine and third-party licenses
+**A Swift filename does not by itself exclude code from publication.** `NeuralWorker.swift`, the covered AI Coordinator worker and shared runtime, ForgePlayVP, and the shared VR implementation remain included.
 
-| Component | Applicable boundary |
+Neither a process boundary, IPC, nor a separate folder automatically removes license obligations. Additional permissions apply only to the author-owned contributions identified in their terms.
+
+### Wine and Third-Party Licenses
+
+ForgePlay is a multi-license distribution. Project-authored contributions remain distinguishable from reused material, with original copyrights, provenance, and license notices preserved.
+
+| Component | Applicable license and boundary |
 | --- | --- |
-| Wine and Wine-derived code | Upstream LGPL-2.1-or-later, designated Game Mode GPL conversions, and original copyright notices |
+| Identified ForgePlay-authored runtimes | GPL-3.0-only and expressly stated component permissions |
+| Wine and Wine-derived code | LGPL-2.1-or-later and individual notices; designated Game Mode host and patch copies retain their GPL-3.0-only conversion notices |
+| Wine-derived VR Unix loader | LGPL-2.1-or-later and its original additional linking permission |
+| Valve OpenVR public headers and generated declarations | BSD-3-Clause |
 | HyPER-GAN | MIT notices for upstream code, weights, and derived model material |
-| OWLv2 | Apache-2.0 notices for the model, tokenizer, and conversion provenance |
-| Supertonic2 weights and voice styles | OpenRAIL-M, separate from ForgePlay’s GPL code and MIT reference code |
+| OWLv2 | Apache-2.0 |
+| Supertonic 2 model and voice-style weights | BigScience Open RAIL-M, separate from ForgePlay’s GPL code |
 | Supertonic reference code and ONNX Runtime | MIT and applicable dependency notices |
-| MoltenVK and identified modifications | Apache-2.0 and component-specific notices |
-| DXMT, DXVK, GStreamer, fonts, and other dependencies | Their original MIT, zlib/libpng, LGPL, OFL, or other applicable terms |
+| MoltenVK, DXMT, DXVK, GStreamer, fonts, and other dependencies | Their individual licenses and notices |
 | Witcher 3 compatibility adapter | MIT with upstream and modification notices; the original game DLL is not included |
 | Apple D3DMetal, system frameworks, and models | Separate Apple terms; not relicensed under ForgePlay’s GPL declarations |
 
-The designated Game Mode copies retain conversion notices under [LGPL 2.1 section 3](https://github.com/wine-mirror/wine/blob/master/COPYING.LIB). **Obligations for the modified Wine distribution containing those changes are not limited to two patch files.** LGPL rights in upstream Wine and separate copies, and third-party copyrights, remain preserved.
+The designated Game Mode copies retain their existing conversion notices under [LGPL 2.1 section 3](https://github.com/wine-mirror/wine/blob/master/COPYING.LIB). **Obligations for the corresponding modified Wine distribution are not limited to publishing patch files.** Applicable source and build-material obligations, upstream LGPL rights, and third-party copyrights remain preserved.
 
-### Source is supplied as release assets
+### Source Is Supplied as Release Assets
 
-**To meet the distribution obligations of Wine and the other components, source corresponding to the actual distribution, modification patches, required build materials, and notices are supplied with releases.**
+**To meet the distribution obligations of Wine and other components, source corresponding to the distributed binaries, modification patches, required build materials, and copyright and license notices are provided as separate archives attached to GitHub releases.**
 
-The current package is attached to [ForgePlay 2.1.0 (Build 7)](https://github.com/Facta-Leopard/ForgePlay/releases/tag/v2.1.0).
+The current package is [ForgePlay-2.2.0-8-OpenSource.tar.gz](https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.2.0/ForgePlay-2.2.0-8-OpenSource.tar.gz), attached to [ForgePlay 2.2.0 (Build 8)](https://github.com/Facta-Leopard/ForgePlay/releases/tag/v2.2.0).
 
-- [Source archive](https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.1.0/ForgePlay-Mac-2.1.0-7-OpenSource.tar.gz)
-- [Source SHA-256](https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.1.0/ForgePlay-Mac-2.1.0-7-OpenSource.tar.gz.sha256)
+The 2.2.0 source package is organized as follows.
 
 | File or directory | Purpose |
 | --- | --- |
-| `LICENSE.md`, `SOURCE-SCOPE.md` | Licensing overview and publication boundaries |
-| `LICENSES/ForgePlayCoordinator/` | Coordinator GPL/MIT scopes and original texts |
-| `LICENSES/ForgePlayWrapper/` | Separate binary permission for identified UI and connection wrappers |
-| `LICENSES/ForgePlayRelease13/`, `Scripts/Templates/ReleaseSource20/NOTICE.txt` | Applicable earlier native-component notices and permissions |
-| `SOURCE-FILES.json` | Published file hashes and corresponding Mac binary identities |
-| `BUILDING.md` | Native runtime, Wine, and model preparation/build guidance |
-| `ThirdPartyCorrespondingSource/` | Third-party source, build recipes, and relinking materials |
+| `ForgePlay/` | Covered original implementations, VR/ForgePlayVP, and shared support code |
+| `Wine/` | Wine source, version-matched patches, and Wine-derived code |
+| `ThirdParty/` | Third-party originals, identified modifications, and corresponding source |
+| `Build/` | Required build and packaging tools and configuration |
+| `Notices/` | Full licenses, original copyrights, provenance, and exact scopes |
+| `SOURCE-BOUNDARIES.json` | Original paths and corresponding published-source/build-input hashes |
+| `restore-layout.py` | Restores the original relative layout required for building |
 
-Older version numbers in preserved legal notices identify the origin of those permissions. Consult the relevant release and `SOURCE-FILES.json` for the current source-to-binary correspondence.
+**Directory names do not assign a single license to every contained file.** Consult `Notices/LICENSE.md`, component notices and scope records, and individual file notices.
 
-GitHub’s automatic **`Source code (zip/tar.gz)` files are repository-tag snapshots**. They do not replace the separately attached source archive. The published package is also not a copy of the entire private application repository.
+Implementation paths in this README refer to the original source layout. `SOURCE-BOUNDARIES.json` maps those paths to their locations in the archive.
 
-Providing source in archives does not limit the copying, modification, or redistribution rights granted by the applicable licenses.
+Older version numbers in preserved legal notices identify the origin of those permissions. Consult the relevant release and `SOURCE-BOUNDARIES.json` for the current source-to-binary correspondence.
 
-### Copyright and redistribution
+GitHub’s automatic **`Source code (zip/tar.gz)` downloads are repository-tag snapshots**. They do not replace the separately attached corresponding-source archive. The archive is not a copy of the entire private application repository.
+
+Providing source in archives does not restrict copying, modification, or redistribution rights granted by the applicable licenses.
+
+### Copyright, Attribution, and Redistribution
 
 Author of ForgePlay-authored material: **[Facta-Leopard](https://github.com/Facta-Leopard)**  
 **Copyright © 2026 Facta-Leopard**
 
-When reusing or redistributing material, preserve its applicable copyrights, provenance, licenses, and notices, identify modifications where required, and meet the relevant source obligations. Do not present a modified distribution as an official ForgePlay release or imply endorsement by its author.
+Wine and third-party materials retain their respective original copyrights. Notices for ForgePlay’s contributions do not replace those rights.
 
-GPL-permitted use includes compliant commercial use. This does not override separate terms for Apple components, model weights, artwork, trademarks, or other material.
+When reusing, modifying, or redistributing material:
 
-This README explains scope and implementation. It does not replace the license texts or grant additional third-party rights.
+- Preserve required copyright, attribution, and license notices.
+- Identify modifications and provide corresponding source and build materials where required.
+- Do not misrepresent another author’s work as solely your own, or present a modified distribution as an official ForgePlay release or as endorsed by its author.
+- Observe separate terms for models, Apple components, artwork, and trademarks.
+
+GPL-permitted use includes compliant commercial use. **Source publication grants no new rights to reuse Fopl artwork, logos, names, or branding, and grants no trademark permission.**
+
+This README explains implementation and publication boundaries. It does not replace the license texts or grant additional third-party rights.
 
 ### Share your game results
 
