@@ -1,13 +1,40 @@
 {
   "$schema": "./announcements.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-10-13",
+  "updatedAt": "2026-10-14",
   "announcements": [
+    {
+      "id": "forgeplay-2-2-1-update",
+      "type": "release",
+      "publishedAt": "2026-10-14",
+      "featured": true,
+      "titles": {
+        "ko": "ForgePlay 2.2.1 업데이트",
+        "en": "ForgePlay 2.2.1 Update",
+        "de": "ForgePlay 2.2.1 – Update",
+        "es": "Actualización de ForgePlay 2.2.1",
+        "fr": "Mise à jour ForgePlay 2.2.1",
+        "ja": "ForgePlay 2.2.1アップデート",
+        "zh-Hans": "ForgePlay 2.2.1 更新",
+        "zh-Hant": "ForgePlay 2.2.1 更新"
+      },
+      "summaries": {
+        "ko": "여러분의 제보를 바탕으로 포플 키링 숨기기, 진단 채팅 입력, 삼국지 인트로 재생, Xbox 게임패드와 DirectX 설치 문제 등을 개선했습니다. 2.2.0에서 사용상 문제가 없다면 꼭 업데이트하지 않으셔도 됩니다.",
+        "en": "Your reports helped improve Fopl visibility, diagnostics chat input, game intros, Xbox gamepads and DirectX installation. If 2.2.0 works well for you, this update is optional.",
+        "de": "Eure Meldungen halfen bei Fopl-Sichtbarkeit, Diagnose-Chat, Spielintros, Xbox-Gamepads und DirectX-Installation. Wer mit 2.2.0 keine Probleme hat, muss nicht aktualisieren.",
+        "es": "Vuestros reportes ayudaron a mejorar Fopl, el chat de diagnóstico, las introducciones, los mandos Xbox y la instalación de DirectX. Si 2.2.0 funciona bien, actualizar es opcional.",
+        "fr": "Vos retours ont permis d’améliorer Fopl, le chat de diagnostic, les introductions, les manettes Xbox et l’installation de DirectX. Si 2.2.0 fonctionne bien, la mise à jour est facultative.",
+        "ja": "皆さんの報告をもとに、ポプルの非表示、診断チャット入力、三國志のイントロ、Xboxゲームパッド、DirectXのインストールなどを改善しました。2.2.0で問題がなければ更新は必須ではありません。",
+        "zh-Hans": "根据大家的反馈，改善了 Fopl 隐藏、诊断聊天输入、三国志片头、Xbox 手柄和 DirectX 安装等问题。2.2.0 使用正常时无需特意更新。",
+        "zh-Hant": "根據大家的回報，改善了 Fopl 隱藏、診斷聊天輸入、三國志片頭、Xbox 控制器與 DirectX 安裝等問題。2.2.0 使用正常時無須特意更新。"
+      },
+      "href": "updates.html#update-forgeplay-2-2-1-update"
+    },
     {
       "id": "forgeplay-vr-dagon-demo",
       "type": "project",
       "publishedAt": "2026-10-13",
-      "featured": true,
+      "featured": false,
       "titles": {
         "ko": "ForgePlay VR 시연 영상을 공개합니다.",
         "en": "Introducing the ForgePlay VR demo video",
