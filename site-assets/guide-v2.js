@@ -69,6 +69,7 @@
   };
   // Native feature entry starts compact; navigating tabs within a feature keeps its size.
   const enterSurface = (destination, expanded=false) => {surface=destination;island.setMode(expanded?'expanded':'compact',false);};
+  const stopWine = () => {state.launched={};vrDemo.forceStop();render();};
   const goHome = () => {enterSurface('launcher');render(true);};
   const go = id => {
     if(['catalog','diagnostics','apps'].includes(id)){
@@ -200,7 +201,7 @@
     const c=config(), target=launchTarget(), name=platform(), title=target==="steam"?U("Steam 실행"):target==="exe"?U("프로그램 실행"):U("%@ 실행",name);
     const box=card(U("백엔드 선택 후 실행"),helpText(view));
     const launch=btn(title,()=>{if(!['steam','exe'].includes(target)&&!state.installed[target]){show(C("installTitle"),C("installNotice"),[[C("exampleInstaller"),()=>{state.installed[target]=true;render();}]]);return;}state.launched[configKey()]=true;render();show(title,target==='steam'?D("launch"):target==="exe"?D("exeLaunch"):C("platformLaunch"));},"sim-primary",'play');launch.dataset.launch='';launch.disabled=!state.ready||(target==="exe"&&!state.file);
-    box.append(actions(launch,btn(U("설정 저장"),saveConfig),btn(target==="exe"?U("EXE 파일 선택"):U("저장공간 관리"),()=>target==="exe"?chooseFile():view==='profiles'?show(U('저장공간 관리'),helpText('storage')):setWorkspace("storage")),btn(U("Wine 강제 종료"),()=>show(U("Wine 강제 종료"),C("stopNotice"),[[C("confirmExample"),()=>{state.launched={};render();}]]))));
+    box.append(actions(launch,btn(U("설정 저장"),saveConfig),btn(target==="exe"?U("EXE 파일 선택"):U("저장공간 관리"),()=>target==="exe"?chooseFile():view==='profiles'?show(U('저장공간 관리'),helpText('storage')):setWorkspace("storage")),btn(U("Wine 강제 종료"),()=>show(U("Wine 강제 종료"),C("stopNotice"),[[C("confirmExample"),stopWine]]))));
     if(!state.ready)box.append(btn(C("setupNeeded"),()=>go("setup")));
     if(target==="exe"&&state.file){box.append(node("p","sim-file",state.file));if(state.installer)note(box,C("installerMode"),true);}
     const status=node('div','v2-launch-status');status.append(badge(D(state.ready?'ready':'waiting'),state.ready?'ok':'warning'),info(U("최근 Steam 실행 상태"),state.launched[configKey()]?C('launchResult'):C('readyExample')));box.append(status);
@@ -449,7 +450,7 @@
     }
     if(surface==='vr')row.append(btn(I('quickVR'),()=>{island.setMode('expanded');vrDemo.launch();},'','play'));
     row.append(btn(I('showSettings'),()=>island.setMode('expanded'),'','sliders'));
-    if(surface==='mac')row.append(btn(U('Wine 강제 종료'),()=>show(U('Wine 강제 종료'),C('stopNotice'),[[C('confirmExample'),()=>{state.launched={};render();}]])));
+    if(surface==='mac')row.append(btn(U('Wine 강제 종료'),()=>show(U('Wine 강제 종료'),C('stopNotice'),[[C('confirmExample'),stopWine]])));
     parent.append(row);
   };
   const renderLauncher = () => {
@@ -542,7 +543,7 @@
     matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change',event=>{if(event.matches)mascotAnimation?.cancel();});
     const notice=node('p','v2-safety');notice.dataset.v2Notice='';coach=node('p','v2-coach');coach.setAttribute('role','status');root.append(notice,coach);shell=node('div');root.append(shell);
     dialog=node('dialog','sim-dialog v2-dialog');dialog.setAttribute('aria-labelledby','v2-dialog-title');dialog.addEventListener('close',()=>{preferencesOpen=false;dialog.classList.remove('v2-preferences');if(focusBeforeDialog?.isConnected)focusBeforeDialog.focus();else (root.querySelector('[data-v2-reset]'))?.focus({preventScroll:true});});root.append(dialog);
-    vrDemo=window.ForgePlayVRDemo.create({copy:vrCopy,locale,releaseText:I,appearance:isLight,changeAppearance:value=>{state.theme=value;island.render();},apps:()=>appCatalog?.apps||[],exit:target=>{enterSurface(target==='desktop'?'mac':'launcher');if(target==='desktop'){view='steam';workspace='launch';}render(true);if(surface==='launcher')root.querySelector('[data-v2-tile="vr"]')?.focus({preventScroll:true});}});
+    vrDemo=window.ForgePlayVRDemo.create({copy:vrCopy,locale,releaseText:I,onForceStop:()=>{state.launched={};},appearance:isLight,changeAppearance:value=>{state.theme=value;island.render();},apps:()=>appCatalog?.apps||[],exit:target=>{enterSurface(target==='desktop'?'mac':'launcher');if(target==='desktop'){view='steam';workspace='launch';}render(true);if(surface==='launcher')root.querySelector('[data-v2-tile="vr"]')?.focus({preventScroll:true});}});
     island=window.ForgePlayIslandDemo.create({root,shell,copy:islandCopy,locale,light:isLight,title:()=>surface==='launcher'?'ForgePlay':surface==='vr'?'ForgePlay VR':surface==='utility'?viewName(view):'ForgePlay Mac',renderCompact,home:goHome,settings:()=>openPreferences(),advanced:()=>state.advanced,setAdvanced:value=>{state.advanced=value;},onChatter:value=>{state.poppleTips=value;},refresh:()=>render(),ticker:renderTicker});
     const showVR=()=>{enterSurface('vr');render(true);root.scrollIntoView({block:'start'});};
     for(const link of document.querySelectorAll('[data-guide-vr-demo]'))link.addEventListener('click',event=>{if(event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;event.preventDefault();showVR();});

@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   // Presentation-only model. No native processes, device access, or persisted settings.
-  const initial = () => ({mode:'compact',position:'left',chatter:true,reactions:true,hidden:false});
+  const initial = () => ({mode:'compact',position:'left',chatter:true,reactions:true,hidden:false,keyringVisible:true});
   const transition = (state, action, value) => {
     const next={...state};
     if(action==='mode'&&['compact','expanded','keyring'].includes(value)){next.mode=value;next.hidden=false;}
@@ -9,6 +9,8 @@
     if(action==='chatter'||action==='reactions')next[action]=!state[action];
     if(action==='hide')next.hidden=true;
     if(action==='restore')next.hidden=false;
+    if(action==='keyringVisible')next.keyringVisible=!state.keyringVisible;
+    if(!next.keyringVisible&&next.mode==='keyring')next.mode='compact';
     return next;
   };
   const create = ({root,shell,copy,locale,light,title,renderCompact,home,settings,advanced,setAdvanced,onChatter,refresh,ticker}) => {
@@ -23,7 +25,8 @@
     shell.before(stage);stage.append(panel,companion,recovery);panel.append(chrome,compact,shell);
     const button=(key,action,text)=>{const b=n('button','',text===undefined?t(key):text);b.type='button';b.setAttribute('aria-label',t(key));b.title=t(key);b.addEventListener('click',action);return b;};
     const symbolButton=(key,action,symbol)=>{const b=button(key,action,'');b.append(window.ForgePlayGuideIcons.icon(symbol,22));return b;};
-    const active=()=>!document.hidden&&inView&&!state.hidden&&!root.querySelector('dialog[open]');
+    const visible=()=>!document.hidden&&inView&&!state.hidden&&!root.querySelector('dialog[open]');
+    const active=()=>visible()&&state.keyringVisible;
     const quiet=()=>{animation?.cancel();animation=null;clearTimeout(bubbleTimer);clearTimeout(chatterTimer);bubble.hidden=true;sprite.dataset.pose='idle';};
     const speak=(key='hello')=>{
       if(!active())return;
@@ -40,29 +43,32 @@
       if(!state.chatter||!active())return;
       chatterTimer=setTimeout(()=>{if(state.chatter&&active())speak(['tipFold','tipMenu','tipHome','hello'][phrase++%4]);scheduleChatter();},18000);
     };
-    const syncActivity=()=>{stage.dataset.paused=String(!active());if(!active())quiet();else scheduleChatter();};
-    const closeMenu=()=>{if(menu){menu.remove();menu=null;}fopl.focus({preventScroll:true});};
-    const change=(action,value)=>{state=transition(state,action,value);if(action==='chatter')onChatter(state.chatter);if(action==='hide')quiet();refresh();if(action==='hide')recovery.focus({preventScroll:true});else if(action==='mode'&&value!=='keyring')chrome.querySelector('[data-island-handle]')?.focus({preventScroll:true});else fopl.focus({preventScroll:true});};
+    const syncActivity=()=>{stage.dataset.paused=String(!visible());if(!active())quiet();else scheduleChatter();};
+    const menuAnchor=()=>state.keyringVisible?fopl:chrome.querySelector('[data-island-menu]');
+    const closeMenu=()=>{if(menu){menu.remove();menu=null;}menuAnchor()?.focus({preventScroll:true});};
+    const change=(action,value)=>{state=transition(state,action,value);if(action==='chatter')onChatter(state.chatter);if(action==='hide')quiet();refresh();if(action==='hide')recovery.focus({preventScroll:true});else if(action==='mode'&&state.mode!=='keyring')chrome.querySelector('[data-island-handle]')?.focus({preventScroll:true});else menuAnchor()?.focus({preventScroll:true});};
     const openMenu=event=>{
       event?.preventDefault();if(menu){closeMenu();return;}
       menu=n('div','island-menu');menu.setAttribute('role','dialog');menu.setAttribute('aria-label',t('menu'));menu.tabIndex=-1;
       const add=(key,action,pressed)=>{const b=button(key,action);if(pressed!==undefined)b.setAttribute('aria-pressed',String(pressed));menu.append(b);return b;};
       add('compact',()=>{closeMenu();change('mode','compact');},state.mode==='compact');
       add('expanded',()=>{closeMenu();change('mode','expanded');},state.mode==='expanded');
-      add('keyring',()=>{closeMenu();change('mode','keyring');},state.mode==='keyring');
+      add('keyring',()=>{closeMenu();change('mode','keyring');},state.mode==='keyring').disabled=!state.keyringVisible;
+      add('keyringVisible',()=>{closeMenu();change('keyringVisible');},state.keyringVisible);
       add('hide',()=>{closeMenu();change('hide');});menu.append(n('hr'));
       for(const key of ['chatter','reactions'])add(key,()=>{closeMenu();change(key);},state[key]);
       const group=n('fieldset'),legend=n('legend','',t('position'));group.append(legend);
       for(const value of ['left','center','right']){const b=button(value,()=>{closeMenu();change('position',value);});b.setAttribute('aria-pressed',String(state.position===value));group.append(b);}menu.append(group);
       add('advanced',()=>{closeMenu();setAdvanced(!advanced());refresh();},advanced());menu.append(n('hr'));
       add('settings',()=>{closeMenu();settings();});add('close',closeMenu);stage.append(menu);
-      const rect=fopl.getBoundingClientRect(),bounds=stage.getBoundingClientRect();
+      const rect=menuAnchor().getBoundingClientRect(),bounds=stage.getBoundingClientRect();
       menu.style.left=Math.max(8,Math.min(rect.left-bounds.left+50,bounds.width-280))+'px';
       menu.style.top=Math.max(8,rect.top-bounds.top-70)+'px';
       menu.addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();closeMenu();}if(e.key==='Tab'){const items=[...menu.querySelectorAll('button')];if(e.shiftKey&&document.activeElement===items[0]){e.preventDefault();items.at(-1).focus();}else if(!e.shiftKey&&document.activeElement===items.at(-1)){e.preventDefault();items[0].focus();}}});
       menu.querySelector('button').focus({preventScroll:true});
     };
     fopl.addEventListener('contextmenu',openMenu);
+    panel.addEventListener('contextmenu',openMenu);
     fopl.addEventListener('keydown',e=>{if(e.key==='ContextMenu'||(e.shiftKey&&e.key==='F10'))openMenu(e);});
     fopl.addEventListener('click',()=>{
       if(!state.reactions){openMenu();return;}
@@ -78,7 +84,7 @@
       lastPointer=event.clientX;
     },{passive:true});
     stage.addEventListener('pointerleave',()=>{lastPointer=null;});
-    stage.addEventListener('click',event=>{if(menu&&!menu.contains(event.target)&&!companion.contains(event.target))closeMenu();else if(!companion.contains(event.target))impulse(1,5);});
+    stage.addEventListener('click',event=>{if(menu&&!menu.contains(event.target)&&!companion.contains(event.target)&&!event.target.closest('[data-island-menu]'))closeMenu();else if(!companion.contains(event.target))impulse(1,5);});
     const observer=new IntersectionObserver(entries=>{inView=entries[0].isIntersecting;syncActivity();});observer.observe(stage);
     const visibility=()=>syncActivity();document.addEventListener('visibilitychange',visibility);
     reduced.addEventListener('change',quiet);
@@ -86,7 +92,8 @@
       const restoreMenu=Boolean(menu);
       if(menu){menu.remove();menu=null;}
       stage.classList.toggle('island-light',light());stage.dataset.mode=state.mode;stage.dataset.position=state.position;
-      panel.hidden=state.hidden||state.mode==='keyring';companion.hidden=state.hidden;recovery.hidden=!state.hidden;recovery.textContent=t('restore');
+      stage.dataset.keyringVisible=String(state.keyringVisible);
+      panel.hidden=state.hidden||state.mode==='keyring';companion.hidden=state.hidden||!state.keyringVisible;recovery.hidden=!state.hidden;recovery.textContent=t('restore');
       shell.hidden=state.mode!=='expanded';compact.hidden=state.mode!=='compact';
       fopl.setAttribute('aria-label',t('fopl'));options.setAttribute('aria-label',t('menu'));options.title=t('menu');
       chrome.replaceChildren();const handle=button('handle',event=>{if(event.detail===0)change('mode',state.mode==='expanded'?'compact':'expanded');},'');handle.className='island-handle';handle.setAttribute('aria-expanded',String(state.mode==='expanded'));handle.dataset.islandHandle='';
@@ -96,6 +103,8 @@
       const row=n('div','island-chrome-row'),lights=n('span','island-lights');lights.append(button('hide',()=>change('hide'),'●'),button('compact',()=>change('mode','compact'),'●'));
       const titleNode=n('strong','island-title',title());row.append(lights,titleNode);
       const controls=n('div','island-controls');controls.append(symbolButton('keyring',()=>change('mode','keyring'),'collapseAll'),symbolButton(state.mode==='expanded'?'compact':'expanded',()=>change('mode',state.mode==='expanded'?'compact':'expanded'),state.mode==='expanded'?'collapse':'expand'));
+      controls.firstElementChild.disabled=!state.keyringVisible;
+      const menuButton=button('menu',openMenu,'···');menuButton.dataset.islandMenu='';menuButton.setAttribute('aria-haspopup','dialog');controls.append(menuButton);
       const brand=button('home',home,''),image=n('img');image.src='site-assets/forgeplay-icon.png';image.alt='';image.width=image.height=28;brand.append(image);controls.append(brand);row.append(controls);chrome.append(handle,row,ticker());
       compact.replaceChildren();if(state.mode==='compact')renderCompact(compact);
       syncActivity();if(restoreMenu)openMenu();

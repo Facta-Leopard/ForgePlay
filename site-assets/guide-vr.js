@@ -40,7 +40,7 @@
     return next;
   };
   const bitrate = quality => Math.min(100,Math.max(25,Math.round(60*(quality/1600)**2/5)*5));
-  const create = ({copy,locale,exit,apps=()=>[],releaseText=key=>key,appearance=()=>false,changeAppearance=()=>{}}) => {
+  const create = ({copy,locale,exit,onForceStop=()=>{},apps=()=>[],releaseText=key=>key,appearance=()=>false,changeAppearance=()=>{}}) => {
     let state=initial(),host,modal=null,modalReturn=null,scroll=0,fieldFocus=null;
     let expanded={mac:new Set(),vision:new Set()};
     const t=(key,values={})=>Object.entries(values).reduce((text,[key,value])=>text.replaceAll('{'+key+'}',String(value)),copy.strings[key]?.[Math.max(0,copy.locales.indexOf(locale()))]||releaseText(key));
@@ -52,7 +52,7 @@
     const help=(key)=>{const b=button('help',()=>open('help',key),'vr-icon','info');b.setAttribute('aria-label',t('help')+' · '+t(key));return b;};
     const panel=(title,subtitle,glyph)=>{const e=n('section','vr-panel'),h=n('div','vr-panel-heading');h.append(icon(glyph,21),n('h3','',t(title)));if(subtitle)h.append(help(subtitle));e.append(h);return e;};
     const pill=(text,good=false)=>{const e=n('span','vr-pill'+(good?' is-ready':''));e.append(icon(good?'checkCircle':'vision',14),n('span','',text));return e;};
-    const set=(action,value)=>{state=transition(state,action,value);render(['device','acknowledge','connect','play','home','reopenVision','disconnectVision','stop','resetPairing'].includes(action));};
+    const set=(action,value)=>{state=transition(state,action,value);if(action==='forceStop')onForceStop();render(['device','acknowledge','connect','play','home','reopenVision','disconnectVision','stop','resetPairing'].includes(action));};
     const go=(page,topic)=>{state.page=page;if(topic)state.topic=topic;scroll=0;render(true);};
     const open=(type,value)=>{modal={type,value};modalReturn=document.activeElement?.dataset?.vrAction;render();};
     const close=()=>{modal=null;render();};
@@ -252,7 +252,7 @@
       if(state.environment){const stop=button('forceStop',()=>open('confirm','forceStop'),'vr-text');footer.append(stop);}
       const end=button('endSession',()=>state.steam?open('confirm','endSession'):set('stop'),'','power');end.disabled=!state.listening&&!state.steam;footer.append(end);main.append(footer);layout.append(main);host.append(layout);complete(body,oldFocus);
     };
-    return {render:element=>{host=element;render();},launch:()=>{if(state.macPrepared)next();else render(true);},reset:()=>{state=initial();modal=null;scroll=0;expanded={mac:new Set(),vision:new Set()};if(host)delete host.dataset.vrDevice;},hint:()=>t('coach')};
+    return {render:element=>{host=element;render();},forceStop:()=>{state=transition(state,'forceStop');},launch:()=>{if(state.macPrepared)next();else render(true);},reset:()=>{state=initial();modal=null;scroll=0;expanded={mac:new Set(),vision:new Set()};if(host)delete host.dataset.vrDevice;},hint:()=>t('coach')};
   };
   window.ForgePlayVRDemo=Object.freeze({create,initial,transition,locked,bitrate,validCode,demoCode});
 })();

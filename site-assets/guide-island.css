@@ -1,4 +1,4 @@
-/* ForgePlay 2.2.0 native island presentation; existing app palettes are retained. */
+/* ForgePlay native island presentation; existing app palettes are retained. */
 .guide-page:has(.island-stage:hover) .fopl-keyring,.guide-page:has(.island-stage:focus-within) .fopl-keyring,.guide-page:has(.island-menu) .fopl-keyring{visibility:hidden;}
 .island-stage:has(.island-menu){z-index:10;}
 .island-stage{--island-bg:#12100e;--island-panel:#1d1915;--island-ink:#f4ebdd;--island-muted:#bbae9e;--island-line:#3c3229;--island-accent:#e6a264;position:relative;margin:24px 0 12px;padding:20px 16px 240px;min-height:460px;border-radius:24px;background:radial-gradient(ellipse at 50% 0,#342c23,transparent 70%),#171614;color:var(--island-ink);font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;isolation:isolate;}
@@ -41,6 +41,7 @@
 .island-stage[data-position=right] .island-companion{left:auto;right:60px;}
 .island-stage[data-mode=keyring]{min-height:320px;padding-bottom:300px;}
 .island-stage[data-mode=keyring] .island-companion{top:16px;}
+.island-stage[data-keyring-visible=false]{padding-bottom:24px;min-height:0;}
 .island-fopl{display:block;width:176px;height:202px;border:0;padding:0;background:none!important;position:relative;touch-action:manipulation;}
 .island-fopl::before{content:'';position:absolute;left:50%;top:0;width:1px;height:15px;background:var(--island-accent);}
 .island-fopl-pivot{display:block;position:absolute;top:10px;width:176px;height:198px;transform-origin:50% 4.17%;}
