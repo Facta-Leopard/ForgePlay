@@ -156,10 +156,11 @@
 
   const appendAction = (parent, action, selectedLocale) => {
     const releaseDownload = /^https:\/\/github\.com\/Facta-Leopard\/ForgePlay\/releases\/download\/v([0-9]+\.[0-9]+\.[0-9]+)\/ForgePlay-\1-[0-9]+\.dmg$/;
-    if (!["https://github.com/Facta-Leopard/ForgePlay/issues", "site-assets/guide.html"].includes(action.href)
+    if (!["https://github.com/Facta-Leopard/ForgePlay/issues", "site-assets/guide.html", "https://facta-leopard.github.io/ForgePlayVP/"].includes(action.href)
       && !releaseDownload.test(action.href)) return;
     const link = appendTextElement(parent, "a", "update-feedback-button", localizedText(action.label, selectedLocale));
-    applyLinkDestination(link, action.href, selectedLocale);
+    const href=action.href==='https://facta-leopard.github.io/ForgePlayVP/'?action.href+selectedLocale+'/':action.href;
+    applyLinkDestination(link, href, selectedLocale);
     link.setAttribute("aria-label", localizedText(action.accessibilityLabel, selectedLocale));
   };
 
@@ -283,7 +284,13 @@
           appendStructuredParagraph(body, paragraph);
           (announcement.images || []).filter(asset => asset.afterParagraph === index)
             .forEach(asset => appendImage(body, asset, selectedLocale, "update-inline-image"));
+          if (announcement.video?.afterParagraph === index) {
+            const video=window.ForgePlayVideo?.create(announcement.video);
+            if(video)body.append(video);
+          }
           if (announcement.action?.afterParagraph === index) appendAction(body, announcement.action, selectedLocale);
+          (announcement.actions || []).filter(action => action.afterParagraph === index)
+            .forEach(action => appendAction(body, action, selectedLocale));
         });
         content.append(body);
       }

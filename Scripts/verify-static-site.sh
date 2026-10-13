@@ -1534,7 +1534,7 @@ for announcement in announcements:
     require_object_shape(
         announcement,
         {"id", "type", "publishedAt", "featured", "titles", "summaries", "href"},
-        {"id", "type", "publishedAt", "featured", "titles", "summaries", "paragraphs", "images", "action", "href"},
+        {"id", "type", "publishedAt", "featured", "titles", "summaries", "paragraphs", "images", "video", "action", "actions", "href"},
         f"announcement {identifier}",
     )
     if announcement.get("type") not in {"project", "release"}:
@@ -1669,13 +1669,28 @@ for announcement in announcements:
             raise SystemExit(
                 f"announcement {identifier} paragraph structure differs by locale"
             )
-    if "action" in announcement:
-        action = announcement["action"]
+    if "video" in announcement:
+        video = announcement["video"]
+        fields = {"youtubeId", "title", "poster", "afterParagraph"}
+        require_object_shape(video, fields, fields, f"announcement {identifier} video")
+        if not isinstance(video["youtubeId"], str) or not re.fullmatch(r"[A-Za-z0-9_-]{11}", video["youtubeId"]):
+            raise SystemExit(f"announcement {identifier}: invalid YouTube video ID")
+        if not isinstance(video["title"], str) or not video["title"].strip():
+            raise SystemExit(f"announcement {identifier}: video title is required")
+        poster = video["poster"]
+        if not isinstance(poster, str) or not re.fullmatch(r"site-assets/announcements/[a-z0-9-]+\.(jpg|png)", poster) or not (root / poster).is_file():
+            raise SystemExit(f"announcement {identifier}: missing approved video poster")
+        if type(video["afterParagraph"]) is not int or not 0 <= video["afterParagraph"] < len((paragraphs or {}).get("en", [])):
+            raise SystemExit(f"announcement {identifier}: invalid video position")
+    extra_actions = announcement.get("actions", [])
+    if not isinstance(extra_actions, list) or ("actions" in announcement and not 1 <= len(extra_actions) <= 3):
+        raise SystemExit(f"announcement {identifier}: invalid action list")
+    for action in ([announcement["action"]] if "action" in announcement else []) + extra_actions:
         fields = {"href", "label", "accessibilityLabel", "afterParagraph"}
         require_object_shape(action, fields, fields, f"announcement {identifier} action")
         download_action = re.fullmatch(r"https://github\.com/Facta-Leopard/ForgePlay/releases/download/v([0-9]+\.[0-9]+\.[0-9]+)/ForgePlay-\1-[0-9]+\.dmg", action["href"])
-        if action["href"] not in {"https://github.com/Facta-Leopard/ForgePlay/issues", "site-assets/guide.html"} and not download_action:
-            raise SystemExit("announcement action must target the project issue list, guide or a version-matched release DMG")
+        if action["href"] not in {"https://github.com/Facta-Leopard/ForgePlay/issues", "site-assets/guide.html", "https://facta-leopard.github.io/ForgePlayVP/"} and not download_action:
+            raise SystemExit("announcement action must target the project issue list, guide, ForgePlayVP or a version-matched release DMG")
         for key in ("label", "accessibilityLabel"):
             if not isinstance(action[key],dict) or set(action[key]) != set(locale_names) or not all(isinstance(v,str) and v.strip() for v in action[key].values()):
                 raise SystemExit(f"announcement {identifier}: action labels require eight locales")
@@ -2217,7 +2232,12 @@ require_snippet "$ROOT_DIR/site-data/README.md" 'Routine compatibility database 
 require_snippet "$ROOT_DIR/site-data/README.md" 'No raw HTML or Markdown is rendered.'
 require_snippet "$ROOT_DIR/updates.html" 'data-announcement-list'
 require_snippet "$ROOT_DIR/updates.html" 'data-nav-page="updates"'
-require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20261004-release210"'
+require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20261013-vr-demo"'
+for page in updates.html site-assets/guide.html; do
+  require_snippet "$ROOT_DIR/$page" 'src="site-assets/video-card.js?v=20261013-1"'
+  require_snippet "$ROOT_DIR/$page" 'href="site-assets/video-card.css?v=20261013-1"'
+done
+node --check "$ROOT_DIR/site-assets/video-card.js"
 require_snippet "$ROOT_DIR/updates.html" 'Release notes, important notices, and development news.'
 require_snippet "$ROOT_DIR/announcements.js" 'site-data/announcements.json'
 require_snippet "$ROOT_DIR/announcements.js" 'forgeplay:localechange'

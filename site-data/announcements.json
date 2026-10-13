@@ -1,13 +1,40 @@
 {
   "$schema": "./announcements.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-10-12",
+  "updatedAt": "2026-10-13",
   "announcements": [
+    {
+      "id": "forgeplay-vr-dagon-demo",
+      "type": "project",
+      "publishedAt": "2026-10-13",
+      "featured": true,
+      "titles": {
+        "ko": "ForgePlay VR 시연 영상을 공개합니다.",
+        "en": "Introducing the ForgePlay VR demo video",
+        "de": "Das ForgePlay-VR-Demovideo ist da",
+        "es": "Presentamos la demostración de ForgePlay VR",
+        "fr": "Découvrez la vidéo de démonstration de ForgePlay VR",
+        "ja": "ForgePlay VRのデモ動画を公開します。",
+        "zh-Hans": "ForgePlay VR 演示视频现已公开。",
+        "zh-Hant": "ForgePlay VR 示範影片現已公開。"
+      },
+      "summaries": {
+        "ko": "Mac과 Apple Vision Pro를 연결한 Dagon 시연 영상을 공개합니다. 컨트롤러 없이 맨손으로 가리키고 선택하는 ForgePlay VR을 살펴보세요.",
+        "en": "Watch Dagon with a Mac and Apple Vision Pro. Discover ForgePlay VR and its hand-directed pointing and selection without a separate VR controller.",
+        "de": "Seht Dagon mit einem Mac und Apple Vision Pro. Entdeckt ForgePlay VR und das Zeigen und Auswählen per Hand ohne separaten VR-Controller.",
+        "es": "Mira Dagon con un Mac y Apple Vision Pro. Descubre ForgePlay VR y cómo apuntar y seleccionar con las manos sin un controlador VR adicional.",
+        "fr": "Regardez Dagon avec un Mac et Apple Vision Pro. Découvrez ForgePlay VR et le pointage et la sélection à la main, sans contrôleur VR supplémentaire.",
+        "ja": "MacとApple Vision Proを接続したDagonのデモ動画を公開します。専用VRコントローラーなしで、手で指して選択できるForgePlay VRをご覧ください。",
+        "zh-Hans": "观看连接 Mac 和 Apple Vision Pro 运行 Dagon 的演示视频，了解无需额外 VR 控制器即可用手指向和选择的 ForgePlay VR。",
+        "zh-Hant": "觀看連接 Mac 和 Apple Vision Pro 執行 Dagon 的示範影片，了解無需額外 VR 控制器即可用手指向與選取的 ForgePlay VR。"
+      },
+      "href": "updates.html#update-forgeplay-vr-dagon-demo"
+    },
     {
       "id": "forgeplay-2-2-0-preview",
       "type": "release",
       "publishedAt": "2026-10-12",
-      "featured": true,
+      "featured": false,
       "titles": {
         "ko": "ForgePlay 2.2.0 업데이트",
         "en": "ForgePlay 2.2.0 Update",

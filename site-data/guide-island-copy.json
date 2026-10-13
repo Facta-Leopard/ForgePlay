@@ -12,6 +12,26 @@
     "zh-Hant"
   ],
   "strings": {
+    "vrVideoTitle": [
+      "ForgePlay VR, 영상으로 살펴보세요.",
+      "See ForgePlay VR in action.",
+      "ForgePlay VR im Video erleben.",
+      "Descubre ForgePlay VR en vídeo.",
+      "Découvrez ForgePlay VR en vidéo.",
+      "ForgePlay VRを動画でご覧ください。",
+      "通过视频了解 ForgePlay VR。",
+      "透過影片了解 ForgePlay VR。"
+    ],
+    "vrVideoBody": [
+      "Mac과 Vision Pro를 연결한 Dagon 시연 영상입니다. 실제 게임 화면을 살펴보고, 위의 체험형 가이드에서 연결 과정과 주요 설정을 직접 눌러보세요.",
+      "Watch Dagon running through a Mac and Vision Pro. Then explore the connection flow and settings in the interactive guide above.",
+      "Seht Dagon mit einem Mac und Vision Pro in Aktion. Probiert anschließend die Verbindungsschritte und Einstellungen im interaktiven Guide oben aus.",
+      "Mira Dagon en funcionamiento con un Mac y Vision Pro. Después, explora la conexión y los ajustes en la guía interactiva de arriba.",
+      "Regardez Dagon en fonctionnement avec un Mac et Vision Pro. Explorez ensuite la connexion et les réglages dans le guide interactif ci-dessus.",
+      "MacとVision Proを接続したDagonのデモ動画です。実際のゲーム画面を見てから、上の体験型ガイドで接続手順や主な設定を試してみてください。",
+      "这是连接 Mac 和 Vision Pro 运行 Dagon 的演示视频。观看实际游戏画面后，可在上方交互式指南中体验连接流程和主要设置。",
+      "這是連接 Mac 和 Vision Pro 執行 Dagon 的示範影片。觀看實際遊戲畫面後，可在上方互動式指南中體驗連接流程與主要設定。"
+    ],
     "vrShowcaseTitle": [
       "Mac의 VR 게임을, Vision Pro에서.",
       "Your Mac’s VR games, on Vision Pro.",

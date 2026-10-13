@@ -1,13 +1,110 @@
 {
   "$schema": "./announcements.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-10-12",
+  "updatedAt": "2026-10-13",
   "announcements": [
+    {
+      "id": "forgeplay-vr-dagon-demo",
+      "type": "project",
+      "publishedAt": "2026-10-13",
+      "featured": true,
+      "titles": {
+        "ko": "ForgePlay VR 시연 영상을 공개합니다.",
+        "en": "Introducing the ForgePlay VR demo video",
+        "de": "Das ForgePlay-VR-Demovideo ist da",
+        "es": "Presentamos la demostración de ForgePlay VR",
+        "fr": "Découvrez la vidéo de démonstration de ForgePlay VR",
+        "ja": "ForgePlay VRのデモ動画を公開します。",
+        "zh-Hans": "ForgePlay VR 演示视频现已公开。",
+        "zh-Hant": "ForgePlay VR 示範影片現已公開。"
+      },
+      "summaries": {
+        "ko": "Mac과 Apple Vision Pro를 연결한 Dagon 시연 영상을 공개합니다. 컨트롤러 없이 맨손으로 가리키고 선택하는 ForgePlay VR을 살펴보세요.",
+        "en": "Watch Dagon with a Mac and Apple Vision Pro. Discover ForgePlay VR and its hand-directed pointing and selection without a separate VR controller.",
+        "de": "Seht Dagon mit einem Mac und Apple Vision Pro. Entdeckt ForgePlay VR und das Zeigen und Auswählen per Hand ohne separaten VR-Controller.",
+        "es": "Mira Dagon con un Mac y Apple Vision Pro. Descubre ForgePlay VR y cómo apuntar y seleccionar con las manos sin un controlador VR adicional.",
+        "fr": "Regardez Dagon avec un Mac et Apple Vision Pro. Découvrez ForgePlay VR et le pointage et la sélection à la main, sans contrôleur VR supplémentaire.",
+        "ja": "MacとApple Vision Proを接続したDagonのデモ動画を公開します。専用VRコントローラーなしで、手で指して選択できるForgePlay VRをご覧ください。",
+        "zh-Hans": "观看连接 Mac 和 Apple Vision Pro 运行 Dagon 的演示视频，了解无需额外 VR 控制器即可用手指向和选择的 ForgePlay VR。",
+        "zh-Hant": "觀看連接 Mac 和 Apple Vision Pro 執行 Dagon 的示範影片，了解無需額外 VR 控制器即可用手指向與選取的 ForgePlay VR。"
+      },
+      "paragraphs": {
+        "ko": [
+          "Mac과 Apple Vision Pro로 즐기는 VR 게임, 영상으로 만나보세요.",
+          "이번에는 **Dagon을 실행한 ForgePlay VR 시연 영상**을 준비했습니다. Mac의 ForgePlay와 Vision Pro의 ForgePlayVP를 연결해 SteamVR 게임을 즐기는 모습을 소개합니다.",
+          "ForgePlay VR은 **별도의 VR 컨트롤러 없이 맨손으로 대상을 가리키고, 손가락을 맞대어 선택하는 조작**을 지원합니다. 게임 속 공간을 둘러보며 필요한 항목을 직접 선택할 수 있습니다.",
+          "게임마다 지원하는 조작과 실행 호환성은 다를 수 있습니다. 연결 방법과 주요 설정은 사용 가이드에서 확인해 주세요."
+        ],
+        "en": [
+          "See VR gaming with a Mac and Apple Vision Pro in action.",
+          "We have prepared a **ForgePlay VR demonstration running Dagon**. It shows SteamVR gameplay using ForgePlay on Mac connected to ForgePlayVP on Vision Pro.",
+          "ForgePlay VR supports **pointing at targets with your hands and pinching to select, without a separate VR controller**. Look around the game world and select the items you need.",
+          "Available controls and compatibility vary by game. See the user guide for connection steps and key settings."
+        ],
+        "de": [
+          "Erlebt VR-Gaming mit einem Mac und Apple Vision Pro im Video.",
+          "Wir haben eine **ForgePlay-VR-Demonstration mit Dagon** vorbereitet. Sie zeigt SteamVR-Gameplay mit ForgePlay auf dem Mac und dem verbundenen ForgePlayVP auf Vision Pro.",
+          "ForgePlay VR unterstützt **das Zeigen auf Ziele mit den Händen und das Auswählen per Pinch-Geste – ohne separaten VR-Controller**. Schaut euch in der Spielwelt um und wählt die gewünschten Elemente aus.",
+          "Steuerungsmöglichkeiten und Kompatibilität hängen vom Spiel ab. Verbindungsschritte und wichtige Einstellungen findet ihr im Benutzerhandbuch."
+        ],
+        "es": [
+          "Descubre en vídeo los juegos VR con un Mac y Apple Vision Pro.",
+          "Hemos preparado una **demostración de ForgePlay VR con Dagon**. Muestra una partida de SteamVR con ForgePlay en el Mac conectado a ForgePlayVP en Vision Pro.",
+          "ForgePlay VR permite **apuntar con las manos y juntar los dedos para seleccionar, sin un controlador VR adicional**. Puedes mirar a tu alrededor en el juego y seleccionar lo que necesites.",
+          "Los controles disponibles y la compatibilidad varían según el juego. Consulta la guía de uso para conocer la conexión y los ajustes principales."
+        ],
+        "fr": [
+          "Découvrez en vidéo le jeu VR avec un Mac et Apple Vision Pro.",
+          "Nous avons préparé une **démonstration de ForgePlay VR avec Dagon**. Elle présente une partie SteamVR avec ForgePlay sur Mac connecté à ForgePlayVP sur Vision Pro.",
+          "ForgePlay VR permet de **pointer des cibles avec les mains et de pincer les doigts pour sélectionner, sans contrôleur VR supplémentaire**. Regardez autour de vous dans le jeu et sélectionnez les éléments souhaités.",
+          "Les commandes disponibles et la compatibilité varient selon le jeu. Consultez le guide d’utilisation pour la connexion et les principaux réglages."
+        ],
+        "ja": [
+          "MacとApple Vision Proで楽しむVRゲームを、動画でご覧ください。",
+          "今回は**Dagonを実行したForgePlay VRのデモ動画**を用意しました。MacのForgePlayとVision ProのForgePlayVPを接続し、SteamVRゲームを楽しむ様子を紹介します。",
+          "ForgePlay VRは、**専用のVRコントローラーなしで手で対象を指し、指をつまんで選択する操作**に対応しています。ゲームの世界を見回しながら、必要な項目を選択できます。",
+          "利用できる操作や動作互換性はゲームによって異なります。接続方法と主な設定は使用ガイドをご確認ください。"
+        ],
+        "zh-Hans": [
+          "通过视频看看如何用 Mac 和 Apple Vision Pro 体验 VR 游戏。",
+          "这次我们准备了**运行 Dagon 的 ForgePlay VR 演示视频**，展示 Mac 上的 ForgePlay 连接 Vision Pro 上的 ForgePlayVP 后游玩 SteamVR 游戏的效果。",
+          "ForgePlay VR 支持**无需额外 VR 控制器，用手指向目标并捏合手指进行选择**。你可以环顾游戏空间，选择所需的项目。",
+          "可用操作和运行兼容性因游戏而异。连接方法和主要设置请参阅使用指南。"
+        ],
+        "zh-Hant": [
+          "透過影片看看如何用 Mac 和 Apple Vision Pro 體驗 VR 遊戲。",
+          "這次我們準備了**執行 Dagon 的 ForgePlay VR 示範影片**，展示 Mac 上的 ForgePlay 連接 Vision Pro 上的 ForgePlayVP 後遊玩 SteamVR 遊戲的效果。",
+          "ForgePlay VR 支援**無需額外 VR 控制器，用手指向目標並捏合手指進行選取**。你可以環顧遊戲空間，選擇所需的項目。",
+          "可用操作與執行相容性因遊戲而異。連接方法與主要設定請參閱使用指南。"
+        ]
+      },
+      "video": {
+        "youtubeId": "3BUhr--ep0k",
+        "title": "Apple Vision Pro + Mac = VR Gaming | ForgePlayVP — Dagon Demo",
+        "poster": "site-assets/announcements/forgeplay-vr-update-pointing.jpg",
+        "afterParagraph": 2
+      },
+      "actions": [
+        {
+          "href": "site-assets/guide.html",
+          "label": {"ko":"사용 가이드","en":"User guide","de":"Benutzerhandbuch","es":"Guía de uso","fr":"Guide d’utilisation","ja":"使用ガイド","zh-Hans":"使用指南","zh-Hant":"使用指南"},
+          "accessibilityLabel": {"ko":"ForgePlay 사용 가이드 열기","en":"Open the ForgePlay user guide","de":"ForgePlay-Benutzerhandbuch öffnen","es":"Abrir la guía de ForgePlay","fr":"Ouvrir le guide ForgePlay","ja":"ForgePlay使用ガイドを開く","zh-Hans":"打开 ForgePlay 使用指南","zh-Hant":"開啟 ForgePlay 使用指南"},
+          "afterParagraph": 3
+        },
+        {
+          "href": "https://facta-leopard.github.io/ForgePlayVP/",
+          "label": {"ko":"ForgePlayVP 홈페이지","en":"ForgePlayVP homepage","de":"ForgePlayVP-Website","es":"Web de ForgePlayVP","fr":"Site ForgePlayVP","ja":"ForgePlayVPホームページ","zh-Hans":"ForgePlayVP 官网","zh-Hant":"ForgePlayVP 官網"},
+          "accessibilityLabel": {"ko":"ForgePlayVP 홈페이지 열기","en":"Open the ForgePlayVP homepage","de":"ForgePlayVP-Website öffnen","es":"Abrir la web de ForgePlayVP","fr":"Ouvrir le site ForgePlayVP","ja":"ForgePlayVPホームページを開く","zh-Hans":"打开 ForgePlayVP 官网","zh-Hant":"開啟 ForgePlayVP 官網"},
+          "afterParagraph": 3
+        }
+      ],
+      "href": "updates.html#update-forgeplay-vr-dagon-demo"
+    },
     {
       "id": "forgeplay-2-2-0-preview",
       "type": "release",
       "publishedAt": "2026-10-12",
-      "featured": true,
+      "featured": false,
       "titles": {
         "ko": "ForgePlay 2.2.0 업데이트",
         "en": "ForgePlay 2.2.0 Update",
