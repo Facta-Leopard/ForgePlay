@@ -2,7 +2,7 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-14",
-  "revision": 0,
+  "revision": 1,
   "testProfiles": [
     {
       "id": "apple-silicon-m5-pro-64gb-macos-27-0-1",
@@ -2796,7 +2796,7 @@
       "testProfileId": "apple-silicon-m5-pro-24gb-macos-27-0-1",
       "forgePlayVersion": "2.2.1",
       "gameVersion": null,
-      "status": "blocked",
+      "status": "playable",
       "source": "github-issue",
       "reporter": "KFCBucketCat",
       "testedAt": "2026-10-14",
@@ -2810,7 +2810,7 @@
         "zh-Hans": "GitHub 后续反馈 — 章节切换时无法继续（仅开头可玩）：ForgePlay 2.2.1（构建 9）、Steam、D3DMetal NVIDIA 下可完成初始设置和早期剧情。开场黑屏视频可按 ESC 跳过，但说明阶段结束后进入下一章的黑屏无法用 ESC 跳过，只能强制退出。原反馈分类为 Playable with issues，并未确认能够通关；具体原因未确认。",
         "zh-Hant": "GitHub 後續回報 — 章節切換時無法繼續（僅開頭可玩）：ForgePlay 2.2.1（組建 9）、Steam、D3DMetal NVIDIA 下可完成初始設定和早期劇情。開場黑畫面影片可按 ESC 跳過，但說明階段結束後進入下一章的黑畫面無法用 ESC 跳過，只能強制結束。原回報分類為 Playable with issues，並未確認能夠通關；具體原因未確認。"
       },
-      "blocker": "unknown"
+      "blocker": null
     },
     {
       "id": "apollo-justice-ace-attorney-trilogy-github-52-20261014",
