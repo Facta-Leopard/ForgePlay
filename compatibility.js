@@ -275,10 +275,7 @@
       element.textContent = String(playableCount);
     });
 
-    const firstProfile = database.testProfiles[0];
-    document.querySelectorAll("[data-compatibility-device]").forEach((element) => {
-      element.textContent = formatProfile(firstProfile);
-    });
+    // The publisher's M4 Pro / 24GB example is fixed in the HTML, not tied to report order.
     document.querySelectorAll("[data-compatibility-updated]").forEach((element) => {
       element.textContent = formatDate(database.updatedAt, locale());
     });
