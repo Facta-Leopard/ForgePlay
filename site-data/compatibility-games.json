@@ -1,8 +1,8 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
-  "updatedAt": "2026-10-14",
-  "revision": 2,
+  "updatedAt": "2026-10-15",
+  "revision": 0,
   "testProfiles": [
     {
       "id": "apple-silicon-m5-pro-64gb-macos-27-0-1",
@@ -764,7 +764,7 @@
       "source": "project-test",
       "testedAt": null,
       "notes": {
-        "ko": "개발자 테스트: ForgePlay 2.2.0의 STOVE 환경에서 원활한 정상 실행을 확인했습니다. 특이사항: Ren’Py(렌파이) 게임 엔진 기반인 이 게임이 원활히 실행되는 것을 확인한 테스트 결과입니다. 테스트 Mac: M4 Pro 컷칩, 통합 메모리 24GB, macOS 27.0.1.",
+        "ko": "ForgePlay 2.2.0에서 STOVE판을 직접 테스트했으며, 원활하게 실행됐습니다. Ren’Py(렌파이) 엔진으로 만든 게임입니다. 테스트에는 M4 Pro 컷칩·통합 메모리 24GB·macOS 27.0.1 환경을 사용했습니다.",
         "en": "Developer test: confirmed smooth, normal operation through STOVE in ForgePlay 2.2.0. Note: this test confirmed that this Ren’Py-based game runs smoothly. Mac: binned M4 Pro, 24GB unified memory, macOS 27.0.1.",
         "de": "Entwicklertest: reibungsloser, normaler Betrieb über STOVE mit ForgePlay 2.2.0 bestätigt. Hinweis: Dieser Test bestätigt die flüssige Ausführung dieses auf Ren’Py basierenden Spiels. Mac: M4 Pro mit reduzierter Kernzahl, 24GB gemeinsamer Speicher, macOS 27.0.1.",
         "es": "Prueba del desarrollador: funcionamiento normal y fluido mediante STOVE en ForgePlay 2.2.0. Nota: esta prueba confirmó el funcionamiento fluido de este juego basado en Ren’Py. Mac: M4 Pro con menos núcleos, 24GB de memoria unificada, macOS 27.0.1.",
@@ -786,7 +786,7 @@
       "source": "project-test",
       "testedAt": null,
       "notes": {
-        "ko": "개발자 테스트: ForgePlay 2.1.0의 .EXE 환경에서 원활한 정상 실행을 확인했습니다. 테스트 Mac: M4 Pro 컷칩, 통합 메모리 24GB, macOS 27.0.1.",
+        "ko": "ForgePlay 2.1.0에서 EXE 파일로 직접 실행해 원활하게 동작하는 것을 확인했습니다. 테스트에는 M4 Pro 컷칩·통합 메모리 24GB·macOS 27.0.1 환경을 사용했습니다.",
         "en": "Developer test: confirmed smooth, normal operation through .EXE in ForgePlay 2.1.0. Mac: binned M4 Pro, 24GB unified memory, macOS 27.0.1.",
         "de": "Entwicklertest: reibungsloser, normaler Betrieb über .EXE mit ForgePlay 2.1.0 bestätigt. Mac: M4 Pro mit reduzierter Kernzahl, 24 GB gemeinsamer Speicher, macOS 27.0.1.",
         "es": "Prueba del desarrollador: funcionamiento normal y fluido mediante .EXE en ForgePlay 2.1.0. Mac: M4 Pro con menos núcleos, 24GB de memoria unificada, macOS 27.0.1.",
@@ -808,7 +808,7 @@
       "source": "project-test",
       "testedAt": null,
       "notes": {
-        "ko": "개발자 테스트: ForgePlay 2.1.0의 .EXE 환경에서 원활한 정상 실행을 확인했습니다. 테스트 Mac: M4 Pro 컷칩, 통합 메모리 24GB, macOS 27.0.1.",
+        "ko": "ForgePlay 2.1.0에서 EXE 파일로 직접 실행해 원활하게 동작하는 것을 확인했습니다. 테스트에는 M4 Pro 컷칩·통합 메모리 24GB·macOS 27.0.1 환경을 사용했습니다.",
         "en": "Developer test: confirmed smooth, normal operation through .EXE in ForgePlay 2.1.0. Mac: binned M4 Pro, 24GB unified memory, macOS 27.0.1.",
         "de": "Entwicklertest: reibungsloser, normaler Betrieb über .EXE mit ForgePlay 2.1.0 bestätigt. Mac: M4 Pro mit reduzierter Kernzahl, 24 GB gemeinsamer Speicher, macOS 27.0.1.",
         "es": "Prueba del desarrollador: funcionamiento normal y fluido mediante .EXE en ForgePlay 2.1.0. Mac: M4 Pro con menos núcleos, 24GB de memoria unificada, macOS 27.0.1.",
@@ -830,7 +830,7 @@
       "source": "project-test",
       "testedAt": null,
       "notes": {
-        "ko": "개발자 테스트: ForgePlay 2.1.0의 .EXE 환경에서 원활한 정상 실행을 확인했습니다. 테스트 Mac: M4 Pro 컷칩, 통합 메모리 24GB, macOS 27.0.1.",
+        "ko": "ForgePlay 2.1.0에서 EXE 파일로 직접 실행해 원활하게 동작하는 것을 확인했습니다. 테스트에는 M4 Pro 컷칩·통합 메모리 24GB·macOS 27.0.1 환경을 사용했습니다.",
         "en": "Developer test: confirmed smooth, normal operation through .EXE in ForgePlay 2.1.0. Mac: binned M4 Pro, 24GB unified memory, macOS 27.0.1.",
         "de": "Entwicklertest: reibungsloser, normaler Betrieb über .EXE mit ForgePlay 2.1.0 bestätigt. Mac: M4 Pro mit reduzierter Kernzahl, 24 GB gemeinsamer Speicher, macOS 27.0.1.",
         "es": "Prueba del desarrollador: funcionamiento normal y fluido mediante .EXE en ForgePlay 2.1.0. Mac: M4 Pro con menos núcleos, 24GB de memoria unificada, macOS 27.0.1.",
@@ -852,7 +852,7 @@
       "source": "project-test",
       "testedAt": null,
       "notes": {
-        "ko": "개발자 테스트: ForgePlay 2.1.0의 .EXE 환경에서 원활한 정상 실행을 확인했습니다. 테스트 Mac: M4 Pro 컷칩, 통합 메모리 24GB, macOS 27.0.1.",
+        "ko": "ForgePlay 2.1.0에서 EXE 파일로 직접 실행해 원활하게 동작하는 것을 확인했습니다. 테스트에는 M4 Pro 컷칩·통합 메모리 24GB·macOS 27.0.1 환경을 사용했습니다.",
         "en": "Developer test: confirmed smooth, normal operation through .EXE in ForgePlay 2.1.0. Mac: binned M4 Pro, 24GB unified memory, macOS 27.0.1.",
         "de": "Entwicklertest: reibungsloser, normaler Betrieb über .EXE mit ForgePlay 2.1.0 bestätigt. Mac: M4 Pro mit reduzierter Kernzahl, 24 GB gemeinsamer Speicher, macOS 27.0.1.",
         "es": "Prueba del desarrollador: funcionamiento normal y fluido mediante .EXE en ForgePlay 2.1.0. Mac: M4 Pro con menos núcleos, 24GB de memoria unificada, macOS 27.0.1.",
@@ -874,7 +874,7 @@
       "source": "project-test",
       "testedAt": null,
       "notes": {
-        "ko": "개발자 테스트: ForgePlay 2.1.0의 Steam 환경에서 원활한 정상 실행을 확인했습니다. 테스트 Mac: M4 Pro 컷칩, 통합 메모리 24GB, macOS 27.0.1.",
+        "ko": "ForgePlay 2.1.0에서 Steam판을 직접 테스트했으며, 원활하게 실행됐습니다. 테스트에는 M4 Pro 컷칩·통합 메모리 24GB·macOS 27.0.1 환경을 사용했습니다.",
         "en": "Developer test: confirmed smooth, normal operation through Steam in ForgePlay 2.1.0. Mac: binned M4 Pro, 24GB unified memory, macOS 27.0.1.",
         "de": "Entwicklertest: reibungsloser, normaler Betrieb über Steam mit ForgePlay 2.1.0 bestätigt. Mac: M4 Pro mit reduzierter Kernzahl, 24 GB gemeinsamer Speicher, macOS 27.0.1.",
         "es": "Prueba del desarrollador: funcionamiento normal y fluido mediante Steam en ForgePlay 2.1.0. Mac: M4 Pro con menos núcleos, 24GB de memoria unificada, macOS 27.0.1.",
@@ -896,7 +896,7 @@
       "source": "project-test",
       "testedAt": null,
       "notes": {
-        "ko": "개발자 테스트: ForgePlay 2.1.0의 Steam 환경에서 원활한 정상 실행을 확인했습니다. 테스트 Mac: M4 Pro 컷칩, 통합 메모리 24GB, macOS 27.0.1.",
+        "ko": "ForgePlay 2.1.0에서 Steam판을 직접 테스트했으며, 원활하게 실행됐습니다. 테스트에는 M4 Pro 컷칩·통합 메모리 24GB·macOS 27.0.1 환경을 사용했습니다.",
         "en": "Developer test: confirmed smooth, normal operation through Steam in ForgePlay 2.1.0. Mac: binned M4 Pro, 24GB unified memory, macOS 27.0.1.",
         "de": "Entwicklertest: reibungsloser, normaler Betrieb über Steam mit ForgePlay 2.1.0 bestätigt. Mac: M4 Pro mit reduzierter Kernzahl, 24 GB gemeinsamer Speicher, macOS 27.0.1.",
         "es": "Prueba del desarrollador: funcionamiento normal y fluido mediante Steam en ForgePlay 2.1.0. Mac: M4 Pro con menos núcleos, 24GB de memoria unificada, macOS 27.0.1.",
@@ -919,7 +919,7 @@
       "reporter": "G9aia",
       "testedAt": null,
       "notes": {
-        "ko": "GitHub 이슈 #35 — 플레이 가능(문제 있음): Steam판 마일즈 모랄레스(App ID 1817190)를 ForgePlay 2.0.0의 D3DMetal로 실행하면 그래픽카드 미감지 및 GPU·드라이버 호환성 경고창 2개가 나타나지만, 각각 확인을 누른 뒤 정상 플레이된다고 합니다. 경고의 'AMD Compatibility Mode' 표시는 게임이 출력한 문구이며 실제 Mac 사양을 뜻하지 않습니다. 기기는 16인치 M5 Pro MacBook Pro·48GB·1TB·macOS 27.0.1입니다. 개발자 추가 안내: 그래픽카드 인식 폴백 경로 수정을 차기 버전용으로 적용했습니다. 배포 후 제보자의 재확인을 기다리고 있으며, 경고 해소가 확인된 상태는 아닙니다.",
+        "ko": "Steam판 마일즈 모랄레스(App ID 1817190)를 ForgePlay 2.0.0에서 D3DMetal로 실행하면 그래픽카드 인식 및 GPU·드라이버 호환성 경고가 2개 뜹니다. 각각 확인을 누르면 정상적으로 플레이할 수 있다는 제보입니다. 경고에 나오는 ‘AMD Compatibility Mode’는 게임의 안내 문구이지, 사용 중인 Mac의 사양을 뜻하지 않습니다. 기기는 16인치 M5 Pro MacBook Pro·메모리 48GB·저장 공간 1TB·macOS 27.0.1입니다.\n\n개발자 안내: 그래픽카드를 인식하지 못했을 때의 대체 처리를 수정했으며, 다음 버전에 반영할 예정입니다. 업데이트 후 제보자의 재확인이 필요하므로, 경고가 해결됐다고 확인한 상태는 아닙니다.",
         "en": "GitHub issue #35 — playable with issues: the Steam version of Miles Morales (App ID 1817190) shows two graphics-card detection and GPU/driver compatibility warnings with D3DMetal in ForgePlay 2.0.0, but reportedly plays normally after both are dismissed. 'AMD Compatibility Mode' is wording shown by the game, not the Mac's hardware. Setup: 16-inch M5 Pro MacBook Pro, 48GB, 1TB, macOS 27.0.1. Developer note: a graphics-detection fallback fix has been applied for the next release. Reporter retesting after release is pending; removal of the warnings is not yet user-confirmed.",
         "de": "GitHub-Issue #35 — mit Einschränkungen spielbar: Die Steam-Version von Miles Morales (App-ID 1817190) zeigt mit D3DMetal in ForgePlay 2.0.0 zwei Warnungen zur Grafikkartenerkennung und GPU-/Treiberkompatibilität. Nach Bestätigung beider Meldungen läuft das Spiel laut Bericht normal. 'AMD Compatibility Mode' ist eine Spielmeldung, keine Mac-Hardwareangabe. Gerät: 16-Zoll-MacBook Pro, M5 Pro, 48 GB, 1 TB, macOS 27.0.1. Entwicklerhinweis: Der Fallback-Pfad der Grafikerkennung wurde für die nächste Version korrigiert. Ein erneuter Test durch den Melder nach Veröffentlichung steht aus; das Verschwinden der Warnungen ist noch nicht bestätigt.",
         "es": "Incidencia #35 de GitHub — jugable con problemas: Miles Morales de Steam (App ID 1817190) muestra dos advertencias de detección de tarjeta gráfica y compatibilidad de GPU/controlador con D3DMetal en ForgePlay 2.0.0. Según el informe, se juega con normalidad al aceptar ambas. 'AMD Compatibility Mode' es un mensaje del juego, no el hardware real del Mac. Equipo: MacBook Pro de 16 pulgadas, M5 Pro, 48GB, 1TB, macOS 27.0.1. Nota del desarrollador: se aplicó una corrección de la ruta alternativa de detección gráfica para la próxima versión. Queda pendiente que el informante la pruebe tras publicarse; aún no se ha confirmado que desaparezcan las advertencias.",
@@ -942,7 +942,7 @@
       "reporter": "G9aia",
       "testedAt": null,
       "notes": {
-        "ko": "GitHub 이슈 #36 — 플레이 가능(문제 있음): Steam판 스파이더맨 2(App ID 2651280)는 ForgePlay 2.0.0에서 플레이되지만 그래픽카드 미감지 및 GPU·드라이버 호환성 경고창 2개가 나타나며, 게임 중 마우스 포인터가 계속 보인다고 합니다. 선택한 렌더러와 포인터 증상의 정확한 재현 조건은 미확인입니다. 기기는 16인치 M5 Pro MacBook Pro·48GB·1TB·macOS 27.0.1입니다. 개발자 추가 안내: 그래픽카드 인식 폴백과 환경설정의 단축키 옵션 충돌 관련 수정사항을 차기 버전용으로 적용했습니다. 배포 후 제보자의 재확인 대기 중이며, 경고·포인터 문제의 해소를 확정한 기록은 아닙니다.",
+        "ko": "Steam판 스파이더맨 2(App ID 2651280)는 ForgePlay 2.0.0에서 플레이할 수 있지만, 그래픽카드 인식 및 GPU·드라이버 호환성 경고가 2개 뜨고 게임 중에도 마우스 포인터가 계속 보인다는 제보입니다. 어떤 렌더러를 사용했는지, 포인터 문제가 어떤 조건에서 생기는지는 아직 알 수 없습니다. 기기는 16인치 M5 Pro MacBook Pro·메모리 48GB·저장 공간 1TB·macOS 27.0.1입니다.\n\n개발자 안내: 그래픽카드를 인식하지 못했을 때의 대체 처리와 환경설정의 단축키 옵션 충돌을 수정했으며, 다음 버전에 반영할 예정입니다. 업데이트 후 제보자의 확인을 기다리고 있어 경고와 포인터 문제가 해결됐는지는 아직 확인하지 못했습니다.",
         "en": "GitHub issue #36 — playable with issues: the Steam version of Spider-Man 2 (App ID 2651280) runs in ForgePlay 2.0.0, but shows two graphics-card detection and GPU/driver compatibility warnings, and the mouse pointer remains visible during play. The selected renderer and exact conditions for the pointer issue are unconfirmed. Setup: 16-inch M5 Pro MacBook Pro, 48GB, 1TB, macOS 27.0.1. Developer note: graphics-detection fallback and shortcut-option conflict fixes have been applied for the next release. Reporter retesting after release is pending; resolution of the warnings and pointer issue is not yet confirmed.",
         "de": "GitHub-Issue #36 — mit Einschränkungen spielbar: Die Steam-Version von Spider-Man 2 (App-ID 2651280) läuft in ForgePlay 2.0.0, zeigt aber zwei Warnungen zur Grafikkartenerkennung und GPU-/Treiberkompatibilität; zudem bleibt der Mauszeiger im Spiel sichtbar. Renderer und genaue Auslöser des Zeigerproblems sind unbestätigt. Gerät: 16-Zoll-MacBook Pro, M5 Pro, 48 GB, 1 TB, macOS 27.0.1. Entwicklerhinweis: Korrekturen am Grafik-Fallback und an einem Konflikt mit Tastenkürzeloptionen wurden für die nächste Version angewendet. Ein erneuter Test durch den Melder steht nach Veröffentlichung aus; die Behebung der Warnungen und des Zeigerproblems ist noch nicht bestätigt.",
         "es": "Incidencia #36 de GitHub — jugable con problemas: Spider-Man 2 de Steam (App ID 2651280) funciona en ForgePlay 2.0.0, pero muestra dos advertencias de detección gráfica y compatibilidad de GPU/controlador; además, el puntero sigue visible durante la partida. No se confirmaron el renderizador ni las condiciones exactas del problema del puntero. Equipo: MacBook Pro de 16 pulgadas, M5 Pro, 48GB, 1TB, macOS 27.0.1. Nota del desarrollador: se aplicaron correcciones a la detección gráfica alternativa y a un conflicto con las opciones de atajos para la próxima versión. Queda pendiente la nueva prueba del informante tras publicarse; aún no se ha confirmado que desaparezcan las advertencias y el problema del puntero.",
@@ -965,7 +965,7 @@
       "reporter": "G9aia",
       "testedAt": null,
       "notes": {
-        "ko": "GitHub 이슈 #34: Steam판 마블 스파이더맨 리마스터(App ID 1817070)를 ForgePlay 2.0.0에서 D3DMetal로 정상 플레이했다는 제보입니다. 기기는 16인치 MacBook Pro·M5 Pro·통합 메모리 48GB·저장 공간 1TB, macOS 27.0.1입니다. 게임은 테스트 당시 최신 버전으로 기재됐으나 정확한 빌드 번호는 미확인입니다. FPS·플레이 시간·그래픽 설정과 오디오·입력 장치별 세부 결과는 제공되지 않았습니다.",
+        "ko": "Steam판 마블 스파이더맨 리마스터(App ID 1817070)를 ForgePlay 2.0.0에서 D3DMetal로 정상 플레이했다는 제보입니다. 기기는 16인치 MacBook Pro·M5 Pro·통합 메모리 48GB·저장 공간 1TB·macOS 27.0.1입니다. 게임은 테스트 당시 최신 버전이라고 알려주셨지만, 정확한 빌드 번호는 없습니다. FPS, 플레이 시간, 그래픽 설정, 소리와 입력 장치의 세부 동작은 따로 알려주지 않으셨습니다.",
         "en": "GitHub issue #34 reports normal gameplay in the Steam version of Marvel's Spider-Man Remastered (App ID 1817070) using D3DMetal in ForgePlay 2.0.0. Setup: 16-inch MacBook Pro, M5 Pro, 48GB unified memory, 1TB storage, macOS 27.0.1. The reporter described the game as current at testing, but the exact build is unconfirmed. FPS, play duration, graphics settings, and device-specific audio/input results were not provided.",
         "de": "GitHub-Issue #34 meldet normales Spielen mit der Steam-Version von Marvel's Spider-Man Remastered (App-ID 1817070), D3DMetal und ForgePlay 2.0.0. Gerät: 16-Zoll-MacBook Pro, M5 Pro, 48 GB gemeinsamer Arbeitsspeicher, 1 TB Speicher, macOS 27.0.1. Laut Melder war das Spiel beim Test aktuell; der genaue Build ist unbestätigt. FPS, Spieldauer, Grafikeinstellungen und gerätespezifische Audio-/Eingabeergebnisse fehlen.",
         "es": "La incidencia #34 de GitHub informa de juego normal en Marvel's Spider-Man Remastered de Steam (App ID 1817070), con D3DMetal y ForgePlay 2.0.0. Equipo: MacBook Pro de 16 pulgadas, M5 Pro, 48GB de memoria unificada, 1TB de almacenamiento y macOS 27.0.1. El juego se indicó como actualizado al probarlo, pero no se confirmó la compilación exacta. No se aportaron FPS, duración, ajustes gráficos ni resultados de audio o entrada por dispositivo.",
@@ -987,7 +987,7 @@
       "source": "community-report",
       "testedAt": null,
       "notes": {
-        "ko": "ForgePlay 2.0.0의 STOVE판 52헤르츠 관련 커뮤니티 제보입니다. 필수 구성요소 설치 도구에서 DirectX 게임 구성요소 설치 파일을 선택해 실행하면 설치 도중 오류가 발생하며, Microsoft .NET 4.8.1(ndp4.8.1) 설치 파일은 실행 단계부터 진행되지 않는다고 합니다. 게임 자체의 실행 여부와 Mac 사양·macOS 버전은 미확인입니다. 개발자 추가 안내: Ren’Py 게임 엔진의 작동 방식을 확인했으며, 다음 버전에 관련 개선을 적용할 예정입니다.",
+        "ko": "ForgePlay 2.0.0에서 STOVE판 52헤르츠를 준비하는 중 구성요소 설치에 문제가 있다는 제보입니다. 필수 구성요소 설치 도구로 DirectX 설치 파일을 실행하면 설치 도중 오류가 나고, Microsoft .NET 4.8.1(ndp4.8.1) 설치 파일은 실행부터 막힙니다. 게임 자체가 실행되는지와 Mac 사양·macOS 버전은 아직 알 수 없습니다.\n\n개발자 안내: Ren’Py 엔진의 작동 방식을 확인했으며, 다음 버전에 관련 개선을 반영할 예정입니다.",
         "en": "Community report concerning the STOVE version of 52 Hertz in ForgePlay 2.0.0: the DirectX game-components installer fails during installation when selected and run through the prerequisite installer tool. The Microsoft .NET 4.8.1 (ndp4.8.1) installer cannot proceed from launch. Whether the game itself runs is unconfirmed; Mac specifications and macOS version were not provided. Developer note: Ren’Py’s behavior has been investigated, and related improvements are planned for the next version.",
         "de": "Community-Bericht zur STOVE-Version von 52 Hertz in ForgePlay 2.0.0: Wird das DirectX-Installationsprogramm für Spielkomponenten im Werkzeug für erforderliche Komponenten ausgewählt und gestartet, tritt während der Installation ein Fehler auf. Das Installationsprogramm für Microsoft .NET 4.8.1 (ndp4.8.1) kommt bereits beim Start nicht weiter. Ob das Spiel selbst läuft, ist unbestätigt; Mac-Konfiguration und macOS-Version fehlen. Entwicklerhinweis: Die Funktionsweise von Ren’Py wurde untersucht; entsprechende Verbesserungen sind für die nächste Version geplant.",
         "es": "Informe de la comunidad sobre 52 Hertz de STOVE en ForgePlay 2.0.0: al seleccionar y ejecutar el instalador de componentes de juego DirectX desde la herramienta de requisitos, se produce un error durante la instalación. El instalador de Microsoft .NET 4.8.1 (ndp4.8.1) no pasa de la fase de inicio. No se ha confirmado si el juego funciona; tampoco se proporcionaron las especificaciones del Mac ni la versión de macOS. Nota del desarrollador: se ha investigado el funcionamiento de Ren’Py y se prevén mejoras relacionadas para la próxima versión.",
@@ -1011,7 +1011,7 @@
       "reporter": "ㅇㅇ",
       "testedAt": null,
       "notes": {
-        "ko": "ForgePlay 2.0.0에서 Steam판 아이작이 원활하게 실행되며 한글 패치도 정상 작동한다는 커뮤니티 제보입니다. 다만 일부 모드는 작동하지 않는다고 합니다. 제보 기기는 13인치 M5 MacBook Air, macOS 27입니다. 메모리 용량과 게임의 세부 에디션·버전, 작동하지 않는 모드 이름은 확인되지 않았습니다.",
+        "ko": "ForgePlay 2.0.0에서 Steam판 아이작이 잘 실행되고 한글 패치도 정상 작동한다는 제보입니다. 다만 일부 모드는 작동하지 않습니다. 기기는 13인치 M5 MacBook Air이며 macOS 27을 사용했습니다. 메모리 용량, 게임의 에디션과 버전, 작동하지 않는 모드 이름은 따로 알려주지 않으셨습니다.",
         "en": "Community report: the Steam version of The Binding of Isaac runs smoothly in ForgePlay 2.0.0, and the Korean-language patch works. Some mods do not work. Reported setup: 13-inch M5 MacBook Air, macOS 27. Memory capacity, exact game edition and version, and the names of the affected mods are unconfirmed.",
         "de": "Community-Bericht: Die Steam-Version von The Binding of Isaac läuft in ForgePlay 2.0.0 flüssig; auch der koreanische Sprachpatch funktioniert. Einige Mods funktionieren jedoch nicht. Gemeldetes Gerät: 13-Zoll-MacBook Air mit M5 und macOS 27. Speicherausstattung, genaue Spieledition und -version sowie die betroffenen Mods sind nicht bestätigt.",
         "es": "Informe de la comunidad: la versión de Steam de The Binding of Isaac funciona con fluidez en ForgePlay 2.0.0 y el parche de idioma coreano también funciona. Algunos mods no funcionan. Equipo indicado: MacBook Air M5 de 13 pulgadas con macOS 27. No se han confirmado la memoria, la edición y versión exactas del juego ni los nombres de los mods afectados.",
@@ -1034,7 +1034,7 @@
       "reporter": "쩌니",
       "testedAt": null,
       "notes": {
-        "ko": "ForgePlay 2.0.0에서 Steam판 Path of Exile 1을 실행한 커뮤니티 제보입니다. FPS가 60을 거의 넘지 못하며, 캐릭터를 움직이기 시작할 때 잠깐 끊김이 있다고 합니다. 제보자는 최적화 문제로 추정했으나 정확한 원인은 확인되지 않았습니다. 그래픽 백엔드·해상도·그래픽 설정·프레임 생성 사용 여부는 미확인입니다.",
+        "ko": "ForgePlay 2.0.0에서 Steam판 Path of Exile 1을 실행하면 FPS가 60을 거의 넘지 못하고, 캐릭터를 움직이기 시작할 때 잠깐 끊긴다는 제보입니다. 제보자는 최적화 문제로 추측했지만 정확한 원인은 아직 알 수 없습니다. 사용한 렌더러, 해상도, 그래픽 설정과 프레임 생성 사용 여부는 제보에 없습니다.",
         "en": "Community report for the Steam version of Path of Exile 1 in ForgePlay 2.0.0: FPS rarely exceeds 60, with a brief stutter when the character starts moving. The reporter suspects an optimization issue, but the cause is unconfirmed. Graphics backend, resolution, graphics settings, and whether frame generation was enabled were not specified.",
         "de": "Community-Bericht zur Steam-Version von Path of Exile 1 in ForgePlay 2.0.0: Die Bildrate liegt kaum über 60 FPS; zu Beginn einer Charakterbewegung tritt ein kurzes Ruckeln auf. Der Melder vermutet ein Optimierungsproblem, die Ursache ist jedoch unbestätigt. Grafik-Backend, Auflösung, Grafikeinstellungen und Nutzung der Frame-Generierung wurden nicht angegeben.",
         "es": "Informe de la comunidad sobre Path of Exile 1 de Steam en ForgePlay 2.0.0: los FPS rara vez superan 60 y hay un tirón breve al empezar a mover al personaje. El informante sospecha un problema de optimización, pero la causa no está confirmada. No se indicaron el backend gráfico, la resolución, los ajustes gráficos ni el uso de generación de fotogramas.",
@@ -1057,7 +1057,7 @@
       "reporter": "쩌니",
       "testedAt": null,
       "notes": {
-        "ko": "ForgePlay 2.0.0에서 Steam판 Path of Exile 2를 실행한 커뮤니티 제보입니다. FPS가 60을 거의 넘지 못하며, 캐릭터를 움직이기 시작할 때 잠깐 끊김이 있다고 합니다. 제보자는 최적화 문제로 추정했으나 정확한 원인은 확인되지 않았습니다. 그래픽 백엔드·해상도·그래픽 설정·프레임 생성 사용 여부는 미확인입니다.",
+        "ko": "ForgePlay 2.0.0에서 Steam판 Path of Exile 2를 실행하면 FPS가 60을 거의 넘지 못하고, 캐릭터를 움직이기 시작할 때 잠깐 끊긴다는 제보입니다. 제보자는 최적화 문제로 추측했지만 정확한 원인은 아직 알 수 없습니다. 사용한 렌더러, 해상도, 그래픽 설정과 프레임 생성 사용 여부는 제보에 없습니다.",
         "en": "Community report for the Steam version of Path of Exile 2 in ForgePlay 2.0.0: FPS rarely exceeds 60, with a brief stutter when the character starts moving. The reporter suspects an optimization issue, but the cause is unconfirmed. Graphics backend, resolution, graphics settings, and whether frame generation was enabled were not specified.",
         "de": "Community-Bericht zur Steam-Version von Path of Exile 2 in ForgePlay 2.0.0: Die Bildrate liegt kaum über 60 FPS; zu Beginn einer Charakterbewegung tritt ein kurzes Ruckeln auf. Der Melder vermutet ein Optimierungsproblem, die Ursache ist jedoch unbestätigt. Grafik-Backend, Auflösung, Grafikeinstellungen und Nutzung der Frame-Generierung wurden nicht angegeben.",
         "es": "Informe de la comunidad sobre Path of Exile 2 de Steam en ForgePlay 2.0.0: los FPS rara vez superan 60 y hay un tirón breve al empezar a mover al personaje. El informante sospecha un problema de optimización, pero la causa no está confirmada. No se indicaron el backend gráfico, la resolución, los ajustes gráficos ni el uso de generación de fotogramas.",
@@ -1080,7 +1080,7 @@
       "reporter": "00",
       "testedAt": null,
       "notes": {
-        "ko": "ForgePlay 2.0.0에서 Steam판 델타포스를 실행할 수 없다는 커뮤니티 제보입니다. Mac 사양과 macOS 버전은 확인되지 않았습니다. 개발자 확인: 커널 수준의 안티치트로 인해 실행할 수 없습니다.",
+        "ko": "ForgePlay 2.0.0에서 Steam판 델타포스가 실행되지 않는다는 제보입니다. Mac 사양과 macOS 버전은 따로 알려주지 않으셨습니다.\n\n개발자 확인: 커널 수준의 안티치트 때문에 실행할 수 없습니다.",
         "en": "Community report: the Steam version of Delta Force does not launch in ForgePlay 2.0.0. Mac specifications and macOS version are unconfirmed. Developer confirmation: the game cannot run because of its kernel-level anti-cheat.",
         "de": "Community-Bericht: Die Steam-Version von Delta Force startet in ForgePlay 2.0.0 nicht. Mac-Konfiguration und macOS-Version sind nicht bestätigt. Vom Entwickler bestätigt: Das Spiel kann wegen seines Anti-Cheat-Systems auf Kernel-Ebene nicht ausgeführt werden.",
         "es": "Informe de la comunidad: la versión de Steam de Delta Force no se inicia en ForgePlay 2.0.0. Las especificaciones del Mac y la versión de macOS no están confirmadas. Confirmación del desarrollador: el juego no puede ejecutarse debido a su sistema antitrampas a nivel de kernel.",
@@ -1140,7 +1140,7 @@
       "testedAt": "2026-08-23",
       "notes": {
         "en": "After updating to ForgePlay 1.1.0, the reporter said the Steam version of Overwatch 2 was almost fully playable. With mostly default settings and Low graphics, it ran at about 100–110 FPS with roughly 60 ms latency. Mouse sensitivity seemed slightly different and was partially improved with LinearMouse.",
-        "ko": "ForgePlay 1.1.0 업데이트 후 Steam판 오버워치 2가 거의 정상적으로 플레이된다고 제보했습니다. 거의 기본 설정과 낮음 그래픽에서 약 100–110 FPS, 핑 약 60ms를 기록했습니다. 마우스 감도가 조금 달라진 듯했으며 LinearMouse 설치로 일부 완화되었다고 했습니다.",
+        "ko": "ForgePlay 1.1.0으로 업데이트한 뒤 Steam판 오버워치 2를 큰 문제 없이 플레이했다는 제보입니다. 대부분 기본 설정을 사용하고 그래픽은 낮음으로 설정했으며, 약 100–110 FPS와 60ms 정도의 핑이 나왔습니다. 마우스 감도가 조금 달라진 느낌이 있었지만, LinearMouse를 설치한 뒤에는 어느 정도 나아졌다고 합니다.",
         "ja": "ForgePlay 1.1.0へのアップデート後、Steam版Overwatch 2はほぼ正常にプレイできたと報告されています。ほぼ既定の設定・低グラフィック設定で約100～110 FPS、遅延は約60msでした。マウス感度が少し変わったように感じられ、LinearMouseの導入で一部改善したとのことです。",
         "zh-Hans": "更新至 ForgePlay 1.1.0 后，报告者表示 Steam 版 Overwatch 2 几乎可以正常游玩。在接近默认设置和低画质下，帧率约为 100–110 FPS，延迟约为 60ms。鼠标灵敏度似乎略有变化，安装 LinearMouse 后有所缓解。",
         "zh-Hant": "更新至 ForgePlay 1.1.0 後，回報者表示 Steam 版 Overwatch 2 幾乎可以正常遊玩。在接近預設設定與低畫質下，影格率約為 100–110 FPS，延遲約為 60ms。滑鼠靈敏度似乎略有變化，安裝 LinearMouse 後有所緩解。",
@@ -1270,7 +1270,7 @@
       "testedAt": null,
       "notes": {
         "en": "Tested at 1080p on High settings across about eight ranked matches. Occasional frame drops occurred in enclosed areas before enough shader data had downloaded, then eased as the map download progressed. No issues beyond stuttering were observed.",
-        "ko": "1080p 상옵에서 랭크 매치를 약 8회 진행했습니다. 셰이더 다운로드가 충분히 진행되기 전에는 구석진 공간에서 간헐적으로 프레임이 떨어졌지만, 맵 다운로드가 어느 정도 진행된 뒤에는 완화되었습니다. 스터터링 외에 특이사항은 없었습니다.",
+        "ko": "1080p 해상도와 높은 그래픽 설정으로 랭크 매치를 약 8회 진행했습니다. 셰이더 다운로드가 충분히 진행되기 전에는 구석진 곳에서 간혹 프레임이 떨어졌지만, 맵 다운로드가 어느 정도 진행된 뒤에는 나아졌습니다. 이 끊김 외에 다른 문제는 없었다는 제보입니다.",
         "ja": "1080p・高設定でランクマッチを約8試合プレイ。シェーダーデータのダウンロードが十分に進む前は狭い場所でまれにフレームレートが低下しましたが、マップのダウンロードが進むと軽減しました。スタッタリング以外の問題は確認されていません。",
         "zh-Hans": "在 1080p 高画质下进行了约 8 场排位赛。着色器数据尚未充分下载时，狭窄区域偶尔会掉帧；随着地图下载推进，情况有所缓解。除卡顿外未发现其他异常。",
         "zh-Hant": "以 1080p 高畫質進行了約 8 場排名賽。著色器資料尚未充分下載時，狹窄區域偶爾會掉幀；隨著地圖下載推進，情況有所緩解。除卡頓外未發現其他異常。",
@@ -1292,7 +1292,7 @@
       "testedAt": null,
       "notes": {
         "en": "A community report says the game does not run at all. The tested Mac model and macOS version were not provided.",
-        "ko": "커뮤니티 제보에 따르면 게임을 전혀 실행할 수 없습니다. 테스트한 Mac 모델과 macOS 버전은 제보되지 않았습니다.",
+        "ko": "게임이 전혀 실행되지 않는다는 제보입니다. 사용한 Mac 모델과 macOS 버전은 따로 알려주지 않으셨습니다.",
         "ja": "コミュニティから、ゲームをまったく起動できないとの報告がありました。テストしたMacのモデルとmacOSのバージョンは未報告です。",
         "zh-Hans": "社区反馈称该游戏完全无法运行。未提供测试所用的 Mac 型号和 macOS 版本。",
         "zh-Hant": "社群回報指出該遊戲完全無法執行。未提供測試所用的 Mac 型號與 macOS 版本。",
@@ -1314,7 +1314,7 @@
       "testedAt": null,
       "notes": {
         "en": "The process exits at the launcher, so the game cannot be started. The tested Mac model and macOS version were not provided.",
-        "ko": "런처 단계에서 종료되어 게임에 진입할 수 없습니다. 테스트한 Mac 모델과 macOS 버전은 제보되지 않았습니다.",
+        "ko": "런처가 종료되어 게임을 시작할 수 없다는 제보입니다. 사용한 Mac 모델과 macOS 버전은 따로 알려주지 않으셨습니다.",
         "ja": "ランチャーの段階で終了し、ゲームを開始できません。テストしたMacのモデルとmacOSのバージョンは未報告です。",
         "zh-Hans": "程序在启动器阶段退出，因此无法进入游戏。未提供测试所用的 Mac 型号和 macOS 版本。",
         "zh-Hant": "程式在啟動器階段結束，因此無法進入遊戲。未提供測試所用的 Mac 型號與 macOS 版本。",
@@ -1336,7 +1336,7 @@
       "testedAt": null,
       "notes": {
         "en": "On an M4 Pro Mac with 24GB of unified memory, rendering is normal, but after selecting a server a security-module message appears and progress is blocked. The macOS version was not provided.",
-        "ko": "M4 Pro 24GB에서 화면은 정상적으로 렌더링되지만, 서버 선택 후 보안 모듈 관련 메시지가 나타나 더 진행할 수 없습니다. macOS 버전은 제보되지 않았습니다.",
+        "ko": "M4 Pro·24GB에서 게임 화면은 정상적으로 나오지만, 서버를 선택하면 보안 모듈 관련 메시지가 뜨면서 더 진행할 수 없습니다. 사용한 macOS 버전은 따로 알려주지 않으셨습니다.",
         "ja": "M4 Pro・24GBのMacでは描画は正常ですが、サーバー選択後にセキュリティモジュールに関するメッセージが表示され、それ以上進めません。macOSのバージョンは未報告です。",
         "zh-Hans": "在配备 M4 Pro 和 24GB 统一内存的 Mac 上画面渲染正常，但选择服务器后会出现与安全模块有关的提示，无法继续。未提供 macOS 版本。",
         "zh-Hant": "在配備 M4 Pro 與 24GB 統一記憶體的 Mac 上畫面渲染正常，但選擇伺服器後會出現與安全模組有關的提示，無法繼續。未提供 macOS 版本。",
@@ -1483,7 +1483,7 @@
       "testedAt": null,
       "notes": {
         "en": "The game starts and finishes loading, but then remains on a black screen and cannot proceed.",
-        "ko": "게임 시작 후 로딩까지 완료되지만, 이후 검은 화면이 나타나 더 진행할 수 없습니다.",
+        "ko": "로딩까지는 끝나지만, 그 뒤 검은 화면이 나오면서 더 진행할 수 없습니다.",
         "ja": "ゲームは起動して読み込みも完了しますが、その後は黒い画面のまま進行できません。",
         "zh-Hans": "游戏能够启动并完成加载，但随后出现黑屏，无法继续。",
         "zh-Hant": "遊戲能夠啟動並完成載入，但隨後出現黑畫面，無法繼續。",
@@ -1518,7 +1518,7 @@
       "testedAt": null,
       "notes": {
         "en": "Changing key bindings in the in-game settings displays “Error,” but the configured keys work correctly during gameplay.",
-        "ko": "인게임 설정에서 키 바인딩을 변경하면 ‘Error’라고 표시되지만, 실제 플레이에서는 변경한 키가 정상적으로 동작합니다.",
+        "ko": "게임 설정에서 조작 키를 바꾸면 ‘Error’가 표시됩니다. 다만 실제 플레이에서는 바꾼 키가 정상적으로 작동합니다.",
         "ja": "ゲーム内設定でキーバインドを変更すると「Error」と表示されますが、実際のプレイでは変更したキーが正常に動作します。",
         "zh-Hans": "在游戏内设置中更改按键绑定时会显示“Error”，但实际游玩时更改后的按键可以正常使用。",
         "zh-Hant": "在遊戲內設定中變更按鍵綁定時會顯示「Error」，但實際遊玩時變更後的按鍵可以正常使用。",
@@ -1540,7 +1540,7 @@
       "testedAt": null,
       "notes": {
         "en": "Runs smoothly using D3DMetal.",
-        "ko": "D3DMetal로 원활하게 플레이됩니다.",
+        "ko": "제보된 환경에서는 D3DMetal로 원활하게 플레이할 수 있습니다.",
         "ja": "D3DMetalでスムーズにプレイできます。",
         "zh-Hans": "使用 D3DMetal 可流畅游玩。",
         "zh-Hant": "使用 D3DMetal 可流暢遊玩。",
@@ -1562,7 +1562,7 @@
       "testedAt": null,
       "notes": {
         "en": "After launch, the screen remains black with only the cursor visible, preventing gameplay.",
-        "ko": "실행 후 검은 화면에 커서만 표시되어 게임을 진행할 수 없습니다.",
+        "ko": "실행하면 검은 화면에 마우스 커서만 나오고 게임을 진행할 수 없습니다.",
         "ja": "起動後は黒い画面にカーソルだけが表示され、ゲームを進められません。",
         "zh-Hans": "启动后只显示黑屏和光标，无法继续游戏。",
         "zh-Hant": "啟動後只顯示黑畫面與游標，無法繼續遊戲。",
@@ -1583,7 +1583,7 @@
       "testedAt": "2026-07-27",
       "notes": {
         "en": "The launcher and game client both start normally, and actual gameplay was verified.",
-        "ko": "런처와 게임 본체가 정상적으로 실행되며 실제 게임플레이까지 확인했습니다.",
+        "ko": "런처와 게임이 정상적으로 실행됐으며, 실제 플레이도 확인했습니다.",
         "ja": "ランチャーとゲーム本体がどちらも正常に起動し、実際のゲームプレイまで確認しました。",
         "zh-Hans": "启动器和游戏客户端均可正常运行，并已确认能够实际游玩。",
         "zh-Hant": "啟動器與遊戲用戶端均可正常執行，並已確認能夠實際遊玩。",
@@ -1605,7 +1605,7 @@
       "testedAt": null,
       "notes": {
         "en": "Gameplay runs smoothly. In the Korean client, interaction prompts use Hangul characters instead of the Latin X and F labels; the reporter found the Korean UI visually cleaner.",
-        "ko": "게임플레이가 원활합니다. 한국어 클라이언트에서는 상호작용 버튼이 영문 X·F 대신 한글 자모로 표시되어, 한국어 UI가 시각적으로 더 깔끔하게 느껴졌다고 제보했습니다.",
+        "ko": "원활하게 플레이할 수 있다는 제보입니다. 한국어 클라이언트에서는 상호작용 버튼이 영문 X·F 대신 한글 자모로 표시되며, 이 때문에 한국어 화면이 더 깔끔해 보였다는 의견도 있었습니다.",
         "ja": "ゲームプレイは快適です。韓国語クライアントでは、操作ボタンが英字のX・Fではなくハングル字母で表示され、韓国語UIのほうが見た目も整っていると感じたとのことです。",
         "zh-Hans": "游戏运行流畅。在韩语客户端中，交互按键会以韩文字母显示，而不是英文字母 X 和 F；报告者认为韩语界面在视觉上更加整洁。",
         "zh-Hant": "遊戲執行流暢。在韓語用戶端中，互動按鍵會以韓文字母顯示，而不是英文字母 X 與 F；回報者認為韓語介面在視覺上更加整潔。",
@@ -1627,7 +1627,7 @@
       "testedAt": null,
       "notes": {
         "en": "Runs smoothly using D3DMetal.",
-        "ko": "D3DMetal로 원활하게 플레이됩니다.",
+        "ko": "제보된 환경에서는 D3DMetal로 원활하게 플레이할 수 있습니다.",
         "ja": "D3DMetalでスムーズにプレイできます。",
         "zh-Hans": "使用 D3DMetal 可流畅游玩。",
         "zh-Hant": "使用 D3DMetal 可流暢遊玩。",
@@ -1649,7 +1649,7 @@
       "testedAt": null,
       "notes": {
         "en": "Gameplay was confirmed with a source-modified development build. At the time of the report, the related changes were planned for a future ForgePlay release and were not included in the then-current 1.0 release.",
-        "ko": "소스 수정이 적용된 개발 빌드에서 게임 모드로 플레이할 수 있음을 확인했습니다. 제보 당시 관련 변경은 향후 ForgePlay 릴리스에 포함할 예정이었으며, 당시 공개된 1.0에는 아직 적용되지 않았습니다.",
+        "ko": "수정 사항을 반영한 개발 빌드에서 게임 모드로 플레이할 수 있는 것을 확인했습니다. 제보 당시 공개된 1.0에는 아직 반영되지 않은 내용이며, 이후 정식 릴리스에 포함할 예정이었습니다.",
         "ja": "ソース修正を適用した開発ビルドで、ゲームモードによるプレイが可能であることを確認しました。報告時点では、関連する変更は今後のForgePlayリリースに含める予定で、その時点で公開されていた1.0にはまだ反映されていませんでした。",
         "zh-Hans": "已确认在应用源代码修改的开发版本中可通过游戏模式游玩。在该报告提交时，相关更改计划在后续的 ForgePlay 版本中发布，当时公开的 1.0 尚未包含这些更改。",
         "zh-Hant": "已確認在套用原始碼修改的開發版本中可透過遊戲模式遊玩。在該報告提交時，相關變更預計在後續的 ForgePlay 版本中發布，當時公開的 1.0 尚未包含這些變更。",
@@ -1684,7 +1684,7 @@
       "testedAt": null,
       "notes": {
         "en": "At the time of this report, gameplay appeared to be blocked by a Rosetta AVX issue, and a ForgePlay release containing the fix was planned.",
-        "ko": "제보 당시에는 Rosetta AVX 관련 문제로 인해 게임을 플레이할 수 없는 것으로 보였으며, 수정 사항을 반영한 ForgePlay 릴리스를 준비 중이었습니다.",
+        "ko": "제보 당시에는 Rosetta의 AVX 처리와 관련된 문제로 플레이할 수 없는 것으로 추정했습니다. 당시에는 수정 사항을 반영한 ForgePlay 릴리스를 준비하고 있었습니다.",
         "ja": "報告時点では、RosettaのAVX関連の問題によりプレイできないとみられ、修正を含むForgePlayリリースを準備していました。",
         "zh-Hans": "在该报告提交时，游戏疑似受 Rosetta AVX 相关问题影响而无法游玩，当时正在准备包含修复的 ForgePlay 版本。",
         "zh-Hant": "在該報告提交時，遊戲疑似受 Rosetta AVX 相關問題影響而無法遊玩，當時正在準備包含修正的 ForgePlay 版本。",
@@ -1706,7 +1706,7 @@
       "testedAt": null,
       "notes": {
         "en": "Runs normally at medium graphics settings. It uses slightly more memory than CrossOver, but not enough to cause a significant issue.",
-        "ko": "중간 그래픽 설정에서 정상적으로 플레이됩니다. CrossOver보다 메모리를 조금 더 사용하지만 플레이에 큰 문제는 없습니다.",
+        "ko": "그래픽을 보통으로 설정하면 정상적으로 플레이할 수 있습니다. CrossOver보다 메모리를 조금 더 사용하지만, 플레이에 큰 지장은 없다는 제보입니다.",
         "ja": "グラフィック設定「中」で正常にプレイできます。CrossOverよりメモリ使用量はやや多いものの、大きな問題はありません。",
         "zh-Hans": "在中等画质设置下可正常游玩。内存占用比 CrossOver 略高，但不会造成明显问题。",
         "zh-Hant": "在中等畫質設定下可正常遊玩。記憶體占用比 CrossOver 略高，但不會造成明顯問題。",
@@ -1729,7 +1729,7 @@
       "testedAt": null,
       "notes": {
         "en": "Runs very well at 2K resolution with the quality preset set to High. No issues were observed during the brief test session.",
-        "ko": "2K 해상도와 고품질 설정에서 매우 원활하게 플레이됩니다. 짧은 테스트 동안 별다른 문제는 확인되지 않았습니다.",
+        "ko": "2K 해상도와 높은 그래픽 설정에서 매우 원활하게 플레이할 수 있습니다. 짧게 테스트한 동안에는 별다른 문제가 없었습니다.",
         "ja": "2K解像度・高品質設定で非常に快適にプレイできます。短時間のテストでは特に問題は確認されませんでした。",
         "zh-Hans": "在 2K 分辨率和高画质设置下运行非常流畅。短时间测试期间未发现明显问题。",
         "zh-Hant": "在 2K 解析度與高畫質設定下執行非常流暢。短時間測試期間未發現明顯問題。",
@@ -1752,7 +1752,7 @@
       "testedAt": null,
       "notes": {
         "en": "Gameplay works well overall without any major issues. Joining a co-op lobby hosted by another player works, but creating a lobby as the host does not.",
-        "ko": "게임 플레이 자체에는 큰 문제가 없고 전반적으로 정상 작동합니다. 다른 사용자가 만든 협동 방에는 정상적으로 참가할 수 있지만, 직접 호스트가 되어 방을 만드는 것은 작동하지 않습니다.",
+        "ko": "다른 사용자가 만든 협동 방에 참가해 플레이하는 데는 큰 문제가 없지만, 직접 방을 만드는 기능은 작동하지 않습니다.",
         "ja": "ゲームプレイ自体には大きな問題がなく、全体的に正常に動作します。ほかのプレイヤーがホストする協力プレイのルームには正常に参加できますが、自分がホストとしてルームを作成することはできません。",
         "zh-Hans": "游戏本身总体运行正常，没有明显的大问题。可以正常加入其他玩家主持的合作房间，但无法由自己作为主机创建房间。",
         "zh-Hant": "遊戲本身整體執行正常，沒有明顯的大問題。可以正常加入其他玩家主持的合作房間，但無法由自己作為主機建立房間。",
@@ -1775,7 +1775,7 @@
       "testedAt": null,
       "notes": {
         "en": "Runs well overall. Although it is an older game, the MacBook Pro produces some noticeable heat during play.",
-        "ko": "전반적으로 원활하게 플레이됩니다. 구형 게임임에도 플레이 중 MacBook Pro에서 발열이 다소 발생합니다.",
+        "ko": "전반적으로 원활하게 플레이할 수 있습니다. 다만 오래된 게임인데도 플레이 중 MacBook Pro에서 열이 조금 난다는 제보입니다.",
         "ja": "全体的に快適にプレイできます。古いゲームですが、プレイ中はMacBook Proにやや発熱が生じます。",
         "zh-Hans": "整体运行流畅。虽然是一款较老的游戏，但游玩时 MacBook Pro 仍会出现一定程度的发热。",
         "zh-Hant": "整體執行流暢。雖然是一款較舊的遊戲，但遊玩時 MacBook Pro 仍會出現一定程度的發熱。",
@@ -1798,7 +1798,7 @@
       "testedAt": null,
       "notes": {
         "en": "Community report for ForgePlay 1.2: with Frame Generation (beta) turned off, Overwatch 2 reportedly ran smoothly on a full-configuration M3 Max for about two hours, averaging approximately 120 FPS with moderate heat and no frame drops. Turning Frame Generation on reportedly caused severe lag. For comparison, the reporter said CrossOver initially ran well but developed substantial heat and frame drops after more than 30 minutes.",
-        "ko": "ForgePlay 1.2 커뮤니티 제보: M3 Max 풀칩 환경에서 프레임 생성(베타)을 끄면 원활하게 플레이된다고 합니다. 약 2시간 동안 평균 약 120 FPS를 유지했고, 발열은 보통 수준이며 프레임 드롭은 없었다고 제보했습니다. 프레임 생성을 켰을 때는 심한 렉이 발생했다고 합니다. 비교한 CrossOver는 처음에는 괜찮았지만 30분이 지나면 발열과 프레임 드롭이 심해졌다고 합니다.",
+        "ko": "ForgePlay 1.2에서 M3 Max 풀칩으로 테스트한 제보입니다. 프레임 생성(베타)을 끄면 약 2시간 동안 평균 120 FPS 정도로 원활하게 플레이했고, 발열은 보통 수준이며 프레임 드롭은 없었습니다. 반대로 프레임 생성을 켜면 심하게 끊겼다고 합니다. 같은 제보자는 CrossOver에서도 비교했는데, 처음에는 괜찮다가 30분쯤 지나면 발열과 프레임 드롭이 심해졌다고 했습니다.",
         "ja": "ForgePlay 1.2 のコミュニティ報告：M3 Max のフル構成チップを搭載した環境で、フレーム生成（ベータ）をオフにすると Overwatch 2 を快適にプレイできたとのことです。約2時間にわたり平均約120 FPS を維持し、発熱は中程度でフレーム落ちはなかったと報告されています。フレーム生成をオンにすると激しいラグが発生したとのことです。比較した CrossOver は最初は快適だったものの、30分を超えると発熱とフレーム落ちがひどくなったそうです。",
         "zh-Hans": "ForgePlay 1.2 社区反馈：在满配版 M3 Max 芯片环境下，关闭帧生成（测试版）后，Overwatch 2 可流畅运行。反馈者称，游玩约两小时期间平均约为 120 FPS，发热适中且没有掉帧；开启帧生成后则出现严重卡顿。作为对比，反馈者表示 CrossOver 起初运行良好，但超过 30 分钟后发热和掉帧明显加重。",
         "zh-Hant": "ForgePlay 1.2 社群回報：在滿配版 M3 Max 晶片環境下，關閉影格生成（測試版）後，Overwatch 2 可順暢執行。回報者表示，遊玩約兩小時期間平均約為 120 FPS，發熱適中且沒有掉幀；開啟影格生成後則出現嚴重延遲。作為比較，回報者表示 CrossOver 起初執行良好，但超過 30 分鐘後發熱和掉幀明顯加劇。",
@@ -1821,7 +1821,7 @@
       "testedAt": null,
       "notes": {
         "en": "Community report for ForgePlay 1.2: on an M5 Pro with 24 GB of unified memory, Satisfactory reportedly ran very smoothly with Frame Generation (beta) turned off. With Frame Generation on and graphics set to Medium, the reporter saw a maximum of 60 FPS. No FPS figure or graphics preset was provided for play with Frame Generation off.",
-        "ko": "ForgePlay 1.2 커뮤니티 제보: M5 Pro·통합 메모리 24GB 환경에서 프레임 생성(베타)을 끄면 Satisfactory가 매우 쾌적하게 실행된다고 합니다. 프레임 생성을 켜고 그래픽 옵션을 보통으로 설정했을 때는 최대 60 FPS였다고 제보했습니다. 프레임 생성을 끈 상태의 FPS와 그래픽 옵션은 별도로 기재되지 않았습니다.",
+        "ko": "ForgePlay 1.2에서 M5 Pro·통합 메모리 24GB로 테스트한 제보입니다. 프레임 생성(베타)을 끄면 Satisfactory를 매우 쾌적하게 플레이할 수 있었습니다. 프레임 생성을 켜고 그래픽을 보통으로 설정했을 때는 최대 60 FPS가 나왔습니다. 프레임 생성을 껐을 때의 FPS와 그래픽 설정은 따로 알려주지 않으셨습니다.",
         "ja": "ForgePlay 1.2 のコミュニティ報告：M5 Pro・ユニファイドメモリ24 GB の環境で、フレーム生成（ベータ）をオフにすると Satisfactory が非常に快適に動作したとのことです。フレーム生成をオンにし、グラフィック設定を「中」にした場合は最大60 FPS だったと報告されています。フレーム生成をオフにした状態の FPS とグラフィック設定は記載されていません。",
         "zh-Hans": "ForgePlay 1.2 社区反馈：在 M5 Pro、24 GB 统一内存环境下，关闭帧生成（测试版）后，Satisfactory 运行非常流畅。反馈者表示，开启帧生成并将画质设为中等时，最高为 60 FPS。未提供关闭帧生成时的具体 FPS 或画质设置。",
         "zh-Hant": "ForgePlay 1.2 社群回報：在 M5 Pro、24 GB 統一記憶體環境下，關閉影格生成（測試版）後，Satisfactory 執行非常順暢。回報者表示，開啟影格生成並將畫質設為中等時，最高為 60 FPS。未提供關閉影格生成時的具體 FPS 或畫質設定。",
@@ -1844,7 +1844,7 @@
       "testedAt": null,
       "notes": {
         "en": "Reported setup: a 16-inch Mac with M5 Pro, 48GB of unified memory, a 1TB SSD, and macOS Tahoe 26.6.2. Frame generation was turned off. The reporter said Bodycam ran very smoothly on ForgePlay 1.2 without any additional configuration, and all in-game options worked correctly. In their comparison with CrossOver, the mouse would not stay locked and its coordinates were incorrect, so configuration took considerable time.",
-        "ko": "제보 기기는 16인치 Mac(M5 Pro, 통합 메모리 48GB, SSD 1TB, macOS Tahoe 26.6.2)이며, 프레임 생성은 끈 상태로 플레이했다고 합니다. ForgePlay 1.2에서 별도 설정 없이 Bodycam이 매우 원활하게 실행되고, 게임의 모든 옵션이 정상 작동했다고 제보했습니다. 비교한 CrossOver에서는 마우스가 고정되지 않고 좌표가 맞지 않아 설정에 많은 시간이 걸렸다고 합니다.",
+        "ko": "ForgePlay 1.2에서 프레임 생성을 끈 채 별도 설정 없이 Bodycam을 매우 원활하게 플레이했으며, 게임의 모든 옵션도 정상 작동했다는 제보입니다. 기기는 16인치 Mac·M5 Pro·통합 메모리 48GB·SSD 1TB·macOS Tahoe 26.6.2입니다. 제보자는 CrossOver에서는 마우스가 고정되지 않고 위치도 맞지 않아 설정에 많은 시간을 썼다고 했습니다.",
         "ja": "報告された環境は、M5 Pro、48GBユニファイドメモリ、1TB SSD、macOS Tahoe 26.6.2を搭載した16インチMacです。フレーム生成はオフにしてプレイしたとのことです。 ForgePlay 1.2では、追加の設定なしでBodycamが非常に快適に動作し、ゲーム内のすべてのオプションも正常に機能したとの報告です。比較したCrossOverではマウスが固定されず、座標もずれていたため、設定にかなりの時間がかかったとのことです。",
         "zh-Hans": "报告的设备为 16 英寸 Mac，搭载 M5 Pro、48GB 统一内存和 1TB SSD，运行 macOS Tahoe 26.6.2，游玩时关闭了帧生成。 据玩家反馈，Bodycam 在 ForgePlay 1.2 中无需额外设置即可非常流畅地运行，游戏内所有选项均正常工作。该玩家对比使用 CrossOver 时，遇到了鼠标无法锁定、坐标不正确的问题，因此花费了较长时间进行设置。",
         "zh-Hant": "回報的裝置為 16 吋 Mac，搭載 M5 Pro、48GB 統一記憶體和 1TB SSD，執行 macOS Tahoe 26.6.2，遊玩時關閉了影格生成。 據玩家回報，Bodycam 在 ForgePlay 1.2 中無需額外設定即可非常流暢地執行，遊戲內所有選項均正常運作。該玩家比較使用 CrossOver 時，遇到了滑鼠無法鎖定、座標不正確的問題，因此花費了不少時間進行設定。",
@@ -1867,7 +1867,7 @@
       "testedAt": null,
       "notes": {
         "en": "The reporter confirmed that Company of Heroes 3 runs on ForgePlay 1.2.",
-        "ko": "ForgePlay 1.2에서 컴퍼니 오브 히어로즈 3 실행을 확인했다고 제보했습니다.",
+        "ko": "ForgePlay 1.2에서 컴퍼니 오브 히어로즈 3가 실행된다는 제보입니다.",
         "ja": "ForgePlay 1.2で『Company of Heroes 3』が動作することを確認したとの報告です。",
         "zh-Hans": "据反馈，已确认 Company of Heroes 3 可在 ForgePlay 1.2 上运行。",
         "zh-Hant": "據回報，已確認 Company of Heroes 3 可在 ForgePlay 1.2 上執行。",
@@ -1890,7 +1890,7 @@
       "testedAt": null,
       "notes": {
         "en": "The reporter said the game plays normally. Changing the language to Korean did not work until they separately downloaded the Windows default fonts Malgun.ttf (Regular), Malgunbd.ttf (Bold), and Malgunsl.ttf (Semilight) and placed them in C:\\\\Windows\\\\Fonts.",
-        "ko": "게임은 정상적으로 플레이된다고 제보했습니다. 다만 한글로 언어를 변경할 수 없었으며, Windows 기본 글꼴인 Malgun.ttf(Regular), Malgunbd.ttf(Bold), Malgunsl.ttf(Semilight)를 별도로 다운로드해 C:\\\\Windows\\\\Fonts에 넣은 뒤 정상적으로 언어 변경이 가능해졌다고 합니다.",
+        "ko": "게임은 정상적으로 플레이할 수 있지만, 처음에는 언어를 한국어로 바꿀 수 없었다는 제보입니다. Windows 기본 글꼴인 Malgun.ttf(Regular), Malgunbd.ttf(Bold), Malgunsl.ttf(Semilight)를 따로 받아 C:\\\\Windows\\\\Fonts에 넣은 뒤에는 한국어로 변경할 수 있었다고 합니다.",
         "ja": "ゲームは正常にプレイできるとの報告です。ただし、韓国語への言語変更ができませんでした。Windowsの標準フォントであるMalgun.ttf（Regular）、Malgunbd.ttf（Bold）、Malgunsl.ttf（Semilight）を別途ダウンロードしてC:\\\\Windows\\\\Fontsに配置したところ、言語を正常に変更できるようになったとのことです。",
         "zh-Hans": "据反馈，游戏可以正常游玩。但无法切换为韩语；单独下载 Windows 默认字体 Malgun.ttf（Regular）、Malgunbd.ttf（Bold）和 Malgunsl.ttf（Semilight），并放入 C:\\\\Windows\\\\Fonts 后，语言切换恢复正常。",
         "zh-Hant": "據回報，遊戲可以正常遊玩。但無法切換為韓文；另外下載 Windows 預設字型 Malgun.ttf（Regular）、Malgunbd.ttf（Bold）與 Malgunsl.ttf（Semilight），並放入 C:\\\\Windows\\\\Fonts 後，語言切換恢復正常。",
@@ -1912,7 +1912,7 @@
       "testedAt": "2026-09-11",
       "notes": {
         "en": "On ForgePlay 1.3, Overwatch 2 enters an infinite loading state and cannot be played. This symptom was observed after the 1.3 update, and the compatibility issue is under investigation. It has not yet been confirmed whether the update itself is the cause.",
-        "ko": "ForgePlay 1.3에서 오버워치 2 실행 시 무한 로딩이 발생해 플레이할 수 없습니다. 1.3 업데이트 이후 확인된 증상이며, 호환성 문제를 확인 중입니다. 업데이트 자체가 원인인지는 추가 확인이 필요합니다.",
+        "ko": "ForgePlay 1.3에서는 오버워치 2가 무한 로딩에 걸려 플레이할 수 없습니다. 1.3 업데이트 이후 확인된 증상으로, 호환성 문제를 확인하고 있습니다. 업데이트 자체가 원인인지는 아직 알 수 없습니다.",
         "ja": "ForgePlay 1.3では、Overwatch 2の起動時に無限ロードが発生し、プレイできません。この症状は1.3アップデート後に確認されており、互換性の問題を確認中です。アップデート自体が原因かどうかは、まだ確認できていません。",
         "zh-Hans": "在 ForgePlay 1.3 中启动 Overwatch 2 时会进入无限加载状态，无法进行游戏。该症状在 1.3 更新后被发现，目前正在确认兼容性问题。尚未确认问题是否由更新本身导致。",
         "zh-Hant": "在 ForgePlay 1.3 中啟動 Overwatch 2 時會進入無限載入狀態，無法進行遊戲。此症狀在 1.3 更新後被發現，目前正在確認相容性問題。尚未確認問題是否由更新本身造成。",
@@ -1934,7 +1934,7 @@
       "testedAt": "2026-09-12",
       "notes": {
         "en": "Pre-release test of ForgePlay 1.3.1 (build 5): the compatibility issue associated with infinite loading in ForgePlay 1.3 has been resolved, and the game was confirmed to launch normally and run smoothly in the test environment. Tested on a MacBook Pro with M4 Pro (12-core CPU), 24GB of memory, and macOS 26.6.2 (25G83).",
-        "ko": "ForgePlay 1.3.1(빌드 5) 출시 전 테스트: 기존 1.3에서 발생했던 무한 로딩 관련 호환성 문제를 해결했으며, 테스트 환경에서 게임의 정상 실행과 원활한 동작을 확인했습니다. 테스트 기기는 MacBook Pro·M4 Pro(12코어 CPU)·메모리 24GB이며, macOS 26.6.2(25G83) 환경입니다.",
+        "ko": "ForgePlay 1.3.1(빌드 5) 출시 전 테스트에서, 1.3의 무한 로딩 문제를 수정한 뒤 정상 실행과 원활한 동작을 확인했습니다. 테스트에는 MacBook Pro·M4 Pro(12코어 CPU)·메모리 24GB·macOS 26.6.2(25G83) 환경을 사용했습니다.",
         "ja": "ForgePlay 1.3.1（ビルド5）のリリース前テスト：ForgePlay 1.3で発生していた無限ロードに関する互換性の問題を解決し、テスト環境でゲームが正常に起動して快適に動作することを確認しました。テスト機器はM4 Pro（12コアCPU）と24GBメモリを搭載したMacBook Pro、macOSは26.6.2（25G83）です。",
         "zh-Hans": "ForgePlay 1.3.1（构建5）发布前测试：已解决 ForgePlay 1.3 中导致无限加载的兼容性问题，并在测试环境中确认游戏可正常启动、流畅运行。测试设备为 MacBook Pro，搭载 M4 Pro（12核CPU）和24GB内存，运行 macOS 26.6.2（25G83）。",
         "zh-Hant": "ForgePlay 1.3.1（組建5）發布前測試：已解決 ForgePlay 1.3 中造成無限載入的相容性問題，並在測試環境中確認遊戲可正常啟動、順暢執行。測試裝置為 MacBook Pro，搭載 M4 Pro（12核心CPU）與24GB記憶體，執行 macOS 26.6.2（25G83）。",
@@ -1956,7 +1956,7 @@
       "reporter": "늉늉",
       "testedAt": null,
       "notes": {
-        "ko": "커뮤니티 제보: M5 Pro·메모리 24GB·macOS 27.0 환경에서 프라그마타가 잘 실행된다고 합니다.",
+        "ko": "M5 Pro·메모리 24GB·macOS 27.0에서 프라그마타가 잘 실행된다는 제보입니다.",
         "en": "Community report: Pragmata runs well on an M5 Pro Mac with 24GB memory and macOS 27.0.",
         "de": "Community-Bericht: Pragmata läuft gut auf einem Mac mit M5 Pro, 24GB Arbeitsspeicher und macOS 27.0.",
         "es": "Informe de la comunidad: Pragmata funciona bien en un Mac con M5 Pro, 24GB de memoria y macOS 27.0.",
@@ -1978,7 +1978,7 @@
       "source": "project-test",
       "testedAt": null,
       "notes": {
-        "ko": "프로젝트 테스트: M4 Pro·메모리 24GB·macOS 27.0 환경에서 프라그마타의 정상 실행을 확인했습니다.",
+        "ko": "M4 Pro·메모리 24GB·macOS 27.0 환경에서 직접 테스트해 프라그마타의 정상 실행을 확인했습니다.",
         "en": "Project test: Pragmata was confirmed to run successfully on an M4 Pro Mac with 24GB memory and macOS 27.0.",
         "de": "Projekttest: Pragmata wurde auf einem Mac mit M4 Pro, 24GB Arbeitsspeicher und macOS 27.0 erfolgreich ausgeführt.",
         "es": "Prueba del proyecto: se confirmó que Pragmata se ejecuta correctamente en un Mac con M4 Pro, 24GB de memoria y macOS 27.0.",
@@ -2001,7 +2001,7 @@
       "reporter": "bkpwvktz4f-hash",
       "testedAt": null,
       "notes": {
-        "ko": "GitHub 이슈 #18 제보: M4 iMac(10코어)·메모리 24GB·macOS 27에서 인조이가 실행되며 CrossOver보다 원활하다고 합니다. 다만 CrossOver에서도 겪었던 영상 처리 문제로 로딩이 막힐 수 있고, 게임 파일 내 'movie' 항목의 이름을 변경하면 실행할 수 있었다고 합니다. 변경 대상의 정확한 경로와 파일·폴더 여부는 아직 확인되지 않았습니다.",
+        "ko": "M4 iMac(10코어)·메모리 24GB·macOS 27에서 인조이를 실행했으며, CrossOver보다 원활하다는 제보입니다. 다만 CrossOver에서 겪었던 것과 같은 영상 처리 문제로 로딩이 막힐 수 있습니다. 제보자는 게임 파일의 ‘movie’ 항목 이름을 바꾼 뒤 실행할 수 있었다고 했지만, 정확히 어느 경로의 파일이나 폴더를 바꿨는지는 아직 알 수 없습니다.",
         "en": "GitHub issue #18: inZOI runs on an M4 iMac (10-core), 24GB memory, macOS 27, reportedly more smoothly than in CrossOver. A video-processing issue also encountered in CrossOver may block loading; the reporter says renaming the 'movie' item within the game files allowed it to run. The exact path and whether this is a file or folder remain unconfirmed.",
         "de": "GitHub-Issue #18: inZOI läuft auf einem M4 iMac (10 Kerne) mit 24GB Arbeitsspeicher und macOS 27 laut Bericht flüssiger als mit CrossOver. Ein auch in CrossOver auftretendes Problem bei der Videoverarbeitung kann das Laden blockieren. Laut Melder ließ sich das Spiel nach dem Umbenennen des Elements 'movie' in den Spieldateien ausführen. Der genaue Pfad und ob es sich um eine Datei oder einen Ordner handelt, sind noch unbestätigt.",
         "es": "Incidencia #18 de GitHub: inZOI funciona en un iMac M4 (10 núcleos), con 24GB de memoria y macOS 27; según el informe, con más fluidez que en CrossOver. Un problema de procesamiento de vídeo, también observado en CrossOver, puede bloquear la carga. La persona indica que pudo ejecutar el juego al cambiar el nombre del elemento 'movie' dentro de los archivos del juego. Aún no se ha confirmado la ruta exacta ni si es un archivo o una carpeta.",
@@ -2024,7 +2024,7 @@
       "reporter": "kreamsoup-SH",
       "testedAt": null,
       "notes": {
-        "ko": "GitHub 제보자 @kreamsoup-SH: M3 Air·메모리 8GB·macOS Tahoe 26.5.1(25F80) 환경에서 VRChat이 실행되지 않습니다.",
+        "ko": "M3 Air·메모리 8GB·macOS Tahoe 26.5.1(25F80)에서 VRChat이 실행되지 않는다는 @kreamsoup-SH님의 GitHub 제보입니다.",
         "en": "GitHub report by @kreamsoup-SH: VRChat does not launch on an M3 MacBook Air with 8GB memory and macOS Tahoe 26.5.1 (25F80).",
         "de": "GitHub-Bericht von @kreamsoup-SH: VRChat startet auf einem M3 MacBook Air mit 8GB Arbeitsspeicher und macOS Tahoe 26.5.1 (25F80) nicht.",
         "es": "Informe de GitHub de @kreamsoup-SH: VRChat no se inicia en un MacBook Air M3 con 8GB de memoria y macOS Tahoe 26.5.1 (25F80).",
@@ -2047,7 +2047,7 @@
       "reporter": "sleeeppy",
       "testedAt": null,
       "notes": {
-        "ko": "GitHub 제보자 @sleeeppy: Steam의 Windows용 Zenless Zone Zero(젠레스 존 제로, App ID 4162040)를 HoYoPlay를 통해 실행했습니다. ForgePlay 내부의 Windows Steam은 게임을 실행하지만, 세션이 플레이 가능한 화면에 도달하지 않습니다. 테스트 환경은 Mac17,9·Apple M5 Pro·통합 메모리 24GB·macOS 26.6.2(25G83)입니다.",
+        "ko": "@sleeeppy님의 GitHub 제보입니다. Steam의 Windows용 젠레스 존 제로(Zenless Zone Zero, App ID 4162040)를 HoYoPlay로 실행했지만, 게임을 플레이할 수 있는 화면까지 넘어가지 못했습니다. ForgePlay 안의 Windows Steam에서 게임 실행을 시작한 것까지는 확인됐습니다. 기기는 Mac17,9·Apple M5 Pro·통합 메모리 24GB·macOS 26.6.2(25G83)입니다.",
         "en": "GitHub report by @sleeeppy: The official Windows Steam build of Zenless Zone Zero (App ID 4162040), launched through HoYoPlay, can be started by Windows Steam inside ForgePlay, but the session never reaches a playable frame. Test environment: Mac17,9 with Apple M5 Pro, 24GB unified memory, and macOS 26.6.2 (25G83).",
         "de": "GitHub-Bericht von @sleeeppy: Die offizielle Windows-Steam-Version von Zenless Zone Zero (App-ID 4162040), gestartet über HoYoPlay, kann von Windows-Steam in ForgePlay gestartet werden, erreicht jedoch nie ein spielbares Bild. Testumgebung: Mac17,9 mit Apple M5 Pro, 24GB Unified Memory und macOS 26.6.2 (25G83).",
         "es": "Informe de GitHub de @sleeeppy: La versión oficial de Zenless Zone Zero para Windows en Steam (App ID 4162040), iniciada mediante HoYoPlay, puede iniciarse desde Windows Steam dentro de ForgePlay, pero la sesión nunca llega a mostrar una imagen jugable. Entorno de prueba: Mac17,9 con Apple M5 Pro, 24GB de memoria unificada y macOS 26.6.2 (25G83).",
@@ -2070,7 +2070,7 @@
       "reporter": "ㅇㅇ",
       "testedAt": null,
       "notes": {
-        "ko": "ForgePlay 2.0.0에서 WineD3D로 정상 실행된다는 커뮤니티 제보입니다. 다만 시점을 돌릴 때 마우스 입력이 간헐적으로 끊기는 듯한 증상이 있다고 합니다. Mac 사양·macOS 버전·게임 버전은 확인되지 않았습니다.",
+        "ko": "ForgePlay 2.0.0에서 WineD3D로 정상 실행된다는 제보입니다. 다만 시점을 돌릴 때 마우스 입력이 간혹 끊기는 느낌이 있다고 합니다. Mac 사양, macOS와 게임 버전은 따로 알려주지 않으셨습니다.",
         "en": "A community report says Team Fortress 2 runs successfully with WineD3D in ForgePlay 2.0.0. However, mouse input reportedly seems to stutter intermittently when turning the camera. Mac specifications, macOS version and game version are unconfirmed.",
         "ja": "ForgePlay 2.0.0でWineD3Dを使用すると正常に動作するとのコミュニティ報告です。ただし、視点を動かす際にマウス入力が断続的に途切れるように感じるとのことです。Macの仕様、macOSのバージョン、ゲームのバージョンは未確認です。",
         "zh-Hans": "社区反馈称，Team Fortress 2 在 ForgePlay 2.0.0 中使用 WineD3D 可以正常运行。不过，转动视角时似乎存在鼠标输入间歇性卡顿的现象。Mac 配置、macOS 版本和游戏版本尚未确认。",
@@ -2093,7 +2093,7 @@
       "reporter": "dms-199999",
       "testedAt": null,
       "notes": {
-        "ko": "GitHub 이슈 #24: M4·메모리 24GB·macOS Tahoe 26.5 환경에서 플레이 가능하다고 제보했습니다. ForgePlay 버전은 원문의 오기재 가능성이 있어 확인 중입니다. 그래픽 백엔드와 게임 버전은 확인되지 않았습니다.",
+        "ko": "M4·메모리 24GB·macOS Tahoe 26.5에서 플레이할 수 있다는 제보입니다. 적어주신 ForgePlay 버전은 잘못 기재됐을 가능성이 있어 확인하고 있습니다. 사용한 렌더러와 게임 버전도 아직 알 수 없습니다.",
         "en": "GitHub issue #24 reports Lethal Company as playable on an M4 Mac with 24GB memory and macOS Tahoe 26.5. The ForgePlay version is awaiting confirmation because the original entry may be incorrect. The graphics backend and game version are unconfirmed.",
         "ja": "GitHubイシュー#24：M4、メモリ24GB、macOS Tahoe 26.5の環境でプレイ可能との報告です。ForgePlayのバージョンは原文の記載に誤りの可能性があるため確認中です。グラフィックバックエンドとゲームのバージョンは未確認です。",
         "zh-Hans": "GitHub 问题 #24：反馈者报告在 M4、24GB 内存、macOS Tahoe 26.5 环境下可以游玩。由于原文的 ForgePlay 版本可能填写有误，目前正在确认。图形后端和游戏版本尚未确认。",
@@ -2116,7 +2116,7 @@
       "reporter": "맥갤러6",
       "testedAt": null,
       "notes": {
-        "ko": "ForgePlay 2.0.0에서 Battle.net판 오버워치 2를 실행할 수 없다는 커뮤니티 제보입니다. Mac 사양과 macOS 버전은 확인되지 않았습니다. 개발자 추가 안내: 원활하게 실행되는 Steam판과 달리, Battle.net판은 별도 안티치트 때문에 실행할 수 없습니다.",
+        "ko": "ForgePlay 2.0.0에서 Battle.net판 오버워치 2가 실행되지 않는다는 제보입니다. Mac 사양과 macOS 버전은 따로 알려주지 않으셨습니다.\n\n개발자 안내: Steam판은 원활하게 실행되지만, Battle.net판은 별도의 안티치트 때문에 실행할 수 없습니다.",
         "en": "Community report: the Battle.net version of Overwatch 2 does not launch in ForgePlay 2.0.0. Mac specifications and macOS version are unconfirmed. Developer note: unlike the Steam version, which runs smoothly, the Battle.net version cannot run because of its separate anti-cheat.",
         "ja": "ForgePlay 2.0.0ではBattle.net版Overwatch 2を起動できないとのコミュニティ報告です。Macの仕様とmacOSのバージョンは未確認です。 開発者追記：スムーズに動作するSteam版とは異なり、Battle.net版は別のアンチチートにより実行できません。",
         "zh-Hans": "社区反馈：Battle.net 版《守望先锋 2》在 ForgePlay 2.0.0 中无法启动。Mac 配置和 macOS 版本尚未确认。 开发者补充：与运行流畅的 Steam 版不同，Battle.net 版因其单独的反作弊机制而无法运行。",
@@ -2139,7 +2139,7 @@
       "reporter": "맥갤러7",
       "testedAt": null,
       "notes": {
-        "ko": "ForgePlay 2.0.0에서 실행 가능하다는 커뮤니티 제보입니다. 첫 실행에서는 해상도가 최저로 설정되고 설정 메뉴에서 해상도를 바꿀 수 없었지만, 두 번째 실행에서는 이 문제가 재발하지 않았습니다. 다만 설정 메뉴에 들어가면 화면이 점점 커졌다가 창 모드처럼 줄어든 뒤 돌아오는 현상이 있으며, 제보자는 시각적으로 불편하다고 했습니다. Mac 사양·macOS 버전은 확인되지 않았습니다.",
+        "ko": "ForgePlay 2.0.0에서 게임은 실행된다는 제보입니다. 처음에는 해상도가 가장 낮게 설정되고 설정 메뉴에서도 바꿀 수 없었지만, 두 번째 실행부터는 이 문제가 나타나지 않았습니다. 다만 설정 메뉴를 열면 화면이 점점 커졌다가 창 모드처럼 작아진 뒤 다시 돌아오는 현상이 있어 보기 불편하다고 합니다. Mac 사양과 macOS 버전은 따로 알려주지 않으셨습니다.",
         "en": "Community report: playable in ForgePlay 2.0.0. On the first launch, resolution was set to the lowest option and could not be changed in settings; this did not recur on the second launch. However, opening settings makes the image grow, shrink as if entering windowed mode, then return; the reporter found this visually uncomfortable. Mac specifications and macOS version are unconfirmed.",
         "ja": "ForgePlay 2.0.0で実行可能とのコミュニティ報告です。初回は最低解像度となり設定から変更できませんでしたが、2回目の起動では再発しませんでした。ただし設定画面を開くと画面が徐々に拡大し、ウインドウモードのように縮小してから戻る現象があり、報告者は視覚的に不快だとしています。Macの仕様、macOSのバージョンは未確認です。",
         "zh-Hans": "社区反馈：ForgePlay 2.0.0 中可以运行。首次启动时分辨率为最低选项，且无法在设置中更改；第二次启动未再次出现此问题。但进入设置菜单时，画面会逐渐放大，再像窗口模式一样缩小后恢复，反馈者表示视觉上不适。Mac 配置和 macOS 版本尚未确认。",
@@ -2162,7 +2162,7 @@
       "reporter": "맥갤러7",
       "testedAt": null,
       "notes": {
-        "ko": "ForgePlay 2.0.0에서 아이돌마스터 스탈릿 시즌이 문제없이 정상 작동한다는 커뮤니티 제보입니다. 실행 플랫폼·Mac 사양·macOS 버전은 확인되지 않았습니다.",
+        "ko": "ForgePlay 2.0.0에서 아이돌마스터 스탈릿 시즌이 문제없이 작동한다는 제보입니다. 실행 플랫폼, Mac 사양과 macOS 버전은 따로 알려주지 않으셨습니다.",
         "en": "Community report: The Idolmaster Starlit Season runs normally without issues in ForgePlay 2.0.0. Launch platform, Mac specifications and macOS version are unconfirmed.",
         "ja": "ForgePlay 2.0.0で『アイドルマスター スターリットシーズン』が問題なく正常に動作するとのコミュニティ報告です。起動プラットフォーム、Macの仕様、macOSのバージョンは未確認です。",
         "zh-Hans": "社区反馈：《偶像大师 星耀季节》在 ForgePlay 2.0.0 中正常运行，未出现问题。启动平台、Mac 配置和 macOS 版本尚未确认。",
@@ -2185,7 +2185,7 @@
       "reporter": "fmszctvvjk-droid",
       "testedAt": null,
       "notes": {
-        "ko": "GitHub 이슈 #25: ForgePlay 2.0.0에서 페르소나 4 골든 실행 시 앱이 충돌해 플레이할 수 없다고 제보했습니다. 기기는 원문에 M6·16GB, macOS는 Golden Gate 27.0으로 기재되어 있으며 하드웨어 표기는 추가 확인되지 않았습니다. 실행 플랫폼·그래픽 백엔드·게임 버전·충돌 원인은 미확인입니다. 개발자는 다른 그래픽 백엔드로도 시도했는지 추가 정보를 요청했습니다.",
+        "ko": "ForgePlay 2.0.0에서 페르소나 4 골든을 실행하면 앱이 충돌해 플레이할 수 없다는 제보입니다. 기기는 M6·16GB, macOS는 Golden Gate 27.0으로 적어주셨지만, 기기 사양은 추가로 확인하지 못했습니다. 실행 플랫폼, 렌더러, 게임 버전과 충돌 원인도 아직 알 수 없습니다. 개발자는 다른 렌더러로도 실행해 봤는지 추가 정보를 요청했습니다.",
         "en": "GitHub issue #25 reports an application crash when launching Persona 4 Golden in ForgePlay 2.0.0, preventing play. The report lists M6, 16GB and macOS Golden Gate 27.0; the hardware designation is not independently confirmed. Launch platform, graphics backend, game version and crash cause are unknown. The developer requested results with other graphics backends.",
         "ja": "GitHubイシュー#25：ForgePlay 2.0.0でPersona 4 Goldenを起動するとアプリがクラッシュし、プレイできないとの報告です。原文にはM6・16GB・macOS Golden Gate 27.0と記載されていますが、機種表記は別途確認されていません。起動プラットフォーム、グラフィックバックエンド、ゲームのバージョン、原因は未確認です。開発者は別のバックエンドで試したか追加情報を求めています。",
         "zh-Hans": "GitHub 问题 #25：反馈称在 ForgePlay 2.0.0 中启动《女神异闻录 4 黄金版》时应用崩溃，无法游玩。原文填写 M6、16GB 和 macOS Golden Gate 27.0，硬件型号尚未另行确认。启动平台、图形后端、游戏版本和崩溃原因未知。开发者已询问是否尝试其他图形后端。",
@@ -2208,7 +2208,7 @@
       "reporter": "KFCBucketCat",
       "testedAt": null,
       "notes": {
-        "ko": "GitHub 이슈 #26: ForgePlay 2.0.0(6)에서 실행 시 Wine 디버그 창과 SAN13Launcher.exe의 심각한 오류 안내가 나타나며 게임이 시작되지 않는다고 합니다. 실행 플랫폼·그래픽 백엔드·오류 원인은 미확인입니다.",
+        "ko": "ForgePlay 2.0.0(빌드 6)에서 실행하면 Wine 디버그 창과 함께 SAN13Launcher.exe 오류 안내가 뜨고, 게임이 시작되지 않는다는 제보입니다. 실행 플랫폼, 렌더러와 오류 원인은 아직 알 수 없습니다.",
         "en": "GitHub issue #26: In ForgePlay 2.0.0 (6), a Wine debug window and a serious-error message for SAN13Launcher.exe appear, and the game does not start. Launch platform, graphics backend and cause are unconfirmed.",
         "de": "GitHub-Issue #26: In ForgePlay 2.0.0 (6) erscheinen ein Wine-Debugfenster und eine Meldung über einen schwerwiegenden Fehler in SAN13Launcher.exe; das Spiel startet nicht. Startplattform, Grafik-Backend und Ursache sind unbestätigt.",
         "es": "Incidencia #26 de GitHub: en ForgePlay 2.0.0 (6) aparecen una ventana de depuración de Wine y un error grave de SAN13Launcher.exe; el juego no se inicia. Plataforma de lanzamiento, backend gráfico y causa sin confirmar.",
@@ -2231,7 +2231,7 @@
       "reporter": "KFCBucketCat",
       "testedAt": null,
       "notes": {
-        "ko": "GitHub 이슈 #27: ForgePlay 2.0.0(6)에서 실행 시 Wine 디버그 창과 SAN14Launcher.exe의 심각한 오류 안내가 나타나며 게임이 시작되지 않는다고 합니다. 실행 플랫폼·그래픽 백엔드·오류 원인은 미확인입니다.",
+        "ko": "ForgePlay 2.0.0(빌드 6)에서 실행하면 Wine 디버그 창과 함께 SAN14Launcher.exe 오류 안내가 뜨고, 게임이 시작되지 않는다는 제보입니다. 실행 플랫폼, 렌더러와 오류 원인은 아직 알 수 없습니다.",
         "en": "GitHub issue #27: In ForgePlay 2.0.0 (6), a Wine debug window and a serious-error message for SAN14Launcher.exe appear, and the game does not start. Launch platform, graphics backend and cause are unconfirmed.",
         "de": "GitHub-Issue #27: In ForgePlay 2.0.0 (6) erscheinen ein Wine-Debugfenster und eine Meldung über einen schwerwiegenden Fehler in SAN14Launcher.exe; das Spiel startet nicht. Startplattform, Grafik-Backend und Ursache sind unbestätigt.",
         "es": "Incidencia #27 de GitHub: en ForgePlay 2.0.0 (6) aparecen una ventana de depuración de Wine y un error grave de SAN14Launcher.exe; el juego no se inicia. Plataforma de lanzamiento, backend gráfico y causa sin confirmar.",
@@ -2254,7 +2254,7 @@
       "reporter": "KFCBucketCat",
       "testedAt": null,
       "notes": {
-        "ko": "후속 제보 안내: 같은 제보자가 ForgePlay 2.2.1(빌드 9)의 Steam 환경에서 실행·내정·전투·엔딩까지 진행 가능하다고 확인했습니다. 다만 동영상 재생 시 검은 화면이 남아 있습니다. 이 항목의 실행 불가 결과는 이전 2.0.0 기록이며, 현재 2.2.1 Steam 결과와 구분해 주세요.\n\nGitHub 이슈 #28: ForgePlay 2.0.0(6)에서 코에이·시부사와 코우 로고까지 표시되지만, 이후 오프닝 구간에서 검은 화면이 나타나고 잠시 뒤 게임이 강제 종료된다고 합니다. 본문의 증상을 기준으로 실행 불가로 분류했습니다. 실행 플랫폼·그래픽 백엔드·오류 원인은 미확인입니다.",
+        "ko": "같은 제보자가 이후 ForgePlay 2.2.1(빌드 9)의 Steam 환경에서는 내정·전투·엔딩까지 진행할 수 있다고 알려주셨습니다. 다만 동영상은 여전히 검은 화면으로 나옵니다.\n\n아래는 실행할 수 없었던 2.0.0(빌드 6) 당시의 기록입니다. 코에이·시부사와 코우 로고 뒤에 오프닝 대신 검은 화면이 나오고, 잠시 후 게임이 강제 종료됐습니다. 당시의 실행 플랫폼, 렌더러와 오류 원인은 아직 알 수 없습니다. 이 과거 기록과 2.2.1의 Steam 플레이 결과를 구분해 주세요.",
         "en": "Follow-up: the same reporter confirmed launch, domestic affairs, battles and progression through the ending on Steam with ForgePlay 2.2.1 (build 9). Videos still show a black screen. The failed result in this entry is historical, from 2.0.0; distinguish it from the current 2.2.1 Steam result.\n\nGitHub issue #28: In ForgePlay 2.0.0 (6), the Koei and Kou Shibusawa logos appear, but the opening then goes black and the game crashes shortly afterward. Classified as blocked based on the described symptoms. Launch platform, graphics backend and cause are unconfirmed.",
         "de": "Folgemeldung: Derselbe Melder bestätigt Start, Verwaltung, Kämpfe und Fortschritt bis zum Ende auf Steam mit ForgePlay 2.2.1 (Build 9). Videos bleiben schwarz. Der fehlgeschlagene Start in diesem Eintrag stammt aus 2.0.0 und ist vom aktuellen Steam-Ergebnis unter 2.2.1 zu unterscheiden.\n\nGitHub-Issue #28: In ForgePlay 2.0.0 (6) erscheinen die Logos von Koei und Kou Shibusawa, danach wird das Intro schwarz und das Spiel stürzt kurz darauf ab. Aufgrund der beschriebenen Symptome als nicht spielbar eingestuft. Startplattform, Grafik-Backend und Ursache sind unbestätigt.",
         "es": "Seguimiento: el mismo informante confirmó inicio, gestión, batallas y avance hasta el final en Steam con ForgePlay 2.2.1 (compilación 9). Los vídeos siguen negros. El fallo de este registro corresponde a la versión anterior 2.0.0, no al resultado actual de Steam con 2.2.1.\n\nIncidencia #28 de GitHub: en ForgePlay 2.0.0 (6) aparecen los logotipos de Koei y Kou Shibusawa, pero la introducción queda en negro y el juego se cierra poco después. Se clasifica como no jugable por los síntomas descritos. Plataforma, backend y causa sin confirmar.",
@@ -2277,7 +2277,7 @@
       "reporter": "KFCBucketCat",
       "testedAt": null,
       "notes": {
-        "ko": "GitHub 이슈 #29: ForgePlay 2.0.0(6)에서 실행은 되지만 오프닝·이벤트·챕터 전환 영상이 표시되지 않거나 검은 화면이 나타나며, 간헐적으로 진행이 막힌다고 합니다. 마우스를 클릭해야 대사창이 표시되는 문제도 있습니다. 실행 플랫폼·그래픽 백엔드·오류 원인은 미확인입니다.",
+        "ko": "ForgePlay 2.0.0(빌드 6)에서 실행은 되지만, 오프닝·이벤트·챕터 전환 영상이 안 나오거나 검은 화면으로 바뀌면서 간혹 진행이 막힌다는 제보입니다. 마우스를 클릭해야 대사창이 나타나는 문제도 있습니다. 실행 플랫폼, 렌더러와 오류 원인은 아직 알 수 없습니다.",
         "en": "GitHub issue #29: The game runs in ForgePlay 2.0.0 (6), but opening, event and chapter-transition videos may be missing or black, sometimes preventing progress. Dialogue boxes may appear only after a mouse click. Launch platform, graphics backend and cause are unconfirmed.",
         "de": "GitHub-Issue #29: Das Spiel läuft in ForgePlay 2.0.0 (6), doch Intro-, Ereignis- und Kapitelwechselvideos fehlen oder bleiben schwarz; gelegentlich lässt sich nicht weiterspielen. Dialogfenster erscheinen teils erst nach einem Mausklick. Startplattform, Grafik-Backend und Ursache sind unbestätigt.",
         "es": "Incidencia #29 de GitHub: el juego funciona en ForgePlay 2.0.0 (6), pero los vídeos de introducción, eventos y cambios de capítulo pueden faltar o verse en negro, impidiendo avanzar en ocasiones. Los cuadros de diálogo pueden requerir un clic para aparecer. Plataforma, backend y causa sin confirmar.",
@@ -2300,7 +2300,7 @@
       "reporter": "KFCBucketCat",
       "testedAt": null,
       "notes": {
-        "ko": "GitHub 이슈 #30: ForgePlay 2.0.0(6)에서 게임 플레이 자체에는 문제가 없으나, 설정창에서 옵션을 변경하면 화면이 확대·축소를 반복하다 전체 화면으로 돌아온다고 합니다. 그래픽 백엔드·오류 원인은 미확인입니다.",
+        "ko": "ForgePlay 2.0.0(빌드 6)에서 게임 플레이에는 문제가 없지만, 설정창에서 옵션을 바꾸면 화면이 커졌다 작아지기를 반복한 뒤 전체 화면으로 돌아온다는 제보입니다. 사용한 렌더러와 원인은 아직 알 수 없습니다.",
         "en": "GitHub issue #30: Gameplay itself is reported to work well in ForgePlay 2.0.0 (6), but changing options in the settings window makes the image repeatedly enlarge and shrink before returning to full screen. Graphics backend and cause are unconfirmed.",
         "de": "GitHub-Issue #30: Das Spielen selbst funktioniert laut Bericht in ForgePlay 2.0.0 (6) problemlos. Beim Ändern von Optionen wird das Bild jedoch wiederholt größer und kleiner, bevor es zum Vollbild zurückkehrt. Grafik-Backend und Ursache sind unbestätigt.",
         "es": "Incidencia #30 de GitHub: el juego funciona bien en ForgePlay 2.0.0 (6), pero al cambiar opciones en los ajustes la imagen se amplía y reduce repetidamente antes de volver a pantalla completa. Backend gráfico y causa sin confirmar.",
@@ -2323,7 +2323,7 @@
       "reporter": "freakinmatcha",
       "testedAt": null,
       "notes": {
-        "ko": "GitHub 이슈 #31: 제보자가 'The Witcher 3 : Remastered'로 기재한 게임의 런처가 ForgePlay v2.0에서 실행되지 않는다고 합니다. 첨부 자료에서 Steam 실행 환경은 확인되지만 게임 실패 시점의 로그가 부족해 원인은 미확인입니다. 그래픽 백엔드와 정확한 게임 빌드도 확인되지 않았습니다.",
+        "ko": "ForgePlay v2.0에서 게임 런처가 실행되지 않는다는 제보입니다. 제보자는 게임 이름을 ‘The Witcher 3 : Remastered’로 적어주셨습니다. 첨부 자료로 Steam에서 실행한 것은 확인했지만, 실패 당시의 로그가 부족해 원인을 파악하지 못했습니다. 사용한 렌더러와 정확한 게임 빌드도 아직 알 수 없습니다.",
         "en": "GitHub issue #31: The launcher for the game reported as 'The Witcher 3 : Remastered' does not start in ForgePlay v2.0. Attachments establish a Steam session but lack logs from the game's failure, so the cause is unconfirmed. The graphics backend and exact game build are also unknown.",
         "de": "GitHub-Issue #31: Der Launcher des als 'The Witcher 3 : Remastered' gemeldeten Spiels startet in ForgePlay v2.0 nicht. Die Anhänge belegen eine Steam-Sitzung, enthalten aber keine ausreichenden Logs zum Spielfehler; die Ursache ist unbestätigt. Grafik-Backend und genauer Spiel-Build sind ebenfalls unbekannt.",
         "es": "Incidencia #31 de GitHub: el lanzador del juego indicado como 'The Witcher 3 : Remastered' no se inicia en ForgePlay v2.0. Los adjuntos confirman una sesión de Steam, pero faltan registros del fallo del juego; la causa no está confirmada. Backend gráfico y compilación exacta del juego desconocidos.",
@@ -2346,7 +2346,7 @@
       "reporter": "맥갤러1",
       "testedAt": null,
       "notes": {
-        "ko": "2.0.0에서 제보했던 FPS가 60을 거의 넘지 못하는 문제와 캐릭터 이동 시작 시 끊김이 ForgePlay 2.1.0에서는 모두 사라졌다는 후속 제보입니다. Retina 모드로 4K 모니터를 사용할 때 화면 선명도에도 매우 만족한다고 합니다. 개선 후 FPS 수치는 별도로 제시되지 않았습니다.",
+        "ko": "2.0.0에서 겪었던 60 FPS를 거의 넘지 못하던 증상과 이동을 시작할 때의 끊김이 ForgePlay 2.1.0에서는 모두 사라졌다는 후속 제보입니다. Retina 모드를 켜고 4K 모니터로 볼 때 화면 선명도에도 매우 만족한다고 합니다. 개선 후의 FPS는 따로 알려주지 않으셨습니다.",
         "en": "Follow-up report: the previously reported FPS rarely exceeding 60 and brief stutter when starting to move in 2.0.0 are both gone in ForgePlay 2.1.0. The reporter is also very satisfied with image clarity when using Retina mode on a 4K monitor. No post-update FPS measurements were provided.",
         "de": "Folgebericht: Die in 2.0.0 gemeldete Bildrate von kaum über 60 FPS und das kurze Ruckeln beim Beginn einer Bewegung sind in ForgePlay 2.1.0 verschwunden. Der Melder ist außerdem mit der Bildschärfe im Retina-Modus auf einem 4K-Monitor sehr zufrieden. FPS-Messwerte nach dem Update wurden nicht angegeben.",
         "es": "Informe de seguimiento: en ForgePlay 2.1.0 han desaparecido tanto los FPS que rara vez superaban 60 como el tirón al comenzar a moverse, reportados en 2.0.0. El informante también está muy satisfecho con la nitidez del modo Retina en un monitor 4K. No se aportaron mediciones de FPS tras la actualización.",
@@ -2369,7 +2369,7 @@
       "reporter": "맥갤러1",
       "testedAt": null,
       "notes": {
-        "ko": "2.0.0에서 제보했던 FPS가 60을 거의 넘지 못하는 문제와 캐릭터 이동 시작 시 끊김이 ForgePlay 2.1.0에서는 모두 사라졌다는 후속 제보입니다. Retina 모드로 4K 모니터를 사용할 때 화면 선명도에도 매우 만족한다고 합니다. 개선 후 FPS 수치는 별도로 제시되지 않았습니다.",
+        "ko": "2.0.0에서 겪었던 60 FPS를 거의 넘지 못하던 증상과 이동을 시작할 때의 끊김이 ForgePlay 2.1.0에서는 모두 사라졌다는 후속 제보입니다. Retina 모드를 켜고 4K 모니터로 볼 때 화면 선명도에도 매우 만족한다고 합니다. 개선 후의 FPS는 따로 알려주지 않으셨습니다.",
         "en": "Follow-up report: the previously reported FPS rarely exceeding 60 and brief stutter when starting to move in 2.0.0 are both gone in ForgePlay 2.1.0. The reporter is also very satisfied with image clarity when using Retina mode on a 4K monitor. No post-update FPS measurements were provided.",
         "de": "Folgebericht: Die in 2.0.0 gemeldete Bildrate von kaum über 60 FPS und das kurze Ruckeln beim Beginn einer Bewegung sind in ForgePlay 2.1.0 verschwunden. Der Melder ist außerdem mit der Bildschärfe im Retina-Modus auf einem 4K-Monitor sehr zufrieden. FPS-Messwerte nach dem Update wurden nicht angegeben.",
         "es": "Informe de seguimiento: en ForgePlay 2.1.0 han desaparecido tanto los FPS que rara vez superaban 60 como el tirón al comenzar a moverse, reportados en 2.0.0. El informante también está muy satisfecho con la nitidez del modo Retina en un monitor 4K. No se aportaron mediciones de FPS tras la actualización.",
@@ -2392,7 +2392,7 @@
       "reporter": "G9aia",
       "testedAt": null,
       "notes": {
-        "ko": "GitHub 이슈 #37 후속 제보 — ForgePlay 2.1.0에서 Steam판 스파이더맨 리마스터를 D3DMetal로 실행하면 그래픽카드 미감지 및 GPU 드라이버 호환성 경고창 2개가 다시 나타납니다. 두 경고를 닫으면 정상적으로 플레이된다고 합니다. 'AMD Compatibility Mode'는 게임의 경고 문구이며 실제 Mac GPU 정보를 뜻하지 않습니다. 개발자 추가 안내: 그래픽카드 인식 경로를 다시 수정했으며 다음 버전에 반영할 예정입니다. 현재 2.1.0에서 경고가 해소됐다는 뜻은 아닙니다.",
+        "ko": "ForgePlay 2.1.0에서 Steam판 스파이더맨 리마스터를 D3DMetal로 실행하면 그래픽카드 인식 및 GPU 드라이버 호환성 경고가 2개 다시 뜬다는 후속 제보입니다. 두 경고를 닫으면 정상적으로 플레이할 수 있습니다. ‘AMD Compatibility Mode’는 게임의 경고 문구이며, 실제 Mac의 GPU 정보를 뜻하지 않습니다.\n\n개발자 안내: 그래픽카드 인식 처리를 다시 수정했으며, 다음 버전에 반영할 예정입니다. 이 제보의 2.1.0에서 경고가 사라졌다는 뜻은 아닙니다.",
         "en": "GitHub issue #37 follow-up: launching the Steam version of Spider-Man Remastered with D3DMetal in ForgePlay 2.1.0 again shows two warnings about an undetected graphics card and GPU driver compatibility. The game reportedly plays normally after both are dismissed. 'AMD Compatibility Mode' is wording from the game, not the actual Mac GPU. Developer note: the graphics-detection path has been revised again for a future release; this does not mean the warnings are resolved in 2.1.0.",
         "de": "Folgebericht aus GitHub-Issue #37: Spider-Man Remastered auf Steam zeigt beim Start mit D3DMetal in ForgePlay 2.1.0 erneut zwei Warnungen zur nicht erkannten Grafikkarte und GPU-Treiberkompatibilität. Nach Bestätigung beider Warnungen ist normales Spielen möglich. 'AMD Compatibility Mode' ist eine Spielmeldung, keine Angabe zur tatsächlichen Mac-GPU. Entwicklerhinweis: Der Erkennungspfad wurde erneut für eine kommende Version überarbeitet; die Warnungen gelten in 2.1.0 nicht als behoben.",
         "es": "Seguimiento de la incidencia #37 de GitHub: Spider-Man Remastered de Steam vuelve a mostrar dos advertencias sobre tarjeta gráfica no detectada y compatibilidad del controlador al iniciarse con D3DMetal en ForgePlay 2.1.0. Se juega con normalidad tras cerrar ambas. 'AMD Compatibility Mode' es un mensaje del juego, no la GPU real del Mac. Nota del desarrollador: se ha revisado de nuevo la detección gráfica para una próxima versión; las advertencias no están resueltas en 2.1.0.",
@@ -2415,7 +2415,7 @@
       "reporter": "맥갤러",
       "testedAt": null,
       "notes": {
-        "ko": "ForgePlay 2.1.0 커뮤니티 제보: M3 Max 풀칩에서 고해상도 Retina 모드를 켜면 화면이 선명하고 전반적으로 원활하게 플레이된다고 합니다. 마우스 감도를 높여 시점을 빠르게 돌릴 때는 약간의 끊김이 남아 있다고 합니다.",
+        "ko": "ForgePlay 2.1.0에서 M3 Max 풀칩으로 테스트한 제보입니다. 고해상도 Retina 모드를 켜면 화면이 선명하고 전반적으로 원활하게 플레이할 수 있습니다. 다만 마우스 감도를 높여 시점을 빠르게 돌리면 약간의 끊김이 남아 있다고 합니다.",
         "en": "Community report for ForgePlay 2.1.0: with high-resolution Retina mode enabled on a full-chip M3 Max, Overwatch 2 reportedly looks crisp and runs smoothly overall. Slight stutter remains during rapid camera turns with high mouse sensitivity.",
         "de": "Community-Bericht zu ForgePlay 2.1.0: Auf einem M3 Max in Vollausstattung wirkt Overwatch 2 mit aktiviertem hochauflösendem Retina-Modus scharf und läuft insgesamt flüssig. Bei schnellen Kameraschwenks mit hoher Mausempfindlichkeit bleibt leichtes Ruckeln.",
         "es": "Informe de la comunidad para ForgePlay 2.1.0: con el modo Retina de alta resolución activado en un M3 Max con todos los núcleos, Overwatch 2 se ve nítido y funciona con fluidez en general. Persisten pequeños tirones al girar rápidamente la cámara con sensibilidad alta del ratón.",
@@ -2437,7 +2437,7 @@
       "source": "project-test",
       "testedAt": null,
       "notes": {
-        "ko": "개발자 테스트: ForgePlay 2.1.0의 EXE 직접 실행으로 실행을 확인했습니다. 테스트 환경은 M4 Pro·통합 메모리 24GB·macOS 27.0.1입니다.",
+        "ko": "ForgePlay 2.1.0에서 EXE 파일로 직접 실행해 동작을 확인했습니다. 테스트 환경은 M4 Pro·통합 메모리 24GB·macOS 27.0.1입니다.",
         "en": "Developer test: confirmed running via direct EXE launch in ForgePlay 2.1.0 on an M4 Pro with 24GB unified memory and macOS 27.0.1.",
         "de": "Entwicklertest: Ausführung über den direkten EXE-Start in ForgePlay 2.1.0 bestätigt. Testumgebung: M4 Pro, 24 GB gemeinsamer Speicher, macOS 27.0.1.",
         "es": "Prueba del desarrollador: ejecución confirmada mediante inicio directo de EXE en ForgePlay 2.1.0. Equipo: M4 Pro, 24GB de memoria unificada y macOS 27.0.1.",
@@ -2459,7 +2459,7 @@
       "source": "project-test",
       "testedAt": null,
       "notes": {
-        "ko": "개발자 테스트: ForgePlay 2.1.0의 EXE 직접 실행으로 실행을 확인했습니다. 테스트 환경은 M4 Pro·통합 메모리 24GB·macOS 27.0.1입니다.",
+        "ko": "ForgePlay 2.1.0에서 EXE 파일로 직접 실행해 동작을 확인했습니다. 테스트 환경은 M4 Pro·통합 메모리 24GB·macOS 27.0.1입니다.",
         "en": "Developer test: confirmed running via direct EXE launch in ForgePlay 2.1.0 on an M4 Pro with 24GB unified memory and macOS 27.0.1.",
         "de": "Entwicklertest: Ausführung über den direkten EXE-Start in ForgePlay 2.1.0 bestätigt. Testumgebung: M4 Pro, 24 GB gemeinsamer Speicher, macOS 27.0.1.",
         "es": "Prueba del desarrollador: ejecución confirmada mediante inicio directo de EXE en ForgePlay 2.1.0. Equipo: M4 Pro, 24GB de memoria unificada y macOS 27.0.1.",
@@ -2481,7 +2481,7 @@
       "source": "project-test",
       "testedAt": null,
       "notes": {
-        "ko": "개발자 테스트: ForgePlay 2.1.0의 EXE 직접 실행으로 실행을 확인했습니다. 테스트 환경은 M4 Pro·통합 메모리 24GB·macOS 27.0.1입니다.",
+        "ko": "ForgePlay 2.1.0에서 EXE 파일로 직접 실행해 동작을 확인했습니다. 테스트 환경은 M4 Pro·통합 메모리 24GB·macOS 27.0.1입니다.",
         "en": "Developer test: confirmed running via direct EXE launch in ForgePlay 2.1.0 on an M4 Pro with 24GB unified memory and macOS 27.0.1.",
         "de": "Entwicklertest: Ausführung über den direkten EXE-Start in ForgePlay 2.1.0 bestätigt. Testumgebung: M4 Pro, 24 GB gemeinsamer Speicher, macOS 27.0.1.",
         "es": "Prueba del desarrollador: ejecución confirmada mediante inicio directo de EXE en ForgePlay 2.1.0. Equipo: M4 Pro, 24GB de memoria unificada y macOS 27.0.1.",
@@ -2503,7 +2503,7 @@
       "source": "project-test",
       "testedAt": null,
       "notes": {
-        "ko": "개발자 테스트: ForgePlay 2.1.0의 EXE 직접 실행으로 실행을 확인했습니다. 테스트 환경은 M4 Pro·통합 메모리 24GB·macOS 27.0.1입니다.",
+        "ko": "ForgePlay 2.1.0에서 EXE 파일로 직접 실행해 동작을 확인했습니다. 테스트 환경은 M4 Pro·통합 메모리 24GB·macOS 27.0.1입니다.",
         "en": "Developer test: confirmed running via direct EXE launch in ForgePlay 2.1.0 on an M4 Pro with 24GB unified memory and macOS 27.0.1.",
         "de": "Entwicklertest: Ausführung über den direkten EXE-Start in ForgePlay 2.1.0 bestätigt. Testumgebung: M4 Pro, 24 GB gemeinsamer Speicher, macOS 27.0.1.",
         "es": "Prueba del desarrollador: ejecución confirmada mediante inicio directo de EXE en ForgePlay 2.1.0. Equipo: M4 Pro, 24GB de memoria unificada y macOS 27.0.1.",
@@ -2525,7 +2525,7 @@
       "source": "project-test",
       "testedAt": "2026-10-05",
       "notes": {
-        "ko": "개발자 테스트: ForgePlay 2.1.0에서 Epic Games판 칼리스토 프로토콜의 원활한 플레이를 확인했습니다. 테스트 환경은 M4 Pro·통합 메모리 24GB·macOS 27.0.1입니다.",
+        "ko": "ForgePlay 2.1.0에서 Epic Games판 칼리스토 프로토콜을 직접 테스트해 원활한 플레이를 확인했습니다. 테스트 환경은 M4 Pro·통합 메모리 24GB·macOS 27.0.1입니다.",
         "en": "Developer test: confirmed smooth gameplay in the Epic Games version of The Callisto Protocol with ForgePlay 2.1.0. Test setup: M4 Pro, 24GB unified memory, macOS 27.0.1.",
         "de": "Entwicklertest: flüssiges Spielen der Epic-Games-Version von The Callisto Protocol mit ForgePlay 2.1.0 bestätigt. Testumgebung: M4 Pro, 24 GB gemeinsamer Speicher, macOS 27.0.1.",
         "es": "Prueba del desarrollador: juego fluido confirmado en la versión de Epic Games de The Callisto Protocol con ForgePlay 2.1.0. Equipo: M4 Pro, 24GB de memoria unificada y macOS 27.0.1.",
@@ -2548,7 +2548,7 @@
       "reporter": "글 내려주세요",
       "testedAt": null,
       "notes": {
-        "ko": "커뮤니티 제보: ForgePlay 2.1.0에서 Steam판 스타듀밸리가 잘 실행된다고 합니다.",
+        "ko": "ForgePlay 2.1.0에서 Steam판 스타듀밸리가 잘 실행된다는 제보입니다.",
         "en": "Community report: the Steam version of Stardew Valley runs well in ForgePlay 2.1.0.",
         "de": "Community-Bericht: Die Steam-Version von Stardew Valley läuft mit ForgePlay 2.1.0 gut.",
         "es": "Informe de la comunidad: la versión de Steam de Stardew Valley funciona bien con ForgePlay 2.1.0.",
@@ -2571,7 +2571,7 @@
       "reporter": "글 내려주세요",
       "testedAt": null,
       "notes": {
-        "ko": "커뮤니티 제보 — 플레이 가능(소리 없음): ForgePlay 2.1.0에서 Steam판 데이브 더 다이버는 정상적으로 실행되고 플레이되지만 소리가 나오지 않는다고 합니다.",
+        "ko": "ForgePlay 2.1.0에서 Steam판 데이브 더 다이버는 정상적으로 실행되고 플레이할 수 있지만, 소리가 나오지 않는다는 제보입니다.",
         "en": "Community report — playable, but no sound: the Steam version of DAVE THE DIVER launches and plays normally in ForgePlay 2.1.0, but no audio is heard.",
         "de": "Community-Bericht — spielbar, aber ohne Ton: Die Steam-Version von DAVE THE DIVER startet und läuft mit ForgePlay 2.1.0 normal, es ist jedoch kein Ton zu hören.",
         "es": "Informe de la comunidad — jugable, pero sin sonido: la versión de Steam de DAVE THE DIVER se inicia y se juega con normalidad en ForgePlay 2.1.0, pero no se oye audio.",
@@ -2594,7 +2594,7 @@
       "reporter": "쩌니",
       "testedAt": null,
       "notes": {
-        "ko": "커뮤니티 추가 제보: ForgePlay 2.1.0에서 정상 플레이 가능하며 약 120 FPS가 나온다고 합니다. 채팅창을 열 때 영문 입력 상태에서는 Enter가 정상 작동하지만, 한글 입력 상태에서는 두 번 작동하는 문제가 있습니다. POE 1의 프레임 생성 사용 여부는 확인되지 않았습니다. 테스트 기기는 M5 Max 풀칩·통합 메모리 128GB이며, 실행 플랫폼과 macOS 버전은 미확인입니다.\n\n개발자 추가 안내: 해당 입력 문제를 확인했으며, 다음 버전에서 조치할 예정입니다.",
+        "ko": "ForgePlay 2.1.0에서 약 120 FPS로 정상 플레이할 수 있다는 추가 제보입니다. 채팅창을 열 때 영문 입력 상태에서는 Enter가 정상 작동하지만, 한글 입력 상태에서는 두 번 눌린 것처럼 처리됩니다. POE 1에서 프레임 생성을 사용했는지는 따로 알려주지 않으셨습니다. 기기는 M5 Max 풀칩·통합 메모리 128GB이며, 실행 플랫폼과 macOS 버전은 아직 알 수 없습니다.\n\n개발자 안내: 해당 입력 문제를 확인했으며, 다음 버전에서 수정할 예정입니다.",
         "en": "Additional community report: playable in ForgePlay 2.1.0 at about 120 FPS. Enter opens chat normally with English input selected, but triggers twice with Korean input selected. Whether frame generation was enabled in POE 1 was not specified. Test hardware: full-configuration M5 Max with 128GB unified memory. Launch platform and macOS version are unconfirmed.\n\nDeveloper note: The reported input issue has been confirmed and is planned to be addressed in the next version.",
         "de": "Weiterer Community-Bericht: Mit ForgePlay 2.1.0 bei etwa 120 FPS spielbar. Bei englischer Eingabe öffnet Enter den Chat normal; bei koreanischer Eingabe wird Enter zweimal ausgelöst. Ob Frame-Generierung in POE 1 aktiviert war, wurde nicht angegeben. Testgerät: M5 Max in Vollausstattung mit 128 GB gemeinsamem Speicher. Startplattform und macOS-Version sind unbekannt.\n\nErgänzung des Entwicklers: Das gemeldete Eingabeproblem wurde bestätigt und soll in der nächsten Version behoben werden.",
         "es": "Nuevo informe de la comunidad: se puede jugar con ForgePlay 2.1.0 a unos 120 FPS. Enter abre el chat normalmente con la entrada en inglés, pero se activa dos veces con la entrada en coreano. No se indicó si POE 1 usaba generación de fotogramas. Equipo: M5 Max en configuración completa con 128GB de memoria unificada. Plataforma de ejecución y versión de macOS sin confirmar.\n\nNota del desarrollador: Se ha confirmado el problema de entrada descrito y está previsto corregirlo en la próxima versión.",
@@ -2617,7 +2617,7 @@
       "reporter": "쩌니",
       "testedAt": null,
       "notes": {
-        "ko": "커뮤니티 추가 제보: ForgePlay 2.1.0에서 정상 플레이 가능하며 약 65 FPS, 프레임 생성(FG)을 켜면 약 92 FPS가 나온다고 합니다. 채팅창을 열 때 영문 입력 상태에서는 Enter가 정상 작동하지만, 한글 입력 상태에서는 두 번 작동하는 문제가 있습니다. 테스트 기기는 M5 Max 풀칩·통합 메모리 128GB이며, 실행 플랫폼과 macOS 버전은 미확인입니다.\n\n개발자 추가 안내: 해당 입력 문제를 확인했으며, 다음 버전에서 조치할 예정입니다.",
+        "ko": "ForgePlay 2.1.0에서 약 65 FPS로 정상 플레이할 수 있고, 프레임 생성(FG)을 켜면 약 92 FPS가 나온다는 추가 제보입니다. 채팅창을 열 때 영문 입력 상태에서는 Enter가 정상 작동하지만, 한글 입력 상태에서는 두 번 눌린 것처럼 처리됩니다. 기기는 M5 Max 풀칩·통합 메모리 128GB이며, 실행 플랫폼과 macOS 버전은 아직 알 수 없습니다.\n\n개발자 안내: 해당 입력 문제를 확인했으며, 다음 버전에서 수정할 예정입니다.",
         "en": "Additional community report: playable in ForgePlay 2.1.0 at about 65 FPS, or about 92 FPS with frame generation (FG) enabled. Enter opens chat normally with English input selected, but triggers twice with Korean input selected. Test hardware: full-configuration M5 Max with 128GB unified memory. Launch platform and macOS version are unconfirmed.\n\nDeveloper note: The reported input issue has been confirmed and is planned to be addressed in the next version.",
         "de": "Weiterer Community-Bericht: Mit ForgePlay 2.1.0 bei etwa 65 FPS spielbar, mit aktivierter Frame-Generierung (FG) bei etwa 92 FPS. Bei englischer Eingabe öffnet Enter den Chat normal; bei koreanischer Eingabe wird Enter zweimal ausgelöst. Testgerät: M5 Max in Vollausstattung mit 128 GB gemeinsamem Speicher. Startplattform und macOS-Version sind unbekannt.\n\nErgänzung des Entwicklers: Das gemeldete Eingabeproblem wurde bestätigt und soll in der nächsten Version behoben werden.",
         "es": "Nuevo informe de la comunidad: se puede jugar con ForgePlay 2.1.0 a unos 65 FPS, o unos 92 FPS con la generación de fotogramas (FG) activada. Enter abre el chat normalmente con la entrada en inglés, pero se activa dos veces con la entrada en coreano. Equipo: M5 Max en configuración completa con 128GB de memoria unificada. Plataforma de ejecución y versión de macOS sin confirmar.\n\nNota del desarrollador: Se ha confirmado el problema de entrada descrito y está previsto corregirlo en la próxima versión.",
@@ -2640,7 +2640,7 @@
       "reporter": "쩌니",
       "testedAt": null,
       "notes": {
-        "ko": "커뮤니티 제보 — 플레이 가능하나 키보드 입력 문제 있음: ForgePlay 2.1.0에서 라스트 에폭을 정상적으로 플레이할 수 있다고 제보했지만, 키보드 입력은 전혀 인식되지 않는 것 같다고 합니다. 테스트 기기는 M5 Max 풀칩·통합 메모리 128GB이며, 실행 플랫폼과 macOS 버전은 미확인입니다.\n\n개발자 추가 안내: 해당 입력 문제를 확인했으며, 다음 버전에서 조치할 예정입니다.",
+        "ko": "ForgePlay 2.1.0에서 라스트 에폭을 플레이할 수 있다는 제보지만, 키보드 입력은 전혀 인식되지 않는 것 같다고 합니다. 기기는 M5 Max 풀칩·통합 메모리 128GB이며, 실행 플랫폼과 macOS 버전은 아직 알 수 없습니다.\n\n개발자 안내: 해당 입력 문제를 확인했으며, 다음 버전에서 수정할 예정입니다.",
         "en": "Community report — playable, with a keyboard-input issue: the reporter says Last Epoch is playable in ForgePlay 2.1.0, but keyboard input appears not to be recognized at all. Test hardware: full-configuration M5 Max with 128GB unified memory. Launch platform and macOS version are unconfirmed.\n\nDeveloper note: The reported input issue has been confirmed and is planned to be addressed in the next version.",
         "de": "Community-Bericht — spielbar, aber mit Tastatureingabeproblem: Laut Melder lässt sich Last Epoch mit ForgePlay 2.1.0 spielen, Tastatureingaben werden jedoch offenbar überhaupt nicht erkannt. Testgerät: M5 Max in Vollausstattung mit 128 GB gemeinsamem Speicher. Startplattform und macOS-Version sind unbekannt.\n\nErgänzung des Entwicklers: Das gemeldete Eingabeproblem wurde bestätigt und soll in der nächsten Version behoben werden.",
         "es": "Informe de la comunidad — jugable, con un problema de teclado: el informante indica que Last Epoch se puede jugar con ForgePlay 2.1.0, pero parece que no reconoce ninguna entrada del teclado. Equipo: M5 Max en configuración completa con 128GB de memoria unificada. Plataforma de ejecución y versión de macOS sin confirmar.\n\nNota del desarrollador: Se ha confirmado el problema de entrada descrito y está previsto corregirlo en la próxima versión.",
@@ -2663,7 +2663,7 @@
       "reporter": "Moneyya",
       "testedAt": null,
       "notes": {
-        "ko": "GitHub 이슈 제보: ForgePlay 2.1.0(빌드 7)에서 역전재판 123 나루호도 셀렉션이 실행되지 않는다고 합니다. 실행 플랫폼은 Steam입니다. 그래픽 백엔드와 게임 버전은 기재되지 않았으며 정확한 원인은 미확인입니다.\n\n개발자 추가 안내: 이 게임은 App Store에서 서비스 중이므로, 별도의 호환성 조치는 계획하고 있지 않습니다. 개발 중인 가상 머신(VM) 기능이 완성되면 이를 통한 실행이 가능할 것으로 예상하지만, 실제 VM 실행 여부는 아직 확인되지 않았습니다.",
+        "ko": "ForgePlay 2.1.0(빌드 7)에서 Steam판 역전재판 123 나루호도 셀렉션이 실행되지 않는다는 제보입니다. 사용한 렌더러와 게임 버전은 알려주지 않으셨으며, 정확한 원인도 아직 알 수 없습니다.\n\n개발자 안내: App Store에서 서비스 중인 게임이라 별도의 호환성 조치는 계획하고 있지 않습니다. 개발 중인 가상 머신(VM)이 완성되면 실행할 수 있을 것으로 예상하지만, 아직 실제로 확인한 것은 아닙니다.",
         "en": "GitHub issue report: Phoenix Wright: Ace Attorney Trilogy does not launch in ForgePlay 2.1.0 (build 7). The launch platform is Steam. The graphics backend and game version were not specified, and the cause is unconfirmed.\n\nDeveloper note: As this game is available on the App Store, no game-specific compatibility workaround is currently planned. The developer expects the game may run through the virtual machine (VM) feature once development is complete, but actual VM compatibility has not yet been verified.",
         "de": "GitHub-Issue-Bericht: Phoenix Wright: Ace Attorney Trilogy startet mit ForgePlay 2.1.0 (Build 7) nicht. Die Startplattform ist Steam. Grafik-Backend und Spielversion wurden nicht angegeben; die Ursache ist ungeklärt.\n\nErgänzung des Entwicklers: Da dieses Spiel im App Store erhältlich ist, ist derzeit keine gesonderte Kompatibilitätsanpassung geplant. Es wird erwartet, dass das Spiel nach Abschluss der Entwicklung über die Funktion für virtuelle Maschinen (VM) laufen könnte. Die tatsächliche VM-Kompatibilität wurde noch nicht bestätigt.",
         "es": "Reporte de GitHub: Phoenix Wright: Ace Attorney Trilogy no se inicia en ForgePlay 2.1.0 (compilación 7). La plataforma de ejecución es Steam. No se indicaron el backend gráfico ni la versión del juego; la causa no está confirmada.\n\nNota del desarrollador: Puesto que este juego está disponible en el App Store, por ahora no se prevé una solución de compatibilidad específica. Se espera que pueda ejecutarse mediante la función de máquina virtual (VM) cuando termine su desarrollo, pero su compatibilidad real con VM aún no se ha verificado.",
@@ -2686,7 +2686,7 @@
       "reporter": "E-Schmacher",
       "testedAt": "2026-10-14",
       "notes": {
-        "ko": "GitHub 이슈 후속 제보 — 실행 불가: ForgePlay 2.2.1(빌드 9), Steam 빌드 25773555, DXMT 환경에서 호환성 보완 적용 후에도 REDlauncher가 종료되며 게임 본체의 시작은 확인되지 않았습니다. 이번 기록은 DXMT 실행 결과입니다. 제보자가 철회한 D3DMetal NVIDIA와 DXMT의 독립 비교 결과는 포함하지 않습니다. 정확한 종료 원인은 미확인입니다.",
+        "ko": "ForgePlay 2.2.1(빌드 9)에서 호환성 설정을 적용해도 REDlauncher가 종료되어 게임을 시작하지 못했다는 제보입니다. Steam 빌드 25773555를 DXMT로 실행한 결과입니다. 처음에 D3DMetal NVIDIA와 DXMT 모두 실패했다고 한 내용은 제보자가 정정했습니다. D3DMetal NVIDIA에서도 같은 문제가 생기는지는 이 제보만으로 알 수 없습니다. 정확한 종료 원인은 아직 알 수 없습니다.",
         "en": "GitHub follow-up — does not launch: with ForgePlay 2.2.1 (build 9), Steam build 25773555 and DXMT, REDlauncher exits despite the compatibility workaround; the main game was not observed starting. This record covers DXMT only. The reporter withdrew the claimed independent D3DMetal NVIDIA/DXMT comparison. The exact cause is unconfirmed.",
         "de": "GitHub-Folgebericht — startet nicht: Mit ForgePlay 2.2.1 (Build 9), Steam-Build 25773555 und DXMT beendet sich REDlauncher trotz Kompatibilitätsanpassung; ein Start des eigentlichen Spiels wurde nicht beobachtet. Dieser Eintrag gilt nur für DXMT. Der Melder zog den behaupteten unabhängigen Vergleich mit D3DMetal NVIDIA zurück. Die genaue Ursache ist ungeklärt.",
         "es": "Seguimiento de GitHub — no se inicia: con ForgePlay 2.2.1 (compilación 9), build de Steam 25773555 y DXMT, REDlauncher se cierra pese al ajuste de compatibilidad; no se observó el inicio del juego principal. Este registro solo cubre DXMT. El informante retiró la comparación independiente con D3DMetal NVIDIA. La causa exacta no está confirmada.",
@@ -2709,7 +2709,7 @@
       "reporter": "E-Schmacher",
       "testedAt": "2026-10-14",
       "notes": {
-        "ko": "GitHub 이슈 후속 제보 — 실행 불가: ForgePlay 2.2.1(빌드 9)의 Steam 환경에서 D3DMetal NVIDIA를 선택해 실행했으나 Mortal.exe가 약 2초 후 종료되고 게임 창이 나타나지 않았습니다. 제보자는 모든 실행 옵션에서 동일하다는 설명을 철회했습니다. 다른 렌더러의 독립 비교와 정확한 종료 원인은 확인되지 않았습니다.",
+        "ko": "게임 창이 뜨지 않고 Mortal.exe가 약 2초 후 종료된다는 제보입니다. ForgePlay 2.2.1(빌드 9)의 Steam 환경에서 D3DMetal NVIDIA를 선택한 상태였습니다. 처음에 모든 실행 옵션에서 같은 증상이 있었다고 한 내용은 제보자가 정정했습니다. 다른 렌더러에서도 같은 문제가 생기는지, 왜 종료되는지는 아직 알 수 없습니다.",
         "en": "GitHub follow-up — does not launch: on Steam with ForgePlay 2.2.1 (build 9), D3DMetal NVIDIA was selected, but Mortal.exe exited after about two seconds without a game window. The reporter withdrew the claim that every option behaved identically. Independent tests of other renderers and the exact cause are unconfirmed.",
         "de": "GitHub-Folgebericht — startet nicht: Unter Steam mit ForgePlay 2.2.1 (Build 9) war D3DMetal NVIDIA gewählt, doch Mortal.exe endete nach etwa zwei Sekunden ohne Spielfenster. Die Aussage, alle Optionen verhielten sich gleich, wurde zurückgezogen. Unabhängige Tests anderer Renderer und die genaue Ursache sind nicht bestätigt.",
         "es": "Seguimiento de GitHub — no se inicia: en Steam con ForgePlay 2.2.1 (compilación 9) se seleccionó D3DMetal NVIDIA, pero Mortal.exe terminó tras unos dos segundos sin mostrar ventana. El informante retiró que todas las opciones daban el mismo resultado. No están confirmadas las pruebas independientes de otros renderizadores ni la causa exacta.",
@@ -2732,7 +2732,7 @@
       "reporter": "KFCBucketCat",
       "testedAt": "2026-10-14",
       "notes": {
-        "ko": "GitHub 이슈 후속 제보 — 플레이 가능(동영상 재생 제한): ForgePlay 2.2.1(빌드 9), Steam, D3DMetal NVIDIA에서 실행·내정·전투·엔딩까지 진행할 수 있습니다. 다만 엔딩·이벤트·앨범 모드의 동영상은 검은 화면으로 재생되지 않습니다. Steam Cloud 경고와 첫 동기화 시 일부 누락이 있었으나 재실행 후 모두 동기화됐다고 합니다. 저장 데이터 손상이 확인된 것은 아닙니다.\n\n이전 2.0.0 실행 불가 제보에 대한 동일 제보자의 2.2.1 후속 결과입니다.",
+        "ko": "ForgePlay 2.2.1(빌드 9)에서는 게임을 실행해 내정·전투·엔딩까지 진행할 수 있다는 후속 제보입니다. Steam에서 D3DMetal NVIDIA를 사용했습니다. 다만 엔딩·이벤트·앨범 모드의 동영상은 재생되지 않고 검은 화면으로 나옵니다.\n\nSteam Cloud 경고가 떴고 처음에는 일부 데이터만 동기화됐지만, 게임을 다시 실행한 뒤에는 모두 동기화됐다고 합니다. 저장 데이터가 손상됐다는 내용은 확인되지 않았습니다. 앞서 2.0.0에서 실행되지 않는다고 했던 같은 제보자가 다시 확인해 주신 결과입니다.",
         "en": "GitHub follow-up — playable with video limitations: ForgePlay 2.2.1 (build 9), Steam, D3DMetal NVIDIA. Launch, domestic affairs, battles and progression through the ending work, but ending, event and album-mode videos show a black screen. A Steam Cloud warning and incomplete first sync were reported; all data synced after relaunch. Save corruption was not established.\n\nThis is the same reporter’s 2.2.1 follow-up to the earlier failed-launch report for 2.0.0.",
         "de": "GitHub-Folgebericht — mit Videoeinschränkungen spielbar: ForgePlay 2.2.1 (Build 9), Steam, D3DMetal NVIDIA. Start, Verwaltung, Kämpfe und Fortschritt bis zum Ende funktionieren; End-, Ereignis- und Albumvideos bleiben jedoch schwarz. Nach Cloud-Warnung und zunächst unvollständiger Synchronisierung waren beim erneuten Start alle Daten synchronisiert. Eine Beschädigung der Spielstände wurde nicht festgestellt.\n\nDies ist die 2.2.1-Folgemeldung desselben Melders zum fehlgeschlagenen Start unter 2.0.0.",
         "es": "Seguimiento de GitHub — jugable con limitaciones de vídeo: ForgePlay 2.2.1 (compilación 9), Steam, D3DMetal NVIDIA. Funcionan el inicio, la gestión, las batallas y el avance hasta el final, pero los vídeos del final, eventos y álbum aparecen negros. Tras una advertencia de Steam Cloud y una primera sincronización incompleta, al reiniciar se sincronizó todo. No se confirmó corrupción de partidas.\n\nEste es el seguimiento en 2.2.1 del mismo informante que reportó el fallo de inicio en 2.0.0.",
@@ -2755,7 +2755,7 @@
       "reporter": "KFCBucketCat",
       "testedAt": "2026-10-14",
       "notes": {
-        "ko": "GitHub 이슈 후속 제보 — 실행 불가: ForgePlay 2.2.1(빌드 9), Steam, D3DMetal NVIDIA 환경에서 SAN13Launcher.exe 실행 중 Wine 충돌 안내가 나타나고 종료됩니다. 게임 본체의 시작은 확인되지 않았습니다. 런처 단계의 실패이며 정확한 충돌 원인은 미확인입니다.",
+        "ko": "ForgePlay 2.2.1(빌드 9)의 Steam 환경에서 D3DMetal NVIDIA를 선택해 실행한 제보입니다. SAN13Launcher.exe에서 Wine 오류 안내가 뜬 뒤 종료되며, 게임 본편은 시작하지 못했습니다. 런처에서 문제가 생겼지만 정확한 원인은 아직 알 수 없습니다.",
         "en": "GitHub follow-up — does not launch: with ForgePlay 2.2.1 (build 9), Steam and D3DMetal NVIDIA, SAN13Launcher.exe exits with a Wine crash dialog. The main game was not observed starting. Failure is at the launcher stage; the exact cause is unconfirmed.",
         "de": "GitHub-Folgebericht — startet nicht: Mit ForgePlay 2.2.1 (Build 9), Steam und D3DMetal NVIDIA endet SAN13Launcher.exe mit einer Wine-Absturzmeldung. Ein Start des eigentlichen Spiels wurde nicht beobachtet. Der Fehler liegt in der Launcher-Phase; die genaue Ursache ist ungeklärt.",
         "es": "Seguimiento de GitHub — no se inicia: con ForgePlay 2.2.1 (compilación 9), Steam y D3DMetal NVIDIA, SAN13Launcher.exe se cierra mostrando un error de Wine. No se observó el inicio del juego principal. El fallo ocurre en el lanzador; la causa exacta no está confirmada.",
@@ -2778,7 +2778,7 @@
       "reporter": "KFCBucketCat",
       "testedAt": "2026-10-14",
       "notes": {
-        "ko": "GitHub 이슈 후속 제보 — 실행 불가: ForgePlay 2.2.1(빌드 9), Steam, D3DMetal NVIDIA 환경에서 SAN14_Launcher.exe 실행 중 Wine 충돌 안내가 나타나고 종료됩니다. 게임 본체의 시작은 확인되지 않았습니다. 런처 단계의 실패이며 정확한 충돌 원인은 미확인입니다.",
+        "ko": "ForgePlay 2.2.1(빌드 9)의 Steam 환경에서 D3DMetal NVIDIA를 선택해 실행한 제보입니다. SAN14_Launcher.exe에서 Wine 오류 안내가 뜬 뒤 종료되며, 게임 본편은 시작하지 못했습니다. 런처에서 문제가 생겼지만 정확한 원인은 아직 알 수 없습니다.",
         "en": "GitHub follow-up — does not launch: with ForgePlay 2.2.1 (build 9), Steam and D3DMetal NVIDIA, SAN14_Launcher.exe exits with a Wine crash dialog. The main game was not observed starting. Failure is at the launcher stage; the exact cause is unconfirmed.",
         "de": "GitHub-Folgebericht — startet nicht: Mit ForgePlay 2.2.1 (Build 9), Steam und D3DMetal NVIDIA endet SAN14_Launcher.exe mit einer Wine-Absturzmeldung. Ein Start des eigentlichen Spiels wurde nicht beobachtet. Der Fehler liegt in der Launcher-Phase; die genaue Ursache ist ungeklärt.",
         "es": "Seguimiento de GitHub — no se inicia: con ForgePlay 2.2.1 (compilación 9), Steam y D3DMetal NVIDIA, SAN14_Launcher.exe se cierra mostrando un error de Wine. No se observó el inicio del juego principal. El fallo ocurre en el lanzador; la causa exacta no está confirmada.",
@@ -2801,7 +2801,7 @@
       "reporter": "KFCBucketCat",
       "testedAt": "2026-10-14",
       "notes": {
-        "ko": "GitHub 이슈 후속 제보 — 챕터 전환에서 진행 불가(초반만 플레이 가능): ForgePlay 2.2.1(빌드 9), Steam, D3DMetal NVIDIA에서 최초 설정과 초반 스토리는 진행할 수 있습니다. 오프닝 영상의 검은 화면은 ESC로 넘길 수 있으나, OT 이후 다음 챕터의 검은 화면에서는 ESC도 통하지 않아 강제 종료했다고 합니다. 제보의 원래 분류는 Playable with issues입니다. 정상 완주 가능한 상태로 확인된 것이 아니며, 정확한 원인은 미확인입니다.",
+        "ko": "초반 플레이는 가능하지만, 다음 챕터로 넘어갈 때 진행이 막힌다는 제보입니다. ForgePlay 2.2.1(빌드 9)의 Steam 환경에서 D3DMetal NVIDIA를 사용했으며, 최초 설정과 초반 스토리까지는 진행할 수 있었습니다.\n\n오프닝 영상이 검게 나오는 문제는 ESC로 넘길 수 있지만, OT 이후 다음 챕터에서 나오는 검은 화면은 ESC로도 넘길 수 없어 게임을 강제 종료했다고 합니다. 제보자는 문제가 있지만 일부 플레이는 가능하다고 분류했습니다. 끝까지 플레이한 결과는 아니며, 정확한 원인은 아직 알 수 없습니다.",
         "en": "GitHub follow-up — progression blocked at a chapter transition; only the opening section is playable: ForgePlay 2.2.1 (build 9), Steam, D3DMetal NVIDIA. Initial setup and early story work. ESC skips the black opening video, but the black screen at the next chapter after orientation cannot be skipped, requiring a forced exit. The reporter selected Playable with issues. Completing the game is not confirmed; the exact cause is unknown.",
         "de": "GitHub-Folgebericht — Fortschritt beim Kapitelwechsel blockiert, nur der Anfang spielbar: ForgePlay 2.2.1 (Build 9), Steam, D3DMetal NVIDIA. Einrichtung und frühe Geschichte funktionieren. Das schwarze Intro lässt sich mit ESC überspringen; der schwarze Bildschirm beim nächsten Kapitel nach der Einführung jedoch nicht, weshalb das Spiel erzwungen beendet wurde. Die Meldung war als Playable with issues eingestuft. Vollständiges Durchspielen ist nicht bestätigt; die Ursache ist ungeklärt.",
         "es": "Seguimiento de GitHub — avance bloqueado al cambiar de capítulo; solo el inicio es jugable: ForgePlay 2.2.1 (compilación 9), Steam, D3DMetal NVIDIA. Funcionan la configuración y la historia inicial. ESC omite el vídeo inicial negro, pero no la pantalla negra del siguiente capítulo tras la orientación, por lo que hubo que forzar la salida. El informante eligió Playable with issues. No se confirma que pueda completarse; causa desconocida.",
@@ -2824,7 +2824,7 @@
       "reporter": "oren88",
       "testedAt": null,
       "notes": {
-        "ko": "GitHub 이슈 제보 — 플레이 가능: Steam판 역전재판 456 오도로키 셀렉션이 ForgePlay 2.2.1에서 현재까지 정상적으로 플레이된다고 합니다. 첫 실행 때 로딩이 길게 느껴졌다는 의견은 있으나 측정값과 로그는 없습니다. 렌더러·게임 빌드는 미보고이며, 로딩의 원인을 특정 게임 엔진이나 셰이더로 확정하지 않습니다.",
+        "ko": "Steam판 역전재판 456 오도로키 셀렉션을 ForgePlay 2.2.1에서 지금까지 문제없이 플레이하고 있다는 제보입니다. 첫 실행 때 로딩이 오래 걸리는 느낌이 있었다고 하지만, 측정한 시간이나 로그가 없어 원인은 아직 알 수 없습니다. 특정 게임 엔진이나 셰이더 때문이라고 단정할 수는 없습니다. 사용한 렌더러와 게임 빌드도 따로 알려주지 않으셨습니다.",
         "en": "GitHub report — playable: the Steam version of Apollo Justice: Ace Attorney Trilogy has played normally so far in ForgePlay 2.2.1. The first launch felt slow to load, but no measurements or logs were supplied. Renderer and game build are unreported; no particular engine or shader cause is established.",
         "de": "GitHub-Bericht — spielbar: Apollo Justice: Ace Attorney Trilogy auf Steam läuft laut Bericht bisher normal mit ForgePlay 2.2.1. Das erste Laden wirkte lang, jedoch ohne Messwerte oder Logs. Renderer und Spiel-Build sind nicht angegeben; eine Engine- oder Shader-Ursache ist nicht belegt.",
         "es": "Reporte de GitHub — jugable: Apollo Justice: Ace Attorney Trilogy en Steam funciona con normalidad hasta ahora con ForgePlay 2.2.1. La primera carga pareció larga, pero no hay mediciones ni registros. No se indicaron renderizador ni build del juego; no se establece una causa de motor o sombreadores.",
@@ -2847,7 +2847,7 @@
       "reporter": "맥갤러",
       "testedAt": null,
       "notes": {
-        "ko": "커뮤니티 제보 — 플레이 가능: 연운이 ForgePlay 2.2.1에서 잘 실행된다고 합니다. 개발자가 전달한 시험 환경은 M5 Pro·통합 메모리 64GB·macOS 27.0.1입니다. 실행 플랫폼·렌더러·게임 버전과 구체적인 성능 수치는 미확인입니다.",
+        "ko": "연운이 ForgePlay 2.2.1에서 잘 실행된다는 제보입니다. 개발자가 전달한 기기 정보는 M5 Pro·통합 메모리 64GB·macOS 27.0.1입니다. 실행 플랫폼, 렌더러, 게임 버전과 구체적인 성능 수치는 아직 알 수 없습니다.",
         "en": "Community report — playable: Where Winds Meet runs well in ForgePlay 2.2.1. Test environment supplied by the developer: M5 Pro, 64GB unified memory, macOS 27.0.1. Launch platform, renderer, game version and specific performance figures are unconfirmed.",
         "de": "Community-Bericht — spielbar: Where Winds Meet läuft laut Meldung gut mit ForgePlay 2.2.1. Vom Entwickler übermittelte Testumgebung: M5 Pro, 64 GB gemeinsamer Speicher, macOS 27.0.1. Startplattform, Renderer, Spielversion und genaue Leistungswerte sind unbestätigt.",
         "es": "Informe de la comunidad — jugable: Where Winds Meet funciona bien con ForgePlay 2.2.1. Entorno comunicado por el desarrollador: M5 Pro, 64GB de memoria unificada y macOS 27.0.1. Plataforma, renderizador, versión del juego y cifras de rendimiento sin confirmar.",
