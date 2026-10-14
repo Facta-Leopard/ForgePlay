@@ -1,9 +1,30 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
-  "updatedAt": "2026-10-12",
+  "updatedAt": "2026-10-14",
   "revision": 0,
   "testProfiles": [
+    {
+      "id": "apple-silicon-m5-pro-64gb-macos-27-0-1",
+      "platform": "Apple Silicon Mac",
+      "chip": "M5 Pro",
+      "unifiedMemoryGB": 64,
+      "macOSVersion": "27.0.1"
+    },
+    {
+      "id": "apple-silicon-m5-pro-24gb-macos-27-0-1",
+      "platform": "Apple Silicon Mac",
+      "chip": "M5 Pro",
+      "unifiedMemoryGB": 24,
+      "macOSVersion": "27.0.1"
+    },
+    {
+      "id": "macbook-air-m5-16gb-macos-27-0-1",
+      "platform": "MacBook Air",
+      "chip": "M5",
+      "unifiedMemoryGB": 16,
+      "macOSVersion": "27.0.1"
+    },
     {
       "id": "apple-silicon-m2-max-32gb-golden-gate-27-2",
       "platform": "Apple Silicon Mac",
@@ -223,6 +244,20 @@
     }
   ],
   "games": [
+    {
+      "id": "where-winds-meet",
+      "titles": {
+        "en": "Where Winds Meet",
+        "ko": "연운"
+      }
+    },
+    {
+      "id": "apollo-justice-ace-attorney-trilogy",
+      "titles": {
+        "en": "Apollo Justice: Ace Attorney Trilogy",
+        "ko": "역전재판 456 오도로키 셀렉션"
+      }
+    },
     {
       "id": "dasi-gireul-geotda",
       "titles": {
@@ -2638,6 +2673,190 @@
         "zh-Hant": "GitHub Issue 回報：逆轉裁判123 成步堂精選集在 ForgePlay 2.1.0（組建 7）中無法啟動。執行平台為 Steam。未註明圖形後端及遊戲版本，具體原因尚未確認。\n\n開發者補充說明：由於本遊戲已在 App Store 上架，目前不計畫為其提供專門的相容性修正。開發者預計，開發中的虛擬機器（VM）功能完成後可能能夠執行本遊戲，但實際的 VM 相容性尚未驗證。"
       },
       "blocker": "unknown"
+    },
+    {
+      "id": "the-witcher-3-github-46-20261014",
+      "gameId": "the-witcher-3",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m5-pro-64gb-macos-27-0-1",
+      "forgePlayVersion": "2.2.1",
+      "gameVersion": "25773555",
+      "status": "blocked",
+      "source": "github-issue",
+      "reporter": "E-Schmacher",
+      "testedAt": "2026-10-14",
+      "notes": {
+        "ko": "GitHub 이슈 후속 제보 — 실행 불가: ForgePlay 2.2.1(빌드 9), Steam 빌드 25773555, DXMT 환경에서 호환성 보완 적용 후에도 REDlauncher가 종료되며 게임 본체의 시작은 확인되지 않았습니다. 이번 기록은 DXMT 실행 결과입니다. 제보자가 철회한 D3DMetal NVIDIA와 DXMT의 독립 비교 결과는 포함하지 않습니다. 정확한 종료 원인은 미확인입니다.",
+        "en": "GitHub follow-up — does not launch: with ForgePlay 2.2.1 (build 9), Steam build 25773555 and DXMT, REDlauncher exits despite the compatibility workaround; the main game was not observed starting. This record covers DXMT only. The reporter withdrew the claimed independent D3DMetal NVIDIA/DXMT comparison. The exact cause is unconfirmed.",
+        "de": "GitHub-Folgebericht — startet nicht: Mit ForgePlay 2.2.1 (Build 9), Steam-Build 25773555 und DXMT beendet sich REDlauncher trotz Kompatibilitätsanpassung; ein Start des eigentlichen Spiels wurde nicht beobachtet. Dieser Eintrag gilt nur für DXMT. Der Melder zog den behaupteten unabhängigen Vergleich mit D3DMetal NVIDIA zurück. Die genaue Ursache ist ungeklärt.",
+        "es": "Seguimiento de GitHub — no se inicia: con ForgePlay 2.2.1 (compilación 9), build de Steam 25773555 y DXMT, REDlauncher se cierra pese al ajuste de compatibilidad; no se observó el inicio del juego principal. Este registro solo cubre DXMT. El informante retiró la comparación independiente con D3DMetal NVIDIA. La causa exacta no está confirmada.",
+        "fr": "Suivi GitHub — ne démarre pas : avec ForgePlay 2.2.1 (build 9), le build Steam 25773555 et DXMT, REDlauncher se ferme malgré l’adaptation de compatibilité ; le démarrage du jeu principal n’a pas été observé. Ce relevé concerne seulement DXMT. La comparaison indépendante avec D3DMetal NVIDIA a été retirée par la personne. La cause exacte reste inconnue.",
+        "ja": "GitHub追加報告 — 起動不可：ForgePlay 2.2.1（ビルド9）、Steamビルド25773555、DXMTで互換対応を適用してもREDlauncherが終了し、ゲーム本体の起動は確認できませんでした。この記録はDXMTのみの結果です。報告者が撤回したD3DMetal NVIDIAとの独立比較は含めません。終了原因は未確認です。",
+        "zh-Hans": "GitHub 后续反馈 — 无法启动：ForgePlay 2.2.1（构建 9）、Steam 构建 25773555、DXMT 环境下，即使应用兼容性调整，REDlauncher 仍会退出，未观察到游戏本体启动。本记录仅代表 DXMT；反馈者已撤回与 D3DMetal NVIDIA 独立对比的说法。具体退出原因未确认。",
+        "zh-Hant": "GitHub 後續回報 — 無法啟動：ForgePlay 2.2.1（組建 9）、Steam 組建 25773555、DXMT 環境下，即使套用相容性調整，REDlauncher 仍會結束，未觀察到遊戲本體啟動。本紀錄僅代表 DXMT；回報者已撤回與 D3DMetal NVIDIA 獨立比較的說法。具體結束原因未確認。"
+      },
+      "blocker": "launcher"
+    },
+    {
+      "id": "legend-of-mortal-github-47-20261014",
+      "gameId": "legend-of-mortal",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m5-pro-64gb-macos-27-0-1",
+      "forgePlayVersion": "2.2.1",
+      "gameVersion": null,
+      "status": "blocked",
+      "source": "github-issue",
+      "reporter": "E-Schmacher",
+      "testedAt": "2026-10-14",
+      "notes": {
+        "ko": "GitHub 이슈 후속 제보 — 실행 불가: ForgePlay 2.2.1(빌드 9)의 Steam 환경에서 D3DMetal NVIDIA를 선택해 실행했으나 Mortal.exe가 약 2초 후 종료되고 게임 창이 나타나지 않았습니다. 제보자는 모든 실행 옵션에서 동일하다는 설명을 철회했습니다. 다른 렌더러의 독립 비교와 정확한 종료 원인은 확인되지 않았습니다.",
+        "en": "GitHub follow-up — does not launch: on Steam with ForgePlay 2.2.1 (build 9), D3DMetal NVIDIA was selected, but Mortal.exe exited after about two seconds without a game window. The reporter withdrew the claim that every option behaved identically. Independent tests of other renderers and the exact cause are unconfirmed.",
+        "de": "GitHub-Folgebericht — startet nicht: Unter Steam mit ForgePlay 2.2.1 (Build 9) war D3DMetal NVIDIA gewählt, doch Mortal.exe endete nach etwa zwei Sekunden ohne Spielfenster. Die Aussage, alle Optionen verhielten sich gleich, wurde zurückgezogen. Unabhängige Tests anderer Renderer und die genaue Ursache sind nicht bestätigt.",
+        "es": "Seguimiento de GitHub — no se inicia: en Steam con ForgePlay 2.2.1 (compilación 9) se seleccionó D3DMetal NVIDIA, pero Mortal.exe terminó tras unos dos segundos sin mostrar ventana. El informante retiró que todas las opciones daban el mismo resultado. No están confirmadas las pruebas independientes de otros renderizadores ni la causa exacta.",
+        "fr": "Suivi GitHub — ne démarre pas : sur Steam avec ForgePlay 2.2.1 (build 9), D3DMetal NVIDIA était sélectionné, mais Mortal.exe s’est fermé après environ deux secondes sans fenêtre. L’affirmation d’un résultat identique avec toutes les options a été retirée. Les autres moteurs de rendu n’ont pas été comparés indépendamment et la cause reste inconnue.",
+        "ja": "GitHub追加報告 — 起動不可：ForgePlay 2.2.1（ビルド9）のSteam環境でD3DMetal NVIDIAを選択しましたが、Mortal.exeは約2秒で終了し、ゲーム画面は表示されませんでした。全設定で同じ結果という説明は撤回されています。他レンダラーの独立比較と終了原因は未確認です。",
+        "zh-Hans": "GitHub 后续反馈 — 无法启动：在 ForgePlay 2.2.1（构建 9）的 Steam 环境中选择 D3DMetal NVIDIA 后，Mortal.exe 约两秒即退出，没有出现游戏窗口。反馈者已撤回所有选项结果相同的说法。其他渲染器的独立测试及具体原因未确认。",
+        "zh-Hant": "GitHub 後續回報 — 無法啟動：在 ForgePlay 2.2.1（組建 9）的 Steam 環境中選擇 D3DMetal NVIDIA 後，Mortal.exe 約兩秒即結束，沒有出現遊戲視窗。回報者已撤回所有選項結果相同的說法。其他繪圖後端的獨立測試及具體原因未確認。"
+      },
+      "blocker": "unknown"
+    },
+    {
+      "id": "romance-of-the-three-kingdoms-8-remake-github-48-20261014",
+      "gameId": "romance-of-the-three-kingdoms-8-remake",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m5-pro-24gb-macos-27-0-1",
+      "forgePlayVersion": "2.2.1",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "github-issue",
+      "reporter": "KFCBucketCat",
+      "testedAt": "2026-10-14",
+      "notes": {
+        "ko": "GitHub 이슈 후속 제보 — 플레이 가능(동영상 재생 제한): ForgePlay 2.2.1(빌드 9), Steam, D3DMetal NVIDIA에서 실행·내정·전투·엔딩까지 진행할 수 있습니다. 다만 엔딩·이벤트·앨범 모드의 동영상은 검은 화면으로 재생되지 않습니다. Steam Cloud 경고와 첫 동기화 시 일부 누락이 있었으나 재실행 후 모두 동기화됐다고 합니다. 저장 데이터 손상이 확인된 것은 아닙니다.",
+        "en": "GitHub follow-up — playable with video limitations: ForgePlay 2.2.1 (build 9), Steam, D3DMetal NVIDIA. Launch, domestic affairs, battles and progression through the ending work, but ending, event and album-mode videos show a black screen. A Steam Cloud warning and incomplete first sync were reported; all data synced after relaunch. Save corruption was not established.",
+        "de": "GitHub-Folgebericht — mit Videoeinschränkungen spielbar: ForgePlay 2.2.1 (Build 9), Steam, D3DMetal NVIDIA. Start, Verwaltung, Kämpfe und Fortschritt bis zum Ende funktionieren; End-, Ereignis- und Albumvideos bleiben jedoch schwarz. Nach Cloud-Warnung und zunächst unvollständiger Synchronisierung waren beim erneuten Start alle Daten synchronisiert. Eine Beschädigung der Spielstände wurde nicht festgestellt.",
+        "es": "Seguimiento de GitHub — jugable con limitaciones de vídeo: ForgePlay 2.2.1 (compilación 9), Steam, D3DMetal NVIDIA. Funcionan el inicio, la gestión, las batallas y el avance hasta el final, pero los vídeos del final, eventos y álbum aparecen negros. Tras una advertencia de Steam Cloud y una primera sincronización incompleta, al reiniciar se sincronizó todo. No se confirmó corrupción de partidas.",
+        "fr": "Suivi GitHub — jouable avec des limites vidéo : ForgePlay 2.2.1 (build 9), Steam, D3DMetal NVIDIA. Le lancement, la gestion, les combats et la progression jusqu’à la fin fonctionnent, mais les vidéos de fin, d’événements et de l’album restent noires. Après un avertissement Steam Cloud et une première synchronisation incomplète, tout s’est synchronisé au redémarrage. Aucune corruption de sauvegarde n’est établie.",
+        "ja": "GitHub追加報告 — 動画に制限あり、プレイ可能：ForgePlay 2.2.1（ビルド9）、Steam、D3DMetal NVIDIAで起動・内政・戦闘・エンディングまで進行可能です。ただしエンディング・イベント・アルバムの動画は黒い画面になります。Steam Cloud警告と初回の一部同期漏れは再起動後に解消したとのことです。セーブ破損が確認されたわけではありません。",
+        "zh-Hans": "GitHub 后续反馈 — 可以游玩，但视频受限：ForgePlay 2.2.1（构建 9）、Steam、D3DMetal NVIDIA 下可启动并完成内政、战斗及结局流程，但结局、事件和相册模式的视频均为黑屏。曾出现 Steam Cloud 警告和首次同步不完整，重新启动后全部同步完成。未确认存档损坏。",
+        "zh-Hant": "GitHub 後續回報 — 可以遊玩，但影片受限：ForgePlay 2.2.1（組建 9）、Steam、D3DMetal NVIDIA 下可啟動並完成內政、戰鬥及結局流程，但結局、事件和相簿模式的影片均為黑畫面。曾出現 Steam Cloud 警告和首次同步不完整，重新啟動後全部同步完成。未確認存檔損壞。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "romance-of-the-three-kingdoms-13-github-49-20261014",
+      "gameId": "romance-of-the-three-kingdoms-13",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m5-pro-24gb-macos-27-0-1",
+      "forgePlayVersion": "2.2.1",
+      "gameVersion": null,
+      "status": "blocked",
+      "source": "github-issue",
+      "reporter": "KFCBucketCat",
+      "testedAt": "2026-10-14",
+      "notes": {
+        "ko": "GitHub 이슈 후속 제보 — 실행 불가: ForgePlay 2.2.1(빌드 9), Steam, D3DMetal NVIDIA 환경에서 SAN13Launcher.exe 실행 중 Wine 충돌 안내가 나타나고 종료됩니다. 게임 본체의 시작은 확인되지 않았습니다. 런처 단계의 실패이며 정확한 충돌 원인은 미확인입니다.",
+        "en": "GitHub follow-up — does not launch: with ForgePlay 2.2.1 (build 9), Steam and D3DMetal NVIDIA, SAN13Launcher.exe exits with a Wine crash dialog. The main game was not observed starting. Failure is at the launcher stage; the exact cause is unconfirmed.",
+        "de": "GitHub-Folgebericht — startet nicht: Mit ForgePlay 2.2.1 (Build 9), Steam und D3DMetal NVIDIA endet SAN13Launcher.exe mit einer Wine-Absturzmeldung. Ein Start des eigentlichen Spiels wurde nicht beobachtet. Der Fehler liegt in der Launcher-Phase; die genaue Ursache ist ungeklärt.",
+        "es": "Seguimiento de GitHub — no se inicia: con ForgePlay 2.2.1 (compilación 9), Steam y D3DMetal NVIDIA, SAN13Launcher.exe se cierra mostrando un error de Wine. No se observó el inicio del juego principal. El fallo ocurre en el lanzador; la causa exacta no está confirmada.",
+        "fr": "Suivi GitHub — ne démarre pas : avec ForgePlay 2.2.1 (build 9), Steam et D3DMetal NVIDIA, SAN13Launcher.exe se ferme avec un message de plantage Wine. Le démarrage du jeu principal n’a pas été observé. L’échec survient dans le lanceur ; la cause exacte reste inconnue.",
+        "ja": "GitHub追加報告 — 起動不可：ForgePlay 2.2.1（ビルド9）、Steam、D3DMetal NVIDIAでSAN13Launcher.exeがWineのクラッシュ画面とともに終了します。ゲーム本体の起動は確認されていません。ランチャー段階の失敗で、正確な原因は未確認です。",
+        "zh-Hans": "GitHub 后续反馈 — 无法启动：ForgePlay 2.2.1（构建 9）、Steam、D3DMetal NVIDIA 环境下，SAN13Launcher.exe 显示 Wine 崩溃对话框并退出，未观察到游戏本体启动。失败发生在启动器阶段，具体原因未确认。",
+        "zh-Hant": "GitHub 後續回報 — 無法啟動：ForgePlay 2.2.1（組建 9）、Steam、D3DMetal NVIDIA 環境下，SAN13Launcher.exe 顯示 Wine 當機對話框並結束，未觀察到遊戲本體啟動。失敗發生在啟動器階段，具體原因未確認。"
+      },
+      "blocker": "launcher"
+    },
+    {
+      "id": "romance-of-the-three-kingdoms-14-github-49-20261014",
+      "gameId": "romance-of-the-three-kingdoms-14",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m5-pro-24gb-macos-27-0-1",
+      "forgePlayVersion": "2.2.1",
+      "gameVersion": null,
+      "status": "blocked",
+      "source": "github-issue",
+      "reporter": "KFCBucketCat",
+      "testedAt": "2026-10-14",
+      "notes": {
+        "ko": "GitHub 이슈 후속 제보 — 실행 불가: ForgePlay 2.2.1(빌드 9), Steam, D3DMetal NVIDIA 환경에서 SAN14_Launcher.exe 실행 중 Wine 충돌 안내가 나타나고 종료됩니다. 게임 본체의 시작은 확인되지 않았습니다. 런처 단계의 실패이며 정확한 충돌 원인은 미확인입니다.",
+        "en": "GitHub follow-up — does not launch: with ForgePlay 2.2.1 (build 9), Steam and D3DMetal NVIDIA, SAN14_Launcher.exe exits with a Wine crash dialog. The main game was not observed starting. Failure is at the launcher stage; the exact cause is unconfirmed.",
+        "de": "GitHub-Folgebericht — startet nicht: Mit ForgePlay 2.2.1 (Build 9), Steam und D3DMetal NVIDIA endet SAN14_Launcher.exe mit einer Wine-Absturzmeldung. Ein Start des eigentlichen Spiels wurde nicht beobachtet. Der Fehler liegt in der Launcher-Phase; die genaue Ursache ist ungeklärt.",
+        "es": "Seguimiento de GitHub — no se inicia: con ForgePlay 2.2.1 (compilación 9), Steam y D3DMetal NVIDIA, SAN14_Launcher.exe se cierra mostrando un error de Wine. No se observó el inicio del juego principal. El fallo ocurre en el lanzador; la causa exacta no está confirmada.",
+        "fr": "Suivi GitHub — ne démarre pas : avec ForgePlay 2.2.1 (build 9), Steam et D3DMetal NVIDIA, SAN14_Launcher.exe se ferme avec un message de plantage Wine. Le démarrage du jeu principal n’a pas été observé. L’échec survient dans le lanceur ; la cause exacte reste inconnue.",
+        "ja": "GitHub追加報告 — 起動不可：ForgePlay 2.2.1（ビルド9）、Steam、D3DMetal NVIDIAでSAN14_Launcher.exeがWineのクラッシュ画面とともに終了します。ゲーム本体の起動は確認されていません。ランチャー段階の失敗で、正確な原因は未確認です。",
+        "zh-Hans": "GitHub 后续反馈 — 无法启动：ForgePlay 2.2.1（构建 9）、Steam、D3DMetal NVIDIA 环境下，SAN14_Launcher.exe 显示 Wine 崩溃对话框并退出，未观察到游戏本体启动。失败发生在启动器阶段，具体原因未确认。",
+        "zh-Hant": "GitHub 後續回報 — 無法啟動：ForgePlay 2.2.1（組建 9）、Steam、D3DMetal NVIDIA 環境下，SAN14_Launcher.exe 顯示 Wine 當機對話框並結束，未觀察到遊戲本體啟動。失敗發生在啟動器階段，具體原因未確認。"
+      },
+      "blocker": "launcher"
+    },
+    {
+      "id": "idolmaster-starlit-season-github-50-20261014",
+      "gameId": "idolmaster-starlit-season",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m5-pro-24gb-macos-27-0-1",
+      "forgePlayVersion": "2.2.1",
+      "gameVersion": null,
+      "status": "blocked",
+      "source": "github-issue",
+      "reporter": "KFCBucketCat",
+      "testedAt": "2026-10-14",
+      "notes": {
+        "ko": "GitHub 이슈 후속 제보 — 챕터 전환에서 진행 불가(초반만 플레이 가능): ForgePlay 2.2.1(빌드 9), Steam, D3DMetal NVIDIA에서 최초 설정과 초반 스토리는 진행할 수 있습니다. 오프닝 영상의 검은 화면은 ESC로 넘길 수 있으나, OT 이후 다음 챕터의 검은 화면에서는 ESC도 통하지 않아 강제 종료했다고 합니다. 제보의 원래 분류는 Playable with issues입니다. 정상 완주 가능한 상태로 확인된 것이 아니며, 정확한 원인은 미확인입니다.",
+        "en": "GitHub follow-up — progression blocked at a chapter transition; only the opening section is playable: ForgePlay 2.2.1 (build 9), Steam, D3DMetal NVIDIA. Initial setup and early story work. ESC skips the black opening video, but the black screen at the next chapter after orientation cannot be skipped, requiring a forced exit. The reporter selected Playable with issues. Completing the game is not confirmed; the exact cause is unknown.",
+        "de": "GitHub-Folgebericht — Fortschritt beim Kapitelwechsel blockiert, nur der Anfang spielbar: ForgePlay 2.2.1 (Build 9), Steam, D3DMetal NVIDIA. Einrichtung und frühe Geschichte funktionieren. Das schwarze Intro lässt sich mit ESC überspringen; der schwarze Bildschirm beim nächsten Kapitel nach der Einführung jedoch nicht, weshalb das Spiel erzwungen beendet wurde. Die Meldung war als Playable with issues eingestuft. Vollständiges Durchspielen ist nicht bestätigt; die Ursache ist ungeklärt.",
+        "es": "Seguimiento de GitHub — avance bloqueado al cambiar de capítulo; solo el inicio es jugable: ForgePlay 2.2.1 (compilación 9), Steam, D3DMetal NVIDIA. Funcionan la configuración y la historia inicial. ESC omite el vídeo inicial negro, pero no la pantalla negra del siguiente capítulo tras la orientación, por lo que hubo que forzar la salida. El informante eligió Playable with issues. No se confirma que pueda completarse; causa desconocida.",
+        "fr": "Suivi GitHub — progression bloquée au changement de chapitre, seul le début est jouable : ForgePlay 2.2.1 (build 9), Steam, D3DMetal NVIDIA. La configuration et le début de l’histoire fonctionnent. Échap passe l’introduction noire, mais pas l’écran noir du chapitre suivant après l’orientation, imposant une fermeture forcée. Le signalement était classé Playable with issues. Finir le jeu n’est pas confirmé ; cause inconnue.",
+        "ja": "GitHub追加報告 — 章の切り替えで進行不可（序盤のみプレイ可能）：ForgePlay 2.2.1（ビルド9）、Steam、D3DMetal NVIDIAで初期設定と序盤の物語は進めます。黒いオープニング動画はESCで飛ばせますが、オリエンテーション後の次章の黒画面はESCでも飛ばせず強制終了したとのことです。元の報告分類はPlayable with issuesです。最後まで遊べる確認ではなく、原因も未確認です。",
+        "zh-Hans": "GitHub 后续反馈 — 章节切换时无法继续（仅开头可玩）：ForgePlay 2.2.1（构建 9）、Steam、D3DMetal NVIDIA 下可完成初始设置和早期剧情。开场黑屏视频可按 ESC 跳过，但说明阶段结束后进入下一章的黑屏无法用 ESC 跳过，只能强制退出。原反馈分类为 Playable with issues，并未确认能够通关；具体原因未确认。",
+        "zh-Hant": "GitHub 後續回報 — 章節切換時無法繼續（僅開頭可玩）：ForgePlay 2.2.1（組建 9）、Steam、D3DMetal NVIDIA 下可完成初始設定和早期劇情。開場黑畫面影片可按 ESC 跳過，但說明階段結束後進入下一章的黑畫面無法用 ESC 跳過，只能強制結束。原回報分類為 Playable with issues，並未確認能夠通關；具體原因未確認。"
+      },
+      "blocker": "unknown"
+    },
+    {
+      "id": "apollo-justice-ace-attorney-trilogy-github-52-20261014",
+      "gameId": "apollo-justice-ace-attorney-trilogy",
+      "launchPlatform": "steam",
+      "testProfileId": "macbook-air-m5-16gb-macos-27-0-1",
+      "forgePlayVersion": "2.2.1",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "github-issue",
+      "reporter": "oren88",
+      "testedAt": null,
+      "notes": {
+        "ko": "GitHub 이슈 제보 — 플레이 가능: Steam판 역전재판 456 오도로키 셀렉션이 ForgePlay 2.2.1에서 현재까지 정상적으로 플레이된다고 합니다. 첫 실행 때 로딩이 길게 느껴졌다는 의견은 있으나 측정값과 로그는 없습니다. 렌더러·게임 빌드는 미보고이며, 로딩의 원인을 특정 게임 엔진이나 셰이더로 확정하지 않습니다.",
+        "en": "GitHub report — playable: the Steam version of Apollo Justice: Ace Attorney Trilogy has played normally so far in ForgePlay 2.2.1. The first launch felt slow to load, but no measurements or logs were supplied. Renderer and game build are unreported; no particular engine or shader cause is established.",
+        "de": "GitHub-Bericht — spielbar: Apollo Justice: Ace Attorney Trilogy auf Steam läuft laut Bericht bisher normal mit ForgePlay 2.2.1. Das erste Laden wirkte lang, jedoch ohne Messwerte oder Logs. Renderer und Spiel-Build sind nicht angegeben; eine Engine- oder Shader-Ursache ist nicht belegt.",
+        "es": "Reporte de GitHub — jugable: Apollo Justice: Ace Attorney Trilogy en Steam funciona con normalidad hasta ahora con ForgePlay 2.2.1. La primera carga pareció larga, pero no hay mediciones ni registros. No se indicaron renderizador ni build del juego; no se establece una causa de motor o sombreadores.",
+        "fr": "Signalement GitHub — jouable : Apollo Justice: Ace Attorney Trilogy sur Steam fonctionne normalement jusqu’ici avec ForgePlay 2.2.1. Le premier chargement a semblé long, sans mesure ni journal fourni. Moteur de rendu et build du jeu non précisés ; aucune cause liée à un moteur de jeu ou aux shaders n’est établie.",
+        "ja": "GitHub報告 — プレイ可能：Steam版『逆転裁判456 王泥喜セレクション』はForgePlay 2.2.1で現在まで正常に遊べているとのことです。初回ロードが長く感じられたという意見はありますが、測定値やログはありません。レンダラーとゲームビルドは未報告で、エンジンやシェーダーを原因と断定しません。",
+        "zh-Hans": "GitHub 反馈 — 可以游玩：Steam 版《逆转裁判456 王泥喜精选集》在 ForgePlay 2.2.1 中目前为止运行正常。反馈称首次加载感觉较长，但没有测量值或日志。未提供渲染器和游戏构建版本，不能确定为某个引擎或着色器导致。",
+        "zh-Hant": "GitHub 回報 — 可以遊玩：Steam 版《逆轉裁判456 王泥喜精選集》在 ForgePlay 2.2.1 中目前為止運作正常。回報稱首次載入感覺較長，但沒有測量值或日誌。未提供繪圖後端與遊戲組建版本，不能確定為某個引擎或著色器導致。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "where-winds-meet-2-2-1-community-macgallery-20261014",
+      "gameId": "where-winds-meet",
+      "launchPlatform": "unknown",
+      "testProfileId": "apple-silicon-m5-pro-64gb-macos-27-0-1",
+      "forgePlayVersion": "2.2.1",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "맥갤러",
+      "testedAt": null,
+      "notes": {
+        "ko": "커뮤니티 제보 — 플레이 가능: 연운이 ForgePlay 2.2.1에서 잘 실행된다고 합니다. 개발자가 전달한 시험 환경은 M5 Pro·통합 메모리 64GB·macOS 27.0.1입니다. 실행 플랫폼·렌더러·게임 버전과 구체적인 성능 수치는 미확인입니다.",
+        "en": "Community report — playable: Where Winds Meet runs well in ForgePlay 2.2.1. Test environment supplied by the developer: M5 Pro, 64GB unified memory, macOS 27.0.1. Launch platform, renderer, game version and specific performance figures are unconfirmed.",
+        "de": "Community-Bericht — spielbar: Where Winds Meet läuft laut Meldung gut mit ForgePlay 2.2.1. Vom Entwickler übermittelte Testumgebung: M5 Pro, 64 GB gemeinsamer Speicher, macOS 27.0.1. Startplattform, Renderer, Spielversion und genaue Leistungswerte sind unbestätigt.",
+        "es": "Informe de la comunidad — jugable: Where Winds Meet funciona bien con ForgePlay 2.2.1. Entorno comunicado por el desarrollador: M5 Pro, 64GB de memoria unificada y macOS 27.0.1. Plataforma, renderizador, versión del juego y cifras de rendimiento sin confirmar.",
+        "fr": "Signalement communautaire — jouable : Where Winds Meet fonctionne bien avec ForgePlay 2.2.1. Environnement transmis par le développeur : M5 Pro, 64 Go de mémoire unifiée, macOS 27.0.1. Plateforme, moteur de rendu, version du jeu et performances chiffrées non confirmés.",
+        "ja": "コミュニティ報告 — プレイ可能：『Where Winds Meet（燕雲十六声）』はForgePlay 2.2.1で良好に動作するとのことです。開発者から伝えられた環境はM5 Pro・ユニファイドメモリ64GB・macOS 27.0.1です。起動プラットフォーム、レンダラー、ゲームバージョン、具体的な性能値は未確認です。",
+        "zh-Hans": "社区反馈 — 可以游玩：《燕云十六声》在 ForgePlay 2.2.1 中运行良好。开发者提供的测试环境为 M5 Pro、64GB 统一内存、macOS 27.0.1。运行平台、渲染器、游戏版本及具体性能数据未确认。",
+        "zh-Hant": "社群回報 — 可以遊玩：《燕雲十六聲》在 ForgePlay 2.2.1 中運作良好。開發者提供的測試環境為 M5 Pro、64GB 統一記憶體、macOS 27.0.1。執行平台、繪圖後端、遊戲版本與具體效能數據未確認。"
+      },
+      "blocker": null
     }
   ]
 }
