@@ -2001,7 +2001,7 @@ require_snippet "$ROOT_DIR/index.html" 'data-current-release-download'
 require_snippet "$ROOT_DIR/index.html" 'data-current-release-download-label'
 require_snippet "$ROOT_DIR/index.html" 'data-current-release-link'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/current-release.js?v=20260905-7"'
-require_snippet "$ROOT_DIR/index.html" 'src="site-assets/website-compatibility.js?v=20260929-reports1"'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/website-compatibility.js?v=20261015-version-order"'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/home-experience.css?v=20261005-report'
 python3 - "$ROOT_DIR/index.html" <<'HOME_REPORT'
 from html.parser import HTMLParser
@@ -2056,7 +2056,7 @@ require_snippet "$ROOT_DIR/index.html" 'data-compatibility-platform'
 require_snippet "$ROOT_DIR/index.html" 'data-home-games'
 require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
-require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20261014-device-example"'
+require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20261015-version-order"'
 require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20261004-release210"'
 require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20261004-badges"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
@@ -2123,9 +2123,9 @@ require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count
 require_snippet "$ROOT_DIR/compatibility.html" 'href="site.css?v=20260811-22"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260929-platform1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/current-release.js?v=20260905-7"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20260929-reports1"'
-require_snippet "$ROOT_DIR/site-assets/guide.html" 'src="site-assets/website-compatibility.js?v=20260929-reports1"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20261014-device-example"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20261015-version-order"'
+require_snippet "$ROOT_DIR/site-assets/guide.html" 'src="site-assets/website-compatibility.js?v=20261015-version-order"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20261015-version-order"'
 require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-device>M4 Pro · 24GB</strong>'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-card'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-tag'
@@ -2549,8 +2549,7 @@ assert.equal(model.sortReports(publicationOrder)[0], followupReport);
 assert.equal(model.summarize(publicationOrder, "1.2").headlineReports[0], followupReport);
 assert.equal(publicationOrder[0], initialReport, "sorting must not reorder the source catalog");
 
-// Sort assessed games before the homepage takes its first six cards. Preserve
-// history-based/current-release judgments and stable ordering within a status.
+// Groups without ordering metadata retain the assessed-status fallback.
 const gameGroups = [
   {id:"legacy-blocked",status:"blocked"},
   ...Array.from({length:7},(_,i)=>({id:`playable-${i}`,status:"playable"})),
@@ -2563,6 +2562,38 @@ assert.deepEqual(sortedGroups.map(group=>group.id),[
   ...Array.from({length:7},(_,i)=>`playable-${i}`),"testing","legacy-blocked","current-blocked","unknown"
 ]);
 assert.equal(gameGroups[0].id,"legacy-blocked","display sorting must not mutate source order");
+
+// Default cards prioritize numeric ForgePlay versions, then publication order,
+// not game registration order, status, or whether a test date was supplied.
+const orderReports = [
+  {id:"older",gameId:"older",...report("2.9","playable"),launchPlatform:"steam"},
+  {id:"newer",gameId:"newer",...report("2.10","blocked"),launchPlatform:"steam"},
+  {id:"initial",gameId:"followup",...report("1.0","blocked"),launchPlatform:"steam"},
+  {id:"dated",gameId:"dated",...report("2.2.1","playable"),launchPlatform:"steam"},
+  {id:"undated",gameId:"undated",...report("2.2.1","blocked"),testedAt:null,launchPlatform:"steam"},
+  {id:"followup",gameId:"followup",...report("2.2.1","playable"),testedAt:null,launchPlatform:"steam"},
+  {id:"other-platform",gameId:"followup",...report("2.0","blocked"),launchPlatform:"battlenet"},
+  {id:"unknown",gameId:"unknown",...report(null,"playable"),launchPlatform:"steam"},
+  {id:"development",gameId:"development",...report("development","playable"),launchPlatform:"steam"}
+];
+const orderFixture = {
+  games:["older","newer","followup","dated","undated","unknown","development"].map(id=>({id,titles:{en:id}})),
+  reports:orderReports,currentRelease:{marketingVersion:"2.2.1"}
+};
+const orderBefore = JSON.stringify(orderFixture);
+const ordered = model.platformGroups(orderFixture);
+assert.deepEqual(Array.from(ordered,group=>group.key),[
+  "newer:steam","older:steam","followup:steam","undated:steam","dated:steam",
+  "followup:battlenet","development:steam","unknown:steam"
+]);
+assert.equal(ordered[2].status,"playable");
+assert.equal(ordered[2].reports.length,2,"old failure history must remain");
+assert.equal(ordered[3].status,"blocked","ordering must not change the current assessment");
+assert.deepEqual(Array.from(model.platformGroups(orderFixture,"steam"),group=>group.key),
+  Array.from(ordered.filter(group=>group.launchPlatform==="steam"),group=>group.key));
+assert.equal(JSON.stringify(orderFixture),orderBefore,"ordering must not mutate source records");
+assert.equal(model.compareGameGroups({sortVersion:"2.2",latestReportIndex:1,status:"playable"},
+  {sortVersion:"2.2.0",latestReportIndex:1,status:"playable"}),0);
 
 const baseV3 = base;
 const webV3 = additions;

@@ -305,8 +305,8 @@
         ));
       })
       .sort((left, right) => {
-        const statusDifference = catalog().compareGameGroups(left, right);
-        return statusDifference || left.gameIndex - right.gameIndex;
+        const displayOrder = catalog().compareGameGroups(left, right);
+        return displayOrder || left.gameIndex - right.gameIndex;
       });
 
     const fragment = document.createDocumentFragment();

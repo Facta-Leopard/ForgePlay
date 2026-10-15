@@ -9,11 +9,6 @@
     steam:"Steam", battlenet:"Battle.net", epic:"Epic Games", stove:"STOVE",
     exe:message("compat.platformEXE"), vr:"VR", unknown:message("compat.platformUnknown")
   }[platform] || message("compat.platformUnknown"));
-  // Both website lists use the assessed game status, not raw report/file order.
-  // Equal-status games retain their existing relative order.
-  const compareGameGroups = (left, right) => (
-    statusOrder.indexOf(left.status) - statusOrder.indexOf(right.status)
-  );
   const versionParts = (value) => {
     if (typeof value !== "string" || !/^\d+(?:\.\d+){1,2}$/.test(value)) return null;
     const parts = value.split(".").map(Number);
@@ -29,6 +24,20 @@
     }
     return 0;
   };
+  const compareVersionsDescending = (left, right) => {
+    const version = compareVersions(left, right);
+    return version === null
+      ? Number(Boolean(versionParts(right))) - Number(Boolean(versionParts(left)))
+      : -version;
+  };
+  // Shared by the homepage and full catalog: newest ForgePlay version first,
+  // then the latest published report in that version. Missing test dates do
+  // not bury new reports. Assessment and historical reports remain unchanged.
+  const compareGameGroups = (left, right) => (
+    compareVersionsDescending(left.sortVersion, right.sortVersion)
+      || (right.latestReportIndex ?? -1) - (left.latestReportIndex ?? -1)
+      || statusOrder.indexOf(left.status) - statusOrder.indexOf(right.status)
+  );
   const sortReports = (reports) => {
     // Reports are appended in publication order; later follow-ups lead when
     // their version, reported test date and status otherwise tie.
@@ -148,6 +157,7 @@
   const platformGroups = (database, selectedPlatform = "all") => {
     if (selectedPlatform !== "all" && !platforms.includes(selectedPlatform)) throw new Error("Invalid platform filter");
     const grouped = new Map();
+    const reportIndexes = new Map(database.reports.map((report, index) => [report, index]));
     for (const report of database.reports) {
       const launchPlatform = platformOf(report);
       const key = `${report.gameId}:${launchPlatform}`;
@@ -159,7 +169,12 @@
       const reports = grouped.get(key) || [];
       if (!reports.length || (selectedPlatform !== "all" && launchPlatform !== selectedPlatform)) return [];
       const summary = summarize(reports, database.currentRelease?.marketingVersion);
-      return [{key, game, gameIndex, launchPlatform, reports, summary, status:summary.status}];
+      const latestReport = reports.reduce((latest, report) => (
+        !latest || compareVersionsDescending(report.forgePlayVersion, latest.forgePlayVersion) <= 0
+          ? report : latest
+      ), null);
+      return [{key, game, gameIndex, launchPlatform, reports, summary, status:summary.status,
+        sortVersion:latestReport.forgePlayVersion, latestReportIndex:reportIndexes.get(latestReport)}];
     })).sort(compareGameGroups);
   };
 
