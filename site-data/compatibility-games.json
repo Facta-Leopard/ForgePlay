@@ -2,7 +2,7 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-16",
-  "revision": 1,
+  "revision": 2,
   "testProfiles": [
     {
       "id": "apple-silicon-m2-max-32gb-golden-gate-27-0-27-2",
@@ -2995,29 +2995,6 @@
         "zh-Hant": "回報指出，適度降低畫質設定後可以遊玩。雖然會出現掉幀，但由於戰鬥以回合制為基礎，回報者表示可以接受，並且玩得很滿意。"
       },
       "blocker": null
-    },
-    {
-      "id": "helldivers-2-github-53-20261014",
-      "gameId": "helldivers-2",
-      "launchPlatform": "steam",
-      "testProfileId": "apple-silicon-m5-pro-64gb-macos-27-0-1",
-      "forgePlayVersion": "2.2.1",
-      "gameVersion": null,
-      "status": "blocked",
-      "source": "github-issue",
-      "reporter": "E-Schmacher",
-      "testedAt": "2026-10-14",
-      "notes": {
-        "ko": "호환성 모드에서 실행하면 GameGuard 창이 나온 뒤 오류 보고 창과 함께 종료되어 게임을 플레이할 수 없습니다. D3DMetal NVIDIA를 선택하고 프레임 생성을 끈 상태에서 발생했습니다.",
-        "en": "In compatibility mode, a GameGuard window appears, followed by an error-reporting window, and the game exits before it can be played. This occurred with D3DMetal NVIDIA selected and frame generation disabled.",
-        "de": "Im Kompatibilitätsmodus erscheint zunächst ein GameGuard-Fenster, danach ein Fenster zur Fehlerberichterstattung. Anschließend beendet sich das Spiel, bevor es gespielt werden kann. Dies trat mit ausgewähltem D3DMetal NVIDIA und deaktivierter Frame-Generierung auf.",
-        "es": "En el modo de compatibilidad aparece una ventana de GameGuard, seguida de una ventana para informar del error, y el juego se cierra sin poder jugar. Ocurrió con D3DMetal NVIDIA seleccionado y la generación de fotogramas desactivada.",
-        "fr": "En mode de compatibilité, une fenêtre GameGuard apparaît, suivie d'une fenêtre de rapport d'erreur, puis le jeu se ferme avant de pouvoir jouer. Le problème s'est produit avec D3DMetal NVIDIA sélectionné et la génération d'images désactivée.",
-        "ja": "互換モードで起動すると、GameGuardの画面に続いてエラー報告の画面が表示され、ゲームが終了してプレイできません。D3DMetal NVIDIAを選択し、フレーム生成をオフにした状態で発生しました。",
-        "zh-Hans": "在兼容模式下启动后，先出现 GameGuard 窗口，随后出现错误报告窗口，游戏便退出，无法游玩。此问题发生在选择 D3DMetal NVIDIA 并关闭帧生成的情况下。",
-        "zh-Hant": "在相容模式下啟動後，先出現 GameGuard 視窗，隨後出現錯誤回報視窗，遊戲便結束，無法遊玩。此問題發生在選擇 D3DMetal NVIDIA 並關閉影格生成的情況下。"
-      },
-      "blocker": "unknown"
     },
     {
       "id": "the-witcher-3-github-46-launcher-skip-20261016",
