@@ -1,8 +1,8 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
-  "updatedAt": "2026-10-15",
-  "revision": 5,
+  "updatedAt": "2026-10-16",
+  "revision": 0,
   "testProfiles": [
     {
       "id": "apple-silicon-m2-max-32gb-golden-gate-27-0-27-2",
@@ -251,6 +251,13 @@
     }
   ],
   "games": [
+    {
+      "id": "clair-obscur-expedition-33",
+      "titles": {
+        "en": "Clair Obscur: Expedition 33",
+        "ko": "클레르 옵스퀴르: 33 원정대"
+      }
+    },
     {
       "id": "dragons-dogma-2",
       "titles": {
@@ -2965,6 +2972,29 @@
         "zh-Hant": "遊戲可以啟動，但回報者表示嚴重卡頓與畫面錯誤使其難以正常遊玩。即使將畫質設為最低，也只有約30～40FPS。降低解析度並改為視窗模式後，移動視角時仍會卡頓，部分畫面仍嚴重出錯。"
       },
       "blocker": "graphics"
+    },
+    {
+      "id": "clair-obscur-expedition-33-community-macgallery-20261016",
+      "gameId": "clair-obscur-expedition-33",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m2-max-32gb-golden-gate-27-0-27-2",
+      "forgePlayVersion": "2.2.1",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "맥갤러",
+      "testedAt": null,
+      "notes": {
+        "ko": "그래픽 설정을 어느 정도 낮추면 플레이할 수 있다는 제보입니다. 프레임 저하는 있지만 턴제 기반 전투라 이를 감안하고 만족스럽게 즐기고 있다고 합니다.",
+        "en": "The reporter is enjoying the game with some compromises in graphics settings. Frame-rate drops occur, but they find them acceptable given the turn-based combat.",
+        "de": "Laut Bericht lässt sich das Spiel mit einigen Abstrichen bei den Grafikeinstellungen zufriedenstellend spielen. Es kommt zu Bildrateneinbrüchen, die der Spieler wegen der rundenbasierten Kämpfe jedoch in Kauf nimmt.",
+        "es": "El informante está disfrutando del juego con algunas concesiones en los ajustes gráficos. Hay caídas de fotogramas, pero le resultan tolerables al tratarse de combates por turnos.",
+        "fr": "La personne ayant envoyé le signalement apprécie le jeu en faisant quelques compromis sur les réglages graphiques. Des baisses de fréquence d'images surviennent, mais elle les juge acceptables grâce aux combats au tour par tour.",
+        "ja": "グラフィック設定をある程度下げればプレイできるとの報告です。フレームレートの低下はあるものの、ターン制の戦闘なので、それを許容しながら満足して楽しめているとのことです。",
+        "zh-Hans": "反馈称，适当降低画质设置后可以游玩。虽然会出现掉帧，但由于战斗以回合制为基础，反馈者表示可以接受，并且玩得很满意。",
+        "zh-Hant": "回報指出，適度降低畫質設定後可以遊玩。雖然會出現掉幀，但由於戰鬥以回合制為基礎，回報者表示可以接受，並且玩得很滿意。"
+      },
+      "blocker": null
     }
   ]
 }
