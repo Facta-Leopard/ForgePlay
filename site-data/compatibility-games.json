@@ -2,7 +2,7 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-15",
-  "revision": 1,
+  "revision": 2,
   "testProfiles": [
     {
       "id": "apple-silicon-m5-pro-64gb-macos-27-0-1",
@@ -2796,12 +2796,12 @@
       "testProfileId": "apple-silicon-m5-pro-24gb-macos-27-0-1",
       "forgePlayVersion": "2.2.1",
       "gameVersion": null,
-      "status": "playable",
+      "status": "blocked",
       "source": "github-issue",
       "reporter": "KFCBucketCat",
       "testedAt": "2026-10-14",
       "notes": {
-        "ko": "초반 플레이는 가능하지만, 다음 챕터로 넘어갈 때 진행이 막힌다는 제보입니다. ForgePlay 2.2.1(빌드 9)의 Steam 환경에서 D3DMetal NVIDIA를 사용했으며, 최초 설정과 초반 스토리까지는 진행할 수 있었습니다.\n\n오프닝 영상이 검게 나오는 문제는 ESC로 넘길 수 있지만, OT 이후 다음 챕터에서 나오는 검은 화면은 ESC로도 넘길 수 없어 게임을 강제 종료했다고 합니다. 제보자는 문제가 있지만 일부 플레이는 가능하다고 분류했습니다. 끝까지 플레이한 결과는 아니며, 정확한 원인은 아직 알 수 없습니다.",
+        "ko": "다음 챕터로 넘어가면 검은 화면에서 멈춰 더 이상 진행할 수 없습니다. ForgePlay 2.2.1(빌드 9)의 Steam 환경에서 D3DMetal NVIDIA를 사용했으며, 최초 설정과 초반 스토리까지는 진행할 수 있었습니다.\n\n오프닝 영상이 검게 나오는 문제는 ESC로 넘길 수 있지만, OT 이후 다음 챕터에서 나오는 검은 화면은 ESC로도 넘길 수 없어 게임을 강제 종료했다고 합니다. 정확한 원인은 아직 알 수 없습니다.",
         "en": "GitHub follow-up — progression blocked at a chapter transition; only the opening section is playable: ForgePlay 2.2.1 (build 9), Steam, D3DMetal NVIDIA. Initial setup and early story work. ESC skips the black opening video, but the black screen at the next chapter after orientation cannot be skipped, requiring a forced exit. The reporter selected Playable with issues. Completing the game is not confirmed; the exact cause is unknown.",
         "de": "GitHub-Folgebericht — Fortschritt beim Kapitelwechsel blockiert, nur der Anfang spielbar: ForgePlay 2.2.1 (Build 9), Steam, D3DMetal NVIDIA. Einrichtung und frühe Geschichte funktionieren. Das schwarze Intro lässt sich mit ESC überspringen; der schwarze Bildschirm beim nächsten Kapitel nach der Einführung jedoch nicht, weshalb das Spiel erzwungen beendet wurde. Die Meldung war als Playable with issues eingestuft. Vollständiges Durchspielen ist nicht bestätigt; die Ursache ist ungeklärt.",
         "es": "Seguimiento de GitHub — avance bloqueado al cambiar de capítulo; solo el inicio es jugable: ForgePlay 2.2.1 (compilación 9), Steam, D3DMetal NVIDIA. Funcionan la configuración y la historia inicial. ESC omite el vídeo inicial negro, pero no la pantalla negra del siguiente capítulo tras la orientación, por lo que hubo que forzar la salida. El informante eligió Playable with issues. No se confirma que pueda completarse; causa desconocida.",
@@ -2810,7 +2810,7 @@
         "zh-Hans": "GitHub 后续反馈 — 章节切换时无法继续（仅开头可玩）：ForgePlay 2.2.1（构建 9）、Steam、D3DMetal NVIDIA 下可完成初始设置和早期剧情。开场黑屏视频可按 ESC 跳过，但说明阶段结束后进入下一章的黑屏无法用 ESC 跳过，只能强制退出。原反馈分类为 Playable with issues，并未确认能够通关；具体原因未确认。",
         "zh-Hant": "GitHub 後續回報 — 章節切換時無法繼續（僅開頭可玩）：ForgePlay 2.2.1（組建 9）、Steam、D3DMetal NVIDIA 下可完成初始設定和早期劇情。開場黑畫面影片可按 ESC 跳過，但說明階段結束後進入下一章的黑畫面無法用 ESC 跳過，只能強制結束。原回報分類為 Playable with issues，並未確認能夠通關；具體原因未確認。"
       },
-      "blocker": null
+      "blocker": "unknown"
     },
     {
       "id": "apollo-justice-ace-attorney-trilogy-github-52-20261014",
