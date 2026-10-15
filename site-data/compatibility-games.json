@@ -2,7 +2,7 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-15",
-  "revision": 4,
+  "revision": 5,
   "testProfiles": [
     {
       "id": "apple-silicon-m2-max-32gb-golden-gate-27-0-27-2",
@@ -750,27 +750,45 @@
     },
     {
       "id": "idolmaster-starlit-season",
-      "titles": {"en": "The Idolmaster Starlit Season", "ko": "아이돌마스터 스탈릿 시즌"}
+      "titles": {
+        "en": "The Idolmaster Starlit Season",
+        "ko": "아이돌마스터 스탈릿 시즌"
+      }
     },
     {
       "id": "persona-4-golden",
-      "titles": {"en": "Persona 4 Golden", "ko": "페르소나 4 골든"}
+      "titles": {
+        "en": "Persona 4 Golden",
+        "ko": "페르소나 4 골든"
+      }
     },
     {
       "id": "romance-of-the-three-kingdoms-13",
-      "titles": {"en": "Romance of the Three Kingdoms XIII", "ko": "삼국지 13"}
+      "titles": {
+        "en": "Romance of the Three Kingdoms XIII",
+        "ko": "삼국지 13"
+      }
     },
     {
       "id": "romance-of-the-three-kingdoms-14",
-      "titles": {"en": "Romance of the Three Kingdoms XIV", "ko": "삼국지 14"}
+      "titles": {
+        "en": "Romance of the Three Kingdoms XIV",
+        "ko": "삼국지 14"
+      }
     },
     {
       "id": "romance-of-the-three-kingdoms-8-remake",
-      "titles": {"en": "Romance of the Three Kingdoms 8 Remake", "ko": "삼국지 8 리메이크"}
+      "titles": {
+        "en": "Romance of the Three Kingdoms 8 Remake",
+        "ko": "삼국지 8 리메이크"
+      }
     },
     {
       "id": "the-witcher-3",
-      "titles": {"en": "The Witcher 3", "ko": "더 위쳐 3"}
+      "titles": {
+        "en": "The Witcher 3",
+        "ko": "더 위쳐 3"
+      }
     }
   ],
   "reports": [
@@ -2276,13 +2294,13 @@
       "testedAt": null,
       "notes": {
         "ko": "같은 제보자가 이후 ForgePlay 2.2.1(빌드 9)의 Steam 환경에서는 내정·전투·엔딩까지 진행할 수 있다고 알려주셨습니다. 다만 동영상은 여전히 검은 화면으로 나옵니다.\n\n아래는 실행할 수 없었던 2.0.0(빌드 6) 당시의 기록입니다. 코에이·시부사와 코우 로고 뒤에 오프닝 대신 검은 화면이 나오고, 잠시 후 게임이 강제 종료됐습니다. 당시의 실행 플랫폼, 렌더러와 오류 원인은 아직 알 수 없습니다. 이 과거 기록과 2.2.1의 Steam 플레이 결과를 구분해 주세요.",
-        "en": "Follow-up: the same reporter confirmed launch, domestic affairs, battles and progression through the ending on Steam with ForgePlay 2.2.1 (build 9). Videos still show a black screen. The failed result in this entry is historical, from 2.0.0; distinguish it from the current 2.2.1 Steam result.\n\nGitHub issue #28: In ForgePlay 2.0.0 (6), the Koei and Kou Shibusawa logos appear, but the opening then goes black and the game crashes shortly afterward. Classified as blocked based on the described symptoms. Launch platform, graphics backend and cause are unconfirmed.",
-        "de": "Folgemeldung: Derselbe Melder bestätigt Start, Verwaltung, Kämpfe und Fortschritt bis zum Ende auf Steam mit ForgePlay 2.2.1 (Build 9). Videos bleiben schwarz. Der fehlgeschlagene Start in diesem Eintrag stammt aus 2.0.0 und ist vom aktuellen Steam-Ergebnis unter 2.2.1 zu unterscheiden.\n\nGitHub-Issue #28: In ForgePlay 2.0.0 (6) erscheinen die Logos von Koei und Kou Shibusawa, danach wird das Intro schwarz und das Spiel stürzt kurz darauf ab. Aufgrund der beschriebenen Symptome als nicht spielbar eingestuft. Startplattform, Grafik-Backend und Ursache sind unbestätigt.",
-        "es": "Seguimiento: el mismo informante confirmó inicio, gestión, batallas y avance hasta el final en Steam con ForgePlay 2.2.1 (compilación 9). Los vídeos siguen negros. El fallo de este registro corresponde a la versión anterior 2.0.0, no al resultado actual de Steam con 2.2.1.\n\nIncidencia #28 de GitHub: en ForgePlay 2.0.0 (6) aparecen los logotipos de Koei y Kou Shibusawa, pero la introducción queda en negro y el juego se cierra poco después. Se clasifica como no jugable por los síntomas descritos. Plataforma, backend y causa sin confirmar.",
-        "fr": "Suivi : la même personne confirme le lancement, la gestion, les combats et la progression jusqu’à la fin sur Steam avec ForgePlay 2.2.1 (build 9). Les vidéos restent noires. L’échec de cette entrée concerne l’ancienne version 2.0.0, à distinguer du résultat actuel sur Steam avec 2.2.1.\n\nTicket GitHub nº28 : dans ForgePlay 2.0.0 (6), les logos Koei et Kou Shibusawa apparaissent, puis l’introduction reste noire et le jeu plante peu après. Classé comme non jouable d’après les symptômes décrits. Plateforme, backend et cause non confirmés.",
-        "ja": "追加報告：同じ報告者がForgePlay 2.2.1（ビルド9）のSteam環境で起動・内政・戦闘・エンディングまで進行できると確認しています。ただし動画は黒画面のままです。この項目の起動不可は過去の2.0.0の結果であり、現在の2.2.1 Steamの結果とは区別してください。\n\nGitHubイシュー#28：ForgePlay 2.0.0（6）でコーエーとシブサワ・コウのロゴは表示されますが、その後のオープニングで画面が黒くなり、しばらくするとゲームが強制終了するとの報告です。本文の症状に基づきプレイ不可に分類しました。起動プラットフォーム、バックエンド、原因は未確認です。",
-        "zh-Hans": "后续反馈：同一反馈者确认，在 ForgePlay 2.2.1（构建 9）的 Steam 环境中可启动并完成内政、战斗及结局流程，但视频仍为黑屏。本条无法启动的结果属于旧版 2.0.0，请与当前 2.2.1 Steam 的结果区分。\n\nGitHub 问题 #28：反馈称在 ForgePlay 2.0.0（6）中能显示光荣和涩泽光标志，但随后的开场画面变黑，游戏稍后崩溃。根据正文描述的症状归为无法游玩。启动平台、图形后端及原因尚未确认。",
-        "zh-Hant": "後續回報：同一回報者確認，在 ForgePlay 2.2.1（組建 9）的 Steam 環境中可啟動並完成內政、戰鬥及結局流程，但影片仍為黑畫面。本條無法啟動的結果屬於舊版 2.0.0，請與目前 2.2.1 Steam 的結果區分。\n\nGitHub 問題 #28：回報稱在 ForgePlay 2.0.0（6）中能顯示光榮和澀澤光標誌，但隨後的開場畫面變黑，遊戲稍後當機。依正文描述的症狀歸為無法遊玩。啟動平台、圖形後端及原因尚未確認。"
+        "en": "Follow-up: the same reporter confirmed launch, domestic affairs, battles and progression through the ending on Steam with ForgePlay 2.2.1 (build 9). Videos still show a black screen. The failed result in this entry is historical, from 2.0.0; distinguish it from the current 2.2.1 Steam result.\n\nGitHub issue #28: In ForgePlay 2.0.0 (6), the Koei and Kou Shibusawa logos appear, but the opening then goes black and the game crashes shortly afterward. Launch platform, graphics backend and cause are unconfirmed.",
+        "de": "Folgemeldung: Derselbe Melder bestätigt Start, Verwaltung, Kämpfe und Fortschritt bis zum Ende auf Steam mit ForgePlay 2.2.1 (Build 9). Videos bleiben schwarz. Der fehlgeschlagene Start in diesem Eintrag stammt aus 2.0.0 und ist vom aktuellen Steam-Ergebnis unter 2.2.1 zu unterscheiden.\n\nGitHub-Issue #28: In ForgePlay 2.0.0 (6) erscheinen die Logos von Koei und Kou Shibusawa, danach wird das Intro schwarz und das Spiel stürzt kurz darauf ab. Startplattform, Grafik-Backend und Ursache sind unbestätigt.",
+        "es": "Seguimiento: el mismo informante confirmó inicio, gestión, batallas y avance hasta el final en Steam con ForgePlay 2.2.1 (compilación 9). Los vídeos siguen negros. El fallo de este registro corresponde a la versión anterior 2.0.0, no al resultado actual de Steam con 2.2.1.\n\nIncidencia #28 de GitHub: en ForgePlay 2.0.0 (6) aparecen los logotipos de Koei y Kou Shibusawa, pero la introducción queda en negro y el juego se cierra poco después. Plataforma, backend y causa sin confirmar.",
+        "fr": "Suivi : la même personne confirme le lancement, la gestion, les combats et la progression jusqu’à la fin sur Steam avec ForgePlay 2.2.1 (build 9). Les vidéos restent noires. L’échec de cette entrée concerne l’ancienne version 2.0.0, à distinguer du résultat actuel sur Steam avec 2.2.1.\n\nTicket GitHub nº28 : dans ForgePlay 2.0.0 (6), les logos Koei et Kou Shibusawa apparaissent, puis l’introduction reste noire et le jeu plante peu après. Plateforme, backend et cause non confirmés.",
+        "ja": "追加報告：同じ報告者がForgePlay 2.2.1（ビルド9）のSteam環境で起動・内政・戦闘・エンディングまで進行できると確認しています。ただし動画は黒画面のままです。この項目の起動不可は過去の2.0.0の結果であり、現在の2.2.1 Steamの結果とは区別してください。\n\nGitHubイシュー#28：ForgePlay 2.0.0（6）でコーエーとシブサワ・コウのロゴは表示されますが、その後のオープニングで画面が黒くなり、しばらくするとゲームが強制終了するとの報告です。起動プラットフォーム、バックエンド、原因は未確認です。",
+        "zh-Hans": "后续反馈：同一反馈者确认，在 ForgePlay 2.2.1（构建 9）的 Steam 环境中可启动并完成内政、战斗及结局流程，但视频仍为黑屏。本条无法启动的结果属于旧版 2.0.0，请与当前 2.2.1 Steam 的结果区分。\n\nGitHub 问题 #28：反馈称在 ForgePlay 2.0.0（6）中能显示光荣和涩泽光标志，但随后的开场画面变黑，游戏稍后崩溃。启动平台、图形后端及原因尚未确认。",
+        "zh-Hant": "後續回報：同一回報者確認，在 ForgePlay 2.2.1（組建 9）的 Steam 環境中可啟動並完成內政、戰鬥及結局流程，但影片仍為黑畫面。本條無法啟動的結果屬於舊版 2.0.0，請與目前 2.2.1 Steam 的結果區分。\n\nGitHub 問題 #28：回報稱在 ForgePlay 2.0.0（6）中能顯示光榮和澀澤光標誌，但隨後的開場畫面變黑，遊戲稍後當機。啟動平台、圖形後端及原因尚未確認。"
       },
       "blocker": "unknown"
     },
@@ -2823,13 +2841,13 @@
       "testedAt": "2026-10-14",
       "notes": {
         "ko": "다음 챕터로 넘어가면 검은 화면에서 멈춰 더 이상 진행할 수 없습니다. ForgePlay 2.2.1(빌드 9)의 Steam 환경에서 D3DMetal NVIDIA를 사용했으며, 최초 설정과 초반 스토리까지는 진행할 수 있었습니다.\n\n오프닝 영상이 검게 나오는 문제는 ESC로 넘길 수 있지만, OT 이후 다음 챕터에서 나오는 검은 화면은 ESC로도 넘길 수 없어 게임을 강제 종료했다고 합니다. 정확한 원인은 아직 알 수 없습니다.",
-        "en": "GitHub follow-up — progression blocked at a chapter transition; only the opening section is playable: ForgePlay 2.2.1 (build 9), Steam, D3DMetal NVIDIA. Initial setup and early story work. ESC skips the black opening video, but the black screen at the next chapter after orientation cannot be skipped, requiring a forced exit. The reporter selected Playable with issues. Completing the game is not confirmed; the exact cause is unknown.",
-        "de": "GitHub-Folgebericht — Fortschritt beim Kapitelwechsel blockiert, nur der Anfang spielbar: ForgePlay 2.2.1 (Build 9), Steam, D3DMetal NVIDIA. Einrichtung und frühe Geschichte funktionieren. Das schwarze Intro lässt sich mit ESC überspringen; der schwarze Bildschirm beim nächsten Kapitel nach der Einführung jedoch nicht, weshalb das Spiel erzwungen beendet wurde. Die Meldung war als Playable with issues eingestuft. Vollständiges Durchspielen ist nicht bestätigt; die Ursache ist ungeklärt.",
-        "es": "Seguimiento de GitHub — avance bloqueado al cambiar de capítulo; solo el inicio es jugable: ForgePlay 2.2.1 (compilación 9), Steam, D3DMetal NVIDIA. Funcionan la configuración y la historia inicial. ESC omite el vídeo inicial negro, pero no la pantalla negra del siguiente capítulo tras la orientación, por lo que hubo que forzar la salida. El informante eligió Playable with issues. No se confirma que pueda completarse; causa desconocida.",
-        "fr": "Suivi GitHub — progression bloquée au changement de chapitre, seul le début est jouable : ForgePlay 2.2.1 (build 9), Steam, D3DMetal NVIDIA. La configuration et le début de l’histoire fonctionnent. Échap passe l’introduction noire, mais pas l’écran noir du chapitre suivant après l’orientation, imposant une fermeture forcée. Le signalement était classé Playable with issues. Finir le jeu n’est pas confirmé ; cause inconnue.",
-        "ja": "GitHub追加報告 — 章の切り替えで進行不可（序盤のみプレイ可能）：ForgePlay 2.2.1（ビルド9）、Steam、D3DMetal NVIDIAで初期設定と序盤の物語は進めます。黒いオープニング動画はESCで飛ばせますが、オリエンテーション後の次章の黒画面はESCでも飛ばせず強制終了したとのことです。元の報告分類はPlayable with issuesです。最後まで遊べる確認ではなく、原因も未確認です。",
-        "zh-Hans": "GitHub 后续反馈 — 章节切换时无法继续（仅开头可玩）：ForgePlay 2.2.1（构建 9）、Steam、D3DMetal NVIDIA 下可完成初始设置和早期剧情。开场黑屏视频可按 ESC 跳过，但说明阶段结束后进入下一章的黑屏无法用 ESC 跳过，只能强制退出。原反馈分类为 Playable with issues，并未确认能够通关；具体原因未确认。",
-        "zh-Hant": "GitHub 後續回報 — 章節切換時無法繼續（僅開頭可玩）：ForgePlay 2.2.1（組建 9）、Steam、D3DMetal NVIDIA 下可完成初始設定和早期劇情。開場黑畫面影片可按 ESC 跳過，但說明階段結束後進入下一章的黑畫面無法用 ESC 跳過，只能強制結束。原回報分類為 Playable with issues，並未確認能夠通關；具體原因未確認。"
+        "en": "GitHub follow-up — progression blocked at a chapter transition; only the opening section is playable: ForgePlay 2.2.1 (build 9), Steam, D3DMetal NVIDIA. Initial setup and early story work. ESC skips the black opening video, but the black screen at the next chapter after orientation cannot be skipped, requiring a forced exit. Completing the game is not confirmed; the exact cause is unknown.",
+        "de": "GitHub-Folgebericht — Fortschritt beim Kapitelwechsel blockiert, nur der Anfang spielbar: ForgePlay 2.2.1 (Build 9), Steam, D3DMetal NVIDIA. Einrichtung und frühe Geschichte funktionieren. Das schwarze Intro lässt sich mit ESC überspringen; der schwarze Bildschirm beim nächsten Kapitel nach der Einführung jedoch nicht, weshalb das Spiel erzwungen beendet wurde. Vollständiges Durchspielen ist nicht bestätigt; die Ursache ist ungeklärt.",
+        "es": "Seguimiento de GitHub — avance bloqueado al cambiar de capítulo; solo el inicio es jugable: ForgePlay 2.2.1 (compilación 9), Steam, D3DMetal NVIDIA. Funcionan la configuración y la historia inicial. ESC omite el vídeo inicial negro, pero no la pantalla negra del siguiente capítulo tras la orientación, por lo que hubo que forzar la salida. No se confirma que pueda completarse; causa desconocida.",
+        "fr": "Suivi GitHub — progression bloquée au changement de chapitre, seul le début est jouable : ForgePlay 2.2.1 (build 9), Steam, D3DMetal NVIDIA. La configuration et le début de l’histoire fonctionnent. Échap passe l’introduction noire, mais pas l’écran noir du chapitre suivant après l’orientation, imposant une fermeture forcée. Finir le jeu n’est pas confirmé ; cause inconnue.",
+        "ja": "GitHub追加報告 — 章の切り替えで進行不可（序盤のみプレイ可能）：ForgePlay 2.2.1（ビルド9）、Steam、D3DMetal NVIDIAで初期設定と序盤の物語は進めます。黒いオープニング動画はESCで飛ばせますが、オリエンテーション後の次章の黒画面はESCでも飛ばせず強制終了したとのことです。最後まで遊べる確認ではなく、原因も未確認です。",
+        "zh-Hans": "GitHub 后续反馈 — 章节切换时无法继续（仅开头可玩）：ForgePlay 2.2.1（构建 9）、Steam、D3DMetal NVIDIA 下可完成初始设置和早期剧情。开场黑屏视频可按 ESC 跳过，但说明阶段结束后进入下一章的黑屏无法用 ESC 跳过，只能强制退出。并未确认能够通关；具体原因未确认。",
+        "zh-Hant": "GitHub 後續回報 — 章節切換時無法繼續（僅開頭可玩）：ForgePlay 2.2.1（組建 9）、Steam、D3DMetal NVIDIA 下可完成初始設定和早期劇情。開場黑畫面影片可按 ESC 跳過，但說明階段結束後進入下一章的黑畫面無法用 ESC 跳過，只能強制結束。並未確認能夠通關；具體原因未確認。"
       },
       "blocker": "unknown"
     },
@@ -2868,14 +2886,14 @@
       "reporter": "맥갤러",
       "testedAt": null,
       "notes": {
-        "ko": "연운이 ForgePlay 2.2.1에서 잘 실행된다는 제보입니다. 개발자가 전달한 기기 정보는 M5 Pro·통합 메모리 64GB·macOS 27.0.1입니다. 실행 플랫폼, 렌더러, 게임 버전과 구체적인 성능 수치는 아직 알 수 없습니다.",
-        "en": "Community report — playable: Where Winds Meet runs well in ForgePlay 2.2.1. Test environment supplied by the developer: M5 Pro, 64GB unified memory, macOS 27.0.1. Launch platform, renderer, game version and specific performance figures are unconfirmed.",
-        "de": "Community-Bericht — spielbar: Where Winds Meet läuft laut Meldung gut mit ForgePlay 2.2.1. Vom Entwickler übermittelte Testumgebung: M5 Pro, 64 GB gemeinsamer Speicher, macOS 27.0.1. Startplattform, Renderer, Spielversion und genaue Leistungswerte sind unbestätigt.",
-        "es": "Informe de la comunidad — jugable: Where Winds Meet funciona bien con ForgePlay 2.2.1. Entorno comunicado por el desarrollador: M5 Pro, 64GB de memoria unificada y macOS 27.0.1. Plataforma, renderizador, versión del juego y cifras de rendimiento sin confirmar.",
-        "fr": "Signalement communautaire — jouable : Where Winds Meet fonctionne bien avec ForgePlay 2.2.1. Environnement transmis par le développeur : M5 Pro, 64 Go de mémoire unifiée, macOS 27.0.1. Plateforme, moteur de rendu, version du jeu et performances chiffrées non confirmés.",
-        "ja": "コミュニティ報告 — プレイ可能：『Where Winds Meet（燕雲十六声）』はForgePlay 2.2.1で良好に動作するとのことです。開発者から伝えられた環境はM5 Pro・ユニファイドメモリ64GB・macOS 27.0.1です。起動プラットフォーム、レンダラー、ゲームバージョン、具体的な性能値は未確認です。",
-        "zh-Hans": "社区反馈 — 可以游玩：《燕云十六声》在 ForgePlay 2.2.1 中运行良好。开发者提供的测试环境为 M5 Pro、64GB 统一内存、macOS 27.0.1。运行平台、渲染器、游戏版本及具体性能数据未确认。",
-        "zh-Hant": "社群回報 — 可以遊玩：《燕雲十六聲》在 ForgePlay 2.2.1 中運作良好。開發者提供的測試環境為 M5 Pro、64GB 統一記憶體、macOS 27.0.1。執行平台、繪圖後端、遊戲版本與具體效能數據未確認。"
+        "ko": "연운이 ForgePlay 2.2.1에서 잘 실행된다는 제보입니다. 실행 플랫폼, 렌더러, 게임 버전과 구체적인 성능 수치는 아직 알 수 없습니다.",
+        "en": "Community report — playable: Where Winds Meet runs well in ForgePlay 2.2.1. Launch platform, renderer, game version and specific performance figures are unconfirmed.",
+        "de": "Community-Bericht — spielbar: Where Winds Meet läuft laut Meldung gut mit ForgePlay 2.2.1. Startplattform, Renderer, Spielversion und genaue Leistungswerte sind unbestätigt.",
+        "es": "Informe de la comunidad — jugable: Where Winds Meet funciona bien con ForgePlay 2.2.1. Plataforma, renderizador, versión del juego y cifras de rendimiento sin confirmar.",
+        "fr": "Signalement communautaire — jouable : Where Winds Meet fonctionne bien avec ForgePlay 2.2.1. Plateforme, moteur de rendu, version du jeu et performances chiffrées non confirmés.",
+        "ja": "コミュニティ報告 — プレイ可能：『Where Winds Meet（燕雲十六声）』はForgePlay 2.2.1で良好に動作するとのことです。起動プラットフォーム、レンダラー、ゲームバージョン、具体的な性能値は未確認です。",
+        "zh-Hans": "社区反馈 — 可以游玩：《燕云十六声》在 ForgePlay 2.2.1 中运行良好。运行平台、渲染器、游戏版本及具体性能数据未确认。",
+        "zh-Hant": "社群回報 — 可以遊玩：《燕雲十六聲》在 ForgePlay 2.2.1 中運作良好。執行平台、繪圖後端、遊戲版本與具體效能數據未確認。"
       },
       "blocker": null
     },
@@ -2937,14 +2955,14 @@
       "reporter": "맥갤러",
       "testedAt": null,
       "notes": {
-        "ko": "게임은 실행되지만 심한 끊김과 그래픽 깨짐으로 정상적인 플레이는 어렵다는 제보입니다. 그래픽 옵션을 최저로 낮춰도 약 30~40FPS였으며, 해상도를 낮추고 창 모드로 바꿔도 화면을 움직일 때 버벅거리고 일부 그래픽이 심하게 깨졌다고 합니다.\n\n환경 정보는 같은 제보자의 이전 제보를 참고했습니다.",
-        "en": "The game launches, but the reporter says severe stuttering and graphical corruption make normal play impractical. Even at the lowest graphics settings, performance was about 30–40 FPS. Lowering the resolution and switching to windowed mode still left stuttering when moving the view and severe corruption in some graphics.\n\nEnvironment details were taken from the same reporter's earlier report.",
-        "de": "Das Spiel startet, ist laut Bericht wegen starker Ruckler und Grafikfehler aber nicht vernünftig spielbar. Selbst mit den niedrigsten Grafikeinstellungen wurden nur etwa 30–40 FPS erreicht. Auch mit geringerer Auflösung und im Fenstermodus ruckelte es beim Bewegen der Ansicht, und Teile der Grafik waren stark fehlerhaft.\n\nDie Angaben zur Testumgebung stammen aus einer früheren Meldung derselben Person.",
-        "es": "El juego arranca, pero el informante indica que los tirones intensos y los fallos gráficos impiden jugar con normalidad. Incluso con los ajustes gráficos al mínimo, el rendimiento era de unos 30–40 FPS. Reducir la resolución y pasar al modo ventana no eliminó los tirones al mover la vista ni los graves defectos en algunos gráficos.\n\nLos datos del entorno proceden de un reporte anterior de la misma persona.",
-        "fr": "Le jeu démarre, mais les fortes saccades et les défauts graphiques empêchent de jouer normalement selon le signalement. Même avec les réglages graphiques au minimum, les performances étaient d'environ 30 à 40 FPS. Réduire la résolution et passer en mode fenêtré n'a pas supprimé les saccades lors des mouvements de vue ni les graves défauts de certains éléments graphiques.\n\nLes informations sur l'environnement proviennent d'un précédent signalement de la même personne.",
-        "ja": "ゲームは起動しますが、激しいカクつきと描画の乱れにより通常のプレイは難しいとの報告です。画質を最低にしても約30～40FPSで、解像度を下げてウィンドウモードに変更しても、視点を動かすとカクつき、一部の描画が大きく崩れたとのことです。\n\n環境情報は同じ報告者の以前の報告を参考にしています。",
-        "zh-Hans": "游戏可以启动，但反馈者表示严重卡顿和画面错误使其难以正常游玩。即使将画质设为最低，也只有约30～40FPS。降低分辨率并改为窗口模式后，移动视角时仍会卡顿，部分画面仍严重出错。\n\n环境信息参考了同一反馈者此前的反馈。",
-        "zh-Hant": "遊戲可以啟動，但回報者表示嚴重卡頓與畫面錯誤使其難以正常遊玩。即使將畫質設為最低，也只有約30～40FPS。降低解析度並改為視窗模式後，移動視角時仍會卡頓，部分畫面仍嚴重出錯。\n\n環境資訊參考了同一回報者先前的回報。"
+        "ko": "게임은 실행되지만 심한 끊김과 그래픽 깨짐으로 정상적인 플레이는 어렵다는 제보입니다. 그래픽 옵션을 최저로 낮춰도 약 30~40FPS였으며, 해상도를 낮추고 창 모드로 바꿔도 화면을 움직일 때 버벅거리고 일부 그래픽이 심하게 깨졌다고 합니다.",
+        "en": "The game launches, but the reporter says severe stuttering and graphical corruption make normal play impractical. Even at the lowest graphics settings, performance was about 30–40 FPS. Lowering the resolution and switching to windowed mode still left stuttering when moving the view and severe corruption in some graphics.",
+        "de": "Das Spiel startet, ist laut Bericht wegen starker Ruckler und Grafikfehler aber nicht vernünftig spielbar. Selbst mit den niedrigsten Grafikeinstellungen wurden nur etwa 30–40 FPS erreicht. Auch mit geringerer Auflösung und im Fenstermodus ruckelte es beim Bewegen der Ansicht, und Teile der Grafik waren stark fehlerhaft.",
+        "es": "El juego arranca, pero el informante indica que los tirones intensos y los fallos gráficos impiden jugar con normalidad. Incluso con los ajustes gráficos al mínimo, el rendimiento era de unos 30–40 FPS. Reducir la resolución y pasar al modo ventana no eliminó los tirones al mover la vista ni los graves defectos en algunos gráficos.",
+        "fr": "Le jeu démarre, mais les fortes saccades et les défauts graphiques empêchent de jouer normalement selon le signalement. Même avec les réglages graphiques au minimum, les performances étaient d'environ 30 à 40 FPS. Réduire la résolution et passer en mode fenêtré n'a pas supprimé les saccades lors des mouvements de vue ni les graves défauts de certains éléments graphiques.",
+        "ja": "ゲームは起動しますが、激しいカクつきと描画の乱れにより通常のプレイは難しいとの報告です。画質を最低にしても約30～40FPSで、解像度を下げてウィンドウモードに変更しても、視点を動かすとカクつき、一部の描画が大きく崩れたとのことです。",
+        "zh-Hans": "游戏可以启动，但反馈者表示严重卡顿和画面错误使其难以正常游玩。即使将画质设为最低，也只有约30～40FPS。降低分辨率并改为窗口模式后，移动视角时仍会卡顿，部分画面仍严重出错。",
+        "zh-Hant": "遊戲可以啟動，但回報者表示嚴重卡頓與畫面錯誤使其難以正常遊玩。即使將畫質設為最低，也只有約30～40FPS。降低解析度並改為視窗模式後，移動視角時仍會卡頓，部分畫面仍嚴重出錯。"
       },
       "blocker": "graphics"
     }

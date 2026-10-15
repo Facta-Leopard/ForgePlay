@@ -2524,6 +2524,29 @@ assert.equal(merged.reports.length, base.reports.length + additions.reports.leng
 assert.equal(merged.testProfiles.length, base.testProfiles.length + additions.testProfiles.length);
 assert.equal(JSON.stringify(base), beforeBase, "website merge must preserve the app catalog");
 assert.equal(JSON.stringify(additions), beforeAdditions, "website merge must preserve source reports");
+// Public notes describe gameplay, not how an editor copied details or assigned
+// a category. These regressions supplement (not replace) reader-facing review.
+const editorialNotePatterns = [
+  /(?:환경|기기|사양).{0,80}(?:이전|다른) 제보.{0,30}(?:참고|참조|복사)/u,
+  /개발자가 (?:전달|제공)한 (?:기기|사양|환경)/u,
+  /(?:environment details.{0,100}earlier report|test environment supplied by the developer|classified as blocked based on|reporter selected Playable with issues)/i,
+  /(?:Vom Entwickler übermittelte Testumgebung|Angaben zur Testumgebung.{0,80}früheren Meldung|beschriebenen Symptome.{0,80}eingestuft|Meldung war als Playable with issues)/i,
+  /(?:Entorno comunicado por el desarrollador|datos del entorno.{0,80}reporte anterior|Se clasifica como no jugable por los síntomas|informante eligió Playable with issues)/i,
+  /(?:Environnement transmis par le développeur|informations sur l'environnement.{0,80}précédent signalement|Classé comme non jouable d’après les symptômes|signalement était classé Playable with issues)/i,
+  /(?:環境情報.{0,80}以前の報告.{0,30}参考|開発者から伝えられた環境|本文の症状に基づき.{0,30}分類|元の報告分類はPlayable with issues)/u,
+  /(?:环境信息参考|开发者提供的测试环境|根据正文描述的症状归为|原反馈分类为 Playable with issues)/u,
+  /(?:環境資訊參考|開發者提供的測試環境|依正文描述的症狀歸為|原回報分類為 Playable with issues)/u
+];
+const isEditorialNote = note => editorialNotePatterns.some(pattern => pattern.test(note));
+assert.ok(isEditorialNote("환경 정보는 같은 제보자의 이전 제보를 참고했습니다."));
+assert.ok(isEditorialNote("Test environment supplied by the developer: example."));
+assert.equal(isEditorialNote("The same reporter tested again and confirmed smooth gameplay."),false);
+assert.equal(isEditorialNote("개발자 안내: 해당 입력 문제를 확인했으며, 다음 버전에서 수정할 예정입니다."),false);
+for (const entry of [...merged.reports, ...(additions.notePatches || [])]) {
+  for (const [language, note] of Object.entries(entry.notes || {})) {
+    assert.equal(isEditorialNote(note),false,`internal editing commentary in ${entry.id || entry.reportId}/${language}`);
+  }
+}
 const empty = {...additions, testProfiles: [], reports: []};
 assert.equal(model.merge(base, empty).reports.length, base.reports.length);
 
