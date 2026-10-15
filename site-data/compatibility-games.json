@@ -2,7 +2,7 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-15",
-  "revision": 0,
+  "revision": 1,
   "testProfiles": [
     {
       "id": "apple-silicon-m5-pro-64gb-macos-27-0-1",
@@ -2855,6 +2855,29 @@
         "ja": "コミュニティ報告 — プレイ可能：『Where Winds Meet（燕雲十六声）』はForgePlay 2.2.1で良好に動作するとのことです。開発者から伝えられた環境はM5 Pro・ユニファイドメモリ64GB・macOS 27.0.1です。起動プラットフォーム、レンダラー、ゲームバージョン、具体的な性能値は未確認です。",
         "zh-Hans": "社区反馈 — 可以游玩：《燕云十六声》在 ForgePlay 2.2.1 中运行良好。开发者提供的测试环境为 M5 Pro、64GB 统一内存、macOS 27.0.1。运行平台、渲染器、游戏版本及具体性能数据未确认。",
         "zh-Hant": "社群回報 — 可以遊玩：《燕雲十六聲》在 ForgePlay 2.2.1 中運作良好。開發者提供的測試環境為 M5 Pro、64GB 統一記憶體、macOS 27.0.1。執行平台、繪圖後端、遊戲版本與具體效能數據未確認。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "kingdom-come-deliverance-ii-github-54-20261015",
+      "gameId": "kingdom-come-deliverance-ii",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m5-pro-64gb-macos-27-0-1",
+      "forgePlayVersion": "2.2.1",
+      "gameVersion": "23914554",
+      "status": "playable",
+      "source": "github-issue",
+      "reporter": "E-Schmacher",
+      "testedAt": "2026-10-15",
+      "notes": {
+        "ko": "ForgePlay 2.2.1(빌드 9)에서 Steam판을 잘 실행하고 있다는 제보입니다. D3DMetal NVIDIA 설정을 사용했습니다. 게임의 그래픽 설정에서 수직 동기화를 꺼야 하며, 켜 두면 20FPS에 고정된다고 합니다. 키 설정이 한글 자모로 표시되어 읽기 어렵고, 플레이 중 실수로 한/영을 전환하면 키 입력이 되지 않을 수 있습니다. 이때 한/영을 다시 전환하면 입력이 돌아온다고 합니다.",
+        "en": "The reporter confirms that the Steam version runs well with ForgePlay 2.2.1 (build 9), using the D3DMetal NVIDIA setting. Turn off VSync in the game's graphics settings: leaving it on reportedly locks the frame rate to 20 FPS. Key bindings appear as Korean letters and are difficult to read. Accidentally switching between Korean and English input during play can stop key input; switching back reportedly restores it.",
+        "de": "Laut Bericht läuft die Steam-Version mit ForgePlay 2.2.1 (Build 9) und der Einstellung D3DMetal NVIDIA gut. VSync muss in den Grafikeinstellungen des Spiels ausgeschaltet werden, da die Bildrate sonst bei 20 FPS bleibt. Tastenbelegungen werden als koreanische Buchstaben angezeigt und sind schwer lesbar. Ein versehentlicher Wechsel zwischen koreanischer und englischer Eingabe während des Spielens kann Tasteneingaben blockieren; ein erneuter Wechsel stellt sie laut Bericht wieder her.",
+        "es": "Según el reporte, la versión de Steam funciona bien con ForgePlay 2.2.1 (compilación 9) y la opción D3DMetal NVIDIA. Hay que desactivar la sincronización vertical en los ajustes gráficos del juego: si permanece activada, la tasa de fotogramas se queda en 20 FPS. Las asignaciones de teclas aparecen como letras coreanas y resultan difíciles de leer. Cambiar accidentalmente entre la entrada en coreano e inglés durante la partida puede impedir que respondan las teclas; volver a cambiar restaura la entrada, según el reporte.",
+        "fr": "Selon le signalement, la version Steam fonctionne bien avec ForgePlay 2.2.1 (build 9) et le réglage D3DMetal NVIDIA. Il faut désactiver la synchronisation verticale dans les paramètres graphiques du jeu : sinon, la fréquence resterait bloquée à 20 FPS. Les touches assignées s'affichent sous forme de lettres coréennes et sont difficiles à lire. Passer accidentellement de la saisie coréenne à la saisie anglaise, ou inversement, pendant la partie peut bloquer les touches ; revenir au mode précédent rétablit la saisie d'après le signalement.",
+        "ja": "ForgePlay 2.2.1（ビルド9）のD3DMetal NVIDIA設定で、Steam版が良好に動作するとの報告です。ゲームのグラフィック設定で垂直同期をオフにする必要があり、オンのままだと20FPSに固定されるとのことです。キー割り当てがハングルの字母で表示されるため読みにくく、プレイ中に誤って韓国語・英語入力を切り替えるとキー入力が効かなくなる場合があります。再度切り替えると入力が戻るとのことです。",
+        "zh-Hans": "反馈称，Steam 版在 ForgePlay 2.2.1（构建 9）中使用 D3DMetal NVIDIA 设置可以正常运行。需要在游戏图形设置中关闭垂直同步，否则帧率会固定在 20 FPS。按键绑定显示为韩文字母，不易辨认。游玩时误切换韩语与英语输入可能导致按键失效；反馈称再次切换即可恢复输入。",
+        "zh-Hant": "回報指出，Steam 版在 ForgePlay 2.2.1（組建 9）中使用 D3DMetal NVIDIA 設定可以正常執行。需要在遊戲圖形設定中關閉垂直同步，否則影格率會固定在 20 FPS。按鍵綁定顯示為韓文字母，不易辨認。遊玩時誤切換韓語與英語輸入可能導致按鍵失效；回報指出再次切換即可恢復輸入。"
       },
       "blocker": null
     }
