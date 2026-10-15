@@ -2,7 +2,7 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-15",
-  "revision": 3,
+  "revision": 4,
   "testProfiles": [
     {
       "id": "apple-silicon-m2-max-32gb-golden-gate-27-0-27-2",
@@ -251,6 +251,13 @@
     }
   ],
   "games": [
+    {
+      "id": "dragons-dogma-2",
+      "titles": {
+        "en": "Dragon's Dogma 2",
+        "ko": "드래곤즈 도그마 2"
+      }
+    },
     {
       "id": "ace-attorney-investigations-collection",
       "titles": {
@@ -2917,6 +2924,29 @@
         "zh-Hant": "回報指出，Steam 版在 D3DMetal NVIDIA 設定下可以正常遊玩。"
       },
       "blocker": null
+    },
+    {
+      "id": "dragons-dogma-2-community-macgallery-20261015",
+      "gameId": "dragons-dogma-2",
+      "launchPlatform": "unknown",
+      "testProfileId": "apple-silicon-m2-max-32gb-golden-gate-27-0-27-2",
+      "forgePlayVersion": "2.2.1",
+      "gameVersion": null,
+      "status": "blocked",
+      "source": "community-report",
+      "reporter": "맥갤러",
+      "testedAt": null,
+      "notes": {
+        "ko": "게임은 실행되지만 심한 끊김과 그래픽 깨짐으로 정상적인 플레이는 어렵다는 제보입니다. 그래픽 옵션을 최저로 낮춰도 약 30~40FPS였으며, 해상도를 낮추고 창 모드로 바꿔도 화면을 움직일 때 버벅거리고 일부 그래픽이 심하게 깨졌다고 합니다.\n\n환경 정보는 같은 제보자의 이전 제보를 참고했습니다.",
+        "en": "The game launches, but the reporter says severe stuttering and graphical corruption make normal play impractical. Even at the lowest graphics settings, performance was about 30–40 FPS. Lowering the resolution and switching to windowed mode still left stuttering when moving the view and severe corruption in some graphics.\n\nEnvironment details were taken from the same reporter's earlier report.",
+        "de": "Das Spiel startet, ist laut Bericht wegen starker Ruckler und Grafikfehler aber nicht vernünftig spielbar. Selbst mit den niedrigsten Grafikeinstellungen wurden nur etwa 30–40 FPS erreicht. Auch mit geringerer Auflösung und im Fenstermodus ruckelte es beim Bewegen der Ansicht, und Teile der Grafik waren stark fehlerhaft.\n\nDie Angaben zur Testumgebung stammen aus einer früheren Meldung derselben Person.",
+        "es": "El juego arranca, pero el informante indica que los tirones intensos y los fallos gráficos impiden jugar con normalidad. Incluso con los ajustes gráficos al mínimo, el rendimiento era de unos 30–40 FPS. Reducir la resolución y pasar al modo ventana no eliminó los tirones al mover la vista ni los graves defectos en algunos gráficos.\n\nLos datos del entorno proceden de un reporte anterior de la misma persona.",
+        "fr": "Le jeu démarre, mais les fortes saccades et les défauts graphiques empêchent de jouer normalement selon le signalement. Même avec les réglages graphiques au minimum, les performances étaient d'environ 30 à 40 FPS. Réduire la résolution et passer en mode fenêtré n'a pas supprimé les saccades lors des mouvements de vue ni les graves défauts de certains éléments graphiques.\n\nLes informations sur l'environnement proviennent d'un précédent signalement de la même personne.",
+        "ja": "ゲームは起動しますが、激しいカクつきと描画の乱れにより通常のプレイは難しいとの報告です。画質を最低にしても約30～40FPSで、解像度を下げてウィンドウモードに変更しても、視点を動かすとカクつき、一部の描画が大きく崩れたとのことです。\n\n環境情報は同じ報告者の以前の報告を参考にしています。",
+        "zh-Hans": "游戏可以启动，但反馈者表示严重卡顿和画面错误使其难以正常游玩。即使将画质设为最低，也只有约30～40FPS。降低分辨率并改为窗口模式后，移动视角时仍会卡顿，部分画面仍严重出错。\n\n环境信息参考了同一反馈者此前的反馈。",
+        "zh-Hant": "遊戲可以啟動，但回報者表示嚴重卡頓與畫面錯誤使其難以正常遊玩。即使將畫質設為最低，也只有約30～40FPS。降低解析度並改為視窗模式後，移動視角時仍會卡頓，部分畫面仍嚴重出錯。\n\n環境資訊參考了同一回報者先前的回報。"
+      },
+      "blocker": "graphics"
     }
   ]
 }
