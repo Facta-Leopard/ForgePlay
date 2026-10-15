@@ -2,7 +2,7 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-16",
-  "revision": 0,
+  "revision": 1,
   "testProfiles": [
     {
       "id": "apple-silicon-m2-max-32gb-golden-gate-27-0-27-2",
@@ -2995,6 +2995,52 @@
         "zh-Hant": "回報指出，適度降低畫質設定後可以遊玩。雖然會出現掉幀，但由於戰鬥以回合制為基礎，回報者表示可以接受，並且玩得很滿意。"
       },
       "blocker": null
+    },
+    {
+      "id": "helldivers-2-github-53-20261014",
+      "gameId": "helldivers-2",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m5-pro-64gb-macos-27-0-1",
+      "forgePlayVersion": "2.2.1",
+      "gameVersion": null,
+      "status": "blocked",
+      "source": "github-issue",
+      "reporter": "E-Schmacher",
+      "testedAt": "2026-10-14",
+      "notes": {
+        "ko": "호환성 모드에서 실행하면 GameGuard 창이 나온 뒤 오류 보고 창과 함께 종료되어 게임을 플레이할 수 없습니다. D3DMetal NVIDIA를 선택하고 프레임 생성을 끈 상태에서 발생했습니다.",
+        "en": "In compatibility mode, a GameGuard window appears, followed by an error-reporting window, and the game exits before it can be played. This occurred with D3DMetal NVIDIA selected and frame generation disabled.",
+        "de": "Im Kompatibilitätsmodus erscheint zunächst ein GameGuard-Fenster, danach ein Fenster zur Fehlerberichterstattung. Anschließend beendet sich das Spiel, bevor es gespielt werden kann. Dies trat mit ausgewähltem D3DMetal NVIDIA und deaktivierter Frame-Generierung auf.",
+        "es": "En el modo de compatibilidad aparece una ventana de GameGuard, seguida de una ventana para informar del error, y el juego se cierra sin poder jugar. Ocurrió con D3DMetal NVIDIA seleccionado y la generación de fotogramas desactivada.",
+        "fr": "En mode de compatibilité, une fenêtre GameGuard apparaît, suivie d'une fenêtre de rapport d'erreur, puis le jeu se ferme avant de pouvoir jouer. Le problème s'est produit avec D3DMetal NVIDIA sélectionné et la génération d'images désactivée.",
+        "ja": "互換モードで起動すると、GameGuardの画面に続いてエラー報告の画面が表示され、ゲームが終了してプレイできません。D3DMetal NVIDIAを選択し、フレーム生成をオフにした状態で発生しました。",
+        "zh-Hans": "在兼容模式下启动后，先出现 GameGuard 窗口，随后出现错误报告窗口，游戏便退出，无法游玩。此问题发生在选择 D3DMetal NVIDIA 并关闭帧生成的情况下。",
+        "zh-Hant": "在相容模式下啟動後，先出現 GameGuard 視窗，隨後出現錯誤回報視窗，遊戲便結束，無法遊玩。此問題發生在選擇 D3DMetal NVIDIA 並關閉影格生成的情況下。"
+      },
+      "blocker": "unknown"
+    },
+    {
+      "id": "the-witcher-3-github-46-launcher-skip-20261016",
+      "gameId": "the-witcher-3",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m5-pro-64gb-macos-27-0-1",
+      "forgePlayVersion": "2.2.1",
+      "gameVersion": null,
+      "status": "blocked",
+      "source": "github-issue",
+      "reporter": "E-Schmacher",
+      "testedAt": null,
+      "notes": {
+        "ko": "Steam 실행 옵션에 --launcher-skip을 추가하면 게임이 실행된다는 후속 제보입니다. 다만 수직 동기화를 끄고 그래픽 프리셋을 낮춰도 7FPS에 고정되어 정상적인 플레이가 어렵다고 합니다.",
+        "en": "In a follow-up report, the game launches after adding --launcher-skip to the Steam launch options. However, the reporter says it remains locked at 7 FPS even with VSync disabled and a lower graphics preset, making normal play impractical.",
+        "de": "Laut Folgebericht startet das Spiel, wenn --launcher-skip zu den Steam-Startoptionen hinzugefügt wird. Die Bildrate bleibt jedoch auch bei deaktiviertem VSync und einer niedrigeren Grafikvoreinstellung bei 7 FPS, sodass vernünftiges Spielen laut Bericht nicht möglich ist.",
+        "es": "Según el seguimiento, el juego arranca al añadir --launcher-skip a las opciones de lanzamiento de Steam. Sin embargo, el informante indica que sigue fijo en 7 FPS incluso con la sincronización vertical desactivada y un ajuste preestablecido de gráficos más bajo, lo que impide jugar con normalidad.",
+        "fr": "D'après le retour ultérieur, le jeu démarre après l'ajout de --launcher-skip aux options de lancement Steam. Cependant, la fréquence reste bloquée à 7 FPS même avec la synchronisation verticale désactivée et un préréglage graphique moins élevé, ce qui empêche de jouer normalement selon le signalement.",
+        "ja": "Steamの起動オプションに--launcher-skipを追加するとゲームが起動するとの続報です。ただし、垂直同期をオフにしてグラフィックのプリセットを下げても7FPSに固定され、通常のプレイは難しいとのことです。",
+        "zh-Hans": "后续反馈称，在 Steam 启动选项中添加 --launcher-skip 后，游戏可以启动。但即使关闭垂直同步并降低画质预设，帧率仍固定在 7 FPS，难以正常游玩。",
+        "zh-Hant": "後續回報指出，在 Steam 啟動選項中加入 --launcher-skip 後，遊戲可以啟動。但即使關閉垂直同步並降低畫質預設，影格率仍固定在 7 FPS，難以正常遊玩。"
+      },
+      "blocker": "graphics"
     }
   ]
 }
