@@ -156,7 +156,7 @@
 
   const appendAction = (parent, action, selectedLocale) => {
     const releaseDownload = /^https:\/\/github\.com\/Facta-Leopard\/ForgePlay\/releases\/download\/v([0-9]+\.[0-9]+\.[0-9]+)\/ForgePlay-\1-[0-9]+\.dmg$/;
-    if (!["https://github.com/Facta-Leopard/ForgePlay/issues", "site-assets/guide.html", "https://facta-leopard.github.io/ForgePlayVP/", "https://store.steampowered.com/subscriber_agreement/", "https://github.com/Sikarugir-App/Sikarugir"].includes(action.href)
+    if (!["https://github.com/Facta-Leopard/ForgePlay/issues", "site-assets/guide.html", "https://facta-leopard.github.io/ForgePlayVP/", "https://store.steampowered.com/subscriber_agreement/", "https://github.com/Sikarugir-App/Sikarugir", "updates.html#update-forgeplay-2-1-0-released", "https://x.com/asha_shar/status/2110083127741702241"].includes(action.href)
       && !releaseDownload.test(action.href)) return;
     const link = appendTextElement(parent, "a", "update-feedback-button", localizedText(action.label, selectedLocale));
     const href=action.href==='https://facta-leopard.github.io/ForgePlayVP/'?action.href+selectedLocale+'/':action.href;
@@ -194,6 +194,44 @@
     parent.append(rootList);
   };
 
+  // A deliberately small, text-only table format. Invalid shapes remain prose;
+  // cell contents use the same safe emphasis renderer as ordinary paragraphs.
+  const appendTable = (parent, lines) => {
+    if (lines.length < 3 || !lines.every(line => /^\|.*\|$/.test(line.trim()))) return false;
+    const rows = lines.map(line => line.trim().slice(1, -1).split("|").map(cell => cell.trim()));
+    const [headers, separators, ...body] = rows;
+    if (!headers.length || rows.some(row => row.length !== headers.length)
+      || !separators.every(cell => /^:?-{3,}:?$/.test(cell))) return false;
+    const wrapper = document.createElement("div");
+    wrapper.className = "update-card-table-wrap";
+    wrapper.tabIndex = 0;
+    wrapper.setAttribute("role", "region");
+    wrapper.setAttribute("aria-label", headers.join(" · "));
+    const table = document.createElement("table");
+    table.className = "update-card-table";
+    const head = document.createElement("thead");
+    const headRow = document.createElement("tr");
+    const appendCell = (row, tag, value, index) => {
+      const cell = document.createElement(tag);
+      if (tag === "th") cell.setAttribute("scope", "col");
+      if (separators[index].endsWith(":")) cell.className = "update-card-table-number";
+      appendEmphasizedText(cell, value);
+      row.append(cell);
+    };
+    headers.forEach((value, index) => appendCell(headRow, "th", value, index));
+    head.append(headRow);
+    const tbody = document.createElement("tbody");
+    body.forEach(values => {
+      const row = document.createElement("tr");
+      values.forEach((value, index) => appendCell(row, "td", value, index));
+      tbody.append(row);
+    });
+    table.append(head, tbody);
+    wrapper.append(table);
+    parent.append(wrapper);
+    return true;
+  };
+
   const appendStructuredParagraph = (parent, paragraph) => {
     const trimmed = paragraph.trim();
     if (trimmed.startsWith("## ")) {
@@ -208,6 +246,7 @@
     }
 
     const lines = trimmed.split(/\r?\n/);
+    if (appendTable(parent, lines)) return;
     if (lines.length && lines.every((line) => bulletLinePattern.test(line))) {
       appendBulletList(parent, lines);
       return;

@@ -1,13 +1,40 @@
 {
   "$schema": "./announcements.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-10-16",
+  "updatedAt": "2026-10-17",
   "announcements": [
+    {
+      "id": "forgeplay-graphics-optimization-research",
+      "type": "project",
+      "publishedAt": "2026-10-17",
+      "featured": true,
+      "titles": {
+        "ko": "ForgePlay 그래픽스 최적화 연구의 초기 성과를 공유합니다.",
+        "en": "Sharing early results from ForgePlay graphics optimization research",
+        "de": "Erste Ergebnisse der Grafikoptimierungsforschung für ForgePlay",
+        "es": "Primeros resultados de la investigación de optimización gráfica de ForgePlay",
+        "fr": "Premiers résultats de la recherche d’optimisation graphique de ForgePlay",
+        "ja": "ForgePlayのグラフィックス最適化研究の初期成果をご紹介します。",
+        "zh-Hans": "分享 ForgePlay 图形优化研究的初步成果。",
+        "zh-Hant": "分享 ForgePlay 圖形最佳化研究的初步成果。"
+      },
+      "summaries": {
+        "ko": "2.0.0 때부터 별도로 진행해 온 그래픽스 최적화 연구에서 일부 복사 작업의 처리 시간 단축을 확인했습니다. 기존 Metal 캐싱과 다른 접근의 테스트 결과와 VM·다른 프로젝트로 이어갈 장기적인 방향을 공유합니다. 아직 배포본에 적용된 내용은 아닙니다.",
+        "en": "Separate research underway since 2.0.0 has reduced the time of some copy operations. Explore the tests, the difference from Metal caching, and long-term plans for VM and other projects. Not yet applied to the distributed app.",
+        "de": "Die seit 2.0.0 laufende eigenständige Forschung verkürzt einige Kopieroperationen. Testergebnisse, Unterschiede zum Metal-Cache und langfristige Pläne für VM und weitere Projekte – noch nicht in der veröffentlichten App.",
+        "es": "La investigación paralela desde 2.0.0 ha reducido el tiempo de algunas copias. Compartimos resultados, diferencias respecto a la caché de Metal y planes para VM y otros proyectos. Aún no se aplica a la app distribuida.",
+        "fr": "Les recherches menées séparément depuis 2.0.0 réduisent certaines copies. Résultats, différence avec le cache Metal et perspectives pour la VM et d’autres projets, sans application à l’app distribuée pour le moment.",
+        "ja": "2.0.0から別途進めてきた研究で、一部コピー処理の時間短縮が見られました。既存のMetalキャッシュとは異なる試験結果と、VMやほかのプロジェクトへの長期計画を紹介します。配布版にはまだ適用していません。",
+        "zh-Hans": "自 2.0.0 起单独开展的图形优化研究，已缩短部分复制操作的处理时间。分享与现有 Metal 缓存不同的测试结果，以及面向 VM 和其他项目的长期方向。尚未应用到发布版本。",
+        "zh-Hant": "從 2.0.0 起另外進行的圖形最佳化研究，已縮短部分複製操作的處理時間。分享不同於既有 Metal 快取的測試結果，以及面向 VM 與其他專案的長期方向。尚未套用至發布版本。"
+      },
+      "href": "updates.html#update-forgeplay-graphics-optimization-research"
+    },
     {
       "id": "forgeplay-2-3-0-preview",
       "type": "project",
       "publishedAt": "2026-10-16",
-      "featured": true,
+      "featured": false,
       "titles": {
         "ko": "ForgePlay 2.3.0 Preview",
         "en": "ForgePlay 2.3.0 Preview",

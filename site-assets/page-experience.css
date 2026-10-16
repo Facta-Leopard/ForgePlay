@@ -166,6 +166,13 @@
 .fp-site .update-card-body p,
 .fp-site .update-card-list li { overflow-wrap: anywhere; }
 .fp-site .update-card-body strong { color:var(--page-ink); font-weight:650; }
+.fp-site .update-card-table-wrap { min-width:0; max-width:100%; overflow-x:auto; border:1px solid var(--page-line); border-radius:8px; }
+.fp-site .update-card-table-wrap:focus-visible { outline:2px solid var(--page-accent); outline-offset:3px; }
+.fp-site .update-card-table { width:100%; min-width:32rem; border-collapse:collapse; color:var(--page-copy); font-size:.9rem; line-height:1.65; }
+.fp-site .update-card-table th,.fp-site .update-card-table td { padding:12px 14px; text-align:left; border-bottom:1px solid var(--page-line); }
+.fp-site .update-card-table th { color:var(--page-ink); font-weight:650; }
+.fp-site .update-card-table tr:last-child td { border-bottom:0; }
+.fp-site .update-card-table .update-card-table-number { text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
 .fp-site .update-inline-image { min-width:0; margin:6px 0 12px; }
 .fp-site .update-inline-image a { display:block; overflow:hidden; border:1px solid var(--page-line); border-radius:8px; cursor:zoom-in; }
 .fp-site .update-inline-image img { display:block; width:100%; height:auto; }
