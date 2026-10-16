@@ -2,7 +2,7 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-17",
-  "revision": 0,
+  "revision": 1,
   "testProfiles": [
     {
       "id": "apple-silicon-m2-max-32gb-golden-gate-27-0-27-2",
@@ -793,8 +793,8 @@
     {
       "id": "the-witcher-3",
       "titles": {
-        "en": "The Witcher 3",
-        "ko": "더 위쳐 3"
+        "en": "The Witcher 3: Wild Hunt — Remastered",
+        "ko": "더 위쳐 3: 와일드 헌트 리마스터"
       }
     }
   ],
