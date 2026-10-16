@@ -2,7 +2,7 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-16",
-  "revision": 2,
+  "revision": 3,
   "testProfiles": [
     {
       "id": "apple-silicon-m2-max-32gb-golden-gate-27-0-27-2",
@@ -3003,21 +3003,21 @@
       "testProfileId": "apple-silicon-m5-pro-64gb-macos-27-0-1",
       "forgePlayVersion": "2.2.1",
       "gameVersion": null,
-      "status": "blocked",
+      "status": "playable",
       "source": "github-issue",
       "reporter": "E-Schmacher",
       "testedAt": null,
       "notes": {
-        "ko": "Steam 실행 옵션에 --launcher-skip을 추가하면 게임이 실행된다는 후속 제보입니다. 다만 수직 동기화를 끄고 그래픽 프리셋을 낮춰도 7FPS에 고정되어 정상적인 플레이가 어렵다고 합니다.",
-        "en": "In a follow-up report, the game launches after adding --launcher-skip to the Steam launch options. However, the reporter says it remains locked at 7 FPS even with VSync disabled and a lower graphics preset, making normal play impractical.",
-        "de": "Laut Folgebericht startet das Spiel, wenn --launcher-skip zu den Steam-Startoptionen hinzugefügt wird. Die Bildrate bleibt jedoch auch bei deaktiviertem VSync und einer niedrigeren Grafikvoreinstellung bei 7 FPS, sodass vernünftiges Spielen laut Bericht nicht möglich ist.",
-        "es": "Según el seguimiento, el juego arranca al añadir --launcher-skip a las opciones de lanzamiento de Steam. Sin embargo, el informante indica que sigue fijo en 7 FPS incluso con la sincronización vertical desactivada y un ajuste preestablecido de gráficos más bajo, lo que impide jugar con normalidad.",
-        "fr": "D'après le retour ultérieur, le jeu démarre après l'ajout de --launcher-skip aux options de lancement Steam. Cependant, la fréquence reste bloquée à 7 FPS même avec la synchronisation verticale désactivée et un préréglage graphique moins élevé, ce qui empêche de jouer normalement selon le signalement.",
-        "ja": "Steamの起動オプションに--launcher-skipを追加するとゲームが起動するとの続報です。ただし、垂直同期をオフにしてグラフィックのプリセットを下げても7FPSに固定され、通常のプレイは難しいとのことです。",
-        "zh-Hans": "后续反馈称，在 Steam 启动选项中添加 --launcher-skip 后，游戏可以启动。但即使关闭垂直同步并降低画质预设，帧率仍固定在 7 FPS，难以正常游玩。",
-        "zh-Hant": "後續回報指出，在 Steam 啟動選項中加入 --launcher-skip 後，遊戲可以啟動。但即使關閉垂直同步並降低畫質預設，影格率仍固定在 7 FPS，難以正常遊玩。"
+        "ko": "런처를 건너뛰고 안티앨리어싱을 바꾸면 정상적으로 플레이할 수 있다는 후속 제보입니다. Steam 라이브러리에서 위처 3의 속성 → 실행 옵션에 --launcher-skip을 입력하세요. 게임 내 안티앨리어싱은 FXAA 또는 TAA로 바꿔야 합니다. 제보자는 중간 그래픽 프리셋과 FXAA에서 60FPS를 조금 넘겼다고 합니다. 앞서 7FPS에 고정됐던 것은 안티앨리어싱을 바꾸지 않고 프리셋만 낮췄을 때의 결과입니다.",
+        "en": "The reporter confirms normal gameplay after skipping the launcher and changing anti-aliasing. In the Steam library, open The Witcher 3's Properties and add --launcher-skip under Launch Options. Set in-game anti-aliasing to FXAA or TAA. The reporter gets just over 60 FPS with the Medium graphics preset and FXAA. The earlier 7 FPS result was with only the graphics preset lowered, before changing anti-aliasing.",
+        "de": "Laut Folgebericht lässt sich das Spiel nach dem Überspringen des Launchers und dem Ändern der Kantenglättung normal spielen. In der Steam-Bibliothek die Eigenschaften von The Witcher 3 öffnen und unter Startoptionen --launcher-skip eintragen. Die Kantenglättung im Spiel muss auf FXAA oder TAA gestellt werden. Mit der mittleren Grafikvoreinstellung und FXAA erreicht der Melder etwas über 60 FPS. Die zuvor gemeldeten 7 FPS traten auf, als nur die Grafikvoreinstellung gesenkt und die Kantenglättung noch nicht geändert worden war.",
+        "es": "El informante confirma que puede jugar con normalidad tras omitir el lanzador y cambiar el antialiasing. En la biblioteca de Steam, abre las propiedades de The Witcher 3 y añade --launcher-skip en las opciones de lanzamiento. Cambia el antialiasing del juego a FXAA o TAA. Con el ajuste gráfico preestablecido Medio y FXAA, el informante obtiene algo más de 60 FPS. Los 7 FPS anteriores correspondían a haber bajado solo el ajuste preestablecido, antes de cambiar el antialiasing.",
+        "fr": "Le signalement confirme que le jeu est normalement jouable après avoir contourné le lanceur et changé l'anticrénelage. Dans la bibliothèque Steam, ouvrez les propriétés de The Witcher 3 et ajoutez --launcher-skip dans les options de lancement. Réglez l'anticrénelage du jeu sur FXAA ou TAA. Avec le préréglage graphique Moyen et FXAA, la personne indique obtenir un peu plus de 60 FPS. Les 7 FPS signalés auparavant correspondaient à une baisse du seul préréglage, avant le changement d'anticrénelage.",
+        "ja": "ランチャーをスキップし、アンチエイリアスを変更すると正常にプレイできるとの続報です。Steamライブラリでウィッチャー3のプロパティを開き、起動オプションに--launcher-skipを入力してください。ゲーム内のアンチエイリアスはFXAAまたはTAAに変更する必要があります。報告者は画質プリセット「中」とFXAAで60FPSを少し上回ったとのことです。以前の7FPS固定は、アンチエイリアスを変更せずプリセットだけを下げたときの結果です。",
+        "zh-Hans": "后续反馈确认，跳过启动器并更改抗锯齿后可以正常游玩。在 Steam 库中打开《巫师3》的属性，在启动选项中添加 --launcher-skip。游戏内抗锯齿需要改为 FXAA 或 TAA。反馈者使用中等画质预设和 FXAA 时，帧率略高于 60 FPS。此前固定在 7 FPS 的情况，是只降低画质预设、尚未更改抗锯齿时的结果。",
+        "zh-Hant": "後續回報確認，跳過啟動器並更改反鋸齒後可以正常遊玩。在 Steam 收藏庫中開啟《巫師3》的內容，在啟動選項中加入 --launcher-skip。遊戲內反鋸齒需要改為 FXAA 或 TAA。回報者使用中等畫質預設和 FXAA 時，影格率略高於 60 FPS。先前固定在 7 FPS 的情況，是只降低畫質預設、尚未更改反鋸齒時的結果。"
       },
-      "blocker": "graphics"
+      "blocker": null
     }
   ]
 }
