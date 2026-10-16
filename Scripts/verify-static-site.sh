@@ -129,6 +129,9 @@ PAGES=(
   site-assets/version-posters/forgeplay-2.0.0.png
   site-assets/version-posters/forgeplay-2.2.0.jpg
   site-assets/version-posters/forgeplay-memory-control-preview.jpg
+  site-assets/announcements/forgeplay-2-3-0-preview-poster.png
+  site-assets/announcements/forgeplay-2-3-0-key-mapping.png
+  site-assets/announcements/forgeplay-2-3-0-lost-ark.png
   site-assets/version-posters/forgeplay-vr-preview.jpg
   site-assets/version-posters/forgeplay-vm-preview.jpg
   site-assets/version-posters/forgeplay-ai-coordinator-preview.jpg
@@ -1691,8 +1694,8 @@ for announcement in announcements:
         fields = {"href", "label", "accessibilityLabel", "afterParagraph"}
         require_object_shape(action, fields, fields, f"announcement {identifier} action")
         download_action = re.fullmatch(r"https://github\.com/Facta-Leopard/ForgePlay/releases/download/v([0-9]+\.[0-9]+\.[0-9]+)/ForgePlay-\1-[0-9]+\.dmg", action["href"])
-        if action["href"] not in {"https://github.com/Facta-Leopard/ForgePlay/issues", "site-assets/guide.html", "https://facta-leopard.github.io/ForgePlayVP/"} and not download_action:
-            raise SystemExit("announcement action must target the project issue list, guide, ForgePlayVP or a version-matched release DMG")
+        if action["href"] not in {"https://github.com/Facta-Leopard/ForgePlay/issues", "site-assets/guide.html", "https://facta-leopard.github.io/ForgePlayVP/", "https://store.steampowered.com/subscriber_agreement/", "https://github.com/Sikarugir-App/Sikarugir"} and not download_action:
+            raise SystemExit("announcement action must target an approved project, source reference or version-matched release DMG")
         for key in ("label", "accessibilityLabel"):
             if not isinstance(action[key],dict) or set(action[key]) != set(locale_names) or not all(isinstance(v,str) and v.strip() for v in action[key].values()):
                 raise SystemExit(f"announcement {identifier}: action labels require eight locales")
@@ -2057,7 +2060,7 @@ require_snippet "$ROOT_DIR/index.html" 'data-home-games'
 require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
 require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20261015-version-order"'
-require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20261004-release210"'
+require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20261016-preview230"'
 require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20261004-badges"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
 require_snippet "$ROOT_DIR/index.html" 'data-announcement-summary'
@@ -2097,8 +2100,12 @@ if 'src="site-assets/version-posters/forgeplay-2.2.0.jpg" width="853" height="12
     raise SystemExit('2.2.0 must use the user-provided versioned poster')
 if not (root / 'site-assets/version-posters/forgeplay-2.2.0.jpg').read_bytes().startswith(b'\xff\xd8\xff'):
     raise SystemExit('2.2.0 poster must be a valid JPEG asset')
-if 'src="site-assets/version-posters/forgeplay-memory-control-preview.jpg" width="853" height="1280"' not in page:
+if 'src="site-assets/announcements/forgeplay-2-3-0-preview-poster.png" width="1024" height="1536"' not in page:
     raise SystemExit('Upcoming update preview must retain the supplied poster dimensions')
+if not (root / 'site-assets/announcements/forgeplay-2-3-0-preview-poster.png').read_bytes().startswith(b'\x89PNG\r\n\x1a\n'):
+    raise SystemExit('Upcoming update preview must use the new user-provided PNG')
+if 'src="site-assets/version-posters/forgeplay-memory-control-preview.jpg"' in page:
+    raise SystemExit('The superseded keyboard preview must not remain in the poster shelf')
 for name in ['forgeplay-memory-control-preview.jpg','forgeplay-vr-preview.jpg','forgeplay-vm-preview.jpg','forgeplay-ai-coordinator-preview.jpg']:
     if not (root / 'site-assets/version-posters' / name).read_bytes().startswith(b'\xff\xd8\xff'):
         raise SystemExit('Preview poster must be a valid JPEG asset: '+name)
@@ -2237,7 +2244,7 @@ require_snippet "$ROOT_DIR/site-data/README.md" 'Routine compatibility database 
 require_snippet "$ROOT_DIR/site-data/README.md" 'No raw HTML or Markdown is rendered.'
 require_snippet "$ROOT_DIR/updates.html" 'data-announcement-list'
 require_snippet "$ROOT_DIR/updates.html" 'data-nav-page="updates"'
-require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20261013-vr-demo"'
+require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20261016-preview230"'
 for page in updates.html site-assets/guide.html; do
   require_snippet "$ROOT_DIR/$page" 'src="site-assets/video-card.js?v=20261013-1"'
   require_snippet "$ROOT_DIR/$page" 'href="site-assets/video-card.css?v=20261013-1"'

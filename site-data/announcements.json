@@ -1,13 +1,40 @@
 {
   "$schema": "./announcements.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-10-14",
+  "updatedAt": "2026-10-16",
   "announcements": [
+    {
+      "id": "forgeplay-2-3-0-preview",
+      "type": "project",
+      "publishedAt": "2026-10-16",
+      "featured": true,
+      "titles": {
+        "ko": "ForgePlay 2.3.0 Preview",
+        "en": "ForgePlay 2.3.0 Preview",
+        "de": "ForgePlay 2.3.0 Preview",
+        "es": "ForgePlay 2.3.0 Preview",
+        "fr": "ForgePlay 2.3.0 Preview",
+        "ja": "ForgePlay 2.3.0 Preview",
+        "zh-Hans": "ForgePlay 2.3.0 Preview",
+        "zh-Hant": "ForgePlay 2.3.0 Preview"
+      },
+      "summaries": {
+        "ko": "ForgePlay 2.3.0의 키 매핑·한글 입력·포플 대화 개선과 런타임·메모리 경량화를 미리 소개합니다. ForgePlayVP의 두 차례 심사 보완 경과와 ForgePlay를 만든 목적도 함께 전합니다.",
+        "en": "Preview the keyboard mapping, Korean input, Fopl conversation and runtime/memory improvements in ForgePlay 2.3.0, alongside ForgePlayVP review updates and the purpose behind ForgePlay.",
+        "de": "Vorschau auf Tastenzuordnung, koreanische Eingabe, Fopl-Gespräche und Laufzeit-/Speicherverbesserungen in ForgePlay 2.3.0 sowie den Stand der ForgePlayVP-Prüfung und den Zweck des Projekts.",
+        "es": "Avance de ForgePlay 2.3.0: asignación de teclas, entrada coreana, conversaciones con Fopl y mejoras de runtime y memoria. También explico la revisión de ForgePlayVP y por qué creé ForgePlay.",
+        "fr": "Aperçu de ForgePlay 2.3.0 : touches, saisie coréenne, conversations avec Fopl, environnement d’exécution et mémoire. Également, le suivi de l’examen de ForgePlayVP et la raison d’être du projet.",
+        "ja": "ForgePlay 2.3.0のキーマッピング・韓国語入力・ポプルとの会話、ランタイムとメモリの軽量化を先行紹介します。ForgePlayVPの2回の審査補足と、ForgePlayを作った目的もお伝えします。",
+        "zh-Hans": "提前介绍 ForgePlay 2.3.0 的键位映射、韩语输入、Fopl 对话，以及运行时和内存轻量化改进，同时说明 ForgePlayVP 两次审核补充的进展与制作 ForgePlay 的目的。",
+        "zh-Hant": "搶先介紹 ForgePlay 2.3.0 的按鍵對應、韓語輸入、Fopl 對話，以及執行環境與記憶體輕量化改進，同時說明 ForgePlayVP 兩次審核補充的進展與製作 ForgePlay 的目的。"
+      },
+      "href": "updates.html#update-forgeplay-2-3-0-preview"
+    },
     {
       "id": "forgeplay-2-2-1-update",
       "type": "release",
       "publishedAt": "2026-10-14",
-      "featured": true,
+      "featured": false,
       "titles": {
         "ko": "ForgePlay 2.2.1 업데이트",
         "en": "ForgePlay 2.2.1 Update",

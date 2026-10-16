@@ -156,7 +156,7 @@
 
   const appendAction = (parent, action, selectedLocale) => {
     const releaseDownload = /^https:\/\/github\.com\/Facta-Leopard\/ForgePlay\/releases\/download\/v([0-9]+\.[0-9]+\.[0-9]+)\/ForgePlay-\1-[0-9]+\.dmg$/;
-    if (!["https://github.com/Facta-Leopard/ForgePlay/issues", "site-assets/guide.html", "https://facta-leopard.github.io/ForgePlayVP/"].includes(action.href)
+    if (!["https://github.com/Facta-Leopard/ForgePlay/issues", "site-assets/guide.html", "https://facta-leopard.github.io/ForgePlayVP/", "https://store.steampowered.com/subscriber_agreement/", "https://github.com/Sikarugir-App/Sikarugir"].includes(action.href)
       && !releaseDownload.test(action.href)) return;
     const link = appendTextElement(parent, "a", "update-feedback-button", localizedText(action.label, selectedLocale));
     const href=action.href==='https://facta-leopard.github.io/ForgePlayVP/'?action.href+selectedLocale+'/':action.href;
