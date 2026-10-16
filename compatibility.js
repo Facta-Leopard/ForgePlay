@@ -253,7 +253,7 @@
       "compatibility-record-notes-cell",
       message("compat.columnNotes", "Notes")
     );
-    notesCell.textContent = reportNote(report, selectedLocale);
+    catalog().renderNote(notesCell, reportNote(report, selectedLocale));
 
     record.append(
       statusCell,
@@ -444,12 +444,13 @@
           description.warningText
         );
       }
-      appendTextElement(
+      const summaryNote = appendTextElement(
         notesCell,
         "p",
         "compatibility-report-note",
-        reportNote(summaryRecord.report, selectedLocale)
+        ""
       );
+      catalog().renderNote(summaryNote, reportNote(summaryRecord.report, selectedLocale));
 
       const expandCell = makeCell("compatibility-expand-cell", "");
       const expandButton = document.createElement("button");

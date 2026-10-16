@@ -1113,8 +1113,16 @@ def validate_compatibility_database(candidate):
             raise SystemExit(
                 f"report {report_id} notes must cover all eight site locales"
             )
-        if notes and any(re.search(r"https?://(?:www\.)?github\.com(?:/|$)", note, re.I) for note in notes.values()):
-            raise SystemExit(f"report {report_id}: keep GitHub source URLs out of public compatibility notes")
+        if notes:
+            # This issue reference was explicitly requested for the Witcher report.
+            approved_source_url = (
+                "https://github.com/Facta-Leopard/ForgePlay/issues/46#issuecomment-6203842269"
+                if report_id == "the-witcher-3-github-46-20261014" else None
+            )
+            for note in notes.values():
+                source_urls = re.findall(r"https?://(?:www\.)?github\.com(?:/[^\s]*|(?=\s|$))", note, re.I)
+                if source_urls and source_urls != [approved_source_url]:
+                    raise SystemExit(f"report {report_id}: unapproved GitHub source URL in public compatibility notes")
 
     unreported_games = game_by_id.keys() - reported_game_ids
     if unreported_games:
@@ -2004,7 +2012,7 @@ require_snippet "$ROOT_DIR/index.html" 'data-current-release-download'
 require_snippet "$ROOT_DIR/index.html" 'data-current-release-download-label'
 require_snippet "$ROOT_DIR/index.html" 'data-current-release-link'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/current-release.js?v=20260905-7"'
-require_snippet "$ROOT_DIR/index.html" 'src="site-assets/website-compatibility.js?v=20261015-version-order"'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/website-compatibility.js?v=20261016-issue-links"'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/home-experience.css?v=20261005-report'
 python3 - "$ROOT_DIR/index.html" <<'HOME_REPORT'
 from html.parser import HTMLParser
@@ -2029,7 +2037,7 @@ parser = ReportLink()
 parser.feed(Path(sys.argv[1]).read_text())
 assert parser.found == 1, "Homepage compatibility section must have one localized report-form link"
 HOME_REPORT
-require_snippet "$ROOT_DIR/index.html" 'src="site-assets/home-experience.js?v=20260929-platform1"'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/home-experience.js?v=20261016-issue-links"'
 require_snippet "$ROOT_DIR/index.html" 'data-release-download'
 require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.releaseNotesButton"'
 for html in index.html why.html license.html privacy.html support.html compatibility.html updates.html site-assets/guide.html site-assets/dlss5.html; do
@@ -2059,7 +2067,7 @@ require_snippet "$ROOT_DIR/index.html" 'data-compatibility-platform'
 require_snippet "$ROOT_DIR/index.html" 'data-home-games'
 require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
-require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20261015-version-order"'
+require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20261016-issue-links"'
 require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20261016-preview230"'
 require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20261004-badges"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
@@ -2130,9 +2138,9 @@ require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count
 require_snippet "$ROOT_DIR/compatibility.html" 'href="site.css?v=20260811-22"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260929-platform1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/current-release.js?v=20260905-7"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20261015-version-order"'
-require_snippet "$ROOT_DIR/site-assets/guide.html" 'src="site-assets/website-compatibility.js?v=20261015-version-order"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20261015-version-order"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20261016-issue-links"'
+require_snippet "$ROOT_DIR/site-assets/guide.html" 'src="site-assets/website-compatibility.js?v=20261016-issue-links"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20261016-issue-links"'
 require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-device>M4 Pro · 24GB</strong>'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-card'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-tag'
@@ -2155,6 +2163,9 @@ require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebC
 require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebCatalog.sortReports('
 require_snippet "$ROOT_DIR/site-assets/home-experience.js" ').sort(window.ForgePlayWebCatalog.compareGameGroups)'
 require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebCatalog.describe('
+require_snippet "$ROOT_DIR/compatibility.js" 'catalog().renderNote(notesCell, reportNote(report, selectedLocale))'
+require_snippet "$ROOT_DIR/compatibility.js" 'catalog().renderNote(summaryNote, reportNote(summaryRecord.report, selectedLocale))'
+require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebCatalog.renderNote(note,'
 require_snippet "$ROOT_DIR/site-assets/website-compatibility.js" 'site-data/compatibility-games.json'
 require_snippet "$ROOT_DIR/site-assets/website-compatibility.js" 'site-data/website-compatibility-reports.json'
 if ! grep -Eq 'cache[[:space:]]*:[[:space:]]*"no-store"' "$ROOT_DIR/site-assets/website-compatibility.js"; then

@@ -59,7 +59,8 @@
     appendText(heading, "span", "", "ForgePlay " + version + " · " + message(statusKey[report.status] || statusKey.unknown));
     record.append(heading);
     platformBadge(record, window.ForgePlayWebCatalog.platformOf(report));
-    appendText(record, "p", "", localized(report.notes) || message("refresh.noReportNotes"));
+    const note = appendText(record, "p", "", "");
+    window.ForgePlayWebCatalog.renderNote(note, localized(report.notes) || message("refresh.noReportNotes"));
     const attribution = [
       message(report.websiteDeveloperNote || report.reporter === "ForgePlay 개발자"
         ? "compat.verificationDeveloperNote"

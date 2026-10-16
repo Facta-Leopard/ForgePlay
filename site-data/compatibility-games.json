@@ -2,7 +2,7 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-16",
-  "revision": 3,
+  "revision": 4,
   "testProfiles": [
     {
       "id": "apple-silicon-m2-max-32gb-golden-gate-27-0-27-2",
@@ -2727,21 +2727,21 @@
       "testProfileId": "apple-silicon-m5-pro-64gb-macos-27-0-1",
       "forgePlayVersion": "2.2.1",
       "gameVersion": "25773555",
-      "status": "blocked",
+      "status": "playable",
       "source": "github-issue",
       "reporter": "E-Schmacher",
       "testedAt": "2026-10-14",
       "notes": {
-        "ko": "ForgePlay 2.2.1(빌드 9)에서 호환성 설정을 적용해도 REDlauncher가 종료되어 게임을 시작하지 못했다는 제보입니다. Steam 빌드 25773555를 DXMT로 실행한 결과입니다. 처음에 D3DMetal NVIDIA와 DXMT 모두 실패했다고 한 내용은 제보자가 정정했습니다. D3DMetal NVIDIA에서도 같은 문제가 생기는지는 이 제보만으로 알 수 없습니다. 정확한 종료 원인은 아직 알 수 없습니다.",
-        "en": "GitHub follow-up — does not launch: with ForgePlay 2.2.1 (build 9), Steam build 25773555 and DXMT, REDlauncher exits despite the compatibility workaround; the main game was not observed starting. This record covers DXMT only. The reporter withdrew the claimed independent D3DMetal NVIDIA/DXMT comparison. The exact cause is unconfirmed.",
-        "de": "GitHub-Folgebericht — startet nicht: Mit ForgePlay 2.2.1 (Build 9), Steam-Build 25773555 und DXMT beendet sich REDlauncher trotz Kompatibilitätsanpassung; ein Start des eigentlichen Spiels wurde nicht beobachtet. Dieser Eintrag gilt nur für DXMT. Der Melder zog den behaupteten unabhängigen Vergleich mit D3DMetal NVIDIA zurück. Die genaue Ursache ist ungeklärt.",
-        "es": "Seguimiento de GitHub — no se inicia: con ForgePlay 2.2.1 (compilación 9), build de Steam 25773555 y DXMT, REDlauncher se cierra pese al ajuste de compatibilidad; no se observó el inicio del juego principal. Este registro solo cubre DXMT. El informante retiró la comparación independiente con D3DMetal NVIDIA. La causa exacta no está confirmada.",
-        "fr": "Suivi GitHub — ne démarre pas : avec ForgePlay 2.2.1 (build 9), le build Steam 25773555 et DXMT, REDlauncher se ferme malgré l’adaptation de compatibilité ; le démarrage du jeu principal n’a pas été observé. Ce relevé concerne seulement DXMT. La comparaison indépendante avec D3DMetal NVIDIA a été retirée par la personne. La cause exacte reste inconnue.",
-        "ja": "GitHub追加報告 — 起動不可：ForgePlay 2.2.1（ビルド9）、Steamビルド25773555、DXMTで互換対応を適用してもREDlauncherが終了し、ゲーム本体の起動は確認できませんでした。この記録はDXMTのみの結果です。報告者が撤回したD3DMetal NVIDIAとの独立比較は含めません。終了原因は未確認です。",
-        "zh-Hans": "GitHub 后续反馈 — 无法启动：ForgePlay 2.2.1（构建 9）、Steam 构建 25773555、DXMT 环境下，即使应用兼容性调整，REDlauncher 仍会退出，未观察到游戏本体启动。本记录仅代表 DXMT；反馈者已撤回与 D3DMetal NVIDIA 独立对比的说法。具体退出原因未确认。",
-        "zh-Hant": "GitHub 後續回報 — 無法啟動：ForgePlay 2.2.1（組建 9）、Steam 組建 25773555、DXMT 環境下，即使套用相容性調整，REDlauncher 仍會結束，未觀察到遊戲本體啟動。本紀錄僅代表 DXMT；回報者已撤回與 D3DMetal NVIDIA 獨立比較的說法。具體結束原因未確認。"
+        "ko": "런처를 건너뛰고 안티앨리어싱을 바꾸면 정상적으로 플레이할 수 있다는 후속 제보입니다. Steam 라이브러리에서 위처 3의 속성 → 실행 옵션에 --launcher-skip을 입력하세요. 게임 내 안티앨리어싱은 FXAA 또는 TAA로 바꿔야 합니다. 제보자는 중간 그래픽 프리셋과 FXAA에서 60FPS를 조금 넘겼다고 합니다. 앞서 7FPS에 고정됐던 것은 안티앨리어싱을 바꾸지 않고 프리셋만 낮췄을 때의 결과입니다.\n\n관련 이슈: https://github.com/Facta-Leopard/ForgePlay/issues/46#issuecomment-6203842269",
+        "en": "The reporter confirms normal gameplay after skipping the launcher and changing anti-aliasing. In the Steam library, open The Witcher 3's Properties and add --launcher-skip under Launch Options. Set in-game anti-aliasing to FXAA or TAA. The reporter gets just over 60 FPS with the Medium graphics preset and FXAA. The earlier 7 FPS result was with only the graphics preset lowered, before changing anti-aliasing.\n\nRelated issue: https://github.com/Facta-Leopard/ForgePlay/issues/46#issuecomment-6203842269",
+        "de": "Laut Folgebericht lässt sich das Spiel nach dem Überspringen des Launchers und dem Ändern der Kantenglättung normal spielen. In der Steam-Bibliothek die Eigenschaften von The Witcher 3 öffnen und unter Startoptionen --launcher-skip eintragen. Die Kantenglättung im Spiel muss auf FXAA oder TAA gestellt werden. Mit der mittleren Grafikvoreinstellung und FXAA erreicht der Melder etwas über 60 FPS. Die zuvor gemeldeten 7 FPS traten auf, als nur die Grafikvoreinstellung gesenkt und die Kantenglättung noch nicht geändert worden war.\n\nZugehöriges Issue: https://github.com/Facta-Leopard/ForgePlay/issues/46#issuecomment-6203842269",
+        "es": "El informante confirma que puede jugar con normalidad tras omitir el lanzador y cambiar el antialiasing. En la biblioteca de Steam, abre las propiedades de The Witcher 3 y añade --launcher-skip en las opciones de lanzamiento. Cambia el antialiasing del juego a FXAA o TAA. Con el ajuste gráfico preestablecido Medio y FXAA, el informante obtiene algo más de 60 FPS. Los 7 FPS anteriores correspondían a haber bajado solo el ajuste preestablecido, antes de cambiar el antialiasing.\n\nIncidencia relacionada: https://github.com/Facta-Leopard/ForgePlay/issues/46#issuecomment-6203842269",
+        "fr": "Le signalement confirme que le jeu est normalement jouable après avoir contourné le lanceur et changé l'anticrénelage. Dans la bibliothèque Steam, ouvrez les propriétés de The Witcher 3 et ajoutez --launcher-skip dans les options de lancement. Réglez l'anticrénelage du jeu sur FXAA ou TAA. Avec le préréglage graphique Moyen et FXAA, la personne indique obtenir un peu plus de 60 FPS. Les 7 FPS signalés auparavant correspondaient à une baisse du seul préréglage, avant le changement d'anticrénelage.\n\nTicket associé: https://github.com/Facta-Leopard/ForgePlay/issues/46#issuecomment-6203842269",
+        "ja": "ランチャーをスキップし、アンチエイリアスを変更すると正常にプレイできるとの続報です。Steamライブラリでウィッチャー3のプロパティを開き、起動オプションに--launcher-skipを入力してください。ゲーム内のアンチエイリアスはFXAAまたはTAAに変更する必要があります。報告者は画質プリセット「中」とFXAAで60FPSを少し上回ったとのことです。以前の7FPS固定は、アンチエイリアスを変更せずプリセットだけを下げたときの結果です。\n\n関連イシュー: https://github.com/Facta-Leopard/ForgePlay/issues/46#issuecomment-6203842269",
+        "zh-Hans": "后续反馈确认，跳过启动器并更改抗锯齿后可以正常游玩。在 Steam 库中打开《巫师3》的属性，在启动选项中添加 --launcher-skip。游戏内抗锯齿需要改为 FXAA 或 TAA。反馈者使用中等画质预设和 FXAA 时，帧率略高于 60 FPS。此前固定在 7 FPS 的情况，是只降低画质预设、尚未更改抗锯齿时的结果。\n\n相关问题: https://github.com/Facta-Leopard/ForgePlay/issues/46#issuecomment-6203842269",
+        "zh-Hant": "後續回報確認，跳過啟動器並更改反鋸齒後可以正常遊玩。在 Steam 收藏庫中開啟《巫師3》的內容，在啟動選項中加入 --launcher-skip。遊戲內反鋸齒需要改為 FXAA 或 TAA。回報者使用中等畫質預設和 FXAA 時，影格率略高於 60 FPS。先前固定在 7 FPS 的情況，是只降低畫質預設、尚未更改反鋸齒時的結果。\n\n相關問題: https://github.com/Facta-Leopard/ForgePlay/issues/46#issuecomment-6203842269"
       },
-      "blocker": "launcher"
+      "blocker": null
     },
     {
       "id": "legend-of-mortal-github-47-20261014",
@@ -2993,29 +2993,6 @@
         "ja": "グラフィック設定をある程度下げればプレイできるとの報告です。フレームレートの低下はあるものの、ターン制の戦闘なので、それを許容しながら満足して楽しめているとのことです。",
         "zh-Hans": "反馈称，适当降低画质设置后可以游玩。虽然会出现掉帧，但由于战斗以回合制为基础，反馈者表示可以接受，并且玩得很满意。",
         "zh-Hant": "回報指出，適度降低畫質設定後可以遊玩。雖然會出現掉幀，但由於戰鬥以回合制為基礎，回報者表示可以接受，並且玩得很滿意。"
-      },
-      "blocker": null
-    },
-    {
-      "id": "the-witcher-3-github-46-launcher-skip-20261016",
-      "gameId": "the-witcher-3",
-      "launchPlatform": "steam",
-      "testProfileId": "apple-silicon-m5-pro-64gb-macos-27-0-1",
-      "forgePlayVersion": "2.2.1",
-      "gameVersion": null,
-      "status": "playable",
-      "source": "github-issue",
-      "reporter": "E-Schmacher",
-      "testedAt": null,
-      "notes": {
-        "ko": "런처를 건너뛰고 안티앨리어싱을 바꾸면 정상적으로 플레이할 수 있다는 후속 제보입니다. Steam 라이브러리에서 위처 3의 속성 → 실행 옵션에 --launcher-skip을 입력하세요. 게임 내 안티앨리어싱은 FXAA 또는 TAA로 바꿔야 합니다. 제보자는 중간 그래픽 프리셋과 FXAA에서 60FPS를 조금 넘겼다고 합니다. 앞서 7FPS에 고정됐던 것은 안티앨리어싱을 바꾸지 않고 프리셋만 낮췄을 때의 결과입니다.",
-        "en": "The reporter confirms normal gameplay after skipping the launcher and changing anti-aliasing. In the Steam library, open The Witcher 3's Properties and add --launcher-skip under Launch Options. Set in-game anti-aliasing to FXAA or TAA. The reporter gets just over 60 FPS with the Medium graphics preset and FXAA. The earlier 7 FPS result was with only the graphics preset lowered, before changing anti-aliasing.",
-        "de": "Laut Folgebericht lässt sich das Spiel nach dem Überspringen des Launchers und dem Ändern der Kantenglättung normal spielen. In der Steam-Bibliothek die Eigenschaften von The Witcher 3 öffnen und unter Startoptionen --launcher-skip eintragen. Die Kantenglättung im Spiel muss auf FXAA oder TAA gestellt werden. Mit der mittleren Grafikvoreinstellung und FXAA erreicht der Melder etwas über 60 FPS. Die zuvor gemeldeten 7 FPS traten auf, als nur die Grafikvoreinstellung gesenkt und die Kantenglättung noch nicht geändert worden war.",
-        "es": "El informante confirma que puede jugar con normalidad tras omitir el lanzador y cambiar el antialiasing. En la biblioteca de Steam, abre las propiedades de The Witcher 3 y añade --launcher-skip en las opciones de lanzamiento. Cambia el antialiasing del juego a FXAA o TAA. Con el ajuste gráfico preestablecido Medio y FXAA, el informante obtiene algo más de 60 FPS. Los 7 FPS anteriores correspondían a haber bajado solo el ajuste preestablecido, antes de cambiar el antialiasing.",
-        "fr": "Le signalement confirme que le jeu est normalement jouable après avoir contourné le lanceur et changé l'anticrénelage. Dans la bibliothèque Steam, ouvrez les propriétés de The Witcher 3 et ajoutez --launcher-skip dans les options de lancement. Réglez l'anticrénelage du jeu sur FXAA ou TAA. Avec le préréglage graphique Moyen et FXAA, la personne indique obtenir un peu plus de 60 FPS. Les 7 FPS signalés auparavant correspondaient à une baisse du seul préréglage, avant le changement d'anticrénelage.",
-        "ja": "ランチャーをスキップし、アンチエイリアスを変更すると正常にプレイできるとの続報です。Steamライブラリでウィッチャー3のプロパティを開き、起動オプションに--launcher-skipを入力してください。ゲーム内のアンチエイリアスはFXAAまたはTAAに変更する必要があります。報告者は画質プリセット「中」とFXAAで60FPSを少し上回ったとのことです。以前の7FPS固定は、アンチエイリアスを変更せずプリセットだけを下げたときの結果です。",
-        "zh-Hans": "后续反馈确认，跳过启动器并更改抗锯齿后可以正常游玩。在 Steam 库中打开《巫师3》的属性，在启动选项中添加 --launcher-skip。游戏内抗锯齿需要改为 FXAA 或 TAA。反馈者使用中等画质预设和 FXAA 时，帧率略高于 60 FPS。此前固定在 7 FPS 的情况，是只降低画质预设、尚未更改抗锯齿时的结果。",
-        "zh-Hant": "後續回報確認，跳過啟動器並更改反鋸齒後可以正常遊玩。在 Steam 收藏庫中開啟《巫師3》的內容，在啟動選項中加入 --launcher-skip。遊戲內反鋸齒需要改為 FXAA 或 TAA。回報者使用中等畫質預設和 FXAA 時，影格率略高於 60 FPS。先前固定在 7 FPS 的情況，是只降低畫質預設、尚未更改反鋸齒時的結果。"
       },
       "blocker": null
     }

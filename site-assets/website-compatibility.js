@@ -9,6 +9,22 @@
     steam:"Steam", battlenet:"Battle.net", epic:"Epic Games", stove:"STOVE",
     exe:message("compat.platformEXE"), vr:"VR", unknown:message("compat.platformUnknown")
   }[platform] || message("compat.platformUnknown"));
+  const renderNote = (parent, text) => {
+    parent.replaceChildren();
+    const issueURL = /https:\/\/github\.com\/Facta-Leopard\/ForgePlay\/issues\/([1-9]\d*)(?:#issuecomment-[1-9]\d*)?(?=\s|$)/g;
+    let offset = 0;
+    for (const match of text.matchAll(issueURL)) {
+      parent.append(document.createTextNode(text.slice(offset, match.index)));
+      const link = document.createElement("a");
+      link.href = match[0];
+      link.textContent = "GitHub #" + match[1];
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      parent.append(link);
+      offset = match.index + match[0].length;
+    }
+    parent.append(document.createTextNode(text.slice(offset)));
+  };
   const versionParts = (value) => {
     if (typeof value !== "string" || !/^\d+(?:\.\d+){1,2}$/.test(value)) return null;
     const parts = value.split(".").map(Number);
@@ -197,5 +213,5 @@
     return pending;
   };
   window.ForgePlayWebCatalog = {load, merge, summarize, sortReports, describe, compareVersions, compareGameGroups,
-    platforms, platformOf, platformLabel, platformGroups};
+    platforms, platformOf, platformLabel, platformGroups, renderNote};
 })();
