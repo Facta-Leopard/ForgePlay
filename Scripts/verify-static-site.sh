@@ -1116,7 +1116,7 @@ def validate_compatibility_database(candidate):
         if notes:
             # This issue reference was explicitly requested for the Witcher report.
             approved_source_url = (
-                "https://github.com/Facta-Leopard/ForgePlay/issues/46#issuecomment-6203842269"
+                "https://github.com/Facta-Leopard/ForgePlay/issues/46#issuecomment-6214346559"
                 if report_id == "the-witcher-3-github-46-20261014" else None
             )
             for note in notes.values():
