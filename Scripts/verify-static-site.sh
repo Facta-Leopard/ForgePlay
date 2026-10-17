@@ -1702,7 +1702,7 @@ for announcement in announcements:
         fields = {"href", "label", "accessibilityLabel", "afterParagraph"}
         require_object_shape(action, fields, fields, f"announcement {identifier} action")
         download_action = re.fullmatch(r"https://github\.com/Facta-Leopard/ForgePlay/releases/download/v([0-9]+\.[0-9]+\.[0-9]+)/ForgePlay-\1-[0-9]+\.dmg", action["href"])
-        if action["href"] not in {"https://github.com/Facta-Leopard/ForgePlay/issues", "site-assets/guide.html", "https://facta-leopard.github.io/ForgePlayVP/", "https://store.steampowered.com/subscriber_agreement/", "https://github.com/Sikarugir-App/Sikarugir", "updates.html#update-forgeplay-2-1-0-released", "https://x.com/asha_shar/status/2110083127741702241"} and not download_action:
+        if action["href"] not in {"https://github.com/Facta-Leopard/ForgePlay/issues", "site-assets/guide.html", "https://facta-leopard.github.io/ForgePlayVP/", "https://store.steampowered.com/subscriber_agreement/", "https://github.com/Sikarugir-App/Sikarugir", "updates.html#update-forgeplay-2-1-0-released", "https://x.com/asha_shar/status/2110083127741702241", "https://github.com/Facta-Leopard/ForgePlay/releases/tag/v2.3.0"} and not download_action:
             raise SystemExit("announcement action must target an approved project, source reference or version-matched release DMG")
         for key in ("label", "accessibilityLabel"):
             if not isinstance(action[key],dict) or set(action[key]) != set(locale_names) or not all(isinstance(v,str) and v.strip() for v in action[key].values()):
@@ -2068,7 +2068,7 @@ require_snippet "$ROOT_DIR/index.html" 'data-home-games'
 require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
 require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20261016-issue-links"'
-require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20261017-graphics-research"'
+require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20261018-release230"'
 require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20261004-badges"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
 require_snippet "$ROOT_DIR/index.html" 'data-announcement-summary'
@@ -2255,7 +2255,7 @@ require_snippet "$ROOT_DIR/site-data/README.md" 'Routine compatibility database 
 require_snippet "$ROOT_DIR/site-data/README.md" 'No raw HTML or Markdown is rendered.'
 require_snippet "$ROOT_DIR/updates.html" 'data-announcement-list'
 require_snippet "$ROOT_DIR/updates.html" 'data-nav-page="updates"'
-require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20261017-graphics-research"'
+require_snippet "$ROOT_DIR/updates.html" 'src="announcements.js?v=20261018-release230"'
 for page in updates.html site-assets/guide.html; do
   require_snippet "$ROOT_DIR/$page" 'src="site-assets/video-card.js?v=20261013-1"'
   require_snippet "$ROOT_DIR/$page" 'href="site-assets/video-card.css?v=20261013-1"'

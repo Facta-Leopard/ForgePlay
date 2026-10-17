@@ -1,13 +1,40 @@
 {
   "$schema": "./announcements.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-10-17",
+  "updatedAt": "2026-10-18",
   "announcements": [
+    {
+      "id": "forgeplay-2-3-0-update",
+      "type": "release",
+      "publishedAt": "2026-10-18",
+      "featured": true,
+      "titles": {
+        "ko": "ForgePlay 2.3.0 업데이트",
+        "en": "ForgePlay 2.3.0 Update",
+        "de": "ForgePlay 2.3.0 – Update",
+        "es": "Actualización de ForgePlay 2.3.0",
+        "fr": "Mise à jour ForgePlay 2.3.0",
+        "ja": "ForgePlay 2.3.0アップデート",
+        "zh-Hans": "ForgePlay 2.3.0 更新",
+        "zh-Hant": "ForgePlay 2.3.0 更新"
+      },
+      "summaries": {
+        "ko": "Mac용 ForgePlay 2.3.0(빌드 10)을 공개했습니다. 한글 입력과 포플 표시·대화, 게임별 실행 환경을 개선하고 DXMT 0.80을 적용했습니다. ForgePlayVP의 App Store 출시가 더 늦어지면 .IPA로 배포할 예정입니다.",
+        "en": "ForgePlay 2.3.0 (build 10) for Mac is available, with Korean input, Fopl and per-game environment improvements and DXMT 0.80. If ForgePlayVP’s App Store release is delayed further, an .IPA distribution is planned.",
+        "de": "ForgePlay 2.3.0 (Build 10) für Mac ist verfügbar: Verbesserungen für koreanische Eingabe, Fopl und Spielumgebungen sowie DXMT 0.80. Bei weiterer Verzögerung der ForgePlayVP-Freigabe ist eine .IPA-Verteilung geplant.",
+        "es": "ForgePlay 2.3.0 (compilación 10) para Mac ya está disponible: mejoras de entrada coreana, Fopl y entornos por juego, y DXMT 0.80. Si ForgePlayVP sigue retrasándose en el App Store, se prevé distribuirlo como .IPA.",
+        "fr": "ForgePlay 2.3.0 (build 10) pour Mac est disponible : saisie coréenne, Fopl et environnements par jeu améliorés, DXMT 0.80. Si la sortie App Store de ForgePlayVP tarde davantage, une distribution .IPA est prévue.",
+        "ja": "Mac用ForgePlay 2.3.0（ビルド10）を公開しました。韓国語入力、ポプル表示・会話、ゲーム別環境を改善しDXMT 0.80を適用。ForgePlayVPのApp Store公開がさらに遅れる場合は.IPA配布を予定しています。",
+        "zh-Hans": "Mac 版 ForgePlay 2.3.0（构建 10）已发布，改善韩语输入、Fopl 显示与对话、游戏运行环境，并应用 DXMT 0.80。若 ForgePlayVP 在 App Store 上线继续延迟，计划以 .IPA 分发。",
+        "zh-Hant": "Mac 版 ForgePlay 2.3.0（組建 10）已發布，改善韓語輸入、Fopl 顯示與對話、遊戲執行環境，並套用 DXMT 0.80。若 ForgePlayVP 在 App Store 上架繼續延後，計畫以 .IPA 發布。"
+      },
+      "href": "updates.html#update-forgeplay-2-3-0-update"
+    },
     {
       "id": "forgeplay-graphics-optimization-research",
       "type": "project",
       "publishedAt": "2026-10-17",
-      "featured": true,
+      "featured": false,
       "titles": {
         "ko": "ForgePlay 그래픽스 최적화 연구의 초기 성과를 공유합니다.",
         "en": "Sharing early results from ForgePlay graphics optimization research",
