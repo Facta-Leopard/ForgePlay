@@ -1,8 +1,8 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
-  "updatedAt": "2026-10-17",
-  "revision": 1,
+  "updatedAt": "2026-10-18",
+  "revision": 0,
   "testProfiles": [
     {
       "id": "apple-silicon-m2-max-32gb-golden-gate-27-0-27-2",
@@ -251,6 +251,13 @@
     }
   ],
   "games": [
+    {
+      "id": "lost-ark",
+      "titles": {
+        "en": "Lost Ark",
+        "ko": "로스트아크"
+      }
+    },
     {
       "id": "clair-obscur-expedition-33",
       "titles": {
@@ -2993,6 +3000,28 @@
         "ja": "グラフィック設定をある程度下げればプレイできるとの報告です。フレームレートの低下はあるものの、ターン制の戦闘なので、それを許容しながら満足して楽しめているとのことです。",
         "zh-Hans": "反馈称，适当降低画质设置后可以游玩。虽然会出现掉帧，但由于战斗以回合制为基础，反馈者表示可以接受，并且玩得很满意。",
         "zh-Hant": "回報指出，適度降低畫質設定後可以遊玩。雖然會出現掉幀，但由於戰鬥以回合制為基礎，回報者表示可以接受，並且玩得很滿意。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "lost-ark-forgeplay-2-3-0-stove-project-test-20261018",
+      "gameId": "lost-ark",
+      "launchPlatform": "stove",
+      "testProfileId": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
+      "forgePlayVersion": "2.3.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.3.0(빌드 10)에서 STOVE판 로스트아크가 원활하게 실행됩니다.",
+        "en": "The STOVE version of Lost Ark runs smoothly with ForgePlay 2.3.0 (build 10).",
+        "de": "Die STOVE-Version von Lost Ark läuft mit ForgePlay 2.3.0 (Build 10) flüssig.",
+        "es": "La versión de STOVE de Lost Ark funciona con fluidez en ForgePlay 2.3.0 (compilación 10).",
+        "fr": "La version STOVE de Lost Ark fonctionne de manière fluide avec ForgePlay 2.3.0 (build 10).",
+        "ja": "STOVE版ロストアークはForgePlay 2.3.0（ビルド10）で快適に動作します。",
+        "zh-Hans": "STOVE 版《失落的方舟》在 ForgePlay 2.3.0（构建 10）中运行流畅。",
+        "zh-Hant": "STOVE 版《失落的方舟》在 ForgePlay 2.3.0（組建 10）中運作流暢。"
       },
       "blocker": null
     }
