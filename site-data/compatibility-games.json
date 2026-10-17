@@ -2,7 +2,7 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-18",
-  "revision": 0,
+  "revision": 1,
   "testProfiles": [
     {
       "id": "apple-silicon-m2-max-32gb-golden-gate-27-0-27-2",
@@ -3022,6 +3022,50 @@
         "ja": "STOVE版ロストアークはForgePlay 2.3.0（ビルド10）で快適に動作します。",
         "zh-Hans": "STOVE 版《失落的方舟》在 ForgePlay 2.3.0（构建 10）中运行流畅。",
         "zh-Hant": "STOVE 版《失落的方舟》在 ForgePlay 2.3.0（組建 10）中運作流暢。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "dagon-forgeplay-2-2-1-vr-project-test-20261018",
+      "gameId": "dagon",
+      "launchPlatform": "vr",
+      "testProfileId": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
+      "forgePlayVersion": "2.2.1",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.2.1에서 Dagon이 VR로 원활하게 동작합니다.",
+        "en": "Dagon runs smoothly in VR with ForgePlay 2.2.1.",
+        "de": "Dagon läuft mit ForgePlay 2.2.1 in VR flüssig.",
+        "es": "Dagon funciona con fluidez en VR con ForgePlay 2.2.1.",
+        "fr": "Dagon fonctionne de manière fluide en VR avec ForgePlay 2.2.1.",
+        "ja": "DagonはForgePlay 2.2.1のVR環境で快適に動作します。",
+        "zh-Hans": "Dagon 在 ForgePlay 2.2.1 的 VR 环境中运行流畅。",
+        "zh-Hant": "Dagon 在 ForgePlay 2.2.1 的 VR 環境中運作流暢。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "the-lab-forgeplay-2-2-1-vr-project-test-20261018",
+      "gameId": "the-lab",
+      "launchPlatform": "vr",
+      "testProfileId": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
+      "forgePlayVersion": "2.2.1",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.2.1에서 The Lab이 VR로 원활하게 동작합니다.",
+        "en": "The Lab runs smoothly in VR with ForgePlay 2.2.1.",
+        "de": "The Lab läuft mit ForgePlay 2.2.1 in VR flüssig.",
+        "es": "The Lab funciona con fluidez en VR con ForgePlay 2.2.1.",
+        "fr": "The Lab fonctionne de manière fluide en VR avec ForgePlay 2.2.1.",
+        "ja": "The LabはForgePlay 2.2.1のVR環境で快適に動作します。",
+        "zh-Hans": "The Lab 在 ForgePlay 2.2.1 的 VR 环境中运行流畅。",
+        "zh-Hant": "The Lab 在 ForgePlay 2.2.1 的 VR 環境中運作流暢。"
       },
       "blocker": null
     }
