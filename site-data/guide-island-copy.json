@@ -1,6 +1,6 @@
 {
-  "version": "2.2.1",
-  "build": 9,
+  "version": "2.3.0",
+  "build": 10,
   "locales": [
     "ko",
     "en",
@@ -134,14 +134,14 @@
       "在 Vision Pro 選擇「開啟 VR 遊戲畫面」。"
     ],
     "vrShowcaseNote": [
-      "Mac의 VR 기능은 ForgePlay 2.2.1에 포함되어 있습니다. Vision Pro용 ForgePlayVP는 별도로 App Store 심사 대기 중입니다. 플레이 중에는 Mac 가상 디스플레이 연결과 AWDL을 유지해 주세요.",
-      "Mac-side VR is included in ForgePlay 2.2.1. The separate ForgePlayVP app for Vision Pro is awaiting App Store review. Keep Mac Virtual Display connected and AWDL enabled while playing.",
-      "Mac-VR ist in ForgePlay 2.2.1 enthalten. Die separate ForgePlayVP-App für Vision Pro wartet auf die App-Store-Prüfung. Beim Spielen Mac Virtual Display verbunden und AWDL aktiviert lassen.",
-      "La función VR del Mac se incluye en ForgePlay 2.2.1. La app independiente ForgePlayVP para Vision Pro está pendiente de revisión en el App Store. Mantén la pantalla virtual del Mac conectada y AWDL activado durante el juego.",
-      "La VR côté Mac est incluse dans ForgePlay 2.2.1. ForgePlayVP pour Vision Pro est une app distincte en attente d’examen par l’App Store. Gardez l’écran virtuel Mac connecté et AWDL activé pendant le jeu.",
-      "Mac側VR機能はForgePlay 2.2.1に含まれます。別途必要なVision Pro用ForgePlayVPはApp Store審査待ちです。プレイ中はMac仮想ディスプレイとAWDLの接続を維持してください。",
-      "Mac 端 VR 功能已包含在 ForgePlay 2.2.1 中。独立的 Vision Pro 应用 ForgePlayVP 正在等待 App Store 审核。游玩时请保持 Mac 虚拟显示器连接和 AWDL 开启。",
-      "Mac 端 VR 功能已包含在 ForgePlay 2.2.1 中。獨立的 Vision Pro App ForgePlayVP 正在等待 App Store 審查。遊玩時請保持 Mac 虛擬顯示器連線與 AWDL 開啟。"
+      "Mac의 VR 기능은 ForgePlay 2.3.0에 포함되어 있습니다. Vision Pro용 ForgePlayVP는 별도로 App Store 심사 대기 중입니다. 플레이 중에는 Mac 가상 디스플레이 연결과 AWDL을 유지해 주세요.",
+      "Mac-side VR is included in ForgePlay 2.3.0. The separate ForgePlayVP app for Vision Pro is awaiting App Store review. Keep Mac Virtual Display connected and AWDL enabled while playing.",
+      "Mac-VR ist in ForgePlay 2.3.0 enthalten. Die separate ForgePlayVP-App für Vision Pro wartet auf die App-Store-Prüfung. Beim Spielen Mac Virtual Display verbunden und AWDL aktiviert lassen.",
+      "La función VR del Mac se incluye en ForgePlay 2.3.0. La app independiente ForgePlayVP para Vision Pro está pendiente de revisión en el App Store. Mantén la pantalla virtual del Mac conectada y AWDL activado durante el juego.",
+      "La VR côté Mac est incluse dans ForgePlay 2.3.0. ForgePlayVP pour Vision Pro est une app distincte en attente d’examen par l’App Store. Gardez l’écran virtuel Mac connecté et AWDL activé pendant le jeu.",
+      "Mac側VR機能はForgePlay 2.3.0に含まれます。別途必要なVision Pro用ForgePlayVPはApp Store審査待ちです。プレイ中はMac仮想ディスプレイとAWDLの接続を維持してください。",
+      "Mac 端 VR 功能已包含在 ForgePlay 2.3.0 中。独立的 Vision Pro 应用 ForgePlayVP 正在等待 App Store 审核。游玩时请保持 Mac 虚拟显示器连接和 AWDL 开启。",
+      "Mac 端 VR 功能已包含在 ForgePlay 2.3.0 中。獨立的 Vision Pro App ForgePlayVP 正在等待 App Store 審查。遊玩時請保持 Mac 虛擬顯示器連線與 AWDL 開啟。"
     ],
     "vpHome": [
       "ForgePlayVP 홈페이지 보기",
@@ -584,14 +584,14 @@
       "VR 連線 · DXMT"
     ],
     "vrAvailability": [
-      "Mac의 VR 기능은 2.2.1에 포함되어 있습니다. 실제 연결에는 별도 Vision Pro 앱 ForgePlayVP가 필요하며, 현재 App Store 심사 대기 중입니다. 아래에서는 연결 과정을 미리 체험할 수 있습니다.",
-      "Mac VR is included in 2.2.1. Real connections require the separate ForgePlayVP app for Vision Pro, currently awaiting App Store review. Try the connection flow below.",
-      "Mac-VR ist in 2.2.1 enthalten. Echte Verbindungen benötigen die separate ForgePlayVP-App, die auf die App-Store-Prüfung wartet. Der Ablauf lässt sich hier ausprobieren.",
-      "VR para Mac se incluye en 2.2.1. La conexión real requiere ForgePlayVP para Vision Pro, pendiente de revisión en el App Store. Prueba el proceso aquí.",
-      "La VR Mac est incluse dans 2.2.1. La connexion réelle nécessite ForgePlayVP pour Vision Pro, en attente d’examen par l’App Store. Essayez le parcours ici.",
-      "Mac側VR機能は2.2.1に含まれます。実際の接続にはApp Store審査待ちのForgePlayVPが別途必要です。ここでは接続の流れを体験できます。",
-      "Mac VR 功能已包含在 2.2.1 中。实际连接需要独立的 ForgePlayVP，目前正在等待 App Store 审核。可在下方体验连接流程。",
-      "Mac VR 功能已包含在 2.2.1 中。實際連線需要獨立的 ForgePlayVP，目前正在等待 App Store 審查。可在下方體驗連線流程。"
+      "Mac의 VR 기능은 2.3.0에 포함되어 있습니다. 실제 연결에는 별도 Vision Pro 앱 ForgePlayVP가 필요하며, 현재 App Store 심사 대기 중입니다. 아래에서는 연결 과정을 미리 체험할 수 있습니다.",
+      "Mac VR is included in 2.3.0. Real connections require the separate ForgePlayVP app for Vision Pro, currently awaiting App Store review. Try the connection flow below.",
+      "Mac-VR ist in 2.3.0 enthalten. Echte Verbindungen benötigen die separate ForgePlayVP-App, die auf die App-Store-Prüfung wartet. Der Ablauf lässt sich hier ausprobieren.",
+      "VR para Mac se incluye en 2.3.0. La conexión real requiere ForgePlayVP para Vision Pro, pendiente de revisión en el App Store. Prueba el proceso aquí.",
+      "La VR Mac est incluse dans 2.3.0. La connexion réelle nécessite ForgePlayVP pour Vision Pro, en attente d’examen par l’App Store. Essayez le parcours ici.",
+      "Mac側VR機能は2.3.0に含まれます。実際の接続にはApp Store審査待ちのForgePlayVPが別途必要です。ここでは接続の流れを体験できます。",
+      "Mac VR 功能已包含在 2.3.0 中。实际连接需要独立的 ForgePlayVP，目前正在等待 App Store 审核。可在下方体验连接流程。",
+      "Mac VR 功能已包含在 2.3.0 中。實際連線需要獨立的 ForgePlayVP，目前正在等待 App Store 審查。可在下方體驗連線流程。"
     ],
     "virtualDisplay": [
       "Mac 가상 디스플레이를 연결하고 플레이하세요. AWDL과 가상 디스플레이 연결을 유지해야 합니다. 개발자용 Allow Mac Virtual Display를 켠 상태에서 몰입 화면에 Mac 화면이 겹칠 때만 해당 옵션을 끄세요. 실제 연결을 끄는 것과 다릅니다.",

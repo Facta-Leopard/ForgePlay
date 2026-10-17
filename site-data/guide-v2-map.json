@@ -1,6 +1,6 @@
 {
-  "version": "2.2.1",
-  "build": 9,
+  "version": "2.3.0",
+  "build": 10,
   "aliases": {"AI 로컬 분석 전 미리보기":"AI 로컬 분석(베타) 전 미리보기","다크":"Pumpkin Spice Season 다크","라이트":"Burnt Sienna 라이트","EXE 실행 (베타)":"EXE 실행","게임이 전면일 때 macOS 포인터 숨기기 (베타)":"게임이 전면일 때 macOS 포인터 숨기기"},
   "labels": ["Simple", "Motion Lite", "Motion Quality", "Motion Repair"],
   "views": {
