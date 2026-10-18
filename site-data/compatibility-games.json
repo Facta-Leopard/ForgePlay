@@ -1,8 +1,8 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
-  "updatedAt": "2026-10-18",
-  "revision": 2,
+  "updatedAt": "2026-10-19",
+  "revision": 0,
   "testProfiles": [
     {
       "id": "apple-silicon-m2-max-32gb-golden-gate-27-0-27-2",
@@ -248,9 +248,86 @@
       "chip": "M5 Max",
       "unifiedMemoryGB": 32,
       "macOSVersion": "Golden Gate 27.0.1"
+    },
+    {
+      "id": "apple-silicon-m2-16gb-macos-27-0-1",
+      "platform": "Apple Silicon Mac",
+      "chip": "M2",
+      "unifiedMemoryGB": 16,
+      "macOSVersion": "27.0.1"
     }
   ],
   "games": [
+    {
+      "id": "raiden-iii-digital-edition",
+      "titles": {
+        "en": "Raiden III Digital Edition",
+        "ko": "라이덴 3 디지털 에디션"
+      }
+    },
+    {
+      "id": "raiden-iv-overkill",
+      "titles": {
+        "en": "Raiden IV: OverKill",
+        "ko": "라이덴 4 오버킬"
+      }
+    },
+    {
+      "id": "raiden-v-directors-cut",
+      "titles": {
+        "en": "Raiden V: Director's Cut",
+        "ko": "라이덴 5 디렉터스 컷"
+      }
+    },
+    {
+      "id": "raiden-nova",
+      "titles": {
+        "en": "Raiden NOVA",
+        "ko": "라이덴 노바"
+      }
+    },
+    {
+      "id": "revolver360-reactor",
+      "titles": {
+        "en": "REVOLVER360 RE:ACTOR",
+        "ko": "리볼버360 리액터"
+      }
+    },
+    {
+      "id": "sandtrix",
+      "titles": {
+        "en": "Sandtrix",
+        "ko": "샌드트릭스(Sandtrix)"
+      }
+    },
+    {
+      "id": "glitchfall",
+      "titles": {
+        "en": "Glitchfall",
+        "ko": "글리치폴(Glitchfall)"
+      }
+    },
+    {
+      "id": "redout",
+      "titles": {
+        "en": "Redout: Enhanced Edition",
+        "ko": "레드아웃 1"
+      }
+    },
+    {
+      "id": "redout-2",
+      "titles": {
+        "en": "Redout 2",
+        "ko": "레드아웃 2"
+      }
+    },
+    {
+      "id": "monster-hunter-rise",
+      "titles": {
+        "en": "MONSTER HUNTER RISE",
+        "ko": "몬스터 헌터 라이즈"
+      }
+    },
     {
       "id": "lost-ark",
       "titles": {
@@ -3089,6 +3166,305 @@
         "ja": "ForgePlay 2.2.1でランチャーが終了してゲームを起動できなかった問題が改善されました。2.3.0ではランチャーとゲームが正常に起動します。",
         "zh-Hans": "ForgePlay 2.2.1 中启动器退出、导致游戏无法启动的问题已得到改善。在 2.3.0 中，启动器和游戏均可正常启动。",
         "zh-Hant": "ForgePlay 2.2.1 中啟動器結束、導致遊戲無法啟動的問題已獲得改善。在 2.3.0 中，啟動器與遊戲均可正常啟動。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "raiden-iii-digital-edition-2-3-0-community-chochigyeong-20261019",
+      "gameId": "raiden-iii-digital-edition",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m2-16gb-macos-27-0-1",
+      "forgePlayVersion": "2.3.0",
+      "gameVersion": null,
+      "status": "blocked",
+      "source": "community-report",
+      "reporter": "초치경",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.3.0에서 게임을 실행하지 못했다는 제보입니다.\n\n개발자 안내: 호환성 문제를 확인하고 있으며, 개선 및 조치를 진행 중입니다.",
+        "en": "The game is reported not to launch with ForgePlay 2.3.0.\n\nDeveloper update: The compatibility issue is being investigated, and work on improvements and fixes is underway.",
+        "de": "Laut Bericht startet das Spiel mit ForgePlay 2.3.0 nicht.\n\nEntwicklerhinweis: Das Kompatibilitätsproblem wird untersucht; Verbesserungen und Korrekturen sind in Arbeit.",
+        "es": "Según el reporte, el juego no se inicia con ForgePlay 2.3.0.\n\nAviso del desarrollador: Se está investigando el problema de compatibilidad y se está trabajando en mejoras y correcciones.",
+        "fr": "Selon le signalement, le jeu ne démarre pas avec ForgePlay 2.3.0.\n\nInformation du développeur : le problème de compatibilité est en cours d'analyse et des améliorations et corrections sont en cours.",
+        "ja": "ForgePlay 2.3.0ではゲームを起動できないとの報告です。\n\n開発者からの案内：互換性の問題を調査し、改善と対応を進めています。",
+        "zh-Hans": "反馈称，游戏无法在 ForgePlay 2.3.0 中启动。\n\n开发者说明：正在排查兼容性问题，并推进改进和修复。",
+        "zh-Hant": "回報指出，遊戲無法在 ForgePlay 2.3.0 中啟動。\n\n開發者說明：正在排查相容性問題，並進行改善與修正。"
+      },
+      "blocker": "unknown"
+    },
+    {
+      "id": "raiden-iv-overkill-2-3-0-community-chochigyeong-20261019",
+      "gameId": "raiden-iv-overkill",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m2-16gb-macos-27-0-1",
+      "forgePlayVersion": "2.3.0",
+      "gameVersion": null,
+      "status": "blocked",
+      "source": "community-report",
+      "reporter": "초치경",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.3.0에서 게임을 실행하지 못했다는 제보입니다.\n\n개발자 안내: 호환성 문제를 확인하고 있으며, 개선 및 조치를 진행 중입니다.",
+        "en": "The game is reported not to launch with ForgePlay 2.3.0.\n\nDeveloper update: The compatibility issue is being investigated, and work on improvements and fixes is underway.",
+        "de": "Laut Bericht startet das Spiel mit ForgePlay 2.3.0 nicht.\n\nEntwicklerhinweis: Das Kompatibilitätsproblem wird untersucht; Verbesserungen und Korrekturen sind in Arbeit.",
+        "es": "Según el reporte, el juego no se inicia con ForgePlay 2.3.0.\n\nAviso del desarrollador: Se está investigando el problema de compatibilidad y se está trabajando en mejoras y correcciones.",
+        "fr": "Selon le signalement, le jeu ne démarre pas avec ForgePlay 2.3.0.\n\nInformation du développeur : le problème de compatibilité est en cours d'analyse et des améliorations et corrections sont en cours.",
+        "ja": "ForgePlay 2.3.0ではゲームを起動できないとの報告です。\n\n開発者からの案内：互換性の問題を調査し、改善と対応を進めています。",
+        "zh-Hans": "反馈称，游戏无法在 ForgePlay 2.3.0 中启动。\n\n开发者说明：正在排查兼容性问题，并推进改进和修复。",
+        "zh-Hant": "回報指出，遊戲無法在 ForgePlay 2.3.0 中啟動。\n\n開發者說明：正在排查相容性問題，並進行改善與修正。"
+      },
+      "blocker": "unknown"
+    },
+    {
+      "id": "raiden-v-directors-cut-2-3-0-community-chochigyeong-20261019",
+      "gameId": "raiden-v-directors-cut",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m2-16gb-macos-27-0-1",
+      "forgePlayVersion": "2.3.0",
+      "gameVersion": null,
+      "status": "blocked",
+      "source": "community-report",
+      "reporter": "초치경",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.3.0에서 게임을 실행하지 못했다는 제보입니다.\n\n개발자 안내: 호환성 문제를 확인하고 있으며, 개선 및 조치를 진행 중입니다.",
+        "en": "The game is reported not to launch with ForgePlay 2.3.0.\n\nDeveloper update: The compatibility issue is being investigated, and work on improvements and fixes is underway.",
+        "de": "Laut Bericht startet das Spiel mit ForgePlay 2.3.0 nicht.\n\nEntwicklerhinweis: Das Kompatibilitätsproblem wird untersucht; Verbesserungen und Korrekturen sind in Arbeit.",
+        "es": "Según el reporte, el juego no se inicia con ForgePlay 2.3.0.\n\nAviso del desarrollador: Se está investigando el problema de compatibilidad y se está trabajando en mejoras y correcciones.",
+        "fr": "Selon le signalement, le jeu ne démarre pas avec ForgePlay 2.3.0.\n\nInformation du développeur : le problème de compatibilité est en cours d'analyse et des améliorations et corrections sont en cours.",
+        "ja": "ForgePlay 2.3.0ではゲームを起動できないとの報告です。\n\n開発者からの案内：互換性の問題を調査し、改善と対応を進めています。",
+        "zh-Hans": "反馈称，游戏无法在 ForgePlay 2.3.0 中启动。\n\n开发者说明：正在排查兼容性问题，并推进改进和修复。",
+        "zh-Hant": "回報指出，遊戲無法在 ForgePlay 2.3.0 中啟動。\n\n開發者說明：正在排查相容性問題，並進行改善與修正。"
+      },
+      "blocker": "unknown"
+    },
+    {
+      "id": "raiden-nova-2-3-0-community-chochigyeong-20261019",
+      "gameId": "raiden-nova",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m2-16gb-macos-27-0-1",
+      "forgePlayVersion": "2.3.0",
+      "gameVersion": null,
+      "status": "blocked",
+      "source": "community-report",
+      "reporter": "초치경",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.3.0에서 게임을 실행하지 못했다는 제보입니다.\n\n개발자 안내: 호환성 문제를 확인하고 있으며, 개선 및 조치를 진행 중입니다.",
+        "en": "The game is reported not to launch with ForgePlay 2.3.0.\n\nDeveloper update: The compatibility issue is being investigated, and work on improvements and fixes is underway.",
+        "de": "Laut Bericht startet das Spiel mit ForgePlay 2.3.0 nicht.\n\nEntwicklerhinweis: Das Kompatibilitätsproblem wird untersucht; Verbesserungen und Korrekturen sind in Arbeit.",
+        "es": "Según el reporte, el juego no se inicia con ForgePlay 2.3.0.\n\nAviso del desarrollador: Se está investigando el problema de compatibilidad y se está trabajando en mejoras y correcciones.",
+        "fr": "Selon le signalement, le jeu ne démarre pas avec ForgePlay 2.3.0.\n\nInformation du développeur : le problème de compatibilité est en cours d'analyse et des améliorations et corrections sont en cours.",
+        "ja": "ForgePlay 2.3.0ではゲームを起動できないとの報告です。\n\n開発者からの案内：互換性の問題を調査し、改善と対応を進めています。",
+        "zh-Hans": "反馈称，游戏无法在 ForgePlay 2.3.0 中启动。\n\n开发者说明：正在排查兼容性问题，并推进改进和修复。",
+        "zh-Hant": "回報指出，遊戲無法在 ForgePlay 2.3.0 中啟動。\n\n開發者說明：正在排查相容性問題，並進行改善與修正。"
+      },
+      "blocker": "unknown"
+    },
+    {
+      "id": "revolver360-reactor-2-3-0-community-chochigyeong-20261019",
+      "gameId": "revolver360-reactor",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m2-16gb-macos-27-0-1",
+      "forgePlayVersion": "2.3.0",
+      "gameVersion": null,
+      "status": "blocked",
+      "source": "community-report",
+      "reporter": "초치경",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.3.0에서 게임을 실행하지 못했다는 제보입니다.\n\n개발자 안내: 호환성 문제를 확인하고 있으며, 개선 및 조치를 진행 중입니다.",
+        "en": "The game is reported not to launch with ForgePlay 2.3.0.\n\nDeveloper update: The compatibility issue is being investigated, and work on improvements and fixes is underway.",
+        "de": "Laut Bericht startet das Spiel mit ForgePlay 2.3.0 nicht.\n\nEntwicklerhinweis: Das Kompatibilitätsproblem wird untersucht; Verbesserungen und Korrekturen sind in Arbeit.",
+        "es": "Según el reporte, el juego no se inicia con ForgePlay 2.3.0.\n\nAviso del desarrollador: Se está investigando el problema de compatibilidad y se está trabajando en mejoras y correcciones.",
+        "fr": "Selon le signalement, le jeu ne démarre pas avec ForgePlay 2.3.0.\n\nInformation du développeur : le problème de compatibilité est en cours d'analyse et des améliorations et corrections sont en cours.",
+        "ja": "ForgePlay 2.3.0ではゲームを起動できないとの報告です。\n\n開発者からの案内：互換性の問題を調査し、改善と対応を進めています。",
+        "zh-Hans": "反馈称，游戏无法在 ForgePlay 2.3.0 中启动。\n\n开发者说明：正在排查兼容性问题，并推进改进和修复。",
+        "zh-Hant": "回報指出，遊戲無法在 ForgePlay 2.3.0 中啟動。\n\n開發者說明：正在排查相容性問題，並進行改善與修正。"
+      },
+      "blocker": "unknown"
+    },
+    {
+      "id": "sandtrix-2-3-0-community-chochigyeong-20261019",
+      "gameId": "sandtrix",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m2-16gb-macos-27-0-1",
+      "forgePlayVersion": "2.3.0",
+      "gameVersion": null,
+      "status": "blocked",
+      "source": "community-report",
+      "reporter": "초치경",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.3.0에서 게임을 실행하지 못했다는 제보입니다.\n\n개발자 안내: 호환성 문제를 확인하고 있으며, 개선 및 조치를 진행 중입니다.",
+        "en": "The game is reported not to launch with ForgePlay 2.3.0.\n\nDeveloper update: The compatibility issue is being investigated, and work on improvements and fixes is underway.",
+        "de": "Laut Bericht startet das Spiel mit ForgePlay 2.3.0 nicht.\n\nEntwicklerhinweis: Das Kompatibilitätsproblem wird untersucht; Verbesserungen und Korrekturen sind in Arbeit.",
+        "es": "Según el reporte, el juego no se inicia con ForgePlay 2.3.0.\n\nAviso del desarrollador: Se está investigando el problema de compatibilidad y se está trabajando en mejoras y correcciones.",
+        "fr": "Selon le signalement, le jeu ne démarre pas avec ForgePlay 2.3.0.\n\nInformation du développeur : le problème de compatibilité est en cours d'analyse et des améliorations et corrections sont en cours.",
+        "ja": "ForgePlay 2.3.0ではゲームを起動できないとの報告です。\n\n開発者からの案内：互換性の問題を調査し、改善と対応を進めています。",
+        "zh-Hans": "反馈称，游戏无法在 ForgePlay 2.3.0 中启动。\n\n开发者说明：正在排查兼容性问题，并推进改进和修复。",
+        "zh-Hant": "回報指出，遊戲無法在 ForgePlay 2.3.0 中啟動。\n\n開發者說明：正在排查相容性問題，並進行改善與修正。"
+      },
+      "blocker": "unknown"
+    },
+    {
+      "id": "glitchfall-2-3-0-community-chochigyeong-20261019",
+      "gameId": "glitchfall",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m2-16gb-macos-27-0-1",
+      "forgePlayVersion": "2.3.0",
+      "gameVersion": null,
+      "status": "blocked",
+      "source": "community-report",
+      "reporter": "초치경",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.3.0에서 게임을 실행하지 못했다는 제보입니다.\n\n개발자 안내: 호환성 문제를 확인하고 있으며, 개선 및 조치를 진행 중입니다.",
+        "en": "The game is reported not to launch with ForgePlay 2.3.0.\n\nDeveloper update: The compatibility issue is being investigated, and work on improvements and fixes is underway.",
+        "de": "Laut Bericht startet das Spiel mit ForgePlay 2.3.0 nicht.\n\nEntwicklerhinweis: Das Kompatibilitätsproblem wird untersucht; Verbesserungen und Korrekturen sind in Arbeit.",
+        "es": "Según el reporte, el juego no se inicia con ForgePlay 2.3.0.\n\nAviso del desarrollador: Se está investigando el problema de compatibilidad y se está trabajando en mejoras y correcciones.",
+        "fr": "Selon le signalement, le jeu ne démarre pas avec ForgePlay 2.3.0.\n\nInformation du développeur : le problème de compatibilité est en cours d'analyse et des améliorations et corrections sont en cours.",
+        "ja": "ForgePlay 2.3.0ではゲームを起動できないとの報告です。\n\n開発者からの案内：互換性の問題を調査し、改善と対応を進めています。",
+        "zh-Hans": "反馈称，游戏无法在 ForgePlay 2.3.0 中启动。\n\n开发者说明：正在排查兼容性问题，并推进改进和修复。",
+        "zh-Hant": "回報指出，遊戲無法在 ForgePlay 2.3.0 中啟動。\n\n開發者說明：正在排查相容性問題，並進行改善與修正。"
+      },
+      "blocker": "unknown"
+    },
+    {
+      "id": "redout-2-3-0-community-chochigyeong-20261019",
+      "gameId": "redout",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m2-16gb-macos-27-0-1",
+      "forgePlayVersion": "2.3.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "초치경",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.3.0에서 무난하게 플레이할 수 있다는 제보입니다.",
+        "en": "The game is reported to play normally with ForgePlay 2.3.0.",
+        "de": "Laut Bericht lässt sich das Spiel mit ForgePlay 2.3.0 problemlos spielen.",
+        "es": "Según el reporte, el juego se puede jugar con normalidad con ForgePlay 2.3.0.",
+        "fr": "Selon le signalement, le jeu est jouable normalement avec ForgePlay 2.3.0.",
+        "ja": "ForgePlay 2.3.0では問題なくプレイできるとの報告です。",
+        "zh-Hans": "反馈称，游戏在 ForgePlay 2.3.0 中可以正常游玩。",
+        "zh-Hant": "回報指出，遊戲在 ForgePlay 2.3.0 中可以正常遊玩。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "redout-2-2-3-0-community-chochigyeong-20261019",
+      "gameId": "redout-2",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m2-16gb-macos-27-0-1",
+      "forgePlayVersion": "2.3.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "초치경",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.3.0에서 무난하게 플레이할 수 있다는 제보입니다.",
+        "en": "The game is reported to play normally with ForgePlay 2.3.0.",
+        "de": "Laut Bericht lässt sich das Spiel mit ForgePlay 2.3.0 problemlos spielen.",
+        "es": "Según el reporte, el juego se puede jugar con normalidad con ForgePlay 2.3.0.",
+        "fr": "Selon le signalement, le jeu est jouable normalement avec ForgePlay 2.3.0.",
+        "ja": "ForgePlay 2.3.0では問題なくプレイできるとの報告です。",
+        "zh-Hans": "反馈称，游戏在 ForgePlay 2.3.0 中可以正常游玩。",
+        "zh-Hant": "回報指出，遊戲在 ForgePlay 2.3.0 中可以正常遊玩。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "djmax-respect-v-2-3-0-community-chochigyeong-20261019",
+      "gameId": "djmax-respect-v",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m2-16gb-macos-27-0-1",
+      "forgePlayVersion": "2.3.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "초치경",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.3.0에서 게임은 무난하게 플레이할 수 있지만, 해상도를 전환할 때 문제가 발생한다는 제보입니다.",
+        "en": "The game is reported to play normally with ForgePlay 2.3.0, but problems occur when changing the resolution.",
+        "de": "Laut Bericht lässt sich das Spiel mit ForgePlay 2.3.0 normal spielen, beim Wechsel der Auflösung treten jedoch Probleme auf.",
+        "es": "Según el reporte, el juego se puede jugar con normalidad con ForgePlay 2.3.0, pero se producen problemas al cambiar la resolución.",
+        "fr": "Selon le signalement, le jeu est jouable normalement avec ForgePlay 2.3.0, mais des problèmes surviennent lors d'un changement de résolution.",
+        "ja": "ForgePlay 2.3.0では通常のプレイは可能ですが、解像度を切り替えると問題が発生するとの報告です。",
+        "zh-Hans": "反馈称，游戏在 ForgePlay 2.3.0 中可以正常游玩，但切换分辨率时会出现问题。",
+        "zh-Hant": "回報指出，遊戲在 ForgePlay 2.3.0 中可以正常遊玩，但切換解析度時會出現問題。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "the-binding-of-isaac-2-3-0-community-chochigyeong-20261019",
+      "gameId": "the-binding-of-isaac",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m2-16gb-macos-27-0-1",
+      "forgePlayVersion": "2.3.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "초치경",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.3.0에서 무난하게 플레이할 수 있다는 제보입니다.",
+        "en": "The game is reported to play normally with ForgePlay 2.3.0.",
+        "de": "Laut Bericht lässt sich das Spiel mit ForgePlay 2.3.0 problemlos spielen.",
+        "es": "Según el reporte, el juego se puede jugar con normalidad con ForgePlay 2.3.0.",
+        "fr": "Selon le signalement, le jeu est jouable normalement avec ForgePlay 2.3.0.",
+        "ja": "ForgePlay 2.3.0では問題なくプレイできるとの報告です。",
+        "zh-Hans": "反馈称，游戏在 ForgePlay 2.3.0 中可以正常游玩。",
+        "zh-Hant": "回報指出，遊戲在 ForgePlay 2.3.0 中可以正常遊玩。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "monster-hunter-rise-2-3-0-community-chochigyeong-20261019",
+      "gameId": "monster-hunter-rise",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m2-16gb-macos-27-0-1",
+      "forgePlayVersion": "2.3.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "community-report",
+      "reporter": "초치경",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.3.0에서 게임은 무난하게 플레이할 수 있습니다. 2.2.0에서는 REFramework와 Better Matchmaking 모드를 적용하지 못했다는 제보도 있습니다.\n\n개발자 안내: 해당 모딩을 지원하는 별도 호환성 프로필을 추가할 예정입니다. 적용 시 주의사항 안내와 사용자 확인 절차를 마련할 계획입니다.",
+        "en": "The game plays normally with ForgePlay 2.3.0. A separate report for 2.2.0 describes being unable to apply REFramework and the Better Matchmaking mod.\n\nDeveloper update: A separate compatibility profile is planned to support this mod setup, with guidance on precautions and user confirmation before applying it.",
+        "de": "Das Spiel lässt sich mit ForgePlay 2.3.0 normal spielen. In einem Bericht zu 2.2.0 konnten REFramework und die Mod Better Matchmaking nicht angewendet werden.\n\nEntwicklerhinweis: Für diese Mod-Konfiguration ist ein separates Kompatibilitätsprofil geplant, mit Hinweisen zu Vorsichtsmaßnahmen und einer Bestätigung durch den Nutzer vor der Anwendung.",
+        "es": "El juego se puede jugar con normalidad con ForgePlay 2.3.0. Un reporte de 2.2.0 indica que no se pudieron aplicar REFramework y el mod Better Matchmaking.\n\nAviso del desarrollador: Se prevé añadir un perfil de compatibilidad independiente para esta configuración de mods, con información sobre las precauciones y confirmación del usuario antes de aplicarlo.",
+        "fr": "Le jeu est jouable normalement avec ForgePlay 2.3.0. Un signalement concernant la version 2.2.0 indique que REFramework et le mod Better Matchmaking n'ont pas pu être appliqués.\n\nInformation du développeur : un profil de compatibilité distinct est prévu pour cette configuration de mods, avec des précautions expliquées et une confirmation de l'utilisateur avant application.",
+        "ja": "ForgePlay 2.3.0では通常のプレイが可能です。2.2.0ではREFrameworkとBetter Matchmaking MODを適用できなかったという報告もあります。\n\n開発者からの案内：このMOD構成に対応する専用の互換プロファイルを追加する予定です。適用時には注意事項を案内し、ユーザーの確認を求める仕組みを設ける予定です。",
+        "zh-Hans": "游戏在 ForgePlay 2.3.0 中可以正常游玩。另有 2.2.0 的反馈称，无法应用 REFramework 和 Better Matchmaking 模组。\n\n开发者说明：计划添加独立的兼容性配置来支持这套模组，并在应用前提供注意事项和用户确认步骤。",
+        "zh-Hant": "遊戲在 ForgePlay 2.3.0 中可以正常遊玩。另有 2.2.0 的回報指出，無法套用 REFramework 與 Better Matchmaking 模組。\n\n開發者說明：計畫新增獨立的相容性設定檔來支援這套模組，並在套用前提供注意事項與使用者確認步驟。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "helldivers-2-github-65-20261019",
+      "gameId": "helldivers-2",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m5-pro-64gb-macos-27-0-1",
+      "forgePlayVersion": "2.3.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "github-issue",
+      "reporter": "E-Schmacher",
+      "testedAt": "2026-10-19",
+      "notes": {
+        "ko": "ForgePlay 2.3.0의 호환성 모드에서 게임이 정상적으로 실행됩니다. 다만 그래픽 옵션을 변경해 적용하면 게임이 멈춰 강제 종료 후 다시 실행해야 한다는 제보입니다. 시작할 때 GPU 드라이버가 구버전이라는 경고가 나타나지만, 계속 진행하면 실행할 수 있습니다.\n\n개발자 안내: 그래픽 옵션 변경 시 충돌과 드라이버 경고 문제를 확인하고 있으며, 향후 조치할 예정입니다.",
+        "en": "The game launches normally in ForgePlay 2.3.0 compatibility mode. However, applying changes to graphics settings reportedly freezes the game, requiring a forced quit and restart. An outdated GPU driver warning appears at startup, but the game can run after choosing to continue.\n\nDeveloper update: The crash when changing graphics settings and the driver warning are being investigated, with fixes planned.",
+        "de": "Das Spiel startet im Kompatibilitätsmodus von ForgePlay 2.3.0 normal. Beim Übernehmen geänderter Grafikeinstellungen friert es laut Bericht jedoch ein und muss zwangsweise beendet und neu gestartet werden. Beim Start erscheint eine Warnung über einen veralteten GPU-Treiber; nach dem Fortfahren lässt sich das Spiel ausführen.\n\nEntwicklerhinweis: Der Absturz beim Ändern der Grafikeinstellungen und die Treiberwarnung werden untersucht; Korrekturen sind geplant.",
+        "es": "El juego se inicia con normalidad en el modo de compatibilidad de ForgePlay 2.3.0. Sin embargo, al aplicar cambios en los ajustes gráficos se bloquea y es necesario forzar el cierre y reiniciarlo, según el reporte. Al arrancar aparece una advertencia de controlador de GPU anticuado, pero se puede continuar e iniciar el juego.\n\nAviso del desarrollador: Se están investigando el bloqueo al cambiar los ajustes gráficos y la advertencia del controlador, y se prevén correcciones.",
+        "fr": "Le jeu démarre normalement en mode de compatibilité sous ForgePlay 2.3.0. Toutefois, l'application de modifications des réglages graphiques le fige et impose de le forcer à quitter puis de le relancer, selon le signalement. Un avertissement de pilote GPU obsolète apparaît au démarrage, mais il est possible de continuer et d'exécuter le jeu.\n\nInformation du développeur : le plantage lors du changement des réglages graphiques et l'avertissement du pilote sont en cours d'analyse, et des corrections sont prévues.",
+        "ja": "ForgePlay 2.3.0の互換モードではゲームが正常に起動します。ただし、グラフィック設定の変更を適用するとフリーズし、強制終了して再起動する必要があるとの報告です。起動時にGPUドライバーが古いという警告が表示されますが、続行すれば起動できます。\n\n開発者からの案内：グラフィック設定変更時のクラッシュとドライバー警告を調査しており、今後対応する予定です。",
+        "zh-Hans": "游戏在 ForgePlay 2.3.0 的兼容模式下可以正常启动。不过，反馈称应用图形设置的更改后游戏会卡死，需要强制退出后重新启动。启动时会出现 GPU 驱动过旧的警告，但选择继续后仍可运行游戏。\n\n开发者说明：正在排查更改图形设置时的崩溃和驱动警告问题，计划后续修复。",
+        "zh-Hant": "遊戲在 ForgePlay 2.3.0 的相容模式下可以正常啟動。不過，回報指出套用圖形設定的變更後遊戲會停住，需要強制結束後重新啟動。啟動時會出現 GPU 驅動程式過舊的警告，但選擇繼續後仍可執行遊戲。\n\n開發者說明：正在排查變更圖形設定時的當機與驅動程式警告問題，計畫後續修正。"
       },
       "blocker": null
     }
