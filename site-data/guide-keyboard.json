@@ -1,0 +1,920 @@
+{
+  "locales": [
+    "ko",
+    "en",
+    "de",
+    "es",
+    "fr",
+    "ja",
+    "zh-Hans",
+    "zh-Hant"
+  ],
+  "strings": {
+    "title": [
+      "키보드 키 매핑",
+      "Keyboard key mapping",
+      "Tastaturbelegung",
+      "Asignación de teclas",
+      "Affectation des touches",
+      "キーボードのキー割り当て",
+      "键盘按键映射",
+      "鍵盤按鍵對應"
+    ],
+    "keyNames": [
+      "게임의 키 이름 표시",
+      "Game key names",
+      "Tastennamen im Spiel",
+      "Nombres de teclas del juego",
+      "Noms des touches en jeu",
+      "ゲーム内のキー名表示",
+      "游戏按键名称",
+      "遊戲按鍵名稱"
+    ],
+    "english": [
+      "영문 (기본)",
+      "English (default)",
+      "Englisch (Standard)",
+      "Inglés (predeterminado)",
+      "Anglais (par défaut)",
+      "英字（標準）",
+      "英文（默认）",
+      "英文（預設）"
+    ],
+    "inputLanguage": [
+      "현재 입력 언어",
+      "Current input language",
+      "Aktuelle Eingabesprache",
+      "Idioma de entrada actual",
+      "Langue de saisie actuelle",
+      "現在の入力言語",
+      "当前输入语言",
+      "目前輸入語言"
+    ],
+    "action": [
+      "선택한 키의 동작",
+      "Selected key action",
+      "Aktion der gewählten Taste",
+      "Acción de la tecla elegida",
+      "Action de la touche choisie",
+      "選択したキーの動作",
+      "所选按键的操作",
+      "所選按鍵的動作"
+    ],
+    "original": [
+      "원래 키 그대로",
+      "Keep original key",
+      "Originaltaste beibehalten",
+      "Mantener tecla original",
+      "Conserver la touche",
+      "元のキーを使用",
+      "保持原按键",
+      "保留原按鍵"
+    ],
+    "disabled": [
+      "입력 끄기",
+      "Disable input",
+      "Eingabe deaktivieren",
+      "Desactivar entrada",
+      "Désactiver la touche",
+      "入力を無効化",
+      "禁用输入",
+      "停用輸入"
+    ],
+    "count": [
+      "변경한 키 %d개",
+      "%d keys changed",
+      "%d Tasten geändert",
+      "%d teclas modificadas",
+      "%d touches modifiées",
+      "変更したキー：%d個",
+      "已更改 %d 个按键",
+      "已變更 %d 個按鍵"
+    ],
+    "reset": [
+      "기본 키로 초기화",
+      "Reset to original keys",
+      "Originaltasten wiederherstellen",
+      "Restaurar teclas originales",
+      "Restaurer les touches d’origine",
+      "元のキーにリセット",
+      "恢复原始按键",
+      "還原原始按鍵"
+    ],
+    "extra": [
+      "확장 키보드 · 숫자 키패드",
+      "Extended keyboard · numeric keypad",
+      "Erweiterte Tastatur · Ziffernblock",
+      "Teclado ampliado · teclado numérico",
+      "Clavier étendu · pavé numérique",
+      "拡張キーボード・テンキー",
+      "扩展键盘 · 数字键盘",
+      "延伸鍵盤 · 數字鍵盤"
+    ],
+    "save": [
+      "저장",
+      "Save",
+      "Speichern",
+      "Guardar",
+      "Enregistrer",
+      "保存",
+      "保存",
+      "儲存"
+    ],
+    "cancel": [
+      "취소",
+      "Cancel",
+      "Abbrechen",
+      "Cancelar",
+      "Annuler",
+      "キャンセル",
+      "取消",
+      "取消"
+    ],
+    "alwaysOnTop": [
+      "다른 앱보다 항상 앞에 표시",
+      "Always on top",
+      "Immer im Vordergrund",
+      "Mantener en primer plano",
+      "Toujours au premier plan",
+      "常に最前面に表示",
+      "始终置于顶层",
+      "永遠置於最上層"
+    ],
+    "restart": [
+      "실행 중인 Steam·런처를 종료한 뒤 다시 실행해 주세요.",
+      "Exit the running Steam or launcher, then start it again.",
+      "Beende Steam bzw. den Launcher und starte ihn erneut.",
+      "Cierra Steam o el lanzador y vuelve a iniciarlo.",
+      "Quittez Steam ou le lanceur, puis relancez-le.",
+      "起動中のSteam・ランチャーを終了してから、再起動してください。",
+      "请退出正在运行的 Steam 或启动器，然后重新启动。",
+      "請結束正在執行的 Steam 或啟動器，然後重新啟動。"
+    ],
+    "witcherTitle": [
+      "위처 3 실행 전: REDlauncher 건너뛰기",
+      "Before launching The Witcher 3: skip REDlauncher",
+      "Vor dem Start von The Witcher 3: REDlauncher überspringen",
+      "Antes de iniciar The Witcher 3: omitir REDlauncher",
+      "Avant de lancer The Witcher 3 : ignorer REDlauncher",
+      "ウィッチャー3の起動前：REDlauncherをスキップ",
+      "启动《巫师3》前：跳过REDlauncher",
+      "啟動《巫師3》前：略過REDlauncher"
+    ],
+    "summary": [
+      "키별 매핑은 기본 입력 방식입니다. 저장한 키 변경·입력 끄기 규칙은 항상 적용하며, 변경하지 않은 키는 원래대로 작동합니다. 별도로 켜는 스위치는 없습니다.",
+      "Keyboard key mapping is the default input mode. Saved remap and Disable input rules always apply; unchanged keys keep their original behavior. There is no enable switch.",
+      "Die Tastenzuordnung ist der Standard-Eingabemodus. Gespeicherte Zuordnungen und deaktivierte Tasten gelten immer; unveränderte Tasten behalten ihre ursprüngliche Funktion. Es gibt keinen Aktivierungsschalter.",
+      "La asignación por tecla es el modo de entrada predeterminado. Las reasignaciones y desactivaciones guardadas se aplican siempre; las teclas sin cambios conservan su función original. No hay un interruptor de activación.",
+      "Le mappage par touche est le mode de saisie par défaut. Les réaffectations et désactivations enregistrées s’appliquent toujours ; les touches inchangées gardent leur fonction d’origine. Aucun interrupteur d’activation n’est nécessaire.",
+      "キーごとのマッピングが標準の入力方式です。保存したキー変更・入力無効のルールは常に適用され、変更していないキーは元のまま動作します。有効にするスイッチはありません。",
+      "按键映射是默认输入方式。保存的改键和禁用输入规则始终生效，未修改的按键保持原有功能。无需额外开启开关。",
+      "逐鍵對應是預設輸入方式。儲存的改鍵及停用輸入規則一律套用，未修改的按鍵維持原有功能。無須另外開啟開關。"
+    ],
+    "scope": [
+      "키별 매핑은 공통 런타임과 호환성 실행, STOVE 등 다른 런처·직접 EXE에서 시작하는 게임에 전달됩니다. 보조키도 같은 키보드 그림에서 설정합니다. Mac의 다른 앱 키 배열은 바꾸지 않습니다. 지구본 동작·시스템 단축키와 Touch ID는 별도입니다.",
+      "Keyboard key mapping reaches games launched through the common runtime, compatibility profiles, other launchers such as STOVE, and direct EXEs. Configure modifier keys in the same keyboard diagram. Other Mac apps, Globe actions, system shortcuts and Touch ID remain separate.",
+      "Die Tastenzuordnung gilt für Spiele aus der gemeinsamen Laufzeit, Kompatibilitätsprofilen, Launchern wie STOVE und direkt gestarteten EXEs. Auch Zusatztasten werden im selben Tastaturbild eingerichtet. Andere Mac-Apps, Globusfunktionen, Systemkurzbefehle und Touch ID bleiben getrennt.",
+      "La asignación se aplica a juegos iniciados mediante el entorno común, perfiles de compatibilidad, lanzadores como STOVE y EXE directos. Configura también los modificadores en el mismo teclado. Otras apps de Mac, las funciones de Globo, los atajos del sistema y Touch ID siguen siendo independientes.",
+      "Le mappage s’applique aux jeux lancés via le runtime commun, les profils de compatibilité, les lanceurs comme STOVE et les EXE directs. Configurez aussi les touches de modification sur le même clavier. Les autres apps Mac, la touche Globe, les raccourcis système et Touch ID restent indépendants.",
+      "キーごとのマッピングは共通ランタイム、互換性プロファイル、STOVEなどのランチャー、直接実行するEXEのゲームに適用されます。修飾キーも同じキーボード図で設定します。Macの他のアプリの配列は変更しません。地球儀キーの動作、システムショートカット、Touch IDは別です。",
+      "按键映射会传递给通过公共运行时、兼容性配置、STOVE等启动器和直接EXE启动的游戏。修饰键也在同一键盘图中设置。不会更改Mac上其他应用的键位。地球键操作、系统快捷键和Touch ID独立处理。",
+      "逐鍵對應會傳遞至透過共用執行環境、相容性設定檔、STOVE等啟動器及直接EXE啟動的遊戲。修飾鍵也在同一鍵盤圖中設定。不會改變Mac其他App的鍵位。地球鍵操作、系統快速鍵和Touch ID另行處理。"
+    ],
+    "resetHelp": [
+      "‘기본 키로 초기화’를 누르면 모든 키 변경·입력 끄기 규칙을 지우고 즉시 저장합니다. 키 이름 표시 선택은 유지됩니다. 게임과 런처를 다시 실행하면 원래 키로 작동합니다.",
+      "Keyboard key mapping: Reset to original keys clears all remap and Disable input rules and saves immediately. The key-name display choice is preserved. Restart the game and launcher to use the original keys.",
+      "Originaltasten wiederherstellen löscht alle Zuordnungs- und Deaktivierungsregeln und speichert sofort. Die Anzeige der Tastennamen bleibt unverändert. Starte Spiel und Launcher neu, um die Originaltasten zu verwenden.",
+      "Restaurar teclas originales borra todas las reglas de reasignación y desactivación y guarda inmediatamente. Se conserva la opción de visualización de los nombres de teclas. Reinicia el juego y el lanzador para usar las teclas originales.",
+      "Restaurer les touches d’origine efface toutes les réaffectations et désactivations et enregistre immédiatement. Le choix d’affichage des noms de touches est conservé. Redémarrez le jeu et le lanceur pour utiliser les touches d’origine.",
+      "「元のキーにリセット」を押すと、キー変更・入力無効のルールをすべて削除し、すぐに保存します。キー名の表示設定は維持されます。ゲームとランチャーを再起動すると元のキーで動作します。",
+      "点击“恢复原始按键”会清除全部改键及禁用输入规则，并立即保存。按键名称的显示设置保持不变。重启游戏和启动器后即可使用原始按键。",
+      "按下「還原原始按鍵」會清除所有改鍵及停用輸入規則，並立即儲存。按鍵名稱的顯示設定維持不變。重新啟動遊戲和啟動器後即可使用原始按鍵。"
+    ],
+    "namesHelp": [
+      "키 이름 표시는 키 변경과 별개이며 기본은 영문입니다. 현재 입력 언어 표시는 한글 입력 중 한글 키 이름을 요청하며, 게임에 따라 적용되지 않거나 키 인식에 영향을 줄 수 있습니다. 한글 채팅 입력을 끄는 기능은 아닙니다. 다음 게임 실행부터 사용합니다.",
+      "Keyboard key mapping and Game key names are separate. Key names default to English. Current input language requests Korean key names while Korean input is selected; some games may ignore it or handle keys differently. This does not disable Korean text or IME input. Applies on the next game launch.",
+      "Tastennamen und Tastenzuordnung sind getrennt; standardmäßig sind die Namen englisch. Aktuelle Eingabesprache fordert bei koreanischer Eingabe koreanische Tastennamen an. Manche Spiele ignorieren dies oder erkennen Tasten anders. Koreanische Texteingabe und IME werden nicht deaktiviert. Gilt ab dem nächsten Spielstart.",
+      "Los nombres de teclas y la reasignación son independientes. Los nombres se muestran en inglés por defecto. El idioma de entrada actual solicita nombres coreanos al usar entrada coreana; algunos juegos pueden ignorarlo o interpretar las teclas de otra manera. No desactiva el texto coreano ni el IME. Se aplica al siguiente inicio del juego.",
+      "Les noms de touches et le mappage sont indépendants. Les noms sont en anglais par défaut. La langue de saisie actuelle demande des noms coréens pendant la saisie coréenne ; certains jeux peuvent ignorer ce réglage ou traiter les touches différemment. Le texte coréen et l’IME ne sont pas désactivés. S’applique au prochain lancement du jeu.",
+      "キー名の表示とキー変更は別の設定で、表示は標準で英語です。現在の入力言語を選ぶと韓国語入力中に韓国語のキー名を要求しますが、ゲームによっては反映されず、キーの認識に影響する場合もあります。韓国語の文字入力やIMEを無効にする機能ではありません。次回のゲーム起動から適用されます。",
+      "按键名称显示与改键设置相互独立，默认显示英文。选择当前输入语言时，韩文输入状态下会请求韩文按键名称；部分游戏可能忽略此设置或改变按键识别方式。这不会禁用韩文文字或输入法。下次启动游戏时生效。",
+      "按鍵名稱顯示與改鍵設定彼此獨立，預設顯示英文。選擇目前輸入語言時，韓文輸入狀態下會要求韓文按鍵名稱；部分遊戲可能忽略此設定或改變按鍵辨識方式。這不會停用韓文文字或輸入法。下次啟動遊戲時生效。"
+    ],
+    "actionHelp": [
+      "‘선택한 키의 동작’에서 다른 키 또는 ‘입력 끄기’를 고르세요. 예: A를 B로 바꾸면 A를 눌렀을 때 게임에는 B가 전달됩니다. ‘입력 끄기’는 그 키를 게임에 보내지 않습니다.",
+      "Keyboard key mapping: choose another key or Disable input under Selected key action. A → B sends B to the game when you press A. Disable input suppresses that key in the game.",
+      "Wähle unter Aktion der gewählten Taste eine andere Taste oder Eingabe deaktivieren. A → B sendet beim Drücken von A ein B an das Spiel. Eingabe deaktivieren unterdrückt diese Taste im Spiel.",
+      "En Acción de la tecla seleccionada, elige otra tecla o Desactivar entrada. A → B envía B al juego cuando pulsas A. Desactivar entrada impide enviar esa tecla al juego.",
+      "Dans Action de la touche sélectionnée, choisissez une autre touche ou Désactiver l’entrée. A → B envoie B au jeu lorsque vous appuyez sur A. Désactiver l’entrée empêche l’envoi de cette touche au jeu.",
+      "「選択したキーの動作」で別のキーか「入力を無効」を選んでください。例えばAをBに変更すると、Aを押したときゲームにはBが送られます。入力を無効にすると、そのキーはゲームに送られません。",
+      "在“所选按键的操作”中选择其他按键或“禁用输入”。例如将A改为B后，按A会向游戏发送B。禁用输入则不向游戏发送该键。",
+      "在「所選按鍵的動作」中選擇其他按鍵或「停用輸入」。例如將A改為B後，按A會向遊戲傳送B。停用輸入則不向遊戲傳送該鍵。"
+    ],
+    "fnHelp": [
+      "Fn도 다른 키로 바꾸거나 입력을 끌 수 있습니다. Fn은 Windows 키가 아니므로 바꿀 대상에는 없습니다. 추가 키는 ‘확장 키보드 · 숫자 키패드’를 펼치세요. macOS가 먼저 처리하는 키는 이 설정만으로 차단할 수 없습니다.",
+      "Keyboard key mapping: Fn can be remapped or disabled as a source, but is not a Windows destination key. Expand Extended keyboard and numeric keypad for more keys. This cannot block keys already consumed by macOS.",
+      "Fn kann als Ausgangstaste umbelegt oder deaktiviert werden, ist aber keine Windows-Zieltaste. Öffne Erweiterte Tastatur und Ziffernblock für weitere Tasten. Bereits von macOS verarbeitete Tasten lassen sich damit nicht blockieren.",
+      "Fn puede reasignarse o desactivarse como tecla de origen, pero no es una tecla de destino de Windows. Despliega Teclado ampliado y teclado numérico para ver más teclas. Esto no bloquea teclas procesadas previamente por macOS.",
+      "Fn peut être réaffectée ou désactivée comme touche source, mais n’est pas une touche Windows de destination. Dépliez Clavier étendu et pavé numérique pour accéder aux autres touches. Ce réglage ne bloque pas les touches déjà traitées par macOS.",
+      "Fnも別のキーに変更したり無効にできます。FnはWindowsのキーではないため変更先には選べません。追加のキーは「拡張キーボード・テンキー」を開いてください。macOSが先に処理するキーはこの設定だけではブロックできません。",
+      "Fn也可以改为其他键或禁用。Fn不是Windows按键，因此不能作为目标键。展开“扩展键盘与数字键盘”可选择更多按键。此设置无法阻止macOS先行处理的按键。",
+      "Fn也可改為其他鍵或停用。Fn不是Windows按鍵，因此不能作為目標鍵。展開「延伸鍵盤與數字鍵盤」可選擇更多按鍵。此設定無法阻擋macOS優先處理的按鍵。"
+    ],
+    "witcherHelp": [
+      "Steam판 위처 3가 REDlauncher에서 멈추거나 게임 본체가 열리지 않으면, Steam 라이브러리 → 위처 3 우클릭 → 속성 → 일반 → 시작 옵션에 --launcher-skip을 추가하세요.\n\n기존 옵션은 지우지 말고 공백으로 구분하세요. 게임과 REDlauncher를 종료한 뒤 같은 Steam 환경에서 다시 실행하세요. 그래픽 호환성 보완과는 별개이며, 프로필 선택만으로 이 옵션이 자동 적용되지는 않습니다.",
+      "If Steam's The Witcher 3 stalls in REDlauncher or the game does not open, go to Steam Library → right-click The Witcher 3 → Properties → General → Launch Options and add --launcher-skip.\n\nKeep existing options and separate them with a space. Close the game and REDlauncher, then relaunch through the same Steam environment. This is separate from the graphics workaround; selecting the profile does not apply this option automatically.",
+      "Wenn die Steam-Version von The Witcher 3 in REDlauncher hängen bleibt oder das Spiel nicht startet, füge unter Steam-Bibliothek → Rechtsklick auf The Witcher 3 → Eigenschaften → Allgemein → Startoptionen den Parameter --launcher-skip hinzu.\n\nBehalte vorhandene Optionen bei und trenne sie durch ein Leerzeichen. Beende das Spiel und REDlauncher und starte es erneut in derselben Steam-Umgebung. Dies ist von der Grafikkorrektur unabhängig; die Profilauswahl wendet diese Option nicht automatisch an.",
+      "Si la versión de Steam de The Witcher 3 se queda en REDlauncher o el juego no se abre, añade --launcher-skip en Biblioteca de Steam → clic derecho en The Witcher 3 → Propiedades → General → Opciones de lanzamiento.\n\nConserva las opciones existentes y sepáralas con un espacio. Cierra el juego y REDlauncher y vuelve a iniciarlo desde el mismo entorno de Steam. Esto es independiente de la corrección gráfica; seleccionar el perfil no aplica esta opción automáticamente.",
+      "Si la version Steam de The Witcher 3 reste bloquée dans REDlauncher ou si le jeu ne s’ouvre pas, ajoutez --launcher-skip dans Bibliothèque Steam → clic droit sur The Witcher 3 → Propriétés → Général → Options de lancement.\n\nConservez les options existantes et séparez-les par un espace. Fermez le jeu et REDlauncher, puis relancez le jeu dans le même environnement Steam. Ce réglage est distinct du correctif graphique ; sélectionner le profil n’applique pas automatiquement cette option.",
+      "Steam版ウィッチャー3がREDlauncherで止まる、またはゲーム本体が開かない場合は、Steamライブラリ → ウィッチャー3を右クリック → プロパティ → 一般 → 起動オプションに --launcher-skip を追加してください。\n\n既存のオプションは消さず、スペースで区切ってください。ゲームとREDlauncherを終了し、同じSteam環境から再起動してください。グラフィックの互換性対策とは別の設定です。プロファイルを選ぶだけでは自動適用されません。",
+      "如果Steam版《巫师3》卡在REDlauncher或无法打开游戏本体，请进入Steam库 → 右键点击《巫师3》→ 属性 → 通用 → 启动选项，添加 --launcher-skip。\n\n保留现有选项，并用空格分隔。关闭游戏和REDlauncher，然后从同一Steam环境重新启动。这与图形兼容性修复是两项独立设置；仅选择配置文件不会自动应用此选项。",
+      "如果Steam版《巫師3》停在REDlauncher或無法開啟遊戲本體，請前往Steam收藏庫 → 右鍵點選《巫師3》→ 內容 → 一般 → 啟動選項，加入 --launcher-skip。\n\n保留現有選項，並以空格分隔。關閉遊戲和REDlauncher，再從同一Steam環境重新啟動。這與圖形相容性修正是兩項獨立設定；只選擇設定檔不會自動套用此選項。"
+    ],
+    "topHelp": [
+      "끄면 아일랜드와 포플이 다른 앱 뒤로 가려집니다. 클라이언트 창이 확인되면 이 설정과 관계없이 자동으로 최소화합니다.",
+      "When off, the island and Fopl can go behind other apps. They minimize automatically when the client window is detected, regardless of this setting.",
+      "Ausgeschaltet können Insel und Fopl hinter anderen Apps liegen. Bei erkanntem Clientfenster minimieren sie sich unabhängig von dieser Einstellung.",
+      "Al desactivarlo, la isla y Fopl pueden quedar detrás de otras apps. Se minimizan al detectar la ventana del cliente, sin importar este ajuste.",
+      "Désactivé, l’îlot et Fopl peuvent passer derrière les autres apps. Ils se réduisent à la détection de la fenêtre du client, quel que soit ce réglage.",
+      "オフにするとアイルランドとFoplは他のアプリの後ろに隠れます。クライアントのウインドウを検出すると、この設定に関係なく自動で最小化します。",
+      "关闭后，岛状窗口和 Fopl 可被其他应用遮挡。检测到客户端窗口后，无论此设置如何，都会自动最小化。",
+      "關閉後，島狀視窗和 Fopl 可被其他 App 遮擋。偵測到用戶端視窗後，無論此設定為何，都會自動最小化。"
+    ],
+    "output": [
+      "게임에 전달되는 키",
+      "Key sent to the game",
+      "Taste für das Spiel",
+      "Tecla enviada al juego",
+      "Touche envoyée au jeu",
+      "ゲームへ送るキー",
+      "发送给游戏的按键",
+      "傳送給遊戲的按鍵"
+    ],
+    "topDemo": [
+      "웹에서는 설정 상태만 바뀌며, 다른 창보다 앞으로 나오지는 않습니다.",
+      "This demo changes the setting only; it cannot stay above other windows.",
+      "Die Demo ändert nur die Einstellung, nicht die Reihenfolge anderer Fenster.",
+      "La demo solo cambia el ajuste; no se sitúa sobre otras ventanas.",
+      "La démo change le réglage, pas l’ordre des fenêtres.",
+      "Webでは設定のみを体験でき、他のウインドウより前には出ません。",
+      "网页仅模拟设置，不会置于其他窗口之上。",
+      "網頁僅模擬設定，不會置於其他視窗之上。"
+    ],
+    "questionUsage": [
+      "키보드 설정은 어디서 바꿔?",
+      "Where are the keyboard settings?",
+      "Wo finde ich die Tastatureinstellungen?",
+      "¿Dónde cambio el teclado?",
+      "Où régler le clavier ?",
+      "キーボードの設定はどこ？",
+      "在哪里设置键盘？",
+      "在哪裡設定鍵盤？"
+    ],
+    "questionHello": [
+      "안녕, 포플!",
+      "Hi, Fopl!",
+      "Hallo, Fopl!",
+      "¡Hola, Fopl!",
+      "Salut, Fopl !",
+      "こんにちは、ポプル！",
+      "你好，Fopl！",
+      "你好，Fopl！"
+    ],
+    "replyHello": [
+      "안녕! 포플과는 사용법이나 게임 문제뿐 아니라 일상적인 이야기도 나눌 수 있어. 여기서는 미리 준비한 답변으로 대화 방식을 체험해 봐!",
+      "Hi! You can talk to Fopl about everyday things as well as app usage and game problems. Here, try the conversation with prepared sample replies!",
+      "Hallo! Mit Fopl kannst du über Alltag, Bedienung und Spielprobleme sprechen. Hier zeigen vorbereitete Antworten, wie das funktioniert!",
+      "¡Hola! Fopl puede hablar del día a día, del uso de la app y de problemas con juegos. Aquí puedes probarlo con respuestas preparadas.",
+      "Salut ! Fopl peut parler du quotidien, de l’app et des problèmes de jeu. Ici, découvre le dialogue avec des réponses préparées !",
+      "こんにちは！ポプルとは使い方やゲームの問題以外に、日常の話もできるよ。ここでは用意された返答で体験してね！",
+      "你好！除了应用用法和游戏问题，也可以和 Fopl 聊日常话题。这里用预设回复体验对话！",
+      "你好！除了App用法和遊戲問題，也可以和Fopl聊日常話題。這裡以預設回覆體驗對話！"
+    ],
+    "dialogueHelp": [
+      "2.3.0에서는 질문에 맞춰 일반 대화·사용법 안내·문제진단을 구분합니다. 실행 문제는 해당 실행 기록을 선택해 확인하세요. 아래 체험은 미리 작성한 답변을 사용하며, 실제 AI나 로그 분석은 하지 않습니다.",
+      "In 2.3.0, Fopl distinguishes everyday chat, usage help and troubleshooting. Select the relevant run when investigating a launch issue. The demo below uses prepared replies, not real AI or log analysis.",
+      "In 2.3.0 unterscheidet Fopl Alltag, Bedienhilfe und Diagnose. Wähle bei Startproblemen den passenden Lauf. Die Demo nutzt vorbereitete Antworten, keine echte KI oder Protokollanalyse.",
+      "En 2.3.0, Fopl distingue conversación, ayuda y diagnóstico. Selecciona la ejecución afectada para investigar un fallo. La demo usa respuestas preparadas, sin IA ni análisis real.",
+      "Dans 2.3.0, Fopl distingue conversation, aide et diagnostic. Sélectionnez l’exécution concernée pour un problème de lancement. La démo utilise des réponses préparées, sans IA ni analyse réelle.",
+      "2.3.0では日常会話・使い方・問題診断を区別します。起動の問題は該当する実行記録を選んで確認します。以下は用意された返答による体験で、実際のAIやログ解析は行いません。",
+      "2.3.0 会区分日常对话、使用说明与问题诊断。排查启动问题时请选择对应运行记录。以下仅使用预设回复，不执行真实 AI 或日志分析。",
+      "2.3.0會區分日常對話、使用說明及問題診斷。排查啟動問題時請選擇對應執行紀錄。以下僅使用預設回覆，不執行真正的AI或日誌分析。"
+    ],
+    "path": [
+      "환경설정 → 입력·게임 보호 → 키보드 키 매핑을 여세요. 키보드 그림에서 바꿀 키를 선택하세요.",
+      "Open Settings → Input and Game Protection → Keyboard key mapping, then select a physical key in the keyboard diagram.",
+      "Öffne Einstellungen → Eingabe und Spielschutz → Tastaturzuordnung und wähle eine physische Taste im Tastaturbild.",
+      "Abre Ajustes → Entrada y protección del juego → Asignación de teclas y selecciona una tecla física en el diagrama.",
+      "Ouvrez Réglages → Saisie et protection du jeu → Mappage du clavier, puis sélectionnez une touche physique sur le clavier.",
+      "設定 → 入力・ゲーム保護 → キーボードのキーマッピングを開き、キーボード図で変更するキーを選んでください。",
+      "打开设置 → 输入与游戏保护 → 键盘按键映射，在键盘图中选择要修改的按键。",
+      "開啟設定 → 輸入與遊戲保護 → 鍵盤按鍵對應，在鍵盤圖中選擇要修改的按鍵。"
+    ],
+    "replyFallback": [
+      "다른 질문은 실제 앱의 ‘포플과 대화’에서 해 보세요. 이 웹 체험은 안내용 예시 답변만 제공합니다.",
+      "Try other questions in Talk to Fopl in the app. This web demo provides sample replies only.",
+      "Weitere Fragen kannst du in der App an Fopl stellen. Diese Webdemo zeigt nur Beispielantworten.",
+      "Haz otras preguntas a Fopl en la app. Esta demo solo ofrece respuestas de ejemplo.",
+      "Posez vos autres questions à Fopl dans l’app. Cette démo ne fournit que des réponses d’exemple.",
+      "他の質問は実際のアプリでポプルに聞いてみてください。Web体験では例として用意された返答のみ表示します。",
+      "其他问题请在实际 App 中与 Fopl 对话。本网页仅提供示例回复。",
+      "其他問題請在實際App中與Fopl對話。本網頁僅提供範例回覆。"
+    ],
+    "quit": [
+      "ForgePlay 종료",
+      "Quit ForgePlay",
+      "ForgePlay beenden",
+      "Salir de ForgePlay",
+      "Quitter ForgePlay",
+      "ForgePlayを終了",
+      "退出 ForgePlay",
+      "結束 ForgePlay"
+    ],
+    "minimize": [
+      "최소화",
+      "Minimize",
+      "Minimieren",
+      "Minimizar",
+      "Réduire",
+      "最小化",
+      "最小化",
+      "最小化"
+    ],
+    "restartDemo": [
+      "종료한 체험 다시 시작",
+      "Restart the closed demo",
+      "Geschlossene Demo neu starten",
+      "Reiniciar la demo cerrada",
+      "Relancer la démo fermée",
+      "終了した体験を再開",
+      "重新开始已关闭的体验",
+      "重新開始已關閉的體驗"
+    ]
+  },
+  "rows": [
+    [
+      {
+        "code": 53,
+        "label": "esc",
+        "width": 1
+      },
+      {
+        "code": 122,
+        "label": "F1",
+        "width": 1
+      },
+      {
+        "code": 120,
+        "label": "F2",
+        "width": 1
+      },
+      {
+        "code": 99,
+        "label": "F3",
+        "width": 1
+      },
+      {
+        "code": 118,
+        "label": "F4",
+        "width": 1
+      },
+      {
+        "code": 96,
+        "label": "F5",
+        "width": 1
+      },
+      {
+        "code": 97,
+        "label": "F6",
+        "width": 1
+      },
+      {
+        "code": 98,
+        "label": "F7",
+        "width": 1
+      },
+      {
+        "code": 100,
+        "label": "F8",
+        "width": 1
+      },
+      {
+        "code": 101,
+        "label": "F9",
+        "width": 1
+      },
+      {
+        "code": 109,
+        "label": "F10",
+        "width": 1
+      },
+      {
+        "code": 103,
+        "label": "F11",
+        "width": 1
+      },
+      {
+        "code": 111,
+        "label": "F12",
+        "width": 1
+      }
+    ],
+    [
+      {
+        "code": 50,
+        "label": "`",
+        "width": 1
+      },
+      {
+        "code": 18,
+        "label": "1",
+        "width": 1
+      },
+      {
+        "code": 19,
+        "label": "2",
+        "width": 1
+      },
+      {
+        "code": 20,
+        "label": "3",
+        "width": 1
+      },
+      {
+        "code": 21,
+        "label": "4",
+        "width": 1
+      },
+      {
+        "code": 23,
+        "label": "5",
+        "width": 1
+      },
+      {
+        "code": 22,
+        "label": "6",
+        "width": 1
+      },
+      {
+        "code": 26,
+        "label": "7",
+        "width": 1
+      },
+      {
+        "code": 28,
+        "label": "8",
+        "width": 1
+      },
+      {
+        "code": 25,
+        "label": "9",
+        "width": 1
+      },
+      {
+        "code": 29,
+        "label": "0",
+        "width": 1
+      },
+      {
+        "code": 27,
+        "label": "−",
+        "width": 1
+      },
+      {
+        "code": 24,
+        "label": "=",
+        "width": 1
+      },
+      {
+        "code": 51,
+        "label": "delete",
+        "width": 1.5
+      }
+    ],
+    [
+      {
+        "code": 48,
+        "label": "tab",
+        "width": 1.5
+      },
+      {
+        "code": 12,
+        "label": "Q",
+        "width": 1
+      },
+      {
+        "code": 13,
+        "label": "W",
+        "width": 1
+      },
+      {
+        "code": 14,
+        "label": "E",
+        "width": 1
+      },
+      {
+        "code": 15,
+        "label": "R",
+        "width": 1
+      },
+      {
+        "code": 17,
+        "label": "T",
+        "width": 1
+      },
+      {
+        "code": 16,
+        "label": "Y",
+        "width": 1
+      },
+      {
+        "code": 32,
+        "label": "U",
+        "width": 1
+      },
+      {
+        "code": 34,
+        "label": "I",
+        "width": 1
+      },
+      {
+        "code": 31,
+        "label": "O",
+        "width": 1
+      },
+      {
+        "code": 35,
+        "label": "P",
+        "width": 1
+      },
+      {
+        "code": 33,
+        "label": "[",
+        "width": 1
+      },
+      {
+        "code": 30,
+        "label": "]",
+        "width": 1
+      },
+      {
+        "code": 42,
+        "label": "\\",
+        "width": 1
+      }
+    ],
+    [
+      {
+        "code": 57,
+        "label": "caps lock",
+        "width": 1.75
+      },
+      {
+        "code": 0,
+        "label": "A",
+        "width": 1
+      },
+      {
+        "code": 1,
+        "label": "S",
+        "width": 1
+      },
+      {
+        "code": 2,
+        "label": "D",
+        "width": 1
+      },
+      {
+        "code": 3,
+        "label": "F",
+        "width": 1
+      },
+      {
+        "code": 5,
+        "label": "G",
+        "width": 1
+      },
+      {
+        "code": 4,
+        "label": "H",
+        "width": 1
+      },
+      {
+        "code": 38,
+        "label": "J",
+        "width": 1
+      },
+      {
+        "code": 40,
+        "label": "K",
+        "width": 1
+      },
+      {
+        "code": 37,
+        "label": "L",
+        "width": 1
+      },
+      {
+        "code": 41,
+        "label": ";",
+        "width": 1
+      },
+      {
+        "code": 39,
+        "label": "'",
+        "width": 1
+      },
+      {
+        "code": 36,
+        "label": "return",
+        "width": 1.75
+      }
+    ],
+    [
+      {
+        "code": 56,
+        "label": "⇧ shift",
+        "width": 2.25
+      },
+      {
+        "code": 6,
+        "label": "Z",
+        "width": 1
+      },
+      {
+        "code": 7,
+        "label": "X",
+        "width": 1
+      },
+      {
+        "code": 8,
+        "label": "C",
+        "width": 1
+      },
+      {
+        "code": 9,
+        "label": "V",
+        "width": 1
+      },
+      {
+        "code": 11,
+        "label": "B",
+        "width": 1
+      },
+      {
+        "code": 45,
+        "label": "N",
+        "width": 1
+      },
+      {
+        "code": 46,
+        "label": "M",
+        "width": 1
+      },
+      {
+        "code": 43,
+        "label": ",",
+        "width": 1
+      },
+      {
+        "code": 47,
+        "label": ".",
+        "width": 1
+      },
+      {
+        "code": 44,
+        "label": "/",
+        "width": 1
+      },
+      {
+        "code": 60,
+        "label": "⇧ shift",
+        "width": 2.25
+      }
+    ],
+    [
+      {
+        "code": 63,
+        "label": "fn 🌐",
+        "width": 1
+      },
+      {
+        "code": 59,
+        "label": "⌃ control",
+        "width": 1
+      },
+      {
+        "code": 58,
+        "label": "⌥ option",
+        "width": 1
+      },
+      {
+        "code": 55,
+        "label": "⌘ command",
+        "width": 1.25
+      },
+      {
+        "code": 49,
+        "label": "space",
+        "width": 4.5
+      },
+      {
+        "code": 54,
+        "label": "⌘ command",
+        "width": 1.25
+      },
+      {
+        "code": 61,
+        "label": "⌥ option",
+        "width": 1
+      },
+      {
+        "code": 123,
+        "label": "←",
+        "width": 1
+      },
+      {
+        "code": 126,
+        "label": "↑",
+        "width": 1
+      },
+      {
+        "code": 125,
+        "label": "↓",
+        "width": 1
+      },
+      {
+        "code": 124,
+        "label": "→",
+        "width": 1
+      }
+    ]
+  ],
+  "additional": [
+    {
+      "code": 105,
+      "label": "F13",
+      "width": 1
+    },
+    {
+      "code": 107,
+      "label": "F14",
+      "width": 1
+    },
+    {
+      "code": 113,
+      "label": "F15",
+      "width": 1
+    },
+    {
+      "code": 106,
+      "label": "F16",
+      "width": 1
+    },
+    {
+      "code": 64,
+      "label": "F17",
+      "width": 1
+    },
+    {
+      "code": 79,
+      "label": "F18",
+      "width": 1
+    },
+    {
+      "code": 80,
+      "label": "F19",
+      "width": 1
+    },
+    {
+      "code": 90,
+      "label": "F20",
+      "width": 1
+    },
+    {
+      "code": 114,
+      "label": "help",
+      "width": 1
+    },
+    {
+      "code": 115,
+      "label": "home",
+      "width": 1
+    },
+    {
+      "code": 119,
+      "label": "end",
+      "width": 1
+    },
+    {
+      "code": 116,
+      "label": "page ↑",
+      "width": 1
+    },
+    {
+      "code": 121,
+      "label": "page ↓",
+      "width": 1
+    },
+    {
+      "code": 117,
+      "label": "delete ⌦",
+      "width": 1
+    },
+    {
+      "code": 62,
+      "label": "R ctrl",
+      "width": 1
+    },
+    {
+      "code": 71,
+      "label": "clear",
+      "width": 1
+    },
+    {
+      "code": 82,
+      "label": "num 0",
+      "width": 1
+    },
+    {
+      "code": 83,
+      "label": "num 1",
+      "width": 1
+    },
+    {
+      "code": 84,
+      "label": "num 2",
+      "width": 1
+    },
+    {
+      "code": 85,
+      "label": "num 3",
+      "width": 1
+    },
+    {
+      "code": 86,
+      "label": "num 4",
+      "width": 1
+    },
+    {
+      "code": 87,
+      "label": "num 5",
+      "width": 1
+    },
+    {
+      "code": 88,
+      "label": "num 6",
+      "width": 1
+    },
+    {
+      "code": 89,
+      "label": "num 7",
+      "width": 1
+    },
+    {
+      "code": 91,
+      "label": "num 8",
+      "width": 1
+    },
+    {
+      "code": 92,
+      "label": "num 9",
+      "width": 1
+    },
+    {
+      "code": 65,
+      "label": "num .",
+      "width": 1
+    },
+    {
+      "code": 67,
+      "label": "num ×",
+      "width": 1
+    },
+    {
+      "code": 69,
+      "label": "num +",
+      "width": 1
+    },
+    {
+      "code": 75,
+      "label": "num ÷",
+      "width": 1
+    },
+    {
+      "code": 76,
+      "label": "num ↵",
+      "width": 1
+    },
+    {
+      "code": 78,
+      "label": "num −",
+      "width": 1
+    },
+    {
+      "code": 81,
+      "label": "num =",
+      "width": 1
+    }
+  ]
+}

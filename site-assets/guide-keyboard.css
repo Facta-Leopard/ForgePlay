@@ -1,0 +1,21 @@
+.sim-dialog.v2-keyboard-dialog{width:min(980px,calc(100vw - 32px));max-width:min(980px,calc(100vw - 32px));box-sizing:border-box}
+.guide-keyboard{min-width:0;color:inherit}
+.guide-keyboard>h3{margin:12px 0 4px}
+.guide-keyboard-scroll{overflow-x:auto;overscroll-behavior-x:contain;border:1px solid #776049;border-radius:14px;padding:12px;background:#29231d;margin:18px 0}
+.guide-keyboard-board{min-width:740px;display:grid;gap:6px}
+.guide-keyboard-row{display:flex;gap:5px}
+.guide-keyboard .guide-key{flex:var(--key-width,1) 1 0;min-width:0;display:flex;flex-direction:column;gap:2px;height:49px;padding:3px;border:1px solid #65574a;border-radius:7px;background:#15120f;color:#f2e7d8;box-shadow:0 2px 0 #0005;cursor:pointer;font:inherit;font-size:12px}
+.guide-keyboard .guide-key small{font-size:9px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.guide-keyboard .guide-key[aria-pressed=true]{border:2px solid #e9a562;background:#44301f}
+.guide-keyboard .guide-key[data-changed=true] small{color:#ffc68d}
+.guide-keyboard-extra{display:grid;grid-template-columns:repeat(auto-fit,minmax(62px,1fr));gap:6px;padding:12px 0}
+.guide-keyboard-fields{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.guide-keyboard-fields select{width:100%;max-width:100%}
+.guide-keyboard-result{display:block;padding:16px;border-left:3px solid #e9a562;background:#b677351a;font-weight:600;line-height:1.6}
+.guide-keyboard .sim-note{white-space:pre-line}
+.guide-keyboard :focus-visible{outline:2px solid #e9a562;outline-offset:3px}
+.sim-light .guide-keyboard-scroll{background:#dac5aa;border-color:#bfa180}
+.sim-light .guide-keyboard .guide-key{background:#f6ead8;color:#30261e;border-color:#b79e83;box-shadow:0 2px 0 #84664c33}
+.sim-light .guide-keyboard .guide-key[aria-pressed=true]{background:#ecd1ad;border-color:#97521f}
+.sim-light .guide-keyboard .guide-key[data-changed=true] small{color:#803d0f}
+@media(max-width:600px){.guide-keyboard-fields{grid-template-columns:1fr;gap:8px}.guide-keyboard-scroll{padding:8px}.guide-keyboard .sim-actions{flex-wrap:wrap}}

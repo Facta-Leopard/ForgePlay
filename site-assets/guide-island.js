@@ -1,19 +1,20 @@
 (() => {
   'use strict';
   // Presentation-only model. No native processes, device access, or persisted settings.
-  const initial = () => ({mode:'compact',position:'left',chatter:true,reactions:true,hidden:false,keyringVisible:true});
+  const initial = () => ({mode:'compact',position:'left',chatter:true,reactions:true,hidden:false,closed:false,keyringVisible:true,alwaysOnTop:true});
   const transition = (state, action, value) => {
     const next={...state};
     if(action==='mode'&&['compact','expanded','keyring'].includes(value)){next.mode=value;next.hidden=false;}
     if(action==='position'&&['left','center','right'].includes(value))next.position=value;
-    if(action==='chatter'||action==='reactions')next[action]=!state[action];
+    if(action==='chatter'||action==='reactions'||action==='alwaysOnTop')next[action]=!state[action];
     if(action==='hide')next.hidden=true;
+    if(action==='quit'){next.hidden=true;next.closed=true;}
     if(action==='restore')next.hidden=false;
     if(action==='keyringVisible')next.keyringVisible=!state.keyringVisible;
     if(!next.keyringVisible&&next.mode==='keyring')next.mode='compact';
     return next;
   };
-  const create = ({root,shell,copy,locale,light,title,renderCompact,home,settings,advanced,setAdvanced,onChatter,refresh,ticker}) => {
+  const create = ({root,shell,copy,locale,light,title,renderCompact,home,settings,advanced,setAdvanced,onChatter,refresh,ticker,restart}) => {
     const n=(tag,cls='',text)=>{const e=document.createElement(tag);e.className=cls;if(text!==undefined)e.textContent=text;return e;};
     const t=key=>copy.strings[key]?.[Math.max(0,copy.locales.indexOf(locale()))]||key;
     let state=initial(),animation=null,bubbleTimer=0,chatterTimer=0,lastImpulse=0,lastPointer=null,inView=true,phrase=0,clicks=0,lastClick=0,menu=null,drag=null;
@@ -57,6 +58,7 @@
       add('keyringVisible',()=>{closeMenu();change('keyringVisible');},state.keyringVisible);
       add('hide',()=>{closeMenu();change('hide');});menu.append(n('hr'));
       for(const key of ['chatter','reactions'])add(key,()=>{closeMenu();change(key);},state[key]);
+      add('alwaysOnTop',()=>{closeMenu();change('alwaysOnTop');},state.alwaysOnTop).title=t('topDemo');
       const group=n('fieldset'),legend=n('legend','',t('position'));group.append(legend);
       for(const value of ['left','center','right']){const b=button(value,()=>{closeMenu();change('position',value);});b.setAttribute('aria-pressed',String(state.position===value));group.append(b);}menu.append(group);
       add('advanced',()=>{closeMenu();setAdvanced(!advanced());refresh();},advanced());menu.append(n('hr'));
@@ -77,7 +79,7 @@
     });
     // Touch and keyboard users can open the same options without a context-click.
     const options=button('menu',openMenu,'···');options.className='island-fopl-options';companion.append(options);
-    recovery.addEventListener('click',()=>change('restore'));
+    recovery.addEventListener('click',()=>{if(state.closed){state=initial();restart();refresh();}else change('restore');});
     stage.addEventListener('pointermove',event=>{
       if(!event.isPrimary||event.pointerType==='touch')return;
       if(lastPointer!==null&&Math.abs(event.clientX-lastPointer)>5)impulse(event.clientX>lastPointer?1:-1,4);
@@ -93,14 +95,15 @@
       if(menu){menu.remove();menu=null;}
       stage.classList.toggle('island-light',light());stage.dataset.mode=state.mode;stage.dataset.position=state.position;
       stage.dataset.keyringVisible=String(state.keyringVisible);
-      panel.hidden=state.hidden||state.mode==='keyring';companion.hidden=state.hidden||!state.keyringVisible;recovery.hidden=!state.hidden;recovery.textContent=t('restore');
+      stage.dataset.alwaysOnTop=String(state.alwaysOnTop);
+      panel.hidden=state.hidden||state.mode==='keyring';companion.hidden=state.hidden||!state.keyringVisible;recovery.hidden=!state.hidden;recovery.textContent=t(state.closed?'restartDemo':'restore');
       shell.hidden=state.mode!=='expanded';compact.hidden=state.mode!=='compact';
       fopl.setAttribute('aria-label',t('fopl'));options.setAttribute('aria-label',t('menu'));options.title=t('menu');
       chrome.replaceChildren();const handle=button('handle',event=>{if(event.detail===0)change('mode',state.mode==='expanded'?'compact':'expanded');},'');handle.className='island-handle';handle.setAttribute('aria-expanded',String(state.mode==='expanded'));handle.dataset.islandHandle='';
       handle.addEventListener('pointerdown',event=>{if(event.button!==0)return;drag={y:event.clientY,id:event.pointerId};handle.setPointerCapture(event.pointerId);});
       handle.addEventListener('pointerup',event=>{if(!drag)return;const delta=event.clientY-drag.y;drag=null;change('mode',Math.abs(delta)>24?(delta>0?'expanded':'compact'):(state.mode==='expanded'?'compact':'expanded'));});
       handle.addEventListener('pointercancel',()=>{drag=null;});
-      const row=n('div','island-chrome-row'),lights=n('span','island-lights');lights.append(button('hide',()=>change('hide'),'●'),button('compact',()=>change('mode','compact'),'●'));
+      const row=n('div','island-chrome-row'),lights=n('span','island-lights');lights.append(button('quit',()=>change('quit'),'●'),button('minimize',()=>change('hide'),'●'));
       const titleNode=n('strong','island-title',title());row.append(lights,titleNode);
       const controls=n('div','island-controls');controls.append(symbolButton('keyring',()=>change('mode','keyring'),'collapseAll'),symbolButton(state.mode==='expanded'?'compact':'expanded',()=>change('mode',state.mode==='expanded'?'compact':'expanded'),state.mode==='expanded'?'collapse':'expand'));
       controls.firstElementChild.disabled=!state.keyringVisible;
@@ -112,7 +115,7 @@
     const reset=()=>{quiet();state=initial();render();};
     const setMode=(mode,update=true)=>{state=transition(state,'mode',mode);if(update)refresh();};
     window.addEventListener('pagehide',()=>{quiet();observer.disconnect();document.removeEventListener('visibilitychange',visibility);reduced.removeEventListener('change',quiet);},{once:true});
-    return {render,reset,setMode,speak,get mode(){return state.mode;},setChatter(value){state.chatter=Boolean(value);syncActivity();}};
+    return {render,reset,setMode,speak,get mode(){return state.mode;},get alwaysOnTop(){return state.alwaysOnTop;},setAlwaysOnTop(value){state.alwaysOnTop=Boolean(value);},setChatter(value){state.chatter=Boolean(value);syncActivity();}};
   };
   window.ForgePlayIslandDemo=Object.freeze({initial,transition,create});
 })();
