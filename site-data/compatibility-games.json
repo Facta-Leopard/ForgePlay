@@ -2,7 +2,7 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-18",
-  "revision": 1,
+  "revision": 2,
   "testProfiles": [
     {
       "id": "apple-silicon-m2-max-32gb-golden-gate-27-0-27-2",
@@ -3066,6 +3066,29 @@
         "ja": "The LabはForgePlay 2.2.1のVR環境で快適に動作します。",
         "zh-Hans": "The Lab 在 ForgePlay 2.2.1 的 VR 环境中运行流畅。",
         "zh-Hant": "The Lab 在 ForgePlay 2.2.1 的 VR 環境中運作流暢。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "romance-of-the-three-kingdoms-13-github-59-20261018",
+      "gameId": "romance-of-the-three-kingdoms-13",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m5-pro-24gb-macos-27-0-1",
+      "forgePlayVersion": "2.3.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "github-issue",
+      "reporter": "KFCBucketCat",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.2.1에서 런처가 종료되어 게임을 시작하지 못하던 문제가 개선됐습니다. 2.3.0에서는 런처와 게임이 정상적으로 실행됩니다.",
+        "en": "The problem where the launcher exited and prevented the game from starting in ForgePlay 2.2.1 has been resolved. In 2.3.0, both the launcher and the game start normally.",
+        "de": "Das Problem, bei dem sich der Launcher unter ForgePlay 2.2.1 beendete und das Spiel nicht starten konnte, wurde behoben. Unter 2.3.0 starten sowohl der Launcher als auch das Spiel normal.",
+        "es": "Se ha solucionado el problema por el que el lanzador se cerraba e impedía iniciar el juego en ForgePlay 2.2.1. En 2.3.0, tanto el lanzador como el juego se inician con normalidad.",
+        "fr": "Le problème qui faisait se fermer le lanceur et empêchait le jeu de démarrer sous ForgePlay 2.2.1 a été résolu. Sous 2.3.0, le lanceur et le jeu démarrent normalement.",
+        "ja": "ForgePlay 2.2.1でランチャーが終了してゲームを起動できなかった問題が改善されました。2.3.0ではランチャーとゲームが正常に起動します。",
+        "zh-Hans": "ForgePlay 2.2.1 中启动器退出、导致游戏无法启动的问题已得到改善。在 2.3.0 中，启动器和游戏均可正常启动。",
+        "zh-Hant": "ForgePlay 2.2.1 中啟動器結束、導致遊戲無法啟動的問題已獲得改善。在 2.3.0 中，啟動器與遊戲均可正常啟動。"
       },
       "blocker": null
     }
