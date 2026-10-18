@@ -134,6 +134,7 @@ PAGES=(
   site-assets/version-posters/forgeplay-2.2.0.jpg
   site-assets/version-posters/forgeplay-memory-control-preview.jpg
   site-assets/announcements/forgeplay-2-3-0-preview-poster.png
+  site-assets/version-posters/forgeplay-make-it-yours-preview.png
   site-assets/announcements/forgeplay-2-3-0-key-mapping.png
   site-assets/announcements/forgeplay-2-3-0-lost-ark.png
   site-assets/version-posters/forgeplay-vr-preview.jpg
@@ -2104,8 +2105,13 @@ root = Path(sys.argv[1])
 page = (root / 'index.html').read_text()
 cards = re.findall(r'<button\b[^>]*data-poster-version="([^"]+)"[^>]*>', page)
 previews = re.findall(r'<button\b[^>]*data-poster-preview[^>]*>', page)
-if cards != ['1.0','1.1','1.2','1.3','2.0.0','2.1.0','2.2.0','2.3.0','VR','VM'] or len(previews) != 2 or any(f'data-poster-version="{name}"' not in previews[i] for i, name in enumerate(['VR','VM'])):
-    raise SystemExit('Release posters must remain versioned; only the VR and VM previews follow at the right')
+if cards != ['1.0','1.1','1.2','1.3','2.0.0','2.1.0','2.2.0','2.3.0','Update','VR','VM'] or len(previews) != 3 or any(f'data-poster-version="{name}"' not in previews[i] for i, name in enumerate(['Update','VR','VM'])):
+    raise SystemExit('Release posters must remain versioned; the next update, VR and VM previews follow at the right')
+if 'src="site-assets/version-posters/forgeplay-make-it-yours-preview.png" width="1024" height="1536"' not in page:
+    raise SystemExit('The next update preview must use the supplied Make It Yours poster')
+preview = (root / 'site-assets/version-posters/forgeplay-make-it-yours-preview.png').read_bytes()
+if not preview.startswith(b'\x89PNG\r\n\x1a\n') or int.from_bytes(preview[16:20], 'big') != 1024 or int.from_bytes(preview[20:24], 'big') != 1536:
+    raise SystemExit('The Make It Yours preview must retain its original PNG dimensions')
 if 'src="site-assets/announcements/forgeplay-2-1-0-poster.png"' not in page:
     raise SystemExit('2.1.0 must use the approved release poster')
 if 'src="site-assets/version-posters/forgeplay-2.2.0.jpg" width="853" height="1280"' not in page:
