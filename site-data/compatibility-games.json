@@ -2,7 +2,7 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-19",
-  "revision": 0,
+  "revision": 1,
   "testProfiles": [
     {
       "id": "apple-silicon-m2-max-32gb-golden-gate-27-0-27-2",
@@ -3465,6 +3465,29 @@
         "ja": "ForgePlay 2.3.0の互換モードではゲームが正常に起動します。ただし、グラフィック設定の変更を適用するとフリーズし、強制終了して再起動する必要があるとの報告です。起動時にGPUドライバーが古いという警告が表示されますが、続行すれば起動できます。\n\n開発者からの案内：グラフィック設定変更時のクラッシュとドライバー警告を調査しており、今後対応する予定です。",
         "zh-Hans": "游戏在 ForgePlay 2.3.0 的兼容模式下可以正常启动。不过，反馈称应用图形设置的更改后游戏会卡死，需要强制退出后重新启动。启动时会出现 GPU 驱动过旧的警告，但选择继续后仍可运行游戏。\n\n开发者说明：正在排查更改图形设置时的崩溃和驱动警告问题，计划后续修复。",
         "zh-Hant": "遊戲在 ForgePlay 2.3.0 的相容模式下可以正常啟動。不過，回報指出套用圖形設定的變更後遊戲會停住，需要強制結束後重新啟動。啟動時會出現 GPU 驅動程式過舊的警告，但選擇繼續後仍可執行遊戲。\n\n開發者說明：正在排查變更圖形設定時的當機與驅動程式警告問題，計畫後續修正。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "legend-of-mortal-github-64-20261019",
+      "gameId": "legend-of-mortal",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m5-pro-64gb-macos-27-0-1",
+      "forgePlayVersion": "2.3.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "github-issue",
+      "reporter": "E-Schmacher",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.3.0에서 DXVK로 변경한 뒤 정상적으로 실행된다는 제보입니다. Unity 엔진 기반의 활협전을 실행할 때는 그래픽 백엔드를 DXVK로 선택해 주세요.",
+        "en": "The game is reported to run normally after switching to DXVK in ForgePlay 2.3.0. Select DXVK as the graphics backend when running this Unity-based game.",
+        "de": "Laut Bericht läuft das Spiel nach dem Wechsel zu DXVK mit ForgePlay 2.3.0 normal. Wählen Sie für dieses auf Unity basierende Spiel DXVK als Grafik-Backend.",
+        "es": "Según el reporte, el juego funciona con normalidad tras cambiar a DXVK en ForgePlay 2.3.0. Selecciona DXVK como backend gráfico para ejecutar este juego basado en Unity.",
+        "fr": "Selon le signalement, le jeu fonctionne normalement après le passage à DXVK dans ForgePlay 2.3.0. Sélectionnez DXVK comme backend graphique pour lancer ce jeu conçu avec Unity.",
+        "ja": "ForgePlay 2.3.0でDXVKに切り替えたところ、正常に動作したとの報告です。Unityエンジンを使用した本作を起動する際は、グラフィックバックエンドにDXVKを選択してください。",
+        "zh-Hans": "反馈称，在 ForgePlay 2.3.0 中切换为 DXVK 后，游戏可以正常运行。运行这款基于 Unity 引擎的游戏时，请将图形后端设为 DXVK。",
+        "zh-Hant": "回報指出，在 ForgePlay 2.3.0 中切換為 DXVK 後，遊戲可以正常運作。執行這款以 Unity 引擎製作的遊戲時，請將繪圖後端設為 DXVK。"
       },
       "blocker": null
     }
