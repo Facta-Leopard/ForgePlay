@@ -48,6 +48,7 @@
   const renderRecord = (parent, report) => {
     const record = document.createElement("div");
     record.className = "fp-game-record";
+    record.dataset.status = report.status;
     const heading = document.createElement("div");
     heading.className = "fp-game-record-heading";
     const profile = catalog.testProfiles.find((item) => item.id === report.testProfileId);

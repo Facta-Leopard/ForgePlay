@@ -116,6 +116,7 @@ PAGES=(
   site-assets/current-release.js
   site-assets/website-compatibility.js
   site-assets/compatibility-platforms.css
+  site-assets/compatibility-records.css
   site-data/compatibility-platforms.md
   site-assets/why-story.js
   compatibility.js
@@ -2040,7 +2041,7 @@ parser = ReportLink()
 parser.feed(Path(sys.argv[1]).read_text())
 assert parser.found == 1, "Homepage compatibility section must have one localized report-form link"
 HOME_REPORT
-require_snippet "$ROOT_DIR/index.html" 'src="site-assets/home-experience.js?v=20261016-issue-links"'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/home-experience.js?v=20261018-record-colors"'
 require_snippet "$ROOT_DIR/index.html" 'data-release-download'
 require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.releaseNotesButton"'
 for html in index.html why.html license.html privacy.html support.html compatibility.html updates.html site-assets/guide.html site-assets/dlss5.html; do
@@ -2168,6 +2169,10 @@ require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebC
 require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebCatalog.sortReports('
 require_snippet "$ROOT_DIR/site-assets/home-experience.js" ').sort(window.ForgePlayWebCatalog.compareGameGroups)'
 require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebCatalog.describe('
+require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'record.dataset.status = report.status'
+for html in index.html compatibility.html; do
+  require_snippet "$ROOT_DIR/$html" 'href="site-assets/compatibility-records.css?v=20261018-1"'
+done
 require_snippet "$ROOT_DIR/compatibility.js" 'catalog().renderNote(notesCell, reportNote(report, selectedLocale))'
 require_snippet "$ROOT_DIR/compatibility.js" 'catalog().renderNote(summaryNote, reportNote(summaryRecord.report, selectedLocale))'
 require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebCatalog.renderNote(note,'

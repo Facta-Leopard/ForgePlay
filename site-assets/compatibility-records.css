@@ -1,0 +1,65 @@
+/* Individual test results retain their colors inside any overall game result. */
+.fp-site {
+  --compat-record-pass-surface: #13291f;
+  --compat-record-pass-line: #376c4f;
+  --compat-record-pass-ink: #b8e6c9;
+  --compat-record-fail-surface: #321b1e;
+  --compat-record-fail-line: #974a55;
+  --compat-record-fail-ink: #ffb6bd;
+}
+
+:root[data-site-theme="light"] .fp-site {
+  --compat-record-pass-surface: #dde6d6;
+  --compat-record-pass-line: #789577;
+  --compat-record-pass-ink: #28533b;
+  --compat-record-fail-surface: #efd8cf;
+  --compat-record-fail-line: #b37869;
+  --compat-record-fail-ink: #91332e;
+}
+
+:root .fp-site :is(.compatibility-record, .fp-game-record)[data-status="playable"] {
+  background: var(--compat-record-pass-surface);
+  border-color: var(--compat-record-pass-line);
+}
+
+:root .fp-site :is(.compatibility-record, .fp-game-record)[data-status="blocked"] {
+  background: var(--compat-record-fail-surface);
+  border-color: var(--compat-record-fail-line);
+}
+
+.fp-site .fp-game-record[data-status] {
+  border-inline-start: 3px solid;
+  padding-inline: 16px;
+}
+
+.fp-site .compatibility-record[data-status="playable"] .compatibility-status,
+.fp-site .fp-game-record[data-status="playable"] .fp-game-record-heading > span {
+  color: var(--compat-record-pass-ink);
+}
+
+.fp-site .compatibility-record[data-status="blocked"] .compatibility-status,
+.fp-site .fp-game-record[data-status="blocked"] .fp-game-record-heading > span {
+  color: var(--compat-record-fail-ink);
+}
+
+:root .fp-site .compatibility-record-panel[data-mode="blocked"] {
+  background: var(--compat-record-fail-surface);
+  border-color: var(--compat-record-fail-line);
+}
+
+.fp-site .compatibility-record-panel[data-mode="blocked"] .compatibility-record-panel-title,
+.fp-site .compatibility-blocked-button {
+  color: var(--compat-record-fail-ink);
+}
+
+.fp-site .compatibility-blocked-button {
+  background: var(--compat-record-fail-surface);
+  border-color: var(--compat-record-fail-line);
+}
+
+.fp-site .compatibility-blocked-button:hover,
+.fp-site .compatibility-blocked-button[aria-expanded="true"] {
+  color: var(--compat-record-fail-ink);
+  background: var(--compat-record-fail-surface);
+  border-color: var(--compat-record-fail-ink);
+}
