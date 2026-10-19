@@ -77,7 +77,11 @@
     const currentReports = current
       ? reports.filter((report) => compareVersions(report.forgePlayVersion, current) === 0)
       : [];
-    const scope = currentReports.length ? currentReports : reports;
+    // When the current release is untested, use the newest tested version.
+    // An older success must not hide a more recent failure in that platform.
+    const newestVersion = sortReports(reports).find(report => versionParts(report.forgePlayVersion))?.forgePlayVersion;
+    const scope = currentReports.length ? currentReports : newestVersion
+      ? reports.filter(report => compareVersions(report.forgePlayVersion, newestVersion) === 0) : reports;
     const status = statusOrder.find((value) => scope.some((report) => report.status === value)) || "unknown";
     const headlineReports = sortReports(scope.filter((report) => report.status === status));
     const versions = [...new Set(headlineReports.map((report) => report.forgePlayVersion).filter(Boolean))];
@@ -194,6 +198,24 @@
     })).sort(compareGameGroups);
   };
 
+  // One visible game, with an explicitly platform-scoped headline and all of
+  // its selected-platform history. Never reassess mixed platforms together.
+  const gameGroups = (database, selectedPlatform = "all") => {
+    const grouped = new Map();
+    for (const platformGroup of platformGroups(database, selectedPlatform)) {
+      const id = platformGroup.game.id;
+      if (!grouped.has(id)) grouped.set(id, []);
+      grouped.get(id).push(platformGroup);
+    }
+    return [...grouped.values()].map(platformResults => {
+      // platformGroups already orders by numeric version and report publication.
+      const headline = platformResults[0];
+      const included = new Set(platformResults.flatMap(group => group.reports));
+      return {...headline, key:headline.game.id, platformResults,
+        reports:database.reports.filter(report => included.has(report))};
+    }).sort(compareGameGroups);
+  };
+
   const fetchJSON = async (path) => {
     const url = new URL(path, document.baseURI);
     url.searchParams.set("refresh", Date.now().toString());
@@ -213,5 +235,5 @@
     return pending;
   };
   window.ForgePlayWebCatalog = {load, merge, summarize, sortReports, describe, compareVersions, compareGameGroups,
-    platforms, platformOf, platformLabel, platformGroups, renderNote};
+    platforms, platformOf, platformLabel, platformGroups, gameGroups, renderNote};
 })();

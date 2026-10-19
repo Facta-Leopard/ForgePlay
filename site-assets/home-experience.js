@@ -49,6 +49,7 @@
     const record = document.createElement("div");
     record.className = "fp-game-record";
     record.dataset.status = report.status;
+    record.dataset.reportId = report.id;
     const heading = document.createElement("div");
     heading.className = "fp-game-record-heading";
     const profile = catalog.testProfiles.find((item) => item.id === report.testProfileId);
@@ -83,7 +84,7 @@
     }
     const query = search.value.trim().normalize("NFKC").toLocaleLowerCase();
     const platform = platformFilter?.value || "all";
-    const platformGames = window.ForgePlayWebCatalog.platformGroups(catalog, platform);
+    const platformGames = window.ForgePlayWebCatalog.gameGroups(catalog, platform);
     const games = platformGames.map(group => ({...group, records:group.reports})).filter(({game, status}) => (
       (selectedStatus === "all" || status === selectedStatus) &&
       (!query || Object.values(game.titles).some((title) => title.normalize("NFKC").toLocaleLowerCase().includes(query)))

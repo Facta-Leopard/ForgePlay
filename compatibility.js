@@ -181,6 +181,7 @@
     const record = document.createElement("div");
     record.className = "compatibility-record";
     record.dataset.status = report.status;
+    record.dataset.reportId = report.id;
 
     const statusCell = makeRecordCell(
       "compatibility-record-status-cell",
@@ -269,7 +270,7 @@
 
   const updateSummary = () => {
     if (!database) return;
-    const playableCount = new Set(catalog().platformGroups(database, platformFilter?.value || "all")
+    const playableCount = new Set(catalog().gameGroups(database, platformFilter?.value || "all")
       .filter(group => group.status === "playable").map(group => group.game.id)).size;
     document.querySelectorAll("[data-compatibility-count]").forEach((element) => {
       element.textContent = String(playableCount);
@@ -293,7 +294,7 @@
       database.testProfiles.map((profile) => [profile.id, profile])
     );
     const selectedPlatform = platformFilter?.value || "all";
-    const platformGames = catalog().platformGroups(database, selectedPlatform);
+    const platformGames = catalog().gameGroups(database, selectedPlatform);
     const groups = platformGames
       .map(group => ({...group, records:group.reports.map(report => ({report, profile:profiles.get(report.testProfileId)}))}))
       .filter(({ game, records, status }) => {
@@ -373,7 +374,7 @@
       );
       statusBadge.dataset.status = status;
 
-      const panelId = "compatibility-records-" + game.id + "-" + launchPlatform;
+      const panelId = "compatibility-records-" + game.id;
       let blockedButton = null;
       if (blockedRecords.length) {
         blockedButton = document.createElement("button");

@@ -2017,7 +2017,7 @@ require_snippet "$ROOT_DIR/index.html" 'data-current-release-download'
 require_snippet "$ROOT_DIR/index.html" 'data-current-release-download-label'
 require_snippet "$ROOT_DIR/index.html" 'data-current-release-link'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/current-release.js?v=20260905-7"'
-require_snippet "$ROOT_DIR/index.html" 'src="site-assets/website-compatibility.js?v=20261016-issue-links"'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/website-compatibility.js?v=20261019-game-groups"'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/home-experience.css?v=20261005-report'
 python3 - "$ROOT_DIR/index.html" <<'HOME_REPORT'
 from html.parser import HTMLParser
@@ -2042,7 +2042,7 @@ parser = ReportLink()
 parser.feed(Path(sys.argv[1]).read_text())
 assert parser.found == 1, "Homepage compatibility section must have one localized report-form link"
 HOME_REPORT
-require_snippet "$ROOT_DIR/index.html" 'src="site-assets/home-experience.js?v=20261018-record-colors"'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/home-experience.js?v=20261019-game-groups"'
 require_snippet "$ROOT_DIR/index.html" 'data-release-download'
 require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.releaseNotesButton"'
 for html in index.html why.html license.html privacy.html support.html compatibility.html updates.html site-assets/guide.html site-assets/dlss5.html; do
@@ -2072,7 +2072,7 @@ require_snippet "$ROOT_DIR/index.html" 'data-compatibility-platform'
 require_snippet "$ROOT_DIR/index.html" 'data-home-games'
 require_snippet "$ROOT_DIR/index.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/index.html" 'href="https://github.com/sponsors/facta-leopard"'
-require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20261016-issue-links"'
+require_snippet "$ROOT_DIR/index.html" 'src="compatibility.js?v=20261019-game-groups"'
 require_snippet "$ROOT_DIR/index.html" 'src="announcements.js?v=20261018-release230"'
 require_snippet "$ROOT_DIR/index.html" 'src="developer-apps.js?v=20261004-badges"'
 require_snippet "$ROOT_DIR/index.html" 'data-latest-announcement'
@@ -2150,9 +2150,9 @@ require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count
 require_snippet "$ROOT_DIR/compatibility.html" 'href="site.css?v=20260811-22"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20260929-platform1"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/current-release.js?v=20260905-7"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20261016-issue-links"'
-require_snippet "$ROOT_DIR/site-assets/guide.html" 'src="site-assets/website-compatibility.js?v=20261016-issue-links"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20261016-issue-links"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20261019-game-groups"'
+require_snippet "$ROOT_DIR/site-assets/guide.html" 'src="site-assets/website-compatibility.js?v=20261019-game-groups"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20261019-game-groups"'
 require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-device>M4 Pro · 24GB</strong>'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-card'
 require_snippet "$ROOT_DIR/compatibility.html" 'data-current-release-tag'
@@ -2166,12 +2166,12 @@ require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.columnRecords"
 require_snippet "$ROOT_DIR/compatibility.js" 'forgeplay:localechange'
 require_snippet "$ROOT_DIR/compatibility.js" 'const catalog = () => window.ForgePlayWebCatalog'
 require_snippet "$ROOT_DIR/compatibility.js" 'catalog().load()'
-require_snippet "$ROOT_DIR/compatibility.js" 'catalog().platformGroups('
+require_snippet "$ROOT_DIR/compatibility.js" 'catalog().gameGroups('
 require_snippet "$ROOT_DIR/compatibility.js" 'catalog().sortReports('
 require_snippet "$ROOT_DIR/compatibility.js" 'catalog().compareGameGroups(left, right)'
 require_snippet "$ROOT_DIR/compatibility.js" 'catalog().describe('
 require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebCatalog.load()'
-require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebCatalog.platformGroups('
+require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebCatalog.gameGroups('
 require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebCatalog.sortReports('
 require_snippet "$ROOT_DIR/site-assets/home-experience.js" ').sort(window.ForgePlayWebCatalog.compareGameGroups)'
 require_snippet "$ROOT_DIR/site-assets/home-experience.js" 'window.ForgePlayWebCatalog.describe('
@@ -2549,7 +2549,7 @@ vm.runInNewContext(
   {filename: "website-compatibility.js", timeout: 1000}
 );
 const model = context.window.ForgePlayWebCatalog;
-for (const name of ["load", "merge", "summarize", "sortReports", "describe", "compareVersions", "compareGameGroups", "platformGroups", "platformLabel", "platformOf"]) {
+for (const name of ["load", "merge", "summarize", "sortReports", "describe", "compareVersions", "compareGameGroups", "platformGroups", "gameGroups", "platformLabel", "platformOf"]) {
   assert.equal(typeof model?.[name], "function", `website catalog must expose ${name}`);
 }
 const merged = model.merge(base, additions);
@@ -2598,6 +2598,7 @@ check([report("1.0", "blocked"), report("1.2", "playable")], "1.2", {status: "pl
 check([report("1.2.0", "blocked")], "1.2", {status: "blocked", tone: "red"});
 check([report(null, "blocked")], "1.2", {status: "blocked", tone: "yellow", warningKey: "compat.unversionedBlocked"});
 check([report("1.0", "blocked")], null, {status: "blocked", tone: "yellow", warningKey: "compat.currentVersionUnknown"});
+check([report("1.0", "playable"), report("1.2", "blocked")], "1.3", {status: "blocked", tone: "yellow", warningKey: "compat.retestNeeded"});
 assert.equal(model.compareVersions("1.2.0", "1.2"), 0);
 const initialReport = {...report("1.2", "playable"), id: "initial", testedAt: null};
 const followupReport = {...report("1.2", "playable"), id: "followup", testedAt: null};
@@ -2649,6 +2650,20 @@ assert.equal(ordered[3].status,"blocked","ordering must not change the current a
 assert.deepEqual(Array.from(model.platformGroups(orderFixture,"steam"),group=>group.key),
   Array.from(ordered.filter(group=>group.launchPlatform==="steam"),group=>group.key));
 assert.equal(JSON.stringify(orderFixture),orderBefore,"ordering must not mutate source records");
+const unified = model.gameGroups(orderFixture);
+assert.equal(unified.length, orderFixture.games.length);
+assert.equal(new Set(unified.map(group => group.game.id)).size, unified.length);
+assert.deepEqual(Array.from(unified, group => group.key), ["newer","older","followup","undated","dated","development","unknown"]);
+assert.equal(unified.find(group => group.key === "followup").reports.length, 3);
+assert.deepEqual(Array.from(model.gameGroups(orderFixture,"battlenet"), group => group.status), ["blocked"]);
+const gameLevel = model.gameGroups({...merged,currentRelease:readJSON("current-release.json")});
+assert.equal(gameLevel.length, merged.games.length, "one card per game");
+assert.equal(new Set(gameLevel.flatMap(group => group.reports.map(report => report.id))).size, merged.reports.length);
+for (const platform of model.platforms) {
+  const filtered = model.gameGroups({...merged,currentRelease:readJSON("current-release.json")},platform);
+  assert.equal(new Set(filtered.map(group => group.game.id)).size,filtered.length);
+  assert.ok(filtered.every(group => group.reports.every(report => model.platformOf(report) === platform)));
+}
 assert.equal(model.compareGameGroups({sortVersion:"2.2",latestReportIndex:1,status:"playable"},
   {sortVersion:"2.2.0",latestReportIndex:1,status:"playable"}),0);
 
