@@ -1,8 +1,8 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
-  "updatedAt": "2026-10-19",
-  "revision": 1,
+  "updatedAt": "2026-10-22",
+  "revision": 0,
   "testProfiles": [
     {
       "id": "apple-silicon-m2-max-32gb-golden-gate-27-0-27-2",
@@ -255,6 +255,13 @@
       "chip": "M2",
       "unifiedMemoryGB": 16,
       "macOSVersion": "27.0.1"
+    },
+    {
+      "id": "apple-silicon-m2-max-32gb-golden-gate-27-2-rc",
+      "platform": "Apple Silicon Mac",
+      "chip": "M2 Max",
+      "unifiedMemoryGB": 32,
+      "macOSVersion": "Golden Gate 27.2 (RC)"
     }
   ],
   "games": [
@@ -3488,6 +3495,29 @@
         "ja": "ForgePlay 2.3.0でDXVKに切り替えたところ、正常に動作したとの報告です。Unityエンジンを使用した本作を起動する際は、グラフィックバックエンドにDXVKを選択してください。",
         "zh-Hans": "反馈称，在 ForgePlay 2.3.0 中切换为 DXVK 后，游戏可以正常运行。运行这款基于 Unity 引擎的游戏时，请将图形后端设为 DXVK。",
         "zh-Hant": "回報指出，在 ForgePlay 2.3.0 中切換為 DXVK 後，遊戲可以正常運作。執行這款以 Unity 引擎製作的遊戲時，請將繪圖後端設為 DXVK。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "phoenix-wright-ace-attorney-trilogy-github-67-20261022",
+      "gameId": "phoenix-wright-ace-attorney-trilogy",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m2-max-32gb-golden-gate-27-2-rc",
+      "forgePlayVersion": "2.3.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "github-issue",
+      "reporter": "Moneyya",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.3.0에서 DXMT 프리셋으로 Steam판을 원활하게 플레이할 수 있다는 제보입니다.",
+        "en": "The Steam version is reported to play smoothly with the DXMT preset in ForgePlay 2.3.0.",
+        "de": "Laut Bericht lässt sich die Steam-Version mit der DXMT-Voreinstellung in ForgePlay 2.3.0 flüssig spielen.",
+        "es": "Según el reporte, la versión de Steam se puede jugar con fluidez usando el ajuste preestablecido DXMT en ForgePlay 2.3.0.",
+        "fr": "Selon le signalement, la version Steam est jouable de manière fluide avec le préréglage DXMT dans ForgePlay 2.3.0.",
+        "ja": "ForgePlay 2.3.0のDXMTプリセットで、Steam版を快適にプレイできるとの報告です。",
+        "zh-Hans": "反馈称，Steam 版在 ForgePlay 2.3.0 中使用 DXMT 预设可以流畅游玩。",
+        "zh-Hant": "回報指出，Steam 版在 ForgePlay 2.3.0 中使用 DXMT 預設可以流暢遊玩。"
       },
       "blocker": null
     }
