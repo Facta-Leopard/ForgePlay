@@ -156,7 +156,7 @@
 
   const appendAction = (parent, action, selectedLocale) => {
     const releaseDownload = /^https:\/\/github\.com\/Facta-Leopard\/ForgePlay\/releases\/download\/v([0-9]+\.[0-9]+\.[0-9]+)\/ForgePlay-\1-[0-9]+\.dmg$/;
-    if (!["https://github.com/Facta-Leopard/ForgePlay/issues", "site-assets/guide.html", "https://facta-leopard.github.io/ForgePlayVP/", "https://store.steampowered.com/subscriber_agreement/", "https://github.com/Sikarugir-App/Sikarugir", "updates.html#update-forgeplay-2-1-0-released", "https://x.com/asha_shar/status/2110083127741702241", "https://github.com/Facta-Leopard/ForgePlay/releases/tag/v2.3.0"].includes(action.href)
+    if (!["https://github.com/Facta-Leopard/ForgePlay/issues", "site-assets/guide.html", "https://facta-leopard.github.io/ForgePlayVP/", "https://store.steampowered.com/subscriber_agreement/", "https://github.com/Sikarugir-App/Sikarugir", "updates.html#update-forgeplay-2-1-0-released", "updates.html#update-forgeplay-graphics-optimization-research", "https://x.com/asha_shar/status/2110083127741702241", "https://github.com/Facta-Leopard/ForgePlay/releases/tag/v2.3.0"].includes(action.href)
       && !releaseDownload.test(action.href)) return;
     const link = appendTextElement(parent, "a", "update-feedback-button", localizedText(action.label, selectedLocale));
     const href=action.href==='https://facta-leopard.github.io/ForgePlayVP/'?action.href+selectedLocale+'/':action.href;

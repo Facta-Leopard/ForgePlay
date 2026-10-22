@@ -1,13 +1,40 @@
 {
   "$schema": "./announcements.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-10-18",
+  "updatedAt": "2026-10-23",
   "announcements": [
+    {
+      "id": "forgeplay-2-4-0-update",
+      "type": "release",
+      "publishedAt": "2026-10-23",
+      "featured": true,
+      "titles": {
+        "ko": "ForgePlay 2.4.0 업데이트",
+        "en": "ForgePlay 2.4.0 Update",
+        "de": "ForgePlay 2.4.0 – Update",
+        "es": "Actualización de ForgePlay 2.4.0",
+        "fr": "Mise à jour ForgePlay 2.4.0",
+        "ja": "ForgePlay 2.4.0アップデート",
+        "zh-Hans": "ForgePlay 2.4.0 更新",
+        "zh-Hant": "ForgePlay 2.4.0 更新"
+      },
+      "summaries": {
+        "ko": "100가지 색상 스타일과 나만의 키링, Lupain 루팡, 더 충실한 문제진단과 새로운 호환성 실행 도구를 추가했습니다.",
+        "en": "100 color styles, custom Fopl images, Lupain, improved diagnostics and new compatibility tools.",
+        "de": "100 Farbstile, eigene Fopl-Bilder, Lupain, bessere Diagnose und neue Kompatibilitätswerkzeuge.",
+        "es": "100 estilos, imágenes propias de Fopl, Lupain, mejor diagnóstico y nuevas herramientas de compatibilidad.",
+        "fr": "100 styles, images Fopl personnalisées, Lupain, diagnostic amélioré et nouveaux outils de compatibilité.",
+        "ja": "100種類の配色、ポプル画像変更、Lupain、診断改善と新しい互換性ツール。",
+        "zh-Hans": "新增100种配色、Fopl图片替换、Lupain、更完善的诊断与兼容工具。",
+        "zh-Hant": "新增100種配色、Fopl圖片替換、Lupain及更完善的診斷與相容工具。"
+      },
+      "href": "updates.html#update-forgeplay-2-4-0-update"
+    },
     {
       "id": "forgeplay-2-3-0-update",
       "type": "release",
       "publishedAt": "2026-10-18",
-      "featured": true,
+      "featured": false,
       "titles": {
         "ko": "ForgePlay 2.3.0 업데이트",
         "en": "ForgePlay 2.3.0 Update",

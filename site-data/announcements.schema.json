@@ -165,7 +165,7 @@
           "required": ["href", "label", "accessibilityLabel", "afterParagraph"],
           "properties": {
             "href": {"anyOf": [
-              {"enum": ["https://github.com/Facta-Leopard/ForgePlay/issues", "site-assets/guide.html", "https://facta-leopard.github.io/ForgePlayVP/", "https://store.steampowered.com/subscriber_agreement/", "https://github.com/Sikarugir-App/Sikarugir", "updates.html#update-forgeplay-2-1-0-released", "https://x.com/asha_shar/status/2110083127741702241", "https://github.com/Facta-Leopard/ForgePlay/releases/tag/v2.3.0"]},
+              {"enum": ["https://github.com/Facta-Leopard/ForgePlay/issues", "site-assets/guide.html", "https://facta-leopard.github.io/ForgePlayVP/", "https://store.steampowered.com/subscriber_agreement/", "https://github.com/Sikarugir-App/Sikarugir", "updates.html#update-forgeplay-2-1-0-released", "updates.html#update-forgeplay-graphics-optimization-research", "https://x.com/asha_shar/status/2110083127741702241", "https://github.com/Facta-Leopard/ForgePlay/releases/tag/v2.3.0"]},
               {"type": "string", "pattern": "^https://github\\.com/Facta-Leopard/ForgePlay/releases/download/v([0-9]+\\.[0-9]+\\.[0-9]+)/ForgePlay-\\1-[0-9]+\\.dmg$"}
             ]},
             "label": {"$ref": "#/$defs/localizedText"},
