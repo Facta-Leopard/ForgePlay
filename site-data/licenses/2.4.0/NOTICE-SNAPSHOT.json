@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 1,
+  "version": "2.4.0",
+  "build": 11,
+  "sourceURL": "https://github.com/Facta-Leopard/ForgePlay/releases/download/v2.4.0/ForgePlay-2.4.0-11-OpenSource.tar.gz",
+  "archiveSHA256": "a7eeeaebad5eb626e271d0f59b61eaf58e4d0cfb21ccde277fd156aed73cab52",
+  "archiveByteSize": 162443003,
+  "files": [
+    {
+      "path": "LICENSE.md",
+      "archivePath": "LICENSE.md",
+      "byteSize": 9953,
+      "sha256": "9842d0cba151a6833a271587b89af3a0bb12f78a57f84740c6887a72c17e8cb1"
+    },
+    {
+      "path": "VR-NOTICE.txt",
+      "archivePath": "LICENSES/ForgePlayVR/NOTICE.txt",
+      "byteSize": 3383,
+      "sha256": "4e9b7af7f5a5fb01822212112c03b1efe066c42f29f94807f6dfba2160268a45"
+    },
+    {
+      "path": "VR-SCOPE.json",
+      "archivePath": "LICENSES/ForgePlayVR/SCOPE.json",
+      "byteSize": 1674,
+      "sha256": "46b9960042df318194573af23b7a2805137289de0676611966f4ecc2cb61ec11"
+    },
+    {
+      "path": "COORDINATOR-SCOPE.json",
+      "archivePath": "LICENSES/ForgePlayCoordinator/SCOPE.json",
+      "byteSize": 4860,
+      "sha256": "618dd63472c57c3ac4deeae06bf830f198c7267a551c45591b2ba7059f5f1bf8"
+    },
+    {
+      "path": "COORDINATOR-CONTRACTS-LICENSE.txt",
+      "archivePath": "LICENSES/ForgePlayCoordinator/CONTRACTS-LICENSE.txt",
+      "byteSize": 1217,
+      "sha256": "c1687ea273cab0e4cdda45202fefded49f94d343337a837b0c35da2bd4e07b6e"
+    },
+    {
+      "path": "WRAPPER-PERMISSION.txt",
+      "archivePath": "LICENSES/ForgePlayWrapper/PERMISSION.txt",
+      "byteSize": 3682,
+      "sha256": "54881f7336819548324873e175a26b9fa2018d7c940ff565db8f23ca6b6d0cbd"
+    },
+    {
+      "path": "WRAPPER-SCOPE.json",
+      "archivePath": "LICENSES/ForgePlayWrapper/SCOPE.json",
+      "byteSize": 1585,
+      "sha256": "18c1d8a3d2e91de9f6810243f70ccd5078f4da677d678c8bea191778eeffba9a"
+    },
+    {
+      "path": "Supertonic2-MODEL-LICENSE.txt",
+      "archivePath": "LICENSES/Supertonic2/LICENSE",
+      "byteSize": 15007,
+      "sha256": "0d944a9110fed9a9602d60e0423a272903e7bd21ab060490774efc77c2275e9f"
+    },
+    {
+      "path": "Supertonic2-CODE-LICENSE.txt",
+      "archivePath": "LICENSES/Supertonic2/CODE-LICENSE",
+      "byteSize": 1070,
+      "sha256": "0dfe0d0ba84416fe3879d9a34f4909d8d0137c78d1e95834177b0414ac096fa2"
+    },
+    {
+      "path": "OWLv2-LICENSE.txt",
+      "archivePath": "LICENSES/OWLv2/LICENSE",
+      "byteSize": 11357,
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "path": "HyPER-GAN-LICENSE.txt",
+      "archivePath": "LICENSES/HyPERGAN/LICENSE",
+      "byteSize": 1072,
+      "sha256": "a568d11a92af5cb9c0611a154e27fed30cec8feb3e6a8fcf2e28ba5b962db508"
+    },
+    {
+      "path": "ONNXRuntime-LICENSE.txt",
+      "archivePath": "LICENSES/ONNXRuntime/LICENSE",
+      "byteSize": 1073,
+      "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c"
+    },
+    {
+      "path": "ONNXRuntime-ThirdPartyNotices.txt",
+      "archivePath": "LICENSES/ONNXRuntime/ThirdPartyNotices.txt",
+      "byteSize": 338088,
+      "sha256": "143764b952fdb1a7c69ce653bfba74a7744d6a8a573bfb73e235fba356c83de3"
+    },
+    {
+      "path": "OpenVR-LICENSE.txt",
+      "archivePath": "VR/ThirdParty/OpenVR/LICENSE",
+      "byteSize": 1488,
+      "sha256": "f56ff606104d4ef18e617921a75c73ad73b5a1a1d70c69590c29de16919e04ad"
+    },
+    {
+      "path": "RuntimeSBOM.json",
+      "archivePath": "Mac/Resources/Runners/ForgePlayRuntime/RuntimeSBOM.json",
+      "byteSize": 171483,
+      "sha256": "90d9de41327d5ae15f61c64b4de6cf47604c1ab3bab8fce6320bcb7c25d3dd2d"
+    },
+    {
+      "path": "LUPAIN-README.md",
+      "archivePath": "LICENSES/Lupain/README.md",
+      "byteSize": 3855,
+      "sha256": "ec4cb27fed8f2734b63b095a1259a7cae4a85e0b70864d7d7f64067c3d3fa084"
+    },
+    {
+      "path": "LUPAIN-SCOPE.json",
+      "archivePath": "LICENSES/Lupain/SCOPE.json",
+      "byteSize": 1674,
+      "sha256": "16804356a995fe90624f0db2dc7b5bdd0d3a5ba438ab5c63d559dd463e473eab"
+    },
+    {
+      "path": "LUPAIN-GPL-3.0-only.txt",
+      "archivePath": "LICENSES/Lupain/GPL-3.0-only.txt",
+      "byteSize": 35149,
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+    },
+    {
+      "path": "SpoofDPI-Apache-2.0.txt",
+      "archivePath": "LICENSES/Lupain/ThirdParty/SpoofDPI-Apache-2.0.txt",
+      "byteSize": 11347,
+      "sha256": "c834b41322e30282f9c917b73c0490389f4f6c52ae888547e37e6436e4c094e7"
+    },
+    {
+      "path": "LUPAIN-dependency-register.json",
+      "archivePath": "LICENSES/Lupain/ThirdParty/dependency-register.json",
+      "byteSize": 11653,
+      "sha256": "b0c8bfc2de111c8f227ab7355016d6e81047a3b4ba6049356c4a7cc2b13bb6ea"
+    },
+    {
+      "path": "LUPAIN-spoofdpi.sbom.json",
+      "archivePath": "LICENSES/Lupain/ThirdParty/spoofdpi.sbom.json",
+      "byteSize": 64030,
+      "sha256": "ce3e8072c90bd75f71679a93c74ee6092d552fc5b85255d406974f88b297bd3b"
+    },
+    {
+      "path": "ColorStyles-README.md",
+      "archivePath": "LICENSES/ColorStyles/README.md",
+      "byteSize": 1452,
+      "sha256": "de5cbd1a833d691711ab541e9ae9f3701ba41d51cb9c3865f92d394f876d22c6"
+    },
+    {
+      "path": "WebM-NOTICE.md",
+      "archivePath": "LICENSES/WebM/NOTICE.md",
+      "byteSize": 2756,
+      "sha256": "e4f72a84c1383742bb3c51966a1d2e63bc4006ab638595ffc896072c8b3fad98"
+    },
+    {
+      "path": "DXMT-LICENSE.txt",
+      "archivePath": "Mac/Resources/Runners/ForgePlayRuntime/Legal/dxmt/LICENSE",
+      "byteSize": 1065,
+      "sha256": "6b928413c6308c106f3e0080bd94b6427b56d587d400fd40e6cbfbab7d9c4ae1"
+    },
+    {
+      "path": "DXMT-LLVM-LICENSE.txt",
+      "archivePath": "Mac/Resources/Runners/ForgePlayRuntime/Legal/dxmt/LLVM-LICENSE.txt",
+      "byteSize": 15141,
+      "sha256": "8d85c1057d742e597985c7d4e6320b015a9139385cff4cbae06ffc0ebe89afee"
+    },
+    {
+      "path": "DXMT-NVAPI-LICENSE.txt",
+      "archivePath": "Mac/Resources/Runners/ForgePlayRuntime/Legal/dxmt/NVIDIA-NVAPI-LICENSE.txt",
+      "byteSize": 1217,
+      "sha256": "bab44777f0f4d0333479ea0be6e24c084464a8cb64b98f1253fcc3df70f6eccf"
+    }
+  ]
+}

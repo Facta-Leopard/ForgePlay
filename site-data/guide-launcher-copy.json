@@ -2,7 +2,7 @@
   "locales": ["ko", "en", "de", "es", "fr", "ja", "zh-Hans", "zh-Hant"],
   "strings": {
     "diagnosticsTile": ["포플과 대화(문제진단)", "Talk to Fopl (Diagnostics)", "Mit Fopl sprechen (Diagnose)", "Hablar con Fopl (Diagnóstico)", "Parler à Fopl (Diagnostic)", "ポプルと話す（問題診断）", "与 Fopl 聊天（问题诊断）", "與 Fopl 對話（問題診斷）"],
-    "oneClickUpdate": ["원버튼 업데이트", "One-click update", "Ein-Klick-Update", "Actualización con un clic", "Mise à jour en un clic", "ワンクリック更新", "一键更新", "一鍵更新"],
+    "oneClickUpdate": ["Lupain 루팡", "Lupain", "Lupain", "Lupain", "Lupain", "Lupain", "Lupain", "Lupain"],
     "diagnostics": ["문제진단(AI)", "Diagnostics (AI)", "Diagnose (KI)", "Diagnóstico (IA)", "Diagnostic (IA)", "問題診断（AI）", "问题诊断（AI）", "問題診斷（AI）"],
     "license": ["라이센스", "Licenses", "Lizenzen", "Licencias", "Licences", "ライセンス", "许可证", "授權條款"],
     "why": ["만든 이유", "Why I Made It", "Warum ich ForgePlay entwickelt habe", "Por qué lo creé", "Pourquoi je l’ai créé", "つくった理由", "创作缘由", "創作緣由"],

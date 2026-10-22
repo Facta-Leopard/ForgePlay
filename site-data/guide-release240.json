@@ -1,0 +1,1736 @@
+{
+  "locales": [
+    "ko",
+    "en",
+    "de",
+    "es",
+    "fr",
+    "ja",
+    "zh-Hans",
+    "zh-Hant"
+  ],
+  "strings": {
+    "styles": [
+      "색상 스타일 선택",
+      "Choose color style",
+      "Farbstil auswählen",
+      "Elegir estilo de color",
+      "Choisir un style de couleurs",
+      "カラースタイルを選択",
+      "选择配色风格",
+      "選擇配色樣式"
+    ],
+    "search": [
+      "번호 또는 색상 이름 검색",
+      "Search by number or color name",
+      "Nach Nummer oder Farbname suchen",
+      "Buscar por número o nombre",
+      "Rechercher un numéro ou un nom",
+      "番号または色の名前で検索",
+      "按编号或配色名称搜索",
+      "以編號或配色名稱搜尋"
+    ],
+    "resetColors": [
+      "기본 색상으로 복원",
+      "Restore default colors",
+      "Standardfarben wiederherstellen",
+      "Restaurar colores predeterminados",
+      "Rétablir les couleurs par défaut",
+      "標準の配色に戻す",
+      "恢复默认配色",
+      "恢復預設配色"
+    ],
+    "replaceFopl": [
+      "포플 교체하기",
+      "Replace Fopl",
+      "Fopl ändern",
+      "Cambiar Fopl",
+      "Changer Fopl",
+      "ポプルを変更",
+      "更换 Fopl",
+      "更換 Fopl"
+    ],
+    "lupainToggle": [
+      "Lupain 켜기·끄기",
+      "Toggle Lupain",
+      "Lupain ein-/ausschalten",
+      "Activar o desactivar Lupain",
+      "Activer ou désactiver Lupain",
+      "Lupainのオン・オフ",
+      "开启或关闭Lupain",
+      "開啟或關閉Lupain"
+    ],
+    "lupainOpen": [
+      "Lupain 설정 열기…",
+      "Open Lupain settings…",
+      "Lupain-Einstellungen öffnen…",
+      "Abrir ajustes de Lupain…",
+      "Ouvrir les réglages Lupain…",
+      "Lupain設定を開く…",
+      "打开Lupain设置…",
+      "開啟Lupain設定…"
+    ],
+    "lupainOn": [
+      "Lupain 켜짐",
+      "Lupain is on",
+      "Lupain ist an",
+      "Lupain activado",
+      "Lupain est activé",
+      "Lupainはオンです",
+      "Lupain已开启",
+      "Lupain已開啟"
+    ],
+    "lupainOff": [
+      "Lupain 꺼짐",
+      "Lupain is off",
+      "Lupain ist aus",
+      "Lupain desactivado",
+      "Lupain est désactivé",
+      "Lupainはオフです",
+      "Lupain已关闭",
+      "Lupain已關閉"
+    ],
+    "logging": [
+      "진단 로그 기록",
+      "Record diagnostic logs",
+      "Diagnoseprotokolle aufzeichnen",
+      "Registrar diagnósticos",
+      "Enregistrer les journaux de diagnostic",
+      "診断ログを記録",
+      "记录诊断日志",
+      "記錄診斷日誌"
+    ],
+    "apply": [
+      "적용",
+      "Apply",
+      "Anwenden",
+      "Aplicar",
+      "Appliquer",
+      "適用",
+      "应用",
+      "套用"
+    ],
+    "cancel": [
+      "취소",
+      "Cancel",
+      "Abbrechen",
+      "Cancelar",
+      "Annuler",
+      "キャンセル",
+      "取消",
+      "取消"
+    ],
+    "choose": [
+      "선택",
+      "Choose",
+      "Wählen",
+      "Elegir",
+      "Choisir",
+      "選択",
+      "选择",
+      "選擇"
+    ],
+    "scale": [
+      "크기",
+      "Size",
+      "Größe",
+      "Tamaño",
+      "Taille",
+      "サイズ",
+      "大小",
+      "大小"
+    ],
+    "x": [
+      "가로 위치",
+      "Horizontal position",
+      "Horizontale Position",
+      "Posición horizontal",
+      "Position horizontale",
+      "横位置",
+      "水平位置",
+      "水平位置"
+    ],
+    "y": [
+      "세로 위치",
+      "Vertical position",
+      "Vertikale Position",
+      "Posición vertical",
+      "Position verticale",
+      "縦位置",
+      "垂直位置",
+      "垂直位置"
+    ],
+    "resetFopl": [
+      "기본 포플로 복원",
+      "Restore default Fopl",
+      "Standard-Fopl wiederherstellen",
+      "Restaurar Fopl original",
+      "Rétablir Fopl par défaut",
+      "標準のポプルに戻す",
+      "恢复默认 Fopl",
+      "還原預設 Fopl"
+    ],
+    "unverified": [
+      "설치 여부 미확인",
+      "Installation unverified",
+      "Installation nicht bestätigt",
+      "Instalación sin verificar",
+      "Installation non vérifiée",
+      "インストール未確認",
+      "安装情况未确认",
+      "安裝情況未確認"
+    ],
+    "modding": [
+      "모딩가능 런타임",
+      "Modding Runtime",
+      "Modding-Laufzeit",
+      "Entorno para mods",
+      "Environnement de mods",
+      "MOD対応ランタイム",
+      "模组运行环境",
+      "模組執行環境"
+    ],
+    "rdr2": [
+      "RDR2 처음 실행하기",
+      "Getting started with RDR2",
+      "Erste Schritte mit RDR2",
+      "Primeros pasos con RDR2",
+      "Premiers pas avec RDR2",
+      "RDR2を初めて起動するには",
+      "首次运行 RDR2",
+      "首次執行 RDR2"
+    ],
+    "logs": [
+      "로그 관리",
+      "Log management",
+      "Protokollverwaltung",
+      "Gestión de registros",
+      "Gestion des journaux",
+      "ログ管理",
+      "日志管理",
+      "日誌管理"
+    ],
+    "manual": [
+      "필요할 때 설치하는 구성요소",
+      "Optional component tools",
+      "Komponenten bei Bedarf",
+      "Componentes cuando hagan falta",
+      "Composants au besoin",
+      "必要な構成要素",
+      "按需安装组件",
+      "按需要安裝元件"
+    ],
+    "newFeatures": [
+      "2.4.0 새 기능",
+      "New in 2.4.0",
+      "Neu in 2.4.0",
+      "Novedades de 2.4.0",
+      "Nouveautés 2.4.0",
+      "2.4.0の新機能",
+      "2.4.0新功能",
+      "2.4.0新功能"
+    ],
+    "invalidPNG": [
+      "표시 가능한 단일 PNG를 선택하세요(최대 2048×2048, 16MiB).",
+      "Choose a visible single PNG (up to 2048×2048, 16MiB).",
+      "Sichtbares PNG wählen (max. 2048×2048, 16MiB).",
+      "Elige un PNG visible (máx. 2048×2048, 16MiB).",
+      "Choisissez un PNG visible (max. 2048×2048, 16MiB).",
+      "表示できるPNGを選択（最大2048×2048、16MiB）。",
+      "请选择可见的PNG（最大2048×2048、16MiB）。",
+      "請選擇可見的PNG（最大2048×2048、16MiB）。"
+    ],
+    "restore": [
+      "원본 복구",
+      "Restore original",
+      "Original wiederherstellen",
+      "Restaurar original",
+      "Restaurer l’original",
+      "元に戻す",
+      "恢复原文件",
+      "還原原檔"
+    ],
+    "prepared": [
+      "선택됨 · 적용 전",
+      "Selected · not applied",
+      "Gewählt · nicht angewendet",
+      "Seleccionado · sin aplicar",
+      "Sélectionné · non appliqué",
+      "選択済み・未適用",
+      "已选择·未应用",
+      "已選擇·未套用"
+    ],
+    "applied": [
+      "예시 적용 · 원본 보존",
+      "Example applied · original retained",
+      "Beispiel angewendet · Original erhalten",
+      "Ejemplo aplicado · original conservado",
+      "Exemple appliqué · original conservé",
+      "例を適用・元データ保持",
+      "示例已应用·保留原件",
+      "範例已套用·保留原件"
+    ],
+    "cleanup": [
+      "지금 정리",
+      "Clean up now",
+      "Jetzt bereinigen",
+      "Limpiar ahora",
+      "Nettoyer maintenant",
+      "今すぐ整理",
+      "立即清理",
+      "立即清理"
+    ],
+    "light": [
+      "라이트",
+      "Light",
+      "Hell",
+      "Claro",
+      "Clair",
+      "ライト",
+      "浅色",
+      "淺色"
+    ],
+    "dark": [
+      "다크",
+      "Dark",
+      "Dunkel",
+      "Oscuro",
+      "Sombre",
+      "ダーク",
+      "深色",
+      "深色"
+    ],
+    "unapplied": [
+      "미적용",
+      "Not applied",
+      "Nicht angewendet",
+      "Sin aplicar",
+      "Non appliqué",
+      "未適用",
+      "未应用",
+      "未套用"
+    ]
+  },
+  "palettes": [
+    {
+      "id": 1,
+      "name": "Stormy morning",
+      "ko": "폭풍우가 몰아치는 아침",
+      "colors": [
+        "#6a89a7",
+        "#bdddfc",
+        "#88bdf2",
+        "#384959"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Mossy hollow",
+      "ko": "이끼 낀 골짜기",
+      "colors": [
+        "#636b2f",
+        "#bac095",
+        "#d4de95",
+        "#3d4127"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Blue eclipse",
+      "ko": "블루 이클립스",
+      "colors": [
+        "#272757",
+        "#8686ac",
+        "#505081",
+        "#0f0e47"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Lush forest",
+      "ko": "우거진 숲",
+      "colors": [
+        "#2e6f40",
+        "#cfffdc",
+        "#68ba7f",
+        "#253d2c"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Green juice",
+      "ko": "녹즙",
+      "colors": [
+        "#4cbb17",
+        "#48872b",
+        "#39542c",
+        "#293325"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Chili spice",
+      "ko": "칠리 스파이스",
+      "colors": [
+        "#cd1c18",
+        "#ffa896",
+        "#9b1313",
+        "#38000a"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Chocolate truffle",
+      "ko": "초콜릿 트러플",
+      "colors": [
+        "#713600",
+        "#c05800",
+        "#fdfbd4",
+        "#38240d"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "Ink wash",
+      "ko": "수묵화",
+      "colors": [
+        "#4a4a4a",
+        "#cbcbcb",
+        "#ffffe3",
+        "#6d8196"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "Golden taupe",
+      "ko": "골든 토프",
+      "colors": [
+        "#d4af37",
+        "#bdb76b",
+        "#fdfbd4",
+        "#ce8946"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "Wisteria bloom",
+      "ko": "등나무 꽃",
+      "colors": [
+        "#d3d3ff",
+        "#9400d3",
+        "#d8bfd8",
+        "#ed80e9"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "Burnt sienna",
+      "ko": "번트 시에나",
+      "colors": [
+        "#e35336",
+        "#f5f5dc",
+        "#f4a460",
+        "#a0522d"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "Blooming romance",
+      "ko": "피어나는 로맨스",
+      "colors": [
+        "#660033",
+        "#e673ac",
+        "#469110",
+        "#00520a"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "Desert dusk",
+      "ko": "사막의 황혼",
+      "colors": [
+        "#a2574f",
+        "#e68057",
+        "#bf7587",
+        "#993a8b"
+      ]
+    },
+    {
+      "id": 14,
+      "name": "Lavender fields",
+      "ko": "라벤더 들판",
+      "colors": [
+        "#fdfbd4",
+        "#bdb96a",
+        "#c1bfff",
+        "#cf6dfc"
+      ]
+    },
+    {
+      "id": 15,
+      "name": "Hydrangea",
+      "ko": "수국",
+      "colors": [
+        "#ff8da1",
+        "#ffc2ba",
+        "#ff9ce9",
+        "#ad56c4"
+      ]
+    },
+    {
+      "id": 16,
+      "name": "Cactus flower",
+      "ko": "선인장 꽃",
+      "colors": [
+        "#e491a6",
+        "#845763",
+        "#92e4ba",
+        "#90c67f"
+      ]
+    },
+    {
+      "id": 17,
+      "name": "Wildflowers",
+      "ko": "야생화",
+      "colors": [
+        "#a8dcab",
+        "#519755",
+        "#dbaaa7",
+        "#be91be"
+      ]
+    },
+    {
+      "id": 18,
+      "name": "Country garden",
+      "ko": "시골 정원",
+      "colors": [
+        "#ffffe3",
+        "#dbd4ff",
+        "#808034",
+        "#723480"
+      ]
+    },
+    {
+      "id": 19,
+      "name": "Lotus garden",
+      "ko": "연꽃 정원",
+      "colors": [
+        "#adebb3",
+        "#ff857a",
+        "#ebaee6",
+        "#6b403c"
+      ]
+    },
+    {
+      "id": 20,
+      "name": "Iris garden",
+      "ko": "아이리스 정원",
+      "colors": [
+        "#a47dab",
+        "#692475",
+        "#82ab7d",
+        "#6a6b4e"
+      ]
+    },
+    {
+      "id": 21,
+      "name": "Fresh peach",
+      "ko": "상큼한 복숭아",
+      "colors": [
+        "#ffd3ac",
+        "#ffb5ab",
+        "#e39a7b",
+        "#dbb06b"
+      ]
+    },
+    {
+      "id": 22,
+      "name": "Golden hour",
+      "ko": "골든 아워",
+      "colors": [
+        "#ffbf00",
+        "#cfb53b",
+        "#e0b0ff",
+        "#ededc8"
+      ]
+    },
+    {
+      "id": 23,
+      "name": "Spiced chai",
+      "ko": "스파이스 차이 라떼",
+      "colors": [
+        "#fdfbd4",
+        "#d47e30",
+        "#8d5a2b",
+        "#825e34"
+      ]
+    },
+    {
+      "id": 24,
+      "name": "Cherry blossom",
+      "ko": "벚꽃",
+      "colors": [
+        "#f2c7c7",
+        "#ffffff",
+        "#d5f3d8",
+        "#ffb7c5"
+      ]
+    },
+    {
+      "id": 25,
+      "name": "Evening rose",
+      "ko": "이브닝 로즈",
+      "colors": [
+        "#dca1a1",
+        "#996666",
+        "#8e4585",
+        "#4a4a4a"
+      ]
+    },
+    {
+      "id": 26,
+      "name": "Pastel garden",
+      "ko": "파스텔 가든",
+      "colors": [
+        "#c75f71",
+        "#f0b8b8",
+        "#a2ae9d",
+        "#54463a"
+      ]
+    },
+    {
+      "id": 27,
+      "name": "Tuscan sunset",
+      "ko": "토스카나의 일몰",
+      "colors": [
+        "#e35336",
+        "#ffd3ac",
+        "#9988a1",
+        "#8a2b0e"
+      ]
+    },
+    {
+      "id": 28,
+      "name": "Zesty lemon",
+      "ko": "상큼한 레몬",
+      "colors": [
+        "#ffff66",
+        "#ffe566",
+        "#d6d58b",
+        "#b3b347"
+      ]
+    },
+    {
+      "id": 29,
+      "name": "California beaches",
+      "ko": "캘리포니아 해변",
+      "colors": [
+        "#ffc067",
+        "#66f4ff",
+        "#66c4ff",
+        "#7d99aa"
+      ]
+    },
+    {
+      "id": 30,
+      "name": "Freshly squeezed",
+      "ko": "갓 짜낸 주스",
+      "colors": [
+        "#ffbf00",
+        "#f2cf7e",
+        "#ffe642",
+        "#ff7900"
+      ]
+    },
+    {
+      "id": 31,
+      "name": "Pistachio dream",
+      "ko": "피스타치오 드림",
+      "colors": [
+        "#80ef80",
+        "#e3f0a3",
+        "#badba2",
+        "#42d674"
+      ]
+    },
+    {
+      "id": 32,
+      "name": "Mango popsicle",
+      "ko": "망고 아이스바",
+      "colors": [
+        "#f2b949",
+        "#edd377",
+        "#f2e829",
+        "#f27430"
+      ]
+    },
+    {
+      "id": 33,
+      "name": "Guava",
+      "ko": "구아바",
+      "colors": [
+        "#ff8559",
+        "#ffb578",
+        "#e65447",
+        "#cf5376"
+      ]
+    },
+    {
+      "id": 34,
+      "name": "Glowing horizon",
+      "ko": "빛나는 지평선",
+      "colors": [
+        "#ffb343",
+        "#42eaff",
+        "#4272ff",
+        "#ff7e42"
+      ]
+    },
+    {
+      "id": 35,
+      "name": "Sunny day",
+      "ko": "화창한 날",
+      "colors": [
+        "#ffbf00",
+        "#807040",
+        "#007eff",
+        "#2400ff"
+      ]
+    },
+    {
+      "id": 36,
+      "name": "Retro sunset",
+      "ko": "레트로 선셋",
+      "colors": [
+        "#be5103",
+        "#ffce1b",
+        "#069494",
+        "#b7410e"
+      ]
+    },
+    {
+      "id": 37,
+      "name": "Bubblegum pop",
+      "ko": "버블검 팝",
+      "colors": [
+        "#ff69b4",
+        "#069494",
+        "#ffffff",
+        "#00f0ff"
+      ]
+    },
+    {
+      "id": 38,
+      "name": "Cotton candy skies",
+      "ko": "솜사탕 하늘",
+      "colors": [
+        "#b298e7",
+        "#b8e3e9",
+        "#f5b8d5",
+        "#f9bedd"
+      ]
+    },
+    {
+      "id": 39,
+      "name": "Electric kiwi",
+      "ko": "일렉트릭 키위",
+      "colors": [
+        "#ccff00",
+        "#ffff00",
+        "#dfff00",
+        "#000000"
+      ]
+    },
+    {
+      "id": 40,
+      "name": "Watermelon Splash",
+      "ko": "수박 스플래시",
+      "colors": [
+        "#fc6c85",
+        "#89f336",
+        "#4a4a4a",
+        "#adebb3"
+      ]
+    },
+    {
+      "id": 41,
+      "name": "Alchemical reaction",
+      "ko": "연금술 반응",
+      "colors": [
+        "#9d00ff",
+        "#de811d",
+        "#6bff00",
+        "#5b8040"
+      ]
+    },
+    {
+      "id": 42,
+      "name": "Electropop",
+      "ko": "일렉트로팝",
+      "colors": [
+        "#ccff00",
+        "#ff6b00",
+        "#f900ff",
+        "#5200ff"
+      ]
+    },
+    {
+      "id": 43,
+      "name": "Cool revival",
+      "ko": "쿨한 부활",
+      "colors": [
+        "#00ffff",
+        "#00aeff",
+        "#00de94",
+        "#00ff52"
+      ]
+    },
+    {
+      "id": 44,
+      "name": "Neon jungle",
+      "ko": "네온 정글",
+      "colors": [
+        "#89f336",
+        "#38a711",
+        "#f23598",
+        "#a835f2"
+      ]
+    },
+    {
+      "id": 45,
+      "name": "Sharp edge",
+      "ko": "샤프 엣지",
+      "colors": [
+        "#898989",
+        "#d9d9d9",
+        "#ff4d4d",
+        "#4dffbc"
+      ]
+    },
+    {
+      "id": 46,
+      "name": "Electric fusion",
+      "ko": "전기 융합",
+      "colors": [
+        "#00f0ff",
+        "#00ff81",
+        "#ffa900",
+        "#ff6800"
+      ]
+    },
+    {
+      "id": 47,
+      "name": "Fireworks",
+      "ko": "불꽃놀이",
+      "colors": [
+        "#ed2100",
+        "#e88a38",
+        "#960016",
+        "#bf00ac"
+      ]
+    },
+    {
+      "id": 48,
+      "name": "Space berries",
+      "ko": "스페이스 베리",
+      "colors": [
+        "#fd3db5",
+        "#ffb8dc",
+        "#fb6a2c",
+        "#8c1946"
+      ]
+    },
+    {
+      "id": 49,
+      "name": "Pop art",
+      "ko": "팝 아트",
+      "colors": [
+        "#00f0ff",
+        "#ff46a2",
+        "#ffff00",
+        "#ee4b2b"
+      ]
+    },
+    {
+      "id": 50,
+      "name": "Urban graffiti",
+      "ko": "도시 그래피티",
+      "colors": [
+        "#ff2400",
+        "#2cff05",
+        "#00f0ff",
+        "#5a5a5a"
+      ]
+    },
+    {
+      "id": 51,
+      "name": "Neon noir",
+      "ko": "네온 누아르",
+      "colors": [
+        "#000000",
+        "#2cff05",
+        "#bf00ff",
+        "#2d2d2d"
+      ]
+    },
+    {
+      "id": 52,
+      "name": "Tropical punch",
+      "ko": "트로피컬 펀치",
+      "colors": [
+        "#ff8243",
+        "#ffc0cb",
+        "#fce883",
+        "#069494"
+      ]
+    },
+    {
+      "id": 53,
+      "name": "Cobalt sky",
+      "ko": "코발트 스카이",
+      "colors": [
+        "#0047ab",
+        "#000080",
+        "#82c8e5",
+        "#6d8196"
+      ]
+    },
+    {
+      "id": 54,
+      "name": "Technicolor dream",
+      "ko": "테크니컬러 드림",
+      "colors": [
+        "#ff00ff",
+        "#00ffff",
+        "#ccff00",
+        "#191970"
+      ]
+    },
+    {
+      "id": 55,
+      "name": "Jewel box",
+      "ko": "보석함",
+      "colors": [
+        "#50c878",
+        "#0f52ba",
+        "#9966cc",
+        "#cfb53b"
+      ]
+    },
+    {
+      "id": 56,
+      "name": "Salt and pepper",
+      "ko": "솔트 앤 페퍼",
+      "colors": [
+        "#ffffff",
+        "#d4d4d4",
+        "#b3b3b3",
+        "#2b2b2b"
+      ]
+    },
+    {
+      "id": 57,
+      "name": "Quite clear",
+      "ko": "놀라운 깔끔함",
+      "colors": [
+        "#cbcbcb",
+        "#f2f2f2",
+        "#174d38",
+        "#4d1717"
+      ]
+    },
+    {
+      "id": 58,
+      "name": "Gothic noir",
+      "ko": "고딕 누아르",
+      "colors": [
+        "#000000",
+        "#d1d0d0",
+        "#988686",
+        "#5c4e4e"
+      ]
+    },
+    {
+      "id": 59,
+      "name": "Yacht club",
+      "ko": "요트 클럽",
+      "colors": [
+        "#f2f0ef",
+        "#bbbdbc",
+        "#245f73",
+        "#733e24"
+      ]
+    },
+    {
+      "id": 60,
+      "name": "Quiet luxury",
+      "ko": "고요한 럭셔리",
+      "colors": [
+        "#f7e6ca",
+        "#e8d59e",
+        "#d9bbb0",
+        "#ad9c8e"
+      ]
+    },
+    {
+      "id": 61,
+      "name": "Night sands",
+      "ko": "한밤의 모래사장",
+      "colors": [
+        "#cbbd93",
+        "#fae8b4",
+        "#80775c",
+        "#574a24"
+      ]
+    },
+    {
+      "id": 62,
+      "name": "Harbor haze",
+      "ko": "항구 안개",
+      "colors": [
+        "#909eae",
+        "#5c8dc5",
+        "#ad9e90",
+        "#736f60"
+      ]
+    },
+    {
+      "id": 63,
+      "name": "Old photograph",
+      "ko": "오래된 사진",
+      "colors": [
+        "#fdfbd4",
+        "#d9d7b6",
+        "#878672",
+        "#545333"
+      ]
+    },
+    {
+      "id": 64,
+      "name": "Cappuccino",
+      "ko": "카푸치노",
+      "colors": [
+        "#d6b588",
+        "#c6c0b9",
+        "#705e46",
+        "#422701"
+      ]
+    },
+    {
+      "id": 65,
+      "name": "Breakfast tea",
+      "ko": "아침 차 한 잔",
+      "colors": [
+        "#ffd3ac",
+        "#ccbeb1",
+        "#664c36",
+        "#331c08"
+      ]
+    },
+    {
+      "id": 66,
+      "name": "Cozy campfire",
+      "ko": "아늑한 캠프파이어",
+      "colors": [
+        "#895129",
+        "#ad7a32",
+        "#8a6e29",
+        "#660f09"
+      ]
+    },
+    {
+      "id": 67,
+      "name": "Stone path",
+      "ko": "돌길",
+      "colors": [
+        "#a49a87",
+        "#a5a58d",
+        "#968f83",
+        "#e8e5df"
+      ]
+    },
+    {
+      "id": 68,
+      "name": "Desert mirage",
+      "ko": "사막 신기루",
+      "colors": [
+        "#c2b280",
+        "#e35336",
+        "#98a869",
+        "#272757"
+      ]
+    },
+    {
+      "id": 69,
+      "name": "Honeycomb",
+      "ko": "벌집",
+      "colors": [
+        "#ffc107",
+        "#f9e076",
+        "#fffdd0",
+        "#895129"
+      ]
+    },
+    {
+      "id": 70,
+      "name": "Urban loft",
+      "ko": "어반 로프트",
+      "colors": [
+        "#9c9a9a",
+        "#a35e47",
+        "#000000",
+        "#464646"
+      ]
+    },
+    {
+      "id": 71,
+      "name": "Spiced mocha",
+      "ko": "스파이스 모카",
+      "colors": [
+        "#6f4e37",
+        "#d47e30",
+        "#f5f5dc",
+        "#6d3b07"
+      ]
+    },
+    {
+      "id": 72,
+      "name": "Charming seaside",
+      "ko": "매력적인 해변",
+      "colors": [
+        "#b3ebf2",
+        "#85d1db",
+        "#b6f2d1",
+        "#c9fdf2"
+      ]
+    },
+    {
+      "id": 73,
+      "name": "Calm blue",
+      "ko": "차분한 파랑",
+      "colors": [
+        "#90d5ff",
+        "#57b9ff",
+        "#77b1d4",
+        "#517891"
+      ]
+    },
+    {
+      "id": 74,
+      "name": "Beachfront views",
+      "ko": "해변 풍경",
+      "colors": [
+        "#ede8d0",
+        "#6e632e",
+        "#dbd1ed",
+        "#abbeed"
+      ]
+    },
+    {
+      "id": 75,
+      "name": "Under the moonlight",
+      "ko": "달빛 아래",
+      "colors": [
+        "#ccccff",
+        "#a3a3cc",
+        "#5c5c99",
+        "#292966"
+      ]
+    },
+    {
+      "id": 76,
+      "name": "Lavender lullaby",
+      "ko": "라벤더 자장가",
+      "colors": [
+        "#b5c7eb",
+        "#9ef0ff",
+        "#a4a5f5",
+        "#8e70cf"
+      ]
+    },
+    {
+      "id": 77,
+      "name": "Minty fresh",
+      "ko": "민트 프레시",
+      "colors": [
+        "#98fbcb",
+        "#bfffed",
+        "#7fcfa8",
+        "#558b71"
+      ]
+    },
+    {
+      "id": 78,
+      "name": "Retro calm",
+      "ko": "차분한 레트로",
+      "colors": [
+        "#81d8d0",
+        "#d99e82",
+        "#d7d982",
+        "#ae82d9"
+      ]
+    },
+    {
+      "id": 79,
+      "name": "Siltstone",
+      "ko": "실트스톤",
+      "colors": [
+        "#cbbd93",
+        "#fff5b8",
+        "#ffb16e",
+        "#cca25a"
+      ]
+    },
+    {
+      "id": 80,
+      "name": "Emerald odyssey",
+      "ko": "에메랄드 오디세이",
+      "colors": [
+        "#00674f",
+        "#73e6cb",
+        "#3ebb9e",
+        "#0a3c30"
+      ]
+    },
+    {
+      "id": 81,
+      "name": "Ocean tide",
+      "ko": "바다의 밀물",
+      "colors": [
+        "#00d1d1",
+        "#4052d6",
+        "#00adad",
+        "#005c5c"
+      ]
+    },
+    {
+      "id": 82,
+      "name": "Peach skyline",
+      "ko": "피치 스카이라인",
+      "colors": [
+        "#ffdbbb",
+        "#baddff",
+        "#bafff5",
+        "#496580"
+      ]
+    },
+    {
+      "id": 83,
+      "name": "Mountain mist",
+      "ko": "산안개",
+      "colors": [
+        "#6d8196",
+        "#b0c4de",
+        "#01796f",
+        "#5a5a5a"
+      ]
+    },
+    {
+      "id": 84,
+      "name": "Morning dew",
+      "ko": "아침 이슬",
+      "colors": [
+        "#afeeee",
+        "#adebb3",
+        "#c4c4c4",
+        "#d3d3d3"
+      ]
+    },
+    {
+      "id": 85,
+      "name": "Frozen lake",
+      "ko": "얼어붙은 호수",
+      "colors": [
+        "#6d8196",
+        "#add8e6",
+        "#fffafa",
+        "#000080"
+      ]
+    },
+    {
+      "id": 86,
+      "name": "Olive grove",
+      "ko": "올리브 그로브",
+      "colors": [
+        "#808000",
+        "#228b22",
+        "#636b2f",
+        "#f2f0ef"
+      ]
+    },
+    {
+      "id": 87,
+      "name": "Coastal morning",
+      "ko": "해안의 아침",
+      "colors": [
+        "#93c572",
+        "#89cff0",
+        "#f5f5dc",
+        "#82c8e5"
+      ]
+    },
+    {
+      "id": 88,
+      "name": "Eucalyptus grove",
+      "ko": "유칼립투스 숲",
+      "colors": [
+        "#b2ac88",
+        "#898989",
+        "#f2f0ef",
+        "#4b6e48"
+      ]
+    },
+    {
+      "id": 89,
+      "name": "Soft spring",
+      "ko": "부드러운 봄",
+      "colors": [
+        "#6395ee",
+        "#90b8d6",
+        "#88cfa8",
+        "#85decb"
+      ]
+    },
+    {
+      "id": 90,
+      "name": "Autumn leaves",
+      "ko": "가을 잎",
+      "colors": [
+        "#ffb343",
+        "#db9a39",
+        "#b37e2e",
+        "#614419"
+      ]
+    },
+    {
+      "id": 91,
+      "name": "Winter chill",
+      "ko": "겨울 추위",
+      "colors": [
+        "#b8e3e9",
+        "#93b1b5",
+        "#4f7c82",
+        "#0b2e33"
+      ]
+    },
+    {
+      "id": 92,
+      "name": "Spring energy",
+      "ko": "봄의 에너지",
+      "colors": [
+        "#89f336",
+        "#fffc30",
+        "#4fe0cb",
+        "#00bf33"
+      ]
+    },
+    {
+      "id": 93,
+      "name": "Pumpkin spice season",
+      "ko": "펌킨 스파이스 시즌",
+      "colors": [
+        "#be5103",
+        "#8c4c1f",
+        "#544823",
+        "#332216"
+      ]
+    },
+    {
+      "id": 94,
+      "name": "Island oasis",
+      "ko": "섬의 오아시스",
+      "colors": [
+        "#ccff00",
+        "#fff37e",
+        "#9de05a",
+        "#ffae25"
+      ]
+    },
+    {
+      "id": 95,
+      "name": "Autumn orchard",
+      "ko": "가을 과수원",
+      "colors": [
+        "#8e4585",
+        "#daa520",
+        "#2e6f40",
+        "#660033"
+      ]
+    },
+    {
+      "id": 96,
+      "name": "Tropical rainforest",
+      "ko": "열대 우림",
+      "colors": [
+        "#50c878",
+        "#7e8c54",
+        "#4f7942",
+        "#71aa34"
+      ]
+    },
+    {
+      "id": 97,
+      "name": "Wildflower meadow",
+      "ko": "들꽃 초원",
+      "colors": [
+        "#fbf9e7",
+        "#fdb813",
+        "#82c8e5",
+        "#7cfc00"
+      ]
+    },
+    {
+      "id": 98,
+      "name": "Harvest moon",
+      "ko": "수확의 달",
+      "colors": [
+        "#800020",
+        "#ffce1b",
+        "#a52a2a",
+        "#be5103"
+      ]
+    },
+    {
+      "id": 99,
+      "name": "Winter berry",
+      "ko": "윈터 베리",
+      "colors": [
+        "#8e0a1e",
+        "#2e6f40",
+        "#add8e6",
+        "#ffffff"
+      ]
+    },
+    {
+      "id": 100,
+      "name": "Summer breeze",
+      "ko": "여름 산들바람",
+      "colors": [
+        "#ffeb3b",
+        "#f88379",
+        "#82c8e5",
+        "#e6d8c4"
+      ]
+    }
+  ],
+  "sections": {
+    "styles": {
+      "ko": [
+        "환경설정의 **‘앱 화면 스타일 → 색상 스타일 선택’**에서 100가지 색상 조합을 고를 수 있습니다.",
+        "- 각 조합의 원본 번호와 이름을 함께 표시하며, 번호·한국어 이름·영문 이름으로 검색할 수 있습니다.\n- 적용하기 전에 라이트·다크 화면을 나란히 미리 볼 수 있습니다.\n- 언제든 기존 기본 색상으로 되돌릴 수 있습니다.\n- 선택한 색상은 런처, Mac 실행 화면, 환경설정, 문제진단, 포플 말풍선 등에 함께 반영됩니다."
+      ],
+      "en": [
+        "Choose from 100 combinations in **Settings → App Appearance → Choose Color Style**.",
+        "- Each style shows its original number and name, searchable by number, Korean name or English name.\n- Preview light and dark appearances side by side before applying.\n- Restore the original default colors at any time.\n- Your colors carry across the launcher, Mac launch view, settings, diagnostics and Fopl speech bubbles."
+      ],
+      "de": [
+        "Unter **Einstellungen → App-Darstellung → Farbstil auswählen** stehen 100 Kombinationen bereit.",
+        "- Originalnummer und Name bleiben sichtbar; Suche nach Nummer sowie koreanischem oder englischem Namen.\n- Helle und dunkle Darstellung lassen sich vorab nebeneinander ansehen.\n- Die Standardfarben können jederzeit wiederhergestellt werden.\n- Der Stil gilt für Launcher, Mac-Startansicht, Einstellungen, Diagnose und Fopls Sprechblasen."
+      ],
+      "es": [
+        "Elige entre 100 combinaciones en **Ajustes → Apariencia de la app → Elegir estilo de color**.",
+        "- Cada estilo muestra su número y nombre originales; busca por número o nombre coreano o inglés.\n- Previsualiza los modos claro y oscuro juntos antes de aplicar.\n- Restaura los colores predeterminados cuando quieras.\n- Los colores se reflejan en el lanzador, la vista Mac, los ajustes, el diagnóstico y los bocadillos de Fopl."
+      ],
+      "fr": [
+        "Choisissez parmi 100 combinaisons dans **Réglages → Apparence de l’app → Choisir un style de couleurs**.",
+        "- Chaque style conserve son numéro et son nom d’origine ; recherchez par numéro ou nom coréen ou anglais.\n- Prévisualisez ensemble les modes clair et sombre avant application.\n- Restaurez à tout moment les couleurs par défaut.\n- Le style s’applique au lanceur, à l’interface Mac, aux réglages, au diagnostic et aux bulles de Fopl."
+      ],
+      "ja": [
+        "**環境設定 → Appの外観 → 配色スタイルの選択**から100種類の組み合わせを選べます。",
+        "- 元の番号と名前を表示し、番号・韓国語名・英語名で検索できます。\n- 適用前にライトとダークの画面を並べて確認できます。\n- いつでも標準の配色に戻せます。\n- 配色はランチャー、Mac実行画面、環境設定、診断、ポプルの吹き出しなどに反映されます。"
+      ],
+      "zh-Hans": [
+        "在**设置 → App外观 → 选择配色风格**中选择100种组合。",
+        "- 显示原始编号与名称，可按编号、韩文名称或英文名称搜索。\n- 应用前可并排预览浅色和深色界面。\n- 随时恢复默认配色。\n- 配色会应用于启动器、Mac运行界面、设置、诊断及Fopl对话气泡等。"
+      ],
+      "zh-Hant": [
+        "在**設定 → App外觀 → 選擇配色風格**中選擇100種組合。",
+        "- 顯示原始編號與名稱，可依編號、韓文名稱或英文名稱搜尋。\n- 套用前可並排預覽淺色與深色介面。\n- 隨時還原預設配色。\n- 配色會套用到啟動器、Mac執行畫面、設定、診斷與Fopl對話氣泡等。"
+      ]
+    },
+    "fopl": {
+      "ko": [
+        "환경설정에 **‘포플 교체하기’**를 추가했습니다. 원하는 PNG 이미지를 선택하고 크기와 위치를 조절한 뒤, 키링과 대화 화면에서 어떻게 보일지 확인하고 적용할 수 있습니다.",
+        "- 완전히 투명하거나 표시 영역을 벗어난 이미지는 적용하지 않습니다.\n- 저장에 실패하면 기존 포플을 그대로 유지하며, 저장한 이미지가 손상된 경우에는 기본 포플로 돌아갑니다.\n- 이번 버전은 단일 PNG 이미지 교체를 지원합니다. 교체한 이미지도 키링처럼 흔들리고 반응하지만, 여러 표정으로 구성된 애니메이션 팩은 아직 지원하지 않습니다."
+      ],
+      "en": [
+        "Settings now offers **Replace Fopl**. Select a PNG, adjust its size and position, and preview its appearance in the keyring and conversation before applying it.",
+        "- Fully transparent images and images outside the visible area cannot be applied.\n- Failed saves retain the current Fopl; damaged saved images fall back to the default Fopl.\n- This version supports a single PNG. The replacement can sway and react as a keyring, but multi-expression animation packs are not supported yet."
+      ],
+      "de": [
+        "Unter **Fopl ersetzen** wählt ihr ein PNG, passt Größe und Position an und seht vor dem Anwenden die Vorschau für Anhänger und Gespräch.",
+        "- Vollständig transparente oder außerhalb des sichtbaren Bereichs liegende Bilder werden nicht übernommen.\n- Bei Speicherfehlern bleibt der bisherige Fopl erhalten; beschädigte Bilder führen zum Standard-Fopl zurück.\n- Unterstützt wird ein einzelnes PNG, das schwingen und reagieren kann. Animationspakete mit mehreren Ausdrücken folgen noch nicht."
+      ],
+      "es": [
+        "En **Reemplazar Fopl**, selecciona un PNG, ajusta su tamaño y posición, y revisa cómo quedará en el llavero y la conversación antes de aplicarlo.",
+        "- No se aplican imágenes totalmente transparentes ni fuera del área visible.\n- Si falla el guardado, se conserva Fopl; una imagen dañada restaura el Fopl predeterminado.\n- Se admite un único PNG que puede balancearse y reaccionar. Los paquetes animados con varias expresiones aún no están disponibles."
+      ],
+      "fr": [
+        "Les réglages proposent **Remplacer Fopl**. Choisissez un PNG, ajustez taille et position, puis prévisualisez le porte-clés et la conversation avant application.",
+        "- Les images entièrement transparentes ou hors de la zone visible sont refusées.\n- Un échec d’enregistrement conserve Fopl ; une image enregistrée endommagée rétablit le Fopl par défaut.\n- Un seul PNG est pris en charge. Il peut se balancer et réagir, mais les packs animés à plusieurs expressions ne sont pas encore disponibles."
+      ],
+      "ja": [
+        "環境設定に**ポプルを変更**を追加しました。PNGを選び、サイズと位置を調整して、キーホルダーや会話画面での見え方を確認してから適用できます。",
+        "- 完全に透明な画像や表示領域外の画像は適用できません。\n- 保存に失敗した場合は元のポプルを維持し、保存画像が破損した場合は標準に戻ります。\n- 今回は単一PNGに対応します。揺れや反応はできますが、複数表情のアニメーションパックにはまだ対応していません。"
+      ],
+      "zh-Hans": [
+        "设置中新增**替换Fopl**。选择PNG，调整大小与位置，预览挂件及对话中的效果后再应用。",
+        "- 完全透明或超出显示范围的图片无法应用。\n- 保存失败时保留原Fopl；已保存的图片损坏时恢复默认Fopl。\n- 本版本支持单张PNG，可摆动和响应互动，但暂不支持多表情动画包。"
+      ],
+      "zh-Hant": [
+        "設定中新增**替換Fopl**。選擇PNG，調整大小與位置，預覽吊飾及對話中的樣貌後再套用。",
+        "- 完全透明或超出顯示範圍的圖片無法套用。\n- 儲存失敗時保留原Fopl；已儲存的圖片損壞時恢復預設Fopl。\n- 本版本支援單張PNG，可搖擺及回應互動，但尚未支援多表情動畫套件。"
+      ]
+    },
+    "lupain": {
+      "ko": [
+        "가면을 쓴 포플과 함께하는 **‘Lupain 루팡’**을 추가했습니다. ISP(인터넷 서비스 제공업체)의 일부 웹 연결 차단 환경에서 사용할 수 있는 연결 보조 기능입니다.",
+        "- 런처의 기존 ‘원버튼 업데이트’ 자리를 ‘Lupain 루팡’으로 변경했습니다.\n- 전용 설정 창에서 기능을 제어할 수 있습니다.\n- 포플 키링을 우클릭해 바로 켜고 끄거나, 루팡 설정 창을 열 수 있습니다.",
+        "**IP 주소나 접속 국가를 바꾸는 VPN이 아니며, 게임의 지역 제한을 해제하는 기능도 아닙니다.** 시스템 프록시 설정을 따르는 웹 연결에 적용되며, 실제 결과는 네트워크 환경에 따라 달라질 수 있습니다."
+      ],
+      "en": [
+        "Meet the masked Fopl in **Lupain**, a connection helper for some web-blocking environments imposed by an ISP (Internet Service Provider).",
+        "- Lupain replaces the launcher’s former One-click Update entry.\n- Control it in its dedicated settings window.\n- Right-click Fopl’s keyring to turn it on or off, or open its settings.",
+        "**This is not a VPN that changes your IP address or connection country, and it does not remove game region restrictions.** It applies to web connections that follow system proxy settings; results depend on your network environment."
+      ],
+      "de": [
+        "Der maskierte Fopl begleitet **Lupain**, eine Verbindungshilfe für bestimmte Websperren durch Internetanbieter (ISP).",
+        "- Lupain ersetzt den bisherigen Eintrag für Ein-Klick-Updates im Launcher.\n- Die Steuerung erfolgt in einem eigenen Einstellungsfenster.\n- Ein Rechtsklick auf Fopls Anhänger erlaubt Ein-/Ausschalten und Öffnen der Einstellungen.",
+        "**Lupain ist kein VPN zum Ändern von IP-Adresse oder Land und hebt keine regionalen Spielsperren auf.** Es betrifft Webverbindungen, die den Systemproxy verwenden; das Ergebnis hängt vom Netzwerk ab."
+      ],
+      "es": [
+        "El Fopl enmascarado presenta **Lupain**, una ayuda de conexión para algunos bloqueos web del proveedor de Internet (ISP).",
+        "- Lupain sustituye la antigua entrada Actualización con un clic.\n- Se controla desde una ventana de ajustes dedicada.\n- Haz clic derecho en el llavero para activarlo, desactivarlo o abrir los ajustes.",
+        "**No es una VPN que cambie tu IP o país de conexión, ni elimina las restricciones regionales de los juegos.** Se aplica a conexiones web que siguen el proxy del sistema; el resultado depende de la red."
+      ],
+      "fr": [
+        "Découvrez Fopl masqué dans **Lupain**, un assistant de connexion pour certains blocages web imposés par un fournisseur d’accès Internet (ISP).",
+        "- Lupain remplace l’ancienne entrée Mise à jour en un clic du lanceur.\n- Une fenêtre dédiée permet de le configurer.\n- Un clic droit sur le porte-clés permet de l’activer, le désactiver ou ouvrir ses réglages.",
+        "**Ce n’est pas un VPN changeant l’adresse IP ou le pays de connexion, ni un moyen de lever les restrictions régionales des jeux.** Il s’applique aux connexions web utilisant le proxy système ; les résultats dépendent du réseau."
+      ],
+      "ja": [
+        "仮面を付けたポプルと使う**Lupain ルパン**を追加しました。ISP（インターネットサービスプロバイダー）による一部のWeb接続制限に対応する接続補助機能です。",
+        "- ランチャーのワンボタン更新の位置をLupainに変更しました。\n- 専用の設定画面で操作できます。\n- キーホルダーの右クリックからオン・オフや設定画面の表示ができます。",
+        "**IPアドレスや接続国を変更するVPNではなく、ゲームの地域制限を解除する機能でもありません。** システムプロキシ設定に従うWeb接続が対象で、結果はネットワーク環境によって異なります。"
+      ],
+      "zh-Hans": [
+        "新增由戴面具的Fopl陪伴的**Lupain**，帮助应对ISP（互联网服务提供商）实施的部分网页连接限制。",
+        "- 启动器中原有的一键更新入口改为Lupain。\n- 可在专用设置窗口中控制功能。\n- 右键点击Fopl挂件即可开关功能或打开设置。",
+        "**这不是更改IP地址或连接国家的VPN，也不能解除游戏的地区限制。** 功能适用于遵循系统代理设置的网页连接，实际结果因网络环境而异。"
+      ],
+      "zh-Hant": [
+        "新增由戴面具Fopl陪伴的**Lupain**，協助因應ISP（網際網路服務供應商）實施的部分網頁連線限制。",
+        "- 啟動器原本的一鍵更新入口改為Lupain。\n- 可在專用設定視窗控制功能。\n- 右鍵點選Fopl吊飾即可開關功能或開啟設定。",
+        "**這不是更改IP位址或連線國家的VPN，也不能解除遊戲的地區限制。** 適用於遵循系統代理設定的網頁連線，實際結果會隨網路環境而異。"
+      ]
+    },
+    "logs": {
+      "ko": [
+        "문제 해결에 필요한 기록은 더 충실하게 남기고, 기록 여부와 저장 공간은 사용자가 직접 관리할 수 있도록 정비했습니다.",
+        "- 선택적 진단 로그 기록을 켜고 끌 수 있습니다.\n- 기록을 꺼도 안전한 실행과 종료에 필요한 최소한의 운영 기록은 유지합니다.\n- 다시 켠 뒤 처음부터 이어지는 로그를 확보하려면 게임과 런처를 종료하고 다시 실행해 주세요.",
+        "- 지원 번들에 분석용 발췌와 압축 로그를 함께 담도록 개선했습니다.\n- 중간 기록이 빠져 같은 자료를 다시 요청해야 하는 상황을 줄이고, 누락된 자료나 수집하지 못한 범위도 표시합니다.\n- 최근 실행이 선택 목록에서 빠지던 문제와, 별도 호환성 실행의 로그를 공통 실행 환경에서 찾던 문제를 수정했습니다.\n- Apple Foundation Models를 활용해 수집한 자료를 나누어 분석하고, 확인된 현상과 원인 후보 등을 정리하도록 개선했습니다.",
+        "- ‘포플과 대화’의 로그 관리 화면에서 사용량, 보호 중인 자료와 정리 대상을 확인할 수 있습니다.\n- 포플에게 로그 용량이나 정리를 물어 같은 화면을 열 수도 있습니다.\n- 자동 정리 설정은 진단 로그 기록 여부와 별도로 제공합니다.\n- 반복되는 로그를 줄여 기록하고, 파일 크기 제한과 주기적인 정리를 추가했습니다.\n- 로그 파일이 교체되는 과정에서 최근 오류 기록이 사라질 수 있던 문제도 보완했습니다.",
+        "**문제 제보를 위해 만든 지원 번들 ZIP 파일은 자동으로 삭제하지 않습니다.**"
+      ],
+      "en": [
+        "We have improved the completeness of troubleshooting records while giving you control over logging and storage.",
+        "- Turn optional diagnostic logging on or off.\n- Essential operational records for safe launching and quitting remain when it is off.\n- After re-enabling it, quit and restart the game and launcher to capture a complete run from the beginning.",
+        "- Support bundles now include analysis excerpts and compressed logs.\n- Reduce repeated requests caused by missing middle sections, and identify missing material or collection limits.\n- Fixed recent runs disappearing from the selection list and separate compatibility-session logs being looked up in the shared environment.\n- Apple Foundation Models analyzes collected material in sections and organizes observations and possible causes.",
+        "- In Talk to Fopl, Log Management shows storage use, protected material and cleanup targets.\n- Ask Fopl about log size or cleanup to open the same view.\n- Automatic cleanup is configured separately from logging.\n- Added repeated-output compaction, file-size limits and periodic cleanup.\n- Fixed recent errors being lost when log files were rotated.",
+        "**Support-bundle ZIP files created for reporting problems are not automatically deleted.**"
+      ],
+      "de": [
+        "Für die Fehlersuche werden vollständigere Informationen erfasst, während Aufzeichnung und Speicherbedarf steuerbar bleiben.",
+        "- Optionale Diagnoseprotokolle lassen sich ein- und ausschalten.\n- Für sicheren Start und Abschluss notwendige minimale Betriebsdaten bleiben erhalten.\n- Nach erneutem Einschalten Spiel und Launcher beenden und neu starten, um den gesamten Ablauf zu erfassen.",
+        "- Supportpakete enthalten Analyseauszüge und komprimierte Protokolle.\n- Fehlende Zwischenabschnitte und erneute Anfragen werden reduziert; fehlende Daten und Erfassungsgrenzen werden angezeigt.\n- Korrigiert wurden fehlende aktuelle Läufe in der Auswahl sowie die Suche separater Kompatibilitätsprotokolle in der gemeinsamen Umgebung.\n- Apple Foundation Models analysiert das Material abschnittsweise und ordnet Beobachtungen und mögliche Ursachen.",
+        "- Die Protokollverwaltung unter Mit Fopl sprechen zeigt Belegung, geschützte Daten und Bereinigungsziele.\n- Fragen zu Protokollgröße oder Bereinigung öffnen dieselbe Ansicht.\n- Automatische Bereinigung wird unabhängig von der Aufzeichnung eingestellt.\n- Wiederholungen werden gekürzt; Größenlimits und regelmäßige Bereinigung wurden ergänzt.\n- Der Verlust aktueller Fehler beim Protokollwechsel wurde behoben.",
+        "**Für Fehlermeldungen erstellte Support-ZIP-Dateien werden nicht automatisch gelöscht.**"
+      ],
+      "es": [
+        "Los datos para investigar problemas son más completos y puedes controlar su grabación y espacio ocupado.",
+        "- Activa o desactiva los registros de diagnóstico opcionales.\n- Se conservan los registros operativos mínimos necesarios para iniciar y cerrar con seguridad.\n- Tras reactivarlos, cierra y reinicia el juego y el lanzador para registrar toda la ejecución.",
+        "- Los paquetes de soporte incluyen extractos de análisis y registros comprimidos.\n- Se reducen las peticiones repetidas por secciones ausentes y se indican omisiones y límites de recopilación.\n- Se corrigieron ejecuciones recientes ausentes de la lista y búsquedas de registros de compatibilidad en el entorno compartido.\n- Apple Foundation Models analiza el material por secciones y organiza observaciones y posibles causas.",
+        "- Gestión de registros, en Hablar con Fopl, muestra uso, material protegido y elementos que se pueden limpiar.\n- Pregunta a Fopl por el tamaño de los registros o su limpieza para abrir esa vista.\n- La limpieza automática se configura por separado.\n- Se añadieron reducción de repeticiones, límites de tamaño y limpieza periódica.\n- Se corrigió la pérdida de errores recientes al rotar los archivos.",
+        "**Los ZIP de soporte preparados para reportar problemas no se borran automáticamente.**"
+      ],
+      "fr": [
+        "Les informations utiles au dépannage sont plus complètes, tandis que vous contrôlez leur enregistrement et leur espace occupé.",
+        "- Activez ou désactivez les journaux de diagnostic facultatifs.\n- Les traces opérationnelles minimales nécessaires au lancement et à l’arrêt sûrs sont conservées.\n- Après réactivation, quittez puis relancez le jeu et son lanceur pour enregistrer toute l’exécution.",
+        "- Les paquets d’assistance contiennent des extraits d’analyse et des journaux compressés.\n- Réduction des demandes répétées dues à des sections manquantes ; omissions et limites de collecte sont indiquées.\n- Correction des exécutions récentes absentes de la liste et de la recherche de journaux de compatibilité dans l’environnement commun.\n- Apple Foundation Models analyse les éléments par sections et organise observations et causes possibles.",
+        "- Dans Parler à Fopl, Gestion des journaux affiche l’espace occupé, les éléments protégés et les cibles du nettoyage.\n- Demandez à Fopl la taille des journaux ou leur nettoyage pour ouvrir cette vue.\n- Le nettoyage automatique se règle séparément de l’enregistrement.\n- Ajout de la réduction des répétitions, de limites de taille et d’un nettoyage périodique.\n- Correction de la perte d’erreurs récentes lors de la rotation des fichiers.",
+        "**Les ZIP d’assistance créés pour signaler un problème ne sont pas supprimés automatiquement.**"
+      ],
+      "ja": [
+        "問題解決に必要な記録を充実させ、記録の有無と保存容量を自分で管理できるようにしました。",
+        "- 任意の診断ログをオン・オフできます。\n- オフでも安全な起動・終了に必要な最低限の運用記録は残ります。\n- 再びオンにした後、最初からのログを得るにはゲームとランチャーを終了して再起動してください。",
+        "- サポートバンドルに分析用の抜粋と圧縮ログを含めます。\n- 途中の記録不足による再提出を減らし、欠落資料や収集範囲の制限も表示します。\n- 最近の実行が選択肢から消える問題と、別の互換性環境のログを共通環境で探す問題を修正しました。\n- Apple Foundation Modelsで資料を分けて分析し、確認できた現象や原因候補を整理します。",
+        "- ポプルとの会話のログ管理画面で使用量、保護中の資料、整理対象を確認できます。\n- ポプルにログ容量や整理について質問して同じ画面を開けます。\n- 自動整理はログ記録とは別に設定できます。\n- 繰り返し出力の短縮、ファイルサイズ制限、定期整理を追加しました。\n- ログ切り替え時に最近のエラーが失われる問題も補いました。",
+        "**報告用に作成したサポートバンドルのZIPは自動削除しません。**"
+      ],
+      "zh-Hans": [
+        "更完整地保留排查所需记录，并让用户自行控制记录与存储空间。",
+        "- 可开启或关闭可选诊断日志。\n- 关闭后仍保留安全启动与退出所需的最少运行记录。\n- 重新开启后，请退出并重启游戏及启动器，以获取从开始阶段起的完整记录。",
+        "- 支持包包含分析摘要与压缩日志。\n- 减少因中间记录缺失而反复索要资料的情况，并标注遗漏资料与收集限制。\n- 修复最近运行未出现在列表中，以及在公共环境中错误查找独立兼容环境日志的问题。\n- 使用Apple Foundation Models分段分析资料，整理已观察到的现象和可能原因。",
+        "- 在与Fopl对话的日志管理界面查看使用量、受保护资料和清理目标。\n- 向Fopl询问日志大小或清理，也可打开同一界面。\n- 自动清理与日志记录分开设置。\n- 增加重复输出精简、文件大小限制及定期清理。\n- 修复日志轮换时可能丢失最近错误记录的问题。",
+        "**用于反馈问题的支持包ZIP不会自动删除。**"
+      ],
+      "zh-Hant": [
+        "更完整保留排查所需紀錄，也讓使用者自行控制記錄與儲存空間。",
+        "- 可開啟或關閉選用診斷日誌。\n- 關閉後仍保留安全啟動及結束所需的最少運作紀錄。\n- 重新開啟後，請結束並重啟遊戲及啟動器，以取得從開始階段起的完整紀錄。",
+        "- 支援套件包含分析摘錄與壓縮日誌。\n- 減少因中間紀錄缺失而重複索取資料，並標示遺漏資料與收集限制。\n- 修正最近執行未出現在清單，以及在共用環境中錯誤尋找獨立相容環境日誌的問題。\n- 透過Apple Foundation Models分段分析資料，整理已觀察到的現象與可能原因。",
+        "- 在與Fopl對話的日誌管理畫面查看使用量、受保護資料與清理目標。\n- 向Fopl詢問日誌大小或清理，也能開啟同一畫面。\n- 自動清理與日誌記錄分別設定。\n- 新增重複輸出精簡、檔案大小限制與定期清理。\n- 修正日誌輪替時可能遺失最近錯誤紀錄的問題。",
+        "**用於回報問題的支援套件ZIP不會自動刪除。**"
+      ]
+    },
+    "modding": {
+      "ko": [
+        "호환성 실행에 **‘모딩가능 런타임’**을 추가했습니다.",
+        "- 사용자가 준비한 dinput8.dll을 검사한 뒤 적용할 수 있습니다.\n- 기존 파일 보존, 적용 상태 확인과 원본 복원을 지원합니다.\n- 복원 과정에서 게임 업데이트나 다른 도구가 변경한 파일을 잘못 삭제하지 않도록 보호를 보강했습니다."
+      ],
+      "en": [
+        "Added a **modding-capable runtime** to Compatibility Launch.",
+        "- Inspect and apply a user-supplied dinput8.dll.\n- Preserve existing files, inspect status and restore originals.\n- Added protection against accidentally deleting files changed by game updates or other tools during restoration."
+      ],
+      "de": [
+        "Der Kompatibilitätsstart enthält jetzt eine **Modding-fähige Laufzeit**.",
+        "- Eine selbst bereitgestellte dinput8.dll kann geprüft und angewendet werden.\n- Vorhandene Dateien bleiben gesichert; Statusprüfung und Wiederherstellung sind möglich.\n- Beim Wiederherstellen werden Dateien geschützt, die Spielupdates oder andere Werkzeuge geändert haben."
+      ],
+      "es": [
+        "Se añadió un **entorno compatible con mods** al inicio de compatibilidad.",
+        "- Comprueba y aplica un dinput8.dll proporcionado por el usuario.\n- Conserva los archivos existentes, consulta el estado y restaura los originales.\n- Se reforzó la protección para no borrar archivos modificados por actualizaciones del juego u otras herramientas durante la restauración."
+      ],
+      "fr": [
+        "Ajout d’un **runtime compatible avec les mods** au lancement de compatibilité.",
+        "- Vérification et application d’un dinput8.dll fourni par l’utilisateur.\n- Conservation des fichiers, consultation de l’état et restauration des originaux.\n- Protection renforcée contre la suppression de fichiers modifiés par une mise à jour du jeu ou un autre outil pendant la restauration."
+      ],
+      "ja": [
+        "互換性実行に**MOD対応ランタイム**を追加しました。",
+        "- ユーザーが用意したdinput8.dllを確認して適用できます。\n- 既存ファイルの保全、状態確認、元の状態への復元に対応します。\n- 復元時にゲーム更新や他のツールが変更したファイルを誤って削除しないよう保護を強化しました。"
+      ],
+      "zh-Hans": [
+        "兼容运行中新增**支持模组的运行环境**。",
+        "- 检查并应用用户准备的dinput8.dll。\n- 支持保留现有文件、查看状态与恢复原文件。\n- 加强保护，避免恢复时误删被游戏更新或其他工具更改的文件。"
+      ],
+      "zh-Hant": [
+        "相容性執行中新增**支援模組的執行環境**。",
+        "- 檢查並套用使用者準備的dinput8.dll。\n- 支援保留現有檔案、查看狀態及還原原檔。\n- 加強保護，避免還原時誤刪被遊戲更新或其他工具修改的檔案。"
+      ]
+    },
+    "rdr2": {
+      "ko": [
+        "또한 **레드 데드 리뎀션 2 전용 프로필과 처음 실행 안내**를 추가했습니다. 필요한 준비와 실행 순서를 해당 화면에서 확인할 수 있습니다.",
+        "1. 실행 중인 Steam과 Rockstar 런처를 각 앱의 종료 메뉴로 닫으세요. 창만 닫으면 백그라운드에 남아 있을 수 있습니다.",
+        "2. 아래 Steam 실행을 누르세요. 처음에는 기존 Steam 환경을 복제하고 RDR2 실행을 요청합니다. 이후에도 이 프로필에서 실행하세요.",
+        "3. Rockstar 설치·업데이트 창이 나타나면 완료하고, 게임을 보유한 계정으로 로그인하세요. 설치 상태가 복사되므로 새로 설치하는 화면이 나오지 않을 수도 있습니다.",
+        "런처 보완은 실행할 때 자동 적용됩니다. 별도 패치 버튼이나 외부 DLL 다운로드는 필요하지 않습니다. Rockstar 로그인과 게임 소유권 확인은 유지됩니다.",
+        "DX12 설정은 선택 사항입니다. 게임이 만든 system.xml이 있을 때만 아래 도구를 사용하세요. 파일이 없으면 이 단계를 건너뛰고 먼저 실행해 보세요.",
+        "아직 시험 중인 프로필입니다. 런처 설치 준비나 초기화 오류가 계속되면 해결된 상태가 아닙니다. 포플과 대화의 문제진단에서 해당 실행의 지원 번들을 만들 수 있습니다."
+      ],
+      "en": [
+        "Added a **Red Dead Redemption 2 profile and first-launch guidance**, with preparation and launch steps available in the profile.",
+        "1. Quit Steam and Rockstar Launcher using each app’s Quit menu. Closing a window may leave the app running in the background.",
+        "2. Click Launch Steam below. On first use, ForgePlay copies your existing Steam environment and requests RDR2 to launch. Use this profile for future launches too.",
+        "3. Complete any Rockstar installation or update prompts, then sign in with the account that owns the game. Existing installation data is copied, so a new installation prompt may not appear.",
+        "Launcher adjustments apply automatically at launch. No separate patch button or external DLL download is needed. Rockstar sign-in and game ownership checks remain in place.",
+        "DX12 settings are optional. Use the tool below only when the game has created system.xml. If the file is missing, skip this step and try launching first.",
+        "This profile is still experimental. If launcher installation or initialization errors persist, the issue remains unresolved. In Talk with Fopl, use diagnostics to create a support bundle for that run."
+      ],
+      "de": [
+        "Ein **Profil für Red Dead Redemption 2 mit Anleitung zum ersten Start** erklärt Vorbereitung und Startfolge.",
+        "1. Beenden Sie Steam und den Rockstar Launcher jeweils über das Menü zum Beenden. Das Schließen eines Fensters kann die App im Hintergrund weiterlaufen lassen.",
+        "2. Klicken Sie unten auf „Steam starten“. Beim ersten Mal kopiert ForgePlay Ihre vorhandene Steam-Umgebung und fordert den Start von RDR2 an. Verwenden Sie auch künftig dieses Profil.",
+        "3. Schließen Sie angezeigte Rockstar-Installationen oder Updates ab und melden Sie sich mit dem Konto an, dem das Spiel gehört. Der vorhandene Installationsstand wird kopiert; eine Neuinstallation wird eventuell nicht angeboten.",
+        "Die Launcher-Anpassungen werden beim Start automatisch angewendet. Eine separate Patch-Schaltfläche oder ein externer DLL-Download ist nicht nötig. Rockstar-Anmeldung und Eigentumsprüfung bleiben erhalten.",
+        "Die DX12-Einstellung ist optional. Verwenden Sie das Werkzeug unten nur, wenn das Spiel bereits system.xml erstellt hat. Fehlt die Datei, überspringen Sie diesen Schritt und versuchen Sie zuerst den Start.",
+        "Dieses Profil ist noch experimentell. Bleiben Installations- oder Initialisierungsfehler des Launchers bestehen, ist das Problem nicht behoben. Erstellen Sie unter „Mit Fopl sprechen“ über die Diagnose ein Supportpaket für diesen Start."
+      ],
+      "es": [
+        "Se añadió un **perfil de Red Dead Redemption 2 con instrucciones para el primer inicio**, incluidas preparación y secuencia de ejecución.",
+        "1. Cierra Steam y Rockstar Launcher desde el menú de salida de cada aplicación. Cerrar solo la ventana puede dejarlos activos en segundo plano.",
+        "2. Pulsa Iniciar Steam abajo. La primera vez, ForgePlay copia el entorno de Steam existente y solicita iniciar RDR2. Usa este perfil también en los próximos inicios.",
+        "3. Completa cualquier instalación o actualización de Rockstar e inicia sesión con la cuenta que posee el juego. Se copia el estado de instalación existente, por lo que puede no aparecer una instalación nueva.",
+        "Los ajustes del lanzador se aplican automáticamente al iniciar. No necesitas un botón de parche separado ni descargar DLL externas. Se mantienen el inicio de sesión de Rockstar y la comprobación de propiedad del juego.",
+        "La configuración DX12 es opcional. Usa la herramienta de abajo solo si el juego ya ha creado system.xml. Si el archivo no existe, omite este paso e intenta iniciar primero.",
+        "Este perfil aún es experimental. Si persisten errores de preparación o inicialización del lanzador, el problema sigue sin resolverse. En Hablar con Fopl, usa el diagnóstico para crear un paquete de soporte de esa ejecución."
+      ],
+      "fr": [
+        "Ajout d’un **profil Red Dead Redemption 2 et d’un guide de premier lancement**, avec les étapes de préparation et de démarrage.",
+        "1. Quittez Steam et le lanceur Rockstar depuis le menu Quitter de chaque application. Fermer seulement la fenêtre peut les laisser actifs en arrière-plan.",
+        "2. Cliquez sur Lancer Steam ci-dessous. Lors de la première utilisation, ForgePlay copie votre environnement Steam existant et demande le lancement de RDR2. Utilisez aussi ce profil lors des prochains lancements.",
+        "3. Terminez les éventuelles installations ou mises à jour Rockstar, puis connectez-vous avec le compte qui possède le jeu. L’état de l’installation est copié ; une nouvelle installation peut donc ne pas être proposée.",
+        "Les ajustements du lanceur sont appliqués automatiquement au démarrage. Aucun bouton de correctif distinct ni téléchargement de DLL externe n’est nécessaire. La connexion Rockstar et la vérification de propriété du jeu sont conservées.",
+        "Le réglage DX12 est facultatif. Utilisez l’outil ci-dessous uniquement si le jeu a déjà créé system.xml. Si ce fichier est absent, ignorez cette étape et essayez d’abord de lancer le jeu.",
+        "Ce profil est encore expérimental. Si les erreurs d’installation ou d’initialisation du lanceur persistent, le problème reste non résolu. Dans Parler avec Fopl, utilisez le diagnostic pour créer un dossier d’assistance pour cette exécution."
+      ],
+      "ja": [
+        "**レッド・デッド・リデンプション2専用プロファイルと初回起動案内**を追加しました。準備と起動の手順を画面で確認できます。",
+        "1. SteamとRockstarランチャーを、それぞれの終了メニューから終了してください。ウインドウを閉じるだけではバックグラウンドで動作し続ける場合があります。",
+        "2. 下の「Steamを起動」を押してください。初回は既存のSteam環境を複製し、RDR2の起動を要求します。次回以降もこのプロファイルから起動してください。",
+        "3. Rockstarのインストール・更新画面が表示されたら完了し、ゲームを所有するアカウントでログインしてください。既存のインストール状態も複製されるため、新規インストール画面が出ない場合があります。",
+        "ランチャーの補完は起動時に自動適用されます。別のパッチボタンや外部DLLのダウンロードは不要です。Rockstarへのログインとゲーム所有権の確認は引き続き必要です。",
+        "DX12設定は任意です。ゲームがsystem.xmlを作成済みの場合のみ、下のツールを使用してください。ファイルがない場合は、この手順を飛ばして先に起動を試してください。",
+        "このプロファイルはまだ試験中です。ランチャーのインストール準備や初期化エラーが続く場合、問題は未解決です。「ポプルと会話」の問題診断から、その実行のサポートバンドルを作成できます。"
+      ],
+      "zh-Hans": [
+        "新增**荒野大镖客：救赎2专用配置和首次运行说明**，可在界面中查看准备与启动步骤。",
+        "1. 请通过各自的退出菜单关闭 Steam 和 Rockstar 启动器。仅关闭窗口可能会让应用继续在后台运行。",
+        "2. 点击下方的“启动 Steam”。首次使用时，ForgePlay 会复制现有 Steam 环境并请求启动 RDR2。以后也请通过此配置启动。",
+        "3. 如出现 Rockstar 安装或更新窗口，请完成操作，然后登录拥有游戏的账号。现有安装状态也会被复制，因此可能不会出现全新安装窗口。",
+        "启动器兼容性调整会在启动时自动应用，无需单独点击补丁按钮或下载外部 DLL。Rockstar 登录和游戏所有权验证仍然保留。",
+        "DX12 设置为可选操作。仅在游戏已生成 system.xml 时使用下方工具。如果没有该文件，请跳过此步骤并先尝试启动。",
+        "此配置仍处于试验阶段。如果启动器安装准备或初始化错误持续出现，则问题尚未解决。可在“与 Fopl 对话”的问题诊断中，为该次运行创建支持包。"
+      ],
+      "zh-Hant": [
+        "新增**碧血狂殺2專用設定檔及首次執行說明**，可在畫面查看準備與啟動步驟。",
+        "1. 請透過各自的結束選單關閉 Steam 和 Rockstar 啟動器。只關閉視窗可能會讓應用程式繼續在背景執行。",
+        "2. 按下下方的「啟動 Steam」。首次使用時，ForgePlay 會複製現有 Steam 環境並要求啟動 RDR2。之後也請透過此設定檔啟動。",
+        "3. 如出現 Rockstar 安裝或更新視窗，請完成操作，再登入擁有遊戲的帳號。現有安裝狀態也會複製，因此可能不會出現全新安裝視窗。",
+        "啟動器相容性調整會在啟動時自動套用，不需要另外按補丁按鈕或下載外部 DLL。Rockstar 登入與遊戲擁有權驗證仍然保留。",
+        "DX12 設定為選用操作。僅在遊戲已建立 system.xml 時使用下方工具。如果沒有此檔案，請略過此步驟並先嘗試啟動。",
+        "此設定檔仍在試驗階段。如果啟動器安裝準備或初始化錯誤持續出現，則問題尚未解決。可在「與 Fopl 對話」的問題診斷中，為該次執行建立支援套件。"
+      ]
+    },
+    "components": {
+      "ko": [
+        "게임이나 런처가 DirectX 등 필요한 구성요소를 자체적으로 설치하는 경우가 있으므로, 사용자가 모든 구성요소를 미리 수동 설치해야 하는 것처럼 보이던 흐름을 정리했습니다.",
+        "- 일반 실행 화면의 구성요소 설치 탭과 필수 설치처럼 보이던 안내를 정리했습니다.\n- 새 설치와 기존 실행 환경 모두 DirectX·VC++·.NET의 수동 설치 기록을 추가 실행 조건으로 요구하지 않습니다.\n- 게임에서 필요한 구성요소를 요구하는 경우에 설치하면 됩니다.",
+        "설치 결과를 표시하는 방식도 바로잡았습니다. 설치 프로그램이 종료됐다는 이유만으로 ‘설치 완료’로 표시하지 않으며, 확인하지 못한 결과는 **‘설치 여부 미확인’**, 과거 기록은 **‘이전 설치 기록 · 미검증’**으로 구분합니다."
+      ],
+      "en": [
+        "Games or launchers may install their own DirectX and other requirements. We removed guidance that made manually installing every component in advance look mandatory.",
+        "- Cleaned up the component-installation tab and mandatory-looking guidance in normal launch views.\n- New and existing environments no longer require manual DirectX, Visual C++ or .NET installation records as an additional launch condition.\n- Install components when a game requires them.",
+        "An installer exiting no longer automatically means installation succeeded. Unconfirmed results are labeled **Installation status unverified**, and older records **Previous installation record · unverified**."
+      ],
+      "de": [
+        "Spiele oder Launcher können DirectX und andere benötigte Komponenten selbst installieren. Hinweise, die eine manuelle Vorabinstallation sämtlicher Komponenten nahelegten, wurden überarbeitet.",
+        "- Komponenteninstallation und missverständlich verpflichtende Hinweise in normalen Startansichten wurden bereinigt.\n- Neue und bestehende Umgebungen verlangen keine manuellen DirectX-, Visual-C++- oder .NET-Installationsnachweise als zusätzliche Startbedingung.\n- Installiert Komponenten, wenn ein Spiel sie benötigt.",
+        "Das Ende eines Installationsprogramms gilt nicht mehr automatisch als Erfolg. Unbestätigte Ergebnisse heißen **Installationsstatus ungeprüft**, alte Einträge **Frühere Installation · ungeprüft**."
+      ],
+      "es": [
+        "Los juegos o lanzadores pueden instalar DirectX y otros requisitos por su cuenta. Se retiraron indicaciones que parecían exigir instalarlo todo manualmente antes de jugar.",
+        "- Se reorganizaron la pestaña de componentes y las instrucciones aparentemente obligatorias del inicio normal.\n- Los entornos nuevos y existentes no exigen constancias de instalación manual de DirectX, Visual C++ o .NET como requisito adicional de inicio.\n- Instala los componentes cuando el juego los requiera.",
+        "Que un instalador termine ya no implica que la instalación haya tenido éxito. Los resultados sin confirmar se marcan **Estado de instalación sin verificar** y los antiguos **Instalación anterior · sin verificar**."
+      ],
+      "fr": [
+        "Les jeux ou lanceurs peuvent installer eux-mêmes DirectX et leurs autres dépendances. Les indications suggérant de tout installer manuellement à l’avance ont été revues.",
+        "- Réorganisation de l’onglet d’installation des composants et des indications paraissant obligatoires dans le lancement normal.\n- Les environnements neufs ou existants n’exigent plus de traces d’installation manuelle de DirectX, Visual C++ ou .NET pour autoriser le lancement.\n- Installez un composant lorsqu’un jeu le réclame.",
+        "La fin d’un programme d’installation ne vaut plus confirmation de réussite. Les résultats non confirmés portent la mention **Installation non vérifiée** et les anciens **Ancienne installation · non vérifiée**."
+      ],
+      "ja": [
+        "ゲームやランチャーがDirectXなどを自分でインストールする場合があるため、すべてを事前に手動インストールしなければならないように見える案内を整理しました。",
+        "- 通常実行画面の構成要素タブと必須に見える案内を整理しました。\n- 新規・既存環境ともDirectX・VC++・.NETの手動インストール記録を追加の起動条件として要求しません。\n- ゲームが必要とする場合にインストールしてください。",
+        "インストーラーが終了しただけで成功と表示することをやめました。未確認の結果は**インストール状況未確認**、古い記録は**以前のインストール記録・未検証**と表示します。"
+      ],
+      "zh-Hans": [
+        "游戏或启动器可能自行安装DirectX等所需组件，因此整理了让人误以为必须提前手动安装全部组件的流程。",
+        "- 整理普通运行界面的组件安装页及看似强制的说明。\n- 新旧环境均不再把手动安装DirectX、VC++或.NET的记录作为额外启动条件。\n- 游戏要求相应组件时再安装即可。",
+        "安装程序退出不再直接视为安装成功。未确认的结果标记为**安装状态未验证**，旧记录标记为**以前的安装记录·未验证**。"
+      ],
+      "zh-Hant": [
+        "遊戲或啟動器可能自行安裝DirectX等所需元件，因此整理了讓人以為必須預先手動安裝所有元件的流程。",
+        "- 整理一般執行畫面的元件安裝分頁及看似強制的說明。\n- 新舊環境均不再把手動安裝DirectX、VC++或.NET的紀錄視為額外啟動條件。\n- 遊戲要求對應元件時再安裝即可。",
+        "安裝程式結束不再直接視為安裝成功。未確認的結果標記為**安裝狀態未驗證**，舊紀錄標記為**先前的安裝紀錄·未驗證**。"
+      ]
+    }
+  }
+}

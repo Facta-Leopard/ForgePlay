@@ -14,7 +14,7 @@
     if(!next.keyringVisible&&next.mode==='keyring')next.mode='compact';
     return next;
   };
-  const create = ({root,shell,copy,locale,light,title,renderCompact,home,settings,advanced,setAdvanced,onChatter,refresh,ticker,restart}) => {
+  const create = ({root,shell,copy,locale,light,title,renderCompact,home,settings,advanced,setAdvanced,onChatter,refresh,ticker,restart,lupain,toggleLupain,openLupain}) => {
     const n=(tag,cls='',text)=>{const e=document.createElement(tag);e.className=cls;if(text!==undefined)e.textContent=text;return e;};
     const t=key=>copy.strings[key]?.[Math.max(0,copy.locales.indexOf(locale()))]||key;
     let state=initial(),animation=null,bubbleTimer=0,chatterTimer=0,lastImpulse=0,lastPointer=null,inView=true,phrase=0,clicks=0,lastClick=0,menu=null,drag=null;
@@ -59,6 +59,8 @@
       add('hide',()=>{closeMenu();change('hide');});menu.append(n('hr'));
       for(const key of ['chatter','reactions'])add(key,()=>{closeMenu();change(key);},state[key]);
       add('alwaysOnTop',()=>{closeMenu();change('alwaysOnTop');},state.alwaysOnTop).title=t('topDemo');
+      add('lupainToggle',()=>{closeMenu();toggleLupain();},lupain());
+      add('lupainOpen',()=>{closeMenu();openLupain();});
       const group=n('fieldset'),legend=n('legend','',t('position'));group.append(legend);
       for(const value of ['left','center','right']){const b=button(value,()=>{closeMenu();change('position',value);});b.setAttribute('aria-pressed',String(state.position===value));group.append(b);}menu.append(group);
       add('advanced',()=>{closeMenu();setAdvanced(!advanced());refresh();},advanced());menu.append(n('hr'));

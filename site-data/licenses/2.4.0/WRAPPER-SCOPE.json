@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "revision": "2026-10-04.1-runtime-boundary",
+  "rightsHolder": "Facta-Leopard",
+  "permission": "PERMISSION.txt",
+  "priorGPLRightsPreserved": true,
+  "files": [
+    "Mac/Coordinator/App/CoordinatorAvailability.swift",
+    "Mac/Coordinator/App/CoordinatorConsentSheet.swift",
+    "Mac/Coordinator/App/CoordinatorControls.swift",
+    "Mac/Coordinator/App/CoordinatorTargetEditor.swift",
+    "Mac/Coordinator/App/CoordinatorConversation.swift",
+    "Mac/Coordinator/App/CoordinatorConversationControls.swift",
+    "Mac/Coordinator/App/CoordinatorSpeechInput.swift",
+    "Mac/Coordinator/App/CoordinatorLegalNotice.swift",
+    "Mac/Coordinator/App/CoordinatorPolicyService.swift",
+    "Mac/Coordinator/App/VisualCoordinatorConfiguration.swift",
+    "Mac/Coordinator/Shared/CoordinatorSignedPolicy.swift",
+    "Mac/Sources/ForgePlay/UI/PoppleMascotView.swift",
+    "Launcher/Diagnostics/Sources/Presentation/DiagnosticChatCard.swift"
+  ],
+  "excludedRuntimeRoots": [
+    "Mac/Coordinator/Core/",
+    "Mac/Coordinator/Speech/",
+    "Mac/Coordinator/Contracts/",
+    "Mac/Native/"
+  ],
+  "notes": [
+    "This is an exact file boundary for the author-owned binary-wrapper permission, not a grant for all Swift code.",
+    "The four shared Swift files compiled into ForgePlayCoordinatorWorker are runtime source and are not excluded from publication.",
+    "The atlas-packing tool retains its existing GPL grant; artwork and branding permissions remain separate.",
+    "Third-party rights, Wine-derived source obligations and earlier GPL grants are unchanged."
+  ]
+}
