@@ -1,7 +1,7 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
-  "updatedAt": "2026-10-23",
+  "updatedAt": "2026-10-24",
   "revision": 0,
   "testProfiles": [
     {
@@ -3540,6 +3540,29 @@
         "ja": "Steam版ブルーアーカイブはForgePlay 2.4.0でプレイできます。",
         "zh-Hans": "Steam 版《蔚蓝档案》可以通过 ForgePlay 2.4.0 游玩。",
         "zh-Hant": "Steam 版《蔚藍檔案》可以透過 ForgePlay 2.4.0 遊玩。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "romance-of-the-three-kingdoms-14-github-59-20261024",
+      "gameId": "romance-of-the-three-kingdoms-14",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m5-pro-24gb-macos-27-0-1",
+      "forgePlayVersion": "2.4.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "github-issue",
+      "reporter": "KFCBucketCat",
+      "testedAt": "2026-10-24",
+      "notes": {
+        "ko": "이전 버전에서는 진행하지 못했지만, ForgePlay 2.4.0(빌드 11)에서 DXMT로 플레이할 수 있다는 제보입니다. 코에이·시부사와 코우 로고와 오프닝 영상이 표시되지 않으며, 시작 시 약 2~3분간 검은 화면이 나온 뒤 메인 화면으로 진입합니다. 동영상을 제외한 게임 플레이는 정상적으로 진행된다고 합니다. 런처에서 ‘영상 없음’을 선택해도 같은 시작 지연이 남습니다.\n\n제보자는 시험 전에 Microsoft DirectX End-User Runtimes (June 2010)를 수동 설치했습니다. 이 설치가 필요한 조건인지, 실행 개선에 영향을 주었는지는 확인되지 않았습니다.",
+        "en": "The reporter could not progress in earlier versions, but can now play with DXMT in ForgePlay 2.4.0 (build 11). The Koei and Kou Shibusawa logos and opening video do not appear. Startup shows a black screen for about 2–3 minutes before reaching the main menu. Gameplay is reported to work normally apart from videos. Selecting the launcher's no-video option does not remove the startup delay.\n\nThe reporter manually installed Microsoft DirectX End-User Runtimes (June 2010) before testing. It has not been confirmed whether this installation is required or contributed to the improvement.",
+        "de": "Während das Spiel in früheren Versionen nicht weiterlief, ist es laut Bericht mit DXMT in ForgePlay 2.4.0 (Build 11) spielbar. Die Logos von Koei und Kou Shibusawa sowie das Eröffnungsvideo werden nicht angezeigt. Beim Start bleibt der Bildschirm etwa 2–3 Minuten schwarz, bevor das Hauptmenü erscheint. Abgesehen von Videos funktioniert das Spiel laut Bericht normal. Auch die Option zum Deaktivieren der Videos im Launcher beseitigt diese Startverzögerung nicht.\n\nVor dem Test wurden Microsoft DirectX End-User Runtimes (June 2010) manuell installiert. Ob diese Installation erforderlich ist oder zur Verbesserung beigetragen hat, wurde nicht bestätigt.",
+        "es": "Según el reporte, antes no se podía avanzar, pero ahora el juego es jugable con DXMT en ForgePlay 2.4.0 (compilación 11). No aparecen los logotipos de Koei y Kou Shibusawa ni el vídeo de apertura. Al iniciar, la pantalla permanece negra durante unos 2–3 minutos antes de llegar al menú principal. El juego funciona con normalidad salvo los vídeos. Seleccionar la opción de desactivar vídeos en el lanzador no elimina la demora inicial.\n\nLa persona que realizó la prueba instaló manualmente Microsoft DirectX End-User Runtimes (June 2010) antes de probar el juego. No se ha confirmado si esta instalación es necesaria o si contribuyó a la mejora.",
+        "fr": "Selon le signalement, le jeu ne permettait pas de progresser dans les versions précédentes, mais il est désormais jouable avec DXMT sous ForgePlay 2.4.0 (build 11). Les logos Koei et Kou Shibusawa ainsi que la vidéo d'ouverture ne s'affichent pas. Au démarrage, l'écran reste noir pendant environ 2 à 3 minutes avant d'atteindre le menu principal. Le jeu fonctionne normalement en dehors des vidéos. Désactiver les vidéos dans le lanceur ne supprime pas ce délai de démarrage.\n\nLa personne ayant effectué le test a installé manuellement Microsoft DirectX End-User Runtimes (June 2010) au préalable. Il n'est pas confirmé que cette installation soit nécessaire ou qu'elle ait contribué à l'amélioration.",
+        "ja": "以前のバージョンでは先に進めませんでしたが、ForgePlay 2.4.0（ビルド11）ではDXMTでプレイできるとの報告です。コーエー・シブサワコウのロゴとオープニング映像は表示されず、起動時に約2～3分間の黒い画面を経てメイン画面に進みます。動画以外のゲームプレイは正常に動作するとのことです。ランチャーで動画を表示しない設定にしても、同じ起動待ち時間が残ります。\n\n報告者はテスト前にMicrosoft DirectX End-User Runtimes (June 2010)を手動でインストールしました。このインストールが必須条件か、動作の改善に影響したかは確認されていません。",
+        "zh-Hans": "反馈者此前在旧版本中无法继续运行，但现在使用 ForgePlay 2.4.0（构建 11）的 DXMT 可以游玩。光荣和涩泽光的标志及开场视频不会显示，启动时会黑屏约 2～3 分钟，然后进入主菜单。据反馈，除视频外，游戏可以正常游玩。在启动器中选择不播放视频，仍会出现同样的启动等待。\n\n反馈者在测试前手动安装了 Microsoft DirectX End-User Runtimes (June 2010)。尚未确认该安装是否为必要条件，或是否促成了运行情况的改善。",
+        "zh-Hant": "回報者此前在舊版本中無法繼續執行，但現在使用 ForgePlay 2.4.0（組建 11）的 DXMT 可以遊玩。光榮和澀澤光的標誌及開場影片不會顯示，啟動時會黑畫面約 2～3 分鐘，然後進入主選單。據回報，除影片外，遊戲可以正常遊玩。在啟動器中選擇不播放影片，仍會出現相同的啟動等待。\n\n回報者在測試前手動安裝了 Microsoft DirectX End-User Runtimes (June 2010)。尚未確認此安裝是否為必要條件，或是否促成了執行情況的改善。"
       },
       "blocker": null
     }
