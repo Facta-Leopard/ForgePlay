@@ -1,7 +1,7 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
-  "updatedAt": "2026-10-22",
+  "updatedAt": "2026-10-23",
   "revision": 0,
   "testProfiles": [
     {
@@ -3518,6 +3518,28 @@
         "ja": "ForgePlay 2.3.0のDXMTプリセットで、Steam版を快適にプレイできるとの報告です。",
         "zh-Hans": "反馈称，Steam 版在 ForgePlay 2.3.0 中使用 DXMT 预设可以流畅游玩。",
         "zh-Hant": "回報指出，Steam 版在 ForgePlay 2.3.0 中使用 DXMT 預設可以流暢遊玩。"
+      },
+      "blocker": null
+    },
+    {
+      "id": "blue-archive-forgeplay-2-4-0-steam-project-test-20261023",
+      "gameId": "blue-archive",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m4-pro-binned-24gb-macos-27-0-1",
+      "forgePlayVersion": "2.4.0",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "project-test",
+      "testedAt": null,
+      "notes": {
+        "ko": "Steam판 블루 아카이브를 ForgePlay 2.4.0에서 플레이할 수 있습니다.",
+        "en": "The Steam version of Blue Archive is playable with ForgePlay 2.4.0.",
+        "de": "Die Steam-Version von Blue Archive ist mit ForgePlay 2.4.0 spielbar.",
+        "es": "La versión de Steam de Blue Archive se puede jugar con ForgePlay 2.4.0.",
+        "fr": "La version Steam de Blue Archive est jouable avec ForgePlay 2.4.0.",
+        "ja": "Steam版ブルーアーカイブはForgePlay 2.4.0でプレイできます。",
+        "zh-Hans": "Steam 版《蔚蓝档案》可以通过 ForgePlay 2.4.0 游玩。",
+        "zh-Hant": "Steam 版《蔚藍檔案》可以透過 ForgePlay 2.4.0 遊玩。"
       },
       "blocker": null
     }
