@@ -2115,8 +2115,12 @@ root = Path(sys.argv[1])
 page = (root / 'index.html').read_text()
 cards = re.findall(r'<button\b[^>]*data-poster-version="([^"]+)"[^>]*>', page)
 previews = re.findall(r'<button\b[^>]*data-poster-preview[^>]*>', page)
-if cards != ['1.0','1.1','1.2','1.3','2.0.0','2.1.0','2.2.0','2.3.0','2.4.0','VR','VM'] or len(previews) != 2 or any(f'data-poster-version="{name}"' not in previews[i] for i, name in enumerate(['VR','VM'])):
-    raise SystemExit('Release posters must remain versioned; only VR and VM previews follow at the right')
+if cards != ['1.0','1.1','1.2','1.3','2.0.0','2.1.0','2.2.0','2.3.0','2.4.0','Next Update','VR','VM'] or len(previews) != 3 or any(f'data-poster-version="{name}"' not in previews[i] for i, name in enumerate(['Next Update','VR','VM'])):
+    raise SystemExit('Release posters must remain versioned; unnumbered next-update, VR and VM previews follow at the right')
+if 'src="site-assets/version-posters/forgeplay-3.0.0-preview.png" width="1024" height="1536"' not in page:
+    raise SystemExit('Next update must use the supplied Graphics Independence preview poster')
+if not (root / 'site-assets/version-posters/forgeplay-3.0.0-preview.png').read_bytes().startswith(b'\x89PNG\r\n\x1a\n'):
+    raise SystemExit('Graphics Independence preview must be a valid PNG asset')
 if 'src="site-assets/announcements/forgeplay-2-4-0-poster.jpg" width="853" height="1280"' not in page:
     raise SystemExit('2.4.0 must use the supplied Make It Yours release poster')
 preview = (root / 'site-assets/announcements/forgeplay-2-4-0-poster.jpg').read_bytes()
