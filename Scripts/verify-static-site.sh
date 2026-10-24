@@ -174,6 +174,7 @@ PAGES=(
   site-assets/forgeplay-manifesto.jpg
   site-assets/forgeplay-manifesto-3200.jpg
   site-assets/forgeplay-social.png
+  site-assets/forgeplay-fopl-share-20261024.png
   site-assets/developer-apps/hopdisk.png
   site-assets/developer-apps/bunmixer.png
   site-assets/developer-apps/latchcast.png
@@ -2055,22 +2056,30 @@ HOME_REPORT
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/home-experience.js?v=20261019-game-groups"'
 require_snippet "$ROOT_DIR/index.html" 'data-release-download'
 require_snippet "$ROOT_DIR/index.html" 'data-i18n="home.releaseNotesButton"'
-for html in index.html why.html license.html privacy.html support.html compatibility.html updates.html site-assets/guide.html site-assets/dlss5.html; do
+for html in index.html why.html license.html privacy.html support.html compatibility.html updates.html site-assets/guide.html site-assets/dlss5.html site-assets/supporters.html; do
   require_snippet "$ROOT_DIR/$html" 'data-nav-page="dlss5"'
   require_snippet "$ROOT_DIR/$html" 'data-i18n="shared.navFirsts"'
   if grep -Fq 'href="index.html#game-mode"' "$ROOT_DIR/$html"; then
     fail "$html must use the combined world-firsts navigation"
   fi
-  require_snippet "$ROOT_DIR/$html" 'property="og:image" content="https://facta-leopard.github.io/ForgePlay/site-assets/forgeplay-icon.png?v=20260927-share1"'
+  require_snippet "$ROOT_DIR/$html" 'property="og:image" content="https://facta-leopard.github.io/ForgePlay/site-assets/forgeplay-fopl-share-20261024.png"'
   require_snippet "$ROOT_DIR/$html" 'property="og:image:width" content="1254"'
   require_snippet "$ROOT_DIR/$html" 'property="og:image:height" content="1254"'
-  require_snippet "$ROOT_DIR/$html" 'property="og:image:alt" content="ForgePlay app icon"'
+  require_snippet "$ROOT_DIR/$html" 'property="og:image:alt" content="Fopl standing on the ForgePlay emblem"'
   require_snippet "$ROOT_DIR/$html" 'name="twitter:card" content="summary"'
-  require_snippet "$ROOT_DIR/$html" 'name="twitter:image" content="https://facta-leopard.github.io/ForgePlay/site-assets/forgeplay-icon.png?v=20260927-share1"'
-  if grep -Fq 'site-assets/forgeplay-social.png' "$ROOT_DIR/$html"; then
-    fail "$html must use the current app icon for social previews"
+  require_snippet "$ROOT_DIR/$html" 'name="twitter:image" content="https://facta-leopard.github.io/ForgePlay/site-assets/forgeplay-fopl-share-20261024.png"'
+  require_snippet "$ROOT_DIR/$html" 'name="twitter:image:alt" content="Fopl standing on the ForgePlay emblem"'
+  if grep -Eq 'site-assets/(forgeplay-social\.png|forgeplay-icon\.png\?v=20260927-share1)' "$ROOT_DIR/$html"; then
+    fail "$html must use Fopl standing on the emblem for social previews"
   fi
 done
+python3 - "$ROOT_DIR/site-assets/forgeplay-fopl-share-20261024.png" <<'SHARE_IMAGE'
+from pathlib import Path
+import struct, sys
+image = Path(sys.argv[1]).read_bytes()
+assert image.startswith(b'\x89PNG\r\n\x1a\n'), 'Social preview must be a PNG'
+assert image[12:16] == b'IHDR' and struct.unpack('>II', image[16:24]) == (1254, 1254), 'Social image dimensions must match the metadata'
+SHARE_IMAGE
 require_snippet "$ROOT_DIR/index.html" 'site-assets/arcade/launcher/forge-banner.png'
 require_snippet "$ROOT_DIR/index.html" 'class="arcade-cabinet fp-wrap"'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/arcade/launcher/gate-portrait.png'
