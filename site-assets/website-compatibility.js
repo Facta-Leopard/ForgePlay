@@ -9,15 +9,23 @@
     steam:"Steam", battlenet:"Battle.net", epic:"Epic Games", stove:"STOVE",
     exe:message("compat.platformEXE"), vr:"VR", unknown:message("compat.platformUnknown")
   }[platform] || message("compat.platformUnknown"));
+  const officialNoteLinks = new Map([
+    ["https://arrowhead.zendesk.com/hc/en-us/articles/31176395885596-Devoid-of-Liberty-7-2-0", "Arrowhead · Devoid of Liberty 7.2.0"]
+  ]);
   const renderNote = (parent, text) => {
     parent.replaceChildren();
-    const issueURL = /https:\/\/github\.com\/Facta-Leopard\/ForgePlay\/issues\/([1-9]\d*)(?:#issuecomment-[1-9]\d*)?(?=\s|$)/g;
+    const issueURL = /^https:\/\/github\.com\/Facta-Leopard\/ForgePlay\/issues\/([1-9]\d*)(?:#issuecomment-[1-9]\d*)?$/;
     let offset = 0;
-    for (const match of text.matchAll(issueURL)) {
+    // Validate the entire URL token so an approved prefix never links a spoofed
+    // host, extra path, query, fragment, or nested redirect URL.
+    for (const match of text.matchAll(/https?:\/\/\S+/g)) {
+      const issue = match[0].match(issueURL);
+      const label = officialNoteLinks.get(match[0]) || (issue ? "GitHub #" + issue[1] : null);
+      if (!label) continue;
       parent.append(document.createTextNode(text.slice(offset, match.index)));
       const link = document.createElement("a");
       link.href = match[0];
-      link.textContent = "GitHub #" + match[1];
+      link.textContent = label;
       link.target = "_blank";
       link.rel = "noopener noreferrer";
       parent.append(link);

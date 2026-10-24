@@ -2,7 +2,7 @@
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
   "updatedAt": "2026-10-24",
-  "revision": 0,
+  "revision": 1,
   "testProfiles": [
     {
       "id": "apple-silicon-m2-max-32gb-golden-gate-27-0-27-2",
@@ -3565,6 +3565,29 @@
         "zh-Hant": "回報者此前在舊版本中無法繼續執行，但現在使用 ForgePlay 2.4.0（組建 11）的 DXMT 可以遊玩。光榮和澀澤光的標誌及開場影片不會顯示，啟動時會黑畫面約 2～3 分鐘，然後進入主選單。據回報，除影片外，遊戲可以正常遊玩。在啟動器中選擇不播放影片，仍會出現相同的啟動等待。\n\n回報者在測試前手動安裝了 Microsoft DirectX End-User Runtimes (June 2010)。尚未確認此安裝是否為必要條件，或是否促成了執行情況的改善。"
       },
       "blocker": null
+    },
+    {
+      "id": "helldivers-2-github-70-20261024",
+      "gameId": "helldivers-2",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m5-pro-64gb-macos-27-0-1",
+      "forgePlayVersion": "2.4.0",
+      "gameVersion": null,
+      "status": "blocked",
+      "source": "github-issue",
+      "reporter": "E-Schmacher",
+      "testedAt": "2026-10-24",
+      "notes": {
+        "ko": "2026년 10월 20일 Easy Anti-Cheat 적용 이후 Steam판을 더 이상 플레이할 수 없다는 후속 제보입니다. ForgePlay 2.4.0의 헬다이버즈2 호환 모드에서도 플레이 버튼을 누르면 오류 화면이 나타나 진행할 수 없습니다. 이전 2.3.0 실행 가능 제보와 달라진 결과입니다.\n\n공식 업데이트 안내: https://arrowhead.zendesk.com/hc/en-us/articles/31176395885596-Devoid-of-Liberty-7-2-0",
+        "en": "A follow-up report says the Steam version is no longer playable after Easy Anti-Cheat was introduced on October 20, 2026. Clicking Play shows an error and prevents progress even in ForgePlay 2.4.0's Helldivers 2 compatibility mode. This supersedes the earlier playable result for 2.3.0.\n\nOfficial update: https://arrowhead.zendesk.com/hc/en-us/articles/31176395885596-Devoid-of-Liberty-7-2-0",
+        "de": "Laut Folgebericht ist die Steam-Version seit der Einführung von Easy Anti-Cheat am 20. Oktober 2026 nicht mehr spielbar. Auch im Helldivers-2-Kompatibilitätsmodus von ForgePlay 2.4.0 erscheint nach dem Klick auf Spielen eine Fehlermeldung, die das Fortfahren verhindert. Damit hat sich das zuvor für 2.3.0 gemeldete spielbare Ergebnis geändert.\n\nOffizielle Update-Informationen: https://arrowhead.zendesk.com/hc/en-us/articles/31176395885596-Devoid-of-Liberty-7-2-0",
+        "es": "Según un reporte posterior, la versión de Steam dejó de ser jugable tras la incorporación de Easy Anti-Cheat el 20 de octubre de 2026. Incluso en el modo de compatibilidad de Helldivers 2 de ForgePlay 2.4.0, al pulsar Jugar aparece un error que impide continuar. Esto cambia el resultado jugable comunicado anteriormente para 2.3.0.\n\nActualización oficial: https://arrowhead.zendesk.com/hc/en-us/articles/31176395885596-Devoid-of-Liberty-7-2-0",
+        "fr": "Un nouveau signalement indique que la version Steam n'est plus jouable depuis l'introduction d'Easy Anti-Cheat le 20 octobre 2026. Même dans le mode de compatibilité Helldivers 2 de ForgePlay 2.4.0, cliquer sur Jouer affiche une erreur et empêche de continuer. Ce résultat diffère du précédent signalement de jeu possible avec la version 2.3.0.\n\nMise à jour officielle : https://arrowhead.zendesk.com/hc/en-us/articles/31176395885596-Devoid-of-Liberty-7-2-0",
+        "ja": "2026年10月20日のEasy Anti-Cheat導入後、Steam版をプレイできなくなったとの続報です。ForgePlay 2.4.0のHelldivers 2互換モードでも、プレイボタンを押すとエラー画面が表示され、先に進めません。以前の2.3.0でプレイ可能だったという報告から状況が変わっています。\n\n公式アップデート情報： https://arrowhead.zendesk.com/hc/en-us/articles/31176395885596-Devoid-of-Liberty-7-2-0",
+        "zh-Hans": "后续反馈称，2026年10月20日引入 Easy Anti-Cheat 后，Steam 版已无法游玩。即使使用 ForgePlay 2.4.0 的《绝地潜兵2》兼容模式，点击开始游戏也会出现错误画面，无法继续。这与此前 2.3.0 可以游玩的反馈不同。\n\n官方更新说明： https://arrowhead.zendesk.com/hc/en-us/articles/31176395885596-Devoid-of-Liberty-7-2-0",
+        "zh-Hant": "後續回報指出，2026年10月20日導入 Easy Anti-Cheat 後，Steam 版已無法遊玩。即使使用 ForgePlay 2.4.0 的《絕地戰兵2》相容模式，點選開始遊戲也會出現錯誤畫面，無法繼續。這與先前 2.3.0 可以遊玩的回報不同。\n\n官方更新說明： https://arrowhead.zendesk.com/hc/en-us/articles/31176395885596-Devoid-of-Liberty-7-2-0"
+      },
+      "blocker": "anti-cheat"
     }
   ]
 }

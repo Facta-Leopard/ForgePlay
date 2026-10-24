@@ -2028,7 +2028,7 @@ require_snippet "$ROOT_DIR/index.html" 'data-current-release-download'
 require_snippet "$ROOT_DIR/index.html" 'data-current-release-download-label'
 require_snippet "$ROOT_DIR/index.html" 'data-current-release-link'
 require_snippet "$ROOT_DIR/index.html" 'src="site-assets/current-release.js?v=20260905-7"'
-require_snippet "$ROOT_DIR/index.html" 'src="site-assets/website-compatibility.js?v=20261019-game-groups"'
+require_snippet "$ROOT_DIR/index.html" 'src="site-assets/website-compatibility.js?v=20261024-note-links"'
 require_snippet "$ROOT_DIR/index.html" 'site-assets/home-experience.css?v=20261005-report'
 python3 - "$ROOT_DIR/index.html" <<'HOME_REPORT'
 from html.parser import HTMLParser
@@ -2173,7 +2173,7 @@ require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count
 require_snippet "$ROOT_DIR/compatibility.html" 'href="site.css?v=20260811-22"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20261023-release240"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/current-release.js?v=20260905-7"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20261019-game-groups"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20261024-note-links"'
 require_snippet "$ROOT_DIR/site-assets/guide.html" 'src="site-assets/website-compatibility.js?v=20261019-game-groups"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="compatibility.js?v=20261019-game-groups"'
 require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-device>M4 Pro · 24GB</strong>'
@@ -2582,9 +2582,56 @@ vm.runInNewContext(
   {filename: "website-compatibility.js", timeout: 1000}
 );
 const model = context.window.ForgePlayWebCatalog;
-for (const name of ["load", "merge", "summarize", "sortReports", "describe", "compareVersions", "compareGameGroups", "platformGroups", "gameGroups", "platformLabel", "platformOf"]) {
+for (const name of ["load", "merge", "summarize", "sortReports", "describe", "compareVersions", "compareGameGroups", "platformGroups", "gameGroups", "platformLabel", "platformOf", "renderNote"]) {
   assert.equal(typeof model?.[name], "function", `website catalog must expose ${name}`);
 }
+context.document = {
+  createTextNode: text => ({textContent:text}),
+  createElement: tag => {
+    assert.equal(tag, "a", "notes must never create HTML supplied in text");
+    return {tagName:tag};
+  }
+};
+const noteHost = {
+  children:[],
+  replaceChildren() { this.children = []; },
+  append(...nodes) { this.children.push(...nodes); }
+};
+const officialPatchURL = "https://arrowhead.zendesk.com/hc/en-us/articles/31176395885596-Devoid-of-Liberty-7-2-0";
+const existingIssueURL = "https://github.com/Facta-Leopard/ForgePlay/issues/46#issuecomment-6214346559";
+model.renderNote(noteHost, `<img src=x onerror=alert(1)> ${officialPatchURL}\n${existingIssueURL} 이후`);
+const noteLinks = noteHost.children.filter(node => node.tagName === "a");
+assert.equal(noteLinks.length, 2);
+assert.deepEqual(noteLinks.map(link => link.href), [officialPatchURL, existingIssueURL]);
+assert.deepEqual(noteLinks.map(link => link.textContent), ["Arrowhead · Devoid of Liberty 7.2.0", "GitHub #46"]);
+for (const link of noteLinks) {
+  assert.equal(link.target, "_blank");
+  assert.equal(link.rel, "noopener noreferrer");
+}
+assert.equal(noteHost.children[0].textContent, "<img src=x onerror=alert(1)> ");
+assert.equal(noteHost.children.at(-1).textContent, " 이후");
+const rejectedNoteURLs = [
+  "javascript:alert(1)",
+  officialPatchURL.replace("https:", "http:"),
+  officialPatchURL.replace("arrowhead.zendesk.com", "arrowhead.zendesk.com.evil.test"),
+  officialPatchURL.replace("arrowhead.zendesk.com", "evil.test@arrowhead.zendesk.com"),
+  officialPatchURL.replace("/hc/en-us/", "/hc/ko/"),
+  officialPatchURL.replace("/articles/", "/articles/%2e%2e/articles/"),
+  officialPatchURL + "/", officialPatchURL + "/extra", officialPatchURL + "?redirect=evil",
+  officialPatchURL + "#extra", officialPatchURL + "-extra", officialPatchURL + "%3Fquery",
+  "https://evil.test/?url=" + officialPatchURL,
+  existingIssueURL + "?extra=1", existingIssueURL + "/extra",
+  existingIssueURL.replace("github.com", "github.com.evil.test")
+];
+for (const input of rejectedNoteURLs) {
+  model.renderNote(noteHost, input);
+  assert.equal(noteHost.children.length, 1, input);
+  assert.equal(noteHost.children[0].textContent, input, "unapproved URLs must remain plain text");
+}
+model.renderNote(noteHost, "");
+assert.equal(noteHost.children.length, 1);
+assert.equal(noteHost.children[0].textContent, "");
+console.log("Compatibility note links: exact official URL, GitHub #46, unsafe suffix/host rejection and text-node safety passed.");
 const merged = model.merge(base, additions);
 assert.equal(merged.games.length, base.games.length, "website reports must not replace games");
 assert.equal(merged.reports.length, base.reports.length + additions.reports.length);
