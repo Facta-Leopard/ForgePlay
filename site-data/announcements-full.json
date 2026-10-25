@@ -342,6 +342,34 @@
           "感謝大家一直以來的關注與鼓勵。"
         ]
       },
+      "images": [
+        {
+          "src": "site-assets/announcements/forgeplay-2-4-1-preview-fopl.png",
+          "width": 1254,
+          "height": 1254,
+          "afterParagraph": 35,
+          "caption": {
+            "ko": "ForgePlay 마스코트 포플",
+            "en": "Fopl, the ForgePlay mascot",
+            "de": "Fopl, das ForgePlay-Maskottchen",
+            "es": "Fopl, la mascota de ForgePlay",
+            "fr": "Fopl, la mascotte de ForgePlay",
+            "ja": "ForgePlayのマスコット、ポプル",
+            "zh-Hans": "ForgePlay 吉祥物 Fopl",
+            "zh-Hant": "ForgePlay 吉祥物 Fopl"
+          },
+          "alt": {
+            "ko": "DirectX 글자 위의 초록색 형상을 힘차게 부수는 포플",
+            "en": "Fopl energetically smashing a green shape above the DirectX lettering",
+            "de": "Fopl zerschmettert eine grüne Form über dem DirectX-Schriftzug",
+            "es": "Fopl rompe con energía una figura verde sobre el texto DirectX",
+            "fr": "Fopl brise avec énergie une forme verte au-dessus du texte DirectX",
+            "ja": "DirectXの文字の上にある緑の形を勢いよく砕くポプル",
+            "zh-Hans": "Fopl 用力踩碎 DirectX 字样上方的绿色造型",
+            "zh-Hant": "Fopl 用力踩碎 DirectX 字樣上方的綠色造型"
+          }
+        }
+      ],
       "href": "updates.html#update-forgeplay-2-4-1-preview"
     },
     {
