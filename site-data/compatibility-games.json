@@ -1,8 +1,8 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
-  "updatedAt": "2026-10-24",
-  "revision": 1,
+  "updatedAt": "2026-10-25",
+  "revision": 0,
   "testProfiles": [
     {
       "id": "apple-silicon-m2-max-32gb-golden-gate-27-0-27-2",
@@ -262,6 +262,13 @@
       "chip": "M2 Max",
       "unifiedMemoryGB": 32,
       "macOSVersion": "Golden Gate 27.2 (RC)"
+    },
+    {
+      "id": "apple-silicon-m5-pro-48gb-macos-27-0-1",
+      "platform": "Apple Silicon Mac",
+      "chip": "M5 Pro",
+      "unifiedMemoryGB": 48,
+      "macOSVersion": "27.0.1"
     }
   ],
   "games": [
@@ -886,6 +893,13 @@
       "titles": {
         "en": "The Witcher 3: Wild Hunt — Remastered",
         "ko": "더 위쳐 3: 와일드 헌트 리마스터"
+      }
+    },
+    {
+      "id": "red-dead-redemption-2",
+      "titles": {
+        "en": "Red Dead Redemption 2",
+        "ko": "레드 데드 리뎀션 2"
       }
     }
   ],
@@ -3588,6 +3602,29 @@
         "zh-Hant": "後續回報指出，2026年10月20日導入 Easy Anti-Cheat 後，Steam 版已無法遊玩。即使使用 ForgePlay 2.4.0 的《絕地戰兵2》相容模式，點選開始遊戲也會出現錯誤畫面，無法繼續。這與先前 2.3.0 可以遊玩的回報不同。\n\n官方更新說明： https://arrowhead.zendesk.com/hc/en-us/articles/31176395885596-Devoid-of-Liberty-7-2-0"
       },
       "blocker": "anti-cheat"
+    },
+    {
+      "id": "red-dead-redemption-2-github-69-20261025",
+      "gameId": "red-dead-redemption-2",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m5-pro-48gb-macos-27-0-1",
+      "forgePlayVersion": "2.4.0",
+      "gameVersion": null,
+      "status": "blocked",
+      "source": "github-issue",
+      "reporter": "kino004404-blip",
+      "testedAt": "2026-10-23",
+      "notes": {
+        "ko": "ForgePlay 2.4.0(빌드 11)에서 Steam판을 실행하면 Rockstar 런처가 ‘설치 준비 중’에서 멈춰 게임을 시작할 수 없다는 제보입니다. 제보자는 전용 호환성 프로필을 적용한 경우와 적용하지 않은 경우 모두 같은 증상을 겪었습니다. D3DMetal에서 프레임 생성과 Retina를 끈 실행에서도 문제가 발생했습니다.\n\n개발자 안내: 런처 처리와 Wine 시간대 정보 관련 문제를 각각 조사하고 있으며, 레드 데드 리뎀션2 전용 호환성 프로필을 재점검해 추가 보완 패치를 준비 중입니다. 수정 버전에서 재확인이 필요하며, 현재 플레이 성공은 확인되지 않았습니다.",
+        "en": "The Steam version is reported not to launch with ForgePlay 2.4.0 (build 11): the Rockstar launcher stops at Preparing to install, preventing the game from starting. The reporter encountered the same symptom with and without the dedicated compatibility profile. The recorded attempt used D3DMetal with frame generation and Retina disabled.\n\nDeveloper update: Launcher handling and Wine time-zone information are being investigated separately. The dedicated Red Dead Redemption 2 compatibility profile is being reviewed and further patches are being prepared. Retesting will be needed in a patched version; successful gameplay has not yet been confirmed.",
+        "de": "Laut Bericht startet die Steam-Version mit ForgePlay 2.4.0 (Build 11) nicht: Der Rockstar-Launcher bleibt bei der Installationsvorbereitung hängen, sodass das Spiel nicht startet. Das gleiche Symptom trat mit und ohne das spezielle Kompatibilitätsprofil auf. Der aufgezeichnete Versuch nutzte D3DMetal mit deaktivierter Frame-Generierung und Retina.\n\nEntwicklerhinweis: Die Launcher-Verarbeitung und die Zeitzoneninformationen von Wine werden getrennt untersucht. Das spezielle Kompatibilitätsprofil für Red Dead Redemption 2 wird überprüft; weitere Patches sind in Vorbereitung. Mit einer korrigierten Version ist ein erneuter Test erforderlich. Erfolgreiches Spielen wurde noch nicht bestätigt.",
+        "es": "Según el reporte, la versión de Steam no se inicia con ForgePlay 2.4.0 (compilación 11): el lanzador de Rockstar se detiene al preparar la instalación e impide iniciar el juego. El mismo síntoma se produjo con y sin el perfil de compatibilidad específico. El intento registrado utilizó D3DMetal con la generación de fotogramas y Retina desactivadas.\n\nAviso del desarrollador: Se están investigando por separado el funcionamiento del lanzador y la información de zona horaria de Wine. Se está revisando el perfil de compatibilidad de Red Dead Redemption 2 y preparando parches adicionales. Será necesario volver a probarlo en una versión corregida; todavía no se ha confirmado que se pueda jugar.",
+        "fr": "Selon le signalement, la version Steam ne démarre pas avec ForgePlay 2.4.0 (build 11) : le lanceur Rockstar reste bloqué à la préparation de l'installation et empêche le jeu de démarrer. Le même symptôme apparaît avec et sans le profil de compatibilité dédié. La tentative enregistrée utilisait D3DMetal avec la génération d'images et Retina désactivées.\n\nInformation du développeur : le traitement du lanceur et les informations de fuseau horaire de Wine font l'objet d'analyses distinctes. Le profil de compatibilité de Red Dead Redemption 2 est en cours de réexamen et des correctifs supplémentaires sont en préparation. Un nouvel essai sera nécessaire avec une version corrigée ; il n'est pas encore confirmé que le jeu soit jouable.",
+        "ja": "ForgePlay 2.4.0（ビルド11）でSteam版を実行すると、Rockstarランチャーがインストール準備の段階で止まり、ゲームを開始できないとの報告です。報告者は専用の互換プロファイルを適用した場合と適用しない場合の両方で同じ症状を確認しています。記録された試行ではD3DMetalを使用し、フレーム生成とRetinaをオフにしていました。\n\n開発者からの案内：ランチャーの処理とWineのタイムゾーン情報に関する問題をそれぞれ調査し、Red Dead Redemption 2専用の互換プロファイルを再確認して追加パッチを準備しています。修正版での再確認が必要で、現時点ではプレイの成功は確認されていません。",
+        "zh-Hans": "反馈称，Steam 版在 ForgePlay 2.4.0（构建 11）中无法启动：Rockstar 启动器停在准备安装阶段，无法进入游戏。反馈者在应用和不应用专用兼容性配置时都遇到了同样的症状。所记录的尝试使用 D3DMetal，并关闭了帧生成和 Retina。\n\n开发者说明：正在分别调查启动器处理和 Wine 时区信息相关问题，并重新检查《荒野大镖客：救赎2》的专用兼容性配置，准备进一步的补丁。需要在修正版本中重新确认，目前尚未确认能够成功游玩。",
+        "zh-Hant": "回報指出，Steam 版在 ForgePlay 2.4.0（組建 11）中無法啟動：Rockstar 啟動器停在準備安裝階段，無法進入遊戲。回報者在套用和不套用專用相容性設定檔時都遇到了相同症狀。所記錄的嘗試使用 D3DMetal，並關閉了影格生成和 Retina。\n\n開發者說明：正在分別調查啟動器處理與 Wine 時區資訊相關問題，並重新檢查《碧血狂殺2》的專用相容性設定檔，準備進一步的修補程式。需要在修正版本中重新確認，目前尚未確認能夠成功遊玩。"
+      },
+      "blocker": "launcher"
     }
   ]
 }
