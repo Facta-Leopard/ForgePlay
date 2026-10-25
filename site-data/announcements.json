@@ -4,10 +4,37 @@
   "updatedAt": "2026-10-25",
   "announcements": [
     {
+      "id": "forgeplay-2-4-1-update",
+      "type": "release",
+      "publishedAt": "2026-10-25",
+      "featured": true,
+      "titles": {
+        "ko": "2.4.1. 업데이트",
+        "en": "2.4.1 Update",
+        "de": "2.4.1 – Update",
+        "es": "Actualización 2.4.1",
+        "fr": "Mise à jour 2.4.1",
+        "ja": "2.4.1 アップデート",
+        "zh-Hans": "2.4.1 更新",
+        "zh-Hant": "2.4.1 更新"
+      },
+      "summaries": {
+        "ko": "ForgePlay 2.4.1(빌드 12)을 공개했습니다. 화면 스타일·글꼴·문제진단과 D3DMetal·호환성 프로필을 개선했습니다. 현재 사용에 문제가 없다면 꼭 업데이트하지 않아도 됩니다.",
+        "en": "ForgePlay 2.4.1 (build 12) improves appearance, fonts, diagnostics, D3DMetal and compatibility profiles. Updating is optional if your current version works well.",
+        "de": "ForgePlay 2.4.1 (Build 12) verbessert Darstellung, Schriften, Diagnose, D3DMetal und Profile. Bei problemloser Nutzung ist das Update optional.",
+        "es": "ForgePlay 2.4.1 (compilación 12) mejora apariencia, fuentes, diagnóstico, D3DMetal y perfiles. No es necesario actualizar si todo funciona bien.",
+        "fr": "ForgePlay 2.4.1 (build 12) améliore apparence, polices, diagnostic, D3DMetal et profils. La mise à jour est facultative si tout fonctionne bien.",
+        "ja": "ForgePlay 2.4.1（ビルド12）を公開。画面、フォント、診断、D3DMetalとプロファイルを改善しました。現在問題なく使えていれば更新は必須ではありません。",
+        "zh-Hans": "ForgePlay 2.4.1（构建12）已发布，改善界面、字体、诊断、D3DMetal与兼容配置。当前使用无问题时无需特意更新。",
+        "zh-Hant": "ForgePlay 2.4.1（組建12）已發布，改善畫面、字型、診斷、D3DMetal與相容設定檔。目前使用正常時不必特別更新。"
+      },
+      "href": "updates.html#update-forgeplay-2-4-1-update"
+    },
+    {
       "id": "forgeplay-2-4-1-preview",
       "type": "project",
       "publishedAt": "2026-10-25",
-      "featured": true,
+      "featured": false,
       "titles": {
         "ko": "ForgePlay 2.4.1 Preview",
         "en": "ForgePlay 2.4.1 Preview",

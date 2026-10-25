@@ -291,14 +291,14 @@
       "你好！除了App用法和遊戲問題，也可以和Fopl聊日常話題。這裡以預設回覆體驗對話！"
     ],
     "dialogueHelp": [
-      "2.4.0에서는 질문에 맞춰 일반 대화·사용법 안내·문제진단을 구분합니다. 실행 문제는 해당 실행 기록을 선택해 확인하세요. 아래 체험은 미리 작성한 답변을 사용하며, 실제 AI나 로그 분석은 하지 않습니다.",
-      "In 2.4.0, Fopl distinguishes everyday chat, usage help and troubleshooting. Select the relevant run when investigating a launch issue. The demo below uses prepared replies, not real AI or log analysis.",
-      "In 2.4.0 unterscheidet Fopl Alltag, Bedienhilfe und Diagnose. Wähle bei Startproblemen den passenden Lauf. Die Demo nutzt vorbereitete Antworten, keine echte KI oder Protokollanalyse.",
-      "En 2.4.0, Fopl distingue conversación, ayuda y diagnóstico. Selecciona la ejecución afectada para investigar un fallo. La demo usa respuestas preparadas, sin IA ni análisis real.",
-      "Dans 2.4.0, Fopl distingue conversation, aide et diagnostic. Sélectionnez l’exécution concernée pour un problème de lancement. La démo utilise des réponses préparées, sans IA ni analyse réelle.",
-      "2.4.0では日常会話・使い方・問題診断を区別します。起動の問題は該当する実行記録を選んで確認します。以下は用意された返答による体験で、実際のAIやログ解析は行いません。",
-      "2.4.0 会区分日常对话、使用说明与问题诊断。排查启动问题时请选择对应运行记录。以下仅使用预设回复，不执行真实 AI 或日志分析。",
-      "2.4.0會區分日常對話、使用說明及問題診斷。排查啟動問題時請選擇對應執行紀錄。以下僅使用預設回覆，不執行真正的AI或日誌分析。"
+      "2.4.1에서는 질문에 맞춰 일반 대화·사용법 안내·문제진단을 구분합니다. 실행 문제는 해당 실행 기록을 선택해 확인하세요. 아래 체험은 미리 작성한 답변을 사용하며, 실제 AI나 로그 분석은 하지 않습니다.",
+      "In 2.4.1, Fopl distinguishes everyday chat, usage help and troubleshooting. Select the relevant run when investigating a launch issue. The demo below uses prepared replies, not real AI or log analysis.",
+      "In 2.4.1 unterscheidet Fopl Alltag, Bedienhilfe und Diagnose. Wähle bei Startproblemen den passenden Lauf. Die Demo nutzt vorbereitete Antworten, keine echte KI oder Protokollanalyse.",
+      "En 2.4.1, Fopl distingue conversación, ayuda y diagnóstico. Selecciona la ejecución afectada para investigar un fallo. La demo usa respuestas preparadas, sin IA ni análisis real.",
+      "Dans 2.4.1, Fopl distingue conversation, aide et diagnostic. Sélectionnez l’exécution concernée pour un problème de lancement. La démo utilise des réponses préparées, sans IA ni analyse réelle.",
+      "2.4.1では日常会話・使い方・問題診断を区別します。起動の問題は該当する実行記録を選んで確認します。以下は用意された返答による体験で、実際のAIやログ解析は行いません。",
+      "2.4.1 会区分日常对话、使用说明与问题诊断。排查启动问题时请选择对应运行记录。以下仅使用预设回复，不执行真实 AI 或日志分析。",
+      "2.4.1會區分日常對話、使用說明及問題診斷。排查啟動問題時請選擇對應執行紀錄。以下僅使用預設回覆，不執行真正的AI或日誌分析。"
     ],
     "path": [
       "환경설정 → 입력·게임 보호 → 키보드 키 매핑을 여세요. 키보드 그림에서 바꿀 키를 선택하세요.",
