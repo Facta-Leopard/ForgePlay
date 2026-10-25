@@ -1,13 +1,40 @@
 {
   "$schema": "./announcements.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-10-23",
+  "updatedAt": "2026-10-25",
   "announcements": [
+    {
+      "id": "forgeplay-2-4-1-preview",
+      "type": "project",
+      "publishedAt": "2026-10-25",
+      "featured": true,
+      "titles": {
+        "ko": "ForgePlay 2.4.1 Preview",
+        "en": "ForgePlay 2.4.1 Preview",
+        "de": "ForgePlay 2.4.1 Preview",
+        "es": "ForgePlay 2.4.1 Preview",
+        "fr": "ForgePlay 2.4.1 Preview",
+        "ja": "ForgePlay 2.4.1 Preview",
+        "zh-Hans": "ForgePlay 2.4.1 Preview",
+        "zh-Hant": "ForgePlay 2.4.1 Preview"
+      },
+      "summaries": {
+        "ko": "화면 스타일과 문제진단을 개선하고 D3DMetal·폰트·시간대 처리를 정비합니다. 게임별 제보 대응, ForgePlayVP와 Fopla 개발 소식도 함께 전합니다.",
+        "en": "Appearance and diagnostics fixes, D3DMetal, font and time-zone updates, game-report follow-ups, and news on ForgePlayVP and Fopla.",
+        "de": "Verbesserungen an Darstellung und Diagnose, Updates für D3DMetal, Schriften und Zeitzonen, Spielmeldungen sowie Neues zu ForgePlayVP und Fopla.",
+        "es": "Mejoras de apariencia y diagnóstico, D3DMetal, fuentes y zonas horarias, respuestas a reportes y novedades de ForgePlayVP y Fopla.",
+        "fr": "Améliorations de l’apparence et du diagnostic, D3DMetal, polices et fuseaux horaires, suivi des signalements et nouvelles de ForgePlayVP et Fopla.",
+        "ja": "画面スタイルと診断の改善、D3DMetal・フォント・タイムゾーンの整備、ゲーム別の報告対応とForgePlayVP・Foplaの開発情報をお知らせします。",
+        "zh-Hans": "改善界面风格与问题诊断，更新D3DMetal、字体和时区处理，并介绍游戏反馈处理、ForgePlayVP及Fopla开发进展。",
+        "zh-Hant": "改善畫面風格與問題診斷，更新D3DMetal、字型與時區處理，並介紹遊戲回報處理、ForgePlayVP及Fopla開發進度。"
+      },
+      "href": "updates.html#update-forgeplay-2-4-1-preview"
+    },
     {
       "id": "forgeplay-2-4-0-update",
       "type": "release",
       "publishedAt": "2026-10-23",
-      "featured": true,
+      "featured": false,
       "titles": {
         "ko": "ForgePlay 2.4.0 업데이트",
         "en": "ForgePlay 2.4.0 Update",
