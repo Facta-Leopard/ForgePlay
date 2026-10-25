@@ -1,0 +1,3604 @@
+{
+  "hostSupportPayload": [
+    {
+      "component": "d3dmetal",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "5535a1a975e27659cf6e432810170e3cb55434859de0ffa44f8a3d692d047b04",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "path": "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Versions/A/D3DMetal",
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "file",
+      "version": "4.0b3"
+    },
+    {
+      "component": "d3dmetal",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "26e3166820a15850f9977e2336ee7f4d1237f402c8520a1bd30716fc2655ea18",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "path": "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Versions/A/Resources/Info.plist",
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "file",
+      "version": "4.0b3"
+    },
+    {
+      "component": "d3dmetal",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "553d0035773ddd1590045f8fdc3a4c6ead31e36336721aeca8421e88ed1c9f80",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "path": "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Versions/A/Resources/LICENSE",
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "file",
+      "version": "4.0b3"
+    },
+    {
+      "component": "d3dmetal",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "c1ea924b9818099d60c861eedb23266632a7db39240b2412a7d405c3a7695408",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "path": "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Versions/A/Resources/default.metallib",
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "file",
+      "version": "4.0b3"
+    },
+    {
+      "component": "d3dmetal",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "253c601d41c3e0858059f95974cc2714741a550740083ab42502cdc3dc7a1faf",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "path": "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Versions/A/Resources/libdxccontainer.dylib",
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "file",
+      "version": "4.0b3"
+    },
+    {
+      "component": "d3dmetal",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "426e46881a31c198fb02caada7feccbbadcc9c9afc8f92db390b56687b60859e",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "path": "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Versions/A/Resources/libdxcompiler.dylib",
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "file",
+      "version": "4.0b3"
+    },
+    {
+      "component": "d3dmetal",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "9593684d068b3c181f2597a3910fa20c1b0f1d32ea79ed01f1dfdf429e531e03",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "path": "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Versions/A/Resources/libdxilconv.dylib",
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "file",
+      "version": "4.0b3"
+    },
+    {
+      "component": "d3dmetal",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "459b52f6f3ea82390a51836fa05c64a6a580df7bdd7eb2b83b195b39d2aa61cb",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "path": "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Versions/A/Resources/libmetalirconverter.dylib",
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "file",
+      "version": "4.0b3"
+    },
+    {
+      "component": "d3dmetal",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "a8f0d17d004f80db1380030fcbc8577268c38d1a435b76a15dd85316f9764a66",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "path": "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Versions/A/Resources/version.plist",
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "file",
+      "version": "4.0b3"
+    },
+    {
+      "component": "d3dmetal",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "7369951ab8e9e0592fb449bb624ed69cc7f5401b536db5326c654ff7a38dc4f2",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "path": "Frameworks/renderer/d3dmetal/external/libd3dshared.dylib",
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "file",
+      "version": "4.0b3"
+    },
+    {
+      "component": "d3dmetal",
+      "contentHashAlgorithm": "sha256-symlink-target-v1",
+      "contentSHA256": "499f435281145b928040f537634a9c2c615ed92fa3302f6add47a9a99ae483c1",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "linkTarget": "../../external/libd3dshared.dylib",
+      "path": "Frameworks/renderer/d3dmetal/wine/x86_64-unix/d3d10.so",
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "symlink",
+      "version": "4.0b3"
+    },
+    {
+      "component": "d3dmetal",
+      "contentHashAlgorithm": "sha256-symlink-target-v1",
+      "contentSHA256": "499f435281145b928040f537634a9c2c615ed92fa3302f6add47a9a99ae483c1",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "linkTarget": "../../external/libd3dshared.dylib",
+      "path": "Frameworks/renderer/d3dmetal/wine/x86_64-unix/d3d11.so",
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "symlink",
+      "version": "4.0b3"
+    },
+    {
+      "component": "d3dmetal",
+      "contentHashAlgorithm": "sha256-symlink-target-v1",
+      "contentSHA256": "499f435281145b928040f537634a9c2c615ed92fa3302f6add47a9a99ae483c1",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "linkTarget": "../../external/libd3dshared.dylib",
+      "path": "Frameworks/renderer/d3dmetal/wine/x86_64-unix/d3d12.so",
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "symlink",
+      "version": "4.0b3"
+    },
+    {
+      "component": "d3dmetal",
+      "contentHashAlgorithm": "sha256-symlink-target-v1",
+      "contentSHA256": "499f435281145b928040f537634a9c2c615ed92fa3302f6add47a9a99ae483c1",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "linkTarget": "../../external/libd3dshared.dylib",
+      "path": "Frameworks/renderer/d3dmetal/wine/x86_64-unix/d3d12core.so",
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "symlink",
+      "version": "4.0b3"
+    },
+    {
+      "component": "d3dmetal",
+      "contentHashAlgorithm": "sha256-symlink-target-v1",
+      "contentSHA256": "499f435281145b928040f537634a9c2c615ed92fa3302f6add47a9a99ae483c1",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "linkTarget": "../../external/libd3dshared.dylib",
+      "path": "Frameworks/renderer/d3dmetal/wine/x86_64-unix/dxgi.so",
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "symlink",
+      "version": "4.0b3"
+    },
+    {
+      "component": "D3DMetal NVAPI filename compatibility aliases",
+      "contentHashAlgorithm": "sha256-symlink-target-v1",
+      "contentSHA256": "499f435281145b928040f537634a9c2c615ed92fa3302f6add47a9a99ae483c1",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "linkTarget": "../../external/libd3dshared.dylib",
+      "path": "Frameworks/renderer/d3dmetal/wine/x86_64-unix/nvapi.so",
+      "sourceKind": "forgeplay-derived-alias-of-apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "symlink",
+      "version": "4.0b3"
+    },
+    {
+      "component": "d3dmetal",
+      "contentHashAlgorithm": "sha256-symlink-target-v1",
+      "contentSHA256": "499f435281145b928040f537634a9c2c615ed92fa3302f6add47a9a99ae483c1",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "linkTarget": "../../external/libd3dshared.dylib",
+      "path": "Frameworks/renderer/d3dmetal/wine/x86_64-unix/nvapi64.so",
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "symlink",
+      "version": "4.0b3"
+    },
+    {
+      "component": "d3dmetal",
+      "contentHashAlgorithm": "sha256-symlink-target-v1",
+      "contentSHA256": "499f435281145b928040f537634a9c2c615ed92fa3302f6add47a9a99ae483c1",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "linkTarget": "../../external/libd3dshared.dylib",
+      "path": "Frameworks/renderer/d3dmetal/wine/x86_64-unix/nvngx-on-metalfx.so",
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "symlink",
+      "version": "4.0b3"
+    },
+    {
+      "component": "d3dmetal",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "8509cd61f4e25e20fa6c4444b3dea062f026d672f441e82402702fa1faf6676b",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "path": "Frameworks/renderer/d3dmetal/wine/x86_64-windows/d3d10.dll",
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "file",
+      "version": "4.0b3"
+    },
+    {
+      "component": "d3dmetal",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "a5de9738b3f89f1d8cdfb9103e82f9231ae543ce3c46134ed761c146a2f2d3e1",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "path": "Frameworks/renderer/d3dmetal/wine/x86_64-windows/d3d11.dll",
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "file",
+      "version": "4.0b3"
+    },
+    {
+      "component": "d3dmetal",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "02aa673497ff8694b41f976e194a920468e54897f3546ed1cd4c1b3a97179735",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "path": "Frameworks/renderer/d3dmetal/wine/x86_64-windows/d3d12.dll",
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "file",
+      "version": "4.0b3"
+    },
+    {
+      "component": "d3dmetal",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "1034f5989c8c69496add15f79c04e56ae47cdf2a861098e8b4323bc8835b9e29",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "path": "Frameworks/renderer/d3dmetal/wine/x86_64-windows/d3d12core.dll",
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "file",
+      "version": "4.0b3"
+    },
+    {
+      "component": "d3dmetal",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "124015390b8527033bcd6e65af6376fde8fb3923450b63a9dbe0bbef05e63f10",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "path": "Frameworks/renderer/d3dmetal/wine/x86_64-windows/dxgi.dll",
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "file",
+      "version": "4.0b3"
+    },
+    {
+      "component": "D3DMetal NVAPI filename compatibility aliases",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "60ceaeb697b5141702c372da33861f499931397b43febb9be9f087f18276d772",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "path": "Frameworks/renderer/d3dmetal/wine/x86_64-windows/nvapi.dll",
+      "sourceKind": "forgeplay-derived-alias-of-apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "file",
+      "version": "4.0b3"
+    },
+    {
+      "component": "d3dmetal",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "60ceaeb697b5141702c372da33861f499931397b43febb9be9f087f18276d772",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "path": "Frameworks/renderer/d3dmetal/wine/x86_64-windows/nvapi64.dll",
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "file",
+      "version": "4.0b3"
+    },
+    {
+      "component": "d3dmetal",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "2e522873d2dec412c29f73096f1c1dc6bd8016dc40fd76fbeddd2eb7e226d3cb",
+      "licenseExpression": "LicenseRef-Apple-Game-Porting-Toolkit",
+      "licensePaths": [
+        "Legal/AppleGPTK/License.rtf",
+        "Legal/AppleGPTK/Acknowledgements.rtf",
+        "Frameworks/renderer/d3dmetal/external/D3DMetal.framework/Resources/LICENSE"
+      ],
+      "path": "Frameworks/renderer/d3dmetal/wine/x86_64-windows/nvngx-on-metalfx.dll",
+      "sourceKind": "apple-official-redistributable",
+      "sourceReference": "https://developer.apple.com/games/game-porting-toolkit/",
+      "sourceTreeSHA256": "b12f1e817dc65cdcd03fb31c08a5e9d3b783a74af08eee63b22caffb29745a44",
+      "type": "file",
+      "version": "4.0b3"
+    },
+    {
+      "component": "dxmt",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "6b928413c6308c106f3e0080bd94b6427b56d587d400fd40e6cbfbab7d9c4ae1",
+      "licenseExpression": "MIT AND Zlib AND (Apache-2.0 WITH LLVM-exception) AND NCSA AND (GPL-3.0-or-later WITH GCC-exception-3.1) AND BSD-3-Clause AND BSD-2-Clause AND ZPL-2.1 AND LicenseRef-MinGW-w64-Runtime",
+      "licensePaths": [
+        "Legal/dxmt/LICENSE",
+        "Legal/dxmt/DXVK-LICENSE",
+        "Legal/dxmt/GCC-COPYING3",
+        "Legal/dxmt/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxmt/LLVM-LICENSE.txt",
+        "Legal/dxmt/MinGW-COPYING.MinGW-w64-runtime.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-HEADERS.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-LICENSE.txt"
+      ],
+      "path": "Frameworks/renderer/dxmt/LICENSE",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/3Shain/dxmt/releases/tag/v0.80",
+      "sourceTreeSHA256": "d506d1244ea8e93ba03c25347e7de245277b72fae2fab7cc0381b0c4e34efc7b",
+      "type": "file",
+      "version": "0.80"
+    },
+    {
+      "component": "dxmt",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "03ca4af84f5cd28cef3ed3f1ef4d17996992d35ccdbe82b29cc020ca02c16f3d",
+      "licenseExpression": "MIT AND Zlib AND (Apache-2.0 WITH LLVM-exception) AND NCSA AND (GPL-3.0-or-later WITH GCC-exception-3.1) AND BSD-3-Clause AND BSD-2-Clause AND ZPL-2.1 AND LicenseRef-MinGW-w64-Runtime",
+      "licensePaths": [
+        "Legal/dxmt/LICENSE",
+        "Legal/dxmt/DXVK-LICENSE",
+        "Legal/dxmt/GCC-COPYING3",
+        "Legal/dxmt/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxmt/LLVM-LICENSE.txt",
+        "Legal/dxmt/MinGW-COPYING.MinGW-w64-runtime.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-HEADERS.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-LICENSE.txt"
+      ],
+      "path": "Frameworks/renderer/dxmt/Legal/DXVK-LICENSE",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/3Shain/dxmt/releases/tag/v0.80",
+      "sourceTreeSHA256": "d506d1244ea8e93ba03c25347e7de245277b72fae2fab7cc0381b0c4e34efc7b",
+      "type": "file",
+      "version": "0.80"
+    },
+    {
+      "component": "dxmt",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+      "licenseExpression": "MIT AND Zlib AND (Apache-2.0 WITH LLVM-exception) AND NCSA AND (GPL-3.0-or-later WITH GCC-exception-3.1) AND BSD-3-Clause AND BSD-2-Clause AND ZPL-2.1 AND LicenseRef-MinGW-w64-Runtime",
+      "licensePaths": [
+        "Legal/dxmt/LICENSE",
+        "Legal/dxmt/DXVK-LICENSE",
+        "Legal/dxmt/GCC-COPYING3",
+        "Legal/dxmt/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxmt/LLVM-LICENSE.txt",
+        "Legal/dxmt/MinGW-COPYING.MinGW-w64-runtime.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-HEADERS.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-LICENSE.txt"
+      ],
+      "path": "Frameworks/renderer/dxmt/Legal/GCC-COPYING3",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/3Shain/dxmt/releases/tag/v0.80",
+      "sourceTreeSHA256": "d506d1244ea8e93ba03c25347e7de245277b72fae2fab7cc0381b0c4e34efc7b",
+      "type": "file",
+      "version": "0.80"
+    },
+    {
+      "component": "dxmt",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "9d6b43ce4d8de0c878bf16b54d8e7a10d9bd42b75178153e3af6a815bdc90f74",
+      "licenseExpression": "MIT AND Zlib AND (Apache-2.0 WITH LLVM-exception) AND NCSA AND (GPL-3.0-or-later WITH GCC-exception-3.1) AND BSD-3-Clause AND BSD-2-Clause AND ZPL-2.1 AND LicenseRef-MinGW-w64-Runtime",
+      "licensePaths": [
+        "Legal/dxmt/LICENSE",
+        "Legal/dxmt/DXVK-LICENSE",
+        "Legal/dxmt/GCC-COPYING3",
+        "Legal/dxmt/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxmt/LLVM-LICENSE.txt",
+        "Legal/dxmt/MinGW-COPYING.MinGW-w64-runtime.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-HEADERS.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-LICENSE.txt"
+      ],
+      "path": "Frameworks/renderer/dxmt/Legal/GCC-RUNTIME-EXCEPTION",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/3Shain/dxmt/releases/tag/v0.80",
+      "sourceTreeSHA256": "d506d1244ea8e93ba03c25347e7de245277b72fae2fab7cc0381b0c4e34efc7b",
+      "type": "file",
+      "version": "0.80"
+    },
+    {
+      "component": "dxmt",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "8d85c1057d742e597985c7d4e6320b015a9139385cff4cbae06ffc0ebe89afee",
+      "licenseExpression": "MIT AND Zlib AND (Apache-2.0 WITH LLVM-exception) AND NCSA AND (GPL-3.0-or-later WITH GCC-exception-3.1) AND BSD-3-Clause AND BSD-2-Clause AND ZPL-2.1 AND LicenseRef-MinGW-w64-Runtime",
+      "licensePaths": [
+        "Legal/dxmt/LICENSE",
+        "Legal/dxmt/DXVK-LICENSE",
+        "Legal/dxmt/GCC-COPYING3",
+        "Legal/dxmt/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxmt/LLVM-LICENSE.txt",
+        "Legal/dxmt/MinGW-COPYING.MinGW-w64-runtime.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-HEADERS.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-LICENSE.txt"
+      ],
+      "path": "Frameworks/renderer/dxmt/Legal/LLVM-LICENSE.txt",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/3Shain/dxmt/releases/tag/v0.80",
+      "sourceTreeSHA256": "d506d1244ea8e93ba03c25347e7de245277b72fae2fab7cc0381b0c4e34efc7b",
+      "type": "file",
+      "version": "0.80"
+    },
+    {
+      "component": "dxmt",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "e9b2dc02451ea29092a1f25fa0f3c07207ed421f1807dffb0c4e6dce69dee7bd",
+      "licenseExpression": "MIT AND Zlib AND (Apache-2.0 WITH LLVM-exception) AND NCSA AND (GPL-3.0-or-later WITH GCC-exception-3.1) AND BSD-3-Clause AND BSD-2-Clause AND ZPL-2.1 AND LicenseRef-MinGW-w64-Runtime",
+      "licensePaths": [
+        "Legal/dxmt/LICENSE",
+        "Legal/dxmt/DXVK-LICENSE",
+        "Legal/dxmt/GCC-COPYING3",
+        "Legal/dxmt/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxmt/LLVM-LICENSE.txt",
+        "Legal/dxmt/MinGW-COPYING.MinGW-w64-runtime.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-HEADERS.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-LICENSE.txt"
+      ],
+      "path": "Frameworks/renderer/dxmt/Legal/MinGW-COPYING.MinGW-w64-runtime.txt",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/3Shain/dxmt/releases/tag/v0.80",
+      "sourceTreeSHA256": "d506d1244ea8e93ba03c25347e7de245277b72fae2fab7cc0381b0c4e34efc7b",
+      "type": "file",
+      "version": "0.80"
+    },
+    {
+      "component": "dxmt",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "79dd9265c69158542d0a89a4f25e39125628709fb79d0f375dfbcd9e086c8852",
+      "licenseExpression": "MIT AND Zlib AND (Apache-2.0 WITH LLVM-exception) AND NCSA AND (GPL-3.0-or-later WITH GCC-exception-3.1) AND BSD-3-Clause AND BSD-2-Clause AND ZPL-2.1 AND LicenseRef-MinGW-w64-Runtime",
+      "licensePaths": [
+        "Legal/dxmt/LICENSE",
+        "Legal/dxmt/DXVK-LICENSE",
+        "Legal/dxmt/GCC-COPYING3",
+        "Legal/dxmt/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxmt/LLVM-LICENSE.txt",
+        "Legal/dxmt/MinGW-COPYING.MinGW-w64-runtime.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-HEADERS.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-LICENSE.txt"
+      ],
+      "path": "Frameworks/renderer/dxmt/Legal/NVIDIA-NVAPI-HEADERS.txt",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/3Shain/dxmt/releases/tag/v0.80",
+      "sourceTreeSHA256": "d506d1244ea8e93ba03c25347e7de245277b72fae2fab7cc0381b0c4e34efc7b",
+      "type": "file",
+      "version": "0.80"
+    },
+    {
+      "component": "dxmt",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "bab44777f0f4d0333479ea0be6e24c084464a8cb64b98f1253fcc3df70f6eccf",
+      "licenseExpression": "MIT AND Zlib AND (Apache-2.0 WITH LLVM-exception) AND NCSA AND (GPL-3.0-or-later WITH GCC-exception-3.1) AND BSD-3-Clause AND BSD-2-Clause AND ZPL-2.1 AND LicenseRef-MinGW-w64-Runtime",
+      "licensePaths": [
+        "Legal/dxmt/LICENSE",
+        "Legal/dxmt/DXVK-LICENSE",
+        "Legal/dxmt/GCC-COPYING3",
+        "Legal/dxmt/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxmt/LLVM-LICENSE.txt",
+        "Legal/dxmt/MinGW-COPYING.MinGW-w64-runtime.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-HEADERS.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-LICENSE.txt"
+      ],
+      "path": "Frameworks/renderer/dxmt/Legal/NVIDIA-NVAPI-LICENSE.txt",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/3Shain/dxmt/releases/tag/v0.80",
+      "sourceTreeSHA256": "d506d1244ea8e93ba03c25347e7de245277b72fae2fab7cc0381b0c4e34efc7b",
+      "type": "file",
+      "version": "0.80"
+    },
+    {
+      "component": "dxmt",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "58cb58bc7b057836db9c21aaf1d01884d77b949161f81194cfa0789a07ec2f71",
+      "licenseExpression": "MIT AND Zlib AND (Apache-2.0 WITH LLVM-exception) AND NCSA AND (GPL-3.0-or-later WITH GCC-exception-3.1) AND BSD-3-Clause AND BSD-2-Clause AND ZPL-2.1 AND LicenseRef-MinGW-w64-Runtime",
+      "licensePaths": [
+        "Legal/dxmt/LICENSE",
+        "Legal/dxmt/DXVK-LICENSE",
+        "Legal/dxmt/GCC-COPYING3",
+        "Legal/dxmt/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxmt/LLVM-LICENSE.txt",
+        "Legal/dxmt/MinGW-COPYING.MinGW-w64-runtime.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-HEADERS.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-LICENSE.txt"
+      ],
+      "path": "Frameworks/renderer/dxmt/PROVENANCE.json",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/3Shain/dxmt/releases/tag/v0.80",
+      "sourceTreeSHA256": "d506d1244ea8e93ba03c25347e7de245277b72fae2fab7cc0381b0c4e34efc7b",
+      "type": "file",
+      "version": "0.80"
+    },
+    {
+      "component": "dxmt",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "bdbcaa8237e7705adf6b7a31ed5649fe619bac5a09f671d3ec24486ad76ad9f0",
+      "licenseExpression": "MIT AND Zlib AND (Apache-2.0 WITH LLVM-exception) AND NCSA AND (GPL-3.0-or-later WITH GCC-exception-3.1) AND BSD-3-Clause AND BSD-2-Clause AND ZPL-2.1 AND LicenseRef-MinGW-w64-Runtime",
+      "licensePaths": [
+        "Legal/dxmt/LICENSE",
+        "Legal/dxmt/DXVK-LICENSE",
+        "Legal/dxmt/GCC-COPYING3",
+        "Legal/dxmt/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxmt/LLVM-LICENSE.txt",
+        "Legal/dxmt/MinGW-COPYING.MinGW-w64-runtime.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-HEADERS.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-LICENSE.txt"
+      ],
+      "path": "Frameworks/renderer/dxmt/version",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/3Shain/dxmt/releases/tag/v0.80",
+      "sourceTreeSHA256": "d506d1244ea8e93ba03c25347e7de245277b72fae2fab7cc0381b0c4e34efc7b",
+      "type": "file",
+      "version": "0.80"
+    },
+    {
+      "component": "dxmt",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "c5a26310d14a30c3e1700a4d0c9865be28a11351a5c4dc5b83ab1bd8fcf7662f",
+      "licenseExpression": "MIT AND Zlib AND (Apache-2.0 WITH LLVM-exception) AND NCSA AND (GPL-3.0-or-later WITH GCC-exception-3.1) AND BSD-3-Clause AND BSD-2-Clause AND ZPL-2.1 AND LicenseRef-MinGW-w64-Runtime",
+      "licensePaths": [
+        "Legal/dxmt/LICENSE",
+        "Legal/dxmt/DXVK-LICENSE",
+        "Legal/dxmt/GCC-COPYING3",
+        "Legal/dxmt/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxmt/LLVM-LICENSE.txt",
+        "Legal/dxmt/MinGW-COPYING.MinGW-w64-runtime.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-HEADERS.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-LICENSE.txt"
+      ],
+      "path": "Frameworks/renderer/dxmt/wine/i386-windows/d3d10core.dll",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/3Shain/dxmt/releases/tag/v0.80",
+      "sourceTreeSHA256": "d506d1244ea8e93ba03c25347e7de245277b72fae2fab7cc0381b0c4e34efc7b",
+      "type": "file",
+      "version": "0.80"
+    },
+    {
+      "component": "dxmt",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "9afc2b3419818618c4c87274435a28935b0df002caa4b9a8d3a88d3dc846b17d",
+      "licenseExpression": "MIT AND Zlib AND (Apache-2.0 WITH LLVM-exception) AND NCSA AND (GPL-3.0-or-later WITH GCC-exception-3.1) AND BSD-3-Clause AND BSD-2-Clause AND ZPL-2.1 AND LicenseRef-MinGW-w64-Runtime",
+      "licensePaths": [
+        "Legal/dxmt/LICENSE",
+        "Legal/dxmt/DXVK-LICENSE",
+        "Legal/dxmt/GCC-COPYING3",
+        "Legal/dxmt/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxmt/LLVM-LICENSE.txt",
+        "Legal/dxmt/MinGW-COPYING.MinGW-w64-runtime.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-HEADERS.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-LICENSE.txt"
+      ],
+      "path": "Frameworks/renderer/dxmt/wine/i386-windows/d3d11.dll",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/3Shain/dxmt/releases/tag/v0.80",
+      "sourceTreeSHA256": "d506d1244ea8e93ba03c25347e7de245277b72fae2fab7cc0381b0c4e34efc7b",
+      "type": "file",
+      "version": "0.80"
+    },
+    {
+      "component": "dxmt",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "7df8cdf66e12a108410002abc77b01f70aa59b8a36a70fa0bc6ae3b056841319",
+      "licenseExpression": "MIT AND Zlib AND (Apache-2.0 WITH LLVM-exception) AND NCSA AND (GPL-3.0-or-later WITH GCC-exception-3.1) AND BSD-3-Clause AND BSD-2-Clause AND ZPL-2.1 AND LicenseRef-MinGW-w64-Runtime",
+      "licensePaths": [
+        "Legal/dxmt/LICENSE",
+        "Legal/dxmt/DXVK-LICENSE",
+        "Legal/dxmt/GCC-COPYING3",
+        "Legal/dxmt/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxmt/LLVM-LICENSE.txt",
+        "Legal/dxmt/MinGW-COPYING.MinGW-w64-runtime.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-HEADERS.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-LICENSE.txt"
+      ],
+      "path": "Frameworks/renderer/dxmt/wine/i386-windows/dxgi.dll",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/3Shain/dxmt/releases/tag/v0.80",
+      "sourceTreeSHA256": "d506d1244ea8e93ba03c25347e7de245277b72fae2fab7cc0381b0c4e34efc7b",
+      "type": "file",
+      "version": "0.80"
+    },
+    {
+      "component": "dxmt",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "20a6865facebdaac92b6c06fadf37d2efb5a242b22ca1c349bb57d7ad43df8e3",
+      "licenseExpression": "MIT AND Zlib AND (Apache-2.0 WITH LLVM-exception) AND NCSA AND (GPL-3.0-or-later WITH GCC-exception-3.1) AND BSD-3-Clause AND BSD-2-Clause AND ZPL-2.1 AND LicenseRef-MinGW-w64-Runtime",
+      "licensePaths": [
+        "Legal/dxmt/LICENSE",
+        "Legal/dxmt/DXVK-LICENSE",
+        "Legal/dxmt/GCC-COPYING3",
+        "Legal/dxmt/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxmt/LLVM-LICENSE.txt",
+        "Legal/dxmt/MinGW-COPYING.MinGW-w64-runtime.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-HEADERS.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-LICENSE.txt"
+      ],
+      "path": "Frameworks/renderer/dxmt/wine/i386-windows/winemetal.dll",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/3Shain/dxmt/releases/tag/v0.80",
+      "sourceTreeSHA256": "d506d1244ea8e93ba03c25347e7de245277b72fae2fab7cc0381b0c4e34efc7b",
+      "type": "file",
+      "version": "0.80"
+    },
+    {
+      "component": "dxmt",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "91f0c576d4d00b28892dcf86b6a4682f9e4a24f63d595592351f7643d7ae31d5",
+      "licenseExpression": "MIT AND Zlib AND (Apache-2.0 WITH LLVM-exception) AND NCSA AND (GPL-3.0-or-later WITH GCC-exception-3.1) AND BSD-3-Clause AND BSD-2-Clause AND ZPL-2.1 AND LicenseRef-MinGW-w64-Runtime",
+      "licensePaths": [
+        "Legal/dxmt/LICENSE",
+        "Legal/dxmt/DXVK-LICENSE",
+        "Legal/dxmt/GCC-COPYING3",
+        "Legal/dxmt/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxmt/LLVM-LICENSE.txt",
+        "Legal/dxmt/MinGW-COPYING.MinGW-w64-runtime.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-HEADERS.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-LICENSE.txt"
+      ],
+      "path": "Frameworks/renderer/dxmt/wine/x86_64-unix/winemetal.so",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/3Shain/dxmt/releases/tag/v0.80",
+      "sourceTreeSHA256": "d506d1244ea8e93ba03c25347e7de245277b72fae2fab7cc0381b0c4e34efc7b",
+      "type": "file",
+      "version": "0.80"
+    },
+    {
+      "component": "dxmt",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "833d26971abc8661efc8b5cc18548c70ce8e482e4ea4b1d3f69a367612264d26",
+      "licenseExpression": "MIT AND Zlib AND (Apache-2.0 WITH LLVM-exception) AND NCSA AND (GPL-3.0-or-later WITH GCC-exception-3.1) AND BSD-3-Clause AND BSD-2-Clause AND ZPL-2.1 AND LicenseRef-MinGW-w64-Runtime",
+      "licensePaths": [
+        "Legal/dxmt/LICENSE",
+        "Legal/dxmt/DXVK-LICENSE",
+        "Legal/dxmt/GCC-COPYING3",
+        "Legal/dxmt/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxmt/LLVM-LICENSE.txt",
+        "Legal/dxmt/MinGW-COPYING.MinGW-w64-runtime.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-HEADERS.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-LICENSE.txt"
+      ],
+      "path": "Frameworks/renderer/dxmt/wine/x86_64-windows/d3d10core.dll",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/3Shain/dxmt/releases/tag/v0.80",
+      "sourceTreeSHA256": "d506d1244ea8e93ba03c25347e7de245277b72fae2fab7cc0381b0c4e34efc7b",
+      "type": "file",
+      "version": "0.80"
+    },
+    {
+      "component": "dxmt",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "7ca382af0eb32d8a432f6efb14d594fefb45673663be1f7e6682254bff885c47",
+      "licenseExpression": "MIT AND Zlib AND (Apache-2.0 WITH LLVM-exception) AND NCSA AND (GPL-3.0-or-later WITH GCC-exception-3.1) AND BSD-3-Clause AND BSD-2-Clause AND ZPL-2.1 AND LicenseRef-MinGW-w64-Runtime",
+      "licensePaths": [
+        "Legal/dxmt/LICENSE",
+        "Legal/dxmt/DXVK-LICENSE",
+        "Legal/dxmt/GCC-COPYING3",
+        "Legal/dxmt/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxmt/LLVM-LICENSE.txt",
+        "Legal/dxmt/MinGW-COPYING.MinGW-w64-runtime.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-HEADERS.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-LICENSE.txt"
+      ],
+      "path": "Frameworks/renderer/dxmt/wine/x86_64-windows/d3d11.dll",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/3Shain/dxmt/releases/tag/v0.80",
+      "sourceTreeSHA256": "d506d1244ea8e93ba03c25347e7de245277b72fae2fab7cc0381b0c4e34efc7b",
+      "type": "file",
+      "version": "0.80"
+    },
+    {
+      "component": "dxmt",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "fc58aae0aba511a1ec4d2417e5bba6adb888bb14315d0f59cccdfd27f670d544",
+      "licenseExpression": "MIT AND Zlib AND (Apache-2.0 WITH LLVM-exception) AND NCSA AND (GPL-3.0-or-later WITH GCC-exception-3.1) AND BSD-3-Clause AND BSD-2-Clause AND ZPL-2.1 AND LicenseRef-MinGW-w64-Runtime",
+      "licensePaths": [
+        "Legal/dxmt/LICENSE",
+        "Legal/dxmt/DXVK-LICENSE",
+        "Legal/dxmt/GCC-COPYING3",
+        "Legal/dxmt/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxmt/LLVM-LICENSE.txt",
+        "Legal/dxmt/MinGW-COPYING.MinGW-w64-runtime.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-HEADERS.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-LICENSE.txt"
+      ],
+      "path": "Frameworks/renderer/dxmt/wine/x86_64-windows/dxgi.dll",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/3Shain/dxmt/releases/tag/v0.80",
+      "sourceTreeSHA256": "d506d1244ea8e93ba03c25347e7de245277b72fae2fab7cc0381b0c4e34efc7b",
+      "type": "file",
+      "version": "0.80"
+    },
+    {
+      "component": "dxmt",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "7c37b66a88aa1fdb08c6035a7fe738af1c1b5eea53af78c4812498d22bef8bc3",
+      "licenseExpression": "MIT AND Zlib AND (Apache-2.0 WITH LLVM-exception) AND NCSA AND (GPL-3.0-or-later WITH GCC-exception-3.1) AND BSD-3-Clause AND BSD-2-Clause AND ZPL-2.1 AND LicenseRef-MinGW-w64-Runtime",
+      "licensePaths": [
+        "Legal/dxmt/LICENSE",
+        "Legal/dxmt/DXVK-LICENSE",
+        "Legal/dxmt/GCC-COPYING3",
+        "Legal/dxmt/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxmt/LLVM-LICENSE.txt",
+        "Legal/dxmt/MinGW-COPYING.MinGW-w64-runtime.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-HEADERS.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-LICENSE.txt"
+      ],
+      "path": "Frameworks/renderer/dxmt/wine/x86_64-windows/nvapi64.dll",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/3Shain/dxmt/releases/tag/v0.80",
+      "sourceTreeSHA256": "d506d1244ea8e93ba03c25347e7de245277b72fae2fab7cc0381b0c4e34efc7b",
+      "type": "file",
+      "version": "0.80"
+    },
+    {
+      "component": "dxmt",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "18d5847ee524ba6eeb2eee656817ddc00a45c46759a753854335a765e997e5fe",
+      "licenseExpression": "MIT AND Zlib AND (Apache-2.0 WITH LLVM-exception) AND NCSA AND (GPL-3.0-or-later WITH GCC-exception-3.1) AND BSD-3-Clause AND BSD-2-Clause AND ZPL-2.1 AND LicenseRef-MinGW-w64-Runtime",
+      "licensePaths": [
+        "Legal/dxmt/LICENSE",
+        "Legal/dxmt/DXVK-LICENSE",
+        "Legal/dxmt/GCC-COPYING3",
+        "Legal/dxmt/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxmt/LLVM-LICENSE.txt",
+        "Legal/dxmt/MinGW-COPYING.MinGW-w64-runtime.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-HEADERS.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-LICENSE.txt"
+      ],
+      "path": "Frameworks/renderer/dxmt/wine/x86_64-windows/nvngx.dll",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/3Shain/dxmt/releases/tag/v0.80",
+      "sourceTreeSHA256": "d506d1244ea8e93ba03c25347e7de245277b72fae2fab7cc0381b0c4e34efc7b",
+      "type": "file",
+      "version": "0.80"
+    },
+    {
+      "component": "dxmt",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "514245d533c750599614311a792c45ed600aef52948571d98c0fc70fd3df16e0",
+      "licenseExpression": "MIT AND Zlib AND (Apache-2.0 WITH LLVM-exception) AND NCSA AND (GPL-3.0-or-later WITH GCC-exception-3.1) AND BSD-3-Clause AND BSD-2-Clause AND ZPL-2.1 AND LicenseRef-MinGW-w64-Runtime",
+      "licensePaths": [
+        "Legal/dxmt/LICENSE",
+        "Legal/dxmt/DXVK-LICENSE",
+        "Legal/dxmt/GCC-COPYING3",
+        "Legal/dxmt/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxmt/LLVM-LICENSE.txt",
+        "Legal/dxmt/MinGW-COPYING.MinGW-w64-runtime.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-HEADERS.txt",
+        "Legal/dxmt/NVIDIA-NVAPI-LICENSE.txt"
+      ],
+      "path": "Frameworks/renderer/dxmt/wine/x86_64-windows/winemetal.dll",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/3Shain/dxmt/releases/tag/v0.80",
+      "sourceTreeSHA256": "d506d1244ea8e93ba03c25347e7de245277b72fae2fab7cc0381b0c4e34efc7b",
+      "type": "file",
+      "version": "0.80"
+    },
+    {
+      "component": "dxvk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "240101b852af584ded719e7335a36f9a3aae3ac816774cf3f460c00d2c88c161",
+      "licenseExpression": "Zlib AND BSD-3-Clause AND Apache-2.0 AND LicenseRef-KhronosFreeUse AND ZPL-2.1 AND MIT AND (GPL-3.0-or-later WITH GCC-exception-3.1)",
+      "licensePaths": [
+        "Legal/dxvk/GCC-COPYING3",
+        "Legal/dxvk/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxvk/GLSL-std450-LICENSE",
+        "Legal/dxvk/LICENSE",
+        "Legal/dxvk/MinGW-w64-AUTHORS",
+        "Legal/dxvk/MinGW-w64-COPYING",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER-PD",
+        "Legal/dxvk/MinGW-w64-runtime-COPYING",
+        "Legal/dxvk/OpenVR-LICENSE",
+        "Legal/dxvk/PROVENANCE.txt",
+        "Legal/dxvk/SPIRV-Headers-LICENSE",
+        "Legal/dxvk/Vulkan-Headers-Apache-2.0",
+        "Legal/dxvk/Vulkan-Headers-NOTICE",
+        "Legal/dxvk/Winpthreads-COPYING"
+      ],
+      "path": "Frameworks/renderer/dxvk/LICENSE",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/Gcenx/DXVK-macOS/releases/tag/v1.10.3-20230507-repack",
+      "sourceTreeSHA256": "b8fc09744f1489a81cc5a8be510a7ab801e96057af0a5d4fbd20fb1b70e09ebe",
+      "type": "file",
+      "version": "1.10.3-20230507-repack-builtin"
+    },
+    {
+      "component": "dxvk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+      "licenseExpression": "Zlib AND BSD-3-Clause AND Apache-2.0 AND LicenseRef-KhronosFreeUse AND ZPL-2.1 AND MIT AND (GPL-3.0-or-later WITH GCC-exception-3.1)",
+      "licensePaths": [
+        "Legal/dxvk/GCC-COPYING3",
+        "Legal/dxvk/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxvk/GLSL-std450-LICENSE",
+        "Legal/dxvk/LICENSE",
+        "Legal/dxvk/MinGW-w64-AUTHORS",
+        "Legal/dxvk/MinGW-w64-COPYING",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER-PD",
+        "Legal/dxvk/MinGW-w64-runtime-COPYING",
+        "Legal/dxvk/OpenVR-LICENSE",
+        "Legal/dxvk/PROVENANCE.txt",
+        "Legal/dxvk/SPIRV-Headers-LICENSE",
+        "Legal/dxvk/Vulkan-Headers-Apache-2.0",
+        "Legal/dxvk/Vulkan-Headers-NOTICE",
+        "Legal/dxvk/Winpthreads-COPYING"
+      ],
+      "path": "Frameworks/renderer/dxvk/Legal/GCC-COPYING3",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/Gcenx/DXVK-macOS/releases/tag/v1.10.3-20230507-repack",
+      "sourceTreeSHA256": "b8fc09744f1489a81cc5a8be510a7ab801e96057af0a5d4fbd20fb1b70e09ebe",
+      "type": "file",
+      "version": "1.10.3-20230507-repack-builtin"
+    },
+    {
+      "component": "dxvk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "9d6b43ce4d8de0c878bf16b54d8e7a10d9bd42b75178153e3af6a815bdc90f74",
+      "licenseExpression": "Zlib AND BSD-3-Clause AND Apache-2.0 AND LicenseRef-KhronosFreeUse AND ZPL-2.1 AND MIT AND (GPL-3.0-or-later WITH GCC-exception-3.1)",
+      "licensePaths": [
+        "Legal/dxvk/GCC-COPYING3",
+        "Legal/dxvk/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxvk/GLSL-std450-LICENSE",
+        "Legal/dxvk/LICENSE",
+        "Legal/dxvk/MinGW-w64-AUTHORS",
+        "Legal/dxvk/MinGW-w64-COPYING",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER-PD",
+        "Legal/dxvk/MinGW-w64-runtime-COPYING",
+        "Legal/dxvk/OpenVR-LICENSE",
+        "Legal/dxvk/PROVENANCE.txt",
+        "Legal/dxvk/SPIRV-Headers-LICENSE",
+        "Legal/dxvk/Vulkan-Headers-Apache-2.0",
+        "Legal/dxvk/Vulkan-Headers-NOTICE",
+        "Legal/dxvk/Winpthreads-COPYING"
+      ],
+      "path": "Frameworks/renderer/dxvk/Legal/GCC-RUNTIME-EXCEPTION",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/Gcenx/DXVK-macOS/releases/tag/v1.10.3-20230507-repack",
+      "sourceTreeSHA256": "b8fc09744f1489a81cc5a8be510a7ab801e96057af0a5d4fbd20fb1b70e09ebe",
+      "type": "file",
+      "version": "1.10.3-20230507-repack-builtin"
+    },
+    {
+      "component": "dxvk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "e6fa4907fe38df2392c2196b50a8ea4664d802003d99ef44f948b87e1bc2b18a",
+      "licenseExpression": "Zlib AND BSD-3-Clause AND Apache-2.0 AND LicenseRef-KhronosFreeUse AND ZPL-2.1 AND MIT AND (GPL-3.0-or-later WITH GCC-exception-3.1)",
+      "licensePaths": [
+        "Legal/dxvk/GCC-COPYING3",
+        "Legal/dxvk/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxvk/GLSL-std450-LICENSE",
+        "Legal/dxvk/LICENSE",
+        "Legal/dxvk/MinGW-w64-AUTHORS",
+        "Legal/dxvk/MinGW-w64-COPYING",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER-PD",
+        "Legal/dxvk/MinGW-w64-runtime-COPYING",
+        "Legal/dxvk/OpenVR-LICENSE",
+        "Legal/dxvk/PROVENANCE.txt",
+        "Legal/dxvk/SPIRV-Headers-LICENSE",
+        "Legal/dxvk/Vulkan-Headers-Apache-2.0",
+        "Legal/dxvk/Vulkan-Headers-NOTICE",
+        "Legal/dxvk/Winpthreads-COPYING"
+      ],
+      "path": "Frameworks/renderer/dxvk/Legal/GLSL-std450-LICENSE",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/Gcenx/DXVK-macOS/releases/tag/v1.10.3-20230507-repack",
+      "sourceTreeSHA256": "b8fc09744f1489a81cc5a8be510a7ab801e96057af0a5d4fbd20fb1b70e09ebe",
+      "type": "file",
+      "version": "1.10.3-20230507-repack-builtin"
+    },
+    {
+      "component": "dxvk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "240101b852af584ded719e7335a36f9a3aae3ac816774cf3f460c00d2c88c161",
+      "licenseExpression": "Zlib AND BSD-3-Clause AND Apache-2.0 AND LicenseRef-KhronosFreeUse AND ZPL-2.1 AND MIT AND (GPL-3.0-or-later WITH GCC-exception-3.1)",
+      "licensePaths": [
+        "Legal/dxvk/GCC-COPYING3",
+        "Legal/dxvk/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxvk/GLSL-std450-LICENSE",
+        "Legal/dxvk/LICENSE",
+        "Legal/dxvk/MinGW-w64-AUTHORS",
+        "Legal/dxvk/MinGW-w64-COPYING",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER-PD",
+        "Legal/dxvk/MinGW-w64-runtime-COPYING",
+        "Legal/dxvk/OpenVR-LICENSE",
+        "Legal/dxvk/PROVENANCE.txt",
+        "Legal/dxvk/SPIRV-Headers-LICENSE",
+        "Legal/dxvk/Vulkan-Headers-Apache-2.0",
+        "Legal/dxvk/Vulkan-Headers-NOTICE",
+        "Legal/dxvk/Winpthreads-COPYING"
+      ],
+      "path": "Frameworks/renderer/dxvk/Legal/LICENSE",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/Gcenx/DXVK-macOS/releases/tag/v1.10.3-20230507-repack",
+      "sourceTreeSHA256": "b8fc09744f1489a81cc5a8be510a7ab801e96057af0a5d4fbd20fb1b70e09ebe",
+      "type": "file",
+      "version": "1.10.3-20230507-repack-builtin"
+    },
+    {
+      "component": "dxvk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "8f308316e7a94b8410f871868bd3948f126526dc1775aeee97a0e365f9a0fd9f",
+      "licenseExpression": "Zlib AND BSD-3-Clause AND Apache-2.0 AND LicenseRef-KhronosFreeUse AND ZPL-2.1 AND MIT AND (GPL-3.0-or-later WITH GCC-exception-3.1)",
+      "licensePaths": [
+        "Legal/dxvk/GCC-COPYING3",
+        "Legal/dxvk/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxvk/GLSL-std450-LICENSE",
+        "Legal/dxvk/LICENSE",
+        "Legal/dxvk/MinGW-w64-AUTHORS",
+        "Legal/dxvk/MinGW-w64-COPYING",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER-PD",
+        "Legal/dxvk/MinGW-w64-runtime-COPYING",
+        "Legal/dxvk/OpenVR-LICENSE",
+        "Legal/dxvk/PROVENANCE.txt",
+        "Legal/dxvk/SPIRV-Headers-LICENSE",
+        "Legal/dxvk/Vulkan-Headers-Apache-2.0",
+        "Legal/dxvk/Vulkan-Headers-NOTICE",
+        "Legal/dxvk/Winpthreads-COPYING"
+      ],
+      "path": "Frameworks/renderer/dxvk/Legal/MinGW-w64-AUTHORS",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/Gcenx/DXVK-macOS/releases/tag/v1.10.3-20230507-repack",
+      "sourceTreeSHA256": "b8fc09744f1489a81cc5a8be510a7ab801e96057af0a5d4fbd20fb1b70e09ebe",
+      "type": "file",
+      "version": "1.10.3-20230507-repack-builtin"
+    },
+    {
+      "component": "dxvk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "99a69660981156c21336fdb5661f89341b013c94e4bf9e1c7467b4745718397f",
+      "licenseExpression": "Zlib AND BSD-3-Clause AND Apache-2.0 AND LicenseRef-KhronosFreeUse AND ZPL-2.1 AND MIT AND (GPL-3.0-or-later WITH GCC-exception-3.1)",
+      "licensePaths": [
+        "Legal/dxvk/GCC-COPYING3",
+        "Legal/dxvk/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxvk/GLSL-std450-LICENSE",
+        "Legal/dxvk/LICENSE",
+        "Legal/dxvk/MinGW-w64-AUTHORS",
+        "Legal/dxvk/MinGW-w64-COPYING",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER-PD",
+        "Legal/dxvk/MinGW-w64-runtime-COPYING",
+        "Legal/dxvk/OpenVR-LICENSE",
+        "Legal/dxvk/PROVENANCE.txt",
+        "Legal/dxvk/SPIRV-Headers-LICENSE",
+        "Legal/dxvk/Vulkan-Headers-Apache-2.0",
+        "Legal/dxvk/Vulkan-Headers-NOTICE",
+        "Legal/dxvk/Winpthreads-COPYING"
+      ],
+      "path": "Frameworks/renderer/dxvk/Legal/MinGW-w64-COPYING",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/Gcenx/DXVK-macOS/releases/tag/v1.10.3-20230507-repack",
+      "sourceTreeSHA256": "b8fc09744f1489a81cc5a8be510a7ab801e96057af0a5d4fbd20fb1b70e09ebe",
+      "type": "file",
+      "version": "1.10.3-20230507-repack-builtin"
+    },
+    {
+      "component": "dxvk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "039ed6b4f31bb7fb97e733170b58cc435335352e4745734fcfd113877fdaf340",
+      "licenseExpression": "Zlib AND BSD-3-Clause AND Apache-2.0 AND LicenseRef-KhronosFreeUse AND ZPL-2.1 AND MIT AND (GPL-3.0-or-later WITH GCC-exception-3.1)",
+      "licensePaths": [
+        "Legal/dxvk/GCC-COPYING3",
+        "Legal/dxvk/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxvk/GLSL-std450-LICENSE",
+        "Legal/dxvk/LICENSE",
+        "Legal/dxvk/MinGW-w64-AUTHORS",
+        "Legal/dxvk/MinGW-w64-COPYING",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER-PD",
+        "Legal/dxvk/MinGW-w64-runtime-COPYING",
+        "Legal/dxvk/OpenVR-LICENSE",
+        "Legal/dxvk/PROVENANCE.txt",
+        "Legal/dxvk/SPIRV-Headers-LICENSE",
+        "Legal/dxvk/Vulkan-Headers-Apache-2.0",
+        "Legal/dxvk/Vulkan-Headers-NOTICE",
+        "Legal/dxvk/Winpthreads-COPYING"
+      ],
+      "path": "Frameworks/renderer/dxvk/Legal/MinGW-w64-DISCLAIMER",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/Gcenx/DXVK-macOS/releases/tag/v1.10.3-20230507-repack",
+      "sourceTreeSHA256": "b8fc09744f1489a81cc5a8be510a7ab801e96057af0a5d4fbd20fb1b70e09ebe",
+      "type": "file",
+      "version": "1.10.3-20230507-repack-builtin"
+    },
+    {
+      "component": "dxvk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "87f33608570312a0f2a9745edcb2527275df813b13982e8c3b3f893d88a4141a",
+      "licenseExpression": "Zlib AND BSD-3-Clause AND Apache-2.0 AND LicenseRef-KhronosFreeUse AND ZPL-2.1 AND MIT AND (GPL-3.0-or-later WITH GCC-exception-3.1)",
+      "licensePaths": [
+        "Legal/dxvk/GCC-COPYING3",
+        "Legal/dxvk/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxvk/GLSL-std450-LICENSE",
+        "Legal/dxvk/LICENSE",
+        "Legal/dxvk/MinGW-w64-AUTHORS",
+        "Legal/dxvk/MinGW-w64-COPYING",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER-PD",
+        "Legal/dxvk/MinGW-w64-runtime-COPYING",
+        "Legal/dxvk/OpenVR-LICENSE",
+        "Legal/dxvk/PROVENANCE.txt",
+        "Legal/dxvk/SPIRV-Headers-LICENSE",
+        "Legal/dxvk/Vulkan-Headers-Apache-2.0",
+        "Legal/dxvk/Vulkan-Headers-NOTICE",
+        "Legal/dxvk/Winpthreads-COPYING"
+      ],
+      "path": "Frameworks/renderer/dxvk/Legal/MinGW-w64-DISCLAIMER-PD",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/Gcenx/DXVK-macOS/releases/tag/v1.10.3-20230507-repack",
+      "sourceTreeSHA256": "b8fc09744f1489a81cc5a8be510a7ab801e96057af0a5d4fbd20fb1b70e09ebe",
+      "type": "file",
+      "version": "1.10.3-20230507-repack-builtin"
+    },
+    {
+      "component": "dxvk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "e9b2dc02451ea29092a1f25fa0f3c07207ed421f1807dffb0c4e6dce69dee7bd",
+      "licenseExpression": "Zlib AND BSD-3-Clause AND Apache-2.0 AND LicenseRef-KhronosFreeUse AND ZPL-2.1 AND MIT AND (GPL-3.0-or-later WITH GCC-exception-3.1)",
+      "licensePaths": [
+        "Legal/dxvk/GCC-COPYING3",
+        "Legal/dxvk/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxvk/GLSL-std450-LICENSE",
+        "Legal/dxvk/LICENSE",
+        "Legal/dxvk/MinGW-w64-AUTHORS",
+        "Legal/dxvk/MinGW-w64-COPYING",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER-PD",
+        "Legal/dxvk/MinGW-w64-runtime-COPYING",
+        "Legal/dxvk/OpenVR-LICENSE",
+        "Legal/dxvk/PROVENANCE.txt",
+        "Legal/dxvk/SPIRV-Headers-LICENSE",
+        "Legal/dxvk/Vulkan-Headers-Apache-2.0",
+        "Legal/dxvk/Vulkan-Headers-NOTICE",
+        "Legal/dxvk/Winpthreads-COPYING"
+      ],
+      "path": "Frameworks/renderer/dxvk/Legal/MinGW-w64-runtime-COPYING",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/Gcenx/DXVK-macOS/releases/tag/v1.10.3-20230507-repack",
+      "sourceTreeSHA256": "b8fc09744f1489a81cc5a8be510a7ab801e96057af0a5d4fbd20fb1b70e09ebe",
+      "type": "file",
+      "version": "1.10.3-20230507-repack-builtin"
+    },
+    {
+      "component": "dxvk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "db64bcf32be090ca9d1ea7e3df5541a07f4cf5729206b44e57a1182f05554f3f",
+      "licenseExpression": "Zlib AND BSD-3-Clause AND Apache-2.0 AND LicenseRef-KhronosFreeUse AND ZPL-2.1 AND MIT AND (GPL-3.0-or-later WITH GCC-exception-3.1)",
+      "licensePaths": [
+        "Legal/dxvk/GCC-COPYING3",
+        "Legal/dxvk/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxvk/GLSL-std450-LICENSE",
+        "Legal/dxvk/LICENSE",
+        "Legal/dxvk/MinGW-w64-AUTHORS",
+        "Legal/dxvk/MinGW-w64-COPYING",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER-PD",
+        "Legal/dxvk/MinGW-w64-runtime-COPYING",
+        "Legal/dxvk/OpenVR-LICENSE",
+        "Legal/dxvk/PROVENANCE.txt",
+        "Legal/dxvk/SPIRV-Headers-LICENSE",
+        "Legal/dxvk/Vulkan-Headers-Apache-2.0",
+        "Legal/dxvk/Vulkan-Headers-NOTICE",
+        "Legal/dxvk/Winpthreads-COPYING"
+      ],
+      "path": "Frameworks/renderer/dxvk/Legal/OpenVR-LICENSE",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/Gcenx/DXVK-macOS/releases/tag/v1.10.3-20230507-repack",
+      "sourceTreeSHA256": "b8fc09744f1489a81cc5a8be510a7ab801e96057af0a5d4fbd20fb1b70e09ebe",
+      "type": "file",
+      "version": "1.10.3-20230507-repack-builtin"
+    },
+    {
+      "component": "dxvk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "4f9fbd29492df4dc5966d321aa8f7527f8fcd98b166bfa48a18fd6f838878fef",
+      "licenseExpression": "Zlib AND BSD-3-Clause AND Apache-2.0 AND LicenseRef-KhronosFreeUse AND ZPL-2.1 AND MIT AND (GPL-3.0-or-later WITH GCC-exception-3.1)",
+      "licensePaths": [
+        "Legal/dxvk/GCC-COPYING3",
+        "Legal/dxvk/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxvk/GLSL-std450-LICENSE",
+        "Legal/dxvk/LICENSE",
+        "Legal/dxvk/MinGW-w64-AUTHORS",
+        "Legal/dxvk/MinGW-w64-COPYING",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER-PD",
+        "Legal/dxvk/MinGW-w64-runtime-COPYING",
+        "Legal/dxvk/OpenVR-LICENSE",
+        "Legal/dxvk/PROVENANCE.txt",
+        "Legal/dxvk/SPIRV-Headers-LICENSE",
+        "Legal/dxvk/Vulkan-Headers-Apache-2.0",
+        "Legal/dxvk/Vulkan-Headers-NOTICE",
+        "Legal/dxvk/Winpthreads-COPYING"
+      ],
+      "path": "Frameworks/renderer/dxvk/Legal/PROVENANCE.txt",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/Gcenx/DXVK-macOS/releases/tag/v1.10.3-20230507-repack",
+      "sourceTreeSHA256": "b8fc09744f1489a81cc5a8be510a7ab801e96057af0a5d4fbd20fb1b70e09ebe",
+      "type": "file",
+      "version": "1.10.3-20230507-repack-builtin"
+    },
+    {
+      "component": "dxvk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "93a442f4fa56b9ff35af3a9c8f7056b41f01c8832cd65a1d7dafaa9c8eb78edd",
+      "licenseExpression": "Zlib AND BSD-3-Clause AND Apache-2.0 AND LicenseRef-KhronosFreeUse AND ZPL-2.1 AND MIT AND (GPL-3.0-or-later WITH GCC-exception-3.1)",
+      "licensePaths": [
+        "Legal/dxvk/GCC-COPYING3",
+        "Legal/dxvk/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxvk/GLSL-std450-LICENSE",
+        "Legal/dxvk/LICENSE",
+        "Legal/dxvk/MinGW-w64-AUTHORS",
+        "Legal/dxvk/MinGW-w64-COPYING",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER-PD",
+        "Legal/dxvk/MinGW-w64-runtime-COPYING",
+        "Legal/dxvk/OpenVR-LICENSE",
+        "Legal/dxvk/PROVENANCE.txt",
+        "Legal/dxvk/SPIRV-Headers-LICENSE",
+        "Legal/dxvk/Vulkan-Headers-Apache-2.0",
+        "Legal/dxvk/Vulkan-Headers-NOTICE",
+        "Legal/dxvk/Winpthreads-COPYING"
+      ],
+      "path": "Frameworks/renderer/dxvk/Legal/SPIRV-Headers-LICENSE",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/Gcenx/DXVK-macOS/releases/tag/v1.10.3-20230507-repack",
+      "sourceTreeSHA256": "b8fc09744f1489a81cc5a8be510a7ab801e96057af0a5d4fbd20fb1b70e09ebe",
+      "type": "file",
+      "version": "1.10.3-20230507-repack-builtin"
+    },
+    {
+      "component": "dxvk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "licenseExpression": "Zlib AND BSD-3-Clause AND Apache-2.0 AND LicenseRef-KhronosFreeUse AND ZPL-2.1 AND MIT AND (GPL-3.0-or-later WITH GCC-exception-3.1)",
+      "licensePaths": [
+        "Legal/dxvk/GCC-COPYING3",
+        "Legal/dxvk/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxvk/GLSL-std450-LICENSE",
+        "Legal/dxvk/LICENSE",
+        "Legal/dxvk/MinGW-w64-AUTHORS",
+        "Legal/dxvk/MinGW-w64-COPYING",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER-PD",
+        "Legal/dxvk/MinGW-w64-runtime-COPYING",
+        "Legal/dxvk/OpenVR-LICENSE",
+        "Legal/dxvk/PROVENANCE.txt",
+        "Legal/dxvk/SPIRV-Headers-LICENSE",
+        "Legal/dxvk/Vulkan-Headers-Apache-2.0",
+        "Legal/dxvk/Vulkan-Headers-NOTICE",
+        "Legal/dxvk/Winpthreads-COPYING"
+      ],
+      "path": "Frameworks/renderer/dxvk/Legal/Vulkan-Headers-Apache-2.0",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/Gcenx/DXVK-macOS/releases/tag/v1.10.3-20230507-repack",
+      "sourceTreeSHA256": "b8fc09744f1489a81cc5a8be510a7ab801e96057af0a5d4fbd20fb1b70e09ebe",
+      "type": "file",
+      "version": "1.10.3-20230507-repack-builtin"
+    },
+    {
+      "component": "dxvk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "12abeaedfb18867515d3bdf14945bdd16a1fa41919bddc7be9fdf96e41fc2058",
+      "licenseExpression": "Zlib AND BSD-3-Clause AND Apache-2.0 AND LicenseRef-KhronosFreeUse AND ZPL-2.1 AND MIT AND (GPL-3.0-or-later WITH GCC-exception-3.1)",
+      "licensePaths": [
+        "Legal/dxvk/GCC-COPYING3",
+        "Legal/dxvk/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxvk/GLSL-std450-LICENSE",
+        "Legal/dxvk/LICENSE",
+        "Legal/dxvk/MinGW-w64-AUTHORS",
+        "Legal/dxvk/MinGW-w64-COPYING",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER-PD",
+        "Legal/dxvk/MinGW-w64-runtime-COPYING",
+        "Legal/dxvk/OpenVR-LICENSE",
+        "Legal/dxvk/PROVENANCE.txt",
+        "Legal/dxvk/SPIRV-Headers-LICENSE",
+        "Legal/dxvk/Vulkan-Headers-Apache-2.0",
+        "Legal/dxvk/Vulkan-Headers-NOTICE",
+        "Legal/dxvk/Winpthreads-COPYING"
+      ],
+      "path": "Frameworks/renderer/dxvk/Legal/Vulkan-Headers-NOTICE",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/Gcenx/DXVK-macOS/releases/tag/v1.10.3-20230507-repack",
+      "sourceTreeSHA256": "b8fc09744f1489a81cc5a8be510a7ab801e96057af0a5d4fbd20fb1b70e09ebe",
+      "type": "file",
+      "version": "1.10.3-20230507-repack-builtin"
+    },
+    {
+      "component": "dxvk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "63263614cdd29f2f93cba85e992f041b31f9fc7b4033692f31269489a8a1b177",
+      "licenseExpression": "Zlib AND BSD-3-Clause AND Apache-2.0 AND LicenseRef-KhronosFreeUse AND ZPL-2.1 AND MIT AND (GPL-3.0-or-later WITH GCC-exception-3.1)",
+      "licensePaths": [
+        "Legal/dxvk/GCC-COPYING3",
+        "Legal/dxvk/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxvk/GLSL-std450-LICENSE",
+        "Legal/dxvk/LICENSE",
+        "Legal/dxvk/MinGW-w64-AUTHORS",
+        "Legal/dxvk/MinGW-w64-COPYING",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER-PD",
+        "Legal/dxvk/MinGW-w64-runtime-COPYING",
+        "Legal/dxvk/OpenVR-LICENSE",
+        "Legal/dxvk/PROVENANCE.txt",
+        "Legal/dxvk/SPIRV-Headers-LICENSE",
+        "Legal/dxvk/Vulkan-Headers-Apache-2.0",
+        "Legal/dxvk/Vulkan-Headers-NOTICE",
+        "Legal/dxvk/Winpthreads-COPYING"
+      ],
+      "path": "Frameworks/renderer/dxvk/Legal/Winpthreads-COPYING",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/Gcenx/DXVK-macOS/releases/tag/v1.10.3-20230507-repack",
+      "sourceTreeSHA256": "b8fc09744f1489a81cc5a8be510a7ab801e96057af0a5d4fbd20fb1b70e09ebe",
+      "type": "file",
+      "version": "1.10.3-20230507-repack-builtin"
+    },
+    {
+      "component": "dxvk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "4bd52919b68a1cedf6cb2b7e43897a2a5f438b3734fad0aa2357ea55cee2a011",
+      "licenseExpression": "Zlib AND BSD-3-Clause AND Apache-2.0 AND LicenseRef-KhronosFreeUse AND ZPL-2.1 AND MIT AND (GPL-3.0-or-later WITH GCC-exception-3.1)",
+      "licensePaths": [
+        "Legal/dxvk/GCC-COPYING3",
+        "Legal/dxvk/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxvk/GLSL-std450-LICENSE",
+        "Legal/dxvk/LICENSE",
+        "Legal/dxvk/MinGW-w64-AUTHORS",
+        "Legal/dxvk/MinGW-w64-COPYING",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER-PD",
+        "Legal/dxvk/MinGW-w64-runtime-COPYING",
+        "Legal/dxvk/OpenVR-LICENSE",
+        "Legal/dxvk/PROVENANCE.txt",
+        "Legal/dxvk/SPIRV-Headers-LICENSE",
+        "Legal/dxvk/Vulkan-Headers-Apache-2.0",
+        "Legal/dxvk/Vulkan-Headers-NOTICE",
+        "Legal/dxvk/Winpthreads-COPYING"
+      ],
+      "path": "Frameworks/renderer/dxvk/source.json",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/Gcenx/DXVK-macOS/releases/tag/v1.10.3-20230507-repack",
+      "sourceTreeSHA256": "b8fc09744f1489a81cc5a8be510a7ab801e96057af0a5d4fbd20fb1b70e09ebe",
+      "type": "file",
+      "version": "1.10.3-20230507-repack-builtin"
+    },
+    {
+      "component": "dxvk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "fe60eaa3b024e423853a4a3d319fc4e16af042c0a5bdaaf27ac602487cbeb536",
+      "licenseExpression": "Zlib AND BSD-3-Clause AND Apache-2.0 AND LicenseRef-KhronosFreeUse AND ZPL-2.1 AND MIT AND (GPL-3.0-or-later WITH GCC-exception-3.1)",
+      "licensePaths": [
+        "Legal/dxvk/GCC-COPYING3",
+        "Legal/dxvk/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxvk/GLSL-std450-LICENSE",
+        "Legal/dxvk/LICENSE",
+        "Legal/dxvk/MinGW-w64-AUTHORS",
+        "Legal/dxvk/MinGW-w64-COPYING",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER-PD",
+        "Legal/dxvk/MinGW-w64-runtime-COPYING",
+        "Legal/dxvk/OpenVR-LICENSE",
+        "Legal/dxvk/PROVENANCE.txt",
+        "Legal/dxvk/SPIRV-Headers-LICENSE",
+        "Legal/dxvk/Vulkan-Headers-Apache-2.0",
+        "Legal/dxvk/Vulkan-Headers-NOTICE",
+        "Legal/dxvk/Winpthreads-COPYING"
+      ],
+      "path": "Frameworks/renderer/dxvk/version",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/Gcenx/DXVK-macOS/releases/tag/v1.10.3-20230507-repack",
+      "sourceTreeSHA256": "b8fc09744f1489a81cc5a8be510a7ab801e96057af0a5d4fbd20fb1b70e09ebe",
+      "type": "file",
+      "version": "1.10.3-20230507-repack-builtin"
+    },
+    {
+      "component": "dxvk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "9e0202437af13a6d0acdb992954321f00a641b2eb98897908c41635ffddc1fc8",
+      "licenseExpression": "Zlib AND BSD-3-Clause AND Apache-2.0 AND LicenseRef-KhronosFreeUse AND ZPL-2.1 AND MIT AND (GPL-3.0-or-later WITH GCC-exception-3.1)",
+      "licensePaths": [
+        "Legal/dxvk/GCC-COPYING3",
+        "Legal/dxvk/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxvk/GLSL-std450-LICENSE",
+        "Legal/dxvk/LICENSE",
+        "Legal/dxvk/MinGW-w64-AUTHORS",
+        "Legal/dxvk/MinGW-w64-COPYING",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER-PD",
+        "Legal/dxvk/MinGW-w64-runtime-COPYING",
+        "Legal/dxvk/OpenVR-LICENSE",
+        "Legal/dxvk/PROVENANCE.txt",
+        "Legal/dxvk/SPIRV-Headers-LICENSE",
+        "Legal/dxvk/Vulkan-Headers-Apache-2.0",
+        "Legal/dxvk/Vulkan-Headers-NOTICE",
+        "Legal/dxvk/Winpthreads-COPYING"
+      ],
+      "path": "Frameworks/renderer/dxvk/wine/i386-windows/d3d10core.dll",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/Gcenx/DXVK-macOS/releases/tag/v1.10.3-20230507-repack",
+      "sourceTreeSHA256": "b8fc09744f1489a81cc5a8be510a7ab801e96057af0a5d4fbd20fb1b70e09ebe",
+      "type": "file",
+      "version": "1.10.3-20230507-repack-builtin"
+    },
+    {
+      "component": "dxvk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "2173b081a8660dd70a089dac875a829da6cd1a6230b23fd1daa2a7d7baa1cb03",
+      "licenseExpression": "Zlib AND BSD-3-Clause AND Apache-2.0 AND LicenseRef-KhronosFreeUse AND ZPL-2.1 AND MIT AND (GPL-3.0-or-later WITH GCC-exception-3.1)",
+      "licensePaths": [
+        "Legal/dxvk/GCC-COPYING3",
+        "Legal/dxvk/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxvk/GLSL-std450-LICENSE",
+        "Legal/dxvk/LICENSE",
+        "Legal/dxvk/MinGW-w64-AUTHORS",
+        "Legal/dxvk/MinGW-w64-COPYING",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER-PD",
+        "Legal/dxvk/MinGW-w64-runtime-COPYING",
+        "Legal/dxvk/OpenVR-LICENSE",
+        "Legal/dxvk/PROVENANCE.txt",
+        "Legal/dxvk/SPIRV-Headers-LICENSE",
+        "Legal/dxvk/Vulkan-Headers-Apache-2.0",
+        "Legal/dxvk/Vulkan-Headers-NOTICE",
+        "Legal/dxvk/Winpthreads-COPYING"
+      ],
+      "path": "Frameworks/renderer/dxvk/wine/i386-windows/d3d11.dll",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/Gcenx/DXVK-macOS/releases/tag/v1.10.3-20230507-repack",
+      "sourceTreeSHA256": "b8fc09744f1489a81cc5a8be510a7ab801e96057af0a5d4fbd20fb1b70e09ebe",
+      "type": "file",
+      "version": "1.10.3-20230507-repack-builtin"
+    },
+    {
+      "component": "dxvk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "225562562050d9fae1d4d5d2ca0537020bac268c80dec9aa0633dc0d338a2840",
+      "licenseExpression": "Zlib AND BSD-3-Clause AND Apache-2.0 AND LicenseRef-KhronosFreeUse AND ZPL-2.1 AND MIT AND (GPL-3.0-or-later WITH GCC-exception-3.1)",
+      "licensePaths": [
+        "Legal/dxvk/GCC-COPYING3",
+        "Legal/dxvk/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxvk/GLSL-std450-LICENSE",
+        "Legal/dxvk/LICENSE",
+        "Legal/dxvk/MinGW-w64-AUTHORS",
+        "Legal/dxvk/MinGW-w64-COPYING",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER-PD",
+        "Legal/dxvk/MinGW-w64-runtime-COPYING",
+        "Legal/dxvk/OpenVR-LICENSE",
+        "Legal/dxvk/PROVENANCE.txt",
+        "Legal/dxvk/SPIRV-Headers-LICENSE",
+        "Legal/dxvk/Vulkan-Headers-Apache-2.0",
+        "Legal/dxvk/Vulkan-Headers-NOTICE",
+        "Legal/dxvk/Winpthreads-COPYING"
+      ],
+      "path": "Frameworks/renderer/dxvk/wine/x86_64-windows/d3d10core.dll",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/Gcenx/DXVK-macOS/releases/tag/v1.10.3-20230507-repack",
+      "sourceTreeSHA256": "b8fc09744f1489a81cc5a8be510a7ab801e96057af0a5d4fbd20fb1b70e09ebe",
+      "type": "file",
+      "version": "1.10.3-20230507-repack-builtin"
+    },
+    {
+      "component": "dxvk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "173980cb6c51fdd53dc37b9a17f0de7c5dfdebda18f52059aa7d5a6f1871299c",
+      "licenseExpression": "Zlib AND BSD-3-Clause AND Apache-2.0 AND LicenseRef-KhronosFreeUse AND ZPL-2.1 AND MIT AND (GPL-3.0-or-later WITH GCC-exception-3.1)",
+      "licensePaths": [
+        "Legal/dxvk/GCC-COPYING3",
+        "Legal/dxvk/GCC-RUNTIME-EXCEPTION",
+        "Legal/dxvk/GLSL-std450-LICENSE",
+        "Legal/dxvk/LICENSE",
+        "Legal/dxvk/MinGW-w64-AUTHORS",
+        "Legal/dxvk/MinGW-w64-COPYING",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER",
+        "Legal/dxvk/MinGW-w64-DISCLAIMER-PD",
+        "Legal/dxvk/MinGW-w64-runtime-COPYING",
+        "Legal/dxvk/OpenVR-LICENSE",
+        "Legal/dxvk/PROVENANCE.txt",
+        "Legal/dxvk/SPIRV-Headers-LICENSE",
+        "Legal/dxvk/Vulkan-Headers-Apache-2.0",
+        "Legal/dxvk/Vulkan-Headers-NOTICE",
+        "Legal/dxvk/Winpthreads-COPYING"
+      ],
+      "path": "Frameworks/renderer/dxvk/wine/x86_64-windows/d3d11.dll",
+      "sourceKind": "open-source-project-binary",
+      "sourceReference": "https://github.com/Gcenx/DXVK-macOS/releases/tag/v1.10.3-20230507-repack",
+      "sourceTreeSHA256": "b8fc09744f1489a81cc5a8be510a7ab801e96057af0a5d4fbd20fb1b70e09ebe",
+      "type": "file",
+      "version": "1.10.3-20230507-repack-builtin"
+    },
+    {
+      "component": "ForgePlay runtime policy",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "a187f07204688b45afd1e5cd3e6feca406d8e4fd1c22ca9b9ebd6b5dea355748",
+      "licenseExpression": "LicenseRef-ForgePlay-Project",
+      "licensePaths": [],
+      "path": "Info.plist",
+      "sourceKind": "forgeplay-authored",
+      "sourceReference": "Resources/Runners/ForgePlayRuntime/Info.plist",
+      "type": "file",
+      "version": "1"
+    },
+    {
+      "component": "freetype",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "bd36c8b474855fa294c2ec5c184544478ef3720aad37d65a6296a4f264fd2d3b",
+      "licenseExpression": "FTL",
+      "licensePaths": [
+        "Legal/FreeType/LICENSE.TXT"
+      ],
+      "path": "Legal/FreeType/LICENSE.TXT",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/freetype",
+      "sourceSHA256": "bd36c8b474855fa294c2ec5c184544478ef3720aad37d65a6296a4f264fd2d3b",
+      "type": "file",
+      "version": "2.14.3"
+    },
+    {
+      "component": "gmp",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "a853c2ffec17057872340eee242ae4d96cbf2b520ae27d903e1b2fef1a5f9d1c",
+      "licenseExpression": "LGPL-3.0-or-later OR GPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GMP/COPYING.LESSERv3"
+      ],
+      "path": "Legal/GMP/COPYING.LESSERv3",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/gmp",
+      "sourceSHA256": "a853c2ffec17057872340eee242ae4d96cbf2b520ae27d903e1b2fef1a5f9d1c",
+      "type": "file",
+      "version": "6.3.0"
+    },
+    {
+      "component": "FFmpeg",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "dc626520dcd53a22f727af3ee42c770e56c97a64fe3adb063799d8ab032fe551",
+      "licenseExpression": "LGPL-2.1-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/FFmpeg/LGPL-2.1-or-later.txt"
+      ],
+      "path": "Legal/GStreamer/FFmpeg/LGPL-2.1-or-later.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "dc626520dcd53a22f727af3ee42c770e56c97a64fe3adb063799d8ab032fe551",
+      "type": "file",
+      "version": "libavcodec-61.19.100"
+    },
+    {
+      "component": "FFmpeg",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "75bd999907c110691ac5d5c8116fc9428c890e7a6ce881fb424e3b8d583e8f5c",
+      "licenseExpression": "LGPL-2.1-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/FFmpeg/README-LICENSE-INFO.txt"
+      ],
+      "path": "Legal/GStreamer/FFmpeg/README-LICENSE-INFO.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "75bd999907c110691ac5d5c8116fc9428c890e7a6ce881fb424e3b8d583e8f5c",
+      "type": "file",
+      "version": "libavcodec-61.19.100"
+    },
+    {
+      "component": "GLib",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GLib/LGPL-2.0-or-later.txt"
+      ],
+      "path": "Legal/GStreamer/GLib/LGPL-2.0-or-later.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
+      "type": "file",
+      "version": "2.82.4"
+    },
+    {
+      "component": "GLib",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "1b0ef316ea0204d4920b2695796f34683d3338a07a4db4d8597402ee54e83df7",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GLib/README-LICENSE-INFO.txt"
+      ],
+      "path": "Legal/GStreamer/GLib/README-LICENSE-INFO.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "1b0ef316ea0204d4920b2695796f34683d3338a07a4db4d8597402ee54e83df7",
+      "type": "file",
+      "version": "2.82.4"
+    },
+    {
+      "component": "GStreamer",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamer/LGPL-2.0-or-later.txt"
+      ],
+      "path": "Legal/GStreamer/GStreamer/LGPL-2.0-or-later.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "1b0ef316ea0204d4920b2695796f34683d3338a07a4db4d8597402ee54e83df7",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamer/README-LICENSE-INFO.txt"
+      ],
+      "path": "Legal/GStreamer/GStreamer/README-LICENSE-INFO.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "1b0ef316ea0204d4920b2695796f34683d3338a07a4db4d8597402ee54e83df7",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Bad Plug-ins",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBad/LGPL-2.0-or-later.txt"
+      ],
+      "path": "Legal/GStreamer/GStreamerBad/LGPL-2.0-or-later.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Bad Plug-ins",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "cc77d75df35ab070d2544e78502038912fe6b38b342995d3df9c1d376cfcae3c",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBad/README-LICENSE-INFO.txt"
+      ],
+      "path": "Legal/GStreamer/GStreamerBad/README-LICENSE-INFO.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "cc77d75df35ab070d2544e78502038912fe6b38b342995d3df9c1d376cfcae3c",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt"
+      ],
+      "path": "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "1b0ef316ea0204d4920b2695796f34683d3338a07a4db4d8597402ee54e83df7",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "path": "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "1b0ef316ea0204d4920b2695796f34683d3338a07a4db4d8597402ee54e83df7",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Good Plug-ins",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerGood/LGPL-2.0-or-later.txt"
+      ],
+      "path": "Legal/GStreamer/GStreamerGood/LGPL-2.0-or-later.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Good Plug-ins",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "1b0ef316ea0204d4920b2695796f34683d3338a07a4db4d8597402ee54e83df7",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerGood/README-LICENSE-INFO.txt"
+      ],
+      "path": "Legal/GStreamer/GStreamerGood/README-LICENSE-INFO.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "1b0ef316ea0204d4920b2695796f34683d3338a07a4db4d8597402ee54e83df7",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer libav",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerLibav/LGPL-2.0-or-later.txt"
+      ],
+      "path": "Legal/GStreamer/GStreamerLibav/LGPL-2.0-or-later.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer libav",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "1b0ef316ea0204d4920b2695796f34683d3338a07a4db4d8597402ee54e83df7",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerLibav/README-LICENSE-INFO.txt"
+      ],
+      "path": "Legal/GStreamer/GStreamerLibav/README-LICENSE-INFO.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "1b0ef316ea0204d4920b2695796f34683d3338a07a4db4d8597402ee54e83df7",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Ugly Plug-ins",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerUgly/LGPL-2.0-or-later.txt"
+      ],
+      "path": "Legal/GStreamer/GStreamerUgly/LGPL-2.0-or-later.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Ugly Plug-ins",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "1b0ef316ea0204d4920b2695796f34683d3338a07a4db4d8597402ee54e83df7",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerUgly/README-LICENSE-INFO.txt"
+      ],
+      "path": "Legal/GStreamer/GStreamerUgly/README-LICENSE-INFO.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "1b0ef316ea0204d4920b2695796f34683d3338a07a4db4d8597402ee54e83df7",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "MoltenVK",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "eb7e9ab9690124c5c9f42bdc81383d886a3dede26345b6ed15bbad7caf81f7ea",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/GStreamer/MoltenVK/Apache-2.0.txt"
+      ],
+      "path": "Legal/GStreamer/MoltenVK/Apache-2.0.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "eb7e9ab9690124c5c9f42bdc81383d886a3dede26345b6ed15bbad7caf81f7ea",
+      "type": "file",
+      "version": "1.2.9"
+    },
+    {
+      "component": "MoltenVK",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "2ec8c7b80d2143ae48f48e5a583b07616d756bab3628288c5f4f3547ad086e7a",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/GStreamer/MoltenVK/README-LICENSE-INFO.txt"
+      ],
+      "path": "Legal/GStreamer/MoltenVK/README-LICENSE-INFO.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "2ec8c7b80d2143ae48f48e5a583b07616d756bab3628288c5f4f3547ad086e7a",
+      "type": "file",
+      "version": "1.2.9"
+    },
+    {
+      "component": "ORC",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "4f5dabb1b44bb6fc5cd53820b1f103147ad61b395a57903991325bd1b85d97bf",
+      "licenseExpression": "BSD-2-Clause",
+      "licensePaths": [
+        "Legal/GStreamer/ORC/COPYING"
+      ],
+      "path": "Legal/GStreamer/ORC/COPYING",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "4f5dabb1b44bb6fc5cd53820b1f103147ad61b395a57903991325bd1b85d97bf",
+      "type": "file",
+      "version": "0.4.42"
+    },
+    {
+      "component": "ORC",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "31079dc29805c57b4fa213876b1febecc823c5177ae8f442e4e91b64bcc179c1",
+      "licenseExpression": "BSD-2-Clause",
+      "licensePaths": [
+        "Legal/GStreamer/ORC/README-LICENSE-INFO.txt"
+      ],
+      "path": "Legal/GStreamer/ORC/README-LICENSE-INFO.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "31079dc29805c57b4fa213876b1febecc823c5177ae8f442e4e91b64bcc179c1",
+      "type": "file",
+      "version": "0.4.42"
+    },
+    {
+      "component": "PCRE2",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "87d884eceb7fc54611470ce9f74280d28612b0c877adfc767e9676892a638987",
+      "licenseExpression": "BSD-3-Clause",
+      "licensePaths": [
+        "Legal/GStreamer/PCRE2/LICENCE"
+      ],
+      "path": "Legal/GStreamer/PCRE2/LICENCE",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "87d884eceb7fc54611470ce9f74280d28612b0c877adfc767e9676892a638987",
+      "type": "file",
+      "version": "10.42"
+    },
+    {
+      "component": "PCRE2",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "1bf7a56504fe859fd22d303b26364e19f4b830c3739025f7d262e4eda677db1b",
+      "licenseExpression": "BSD-3-Clause",
+      "licensePaths": [
+        "Legal/GStreamer/PCRE2/README-LICENSE-INFO.txt"
+      ],
+      "path": "Legal/GStreamer/PCRE2/README-LICENSE-INFO.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "1bf7a56504fe859fd22d303b26364e19f4b830c3739025f7d262e4eda677db1b",
+      "type": "file",
+      "version": "10.42"
+    },
+    {
+      "component": "bzip2",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "c6dbbf828498be844a89eaa3b84adbab3199e342eb5cb2ed2f0d4ba7ec0f38a3",
+      "licenseExpression": "bzip2-1.0.6",
+      "licensePaths": [
+        "Legal/GStreamer/bzip2/LICENSE"
+      ],
+      "path": "Legal/GStreamer/bzip2/LICENSE",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "c6dbbf828498be844a89eaa3b84adbab3199e342eb5cb2ed2f0d4ba7ec0f38a3",
+      "type": "file",
+      "version": "1.0.8"
+    },
+    {
+      "component": "bzip2",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "7ac1e4ca33b090317a3866f1c49620a74f6ed94d52618f03abc48c280b40cc74",
+      "licenseExpression": "bzip2-1.0.6",
+      "licensePaths": [
+        "Legal/GStreamer/bzip2/README-LICENSE-INFO.txt"
+      ],
+      "path": "Legal/GStreamer/bzip2/README-LICENSE-INFO.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "7ac1e4ca33b090317a3866f1c49620a74f6ed94d52618f03abc48c280b40cc74",
+      "type": "file",
+      "version": "1.0.8"
+    },
+    {
+      "component": "libffi",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "0f4d7a0bfb83c37465d42dc305f124189196cc0cc2cc8d6f8461103682aebbc5",
+      "licenseExpression": "MIT",
+      "licensePaths": [
+        "Legal/GStreamer/libffi/LICENSE"
+      ],
+      "path": "Legal/GStreamer/libffi/LICENSE",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "0f4d7a0bfb83c37465d42dc305f124189196cc0cc2cc8d6f8461103682aebbc5",
+      "type": "file",
+      "version": "3.2.9999"
+    },
+    {
+      "component": "libffi",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "7ac1e4ca33b090317a3866f1c49620a74f6ed94d52618f03abc48c280b40cc74",
+      "licenseExpression": "MIT",
+      "licensePaths": [
+        "Legal/GStreamer/libffi/README-LICENSE-INFO.txt"
+      ],
+      "path": "Legal/GStreamer/libffi/README-LICENSE-INFO.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "7ac1e4ca33b090317a3866f1c49620a74f6ed94d52618f03abc48c280b40cc74",
+      "type": "file",
+      "version": "3.2.9999"
+    },
+    {
+      "component": "proxy-libintl",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/proxy-libintl/LGPL-2.0-or-later.txt"
+      ],
+      "path": "Legal/GStreamer/proxy-libintl/LGPL-2.0-or-later.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "b7993225104d90ddd8024fd838faf300bea5e83d91203eab98e29512acebd69c",
+      "type": "file",
+      "version": "0.4"
+    },
+    {
+      "component": "proxy-libintl",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "1b0ef316ea0204d4920b2695796f34683d3338a07a4db4d8597402ee54e83df7",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/proxy-libintl/README-LICENSE-INFO.txt"
+      ],
+      "path": "Legal/GStreamer/proxy-libintl/README-LICENSE-INFO.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "1b0ef316ea0204d4920b2695796f34683d3338a07a4db4d8597402ee54e83df7",
+      "type": "file",
+      "version": "0.4"
+    },
+    {
+      "component": "zlib",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "d106dcdb2a0b3087cb3a2380b9f00a0bbadc7eb835cd80408f94a2d78d69727d",
+      "licenseExpression": "Zlib",
+      "licensePaths": [
+        "Legal/GStreamer/zlib/README"
+      ],
+      "path": "Legal/GStreamer/zlib/README",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "d106dcdb2a0b3087cb3a2380b9f00a0bbadc7eb835cd80408f94a2d78d69727d",
+      "type": "file",
+      "version": "1.2.11"
+    },
+    {
+      "component": "zlib",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "9f74ad178e7fc29c452876b139dfca84ee1ee0442f31065b0c439ea24bed4a2c",
+      "licenseExpression": "Zlib",
+      "licensePaths": [
+        "Legal/GStreamer/zlib/README-LICENSE-INFO.txt"
+      ],
+      "path": "Legal/GStreamer/zlib/README-LICENSE-INFO.txt",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "9f74ad178e7fc29c452876b139dfca84ee1ee0442f31065b0c439ea24bed4a2c",
+      "type": "file",
+      "version": "1.2.11"
+    },
+    {
+      "component": "gettext",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "e79e9c8a0c85d735ff98185918ec94ed7d175efc377012787aebcf3b80f0d90b",
+      "licenseExpression": "GPL-3.0-or-later AND LGPL-2.1-or-later",
+      "licensePaths": [
+        "Legal/Gettext/COPYING"
+      ],
+      "path": "Legal/Gettext/COPYING",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/gettext",
+      "sourceSHA256": "e79e9c8a0c85d735ff98185918ec94ed7d175efc377012787aebcf3b80f0d90b",
+      "type": "file",
+      "version": "1.0"
+    },
+    {
+      "component": "gnutls",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+      "licenseExpression": "LGPL-2.1-or-later AND GPL-3.0-only",
+      "licensePaths": [
+        "Legal/GnuTLS/COPYING"
+      ],
+      "path": "Legal/GnuTLS/COPYING",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/gnutls",
+      "sourceSHA256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+      "type": "file",
+      "version": "3.8.13_2"
+    },
+    {
+      "component": "gnutls",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "20e50fe7aae3e56378ebf0417d9de904f55a0e61e4df315333e632a4d3555d95",
+      "licenseExpression": "LGPL-2.1-or-later AND GPL-3.0-only",
+      "licensePaths": [
+        "Legal/GnuTLS/COPYING.LESSERv2"
+      ],
+      "path": "Legal/GnuTLS/COPYING.LESSERv2",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/gnutls",
+      "sourceSHA256": "20e50fe7aae3e56378ebf0417d9de904f55a0e61e4df315333e632a4d3555d95",
+      "type": "file",
+      "version": "3.8.13_2"
+    },
+    {
+      "component": "libidn2",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118",
+      "licenseExpression": "(GPL-2.0-or-later OR LGPL-3.0-or-later) AND Unicode-TOU AND Unicode-DFS-2016",
+      "licensePaths": [
+        "Legal/Libidn2/COPYING.LESSERv3"
+      ],
+      "path": "Legal/Libidn2/COPYING.LESSERv3",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/libidn2",
+      "sourceSHA256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118",
+      "type": "file",
+      "version": "2.3.8"
+    },
+    {
+      "component": "libidn2",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "01d621eef165cf4d3d3dbb737aa0699178d94c6f18cf87e9dde6db3ca7790f46",
+      "licenseExpression": "(GPL-2.0-or-later OR LGPL-3.0-or-later) AND Unicode-TOU AND Unicode-DFS-2016",
+      "licensePaths": [
+        "Legal/Libidn2/COPYING.unicode"
+      ],
+      "path": "Legal/Libidn2/COPYING.unicode",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/libidn2",
+      "sourceSHA256": "01d621eef165cf4d3d3dbb737aa0699178d94c6f18cf87e9dde6db3ca7790f46",
+      "type": "file",
+      "version": "2.3.8"
+    },
+    {
+      "component": "libpng",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "bdb0a645ea18c60507d0368379b1ac5474b92255fcc2d115e07486a7672ba526",
+      "licenseExpression": "libpng-2.0",
+      "licensePaths": [
+        "Legal/Libpng/LICENSE"
+      ],
+      "path": "Legal/Libpng/LICENSE",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/libpng",
+      "sourceSHA256": "bdb0a645ea18c60507d0368379b1ac5474b92255fcc2d115e07486a7672ba526",
+      "type": "file",
+      "version": "1.6.58"
+    },
+    {
+      "component": "libtasn1",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "20e50fe7aae3e56378ebf0417d9de904f55a0e61e4df315333e632a4d3555d95",
+      "licenseExpression": "LGPL-2.1-or-later",
+      "licensePaths": [
+        "Legal/Libtasn1/COPYING.LESSERv2"
+      ],
+      "path": "Legal/Libtasn1/COPYING.LESSERv2",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/libtasn1",
+      "sourceSHA256": "20e50fe7aae3e56378ebf0417d9de904f55a0e61e4df315333e632a4d3555d95",
+      "type": "file",
+      "version": "4.21.0"
+    },
+    {
+      "component": "libunistring",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "a853c2ffec17057872340eee242ae4d96cbf2b520ae27d903e1b2fef1a5f9d1c",
+      "licenseExpression": "GPL-2.0-or-later OR LGPL-3.0-or-later",
+      "licensePaths": [
+        "Legal/Libunistring/COPYING.LIB"
+      ],
+      "path": "Legal/Libunistring/COPYING.LIB",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/libunistring",
+      "sourceSHA256": "a853c2ffec17057872340eee242ae4d96cbf2b520ae27d903e1b2fef1a5f9d1c",
+      "type": "file",
+      "version": "1.4.2"
+    },
+    {
+      "component": "molten-vk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/MoltenVK/LICENSE"
+      ],
+      "path": "Legal/MoltenVK/LICENSE",
+      "sourceKind": "forgeplay-source-build",
+      "sourceReference": "https://github.com/KhronosGroup/MoltenVK/tree/v1.4.1",
+      "sourceSHA256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "type": "file",
+      "version": "1.4.1-forgeplay.4"
+    },
+    {
+      "component": "molten-vk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "301547b6a3c4210d93c1337f01f326ea35e6128b785f924cffadc322c0bb50c9",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/MoltenVK/SourceBuild/CPM.cmake/LICENSE"
+      ],
+      "path": "Legal/MoltenVK/SourceBuild/CPM.cmake/LICENSE",
+      "sourceKind": "forgeplay-source-build",
+      "sourceReference": "https://github.com/KhronosGroup/MoltenVK/tree/v1.4.1",
+      "sourceSHA256": "301547b6a3c4210d93c1337f01f326ea35e6128b785f924cffadc322c0bb50c9",
+      "type": "file",
+      "version": "1.4.1-forgeplay.4"
+    },
+    {
+      "component": "molten-vk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "9f7d954ac98fe9190cb066a42f03921824e828ce68b22c8c73657def240b1140",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/MoltenVK/SourceBuild/ForgePlayMoltenVKSource.lock.json"
+      ],
+      "path": "Legal/MoltenVK/SourceBuild/ForgePlayMoltenVKSource.lock.json",
+      "sourceKind": "forgeplay-source-build",
+      "sourceReference": "https://github.com/KhronosGroup/MoltenVK/tree/v1.4.1",
+      "sourceSHA256": "9f7d954ac98fe9190cb066a42f03921824e828ce68b22c8c73657def240b1140",
+      "type": "file",
+      "version": "1.4.1-forgeplay.4"
+    },
+    {
+      "component": "molten-vk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "0d4af0852690b1baf25df6b401073f365e2d5b7a8c66891b76f00767f8fafed0",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/MoltenVK/SourceBuild/NOTICE-ForgePlay.md"
+      ],
+      "path": "Legal/MoltenVK/SourceBuild/NOTICE-ForgePlay.md",
+      "sourceKind": "forgeplay-source-build",
+      "sourceReference": "https://github.com/KhronosGroup/MoltenVK/tree/v1.4.1",
+      "sourceSHA256": "0d4af0852690b1baf25df6b401073f365e2d5b7a8c66891b76f00767f8fafed0",
+      "type": "file",
+      "version": "1.4.1-forgeplay.4"
+    },
+    {
+      "component": "molten-vk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/MoltenVK/SourceBuild/SPIRV-Cross/LICENSE"
+      ],
+      "path": "Legal/MoltenVK/SourceBuild/SPIRV-Cross/LICENSE",
+      "sourceKind": "forgeplay-source-build",
+      "sourceReference": "https://github.com/KhronosGroup/MoltenVK/tree/v1.4.1",
+      "sourceSHA256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "type": "file",
+      "version": "1.4.1-forgeplay.4"
+    },
+    {
+      "component": "molten-vk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "44b0a56e80b41a1b0a6bd1292515e806539fd97b30be54c2719e6c763190ab57",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/MoltenVK/SourceBuild/SPIRV-Cross/LICENSES/Apache-2.0.txt"
+      ],
+      "path": "Legal/MoltenVK/SourceBuild/SPIRV-Cross/LICENSES/Apache-2.0.txt",
+      "sourceKind": "forgeplay-source-build",
+      "sourceReference": "https://github.com/KhronosGroup/MoltenVK/tree/v1.4.1",
+      "sourceSHA256": "44b0a56e80b41a1b0a6bd1292515e806539fd97b30be54c2719e6c763190ab57",
+      "type": "file",
+      "version": "1.4.1-forgeplay.4"
+    },
+    {
+      "component": "molten-vk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "b89aeb7c2a164a0576786dd2a8b57f2fb628b23981f0a06bd77e2f99a9befa0f",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/MoltenVK/SourceBuild/SPIRV-Cross/LICENSES/CC-BY-4.0.txt"
+      ],
+      "path": "Legal/MoltenVK/SourceBuild/SPIRV-Cross/LICENSES/CC-BY-4.0.txt",
+      "sourceKind": "forgeplay-source-build",
+      "sourceReference": "https://github.com/KhronosGroup/MoltenVK/tree/v1.4.1",
+      "sourceSHA256": "b89aeb7c2a164a0576786dd2a8b57f2fb628b23981f0a06bd77e2f99a9befa0f",
+      "type": "file",
+      "version": "1.4.1-forgeplay.4"
+    },
+    {
+      "component": "molten-vk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "fbeaca472f4f70e276dd1106ca5097435967a22ad6c1d8200aef7ad9f70aaf3f",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/MoltenVK/SourceBuild/SPIRV-Cross/LICENSES/LicenseRef-KhronosFreeUse.txt"
+      ],
+      "path": "Legal/MoltenVK/SourceBuild/SPIRV-Cross/LICENSES/LicenseRef-KhronosFreeUse.txt",
+      "sourceKind": "forgeplay-source-build",
+      "sourceReference": "https://github.com/KhronosGroup/MoltenVK/tree/v1.4.1",
+      "sourceSHA256": "fbeaca472f4f70e276dd1106ca5097435967a22ad6c1d8200aef7ad9f70aaf3f",
+      "type": "file",
+      "version": "1.4.1-forgeplay.4"
+    },
+    {
+      "component": "molten-vk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "8f25018489d6fe0dec34a352314c38dc146247b7de65735790f4398a92afa84b",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/MoltenVK/SourceBuild/SPIRV-Cross/LICENSES/MIT.txt"
+      ],
+      "path": "Legal/MoltenVK/SourceBuild/SPIRV-Cross/LICENSES/MIT.txt",
+      "sourceKind": "forgeplay-source-build",
+      "sourceReference": "https://github.com/KhronosGroup/MoltenVK/tree/v1.4.1",
+      "sourceSHA256": "8f25018489d6fe0dec34a352314c38dc146247b7de65735790f4398a92afa84b",
+      "type": "file",
+      "version": "1.4.1-forgeplay.4"
+    },
+    {
+      "component": "molten-vk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "ea43b1de38a6f90c488800d66dec1ed671e68cda530266bc96951fb5b6307613",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/MoltenVK/SourceBuild/SPIRV-Headers/LICENSE"
+      ],
+      "path": "Legal/MoltenVK/SourceBuild/SPIRV-Headers/LICENSE",
+      "sourceKind": "forgeplay-source-build",
+      "sourceReference": "https://github.com/KhronosGroup/MoltenVK/tree/v1.4.1",
+      "sourceSHA256": "ea43b1de38a6f90c488800d66dec1ed671e68cda530266bc96951fb5b6307613",
+      "type": "file",
+      "version": "1.4.1-forgeplay.4"
+    },
+    {
+      "component": "molten-vk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "d557539df68e771cc1eedcc91d13f70fca930e508d11eedcafa4b15db49e3744",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/MoltenVK/SourceBuild/SPIRV-Headers/LICENSES/CC-BY-4.0.txt"
+      ],
+      "path": "Legal/MoltenVK/SourceBuild/SPIRV-Headers/LICENSES/CC-BY-4.0.txt",
+      "sourceKind": "forgeplay-source-build",
+      "sourceReference": "https://github.com/KhronosGroup/MoltenVK/tree/v1.4.1",
+      "sourceSHA256": "d557539df68e771cc1eedcc91d13f70fca930e508d11eedcafa4b15db49e3744",
+      "type": "file",
+      "version": "1.4.1-forgeplay.4"
+    },
+    {
+      "component": "molten-vk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "6d7c9e9d7d12c8d3753bdb24417b84819ba4d6c2f025c37948113d86dc81eef9",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/MoltenVK/SourceBuild/SPIRV-Headers/LICENSES/MIT.txt"
+      ],
+      "path": "Legal/MoltenVK/SourceBuild/SPIRV-Headers/LICENSES/MIT.txt",
+      "sourceKind": "forgeplay-source-build",
+      "sourceReference": "https://github.com/KhronosGroup/MoltenVK/tree/v1.4.1",
+      "sourceSHA256": "6d7c9e9d7d12c8d3753bdb24417b84819ba4d6c2f025c37948113d86dc81eef9",
+      "type": "file",
+      "version": "1.4.1-forgeplay.4"
+    },
+    {
+      "component": "molten-vk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/MoltenVK/SourceBuild/SPIRV-Tools/LICENSE"
+      ],
+      "path": "Legal/MoltenVK/SourceBuild/SPIRV-Tools/LICENSE",
+      "sourceKind": "forgeplay-source-build",
+      "sourceReference": "https://github.com/KhronosGroup/MoltenVK/tree/v1.4.1",
+      "sourceSHA256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "type": "file",
+      "version": "1.4.1-forgeplay.4"
+    },
+    {
+      "component": "molten-vk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "761f6cd13bceed4ab70cea746cd4b940b6aa2f0709eebde3a03591f5ed16bb2d",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/MoltenVK/SourceBuild/SourceBuildRecord.json"
+      ],
+      "path": "Legal/MoltenVK/SourceBuild/SourceBuildRecord.json",
+      "sourceKind": "forgeplay-source-build",
+      "sourceReference": "https://github.com/KhronosGroup/MoltenVK/tree/v1.4.1",
+      "sourceSHA256": "761f6cd13bceed4ab70cea746cd4b940b6aa2f0709eebde3a03591f5ed16bb2d",
+      "type": "file",
+      "version": "1.4.1-forgeplay.4"
+    },
+    {
+      "component": "molten-vk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "ac24e5ea920e4318e4d02c4086ae51f53cfb03feed06c18df1019e7ada1ec7bc",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/MoltenVK/SourceBuild/Vulkan-Headers/LICENSE.md"
+      ],
+      "path": "Legal/MoltenVK/SourceBuild/Vulkan-Headers/LICENSE.md",
+      "sourceKind": "forgeplay-source-build",
+      "sourceReference": "https://github.com/KhronosGroup/MoltenVK/tree/v1.4.1",
+      "sourceSHA256": "ac24e5ea920e4318e4d02c4086ae51f53cfb03feed06c18df1019e7ada1ec7bc",
+      "type": "file",
+      "version": "1.4.1-forgeplay.4"
+    },
+    {
+      "component": "molten-vk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/MoltenVK/SourceBuild/Vulkan-Headers/LICENSES/Apache-2.0.txt"
+      ],
+      "path": "Legal/MoltenVK/SourceBuild/Vulkan-Headers/LICENSES/Apache-2.0.txt",
+      "sourceKind": "forgeplay-source-build",
+      "sourceReference": "https://github.com/KhronosGroup/MoltenVK/tree/v1.4.1",
+      "sourceSHA256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "type": "file",
+      "version": "1.4.1-forgeplay.4"
+    },
+    {
+      "component": "molten-vk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "1ca3502222d967f3be5751c55f6b7ee735b5383909c3b501495f54b216dbf227",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/MoltenVK/SourceBuild/Vulkan-Headers/LICENSES/MIT.txt"
+      ],
+      "path": "Legal/MoltenVK/SourceBuild/Vulkan-Headers/LICENSES/MIT.txt",
+      "sourceKind": "forgeplay-source-build",
+      "sourceReference": "https://github.com/KhronosGroup/MoltenVK/tree/v1.4.1",
+      "sourceSHA256": "1ca3502222d967f3be5751c55f6b7ee735b5383909c3b501495f54b216dbf227",
+      "type": "file",
+      "version": "1.4.1-forgeplay.4"
+    },
+    {
+      "component": "molten-vk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "58604a126af6a671ea390ee3d5b3e42228aa59b2858fb7af1d5b20b31739ccbb",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/MoltenVK/SourceBuild/cereal/LICENSE"
+      ],
+      "path": "Legal/MoltenVK/SourceBuild/cereal/LICENSE",
+      "sourceKind": "forgeplay-source-build",
+      "sourceReference": "https://github.com/KhronosGroup/MoltenVK/tree/v1.4.1",
+      "sourceSHA256": "58604a126af6a671ea390ee3d5b3e42228aa59b2858fb7af1d5b20b31739ccbb",
+      "type": "file",
+      "version": "1.4.1-forgeplay.4"
+    },
+    {
+      "component": "molten-vk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "eee44b69a42f9899053d432b8735c61d7682f5c1f1ba5eed7e7075b888026a83",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/MoltenVK/SourceBuild/moltenvk-1.4.1-frame-generation-capture.patch"
+      ],
+      "path": "Legal/MoltenVK/SourceBuild/moltenvk-1.4.1-frame-generation-capture.patch",
+      "sourceKind": "forgeplay-source-build",
+      "sourceReference": "https://github.com/KhronosGroup/MoltenVK/tree/v1.4.1",
+      "sourceSHA256": "eee44b69a42f9899053d432b8735c61d7682f5c1f1ba5eed7e7075b888026a83",
+      "type": "file",
+      "version": "1.4.1-forgeplay.4"
+    },
+    {
+      "component": "nettle",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118",
+      "licenseExpression": "GPL-2.0-or-later OR LGPL-3.0-or-later",
+      "licensePaths": [
+        "Legal/Nettle/COPYING.LESSERv3"
+      ],
+      "path": "Legal/Nettle/COPYING.LESSERv3",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/nettle",
+      "sourceSHA256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118",
+      "type": "file",
+      "version": "4.0"
+    },
+    {
+      "component": "p11-kit",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "2e1ba993904df807a10c3eda1e5c272338edc35674b679773a8b3ad460731054",
+      "licenseExpression": "BSD-3-Clause",
+      "licensePaths": [
+        "Legal/P11-Kit/COPYING"
+      ],
+      "path": "Legal/P11-Kit/COPYING",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/p11-kit",
+      "sourceSHA256": "2e1ba993904df807a10c3eda1e5c272338edc35674b679773a8b3ad460731054",
+      "type": "file",
+      "version": "0.26.2"
+    },
+    {
+      "component": "vulkan-loader",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "43c0a37e6a0fa7ff3c843b3ec5a4fac84b712558ddac103fbd4c1649662a9ece",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/Vulkan-Loader/LICENSE.txt"
+      ],
+      "path": "Legal/Vulkan-Loader/LICENSE.txt",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/vulkan-loader",
+      "sourceSHA256": "43c0a37e6a0fa7ff3c843b3ec5a4fac84b712558ddac103fbd4c1649662a9ece",
+      "type": "file",
+      "version": "1.4.350.1"
+    },
+    {
+      "component": "molten-vk",
+      "contentHashAlgorithm": "sha256",
+      "contentSHA256": "14b8a5ba3de9ba3fdc4dc58facaacb6cf5c133d70671da5ef1a2c8b62a6fce58",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/MoltenVK/LICENSE",
+        "Legal/MoltenVK/SourceBuild/CPM.cmake/LICENSE",
+        "Legal/MoltenVK/SourceBuild/ForgePlayMoltenVKSource.lock.json",
+        "Legal/MoltenVK/SourceBuild/NOTICE-ForgePlay.md",
+        "Legal/MoltenVK/SourceBuild/SPIRV-Cross/LICENSE",
+        "Legal/MoltenVK/SourceBuild/SPIRV-Cross/LICENSES/Apache-2.0.txt",
+        "Legal/MoltenVK/SourceBuild/SPIRV-Cross/LICENSES/CC-BY-4.0.txt",
+        "Legal/MoltenVK/SourceBuild/SPIRV-Cross/LICENSES/LicenseRef-KhronosFreeUse.txt",
+        "Legal/MoltenVK/SourceBuild/SPIRV-Cross/LICENSES/MIT.txt",
+        "Legal/MoltenVK/SourceBuild/SPIRV-Headers/LICENSE",
+        "Legal/MoltenVK/SourceBuild/SPIRV-Headers/LICENSES/CC-BY-4.0.txt",
+        "Legal/MoltenVK/SourceBuild/SPIRV-Headers/LICENSES/MIT.txt",
+        "Legal/MoltenVK/SourceBuild/SPIRV-Tools/LICENSE",
+        "Legal/MoltenVK/SourceBuild/SourceBuildRecord.json",
+        "Legal/MoltenVK/SourceBuild/Vulkan-Headers/LICENSE.md",
+        "Legal/MoltenVK/SourceBuild/Vulkan-Headers/LICENSES/Apache-2.0.txt",
+        "Legal/MoltenVK/SourceBuild/Vulkan-Headers/LICENSES/MIT.txt",
+        "Legal/MoltenVK/SourceBuild/cereal/LICENSE",
+        "Legal/MoltenVK/SourceBuild/moltenvk-1.4.1-frame-generation-capture.patch"
+      ],
+      "path": "wine/etc/vulkan/icd.d/MoltenVK_icd.json",
+      "sourceKind": "forgeplay-source-build",
+      "sourceReference": "https://github.com/KhronosGroup/MoltenVK/tree/v1.4.1",
+      "sourceSHA256": "14b8a5ba3de9ba3fdc4dc58facaacb6cf5c133d70671da5ef1a2c8b62a6fce58",
+      "type": "file",
+      "version": "1.4.1-forgeplay.4"
+    },
+    {
+      "component": "GStreamer Bad Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "2771ddcb12b91b85363b72ab37f29e544d3ec1d4bcfba48c1e88df83742747c1",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "4b90e3e1ac1c059c4c9b4fe84fde6576283107768e8c28939e181f21df3b3f36",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBad/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBad/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/gstreamer-1.0/libgstapplemedia.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "65169a6b4d24c331e40feda449cd1c19610fe07acbecc4d1f3bc4e220b1cd7a5",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Ugly Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "3d5034a0863663e1ea7dde08b6e903333a960481f1ad108fc6d629f8c8141751",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "8219d567fc3e6bfbb8b7caf8bddd16008c04a14a630d1e180d053277f9001a42",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerUgly/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerUgly/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/gstreamer-1.0/libgstasf.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "e75f2bd0a785bae239fae287c17d18567d0ed0e44b65207585a47568454b46de",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "2ef5db1d3e6e6fd950dd6ce5f1159bf32a273eccf972b220d3cb24aab10553b5",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "2076d330815bb478e3d5e267951486118bbd40d59004c64d0c6076ee8604d808",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/gstreamer-1.0/libgstaudioconvert.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "f40321fc95e582dd2d3c6a69aa1b681d1f357ec33443374e00c33a6004684ced",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Good Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "12a4602ea37efed920d199215eb02164be6f100b00bef55a002bde0c34dbdd70",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "2cda7ecd39024da3956124bd7d2b474333fecbdc64f3d735048108637cb06937",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerGood/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerGood/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/gstreamer-1.0/libgstaudioparsers.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "574cb2589751de6906eaa37d9ad71fff22ea5ed1672cfa632d9d2312b29a48bb",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "7d27234bff6fd103f6bf446df71c48e09f4426ce0bc429fabbd62ff8bd30784f",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "1299aeb640d19c74b1ac36dee70c71a228b5953c087d5134e05ce35bf81384d9",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/gstreamer-1.0/libgstaudioresample.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "1336100faf47d5e5dad32a48413057edd127f41385e598973c26336e906fd346",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Good Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "be07e19b3783a6474720526b37258e6255ba41f922379b6277e2d3f23ddac113",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "a1257c1e7aed82898f2cd4f19043036bb39019e620c9ee5ad525de4e1b0ddd7a",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerGood/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerGood/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/gstreamer-1.0/libgstavi.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "732b8101405fde95939795d0b62768fd5e21a3341a03450a00f4939353231a83",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "a96295256b4818f3ef0a6b57a31eac7f484048d1a6d89b205206642537a9e856",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "aea3a16309c74bc9af8d6f53db0966c6208126ec82673e58095828d9b02f9d4e",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamer/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamer/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/gstreamer-1.0/libgstcoreelements.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "b563c449a744dc18444269492b1e61b5f9a59233c3a80fa0ab3328bd16223b23",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Good Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "330c68b4ab8cfaf8f29ace63a453bdb7a51f19ef8936fb195265bbf899b2f948",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "f5284a65f0f390f289dac49d5ecc899781c6823614f9863b9aa99253cc9306b2",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerGood/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerGood/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/gstreamer-1.0/libgstdeinterlace.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "58b8e141f18bd8e311eb5d80bc5498f63760043268d5edfed5d91e96c92ace18",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Good Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "303e5d81b9dbb977dfd092174db02a8859cd590c858f53efbd4db08c216445de",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "63ad6aa443422513d6d5932b5961f24b8262909e7f6561d67dbd6c2757b85813",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerGood/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerGood/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/gstreamer-1.0/libgstisomp4.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "888a053d26c3c926d4a34bffa55ea774df337c829402fcfda5677ac1126d94e0",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer libav",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "95f99ead66247aeec874a0365ea76a42de2857580ac1b3b4c6ba4722fefc217d",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "7e030370887f7326bafe23a012999b19a342d281fa61bd754c770b2d29b575e0",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerLibav/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerLibav/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/gstreamer-1.0/libgstlibav.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "a249bbcbaab667c02cee16d1b20e3d2c3d85623f3598287c8b55f7b09c8f0d38",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Good Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "066b44114d1743fec0d3a92151f01b3bb27b03a9f29835f76794a3112aef1d8a",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "26fe22e5d1664eff686ee1c120eb5c7c808d2a60de5fb2bc0de831e3df3c685b",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerGood/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerGood/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/gstreamer-1.0/libgstmatroska.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "d631bf339ca891c44a2d05891861524e21a39b91feb3253b4c5e43645ba14f4c",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "d395db96d21ca5e7f27326f921bd0ae872087934e8bb8b437d0b86223745fbe8",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "8473410a4fc713764d6a09b4be391eddbaaa3b035f0e462eb677a0f7e58e7180",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/gstreamer-1.0/libgstplayback.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "28c6ecf8be62b5e5d19c8a7fb2f5fe8302f57e03197cc345d5b074f8f0b3054d",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "49f5f94304a2bdb42bd6705d13d1c4ebbf4a01cab3a42b6921d2689366c0aada",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "19e955300f0dde3af92f27b9a16b58c5800ff535bd5fa60ef64212d4b99404d9",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/gstreamer-1.0/libgsttypefindfunctions.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "165bf7f3113cfcbc121340795546fd22967ba11976e97537e1a65960a96b4f0f",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "8acb4dc2f5362c8f117a693f5a45ead8c177c45677e0b7af098302d1a496f7a9",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "ea93c1a4f54c0489f5dadec19f7403d7e4714773f0fbdd36297e8f52c329c4cb",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/gstreamer-1.0/libgstvideoconvertscale.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "b83cc344ebee61cd8f54719c493f95b85256c6c66eff61f6c6a0bc36674be8f9",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Good Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "d638a00097e0aea1e8f1e1db4a312449751057e082ed0d2595315ec4d2b8e85d",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "af2f635e6ebcc0649e2c6f26c5f780e1c73ed209a19a96fd0c1ab699a63d2a45",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerGood/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerGood/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/gstreamer-1.0/libgstvideofilter.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "d376b91c28de3b57f799cdc78c2459d3213099b9fee7ff1a7670c4ab34caac5b",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Bad Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "28c7c51767b5ed59d9d911f3349442d3c15d817de035246953fefc6603e8004b",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "bb1bfe8eebe27928e9cdc3e6fe9c4cb4c7e75c860430afc558a1d6a425246dc3",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBad/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBad/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/gstreamer-1.0/libgstvideoparsersbad.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "788bd57ad5064816c25b524846a563f53e7f543e7ebc0f5eb3c7c3d2f9eac726",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "MoltenVK",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "9851b9338aa80131cec106a73f9af893502ee97835d0a8428e56dd9a7a8ab8f4",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "805efb913c78effc3f29d4d34e07422453a3b9b8707c254800ad2d28f45405ef",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/GStreamer/MoltenVK/Apache-2.0.txt",
+        "Legal/GStreamer/MoltenVK/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libMoltenVK.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "e50581be09547002fef15d4fa01ffd277e8726eb76969f338215770792e70eb8",
+      "type": "file",
+      "version": "1.2.9"
+    },
+    {
+      "component": "FFmpeg",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "c01b114a754654529d1bfd505c85855e55fa10ec69e3c0958e9e1e85e0ac5f61",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "c67eeb79a451314e56d2a2a571321098de176c0a8506e829e2accded4665f3d9",
+      "licenseExpression": "LGPL-2.1-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/FFmpeg/LGPL-2.1-or-later.txt",
+        "Legal/GStreamer/FFmpeg/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libavcodec.61.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "a9f9e527a8c8e52872d1bb04460470eb4f6488792bc559551ee11050b46b6a43",
+      "type": "file",
+      "version": "libavcodec-61.19.100"
+    },
+    {
+      "component": "FFmpeg",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "ae5eff475a35984826e52138f42c0597af65380f2016adb343ce5e7485ef8fc5",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "7da67d4317087cc1459a5217882b756b54384b5b88d1de4144561e5b717025b5",
+      "licenseExpression": "LGPL-2.1-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/FFmpeg/LGPL-2.1-or-later.txt",
+        "Legal/GStreamer/FFmpeg/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libavfilter.10.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "90d4c02ce9de686850bac602585ead8e45fd279a0dc6abdee5d757b9047dc079",
+      "type": "file",
+      "version": "libavcodec-61.19.100"
+    },
+    {
+      "component": "FFmpeg",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "454bcb5c169dd737dd0762af2a3e4562bb858996f350384abf33df49c2fdd568",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "fac2ee2a9cd29a2980154a2c8ee731516a339e9cd05559f9795d250b973b3c1f",
+      "licenseExpression": "LGPL-2.1-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/FFmpeg/LGPL-2.1-or-later.txt",
+        "Legal/GStreamer/FFmpeg/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libavformat.61.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "76108d6b6dfb4d4e8246bd44425ae7ac00c3c7476d4efd68367d4c9c371e19b3",
+      "type": "file",
+      "version": "libavcodec-61.19.100"
+    },
+    {
+      "component": "FFmpeg",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "f76d338a009f4a1033b62c42defeaa38e66687572bb99213e19a18c6271f2a49",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "102d944e78fa9ed484dcb5bfd7d01bf99df08400a8de54dad70032bbba5759e4",
+      "licenseExpression": "LGPL-2.1-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/FFmpeg/LGPL-2.1-or-later.txt",
+        "Legal/GStreamer/FFmpeg/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libavutil.59.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "8804cf6072a5248670ee2fdad915d750ad5983bc5c5618224c29ebf810b26e76",
+      "type": "file",
+      "version": "libavcodec-61.19.100"
+    },
+    {
+      "component": "bzip2",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "e6e2c4ef97ef7c872c99f18b306b7225a0c6193ac70946070f365293fcc3c420",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "0f867821ae41aa36727052451ae0b6633bcea5bd44cf5f47b199a6f99c80ac7a",
+      "licenseExpression": "bzip2-1.0.6",
+      "licensePaths": [
+        "Legal/GStreamer/bzip2/LICENSE",
+        "Legal/GStreamer/bzip2/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libbz2.1.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "ccb51555f66825d90a4464f3d9ecf87447a88c548be881eddfbf301967ef2845",
+      "type": "file",
+      "version": "1.0.8"
+    },
+    {
+      "component": "libffi",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "f357ad7a7eec71b8d78b918b2a1ffae9c0a205d4b710bcb33d5c8df304e9c44d",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "dca9422439d262686e2fabcfbad1774c5bf9a85ef4ef99e99213ee90e21623a0",
+      "licenseExpression": "MIT",
+      "licensePaths": [
+        "Legal/GStreamer/libffi/LICENSE",
+        "Legal/GStreamer/libffi/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libffi.7.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "eefd7bb49aeca4e73d34cd739a22a44ed88443730c0b280a84fa9062fe01b66e",
+      "type": "file",
+      "version": "3.2.9999"
+    },
+    {
+      "component": "GLib",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "cc71e08c78c3fcc571941e2d62acca155ff5ad2c2eea15048a8d9ecd005040fd",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "4ebb6134ece550889abec9a2204822d913a383a734f615cefe7bd7b95f9de1fe",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GLib/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GLib/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libgio-2.0.0.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "6493ac1832ac0d8787a05a7ddb3f58223956815031c7158ada8b4d6f57c00268",
+      "type": "file",
+      "version": "2.82.4"
+    },
+    {
+      "component": "GLib",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "992f0147ea7dc8c19349e8f971219b240c46354779ccf474c405460aea826fba",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "243a7b51c272cfc78a9e077ba666689be779b63b4d657592c47ed285f1cdf0ca",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GLib/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GLib/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libglib-2.0.0.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "3dad0dcb9f9804021e9c4ab1b448403e508223539b0a673144131ae494c32629",
+      "type": "file",
+      "version": "2.82.4"
+    },
+    {
+      "component": "GLib",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "e1a098330063dab7cef2efa2d09605f54bc2d31b6800fdb7924c748180cb7a6e",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "d38662a3540b40c5d9ec7c472ceca38ed2509ee67f2b2e34842cbaad97d0dc47",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GLib/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GLib/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libgmodule-2.0.0.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "5cc973f1352b405727366ddd91d18f03577471adc4e208d0fbc56cde49c5a23b",
+      "type": "file",
+      "version": "2.82.4"
+    },
+    {
+      "component": "GLib",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "505164bca38a24cf52e1040a3458e9f50c65de51d538a755de154c565bfa49c6",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "3df5c62646a51d95fd7003d8d38fc07726bb4ad40d04e5f4a821a97f724487d5",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GLib/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GLib/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libgobject-2.0.0.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "69085861dbb12c9f84abcea878963816148499af77c31c7a1ae04ac265555fc9",
+      "type": "file",
+      "version": "2.82.4"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "244bcbb4767b5a74a734cd23cdaada4ac69e81668c6c40aae743c4e914ff0816",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "16c3c890fa2ef24a6b8988dc0e4ac1913cfd588c5d8c163d5b8654c4ef6e5993",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libgstaudio-1.0.0.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "1dbafc10cb132ca0a785bbc8f00b86610bdce19209316a99301210bac47ec5df",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "3f70104b22eee61ca6de08f750207f38f64a74c07f7e41e21f4c214e3afe0eea",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "8dfaf4849c210dd8a6456949bcf170a82e5fdaedc4e9321d04ba45bb7825676b",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libgstbase-1.0.0.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "167b3a2da94a3cd24bc5564b18960d231e40b52b212bf3276cf88e6aa0f75d42",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Bad Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "e6df9a36926cab4b4636fe48e5fe4d1529ea02e1c20124e73dc304e9a716451c",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "04ca809ac67b0366b4f2e9659834ba729e41f76f4c68594488f0486bc810e401",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBad/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBad/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libgstcodecparsers-1.0.0.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "c0a2a831165a5359a32c15e4061cb8bb5ff6f8b36c5523afa540e99505c5e2d3",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Bad Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "c847cd95d3821663289dba90a1a9ac7f0d2bf7cd03d366537fddc7f6f742e55e",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "eddb8ff20f94669a2c3edbab3a53c8340268b7a7aa09b28648ade62e687ec4d8",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBad/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBad/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libgstgl-1.0.0.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "0bfe1dfd0b56710360ba9e1ed52d5fb58293a31c42fba058af4a48355fef62fb",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "5290e03797bf699d640abfc21fcc1e63962ae32597f64183b4e7de391e3a5e27",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "ccc289a5d354a4ff3847af9f50ce0e6fa5fd7d0b2e7c6f9b3497e04add40d623",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libgstpbutils-1.0.0.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "48a91d7c723c9d97eafa0a340c4ca44a0ffbb35a8e756dc835d5c9ee64440289",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "706d5eba4ec41f0d194d4047fade351b66e9276b83ec7e92631ca03304746456",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "8f61e9f69096d85ce96791007a185d4cc16e85ece25aee78ab4bf77a70c19319",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamer/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamer/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libgstreamer-1.0.0.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "d9c87de9db7cf392deab55e104918fa17fa0fe48704b327434f66fd17837f4d8",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "628a9fe866290eb6766b1beff9ad1dab0e149aa004f849aeea99150af54152b0",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "265644a36172158672935a0dece6680336656777b57cd8f764c9bfe2e0e88419",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libgstriff-1.0.0.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "5267fb378f6f34e1694dc92fd15290697e45c49fbb5456739cee7eef4d506997",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "425b043a7e1d0143cbd16b0cd6eddba47f576e615a9ea2fff106dfaae0b31a99",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "7e50575482b5e7b8f58a62e4f8d5c089893a5f0ddcc3ddd381eb48faec9ea1cb",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libgstrtp-1.0.0.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "20b9da6643a5dac3e5742a162c22e59c795bfe69eff99b71933c94aee29d9864",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "8c3e242faf4d7a0059aec9dad1b8dc525dd9edddff8f55bfa9621da471fa7b09",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "72128dbccbe355fdce1b113ae35b518b1a234830b573ea0f20e26ec23bfa0fcd",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libgstrtsp-1.0.0.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "179ce9da2b6e9d7e4c03f3cbee53d056f687b649f3c8ba78d306b80418f26f2a",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "f182aa0b332df3f463f2738d1516cdb9809430948d18c73292c264a77d384bd1",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "24cbf6bbea744e5f898287ccb3e049b821816a20971c6f2a1b630d1f332c7554",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libgstsdp-1.0.0.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "0f05be4a7108bd0030d62672cef3ce21ca113b9bfb5c347e4824b02551441d68",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "5ed83f38c65b22cab4d2afb3e3507b9c46ad6c6eeebf7d971db846c4a9cca5f8",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "46aca4737faaa88f86b4ed6e7cc1e98e65f83141f11d465b5e31350c4f2cdb11",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libgsttag-1.0.0.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "7dcdefa4d2ded37f4e907a1534ab1367bd0d42cc56e938dfce4fdd276a0df20b",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Base Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "8efb26570c582e8c0268165fb7c718f86ae0870fe87e65fbade4ecc678092bff",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "6f27e524a7f0dff9065ee1d9574ab232e701535bcea44f9c68fd143d66063540",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBase/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBase/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libgstvideo-1.0.0.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "09d75b896f2317778f44dfb56a7b96d2e22106eb08b92d6dba678e567090ba1a",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "GStreamer Bad Plug-ins",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "bc78d731defc8fb0515a98371ab0b31201b8a213b473f9a25b7a5a41b61a1716",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "57489b31835396d97a881c9430577e86f9eb74f560e4ed757bdbad21053c9675",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/GStreamerBad/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/GStreamerBad/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libgstvulkan-1.0.0.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "1cf8d7f6a744b65233910d051295ed11295ace0ad0e674d41a33b3979664f244",
+      "type": "file",
+      "version": "1.28.5"
+    },
+    {
+      "component": "proxy-libintl",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "e492f942249d673cce981fe693f2ce11f68819a60e841b21dd5099449b9abeed",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "2d0134c50f28703909c6d5ed41aac68a5f589e472e7584a8f8f5ca8b02adb4cd",
+      "licenseExpression": "LGPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/proxy-libintl/LGPL-2.0-or-later.txt",
+        "Legal/GStreamer/proxy-libintl/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libintl.8.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "d6506824bb269bab6c0bb85d96138c766304ac518d62afc0d3761ccc2cfc77d8",
+      "type": "file",
+      "version": "0.4"
+    },
+    {
+      "component": "ORC",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "8c7ec20db85bfffb9a93f07b000c483bd58f40d50d4554951ad2dc886b01054d",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "ce525c5d39d07dfdeca6cf03103fc287e94151640a69b3f9598c7b5071071bba",
+      "licenseExpression": "BSD-2-Clause",
+      "licensePaths": [
+        "Legal/GStreamer/ORC/COPYING",
+        "Legal/GStreamer/ORC/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/liborc-0.4.0.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "57eefd196c7d16ed83adee4956b917de03306b64313623f32ac7582510984d52",
+      "type": "file",
+      "version": "0.4.42"
+    },
+    {
+      "component": "PCRE2",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "7179aafe7441d79020b3a9c7af7a57b17302ac66b7cfb780227589381035160c",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "2dc9cfc726fe7b056919f775dfeb71feb2bfd7387a9ff61ad81ccd5ed0a15eda",
+      "licenseExpression": "BSD-3-Clause",
+      "licensePaths": [
+        "Legal/GStreamer/PCRE2/LICENCE",
+        "Legal/GStreamer/PCRE2/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libpcre2-8.0.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "0ab149dcf90556ffe7721932f53cec2f98e49ee46f83b53ef6a11550e012d9c4",
+      "type": "file",
+      "version": "10.42"
+    },
+    {
+      "component": "FFmpeg",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "bc2737fd2e9b5399c0fa2c433512332adf1047203bb553789a7d1f34ffaa0e2d",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "becb542974e18d82cbc681f6cbb9a54b6336a77c346e5e9ad99a332dcd96b179",
+      "licenseExpression": "LGPL-2.1-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/FFmpeg/LGPL-2.1-or-later.txt",
+        "Legal/GStreamer/FFmpeg/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libswresample.5.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "fb955d0d222b0a0943dfafa2b7ed9454c10c66658847a8141dbefee869cdf71b",
+      "type": "file",
+      "version": "libavcodec-61.19.100"
+    },
+    {
+      "component": "FFmpeg",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "1e7e5051945755854c76fce416a5c05b15e81e61e85e412c7d49fbabfb4f94a5",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "749c7e4bd114c60f381fe838bb52bce2d5da58b425984ce9dd03a4dbcb06fc9e",
+      "licenseExpression": "LGPL-2.1-or-later",
+      "licensePaths": [
+        "Legal/GStreamer/FFmpeg/LGPL-2.1-or-later.txt",
+        "Legal/GStreamer/FFmpeg/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libswscale.8.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "eb17b62cb2ee3c59919acdfd71413e4aa68657a747a12ddcd29ed5f44c87016d",
+      "type": "file",
+      "version": "libavcodec-61.19.100"
+    },
+    {
+      "component": "zlib",
+      "consumptionHashAlgorithm": "sha256-macho-signature-independent-v1",
+      "consumptionSHA256": "03ede405f538d625b84a69b306f296170bef8df1e3d6eb9d0ea9950c5607299e",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "f91e75cf423a56b93417c7132e5dbd0c8e9836a7ec49b949ccf9232e483e2c2f",
+      "licenseExpression": "Zlib",
+      "licensePaths": [
+        "Legal/GStreamer/zlib/README",
+        "Legal/GStreamer/zlib/README-LICENSE-INFO.txt"
+      ],
+      "path": "wine/gstreamer/lib/libz.1.dylib",
+      "sourceKind": "gstreamer-official-macos-universal-sdk",
+      "sourceReference": "https://gstreamer.freedesktop.org/data/pkg/osx/1.28.5/",
+      "sourceSHA256": "9f99d8b3926760c6701188b0df7eac2ba9724003fdcd681997ed5683db2b8f35",
+      "type": "file",
+      "version": "1.2.11"
+    },
+    {
+      "component": "molten-vk",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "ed519782a605a053234345b257d1976d2de3849f9dd6b03d46976378c1fbee1f",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/MoltenVK/LICENSE",
+        "Legal/MoltenVK/SourceBuild/CPM.cmake/LICENSE",
+        "Legal/MoltenVK/SourceBuild/ForgePlayMoltenVKSource.lock.json",
+        "Legal/MoltenVK/SourceBuild/NOTICE-ForgePlay.md",
+        "Legal/MoltenVK/SourceBuild/SPIRV-Cross/LICENSE",
+        "Legal/MoltenVK/SourceBuild/SPIRV-Cross/LICENSES/Apache-2.0.txt",
+        "Legal/MoltenVK/SourceBuild/SPIRV-Cross/LICENSES/CC-BY-4.0.txt",
+        "Legal/MoltenVK/SourceBuild/SPIRV-Cross/LICENSES/LicenseRef-KhronosFreeUse.txt",
+        "Legal/MoltenVK/SourceBuild/SPIRV-Cross/LICENSES/MIT.txt",
+        "Legal/MoltenVK/SourceBuild/SPIRV-Headers/LICENSE",
+        "Legal/MoltenVK/SourceBuild/SPIRV-Headers/LICENSES/CC-BY-4.0.txt",
+        "Legal/MoltenVK/SourceBuild/SPIRV-Headers/LICENSES/MIT.txt",
+        "Legal/MoltenVK/SourceBuild/SPIRV-Tools/LICENSE",
+        "Legal/MoltenVK/SourceBuild/SourceBuildRecord.json",
+        "Legal/MoltenVK/SourceBuild/Vulkan-Headers/LICENSE.md",
+        "Legal/MoltenVK/SourceBuild/Vulkan-Headers/LICENSES/Apache-2.0.txt",
+        "Legal/MoltenVK/SourceBuild/Vulkan-Headers/LICENSES/MIT.txt",
+        "Legal/MoltenVK/SourceBuild/cereal/LICENSE",
+        "Legal/MoltenVK/SourceBuild/moltenvk-1.4.1-frame-generation-capture.patch"
+      ],
+      "path": "wine/lib/libMoltenVK.dylib",
+      "sourceKind": "forgeplay-source-build",
+      "sourceReference": "https://github.com/KhronosGroup/MoltenVK/tree/v1.4.1",
+      "sourceSHA256": "8bfd63164ada33be5c480ed379f4636dc179b83454806f3b4fb4498b8288e984",
+      "type": "file",
+      "version": "1.4.1-forgeplay.4"
+    },
+    {
+      "component": "freetype",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "85ef92e252dddc6ef2ae37b46e7951d1140346e5226e84d63f6dd9b006102960",
+      "licenseExpression": "FTL",
+      "licensePaths": [
+        "Legal/FreeType/LICENSE.TXT"
+      ],
+      "path": "wine/lib/libfreetype.6.dylib",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/freetype",
+      "sourceSHA256": "23c57bffa9fde184c38ddebd2592e79e4ee7e2e8973468bbfb74153ad2ab3d1c",
+      "type": "file",
+      "version": "2.14.3"
+    },
+    {
+      "component": "gmp",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "895231828b35024482af6244d434d7f690833a4c02d3e13fd83ece3cc8578f26",
+      "licenseExpression": "LGPL-3.0-or-later OR GPL-2.0-or-later",
+      "licensePaths": [
+        "Legal/GMP/COPYING.LESSERv3"
+      ],
+      "path": "wine/lib/libgmp.10.dylib",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/gmp",
+      "sourceSHA256": "31b41d0359fce1c234dcca3104ea937637a56734592f1bd4d51fb14ee25fd30b",
+      "type": "file",
+      "version": "6.3.0"
+    },
+    {
+      "component": "gnutls",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "66ea9eb4343469781d2ff2ae6438597595fb0008240ff5d946ce03bc1f345023",
+      "licenseExpression": "LGPL-2.1-or-later AND GPL-3.0-only",
+      "licensePaths": [
+        "Legal/GnuTLS/COPYING.LESSERv2",
+        "Legal/GnuTLS/COPYING"
+      ],
+      "path": "wine/lib/libgnutls.30.dylib",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/gnutls",
+      "sourceSHA256": "8992090dec64becf6c41be6c87447b2cad75ceea575c52786dadab2dd36226af",
+      "type": "file",
+      "version": "3.8.13_2"
+    },
+    {
+      "component": "nettle",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "33f17b5f8c6d5a1ff84e4f37e365534e9d2446ac0072e84d1a08317c6cae0719",
+      "licenseExpression": "GPL-2.0-or-later OR LGPL-3.0-or-later",
+      "licensePaths": [
+        "Legal/Nettle/COPYING.LESSERv3"
+      ],
+      "path": "wine/lib/libhogweed.7.dylib",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/nettle",
+      "sourceSHA256": "9d7aeb270b517bc7709824c54e95241d283cb46a8988bba52fac2168f9383351",
+      "type": "file",
+      "version": "4.0"
+    },
+    {
+      "component": "libidn2",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "ca1ecb6ad6f1dfef11b05c76bcb4d5dcea5ab578b169397fe7371b9b33177639",
+      "licenseExpression": "(GPL-2.0-or-later OR LGPL-3.0-or-later) AND Unicode-TOU AND Unicode-DFS-2016",
+      "licensePaths": [
+        "Legal/Libidn2/COPYING.LESSERv3",
+        "Legal/Libidn2/COPYING.unicode"
+      ],
+      "path": "wine/lib/libidn2.0.dylib",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/libidn2",
+      "sourceSHA256": "be6936b089fbe9f6647fb0ef638561de875ca69500c87477158a45701377cec1",
+      "type": "file",
+      "version": "2.3.8"
+    },
+    {
+      "component": "gettext",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "1449676e98f700079c129a30798eaedb074769501f6fa5462783c2e2dbaece47",
+      "licenseExpression": "GPL-3.0-or-later AND LGPL-2.1-or-later",
+      "licensePaths": [
+        "Legal/Gettext/COPYING"
+      ],
+      "path": "wine/lib/libintl.8.dylib",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/gettext",
+      "sourceSHA256": "56e85bfeae93c23765ca77ef584f753d13fa909eb0fb0d622c5e34211c0519fe",
+      "type": "file",
+      "version": "1.0"
+    },
+    {
+      "component": "nettle",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "29570807b899a0cd75be87ac59b1811cf9c1dfb86fc715b8cc2a9a64e7d1172c",
+      "licenseExpression": "GPL-2.0-or-later OR LGPL-3.0-or-later",
+      "licensePaths": [
+        "Legal/Nettle/COPYING.LESSERv3"
+      ],
+      "path": "wine/lib/libnettle.9.dylib",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/nettle",
+      "sourceSHA256": "7785c2ff8f090203e8463bfa45ba41707c2f80e686c819048297340c68c4c394",
+      "type": "file",
+      "version": "4.0"
+    },
+    {
+      "component": "p11-kit",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "8fc4aca703b1abace6c3246de7016f85528907b550b0215f3ba8290e5124b652",
+      "licenseExpression": "BSD-3-Clause",
+      "licensePaths": [
+        "Legal/P11-Kit/COPYING"
+      ],
+      "path": "wine/lib/libp11-kit.0.dylib",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/p11-kit",
+      "sourceSHA256": "c90e5aee50149050745df569e8f3371b830fb2d15d56366ee7576461ed4545ca",
+      "type": "file",
+      "version": "0.26.2"
+    },
+    {
+      "component": "libpng",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "0a7c3290dd16c27ecb3cf39001301aa77bf34320817ffbd2604b6df087f0a986",
+      "licenseExpression": "libpng-2.0",
+      "licensePaths": [
+        "Legal/Libpng/LICENSE"
+      ],
+      "path": "wine/lib/libpng16.16.dylib",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/libpng",
+      "sourceSHA256": "b018c5075aaf20179c62b0b86c6d308c5abbc80ad2d9cc5250560892be154787",
+      "type": "file",
+      "version": "1.6.58"
+    },
+    {
+      "component": "libtasn1",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "17da85ba6cb7a5211ca14574cb60f600da827f1ea2480a47c93880f6e2194c10",
+      "licenseExpression": "LGPL-2.1-or-later",
+      "licensePaths": [
+        "Legal/Libtasn1/COPYING.LESSERv2"
+      ],
+      "path": "wine/lib/libtasn1.6.dylib",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/libtasn1",
+      "sourceSHA256": "22ede67170b7d188d644dbe892e18f2dba54f7272883adcfc14530b076dc56d9",
+      "type": "file",
+      "version": "4.21.0"
+    },
+    {
+      "component": "libunistring",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "45867b7ec9a060039cc72e7ad9407c22d449fb97f1e686d8f3d2823c2d3a482f",
+      "licenseExpression": "GPL-2.0-or-later OR LGPL-3.0-or-later",
+      "licensePaths": [
+        "Legal/Libunistring/COPYING.LIB"
+      ],
+      "path": "wine/lib/libunistring.5.dylib",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/libunistring",
+      "sourceSHA256": "46500265d18ce13d2fac746b477f41869f2aa19ba33f712a7b2c65d096d5c891",
+      "type": "file",
+      "version": "1.4.2"
+    },
+    {
+      "component": "vulkan-loader",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "e8feac3729d74f8ce79c0cffa6da297db5c65f8ddb7b390ae05b68061c790b51",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/Vulkan-Loader/LICENSE.txt"
+      ],
+      "path": "wine/lib/libvulkan.1.dylib",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/vulkan-loader",
+      "sourceSHA256": "d235dff40c240e41342ae98620217daad7afad05ed04b56fc571c835b183ce4c",
+      "type": "file",
+      "version": "1.4.350.1"
+    },
+    {
+      "component": "vulkan-loader",
+      "contentHashAlgorithm": "sha256-after-canonical-adhoc-sign-and-remove-signature-v1",
+      "contentSHA256": "bb7037343886f664e6559855aeaa0db0be256842498efd451ac1e65089ae704a",
+      "licenseExpression": "Apache-2.0",
+      "licensePaths": [
+        "Legal/Vulkan-Loader/LICENSE.txt"
+      ],
+      "path": "wine/lib/libvulkan.dylib",
+      "sourceKind": "homebrew-core-prebuilt-package",
+      "sourceReference": "https://formulae.brew.sh/formula/vulkan-loader",
+      "sourceSHA256": "d235dff40c240e41342ae98620217daad7afad05ed04b56fc571c835b183ce4c",
+      "type": "file",
+      "version": "1.4.350.1"
+    }
+  ],
+  "inputs": {
+    "dependencyLockPath": "Config/ForgePlayRuntimeDependencies.lock.json",
+    "dependencyLockSHA256": "073820ef572ef7f0504ea73e81870ea8e86db06d10c5b703de6459f3366d82bc",
+    "gstreamerPayloadLockPath": "Config/ForgePlayGStreamerPayload.lock.json",
+    "gstreamerPayloadLockSHA256": "65f60b16f36f6647849708cff7d1cd27c6818956733bc588eca40b54969637dd",
+    "rendererPayloadLockPath": "Config/ForgePlayRendererPayload.lock.json",
+    "rendererPayloadLockSHA256": "b466222707f5d947caf27d73c4e1c1191bf0624c08f0815f61c0d5ed39b378d8"
+  },
+  "payloadFingerprint": "c538be2640193e994cd08d4f66d0bf9b64964b1afc15fd02139f94e0d8e30ad0",
+  "policy": {
+    "applicationBundleExtractionAllowed": false,
+    "checkedInRuntimeOutputAsPackagingInputAllowed": false,
+    "rendererProvenance": "official-or-upstream-artifact-with-verified-local-aliases-v1",
+    "undeclaredHostLibrariesAllowed": false
+  },
+  "runtimeIdentifier": "com.forgeplay.runtime.wine-11.12",
+  "schemaVersion": 2
+}

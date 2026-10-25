@@ -27,7 +27,7 @@
   };
   const freshConfig = () => ({renderer:"D3DMetal - NVIDIA", neural:false, coordinator:false, highlights:true, assistantText:true, assistantVoice:true, voiceStyle:"F1", pitch:3.5, rate:1, method:"HyPER-GAN", resolution:"native", style:"Cityscapes", passes:1, strength:100, fg:false, interpolation:"Simple", frameCheck:true, gameMode:true, network:"standard", microphone:false, vram:"auto", heap:true, retina:false});
   const fresh = () => ({configs:{}, saved:{}, ready:true, setup:9, launched:{}, installed:{steam:true}, file:null, installer:false, library:null, profileRoot:false, profileSaved:false, theme:"system", pointer:false, keyboardMapping:window.ForgePlayKeyboardDemo.initial(), quitKeys:false, switchKeys:false, spaces:false, screenshots:false, awdl:true, retained:30, logLimit:30, autoCleanup:true, aiEnabled:false, appPlatform:'mac', chat:[], snapshots:[{id:"Recovery-example",protected:false},{id:"Manual-backup-example",protected:true}], snapshotLoaded:false, checkedController:false, expanded:{}, tickerPaused:false});
-  const newState = () => Object.assign(fresh(),{retina:false,savedRetina:false,profile:"helldivers2",profilePlatform:'steam',poppleTips:true,advanced:true,coordinatorPrefs:{accepted:false,details:false,mode:"pushToTalk",shortcut:"Fn",position:"frame-check",bubbleColor:"navy",boxColor:"cyan",bubbleWidth:300,bubbleFont:13,maxBox:10,targets:"",instructions:""}});
+  const newState = () => Object.assign(fresh(),{retina:false,savedRetina:false,profile:"renpy",profilePlatform:'steam',poppleTips:true,advanced:true,coordinatorPrefs:{accepted:false,details:false,mode:"pushToTalk",shortcut:"Fn",position:"frame-check",bubbleColor:"navy",boxColor:"cyan",bubbleWidth:300,bubbleFont:13,maxBox:10,targets:"",instructions:""}});
   let state = newState();
   const configKey = () => view==='profiles' ? 'profiles-'+state.profile+'-'+state.profilePlatform : view;
   const config = () => state.configs[configKey()] ||= freshConfig();
@@ -102,6 +102,7 @@
     const c=config(), group=node("div","sim-renderers");
     for(const [name,api] of [["D3DMetal - NVIDIA","DirectX 11/12 · 64-bit"],["DXMT","0.80 · DirectX 10/11"],["DXVK","DirectX 10/11"],["WineD3D","Direct3D 9 · 32-bit · OpenGL"]]){
       const b=btn("",()=>{c.renderer=name;if(name==='WineD3D')c.coordinator=false;render();},c.renderer===name?"sim-selected":"");b.id="v2-renderer-"+name.replaceAll(" ","");b.setAttribute("aria-pressed",String(c.renderer===name));const caption=node('span');caption.append(node("strong","",name),node("small","",api));b.append(symbol(c.renderer===name?'checkCircleFill':'circle',18),caption);
+      if(view==='profiles'&&state.profile==='rotk14')b.disabled=name!=='DXMT';
       if(name==="DXVK")b.title=M('dxvk');group.append(b);
     }
     const heading=node('div','v2-form-heading');heading.append(node('strong','',U(view==='steam'?"다음 Steam 실행 설정":"렌더러")),info(U("렌더러"),C('backendIntro')+'\n\n'+M('dxvk')));parent.append(heading,group);
@@ -246,10 +247,16 @@
     if(state.ready)box.append(btn(U("Steam 실행 화면 열기"),()=>go("steam"),"sim-primary"));parent.append(box);
   };
   const profilesView = parent => {
-    const picker=card(I('profile'),I('renpyHelp'));select(picker,I('profile'),state,'profile',[['helldivers2','HELLDIVERS 2 · App ID 553850'],['witcher3','The Witcher 3 Remastered · DX12'],['renpy',I('renpy')],['modding',R('modding')],['rdr2','Red Dead Redemption 2 · Rockstar']],()=>{if(state.profile!=='renpy')state.profilePlatform='steam';});
+    const picker=card(I('profile'),R('profiles241'));select(picker,I('profile'),state,'profile',[['renpy',I('renpy')],['witcher3','The Witcher 3 Remastered · DX12'],['modding',R('modding')],['rdr2','Red Dead Redemption 2 · Rockstar'],['rotk14',R('rotk14')]],()=>{if(state.profile!=='renpy')state.profilePlatform='steam';});
     const platforms=actions();for(const[id,label]of [['steam','Steam'],['stove','STOVE'],['epic','Epic Games'],['exe','.EXE']]){const b=btn(label,()=>{state.profilePlatform=id;render();});b.disabled=state.profile!=='renpy'&&id!=='steam';b.setAttribute('aria-pressed',String(state.profilePlatform===id));platforms.append(b);}picker.append(platforms);note(picker,I(state.profile==='renpy'?'renpyHelp':'profileOnlySteam'));parent.append(picker);
     if(['modding','rdr2'].includes(state.profile)){const help=card(state.profile==='modding'?R('modding'):R('rdr2'));help.append(btn(state.profile==='modding'?R('modding'):R('rdr2'),()=>release240.open(state.profile),'sim-primary'));note(help,D('notice'));parent.append(help);launchView(parent);return;}
     if(state.profile==='renpy'){launchView(parent);return;}
+    if(state.profile==='rotk14'){
+      config().renderer='DXMT';
+      const help=card(R('rotk14'));
+      for(const paragraph of release240Data.sections.rotk14[locale()]||release240Data.sections.rotk14.en)note(help,paragraph);
+      note(help,D('notice'));parent.append(help);launchView(parent);return;
+    }
     if(state.profile==='witcher3'){
       const skip=card(K('witcherTitle'),null,'info');note(skip,K('witcherHelp'));skip.append(node('code','','--launcher-skip'));parent.append(skip);
       const box=card('The Witcher 3 Remastered · DX12');
@@ -263,15 +270,6 @@
       if(state.witcherPatched)note(box,U('위처 3 보완이 적용되어 있고 원본이 보존되어 있습니다.')+' · '+D('example'));
       note(box,U('보완은 원본 복구 전까지 유지됩니다. 아래에서 D3DMetal을 선택한 뒤 Steam을 실행하세요. 실행 옵션과 Retina 선택은 이 게임의 호환성 설정에 별도로 저장됩니다.'));parent.append(box);launchView(parent);return;
     }
-    const c=config(),box=card('HELLDIVERS 2',helpText('profiles'));note(box,C("profile"));
-    box.append(actions(btn(U("루트 선택"),()=>show(U("루트 선택"),D("fileHint"),[[C("confirmExample"),()=>{state.profileRoot=true;render();}]])),btn(U("프로필 권장값 복원"),()=>{state.configs[configKey()]=freshConfig();render();}),btn(U("설정 저장"),saveConfig)));
-    note(box,state.profileRoot?C("rootConnected"):C("rootNeeded"));renderers(box);toggle(box,'Game Mode',c,'gameMode',C('gameMode'));
-    toggle(box,'Heap zero memory',c,'heap',U("이 게임 프로필의 메모리 호환성 선택이며 다른 Steam 실행 구성과 독립적으로 저장됩니다."));
-    note(box,U("선택한 매니페스트 루트 안에서 정확히 일치하는 GameGuard 구성요소 또는 파일 이름만 게임 렌더러 환경과 렌더러 DLL 재정의에서 제외됩니다."));
-    select(box,U("네트워크 (베타)"),c,'network',[["standard",U("표준 네트워크")],["Ethernet",U("Ethernet 호환성")],["Wi-Fi",U("Wi-Fi 호환성")]]);
-    toggle(box,U("오디오 입력 (베타)"),c,'microphone',C('microphone'));
-    select(box,U("게임 비디오 메모리 (베타)"),c,'vram',[["auto",U("자동")],...[2,4,8,12,16].map(n=>[String(n),n+' GB'])]);
-    const launch=btn(U("Steam 실행"),()=>show(U("Steam 실행"),D("launch")),"sim-primary",'play');launch.disabled=!state.profileRoot||!state.ready;box.append(launch);note(box,configSaved()?C('saved'):C('unsaved'));parent.append(box);
   };
   const dashboardView = parent => {
     const workflow=card(U(state.ready?'Windows용 Steam 실행':'다음 작업'),C('dashboard'),'playCircle');workflow.classList.add('v2-workflow');workflow.append(badge(U(state.ready?'실행 준비 완료':'준비 필요'),state.ready?'ok':'warning'));note(workflow,U('Windows용 Steam을 열고 Steam 라이브러리에서 게임을 실행합니다.'));workflow.append(actions(btn(U(state.ready?'백엔드 선택 후 실행':'설정 계속'),()=>go(state.ready?'steam':'setup'),'','sliders'),btn(U('문제 진단 (베타)'),()=>show(L('diagnostics'),M('diagnosticsGuide')),'','diagnostics')));parent.append(workflow);

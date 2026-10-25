@@ -10,6 +10,26 @@
     "zh-Hant"
   ],
   "strings": {
+    "profiles241": [
+      "2.4.1에서는 HELLDIVERS 2와 Starlit Season·Nioh·Nioh 2·Persona 5 Strikers·Blue Archive의 개발·영상 비교용 항목을 선택 목록에서 제외했습니다. 기존 환경과 기록은 보존합니다. HELLDIVERS 2의 현재 EAC 구성은 ForgePlay에서 지원하지 않습니다.",
+      "In 2.4.1, HELLDIVERS 2 and development/video comparison entries for Starlit Season, Nioh, Nioh 2, Persona 5 Strikers and Blue Archive are no longer selectable. Existing environments and records are retained. The current HELLDIVERS 2 EAC configuration is not supported by ForgePlay.",
+      "Seit 2.4.1 sind HELLDIVERS 2 sowie Entwicklungs-/Videovergleichsprofile für Starlit Season, Nioh, Nioh 2, Persona 5 Strikers und Blue Archive nicht auswählbar. Umgebungen und Verlauf bleiben erhalten. Die aktuelle EAC-Konfiguration von HELLDIVERS 2 wird von ForgePlay nicht unterstützt.",
+      "En 2.4.1 ya no se seleccionan HELLDIVERS 2 ni los perfiles de desarrollo/comparación de vídeo de Starlit Season, Nioh, Nioh 2, Persona 5 Strikers y Blue Archive. Entornos e historial se conservan. ForgePlay no admite la configuración EAC actual de HELLDIVERS 2.",
+      "Dans 2.4.1, HELLDIVERS 2 et les profils de développement/comparaison vidéo de Starlit Season, Nioh, Nioh 2, Persona 5 Strikers et Blue Archive ne sont plus sélectionnables. Les environnements et historiques sont conservés. ForgePlay ne prend pas en charge la configuration EAC actuelle de HELLDIVERS 2.",
+      "2.4.1ではHELLDIVERS 2と、Starlit Season・Nioh・Nioh 2・Persona 5 Strikers・Blue Archiveの開発／動画比較用項目を選択一覧から外しました。環境と履歴は保持します。HELLDIVERS 2の現行EAC構成はForgePlay非対応です。",
+      "2.4.1 已移除 HELLDIVERS 2，以及 Starlit Season、Nioh、Nioh 2、Persona 5 Strikers、Blue Archive 的开发与视频对比选项。既有环境和记录保留。ForgePlay 当前不支持 HELLDIVERS 2 的 EAC 配置。",
+      "2.4.1 已移除 HELLDIVERS 2，以及 Starlit Season、Nioh、Nioh 2、Persona 5 Strikers、Blue Archive 的開發與影片比較選項。既有環境和紀錄保留。ForgePlay 目前不支援 HELLDIVERS 2 的 EAC 組態。"
+    ],
+    "rotk14": [
+      "삼국지 14 · 영상 호환성 (실험)",
+      "Romance of the Three Kingdoms XIV · Video compatibility (experimental)",
+      "Romance of the Three Kingdoms XIV · Videokompatibilität (experimentell)",
+      "Romance of the Three Kingdoms XIV · Vídeo (experimental)",
+      "Romance of the Three Kingdoms XIV · Vidéo (expérimental)",
+      "三國志14 · 動画互換性（実験）",
+      "三国志 14 · 视频兼容（实验）",
+      "三國志 14 · 影片相容性（實驗）"
+    ],
     "styles": [
       "색상 스타일 선택",
       "Choose color style",
@@ -1414,6 +1434,48 @@
     }
   ],
   "sections": {
+    "rotk14": {
+      "ko": [
+        "Steam판 삼국지 14(App ID 872410)만을 위한 실험적 영상 프로필입니다. 별도 Windows 환경을 복제·재사용하며 그래픽 백엔드는 DXMT로 고정됩니다.",
+        "해당 게임과 DXMT 실행 조건이 맞을 때 기존 D3D9 영상 표면 연결 처리를 적용합니다. 코덱 설치, 게임 파일 교체, 모든 게임의 오버레이 해제 기능은 아니며 실제 영상 재생 개선은 아직 확인이 필요합니다.",
+        "일반 실행과 이 프로필을 전환하기 전 Steam을 종료하세요. 연결한 외부 게임·문서 폴더는 공유될 수 있습니다. 이 웹 가이드는 설명과 조작 예시만 제공하며 실제 환경이나 게임을 실행하지 않습니다."
+      ],
+      "en": [
+        "An experimental video profile only for the Steam edition of Romance of the Three Kingdoms XIV (App ID 872410). It clones and reuses a separate Windows environment with DXMT fixed as the graphics backend.",
+        "The existing D3D9 video-surface bridge applies only to the matching game and DXMT path. It does not install codecs, replace game files or disable overlays for all games. Actual video playback improvements still need confirmation.",
+        "Quit Steam before switching between standard launch and this profile. Linked external game/document folders may remain shared. This web guide only demonstrates the controls; it does not run real environments or games."
+      ],
+      "de": [
+        "Experimentelles Videoprofil nur für die Steam-Version von Romance of the Three Kingdoms XIV (App-ID 872410). Eine separate Windows-Umgebung wird kopiert und wiederverwendet; DXMT ist als Grafik-Backend festgelegt.",
+        "Die bestehende D3D9-Videoflächenbrücke gilt nur für das passende Spiel mit DXMT. Es werden keine Codecs installiert, Spieldateien ersetzt oder Overlays für alle Spiele abgeschaltet. Verbesserungen der Wiedergabe müssen noch bestätigt werden.",
+        "Beende Steam vor dem Wechsel zwischen normalem Start und diesem Profil. Verknüpfte externe Spiel-/Dokumentordner können gemeinsam genutzt bleiben. Diese Webanleitung simuliert nur die Bedienung und startet keine echten Umgebungen oder Spiele."
+      ],
+      "es": [
+        "Perfil de vídeo experimental exclusivo para Romance of the Three Kingdoms XIV de Steam (App ID 872410). Clona y reutiliza un entorno Windows separado con DXMT como backend fijo.",
+        "El puente de superficies de vídeo D3D9 existente solo se aplica al juego correspondiente con DXMT. No instala códecs, sustituye archivos ni desactiva superposiciones para todos los juegos. La mejora real de reproducción aún requiere confirmación.",
+        "Cierra Steam antes de alternar entre el inicio normal y este perfil. Las carpetas externas vinculadas de juegos/documentos pueden seguir compartidas. Esta guía solo simula controles y no ejecuta entornos ni juegos reales."
+      ],
+      "fr": [
+        "Profil vidéo expérimental réservé à Romance of the Three Kingdoms XIV sur Steam (App ID 872410). Il copie et réutilise un environnement Windows séparé avec DXMT comme backend fixe.",
+        "Le pont de surfaces vidéo D3D9 existant ne s’applique qu’au jeu correspondant sous DXMT. Il n’installe pas de codecs, ne remplace pas de fichiers et ne désactive pas les surcouches pour tous les jeux. L’amélioration réelle reste à confirmer.",
+        "Quittez Steam avant de passer du lancement normal à ce profil. Les dossiers externes de jeux/documents liés peuvent rester partagés. Ce guide simule les commandes sans exécuter de véritables jeux ou environnements."
+      ],
+      "ja": [
+        "Steam版三國志14（App ID 872410）専用の実験的な動画プロファイルです。別のWindows環境を複製して再利用し、描画バックエンドはDXMTに固定します。",
+        "対応ゲームをDXMTで実行した場合のみ既存のD3D9動画サーフェスブリッジを適用します。コーデックの導入、ゲームファイルの交換、全ゲームのオーバーレイ解除は行いません。実際の動画改善は確認が必要です。",
+        "通常起動とこのプロファイルを切り替える前にSteamを終了してください。接続済みの外部ゲーム／書類フォルダーは共有される場合があります。このWebガイドは操作例であり、実際の環境やゲームは起動しません。"
+      ],
+      "zh-Hans": [
+        "仅供 Steam 版三国志 14（App ID 872410）使用的实验性视频配置。复制并复用独立 Windows 环境，图形后端固定为 DXMT。",
+        "仅在对应游戏通过 DXMT 运行时应用既有 D3D9 视频表面桥接处理。不安装编解码器、不替换游戏文件，也不会关闭所有游戏的叠加层。实际视频改善仍需确认。",
+        "切换普通启动与此配置前请退出 Steam。已连接的外部游戏、文档文件夹可能继续共享。此网页仅演示操作，不运行实际环境或游戏。"
+      ],
+      "zh-Hant": [
+        "僅供 Steam 版三國志 14（App ID 872410）使用的實驗性影片設定檔。複製並重用獨立 Windows 環境，圖形後端固定為 DXMT。",
+        "僅在對應遊戲透過 DXMT 執行時套用既有 D3D9 影片表面橋接處理。不安裝編解碼器、不替換遊戲檔案，也不會關閉所有遊戲的覆蓋層。實際影片改善仍需確認。",
+        "切換一般啟動與此設定檔前請結束 Steam。已連接的外部遊戲、文件資料夾可能仍共用。此網頁僅示範操作，不執行實際環境或遊戲。"
+      ]
+    },
     "styles": {
       "ko": [
         "환경설정의 **‘앱 화면 스타일 → 색상 스타일 선택’**에서 100가지 색상 조합을 고를 수 있습니다.",
@@ -1618,7 +1680,7 @@
     },
     "rdr2": {
       "ko": [
-        "또한 **레드 데드 리뎀션 2 전용 프로필과 처음 실행 안내**를 추가했습니다. 필요한 준비와 실행 순서를 해당 화면에서 확인할 수 있습니다.",
+        "2.4.1에서는 RDR2 호환성 프로필의 Rockstar 런처·설치기·서비스와 게임 본체의 실행 역할을 구분합니다. 설치기와 서비스에 게임용 그래픽 설정이 불필요하게 적용되지 않도록 했으며, 로그인이나 게임 실행 성공을 보장하는 조치는 아닙니다.",
         "1. 실행 중인 Steam과 Rockstar 런처를 각 앱의 종료 메뉴로 닫으세요. 창만 닫으면 백그라운드에 남아 있을 수 있습니다.",
         "2. 아래 Steam 실행을 누르세요. 처음에는 기존 Steam 환경을 복제하고 RDR2 실행을 요청합니다. 이후에도 이 프로필에서 실행하세요.",
         "3. Rockstar 설치·업데이트 창이 나타나면 완료하고, 게임을 보유한 계정으로 로그인하세요. 설치 상태가 복사되므로 새로 설치하는 화면이 나오지 않을 수도 있습니다.",
@@ -1627,7 +1689,7 @@
         "아직 시험 중인 프로필입니다. 런처 설치 준비나 초기화 오류가 계속되면 해결된 상태가 아닙니다. 포플과 대화의 문제진단에서 해당 실행의 지원 번들을 만들 수 있습니다."
       ],
       "en": [
-        "Added a **Red Dead Redemption 2 profile and first-launch guidance**, with preparation and launch steps available in the profile.",
+        "In 2.4.1, the RDR2 profile separates the execution roles of Rockstar Launcher, installers, services and the game. Game-specific graphics settings are not unnecessarily applied to installers and services. This does not guarantee successful login or game startup.",
         "1. Quit Steam and Rockstar Launcher using each app’s Quit menu. Closing a window may leave the app running in the background.",
         "2. Click Launch Steam below. On first use, ForgePlay copies your existing Steam environment and requests RDR2 to launch. Use this profile for future launches too.",
         "3. Complete any Rockstar installation or update prompts, then sign in with the account that owns the game. Existing installation data is copied, so a new installation prompt may not appear.",
@@ -1636,7 +1698,7 @@
         "This profile is still experimental. If launcher installation or initialization errors persist, the issue remains unresolved. In Talk with Fopl, use diagnostics to create a support bundle for that run."
       ],
       "de": [
-        "Ein **Profil für Red Dead Redemption 2 mit Anleitung zum ersten Start** erklärt Vorbereitung und Startfolge.",
+        "In 2.4.1 trennt das RDR2-Profil die Rollen von Rockstar Launcher, Installern, Diensten und Spiel. Spielspezifische Grafikeinstellungen werden nicht unnötig auf Installer und Dienste angewendet. Eine erfolgreiche Anmeldung oder ein Spielstart wird nicht garantiert.",
         "1. Beenden Sie Steam und den Rockstar Launcher jeweils über das Menü zum Beenden. Das Schließen eines Fensters kann die App im Hintergrund weiterlaufen lassen.",
         "2. Klicken Sie unten auf „Steam starten“. Beim ersten Mal kopiert ForgePlay Ihre vorhandene Steam-Umgebung und fordert den Start von RDR2 an. Verwenden Sie auch künftig dieses Profil.",
         "3. Schließen Sie angezeigte Rockstar-Installationen oder Updates ab und melden Sie sich mit dem Konto an, dem das Spiel gehört. Der vorhandene Installationsstand wird kopiert; eine Neuinstallation wird eventuell nicht angeboten.",
@@ -1645,7 +1707,7 @@
         "Dieses Profil ist noch experimentell. Bleiben Installations- oder Initialisierungsfehler des Launchers bestehen, ist das Problem nicht behoben. Erstellen Sie unter „Mit Fopl sprechen“ über die Diagnose ein Supportpaket für diesen Start."
       ],
       "es": [
-        "Se añadió un **perfil de Red Dead Redemption 2 con instrucciones para el primer inicio**, incluidas preparación y secuencia de ejecución.",
+        "En 2.4.1, el perfil RDR2 separa las funciones de Rockstar Launcher, instaladores, servicios y juego. No se aplican innecesariamente ajustes gráficos del juego a instaladores y servicios. Esto no garantiza el acceso ni el arranque del juego.",
         "1. Cierra Steam y Rockstar Launcher desde el menú de salida de cada aplicación. Cerrar solo la ventana puede dejarlos activos en segundo plano.",
         "2. Pulsa Iniciar Steam abajo. La primera vez, ForgePlay copia el entorno de Steam existente y solicita iniciar RDR2. Usa este perfil también en los próximos inicios.",
         "3. Completa cualquier instalación o actualización de Rockstar e inicia sesión con la cuenta que posee el juego. Se copia el estado de instalación existente, por lo que puede no aparecer una instalación nueva.",
@@ -1654,7 +1716,7 @@
         "Este perfil aún es experimental. Si persisten errores de preparación o inicialización del lanzador, el problema sigue sin resolverse. En Hablar con Fopl, usa el diagnóstico para crear un paquete de soporte de esa ejecución."
       ],
       "fr": [
-        "Ajout d’un **profil Red Dead Redemption 2 et d’un guide de premier lancement**, avec les étapes de préparation et de démarrage.",
+        "Dans 2.4.1, le profil RDR2 sépare les rôles du Rockstar Launcher, des installateurs, services et du jeu. Les réglages graphiques du jeu ne sont pas appliqués inutilement aux installateurs et services. Cela ne garantit pas la connexion ou le lancement.",
         "1. Quittez Steam et le lanceur Rockstar depuis le menu Quitter de chaque application. Fermer seulement la fenêtre peut les laisser actifs en arrière-plan.",
         "2. Cliquez sur Lancer Steam ci-dessous. Lors de la première utilisation, ForgePlay copie votre environnement Steam existant et demande le lancement de RDR2. Utilisez aussi ce profil lors des prochains lancements.",
         "3. Terminez les éventuelles installations ou mises à jour Rockstar, puis connectez-vous avec le compte qui possède le jeu. L’état de l’installation est copié ; une nouvelle installation peut donc ne pas être proposée.",
@@ -1663,7 +1725,7 @@
         "Ce profil est encore expérimental. Si les erreurs d’installation ou d’initialisation du lanceur persistent, le problème reste non résolu. Dans Parler avec Fopl, utilisez le diagnostic pour créer un dossier d’assistance pour cette exécution."
       ],
       "ja": [
-        "**レッド・デッド・リデンプション2専用プロファイルと初回起動案内**を追加しました。準備と起動の手順を画面で確認できます。",
+        "2.4.1のRDR2プロファイルでは、Rockstarランチャー・インストーラー・サービスとゲーム本体の役割を区別します。インストーラーとサービスにゲーム用の描画設定を不要に適用しません。ログインや起動成功を保証するものではありません。",
         "1. SteamとRockstarランチャーを、それぞれの終了メニューから終了してください。ウインドウを閉じるだけではバックグラウンドで動作し続ける場合があります。",
         "2. 下の「Steamを起動」を押してください。初回は既存のSteam環境を複製し、RDR2の起動を要求します。次回以降もこのプロファイルから起動してください。",
         "3. Rockstarのインストール・更新画面が表示されたら完了し、ゲームを所有するアカウントでログインしてください。既存のインストール状態も複製されるため、新規インストール画面が出ない場合があります。",
@@ -1672,7 +1734,7 @@
         "このプロファイルはまだ試験中です。ランチャーのインストール準備や初期化エラーが続く場合、問題は未解決です。「ポプルと会話」の問題診断から、その実行のサポートバンドルを作成できます。"
       ],
       "zh-Hans": [
-        "新增**荒野大镖客：救赎2专用配置和首次运行说明**，可在界面中查看准备与启动步骤。",
+        "2.4.1 的 RDR2 配置区分 Rockstar 启动器、安装程序、服务与游戏本体的角色，避免向安装程序和服务不必要地应用游戏图形设置。这不保证登录或游戏启动成功。",
         "1. 请通过各自的退出菜单关闭 Steam 和 Rockstar 启动器。仅关闭窗口可能会让应用继续在后台运行。",
         "2. 点击下方的“启动 Steam”。首次使用时，ForgePlay 会复制现有 Steam 环境并请求启动 RDR2。以后也请通过此配置启动。",
         "3. 如出现 Rockstar 安装或更新窗口，请完成操作，然后登录拥有游戏的账号。现有安装状态也会被复制，因此可能不会出现全新安装窗口。",
@@ -1681,7 +1743,7 @@
         "此配置仍处于试验阶段。如果启动器安装准备或初始化错误持续出现，则问题尚未解决。可在“与 Fopl 对话”的问题诊断中，为该次运行创建支持包。"
       ],
       "zh-Hant": [
-        "新增**碧血狂殺2專用設定檔及首次執行說明**，可在畫面查看準備與啟動步驟。",
+        "2.4.1 的 RDR2 設定檔區分 Rockstar 啟動器、安裝程式、服務與遊戲本體的角色，避免向安裝程式和服務不必要地套用遊戲圖形設定。這不保證登入或遊戲啟動成功。",
         "1. 請透過各自的結束選單關閉 Steam 和 Rockstar 啟動器。只關閉視窗可能會讓應用程式繼續在背景執行。",
         "2. 按下下方的「啟動 Steam」。首次使用時，ForgePlay 會複製現有 Steam 環境並要求啟動 RDR2。之後也請透過此設定檔啟動。",
         "3. 如出現 Rockstar 安裝或更新視窗，請完成操作，再登入擁有遊戲的帳號。現有安裝狀態也會複製，因此可能不會出現全新安裝視窗。",

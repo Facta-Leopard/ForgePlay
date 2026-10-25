@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "copyright": "Copyright (C) 2026 Facta-Leopard",
+  "license": "GPL-3.0-only",
+  "files": [
+    "Launcher/Sources/Shared/LupainContract.swift",
+    "Launcher/Sources/Shared/LupainController.swift",
+    "Launcher/Sources/ForgePlayLauncher/Updates/LauncherUpdateView.swift",
+    "Launcher/Lupain/Helper/main.swift",
+    "Launcher/Lupain/Helper/LupainSession.swift",
+    "Launcher/Lupain/Helper/LupainProcess.c",
+    "Launcher/Lupain/Helper/LupainProcess.h",
+    "Launcher/Lupain/Helper/LupainProxyConfiguration.swift",
+    "Launcher/Lupain/Config/ForgePlayLupainSession.xcconfig",
+    "Launcher/Lupain/embed-lupain.sh",
+    "Scripts/restore-preserved-lupain-payload.py",
+    "Scripts/tests/test-lupain-export.py",
+    "Launcher/Tests/ForgePlayLauncherTests/LupainTests.swift",
+    "Launcher/Resources/LauncherArtwork/Fopl/lupain.png"
+  ],
+  "integrationAdditions": [
+    "LauncherModel.swift: Lupain display metadata for the preserved updates route",
+    "LauncherTileArtwork.swift: Lupain resource mapping and network background",
+    "LauncherIslandView.swift: Lupain compact titles",
+    "LauncherFoplCompanion.swift: Lupain menu/actions and usage tip",
+    "LauncherIslandController.swift: Lupain termination coordination",
+    "ForgePlayApp.swift: Lupain restoration in existing termination coordination",
+    "Launcher/project.yml and Mac/project.yml: Lupain helper/dependency/embed declarations",
+    "Scripts/restore-preserved-apple-d3dmetal-signatures.sh: restore archive-sealed Lupain payloads before resealing the exported app"
+  ],
+  "thirdParty": "ThirdParty/dependency-register.json",
+  "upstreamSBOM": "ThirdParty/spoofdpi.sbom.json"
+}

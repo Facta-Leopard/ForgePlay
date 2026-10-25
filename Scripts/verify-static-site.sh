@@ -631,7 +631,7 @@ for key, values in vr_copy["strings"].items():
         raise SystemExit(f"VR guide: inconsistent placeholders for {key}")
     if re.search(r'[\u3040-\u30ff]', values[0]):
         raise SystemExit(f"VR guide: unexpected Japanese text in Korean {key}")
-for name in ["guide-vr.css?v=20261002-1", "guide-vr.js?v=20261014-221", "guide-v2.js?v=20261023-240", "guide-vr-showcase.css?v=20261012-1", "guide-island.js?v=20261023-240", "guide-island.css?v=20261014-221", "guide-v2-icons.js?v=20261012-3", "guide-launcher.css?v=20261003-fopl1", "guide-desktop.css?v=20261006-1", "why-story.js?v=20261001-reader1"]:
+for name in ["guide-vr.css?v=20261002-1", "guide-vr.js?v=20261014-221", "guide-v2.js?v=20261025-241", "guide-vr-showcase.css?v=20261012-1", "guide-island.js?v=20261023-240", "guide-island.css?v=20261014-221", "guide-v2-icons.js?v=20261012-3", "guide-launcher.css?v=20261003-fopl1", "guide-desktop.css?v=20261006-1", "why-story.js?v=20261001-reader1"]:
     if name not in guide_html:
         raise SystemExit(f"VR guide: missing current asset {name}")
 if 'guide-v2.css?v=20260929-palette1' not in guide_html:
@@ -1954,11 +1954,11 @@ for html in index.html why.html license.html privacy.html support.html compatibi
     require_snippet "$ROOT_DIR/$html" 'href="site.css?v=20260729-14"'
   fi
   if [[ "$html" == "license.html" || "$html" == "site-assets/dlss5.html" ]]; then
-    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20261023-release240"'
+    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20261025-release241"'
   elif [[ "$html" == "index.html" ]]; then
-    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20261023-release240"'
+    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20261025-release241"'
   else
-    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20261023-release240"'
+    require_snippet "$ROOT_DIR/$html" 'src="site.js?v=20261025-release241"'
   fi
   require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.css?v=20260905-7'
   require_snippet "$ROOT_DIR/$html" 'site-assets/site-shell.js?v=20261001-fopl1'
@@ -2016,8 +2016,8 @@ require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'CPU + GPU'
 require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'Bluetooth sampling rate'
 require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'href="https://support.apple.com/105118"'
 require_snippet "$ROOT_DIR/index.html" 'macOS 27 or later · Rosetta required'
-require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'Use ForgePlay-2.4.0-11-OpenSource.tar.gz attached to the 2.4.0 (Build 11) release.'
-require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'data-i18n="home.sourceLink">Download 2.4.0 corresponding source ↗'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'Use ForgePlay-2.4.1-12-OpenSource.tar.gz attached to the 2.4.1 (Build 12) release.'
+require_snippet "$ROOT_DIR/site-assets/dlss5.html" 'data-i18n="home.sourceLink">Download 2.4.1 corresponding source ↗'
 require_snippet "$ROOT_DIR/index.html" 'href="why.html"'
 require_snippet "$ROOT_DIR/index.html" 'href="license.html"'
 require_snippet "$ROOT_DIR/index.html" 'CURRENT STABLE RELEASE'
@@ -2171,7 +2171,7 @@ require_snippet "$ROOT_DIR/compatibility.html" 'data-i18n="compat.logLabel"'
 require_snippet "$ROOT_DIR/compatibility.html" 'issues/new?template=compatibility-report.yml'
 require_snippet "$ROOT_DIR/compatibility.html" '<strong data-compatibility-count aria-live="polite">—</strong>'
 require_snippet "$ROOT_DIR/compatibility.html" 'href="site.css?v=20260811-22"'
-require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20261023-release240"'
+require_snippet "$ROOT_DIR/compatibility.html" 'src="site.js?v=20261025-release241"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/current-release.js?v=20260905-7"'
 require_snippet "$ROOT_DIR/compatibility.html" 'src="site-assets/website-compatibility.js?v=20261024-note-links"'
 require_snippet "$ROOT_DIR/site-assets/guide.html" 'src="site-assets/website-compatibility.js?v=20261019-game-groups"'
@@ -2363,7 +2363,7 @@ if grep -Eq 'innerHTML|outerHTML|insertAdjacentHTML|document\\.write' "$ROOT_DIR
   fail "why-story.js must render the statement without unsafe HTML insertion"
 fi
 
-require_snippet "$ROOT_DIR/license.html" 'ForgePlay 2.4.0 (Build 11) is a multi-license distribution.'
+require_snippet "$ROOT_DIR/license.html" 'ForgePlay 2.4.1 (Build 12) is a multi-license distribution.'
 require_snippet "$ROOT_DIR/license.html" 'GPL-3.0-only'
 require_snippet "$ROOT_DIR/license.html" 'Corresponding Source'
 require_snippet "$ROOT_DIR/license.html" 'Native/NeuralRendering/'
@@ -2377,14 +2377,14 @@ require_snippet "$ROOT_DIR/license.html" 'data-i18n="license.mastheadLabel"'
 require_snippet "$ROOT_DIR/license.html" 'data-i18n-aria-label="license.mastheadAria"'
 require_snippet "$ROOT_DIR/license.html" 'data-i18n="license.mastheadScope"'
 require_snippet "$ROOT_DIR/license.html" 'data-i18n="license.filesLabel"'
-require_snippet "$ROOT_DIR/license.html" 'ForgePlay 2.4.0의 라이선스와 공개 소스'
-require_snippet "$ROOT_DIR/license.html" 'Licenses and public source for ForgePlay 2.4.0'
-require_snippet "$ROOT_DIR/license.html" 'Lizenzen und öffentliche Quellen für ForgePlay 2.4.0'
-require_snippet "$ROOT_DIR/license.html" 'Licencias y código público de ForgePlay 2.4.0'
-require_snippet "$ROOT_DIR/license.html" 'Licences et sources publiques de ForgePlay 2.4.0'
-require_snippet "$ROOT_DIR/license.html" 'ForgePlay 2.4.0のライセンスと公開ソース'
-require_snippet "$ROOT_DIR/license.html" 'ForgePlay 2.4.0 的许可证与公开源码'
-require_snippet "$ROOT_DIR/license.html" 'ForgePlay 2.4.0 的授權與公開原始碼'
+require_snippet "$ROOT_DIR/license.html" 'ForgePlay 2.4.1의 라이선스와 공개 소스'
+require_snippet "$ROOT_DIR/license.html" 'Licenses and public source for ForgePlay 2.4.1'
+require_snippet "$ROOT_DIR/license.html" 'Lizenzen und öffentliche Quellen für ForgePlay 2.4.1'
+require_snippet "$ROOT_DIR/license.html" 'Licencias y código público de ForgePlay 2.4.1'
+require_snippet "$ROOT_DIR/license.html" 'Licences et sources publiques de ForgePlay 2.4.1'
+require_snippet "$ROOT_DIR/license.html" 'ForgePlay 2.4.1のライセンスと公開ソース'
+require_snippet "$ROOT_DIR/license.html" 'ForgePlay 2.4.1 的许可证与公开源码'
+require_snippet "$ROOT_DIR/license.html" 'ForgePlay 2.4.1 的授權與公開原始碼'
 require_snippet "$ROOT_DIR/license.html" 'href="LICENSE.md" download'
 require_snippet "$ROOT_DIR/license.html" 'href="LICENSES/GPL-3.0-only.txt" download'
 python3 - "$ROOT_DIR" <<'LICENSE220'
@@ -2417,14 +2417,24 @@ for item in current_snapshot['files']:
     data = (current / item['path']).read_bytes()
     assert len(data) == item['byteSize'] and hashlib.sha256(data).hexdigest() == item['sha256']
 page = (root / 'license.html').read_text()
+current241 = root / 'site-data/licenses/2.4.1'
+snapshot241 = json.loads((current241 / 'NOTICE-SNAPSHOT.json').read_text())
+assert (snapshot241['version'], snapshot241['build']) == ('2.4.1', 12)
+assert snapshot241['archiveSHA256'] == 'fdda327e07852186f96d88de8f60ae90ba3b6f2625f8c255aca2eeb558161394'
+assert snapshot241['sourceURL'].endswith('/v2.4.1/ForgePlay-2.4.1-12-OpenSource.tar.gz')
+assert len(snapshot241['files']) == 26
+for item in snapshot241['files']:
+    assert Path(item['path']).name == item['path']
+    data = (current241 / item['path']).read_bytes()
+    assert len(data) == item['byteSize'] and hashlib.sha256(data).hexdigest() == item['sha256']
 for lang in ('ko','en','de','es','fr','ja','zh-Hans','zh-Hant'):
     article = re.search(r'<article id="license-' + lang + r'".*?</article>', page, re.S).group()
     assert len(re.findall('class="license-scope-number"', article)) == 6
-    for term in ('2.4.0', 'BUILD 11', 'ForgePlay AI Coordinator', 'ForgePlayVP', 'Open RAIL-M', 'Apache-2.0', 'BSD-3-Clause', 'WRAPPER-PERMISSION.txt', 'SOURCE-FILES.json', 'LUPAIN-SCOPE.json', 'SpoofDPI 1.5.5'):
+    for term in ('2.4.1', 'BUILD 12', 'ForgePlay AI Coordinator', 'ForgePlayVP', 'Open RAIL-M', 'Apache-2.0', 'BSD-3-Clause', 'WRAPPER-PERMISSION.txt', 'SOURCE-BOUNDARIES.json', 'LUPAIN-SCOPE.json', 'SpoofDPI 1.5.5'):
         assert term in article, (lang, term)
     assert '/v2.0.0/' not in article
 assert 'THREE NATIVE IMPLEMENTATIONS' not in page
-print('Release 2.4.0 licensing scope and immutable 2.4.0/2.2.0 notice hashes passed.')
+print('Release 2.4.1 licensing scope and immutable 2.4.1/2.4.0/2.2.0 notice hashes passed.')
 LICENSE220
 
 require_snippet "$ROOT_DIR/site-data/announcements-full.json" '"de": "ForgePlay stellt den macOS-Spielmodus in den Mittelpunkt."'
