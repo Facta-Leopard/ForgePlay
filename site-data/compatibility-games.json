@@ -1,7 +1,7 @@
 {
   "$schema": "./compatibility.schema.json",
   "schemaVersion": 3,
-  "updatedAt": "2026-10-25",
+  "updatedAt": "2026-10-26",
   "revision": 0,
   "testProfiles": [
     {
@@ -900,6 +900,13 @@
       "titles": {
         "en": "Red Dead Redemption 2",
         "ko": "레드 데드 리뎀션 2"
+      }
+    },
+    {
+      "id": "heroes-vow-three-kingdoms",
+      "titles": {
+        "en": "Heroes' Vow: Three Kingdoms",
+        "ko": "영웅입지전: 삼국지"
       }
     }
   ],
@@ -3625,6 +3632,52 @@
         "zh-Hant": "回報指出，Steam 版在 ForgePlay 2.4.0（組建 11）中無法啟動：Rockstar 啟動器停在準備安裝階段，無法進入遊戲。回報者在套用和不套用專用相容性設定檔時都遇到了相同症狀。所記錄的嘗試使用 D3DMetal，並關閉了影格生成和 Retina。\n\n開發者說明：正在分別調查啟動器處理與 Wine 時區資訊相關問題，並重新檢查《碧血狂殺2》的專用相容性設定檔，準備進一步的修補程式。需要在修正版本中重新確認，目前尚未確認能夠成功遊玩。"
       },
       "blocker": "launcher"
+    },
+    {
+      "id": "legend-of-mortal-github-71-20261026",
+      "gameId": "legend-of-mortal",
+      "launchPlatform": "steam",
+      "testProfileId": "apple-silicon-m5-pro-64gb-macos-27-0-1",
+      "forgePlayVersion": "2.4.1",
+      "gameVersion": null,
+      "status": "playable",
+      "source": "github-issue",
+      "reporter": "E-Schmacher",
+      "testedAt": null,
+      "notes": {
+        "ko": "ForgePlay 2.4.1에서 Steam판을 DXVK로 실행했을 때 발생하던 일부 숫자·텍스트 누락이 Core Fonts 원본 EXE들을 설치한 뒤 정상 표시됐다는 제보입니다.\n\n개발자 안내: 다음 업데이트에서는 ‘포플과 대화’에서 Core Fonts를 선택해 설치하고 설치 상태를 확인할 수 있도록 개선할 예정입니다.\n\n현재 설치 방법과 해결 과정: https://github.com/Facta-Leopard/ForgePlay/issues/71\n정상 표시 확인 댓글: https://github.com/Facta-Leopard/ForgePlay/issues/71#issuecomment-6406568231",
+        "en": "Missing numbers and text in the Steam version running with DXVK on ForgePlay 2.4.1 were reported to display correctly after installing the original Core Fonts EXEs.\n\nDeveloper update: A future update is planned to let users select and install Core Fonts and check their installation status through Chat with Fopl.\n\nCurrent installation steps and resolution history: https://github.com/Facta-Leopard/ForgePlay/issues/71\nConfirmation of correct display: https://github.com/Facta-Leopard/ForgePlay/issues/71#issuecomment-6406568231",
+        "de": "Laut Bericht werden zuvor fehlende Zahlen und Texte in der Steam-Version mit DXVK unter ForgePlay 2.4.1 nach der Installation der ursprünglichen Core-Fonts-EXEs korrekt angezeigt.\n\nEntwicklerhinweis: Ein künftiges Update soll die Auswahl und Installation von Core Fonts sowie die Prüfung ihres Installationsstatus über den Chat mit Fopl ermöglichen.\n\nAktuelle Installationsschritte und Lösungsverlauf: https://github.com/Facta-Leopard/ForgePlay/issues/71\nBestätigung der korrekten Anzeige: https://github.com/Facta-Leopard/ForgePlay/issues/71#issuecomment-6406568231",
+        "es": "Según el reporte, los números y textos que faltaban en la versión de Steam con DXVK en ForgePlay 2.4.1 se muestran correctamente tras instalar los EXE originales de Core Fonts.\n\nAviso del desarrollador: Se prevé que una próxima actualización permita seleccionar e instalar Core Fonts y comprobar su estado de instalación mediante la conversación con Fopl.\n\nPasos actuales de instalación y proceso de resolución: https://github.com/Facta-Leopard/ForgePlay/issues/71\nConfirmación de la visualización correcta: https://github.com/Facta-Leopard/ForgePlay/issues/71#issuecomment-6406568231",
+        "fr": "Selon le signalement, les chiffres et textes manquants dans la version Steam utilisant DXVK sous ForgePlay 2.4.1 s'affichent correctement après l'installation des EXE d'origine de Core Fonts.\n\nInformation du développeur : une prochaine mise à jour devrait permettre de choisir et d'installer Core Fonts, ainsi que de vérifier leur état d'installation, depuis la conversation avec Fopl.\n\nMéthode d'installation actuelle et suivi de la résolution : https://github.com/Facta-Leopard/ForgePlay/issues/71\nConfirmation de l'affichage correct : https://github.com/Facta-Leopard/ForgePlay/issues/71#issuecomment-6406568231",
+        "ja": "ForgePlay 2.4.1でSteam版をDXVKで実行した際に欠けていた一部の数字やテキストが、Core Fontsの元のEXEをインストールした後に正常表示されたとの報告です。\n\n開発者からの案内：次回のアップデートでは、Foplとの会話からCore Fontsを選んでインストールし、インストール状態を確認できるよう改善する予定です。\n\n現在のインストール方法と解決までの経緯： https://github.com/Facta-Leopard/ForgePlay/issues/71\n正常表示の確認コメント： https://github.com/Facta-Leopard/ForgePlay/issues/71#issuecomment-6406568231",
+        "zh-Hans": "反馈称，在 ForgePlay 2.4.1 中使用 DXVK 运行 Steam 版时缺失的部分数字和文字，在安装 Core Fonts 原版 EXE 后已正常显示。\n\n开发者说明：计划在下一次更新中，让用户通过与 Fopl 对话来选择安装 Core Fonts 并检查其安装状态。\n\n当前安装方法和解决过程： https://github.com/Facta-Leopard/ForgePlay/issues/71\n正常显示的确认留言： https://github.com/Facta-Leopard/ForgePlay/issues/71#issuecomment-6406568231",
+        "zh-Hant": "回報指出，在 ForgePlay 2.4.1 中使用 DXVK 執行 Steam 版時缺少的部分數字與文字，在安裝 Core Fonts 原版 EXE 後已正常顯示。\n\n開發者說明：計畫在下次更新中，讓使用者透過與 Fopl 對話來選擇安裝 Core Fonts，並檢查其安裝狀態。\n\n目前安裝方法與解決過程： https://github.com/Facta-Leopard/ForgePlay/issues/71\n正常顯示的確認留言： https://github.com/Facta-Leopard/ForgePlay/issues/71#issuecomment-6406568231"
+      },
+      "blocker": null
+    },
+    {
+      "id": "heroes-vow-three-kingdoms-github-71-20261026",
+      "gameId": "heroes-vow-three-kingdoms",
+      "launchPlatform": "unknown",
+      "testProfileId": "apple-silicon-m5-pro-64gb-macos-27-0-1",
+      "forgePlayVersion": null,
+      "gameVersion": null,
+      "status": "playable",
+      "source": "github-issue",
+      "reporter": "E-Schmacher",
+      "testedAt": null,
+      "notes": {
+        "ko": "한글 표시 문제는 맑은 고딕을 추가 설치한 뒤 정상 표시됐다는 제보입니다. Core Fonts 설치만으로는 해결되지 않았습니다.\n\n개발자 안내: 다음 업데이트에서 글꼴 설치 상태 확인과 Microsoft 공식 안내를 개선할 예정입니다. 맑은 고딕의 자동 설치는 제공하지 않습니다.\n\n설치 관련 사항과 해결 과정: https://github.com/Facta-Leopard/ForgePlay/issues/71\n정상 표시 확인 댓글: https://github.com/Facta-Leopard/ForgePlay/issues/71#issuecomment-6406731133",
+        "en": "Korean text is reported to display correctly after additionally installing Malgun Gothic. Installing Core Fonts alone did not resolve the problem.\n\nDeveloper update: A future update is planned to improve font installation-status checks and access to Microsoft's official guidance. Automatic installation of Malgun Gothic will not be provided.\n\nInstallation information and resolution history: https://github.com/Facta-Leopard/ForgePlay/issues/71\nConfirmation of correct display: https://github.com/Facta-Leopard/ForgePlay/issues/71#issuecomment-6406731133",
+        "de": "Laut Bericht wird koreanischer Text nach der zusätzlichen Installation von Malgun Gothic korrekt angezeigt. Core Fonts allein behoben das Problem nicht.\n\nEntwicklerhinweis: Ein künftiges Update soll die Prüfung des Schriftinstallationsstatus und den Zugang zu Microsofts offiziellen Hinweisen verbessern. Eine automatische Installation von Malgun Gothic wird nicht angeboten.\n\nInstallationsinformationen und Lösungsverlauf: https://github.com/Facta-Leopard/ForgePlay/issues/71\nBestätigung der korrekten Anzeige: https://github.com/Facta-Leopard/ForgePlay/issues/71#issuecomment-6406731133",
+        "es": "Según el reporte, el texto coreano se muestra correctamente tras instalar también Malgun Gothic. Instalar solo Core Fonts no resolvió el problema.\n\nAviso del desarrollador: Se prevé mejorar la comprobación del estado de instalación de las fuentes y el acceso a las indicaciones oficiales de Microsoft en una próxima actualización. No se ofrecerá la instalación automática de Malgun Gothic.\n\nInformación de instalación y proceso de resolución: https://github.com/Facta-Leopard/ForgePlay/issues/71\nConfirmación de la visualización correcta: https://github.com/Facta-Leopard/ForgePlay/issues/71#issuecomment-6406731133",
+        "fr": "Selon le signalement, le texte coréen s'affiche correctement après l'installation supplémentaire de Malgun Gothic. Core Fonts seul n'avait pas résolu le problème.\n\nInformation du développeur : une prochaine mise à jour devrait améliorer la vérification de l'installation des polices et l'accès aux indications officielles de Microsoft. L'installation automatique de Malgun Gothic ne sera pas proposée.\n\nInformations d'installation et suivi de la résolution : https://github.com/Facta-Leopard/ForgePlay/issues/71\nConfirmation de l'affichage correct : https://github.com/Facta-Leopard/ForgePlay/issues/71#issuecomment-6406731133",
+        "ja": "韓国語の表示問題は、Malgun Gothic（맑은 고딕）を追加インストールした後に正常表示されたとの報告です。Core Fontsだけでは解決しませんでした。\n\n開発者からの案内：次回のアップデートでは、フォントのインストール状態の確認とMicrosoftの公式案内へのアクセスを改善する予定です。Malgun Gothicの自動インストールは提供しません。\n\nインストールに関する情報と解決までの経緯： https://github.com/Facta-Leopard/ForgePlay/issues/71\n正常表示の確認コメント： https://github.com/Facta-Leopard/ForgePlay/issues/71#issuecomment-6406731133",
+        "zh-Hans": "反馈称，额外安装 Malgun Gothic（맑은 고딕）后，韩文已正常显示。仅安装 Core Fonts 未能解决问题。\n\n开发者说明：计划在下一次更新中改进字体安装状态检查，并提供更清晰的 Microsoft 官方说明入口。不会提供 Malgun Gothic 的自动安装。\n\n安装相关信息和解决过程： https://github.com/Facta-Leopard/ForgePlay/issues/71\n正常显示的确认留言： https://github.com/Facta-Leopard/ForgePlay/issues/71#issuecomment-6406731133",
+        "zh-Hant": "回報指出，額外安裝 Malgun Gothic（맑은 고딕）後，韓文已正常顯示。僅安裝 Core Fonts 未能解決問題。\n\n開發者說明：計畫在下次更新中改善字型安裝狀態檢查，並提供更清楚的 Microsoft 官方說明入口。不會提供 Malgun Gothic 的自動安裝。\n\n安裝相關資訊與解決過程： https://github.com/Facta-Leopard/ForgePlay/issues/71\n正常顯示的確認留言： https://github.com/Facta-Leopard/ForgePlay/issues/71#issuecomment-6406731133"
+      },
+      "blocker": null
     }
   ]
 }

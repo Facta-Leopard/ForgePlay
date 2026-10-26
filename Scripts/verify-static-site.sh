@@ -1130,14 +1130,23 @@ def validate_compatibility_database(candidate):
                 f"report {report_id} notes must cover all eight site locales"
             )
         if notes:
-            # This issue reference was explicitly requested for the Witcher report.
-            approved_source_url = (
-                "https://github.com/Facta-Leopard/ForgePlay/issues/46#issuecomment-6214346559"
-                if report_id == "the-witcher-3-github-46-20261014" else None
-            )
+            # Only the source links explicitly requested for each report are public.
+            approved_source_urls = {
+                "the-witcher-3-github-46-20261014": [
+                    "https://github.com/Facta-Leopard/ForgePlay/issues/46#issuecomment-6214346559"
+                ],
+                "legend-of-mortal-github-71-20261026": [
+                    "https://github.com/Facta-Leopard/ForgePlay/issues/71",
+                    "https://github.com/Facta-Leopard/ForgePlay/issues/71#issuecomment-6406568231"
+                ],
+                "heroes-vow-three-kingdoms-github-71-20261026": [
+                    "https://github.com/Facta-Leopard/ForgePlay/issues/71",
+                    "https://github.com/Facta-Leopard/ForgePlay/issues/71#issuecomment-6406731133"
+                ]
+            }.get(report_id, [])
             for note in notes.values():
                 source_urls = re.findall(r"https?://(?:www\.)?github\.com(?:/[^\s]*|(?=\s|$))", note, re.I)
-                if source_urls and source_urls != [approved_source_url]:
+                if source_urls != approved_source_urls:
                     raise SystemExit(f"report {report_id}: unapproved GitHub source URL in public compatibility notes")
 
     unreported_games = game_by_id.keys() - reported_game_ids
