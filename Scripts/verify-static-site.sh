@@ -2133,8 +2133,12 @@ root = Path(sys.argv[1])
 page = (root / 'index.html').read_text()
 cards = re.findall(r'<button\b[^>]*data-poster-version="([^"]+)"[^>]*>', page)
 previews = re.findall(r'<button\b[^>]*data-poster-preview[^>]*>', page)
-if cards != ['1.0','1.1','1.2','1.3','2.0.0','2.1.0','2.2.0','2.3.0','2.4.0','Next Update','VR','VM'] or len(previews) != 3 or any(f'data-poster-version="{name}"' not in previews[i] for i, name in enumerate(['Next Update','VR','VM'])):
+if cards != ['1.0','1.1','1.2','1.3','2.0.0','2.1.0','2.2.0','2.3.0','2.4.0','2.5.0','Next Update','VR','VM'] or len(previews) != 3 or any(f'data-poster-version="{name}"' not in previews[i] for i, name in enumerate(['Next Update','VR','VM'])):
     raise SystemExit('Release posters must remain versioned; unnumbered next-update, VR and VM previews follow at the right')
+if 'src="site-assets/version-posters/forgeplay-2.5.0.png" width="1024" height="1536"' not in page:
+    raise SystemExit('2.5.0 must use the supplied Lower Ping poster')
+if not (root / 'site-assets/version-posters/forgeplay-2.5.0.png').read_bytes().startswith(b'\x89PNG\r\n\x1a\n'):
+    raise SystemExit('2.5.0 poster must be a valid PNG asset')
 if 'src="site-assets/version-posters/forgeplay-graphics-independence-preview-20261101.png" width="1024" height="1536"' not in page:
     raise SystemExit('Next update must use the supplied Graphics Independence preview poster')
 if not (root / 'site-assets/version-posters/forgeplay-graphics-independence-preview-20261101.png').read_bytes().startswith(b'\x89PNG\r\n\x1a\n'):
