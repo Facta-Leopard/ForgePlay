@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "revision": "2026-10-11",
+  "rightsHolder": "Facta-Leopard",
+  "license": "GPL-3.0-only",
+  "notice": "LICENSES/ForgePlayVR/NOTICE.txt",
+  "sourceDirectories": ["VR/Sources", "VR/Native", "VR/Scripts", "VR/Tests", "Packages/ForgePlayShared/Sources", "Packages/CreatorApps/Sources"],
+  "sourceExtensions": [".swift", ".c", ".cpp", ".h", ".hpp", ".m", ".mm", ".metal", ".def", ".modulemap", ".py", ".sh"],
+  "sourceFiles": ["VR/Package.swift", "Packages/ForgePlayShared/Package.swift", "Packages/CreatorApps/Package.swift"],
+  "excludedFiles": ["VR/Native/UnixBridge/VRUnixBootstrap.cpp"],
+  "thirdPartyInputs": ["VR/ThirdParty", "Mac/Resources/Runners/ForgePlayRuntime"],
+  "notes": [
+    "The grant covers author-owned contributions; preserve earlier grants and embedded third-party notices.",
+    "Wine-derived VRUnixBootstrap.cpp remains LGPL-2.1-or-later with its existing additional linking permission.",
+    "Generated Valve ABI declarations retain BSD-3-Clause; third-party headers and libraries are not relicensed.",
+    "VRTransport is the Mac/Wine shared-memory implementation; VRWire is shared Mac/Vision networking. Both author-owned implementations are covered.",
+    "The author-owned shared support/catalogue code required to build the VR applications is included; existing permissions remain available. This does not include the private Mac/Launcher application wrappers.",
+    "Artwork binaries, logos, private keys, signing profiles and local configuration are not licensed or distributed by this scope.",
+    "Vision Pro packaging and App Store submission are a separate workflow; its covered source is no longer excluded."
+  ]
+}

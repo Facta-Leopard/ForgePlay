@@ -1,0 +1,67 @@
+ForgePlay author-owned host wrapper permission
+Revision: 2026-10-04.1-runtime-boundary
+Copyright (C) 2026 Facta-Leopard
+Original project: https://github.com/Facta-Leopard/ForgePlay
+
+1. Precisely identified material
+
+The files listed in SCOPE.json alongside this notice identify Facta-Leopard's
+host application options, consent, input and connection wrappers, and the
+identified Fopl presentation wrappers. This permission applies only to material
+in those files for which Facta-Leopard holds the relevant copyright. It does
+not apply to a file merely because the file is written in Swift.
+
+2. Alternative permission for the identified wrappers
+
+Facta-Leopard permits use, reproduction, modification and distribution of the
+identified author-owned wrapper contributions in compiled binary form, including
+as part of ForgePlay or a modified distribution, without supplying their source
+code. This permission is not limited to noncommercial distribution. Preserve
+the applicable copyright and this permission notice with a binary distribution
+that relies on it. No source-access right is created by this alternative grant.
+
+3. Limited permission to combine with the published runtime
+
+To the extent that Facta-Leopard's own GPL-covered Coordinator runtime
+contributions would otherwise require source for the identified wrappers as
+part of a combined work, Facta-Leopard grants an additional permission under
+GPLv3 section 7 to combine or link those runtime contributions with the wrappers
+identified in SCOPE.json and convey the resulting binary without providing the
+identified wrapper source. This also covers the identified author-owned Fopl
+presentation contributions. It is an express author permission, not a claim
+that an IPC boundary, process boundary or programming language establishes
+legal independence.
+
+The actual Coordinator inference/control implementation, including its Swift
+worker and required shared runtime files, remains GPL-3.0-only with this limited
+permission. Supply its applicable complete Corresponding Source and necessary
+build/installation material when conveying covered binaries. No part of that
+runtime may be treated as an excluded wrapper under this notice. The existing
+Game Mode, Frame Generation and Neural Rendering grants and their separately
+stated permissions remain unchanged; in particular NeuralWorker.swift is not
+an excluded wrapper.
+
+4. Earlier grants and third-party boundaries
+
+This permission does not revoke, narrow or replace GPL permissions previously
+granted for any copy. Existing recipients may continue to exercise those GPL
+rights. GPL copyright notices in the identified wrapper sources record those
+grants and do not negate this additional binary-distribution permission.
+
+No exception is granted for Wine-derived material, another copyright holder's
+code, model weights, system frameworks, the ExternalStorageAccessBridge or
+unidentified source files. Obligations arising independently from such material
+remain applicable. OWLv2, Supertonic2, ONNX Runtime, Apple components, Wine and
+other third-party material retain their own terms. This notice grants no public
+reuse rights in Fopl artwork, names, trademarks or other branding.
+
+The unmodified GNU GPL text remains unchanged. This notice is a separate
+permission for the identified author's material, not a replacement license for
+the entire application. The earlier 1.3 wrapper permission remains available
+for its own identified scope.
+
+5. Warranty
+
+The separately permitted wrapper contributions are supplied as is, without
+warranty, to the extent permitted by applicable law. The GPL warranty and
+liability provisions continue to apply to GPL-covered material.

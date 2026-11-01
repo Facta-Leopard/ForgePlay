@@ -13,19 +13,38 @@
     return {bg,surface,control,accent,ink,muted:readable(mix(ink,bg,.28),surfaces,end,4.5),border:readable(mix(accent,bg,.65),surfaces,end,3),onAccent:contrast('#000000',accent)>=contrast('#ffffff',accent)?'#000000':'#ffffff'};
   };
   const create=({root,dialog,data,locale,show,refresh,light,notice,example})=>{
-    let palette=null,fopl=null,lupain=false,logging=true,logSize=64,modding='none';const urls=new Set();
+    let palette=null,fopl=null,lupain=false,ping=false,logging=true,logSize=64,modding='none';const urls=new Set();
     const t=k=>data.strings[k]?.[Math.max(0,data.locales.indexOf(locale()))]||k;
     const n=(tag,cls='',text)=>{const e=document.createElement(tag);e.className=cls;if(text!==undefined)e.textContent=text;return e;};
     const button=(text,action,cls='')=>{const b=n('button',cls,text);b.type='button';b.addEventListener('click',action);return b;};
-    const title=kind=>({styles:t('styles'),fopl:t('replaceFopl'),lupain:'Lupain 루팡',logs:t('logs'),modding:t('modding'),rdr2:t('rdr2'),components:t('manual')})[kind];
+    const title=kind=>({styles:t('styles'),fopl:t('replaceFopl'),lupain:'Lupain 루팡',ping:t('reducePing'),fonts:t('fonts'),fontSteps:t('fontSteps'),fg250:t('fg250'),install250:t('install250'),library250:t('library250'),logs:t('logs'),modding:t('modding'),rdr2:t('rdr2'),components:t('manual')})[kind];
     const body=kind=>{for(const text of data.sections[kind]?.[locale()]||data.sections[kind]?.en||[])dialog.append(n('p','sim-note r240-copy',text.replaceAll('**','')));};
     const applyLook=()=>{
       if(palette){root.dataset.guidePalette=String(palette.id);for(const[k,v]of Object.entries(colors(palette,light()===false)))root.style.setProperty('--r240-'+k,v);}else delete root.dataset.guidePalette;
       const url=fopl?.url||(lupain?'site-assets/guide/lupain-240.png':null);
       if(url){root.dataset.guideFopl='true';root.style.setProperty('--r240-fopl','url("'+url+'")');root.style.setProperty('--r240-fopl-scale',String(fopl?.scale||1));root.style.setProperty('--r240-fopl-x',(fopl?.x||0)+'%');root.style.setProperty('--r240-fopl-y',(fopl?.y||0)+'%');}else delete root.dataset.guideFopl;
     };
-    const reset=()=>{for(const u of urls)URL.revokeObjectURL(u);urls.clear();palette=fopl=null;lupain=false;logging=true;logSize=64;modding='none';applyLook();};
+    const reset=()=>{for(const u of urls)URL.revokeObjectURL(u);urls.clear();palette=fopl=null;lupain=false;ping=false;logging=true;logSize=64;modding='none';applyLook();};
     const toggleLupain=()=>{lupain=!lupain;applyLook();refresh();};
+    const togglePing=()=>{ping=!ping;refresh();};
+    const pingControl=()=>{
+      const control=button('',()=>{togglePing();sync();},'r240-toggle');
+      const sync=()=>{control.textContent=t('reducePing')+' · '+t(ping?'pingOn':'pingOff');control.setAttribute('aria-checked',String(ping));};
+      control.setAttribute('role','switch');control.setAttribute('aria-label',t('reducePing'));sync();dialog.append(control);
+    };
+    const fonts=()=>{
+      const selected=new Set(),environment=n('select');environment.setAttribute('aria-label',t('fontEnvironment'));
+      for(const [value,label]of [['common',t('fontCommon')],['compatibility',t('fontCompatibility')]]){const option=n('option','',label);option.value=value;environment.append(option);}
+      const status=n('p','sim-note',t('fontUnchecked'));status.setAttribute('role','status');
+      const steps=button(t('fontSteps'),()=>{const chosen=[...selected].join(', '),target=environment.options[environment.selectedIndex].textContent;show(t('fontSteps'),notice());body('fontSteps');dialog.append(n('p','sim-note',example()+' · '+target+' · '+chosen));},'sim-primary');steps.disabled=true;
+      const grid=n('div','r240-palette-grid');
+      for(const family of ['Andale Mono','Arial','Arial Black','Comic Sans MS','Courier New','Georgia','Impact','Times New Roman','Trebuchet MS','Verdana','Webdings']){
+        const choice=button(family,()=>{if(selected.has(family))selected.delete(family);else selected.add(family);choice.setAttribute('aria-checked',String(selected.has(family)));choice.classList.toggle('sim-selected',selected.has(family));steps.disabled=!selected.size;});
+        choice.setAttribute('role','checkbox');choice.setAttribute('aria-checked','false');grid.append(choice);
+      }
+      environment.addEventListener('change',()=>{status.textContent=t('fontUnchecked');selected.clear();for(const choice of grid.children){choice.setAttribute('aria-checked','false');choice.classList.remove('sim-selected');}steps.disabled=true;});
+      dialog.append(n('label','sim-note',t('fontEnvironment')),environment,button(t('fontCheck'),()=>{status.textContent=t('fontCheckExample');}),status,grid,steps,n('p','sim-note',t('fontDemoBoundary')));
+    };
     const styles=()=>{
       let selected=palette;const previews=n('div','r240-palette-previews'),search=n('input'),grid=n('div','r240-palette-grid');search.type='search';search.placeholder=t('search');search.setAttribute('aria-label',t('search'));
       const caption=n('p','sim-note');caption.setAttribute('role','status');
@@ -47,8 +66,12 @@
     const open=kind=>{
       show(title(kind),notice());dialog.classList.add('r240-dialog');body(kind);
       if(kind==='styles'){styles();return;}if(kind==='fopl'){replaceFopl();return;}
+      if(kind==='fonts'){fonts();return;}if(kind==='ping'){pingControl();return;}
+      if(kind==='fg250'){dialog.append(n('p','sim-note',t('fgRecovery250')),n('p','sim-note',t('frameRecovery250')));return;}
+      if(kind==='install250'||kind==='library250'){dialog.append(n('p','sim-note',t(kind==='install250'?'installFlow250':'libraryFlow250')));return;}
       if(kind==='lupain'){
         const img=n('img','r240-lupain');img.src='site-assets/guide/lupain-240.png';img.alt='Lupain';dialog.append(img);const control=button('',()=>{toggleLupain();sync();},'r240-toggle');const sync=()=>{control.textContent=t(lupain?'lupainOn':'lupainOff');control.setAttribute('aria-checked',String(lupain));};control.setAttribute('role','switch');control.setAttribute('aria-label',t('lupainToggle'));sync();dialog.append(control,n('p','sim-note',example()+' · '+notice()));
+        dialog.append(n('h3','',t('reducePing')));body('ping');pingControl();
       }else if(kind==='logs'){
         const control=button(t('logging'),()=>{logging=!logging;control.setAttribute('aria-checked',String(logging));},'r240-toggle');control.setAttribute('role','switch');control.setAttribute('aria-checked',String(logging));dialog.append(control);const size=n('p','sim-note',example()+' · '+logSize+' MiB');dialog.append(size,button(t('cleanup'),()=>{logSize=24;size.textContent=example()+' · '+logSize+' MiB';}));
       }else if(kind==='modding'){
@@ -61,7 +84,7 @@
       }
     };
     window.addEventListener('pagehide',reset,{once:true});
-    return {t,open,applyLook,reset,toggleLupain,get lupain(){return lupain;},get foplURL(){return fopl?.url||null;}};
+    return {t,open,applyLook,reset,toggleLupain,togglePing,get lupain(){return lupain;},get ping(){return ping;},get foplURL(){return fopl?.url||null;}};
   };
   window.ForgePlayRelease240Demo=Object.freeze({create,colors});
 })();

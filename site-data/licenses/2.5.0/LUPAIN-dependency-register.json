@@ -1,0 +1,386 @@
+[
+  {
+    "name": "github.com/BurntSushi/toml",
+    "version": "v1.5.0",
+    "source": "https://proxy.golang.org/github.com/!burnt!sushi/toml/@v/v1.5.0.zip",
+    "spdx": "MIT",
+    "notice_files": [
+      "github.com_BurntSushi_toml/9b64abc0-COPYING",
+      "github.com_BurntSushi_toml/b28f6150-COPYING",
+      "github.com_BurntSushi_toml/3f9c8b21-COPYING",
+      "github.com_BurntSushi_toml/7140571a-COPYING"
+    ]
+  },
+  {
+    "name": "github.com/aymanbagabas/go-osc52/v2",
+    "version": "v2.0.1",
+    "source": "https://proxy.golang.org/github.com/aymanbagabas/go-osc52/v2/@v/v2.0.1.zip",
+    "spdx": "MIT",
+    "notice_files": [
+      "github.com_aymanbagabas_go-osc52_v2/2767fdb0-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/charmbracelet/bubbles",
+    "version": "v1.0.0",
+    "source": "https://proxy.golang.org/github.com/charmbracelet/bubbles/@v/v1.0.0.zip",
+    "spdx": "MIT",
+    "notice_files": [
+      "github.com_charmbracelet_bubbles/346d6520-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/charmbracelet/bubbletea",
+    "version": "v1.3.10",
+    "source": "https://proxy.golang.org/github.com/charmbracelet/bubbletea/@v/v1.3.10.zip",
+    "spdx": "MIT",
+    "notice_files": [
+      "github.com_charmbracelet_bubbletea/9be319c2-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/charmbracelet/colorprofile",
+    "version": "v0.4.1",
+    "source": "https://proxy.golang.org/github.com/charmbracelet/colorprofile/@v/v0.4.1.zip",
+    "spdx": "MIT",
+    "notice_files": [
+      "github.com_charmbracelet_colorprofile/8b11843b-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/charmbracelet/lipgloss",
+    "version": "v1.1.0",
+    "source": "https://proxy.golang.org/github.com/charmbracelet/lipgloss/@v/v1.1.0.zip",
+    "spdx": "MIT",
+    "notice_files": [
+      "github.com_charmbracelet_lipgloss/a5e130bc-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/charmbracelet/x/ansi",
+    "version": "v0.11.6",
+    "source": "https://proxy.golang.org/github.com/charmbracelet/x/ansi/@v/v0.11.6.zip",
+    "spdx": "MIT",
+    "notice_files": [
+      "github.com_charmbracelet_x_ansi/382bae35-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/charmbracelet/x/cellbuf",
+    "version": "v0.0.15",
+    "source": "https://proxy.golang.org/github.com/charmbracelet/x/cellbuf/@v/v0.0.15.zip",
+    "spdx": "MIT",
+    "notice_files": [
+      "github.com_charmbracelet_x_cellbuf/2af8ea74-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/charmbracelet/x/term",
+    "version": "v0.2.2",
+    "source": "https://proxy.golang.org/github.com/charmbracelet/x/term/@v/v0.2.2.zip",
+    "spdx": "MIT",
+    "notice_files": [
+      "github.com_charmbracelet_x_term/ded51a40-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/clipperhouse/displaywidth",
+    "version": "v0.9.0",
+    "source": "https://proxy.golang.org/github.com/clipperhouse/displaywidth/@v/v0.9.0.zip",
+    "spdx": "MIT",
+    "notice_files": [
+      "github.com_clipperhouse_displaywidth/8ed0d8e2-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/clipperhouse/stringish",
+    "version": "v0.1.1",
+    "source": "https://proxy.golang.org/github.com/clipperhouse/stringish/@v/v0.1.1.zip",
+    "spdx": "BSD-3-Clause AND MIT",
+    "notice_files": [
+      "github.com_clipperhouse_stringish/d3fb3ce0-LICENSE",
+      "github.com_clipperhouse_stringish/3435d56f-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/clipperhouse/uax29/v2",
+    "version": "v2.5.0",
+    "source": "https://proxy.golang.org/github.com/clipperhouse/uax29/v2/@v/v2.5.0.zip",
+    "spdx": "MIT",
+    "notice_files": [
+      "github.com_clipperhouse_uax29_v2/2ab4d421-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/google/btree",
+    "version": "v1.1.2",
+    "source": "https://proxy.golang.org/github.com/google/btree/@v/v1.1.2.zip",
+    "spdx": "Apache-2.0",
+    "notice_files": [
+      "github.com_google_btree/9b7c34fc-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/google/gopacket",
+    "version": "v1.1.19",
+    "source": "https://proxy.golang.org/github.com/google/gopacket/@v/v1.1.19.zip",
+    "spdx": "BSD-3-Clause",
+    "notice_files": [
+      "github.com_google_gopacket/b8652631-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/jackpal/gateway",
+    "version": "v1.2.0",
+    "source": "https://proxy.golang.org/github.com/jackpal/gateway/@v/v1.2.0.zip",
+    "spdx": "BSD-3-Clause",
+    "notice_files": [
+      "github.com_jackpal_gateway/89be77b7-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/kentik/patricia",
+    "version": "v1.2.2",
+    "source": "https://proxy.golang.org/github.com/kentik/patricia/@v/v1.2.2.zip",
+    "spdx": "BSD-2-Clause",
+    "notice_files": [
+      "github.com_kentik_patricia/7d173340-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/lucasb-eyer/go-colorful",
+    "version": "v1.3.0",
+    "source": "https://proxy.golang.org/github.com/lucasb-eyer/go-colorful/@v/v1.3.0.zip",
+    "spdx": "MIT",
+    "notice_files": [
+      "github.com_lucasb-eyer_go-colorful/1c5a59a6-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/mattn/go-colorable",
+    "version": "v0.1.13",
+    "source": "https://proxy.golang.org/github.com/mattn/go-colorable/@v/v0.1.13.zip",
+    "spdx": "MIT",
+    "notice_files": [
+      "github.com_mattn_go-colorable/faefaa68-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/mattn/go-isatty",
+    "version": "v0.0.20",
+    "source": "https://proxy.golang.org/github.com/mattn/go-isatty/@v/v0.0.20.zip",
+    "spdx": "MIT",
+    "notice_files": [
+      "github.com_mattn_go-isatty/ecf65937-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/mattn/go-runewidth",
+    "version": "v0.0.19",
+    "source": "https://proxy.golang.org/github.com/mattn/go-runewidth/@v/v0.0.19.zip",
+    "spdx": "MIT",
+    "notice_files": [
+      "github.com_mattn_go-runewidth/83e3b707-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/miekg/dns",
+    "version": "v1.1.61",
+    "source": "https://proxy.golang.org/github.com/miekg/dns/@v/v1.1.61.zip",
+    "spdx": "BSD-3-Clause",
+    "notice_files": [
+      "github.com_miekg_dns/3e13b398-COPYRIGHT",
+      "github.com_miekg_dns/6070de1c-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/muesli/ansi",
+    "version": "v0.0.0-20230316100256-276c6243b2f6",
+    "source": "https://proxy.golang.org/github.com/muesli/ansi/@v/v0.0.0-20230316100256-276c6243b2f6.zip",
+    "spdx": "MIT",
+    "notice_files": [
+      "github.com_muesli_ansi/e8b5d810-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/muesli/cancelreader",
+    "version": "v0.2.2",
+    "source": "https://proxy.golang.org/github.com/muesli/cancelreader/@v/v0.2.2.zip",
+    "spdx": "MIT",
+    "notice_files": [
+      "github.com_muesli_cancelreader/df00ea76-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/muesli/termenv",
+    "version": "v0.16.0",
+    "source": "https://proxy.golang.org/github.com/muesli/termenv/@v/v0.16.0.zip",
+    "spdx": "MIT",
+    "notice_files": [
+      "github.com_muesli_termenv/a132b6fa-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/rivo/uniseg",
+    "version": "v0.4.7",
+    "source": "https://proxy.golang.org/github.com/rivo/uniseg/@v/v0.4.7.zip",
+    "spdx": "MIT",
+    "notice_files": [
+      "github.com_rivo_uniseg/46a220e9-LICENSE.txt"
+    ]
+  },
+  {
+    "name": "github.com/rs/zerolog",
+    "version": "v1.33.0",
+    "source": "https://proxy.golang.org/github.com/rs/zerolog/@v/v1.33.0.zip",
+    "spdx": "MIT",
+    "notice_files": [
+      "github.com_rs_zerolog/26816e86-LICENSE",
+      "github.com_rs_zerolog/a23c9f3d-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/samber/lo",
+    "version": "v1.52.0",
+    "source": "https://proxy.golang.org/github.com/samber/lo/@v/v1.52.0.zip",
+    "spdx": "MIT",
+    "notice_files": [
+      "github.com_samber_lo/d99cc5dc-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/urfave/cli/v3",
+    "version": "v3.6.1",
+    "source": "https://proxy.golang.org/github.com/urfave/cli/v3/@v/v3.6.1.zip",
+    "spdx": "MIT",
+    "notice_files": [
+      "github.com_urfave_cli_v3/f6cfbf71-LICENSE"
+    ]
+  },
+  {
+    "name": "github.com/xo/terminfo",
+    "version": "v0.0.0-20220910002029-abceb7e1c41e",
+    "source": "https://proxy.golang.org/github.com/xo/terminfo/@v/v0.0.0-20220910002029-abceb7e1c41e.zip",
+    "spdx": "MIT",
+    "notice_files": [
+      "github.com_xo_terminfo/fa530cdf-LICENSE"
+    ]
+  },
+  {
+    "name": "golang.org/x/crypto",
+    "version": "v0.48.0",
+    "source": "https://proxy.golang.org/golang.org/x/crypto/@v/v0.48.0.zip",
+    "spdx": "BSD-3-Clause",
+    "notice_files": [
+      "golang.org_x_crypto/15272b1a-LICENSE",
+      "golang.org_x_crypto/7ab925cd-PATENTS"
+    ]
+  },
+  {
+    "name": "golang.org/x/exp",
+    "version": "v0.0.0-20231110203233-9a3e6036ecaa",
+    "source": "https://proxy.golang.org/golang.org/x/exp/@v/v0.0.0-20231110203233-9a3e6036ecaa.zip",
+    "spdx": "BSD-3-Clause",
+    "notice_files": [
+      "golang.org_x_exp/f71a9187-LICENSE",
+      "golang.org_x_exp/d32eebf7-PATENTS"
+    ]
+  },
+  {
+    "name": "golang.org/x/net",
+    "version": "v0.50.0",
+    "source": "https://proxy.golang.org/golang.org/x/net/@v/v0.50.0.zip",
+    "spdx": "BSD-3-Clause",
+    "notice_files": [
+      "golang.org_x_net/e0059466-LICENSE",
+      "golang.org_x_net/adddc171-PATENTS"
+    ]
+  },
+  {
+    "name": "golang.org/x/sync",
+    "version": "v0.19.0",
+    "source": "https://proxy.golang.org/golang.org/x/sync/@v/v0.19.0.zip",
+    "spdx": "BSD-3-Clause",
+    "notice_files": [
+      "golang.org_x_sync/76698867-LICENSE",
+      "golang.org_x_sync/f1e38eb3-PATENTS"
+    ]
+  },
+  {
+    "name": "golang.org/x/sys",
+    "version": "v0.42.0",
+    "source": "https://proxy.golang.org/golang.org/x/sys/@v/v0.42.0.zip",
+    "spdx": "BSD-3-Clause",
+    "notice_files": [
+      "golang.org_x_sys/d2d445c6-LICENSE",
+      "golang.org_x_sys/649c1460-PATENTS"
+    ]
+  },
+  {
+    "name": "golang.org/x/term",
+    "version": "v0.40.0",
+    "source": "https://proxy.golang.org/golang.org/x/term/@v/v0.40.0.zip",
+    "spdx": "BSD-3-Clause",
+    "notice_files": [
+      "golang.org_x_term/dab08bb2-LICENSE",
+      "golang.org_x_term/068b8a22-PATENTS"
+    ]
+  },
+  {
+    "name": "golang.org/x/text",
+    "version": "v0.34.0",
+    "source": "https://proxy.golang.org/golang.org/x/text/@v/v0.34.0.zip",
+    "spdx": "BSD-3-Clause",
+    "notice_files": [
+      "golang.org_x_text/9dd84277-LICENSE",
+      "golang.org_x_text/be9761e3-PATENTS"
+    ]
+  },
+  {
+    "name": "golang.org/x/time",
+    "version": "v0.12.0",
+    "source": "https://proxy.golang.org/golang.org/x/time/@v/v0.12.0.zip",
+    "spdx": "BSD-3-Clause",
+    "notice_files": [
+      "golang.org_x_time/2ca5d140-LICENSE",
+      "golang.org_x_time/1d7178a8-PATENTS"
+    ]
+  },
+  {
+    "name": "golang.zx2c4.com/wireguard",
+    "version": "v0.0.0-20250521234502-f333402bd9cb",
+    "source": "https://proxy.golang.org/golang.zx2c4.com/wireguard/@v/v0.0.0-20250521234502-f333402bd9cb.zip",
+    "spdx": "MIT",
+    "notice_files": [
+      "golang.zx2c4.com_wireguard/f77ef255-LICENSE"
+    ]
+  },
+  {
+    "name": "gvisor.dev/gvisor",
+    "version": "v0.0.0-20260401053414-479e1cc2c3d9",
+    "source": "https://proxy.golang.org/gvisor.dev/gvisor/@v/v0.0.0-20260401053414-479e1cc2c3d9.zip",
+    "spdx": "Apache-2.0 AND BSD-3-Clause AND MIT",
+    "notice_files": [
+      "gvisor.dev_gvisor/934777ca-LICENSE"
+    ]
+  },
+  {
+    "name": "mvdan.cc/sh",
+    "version": "v2.6.4+incompatible",
+    "source": "https://proxy.golang.org/mvdan.cc/sh/@v/v2.6.4+incompatible.zip",
+    "spdx": "BSD-3-Clause",
+    "notice_files": [
+      "mvdan.cc_sh/a1346f55-LICENSE"
+    ]
+  },
+  {
+    "name": "stdlib",
+    "version": "go1.26.9",
+    "source": "https://raw.githubusercontent.com/golang/go/go1.26.9/LICENSE",
+    "spdx": "NOASSERTION",
+    "notice_files": [
+      "stdlib/LICENSE",
+      "stdlib/PATENTS"
+    ]
+  }
+]

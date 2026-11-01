@@ -1,0 +1,58 @@
+ForgePlay VR and ForgePlayVP — original implementation
+Revision: 2026-10-11
+Copyright (C) 2026 Facta-Leopard
+Original source: https://github.com/Facta-Leopard/ForgePlay
+Vision Pro project: https://github.com/Facta-Leopard/ForgePlayVP
+
+1. Author-owned implementation: GPL-3.0-only
+
+Facta-Leopard licenses the original Mac VR runtime, Vision Pro application,
+shared transport/media/input implementation and accompanying build/test code
+identified in SCOPE.json under the GNU General Public License, version 3 only.
+The unmodified text is in LICENSES/GPL-3.0-only.txt. Compliant copying,
+modification and redistribution, including commercial use, are permitted.
+This grant supersedes the earlier unpublished-source policy for the author's
+VR and Vision Pro implementation. Prior licenses and recipients' rights remain.
+The listed shared support/catalogue source needed to build these applications
+is included in this grant; earlier alternative permissions remain available.
+
+"Original implementation" describes project-authored behavior that implements
+public interfaces; it does not claim invention of standards or sole ownership
+of interfaces, third-party code, frameworks, models or runtime dependencies.
+No SteamVR runtime implementation or game code is included in this grant.
+
+2. Wine and third-party boundary
+
+VR/Native/UnixBridge/VRUnixBootstrap.cpp is adapted from Wine. It retains its
+Wine authorship, LGPL-2.1-or-later terms and the additional linking permission
+reproduced in that file. It is not described as original ForgePlay code.
+Its provenance is recorded in VR/ThirdParty/wine-unix-bridge.lock.json. The
+project-authored shared-memory channel and protocol are separately identified
+in SCOPE.json; placing them in the same directory does not relicense Wine.
+
+Valve OpenVR public headers and generated declarations retain BSD-3-Clause
+notices. MinGW, Wine, DXMT and other bundled components retain their own
+licenses and source obligations. Apple frameworks are system dependencies.
+Binary artwork, logos and branding receive no new license from this notice.
+
+3. Corresponding Source and existing host wrappers
+
+Distribution of the covered binaries must provide the applicable complete
+Corresponding Source, including the covered Swift runtime/transport code,
+native code, build scripts, interface definitions and necessary build inputs.
+A native-DLL-only archive is not complete source for the covered VR system.
+The source inventory records exact paths and hashes for each release.
+
+To preserve the separately licensed ForgePlay launcher/Desktop wrapper
+boundary, Facta-Leopard additionally permits linking or combining the author's
+covered VR contributions with those host UI/connection wrappers without
+requiring publication of the otherwise separately permitted wrapper source.
+This GPLv3 section 7 permission applies only to Facta-Leopard's contributions.
+It does not exempt any VR/Vision implementation in SCOPE.json, Wine-derived
+code or another copyright holder's material from its source/license duties.
+The Vision Pro application and shared VR implementation are covered source,
+not excluded wrappers. A process, IPC or folder boundary alone is no license
+exception. No existing GPL rights are revoked.
+
+This grant includes no trademark permission or warranty. Preserve applicable
+copyright/license notices and identify modifications as required by GPLv3.

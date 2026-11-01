@@ -10,6 +10,196 @@
     "zh-Hant"
   ],
   "strings": {
+    "reducePing": [
+      "핑 줄이기",
+      "Reduce Ping",
+      "Ping reduzieren",
+      "Reducir ping",
+      "Réduire le ping",
+      "Pingを下げる",
+      "降低 Ping",
+      "降低 Ping"
+    ],
+    "pingOn": [
+      "켜짐",
+      "On",
+      "Ein",
+      "Activado",
+      "Activé",
+      "オン",
+      "已开启",
+      "已開啟"
+    ],
+    "pingOff": [
+      "꺼짐",
+      "Off",
+      "Aus",
+      "Desactivado",
+      "Désactivé",
+      "オフ",
+      "已关闭",
+      "已關閉"
+    ],
+    "fonts": [
+      "폰트 설치",
+      "Font installation",
+      "Schriften installieren",
+      "Instalar fuentes",
+      "Installer des polices",
+      "フォントをインストール",
+      "安装字体",
+      "安裝字型"
+    ],
+    "fontSteps": [
+      "선택한 글꼴의 설치 순서 보기",
+      "View installation steps for selected fonts",
+      "Installationsschritte anzeigen",
+      "Ver pasos de instalación",
+      "Voir les étapes d’installation",
+      "選択フォントの導入手順",
+      "查看所选字体安装步骤",
+      "查看所選字型安裝步驟"
+    ],
+    "fontEnvironment": [
+      "게임이 사용하는 Windows 환경 (예시)",
+      "Game's Windows environment (example)",
+      "Windows-Umgebung des Spiels (Beispiel)",
+      "Entorno Windows del juego (ejemplo)",
+      "Environnement Windows du jeu (exemple)",
+      "ゲームのWindows環境（例）",
+      "游戏使用的 Windows 环境（示例）",
+      "遊戲使用的 Windows 環境（範例）"
+    ],
+    "fontCommon": [
+      "공통 Steam 환경",
+      "Shared Steam environment",
+      "Gemeinsame Steam-Umgebung",
+      "Entorno Steam compartido",
+      "Environnement Steam commun",
+      "共通Steam環境",
+      "共用 Steam 环境",
+      "共用 Steam 環境"
+    ],
+    "fontCompatibility": [
+      "게임별 호환성 환경",
+      "Game compatibility environment",
+      "Spiel-Kompatibilitätsumgebung",
+      "Entorno de compatibilidad del juego",
+      "Environnement de compatibilité du jeu",
+      "ゲーム専用互換性環境",
+      "游戏专用兼容环境",
+      "遊戲專用相容環境"
+    ],
+    "fontCheck": [
+      "설치 여부 확인 (예시)",
+      "Check installation (example)",
+      "Installation prüfen (Beispiel)",
+      "Comprobar instalación (ejemplo)",
+      "Vérifier l’installation (exemple)",
+      "導入状態を確認（例）",
+      "检查安装状态（示例）",
+      "檢查安裝狀態（範例）"
+    ],
+    "fontUnchecked": [
+      "검사 전 · 이 웹 체험은 실제 파일을 읽지 않습니다.",
+      "Not checked · This demo does not read real files.",
+      "Ungeprüft · Diese Demo liest keine echten Dateien.",
+      "Sin comprobar · Esta demo no lee archivos reales.",
+      "Non vérifié · Cette démo ne lit pas de fichiers réels.",
+      "未確認 · この体験は実際のファイルを読みません。",
+      "尚未检查 · 网页不会读取实际文件。",
+      "尚未檢查 · 網頁不會讀取實際檔案。"
+    ],
+    "fontCheckExample": [
+      "체험 예시: 확인됨 · 누락 · 다른 버전 · 확인 불가. 실제 검사 결과가 아니며 글꼴은 자동 선택되지 않습니다.",
+      "Example states: verified · missing · different version · unreadable. These are not real results; fonts are not selected automatically.",
+      "Beispielzustände: bestätigt · fehlt · andere Version · unlesbar. Keine echten Ergebnisse; keine automatische Auswahl.",
+      "Estados de ejemplo: verificado · ausente · otra versión · ilegible. No son resultados reales ni se seleccionan fuentes automáticamente.",
+      "États d’exemple : vérifié · absent · autre version · illisible. Ce ne sont pas des résultats réels ; aucune sélection automatique.",
+      "状態の例：確認済み・不足・別バージョン・確認不能。実際の検査結果ではなく、自動選択もしません。",
+      "示例状态：已确认、缺失、版本不同、无法确认。并非实际检查结果，也不会自动选择字体。",
+      "範例狀態：已確認、缺少、版本不同、無法確認。並非實際檢查結果，也不會自動選取字型。"
+    ],
+    "fontDemoBoundary": [
+      "이 화면은 설치 흐름 체험입니다. 글꼴을 내려받거나 설치하지 않고 실제 Windows 환경도 변경하지 않습니다.",
+      "This is an installation-flow demo. It does not download or install fonts or modify a real Windows environment.",
+      "Dies ist eine Ablaufdemo. Sie lädt oder installiert keine Schriften und ändert keine echte Windows-Umgebung.",
+      "Esta demo no descarga ni instala fuentes ni modifica un entorno Windows real.",
+      "Cette démo n’installe ni ne télécharge de polices et ne modifie aucun environnement Windows réel.",
+      "これは導入手順の体験です。フォントの取得・インストールや実際のWindows環境の変更は行いません。",
+      "这里只演示安装流程，不下载、安装字体，也不修改实际 Windows 环境。",
+      "此處僅示範安裝流程，不下載、安裝字型，也不修改實際 Windows 環境。"
+    ],
+    "fg250": [
+      "FG 복구와 Frame Check",
+      "FG recovery and Frame Check",
+      "FG-Wiederherstellung und Frame Check",
+      "Recuperación FG y Frame Check",
+      "Récupération FG et Frame Check",
+      "FG復旧とFrame Check",
+      "FG 恢复与 Frame Check",
+      "FG 復原與 Frame Check"
+    ],
+    "install250": [
+      "런처 설치 안내",
+      "Launcher installation prompts",
+      "Launcher-Installationshinweise",
+      "Avisos de instalación",
+      "Messages d’installation",
+      "ランチャーのインストール案内",
+      "启动器安装提示",
+      "啟動器安裝提示"
+    ],
+    "library250": [
+      "저장소 이동·환경 재생성",
+      "Moving storage and recreating environments",
+      "Speicherwechsel und Neuerstellung",
+      "Mover almacenamiento y recrear entornos",
+      "Déplacement et recréation d’environnement",
+      "保存先移動・環境再作成",
+      "移动存储与重建环境",
+      "移動儲存與重建環境"
+    ],
+    "fgRecovery250": [
+      "2.5.0에서는 GPTK 4.0 beta 3 기반 D3DMetal과의 FG 호환성과 복구를 보완했습니다. 일시적인 캡처·출력 오류가 나면 원본 화면을 유지하고, 정상 처리가 확인되면 FG를 재개합니다. 화면 크기·출력 변경 중 정상적으로 건너뛴 프레임은 실패로 세지 않습니다. 이 체험은 GPU 처리나 실제 FPS 측정을 하지 않습니다.",
+      "2.5.0 improves FG compatibility and recovery with GPTK 4.0 beta 3-based D3DMetal. Temporary capture/output errors retain original frames; FG resumes after successful processing is confirmed. Valid skips during size/output changes are not failures. This demo runs no GPU processing or real FPS measurements.",
+      "2.5.0 verbessert FG mit GPTK 4.0 beta 3-D3DMetal. Bei vorübergehenden Aufnahme-/Ausgabefehlern bleiben Originalbilder erhalten; nach bestätigter Verarbeitung startet FG erneut. Reguläre Sprünge bei Größen-/Ausgabewechsel zählen nicht als Fehler. Keine echte GPU-Verarbeitung oder FPS-Messung in dieser Demo.",
+      "2.5.0 mejora FG con D3DMetal de GPTK 4.0 beta 3. Los errores temporales conservan la imagen original y FG se reanuda al confirmar el procesamiento correcto. Los saltos válidos al cambiar tamaño/salida no son fallos. La demo no procesa GPU ni mide FPS reales.",
+      "2.5.0 améliore FG avec D3DMetal de GPTK 4.0 beta 3. Les erreurs temporaires conservent l’image originale ; FG reprend après confirmation du traitement normal. Les sauts valides lors de changements de taille/sortie ne sont pas des erreurs. Aucune mesure FPS ou opération GPU réelle dans la démo.",
+      "2.5.0ではGPTK 4.0 beta 3のD3DMetalとのFG互換性・復旧を改善しました。一時的な取得・出力エラーでは元映像を維持し、正常処理を確認後に再開します。サイズや出力変更中の正常なスキップは失敗に数えません。この体験はGPU処理や実FPS測定を行いません。",
+      "2.5.0 改善与 GPTK 4.0 beta 3 D3DMetal 的 FG 兼容和恢复。临时捕获、输出错误时保留原画面，确认正常处理后恢复 FG。尺寸或输出变更中的正常跳帧不算失败。网页不执行 GPU 处理或实际 FPS 测量。",
+      "2.5.0 改善與 GPTK 4.0 beta 3 D3DMetal 的 FG 相容及復原。暫時擷取、輸出錯誤時保留原畫面，確認正常處理後恢復 FG。尺寸或輸出變更中的正常略過不算失敗。網頁不執行 GPU 處理或實際 FPS 測量。"
+    ],
+    "frameRecovery250": [
+      "FG 복구 중에도 측정 가능한 Original FPS는 유지하고 오류·복구 상태를 함께 표시합니다. 표시 시각을 처음에 얻지 못해도 정상 정보가 들어오면 측정을 재개합니다. 측정값이 없는 항목은 확인된 값처럼 표시하지 않습니다.",
+      "Measurable Original FPS remains visible during FG recovery, with error/recovery status. Measurement resumes when valid presentation timing arrives, even if initially unavailable. Missing measurements are not shown as confirmed values.",
+      "Messbare Original-FPS bleiben während der FG-Wiederherstellung samt Status sichtbar. Sobald gültige Präsentationszeiten vorliegen, läuft die Messung weiter. Fehlende Messwerte werden nicht als bestätigt dargestellt.",
+      "Los FPS originales medibles siguen visibles durante la recuperación, junto al estado. La medición se reanuda al recibir tiempos de presentación válidos. No se presentan datos ausentes como valores confirmados.",
+      "Les FPS originaux mesurables restent visibles pendant la récupération, avec son état. La mesure reprend à réception d’horodatages valides. Les valeurs manquantes ne sont pas présentées comme confirmées.",
+      "FG復旧中も測定可能なOriginal FPSとエラー・復旧状態を表示します。最初に表示時刻が取得できなくても、有効な情報が届けば測定を再開します。未測定値を確認済みとして表示しません。",
+      "FG 恢复期间保留可测量的 Original FPS 并显示状态。取得有效呈现时间后恢复测量；缺失测量不会当作已确认数值显示。",
+      "FG 復原期間保留可測量的 Original FPS 並顯示狀態。取得有效呈現時間後恢復測量；缺少的測量不會當作已確認數值顯示。"
+    ],
+    "installFlow250": [
+      "안내창을 닫은 뒤 파일 선택창이나 공식 홈페이지를 여는 순서입니다. 취소하거나 다른 화면으로 이동하면 남은 요청을 실행하지 않습니다. 긴 알림은 알림 안에서, 본문은 본문에서 따로 스크롤합니다. 아래 단계는 실제 설치가 아닌 예시입니다.",
+      "Dismiss the prompt before opening the file picker or official site. Canceling or leaving the view must not run stale requests. Long notices and main content scroll separately. The following steps are examples, not real installation.",
+      "Zuerst den Hinweis schließen, dann Dateiauswahl oder Website öffnen. Nach Abbruch oder Ansichtswechsel dürfen alte Anforderungen nicht weiterlaufen. Lange Hinweise und Hauptinhalt scrollen getrennt. Die Schritte sind nur Beispiele.",
+      "Cierra el aviso antes de abrir el selector o la web. Cancelar o cambiar de vista no ejecuta solicitudes pendientes. Avisos largos y contenido se desplazan por separado. Estos pasos no instalan nada real.",
+      "Fermez le message avant le sélecteur ou le site. L’annulation ou un changement de vue ne doit pas exécuter d’anciennes demandes. Avis longs et contenu défilent séparément. Les étapes sont des exemples, pas une installation.",
+      "案内を閉じてからファイル選択や公式サイトを開きます。キャンセルや画面移動後に古い要求を実行しません。長い通知と本文は別々にスクロールします。以下は実際の導入ではなく操作例です。",
+      "先关闭提示，再打开文件选择或官网。取消或离开页面后不执行遗留请求。长提示与正文可分别滚动。下方仅为示例，不会实际安装。",
+      "先關閉提示，再開啟檔案選擇或官網。取消或離開畫面後不執行遺留要求。長提示與本文可分別捲動。下方僅為範例，不會實際安裝。"
+    ],
+    "libraryFlow250": [
+      "저장 위치를 바꾼 뒤 Windows 환경을 재생성해도 외부 Steam 게임 파일 자체는 이동·삭제하지 않고 라이브러리 연결을 보존합니다. 재생성은 로그인·추가 구성요소를 초기화할 수 있어 단순 앱 업데이트에는 필요하지 않습니다. 실패 시 사유를 진단 자료에서 확인하며 개인 경로 가림 처리는 유지됩니다.",
+      "After moving storage, recreating the Windows environment preserves external Steam library links without moving/deleting game files. Recreation may reset logins and added components and is not needed for an ordinary app update. Failures include diagnostic reasons with personal paths redacted.",
+      "Nach einem Speicherwechsel erhält die Neuerstellung externe Steam-Bibliotheksverbindungen, ohne Spieldateien zu bewegen/löschen. Anmeldungen und Zusatzkomponenten können zurückgesetzt werden; normale App-Updates brauchen das nicht. Fehler werden mit geschwärzten persönlichen Pfaden erklärt.",
+      "Tras mover el almacenamiento, la recreación conserva enlaces Steam externos sin mover/borrar juegos. Puede reiniciar sesiones y componentes; no hace falta para una actualización normal. Los errores se explican en diagnósticos con rutas personales ocultas.",
+      "Après déplacement, la recréation conserve les liens Steam externes sans déplacer/supprimer les jeux. Connexions et composants peuvent être réinitialisés ; ce n’est pas requis pour une mise à jour ordinaire. Les motifs d’échec sont consignés avec les chemins personnels masqués.",
+      "保存先変更後の環境再作成でも外部Steamゲームを移動・削除せず接続を維持します。ログインや追加コンポーネントが初期化される場合があり、通常のアプリ更新には不要です。失敗理由は個人パスを伏せた診断情報で確認します。",
+      "移动存储后重建 Windows 环境时，保留外部 Steam 库连接，不移动或删除游戏文件。重建可能重置登录和附加组件，普通应用更新无需执行。失败原因会记录于诊断中，个人路径仍会隐藏。",
+      "移動儲存後重建 Windows 環境時，保留外部 Steam 庫連結，不移動或刪除遊戲檔案。重建可能重設登入及附加元件，一般 App 更新不必執行。失敗原因記錄於診斷中，個人路徑仍會遮蔽。"
+    ],
     "profiles241": [
       "2.4.1에서는 HELLDIVERS 2와 Starlit Season·Nioh·Nioh 2·Persona 5 Strikers·Blue Archive의 개발·영상 비교용 항목을 선택 목록에서 제외했습니다. 기존 환경과 기록은 보존합니다. HELLDIVERS 2의 현재 EAC 구성은 ForgePlay에서 지원하지 않습니다.",
       "In 2.4.1, HELLDIVERS 2 and development/video comparison entries for Starlit Season, Nioh, Nioh 2, Persona 5 Strikers and Blue Archive are no longer selectable. Existing environments and records are retained. The current HELLDIVERS 2 EAC configuration is not supported by ForgePlay.",
@@ -241,14 +431,14 @@
       "按需要安裝元件"
     ],
     "newFeatures": [
-      "2.4.0 새 기능",
-      "New in 2.4.0",
-      "Neu in 2.4.0",
-      "Novedades de 2.4.0",
-      "Nouveautés 2.4.0",
-      "2.4.0の新機能",
-      "2.4.0新功能",
-      "2.4.0新功能"
+      "2.5.0 주요 기능",
+      "Explore 2.5.0 features",
+      "Funktionen in 2.5.0",
+      "Funciones de 2.5.0",
+      "Fonctions de 2.5.0",
+      "2.5.0の主な機能",
+      "2.5.0 主要功能",
+      "2.5.0 主要功能"
     ],
     "invalidPNG": [
       "표시 가능한 단일 PNG를 선택하세요(최대 2048×2048, 16MiB).",
@@ -1434,6 +1624,132 @@
     }
   ],
   "sections": {
+    "ping": {
+      "ko": [
+        "루팡 설정과 포플 우클릭의 ‘핑 줄이기’는 같은 설정을 사용합니다. 기본은 꺼짐이며 루팡 프록시와는 별개로 켜고 끌 수 있습니다.",
+        "ForgePlay가 실행한 Windows 프로그램의 새 TCP 연결에 적용됩니다. UDP·다른 Mac 앱·Wi-Fi·이더넷·DNS·프록시는 바꾸지 않으며, 실제 효과는 프로그램에 따라 다릅니다.",
+        "끄면 이후 새 연결부터 기본 동작으로 돌아갑니다. 이미 열린 연결은 유지되므로 완전히 되돌리려면 프로그램을 정상 종료한 뒤 다시 실행하세요. 이 체험은 실제 통신을 바꾸거나 핑을 측정하지 않습니다."
+      ],
+      "en": [
+        "Lupain settings and the Fopl context menu share one Reduce Ping setting. It starts off and can be toggled independently of the Lupain proxy.",
+        "It applies to new TCP connections from Windows programs launched by ForgePlay. It does not change UDP, other Mac apps, Wi-Fi, Ethernet, DNS or proxies. Effects depend on the program.",
+        "Turning it off restores the default for subsequent new connections. Existing connections remain; quit and relaunch the program to fully restore defaults. This demo changes no networking and measures no ping."
+      ],
+      "de": [
+        "Lupain und das Fopl-Kontextmenü teilen eine Einstellung „Ping reduzieren“. Sie ist standardmäßig aus und unabhängig vom Lupain-Proxy.",
+        "Sie gilt für neue TCP-Verbindungen der von ForgePlay gestarteten Windows-Programme. UDP, andere Mac-Apps, WLAN, Ethernet, DNS und Proxys bleiben unverändert. Die Wirkung hängt vom Programm ab.",
+        "Aus wirkt auf nachfolgende neue Verbindungen. Bestehende bleiben erhalten; für die vollständige Rückkehr das Programm normal beenden und neu starten. Diese Demo ändert kein Netzwerk und misst keinen Ping."
+      ],
+      "es": [
+        "Lupain y el menú contextual de Fopl comparten Reducir ping. Está desactivado por defecto y es independiente del proxy.",
+        "Se aplica a nuevas conexiones TCP de programas Windows iniciados por ForgePlay. No cambia UDP, otras apps Mac, Wi-Fi, Ethernet, DNS ni proxies. El efecto depende del programa.",
+        "Desactivarlo restaura el valor normal para conexiones nuevas. Las existentes continúan; cierra y reinicia el programa para una restauración completa. Esta demo no cambia la red ni mide ping."
+      ],
+      "fr": [
+        "Lupain et le menu Fopl partagent le réglage Réduire le ping, désactivé par défaut et indépendant du proxy.",
+        "Il concerne les nouvelles connexions TCP des programmes Windows lancés par ForgePlay. UDP, autres apps Mac, Wi-Fi, Ethernet, DNS et proxys restent inchangés. L’effet dépend du programme.",
+        "La désactivation s’applique aux prochaines connexions. Les connexions existantes restent ouvertes ; quittez et relancez le programme pour tout rétablir. Cette démo ne modifie pas le réseau et ne mesure aucun ping."
+      ],
+      "ja": [
+        "Lupain設定とポプルの右クリックは同じ「Pingを下げる」設定を使います。初期値はオフで、プロキシとは独立して切り替えられます。",
+        "ForgePlayで起動したWindowsプログラムの新しいTCP接続に適用します。UDP、ほかのMacアプリ、Wi-Fi、Ethernet、DNS、プロキシは変更しません。効果はプログラムによって異なります。",
+        "オフにすると以後の新規接続が標準動作に戻ります。既存の接続は維持されるため、完全に戻す場合はプログラムを正常終了して再起動してください。体験では通信変更やPing測定をしません。"
+      ],
+      "zh-Hans": [
+        "Lupain 设置和 Fopl 右键菜单共用“降低 Ping”设置，默认关闭，可独立于代理切换。",
+        "适用于 ForgePlay 启动的 Windows 程序的新 TCP 连接。不改变 UDP、其他 Mac 应用、Wi-Fi、以太网、DNS 或代理，效果取决于程序。",
+        "关闭后新连接恢复默认行为，既有连接不受中断。完全恢复时请正常退出并重启程序。网页演示不会改变网络或测量 Ping。"
+      ],
+      "zh-Hant": [
+        "Lupain 設定和 Fopl 右鍵選單共用「降低 Ping」，預設關閉，可獨立於代理切換。",
+        "適用於 ForgePlay 啟動的 Windows 程式之新 TCP 連線。不改變 UDP、其他 Mac App、Wi-Fi、乙太網路、DNS 或代理，效果依程式而異。",
+        "關閉後新連線恢復預設行為，既有連線不會中斷。完全恢復時請正常結束並重新啟動程式。網頁示範不改變網路或測量 Ping。"
+      ]
+    },
+    "fonts": {
+      "ko": [
+        "‘포플과 대화(문제진단) → 폰트 설치’에서 게임과 같은 기존 Windows 환경을 고른 뒤 설치 여부를 확인하세요. AI를 켜지 않아도 사용할 수 있으며, 글자가 정상이라면 추가 설치는 필요하지 않습니다.",
+        "검사는 실제 글꼴 파일과 원본의 일치 여부를 확인합니다. 확인됨·누락·다른 버전·확인 불가를 구분하며, 확인된 파일이나 다른 버전을 자동으로 재설치 대상으로 고르지 않습니다. 파일 확인이 게임의 글꼴 인식이나 사용권을 보장하지는 않습니다.",
+        "설치 전에는 게임·Windows 프로그램을 정상 종료하고, 포플 우클릭의 ‘다른 앱보다 항상 앞에 표시’를 끄세요. 설치 후 다시 켤 수 있습니다. 맑은 고딕은 자동 설치 목록에 포함하지 않으며 상태 확인과 Microsoft 안내를 제공합니다. 해당 패키지의 Windows 사용 조건을 확인해야 합니다."
+      ],
+      "en": [
+        "Open Talk to Fopl (Diagnostics) → Font installation, select the same existing Windows environment as the game, then check installation. AI is not required, and correctly displayed text needs no extra fonts.",
+        "The check compares actual font files with the originals, distinguishing verified, missing, different-version and unreadable files. Verified or different-version files are not automatically selected for reinstall. File checks do not guarantee game recognition or license entitlement.",
+        "Quit games and Windows programs normally, and turn off Always on Top in Fopl's context menu before installation; you can turn it back on afterward. Malgun Gothic is not included in automatic installation; checks and Microsoft information are provided. Review that package's Windows usage conditions."
+      ],
+      "de": [
+        "Unter Mit Fopl sprechen (Diagnose) → Schriften installieren dieselbe vorhandene Windows-Umgebung wie das Spiel auswählen und prüfen. KI ist nicht nötig; korrekt angezeigte Texte brauchen keine Zusatzschriften.",
+        "Die Prüfung vergleicht Dateien mit Originalen: bestätigt, fehlend, andere Version oder unlesbar. Bestätigte/abweichende Dateien werden nicht automatisch zur Neuinstallation ausgewählt. Dies garantiert weder Erkennung im Spiel noch Nutzungsrechte.",
+        "Spiele/Windows-Programme normal beenden und Fopls Immer im Vordergrund vorher ausschalten; danach wieder einschaltbar. Malgun Gothic wird nicht automatisch installiert; Prüfung und Microsoft-Hinweise sind verfügbar. Die Windows-Nutzungsbedingungen des Pakets prüfen."
+      ],
+      "es": [
+        "Abre Hablar con Fopl (Diagnóstico) → Instalar fuentes, elige el mismo entorno Windows existente del juego y comprueba la instalación. No requiere IA; si el texto se ve bien no necesitas más fuentes.",
+        "Se comparan archivos y originales: verificados, ausentes, otra versión o ilegibles. No se seleccionan automáticamente para reinstalar archivos verificados o distintos. La comprobación no garantiza reconocimiento por el juego ni derechos de uso.",
+        "Cierra juegos y programas Windows normalmente y desactiva Siempre encima en Fopl antes de instalar; puedes reactivarlo después. Malgun Gothic no se instala automáticamente: hay comprobación e información de Microsoft. Revisa sus condiciones de uso en Windows."
+      ],
+      "fr": [
+        "Ouvrez Parler à Fopl (Diagnostic) → Installer des polices, choisissez le même environnement Windows existant que le jeu, puis vérifiez. L’IA n’est pas requise ; un texte correct ne nécessite pas de polices supplémentaires.",
+        "La vérification compare fichiers et originaux : vérifié, absent, autre version ou illisible. Les fichiers vérifiés/différents ne sont pas présélectionnés pour réinstallation. Cela ne garantit ni reconnaissance par le jeu ni droits d’utilisation.",
+        "Quittez normalement jeux/programmes Windows et désactivez Toujours au premier plan dans Fopl avant d’installer ; réactivez-le ensuite si besoin. Malgun Gothic n’est pas installé automatiquement : vérification et informations Microsoft sont fournies. Consultez les conditions Windows du paquet."
+      ],
+      "ja": [
+        "「ポプルと会話（診断）→フォントをインストール」でゲームと同じ既存Windows環境を選び、導入状態を確認します。AIは不要で、表示が正常なら追加導入も不要です。",
+        "実際のファイルと原本の一致を調べ、確認済み・不足・別バージョン・確認不能を区別します。確認済みや別バージョンを自動で再インストール対象にしません。ゲームでの認識や利用権を保証する検査ではありません。",
+        "導入前にゲーム・Windowsプログラムを正常終了し、ポプルの「常に手前に表示」をオフにしてください。終了後に戻せます。Malgun Gothicは自動導入に含めず、状態確認とMicrosoft案内を提供します。パッケージのWindows利用条件を確認してください。"
+      ],
+      "zh-Hans": [
+        "打开“与 Fopl 对话（诊断）→安装字体”，选择游戏正在使用的同一现有 Windows 环境，再检查状态。无需启用 AI；文字正常时无须额外安装。",
+        "检查实际字体文件与原版是否一致，区分已确认、缺失、版本不同和无法确认。已确认或版本不同的文件不会自动选为重装对象。文件检查不保证游戏识别或授予使用权。",
+        "安装前正常退出游戏和 Windows 程序，并关闭 Fopl 右键菜单中的始终置顶，完成后可重新开启。Malgun Gothic 不在自动安装列表内，只提供检查和 Microsoft 说明；请确认该包的 Windows 使用条件。"
+      ],
+      "zh-Hant": [
+        "開啟「與 Fopl 對話（診斷）→安裝字型」，選擇遊戲使用的同一既有 Windows 環境，再檢查狀態。不必啟用 AI；文字正常時不需額外安裝。",
+        "檢查實際字型檔案與原版是否相符，區分已確認、缺少、版本不同及無法確認。已確認或版本不同的檔案不會自動選為重裝對象。檔案檢查不保證遊戲辨識或授予使用權。",
+        "安裝前正常結束遊戲與 Windows 程式，並關閉 Fopl 右鍵選單的永遠置頂，完成後可重新開啟。Malgun Gothic 不在自動安裝清單，只提供檢查與 Microsoft 說明；請確認該套件的 Windows 使用條件。"
+      ]
+    },
+    "fontSteps": {
+      "ko": [
+        "실제 앱에서는 필요한 Core Fonts 항목을 직접 선택하고, 제공되는 라이선스와 다운로드 출처를 확인한 뒤 설치를 시작합니다. 사용 조건을 확인하는 절차 자체가 새로운 사용권을 부여하지는 않습니다.",
+        "설치 프로그램은 한 번에 하나씩 실행됩니다. 설치기 화면의 안내를 따르고, 완료 후 파일 확인 결과를 다시 살펴보세요. 무결성 또는 실행 오류가 나면 대기열을 중단합니다. 중단 버튼은 이미 열린 설치기를 강제 종료하지 않습니다.",
+        "이 웹 체험은 선택한 항목과 순서만 보여 줍니다. 파일 다운로드·EXE 실행·글꼴 설치·레지스트리 변경은 하지 않습니다."
+      ],
+      "en": [
+        "In the real app, explicitly select needed Core Fonts, review the provided license and download source, then start installation. Reviewing or accepting conditions does not itself grant new usage rights.",
+        "Installers run one at a time. Follow their screens and review file checks afterward. Integrity or execution errors stop the queue. Stopping the queue does not force-quit an already open installer.",
+        "This web demo only shows selections and steps. It downloads no files, runs no EXEs, installs no fonts and changes no registry."
+      ],
+      "de": [
+        "In der echten App benötigte Core Fonts selbst auswählen, Lizenz und Downloadquelle prüfen und dann starten. Die Prüfung/Zustimmung erteilt für sich keine neuen Nutzungsrechte.",
+        "Installer laufen einzeln. Den Dialogen folgen und danach Dateien prüfen. Integritäts-/Ausführungsfehler stoppen die Warteschlange; ein offener Installer wird dadurch nicht zwangsbeendet.",
+        "Diese Webdemo zeigt nur Auswahl und Ablauf. Keine Downloads, EXEs, Schriftinstallation oder Registry-Änderung."
+      ],
+      "es": [
+        "En la app real, selecciona Core Fonts, revisa licencia y origen y empieza la instalación. Revisar o aceptar condiciones no concede por sí mismo nuevos derechos.",
+        "Los instaladores se ejecutan uno a uno. Sigue sus indicaciones y revisa los archivos después. Errores de integridad o ejecución detienen la cola, no fuerzan el cierre de un instalador abierto.",
+        "La demo solo muestra selecciones y pasos. No descarga archivos, ejecuta EXE, instala fuentes ni cambia el registro."
+      ],
+      "fr": [
+        "Dans l’app réelle, sélectionnez les Core Fonts nécessaires, examinez licence et source puis démarrez. Examiner/accepter les conditions ne confère pas en soi de nouveaux droits.",
+        "Les installateurs s’exécutent un par un. Suivez leurs écrans puis vérifiez les fichiers. Les erreurs d’intégrité/exécution arrêtent la file sans forcer la fermeture d’un installateur ouvert.",
+        "La démo montre uniquement choix et étapes : aucun téléchargement, EXE, police installée ou registre modifié."
+      ],
+      "ja": [
+        "実際のアプリでは必要なCore Fontsを選び、ライセンスと取得元を確認してから開始します。条件の確認や同意そのものが新しい利用権を付与するわけではありません。",
+        "インストーラーは1つずつ動きます。画面に従い、完了後にファイル確認結果を見直してください。整合性・実行エラーでは待機列を止めますが、既に開いたインストーラーを強制終了しません。",
+        "このWeb体験は選択項目と手順だけを示します。取得・EXE実行・フォント導入・レジストリ変更は行いません。"
+      ],
+      "zh-Hans": [
+        "在实际应用中，手动选择需要的 Core Fonts，查看许可和下载来源后再开始安装。查看或同意条件本身不会授予新的使用权。",
+        "安装程序逐个运行。请遵循安装界面，完成后重新查看文件检查结果。完整性或执行错误会停止队列，但停止队列不会强制关闭已打开的安装程序。",
+        "网页只展示所选项目和步骤，不下载文件、运行 EXE、安装字体或更改注册表。"
+      ],
+      "zh-Hant": [
+        "在實際 App 中，手動選擇需要的 Core Fonts，查看授權及下載來源後再開始安裝。查看或同意條件本身不會授予新的使用權。",
+        "安裝程式逐個執行。請依安裝畫面操作，完成後重新查看檔案檢查結果。完整性或執行錯誤會停止佇列，但不會強制關閉已開啟的安裝程式。",
+        "網頁只展示所選項目與步驟，不下載檔案、執行 EXE、安裝字型或更改登錄。"
+      ]
+    },
     "rotk14": {
       "ko": [
         "Steam판 삼국지 14(App ID 872410)만을 위한 실험적 영상 프로필입니다. 별도 Windows 환경을 복제·재사용하며 그래픽 백엔드는 DXMT로 고정됩니다.",

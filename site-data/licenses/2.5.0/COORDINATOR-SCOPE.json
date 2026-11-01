@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "component": "ForgePlay AI Coordinator",
+  "revision": "2026-10-04.1-runtime-boundary",
+  "rightsHolder": "Facta-Leopard",
+  "source": "https://github.com/Facta-Leopard/ForgePlay",
+  "groups": [
+    {
+      "license": "GPL-3.0-only",
+      "notice": "LICENSE.txt",
+      "files": [
+        "Mac/Coordinator/Core/CoordinatorDomain.swift",
+        "Mac/Coordinator/Core/CoordinatorLeaseReader.c",
+        "Mac/Coordinator/Core/CoordinatorLeaseReader.h",
+        "Mac/Coordinator/Core/CoordinatorModel.swift",
+        "Mac/Coordinator/Core/CoordinatorPermission.swift",
+        "Mac/Coordinator/Core/CoordinatorWorker.swift",
+        "Mac/Coordinator/Core/CoordinatorWorkerBridge.h",
+        "Mac/Coordinator/Shared/CoordinatorBoxDisplay.swift",
+        "Mac/Coordinator/Shared/CoordinatorDetectionTargets.swift",
+        "Mac/Coordinator/Shared/CoordinatorSceneInstructions.swift",
+        "Mac/Coordinator/Shared/CoordinatorVoice.swift",
+        "Mac/Coordinator/Speech/PoppleVoiceEngine.h",
+        "Mac/Coordinator/Speech/PoppleVoiceEngine.mm"
+      ]
+    },
+    {
+      "license": "MIT",
+      "notice": "CONTRACTS-LICENSE.txt",
+      "files": [
+        "Mac/Coordinator/Contracts/CoordinatorLeaseProtocol.h",
+        "Mac/Coordinator/Contracts/CoordinatorPolicyCatalog.h"
+      ]
+    },
+    {
+      "license": "GPL-3.0-only",
+      "notice": "../GPL-3.0-only.txt",
+      "files": [
+        "Mac/Native/VisualCoordinator/CoordinatorAuthorization.h",
+        "Mac/Native/VisualCoordinator/CoordinatorAuthorization.m",
+        "Mac/Native/VisualCoordinator/CoordinatorCadence.h",
+        "Mac/Native/VisualCoordinator/CoordinatorConnection.h",
+        "Mac/Native/VisualCoordinator/CoordinatorConnection.m",
+        "Mac/Native/VisualCoordinator/CoordinatorGamePolicy.h",
+        "Mac/Native/VisualCoordinator/CoordinatorGamePolicy.m",
+        "Mac/Native/VisualCoordinator/CoordinatorMetal.h",
+        "Mac/Native/VisualCoordinator/CoordinatorMetal.m",
+        "Mac/Native/VisualCoordinator/CoordinatorOverlay.h",
+        "Mac/Native/VisualCoordinator/CoordinatorOverlay.m",
+        "Mac/Native/VisualCoordinator/CoordinatorStage.h",
+        "Mac/Native/VisualCoordinator/CoordinatorStage.m"
+      ]
+    }
+  ],
+  "binaryWrapperPermission": {
+    "scope": "../ForgePlayWrapper/SCOPE.json",
+    "notice": "../ForgePlayWrapper/PERMISSION.txt",
+    "files": [
+      "Mac/Coordinator/App/CoordinatorAvailability.swift",
+      "Mac/Coordinator/App/CoordinatorConsentSheet.swift",
+      "Mac/Coordinator/App/CoordinatorControls.swift",
+      "Mac/Coordinator/App/CoordinatorTargetEditor.swift",
+      "Mac/Coordinator/App/CoordinatorConversation.swift",
+      "Mac/Coordinator/App/CoordinatorConversationControls.swift",
+      "Mac/Coordinator/App/CoordinatorSpeechInput.swift",
+      "Mac/Coordinator/App/CoordinatorLegalNotice.swift",
+      "Mac/Coordinator/App/CoordinatorPolicyService.swift",
+      "Mac/Coordinator/App/VisualCoordinatorConfiguration.swift",
+      "Mac/Coordinator/Shared/CoordinatorSignedPolicy.swift"
+    ],
+    "priorGPLRightsPreserved": true
+  },
+  "excludedMaterials": [
+    {
+      "path": "Mac/Resources/PoppleVoice",
+      "license": "OpenRAIL-M",
+      "notice": "../Supertonic2/README.md"
+    },
+    {
+      "path": "Mac/Dependencies/ONNXRuntime",
+      "license": "MIT and bundled dependency notices",
+      "notice": "../ONNXRuntime/README.md"
+    },
+    {
+      "path": "Mac/Resources/VisualCoordinatorModels/OWLv2",
+      "license": "Apache-2.0",
+      "notice": "../OWLv2/README.md"
+    },
+    {
+      "path": "Mac/Tools/VisualCoordinator",
+      "reason": "Tools are outside the compiled component inventory. Independently authored BoxAreaGuide.swift is GPL-3.0-only; model conversion/research tools and upstream contributions retain their individual notices."
+    },
+    {
+      "path": "Mac/Native/D3DMetalFrameGenerationProxy",
+      "reason": "Existing GPL native material remains under its existing grant."
+    },
+    {
+      "path": "Mac/Runtime",
+      "reason": "Existing runtime/Wine/dependency licenses and prior rights remain unchanged."
+    }
+  ],
+  "notes": [
+    "Shared protocol declarations and initial game-identifier data retain their MIT permission.",
+    "The GPL worker and GPL native adapter retain separate build/runtime responsibilities; IPC is not an exemption from GPL obligations.",
+    "The actual runtime in groups remains GPL/MIT as specified; the exact host wrappers use the separately identified author-owned binary permission.",
+    "The author-owned runtime-to-wrapper combination permission does not waive the runtime's own Corresponding Source or independent third-party obligations.",
+    "Mixed application and build files are not relicensed wholesale by hosting this component.",
+    "Previously granted rights and third-party obligations remain unchanged."
+  ]
+}
