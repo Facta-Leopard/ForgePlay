@@ -1,13 +1,40 @@
 {
   "$schema": "./announcements.schema.json",
   "schemaVersion": 2,
-  "updatedAt": "2026-10-25",
+  "updatedAt": "2026-11-01",
   "announcements": [
+    {
+      "id": "forgeplay-2-5-0-update",
+      "type": "release",
+      "publishedAt": "2026-11-01",
+      "featured": true,
+      "titles": {
+        "ko": "ForgePlay 2.5.0 업데이트",
+        "en": "ForgePlay 2.5.0 Update",
+        "de": "ForgePlay 2.5.0 – Update",
+        "es": "Actualización de ForgePlay 2.5.0",
+        "fr": "Mise à jour ForgePlay 2.5.0",
+        "ja": "ForgePlay 2.5.0アップデート",
+        "zh-Hans": "ForgePlay 2.5.0 更新",
+        "zh-Hant": "ForgePlay 2.5.0 更新"
+      },
+      "summaries": {
+        "ko": "핑 줄이기와 선택 글꼴 설치를 추가하고, 프레임 생성·표시와 설치·설정 화면을 개선했습니다. 제보를 바탕으로 런타임과 외부 게임 라이브러리 보존도 보완했습니다.",
+        "en": "Adds Reduce Ping and optional fonts, improves frame generation and reporting, and refines installation, runtime compatibility and external library preservation.",
+        "de": "Ping reduzieren und optionale Schriften, bessere Frame-Erzeugung und Anzeige sowie Verbesserungen an Installation, Laufzeit und externen Bibliotheken.",
+        "es": "Reducir ping y fuentes opcionales, mejoras de generación y visualización de fotogramas, instalación, compatibilidad y conservación de bibliotecas externas.",
+        "fr": "Réduction du ping, polices facultatives, améliorations de la génération et de l’affichage d’images, de l’installation et des bibliothèques externes.",
+        "ja": "Ping低減と任意のフォント導入を追加。フレーム生成・表示、インストール、ランタイム互換性と外部ライブラリの保持を改善しました。",
+        "zh-Hans": "新增降低Ping与可选字体安装，改善帧生成、帧率显示、安装、运行环境兼容性和外部游戏库连接保留。",
+        "zh-Hant": "新增降低Ping與選用字型安裝，改善影格生成、影格率顯示、安裝、執行環境相容性與外部遊戲庫連結保留。"
+      },
+      "href": "updates.html#update-forgeplay-2-5-0-update"
+    },
     {
       "id": "forgeplay-2-4-1-update",
       "type": "release",
       "publishedAt": "2026-10-25",
-      "featured": true,
+      "featured": false,
       "titles": {
         "ko": "2.4.1. 업데이트",
         "en": "2.4.1 Update",
